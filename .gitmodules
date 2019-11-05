@@ -1,0 +1,3 @@
+[submodule "submodules/gdt"]
+	path = submodules/gdt
+	url = git@gitlab.com:ingowald/gdt
