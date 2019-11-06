@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "optix/Context.h"
+#include "optix/Optix.h"
 
 namespace owl_samples {
   

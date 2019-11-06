@@ -16,7 +16,7 @@
 
 add_library(owl-optix SHARED
   Context.cpp
-  Device.cpp
+  Module.cpp
   )
 target_link_libraries(owl-optix
   gdt

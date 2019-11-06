@@ -16,14 +16,48 @@
 
 #pragma once
 
-#include "optix/common.h"
+#include "optix/Context.h"
 
 namespace optix {
 
-  /*! base class for *any* object we are creating in this library */
-  struct CommonBase {
-    /*! java-style pretty-printer, for debugging */
-    virtual std::string toString() = 0;
+  struct Module : public CommonBase {
+    typedef std::shared_ptr<Module> SP;
+    
+    struct PerDevice {
+      typedef std::shared_ptr<PerDevice> SP;
+
+      PerDevice(Context::PerDevice::SP context,
+                Module *self);
+      
+      ~PerDevice() { destroy(); }
+      
+      void create();
+      void destroy();
+      
+      std::mutex  mutex;
+      OptixModule optixModule;
+      
+      bool        created = false;
+      
+      Context::PerDevice::SP context;
+      Module          *const self;
+    };
+
+    Module(Context::SP context,
+           const std::string &ptxCode);
+    
+    std::string ptxCode;
+    Context::WP context;
+    std::vector<PerDevice::SP> perDevice;
   };
   
+  struct Program : public CommonBase
+  {
+    typedef std::shared_ptr<Program> SP;
+    
+    Module::SP  module;
+    std::string programName;
+  };
+    
 } // ::optix
+
