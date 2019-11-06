@@ -21,6 +21,8 @@
 
 namespace optix {
 
+  using gdt::vec2i;
+  
   struct Context;
 
   /*! the basic abstraction for all classes owned by a optix
@@ -130,6 +132,16 @@ namespace optix {
     
     GeometryObject::SP createGeometryObject(GeometryType::SP type, size_t numPrims);
 
+    Program::SP createRayGenProgram(const std::string &ptxCode,
+                                    const std::string &programName)
+    { OWL_NOTIMPLEMENTED; }
+    
+    void setEntryPoint(int entryPointID, Program::SP program)
+    { OWL_NOTIMPLEMENTED; }
+
+    void launch(int entryPointID, const vec2i &size)
+    { OWL_NOTIMPLEMENTED; }
+    
     /*! a mutex for this particular context */
     std::mutex mutex;
     

@@ -32,7 +32,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${gdt_dir}/cmake/")
 
 include(configure_cuda)
 include(configure_optix)
-include(configure_embree)
+#include(configure_embree)
 include(configure_tbb)
 include(configure_build_type)
 

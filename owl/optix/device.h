@@ -14,24 +14,20 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "optix/Context.h"
+#pragma once
 
-namespace owl_samples {
+#include "optix_device.h"
+#include "gdt/math/vec.h"
 
-  // use embedded ptx string.
-  extern "C" const char ptxCode[0];
-  
-  extern "C" int main(int ac, const char **av)
+namespace optix {
+  using namespace gdt;
+
+  inline __device__ vec2i getLaunchIndex()
   {
-    optix::Context::SP context = optix::Context::create();
-
-    optix::Program::SP rgProgram
-      = context->createRayGenProgram(ptxCode,"simpleRayGen");
-    context->setEntryPoint(0,rgProgram);
-
-    context->launch(0,optix::vec2i(1));
-    
-    return 0;
+    return (vec2i)optixGetLaunchIndex();
   }
-  
 }
+
+#define OPTIX_RAYGEN_PROGRAM(programName) extern "C" void __raygen__##programName
+
+
