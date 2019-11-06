@@ -16,9 +16,12 @@
 
 add_library(owl-optix SHARED
   Context.cpp
+  Device.cpp
   )
 target_link_libraries(owl-optix
   gdt
   ${TBB_LIBRARIES}
+  ${CUDA_LIBRARIES}
+  ${CUDA_CUDA_LIBRARY}
   )
 

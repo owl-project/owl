@@ -18,12 +18,39 @@
 
 namespace optix {
 
+  void Context::log_cb(unsigned int level,
+                       const char *tag,
+                       const char *message,
+                       void * /*cbdata */)
+  {
+    fprintf( stderr, "#owl: [%2d][%12s]: %s\n", level, tag, message );
+  }
+  
+
+  /*! creates a new context with the given device IDs. Invalid
+    device IDs get ignored with a warning, but if no device can be
+    created at all an error will be thrown */
+  Context::Context(const std::vector<int> &deviceIDs)
+  {
+    Device::g_init();
+    
+    std::cout << "#owl: creating new owl context..." << std::endl;
+  }
+
   /*! creates a new context with the given device IDs. Invalid
     device IDs get ignored with a warning, but if no device can be
     created at all an error will be thrown */
   Context::SP Context::create(const std::vector<int> &deviceIDs)
   {
-    OWL_NOTIMPLEMENTED;
+    Context *context = new Context(deviceIDs);
+    // Context::SP context = std::make_shared<Context>(deviceIDs);
+    if (context->devices.empty()) {
+      delete context;
+      throw optix::Error("Context::create(deviceIDs)",
+                         "could not create any devices"
+                         );
+    }
+    return Context::SP(context);
   }
 
   /*! creates a new context with the given device IDs. Invalid
@@ -32,8 +59,10 @@ namespace optix {
   Context::SP Context::create(GPUSelectionMethod whichGPUs)
   {
     switch(whichGPUs) {
+    case Context::GPU_SELECT_FIRST:
+      return create((std::vector<int>){0});
     default:
-      throw optix::Error("Context::create()",
+      throw optix::Error("Context::create(GPUSelectionMethod)",
                          "specified GPU Selection method not implemented "
                          "(method="+std::to_string((int)whichGPUs)+")"
                          );

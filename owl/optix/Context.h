@@ -17,6 +17,7 @@
 #pragma once
 
 #include "optix/Optix.h"
+#include "optix/Device.h"
 
 namespace optix {
 
@@ -36,25 +37,6 @@ namespace optix {
   private:
     // the context owning this object
     std::weak_ptr<Context> context;
-  };
-
-  
-  struct Device {
-    typedef std::shared_ptr<Device> SP;
-
-    void setActive();
-    
-    std::mutex mutex;
-    
-    int                         cudaDeviceID;
-    CUcontext                   cudaContext;
-    CUstream                    stream;
-    
-    OptixDeviceContext          optixContext;
-  };
-
-  struct CommonBase {
-    virtual std::string toString() = 0;
   };
   
   struct ObjectType : public CommonBase {
@@ -111,7 +93,7 @@ namespace optix {
        GPU_SELECT_FIRST=0,
        /*! take the first RTX-enabled GPU, if available,
          else take the first you find - not yet implemented */
-                  GPU_SELECT_FIRST_PREFER_RTX,
+       GPU_SELECT_FIRST_PREFER_RTX,
        /*! leave it to owl to select which one to use ... */
        GPU_SELECT_BEST,
        /*! use *all* GPUs, in multi-gpu mode */
@@ -124,18 +106,32 @@ namespace optix {
 
     /*! creates a new context with one or more GPUs as specified in
         the selection method */
-    static Context::SP create(GPUSelectionMethod whichGPUs=GPU_SELECT_FIRST_PREFER_RTX);
+    static Context::SP create(GPUSelectionMethod whichGPUs=GPU_SELECT_FIRST);
     
     /*! creates a new context with the given device IDs. Invalid
         device IDs get ignored with a warning, but if no device can be
         created at all an error will be thrown */
     static Context::SP create(const std::vector<int> &deviceIDs);
+
+    /*! optix logging callback */
+    static void log_cb(unsigned int level,
+                       const char *tag,
+                       const char *message,
+                       void * /*cbdata */);
+    
+  protected:
+    /*! creates a new context with the given device IDs. Invalid
+        device IDs get ignored with a warning, but if no device can be
+        created at all an error will be thrown */
+    Context(const std::vector<int> &deviceIDs);
     
     GeometryObject::SP createGeometryObject(GeometryType::SP type, size_t numPrims);
-    
+
+    /*! a mutex for this particular context */
     std::mutex mutex;
-    std::vector<Device::SP> allDevices;
-    std::vector<Device::SP> activeDevices;
+    
+    /*! list of all devices active in this context */
+    std::vector<Device::SP> devices;
   };
   
   /*! base class for any kind of owl/optix exception that this lib
