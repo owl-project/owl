@@ -22,7 +22,7 @@ namespace owl_samples {
   {
     optix::Context::SP context = optix::Context::create();
 
-    std::cout << "Successfully created an optix context: Hello owl-optix!" << std::endl;
+    // TODO: create a raygen program
     return 0;
   }
   

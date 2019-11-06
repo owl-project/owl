@@ -14,16 +14,11 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "optix/Context.h"
+#include "optix/device.h"
 
-namespace owl_samples {
-  
-  extern "C" int main(int ac, const char **av)
-  {
-    optix::Context::SP context = optix::Context::create();
-
-    std::cout << "Successfully created an optix context: Hello owl-optix!" << std::endl;
-    return 0;
-  }
-  
+OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
+{
+  if (optix::getLaunchIndex() == optix::vec2i(0))
+    printf("Hello OptiX From your First RayGen Program\n");
 }
+

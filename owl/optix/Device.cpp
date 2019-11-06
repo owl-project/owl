@@ -47,6 +47,7 @@ namespace optix {
       stream(stream),
       optixContext(optixContext)
   {
+    /* nothing else to do */
   }
 
   /*! (try to) create a new device on given ID. may throw an error
