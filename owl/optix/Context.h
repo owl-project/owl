@@ -104,12 +104,47 @@ namespace optix {
   
   /*! the root optix context that creates and managed all objects */
   struct Context {
+    /*! used to specify which GPU(s) we want to use in a context */
+    typedef enum
+      {
+       /*! take the first GPU, whichever one it is */
+       GPU_SELECT_FIRST=0,
+       /*! take the first RTX-enabled GPU, if available,
+         else take the first you find - not yet implemented */
+                  GPU_SELECT_FIRST_PREFER_RTX,
+       /*! leave it to owl to select which one to use ... */
+       GPU_SELECT_BEST,
+       /*! use *all* GPUs, in multi-gpu mode */
+       GPU_SELECT_ALL,
+       /*! use all RTX-enabled GPUs, in multi-gpu mode */
+       GPU_SELECT_ALL_RTX
+    } GPUSelectionMethod;
+  
     typedef std::shared_ptr<Context> SP;
 
+    /*! creates a new context with one or more GPUs as specified in
+        the selection method */
+    static Context::SP create(GPUSelectionMethod whichGPUs=GPU_SELECT_FIRST_PREFER_RTX);
+    
+    /*! creates a new context with the given device IDs. Invalid
+        device IDs get ignored with a warning, but if no device can be
+        created at all an error will be thrown */
+    static Context::SP create(const std::vector<int> &deviceIDs);
+    
     GeometryObject::SP createGeometryObject(GeometryType::SP type, size_t numPrims);
     
     std::mutex mutex;
-    std::vector<Device::SP> devices;
+    std::vector<Device::SP> allDevices;
+    std::vector<Device::SP> activeDevices;
+  };
+  
+  /*! base class for any kind of owl/optix exception that this lib
+      could possibly throw */
+  struct Error : public std::runtime_error {
+    Error(const std::string &where,
+              const std::string &what)
+      : std::runtime_error(where+" : "+what)
+    {}
   };
   
 } // ::optix

@@ -14,8 +14,18 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "optix/Context.h"
+#pragma once
 
-namespace optix {
+// gdt
+#include "gdt/math/AffineSpace.h"
+#include "gdt/parallel/parallel_for.h"
+// std
+#include <vector>
+#include <memory>
+#include <mutex>
+#include <map>
 
-} // ::optix
+#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+\
+                                                    " : not yet implemented")
+
+

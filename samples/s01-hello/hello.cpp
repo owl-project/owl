@@ -14,13 +14,14 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#pragma once
+#include "optix/Context.h"
 
-// gdt
-#include "gdt/math/AffineSpace.h"
-#include "gdt/parallel/parallel_for.h"
-// std
-#include <vector>
-#include <memory>
-#include <mutex>
-#include <map>
+namespace owl_samples {
+  
+  extern "C" int main(int ac, const char **av)
+  {
+    optix::Context::SP context = optix::Context::create();
+    return 0;
+  }
+  
+}

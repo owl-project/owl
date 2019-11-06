@@ -14,7 +14,11 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-add_library(oso SHARED
+add_library(owl-optix SHARED
   Context.cpp
+  )
+target_link_libraries(owl-optix
+  gdt
+  ${TBB_LIBRARIES}
   )
 

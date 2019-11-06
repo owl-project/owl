@@ -14,4 +14,9 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-add_subdirectory(s01-hello)
+add_executable(owlHello
+  hello.cpp
+  )
+target_link_libraries(owlHello
+  owl-optix
+  )

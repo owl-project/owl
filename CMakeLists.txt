@@ -27,12 +27,14 @@ set(gdt_dir ${PROJECT_SOURCE_DIR}/submodules/gdt/)
 
 # -------------------------------------------------------
 set(gdt_dir ${CMAKE_SOURCE_DIR}/submodules/gdt)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${gdt_dir}/cmake/")
 
 include(configure_cuda)
 include(configure_optix)
 include(configure_embree)
 include(configure_tbb)
+include(configure_build_type)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -49,11 +51,11 @@ add_subdirectory(${gdt_dir} EXCLUDE_FROM_ALL)
 #configure_file(optix/config.h.in ${CMAKE_BINARY_DIR}/optix/optix_config.h)
 
 include_directories(${CMAKE_BINARY_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/)
+include_directories(${PROJECT_SOURCE_DIR}/owl/)
 #include_directories(${PROJECT_SOURCE_DIR}/optix/include/)
 
-# the actual back-ends:
-add_subdirectory(optix)
+# the actual back-end
+add_subdirectory(owl/optix)
 
 # the front-end apps: viewer, tools, etc
 add_subdirectory(samples)
