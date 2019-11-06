@@ -15,9 +15,12 @@
 // ======================================================================== //
 
 #include "optix/Context.h"
+#include <optix_function_table_definition.h>
 
 namespace optix {
 
+  std::mutex Context::g_mutex;
+  
   void Context::log_cb(unsigned int level,
                        const char *tag,
                        const char *message,
@@ -26,6 +29,86 @@ namespace optix {
     fprintf( stderr, "#owl: [%2d][%12s]: %s\n", level, tag, message );
   }
   
+  /*! first step in the boot-strappin process: globally initialize
+    all devices */
+  void Context::g_init()
+  {
+    static bool initialized = false;
+    if (initialized) return;
+    std::lock_guard<std::mutex> lock(g_mutex);
+
+    // initialize cuda:
+    cudaFree(0);
+    
+    // initialize optix:
+    OPTIX_CHECK(optixInit());
+
+    // query number of possible devices:
+    int numDevices = 0;
+    cudaGetDeviceCount(&numDevices);
+    if (numDevices == 0)
+      throw Error("Device::g_init","could not find a single CUDA capable device!?");
+    
+    std::cout << "#owl.context: found " << numDevices << " CUDA-capable devices" << std::endl;
+  }
+
+  /*! (try to) create a new device on given ID. may throw an error
+    of this device can not be created (eg, if an invalid ID was
+    passed, of if there is an error creating an of the optix or
+    cuda device contexts */
+  Context::PerDevice::SP
+  Context::PerDevice::create(int cudaDeviceID,
+                             int optixDeviceID,
+                             Context *self)
+  {
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, cudaDeviceID);
+    std::cout << "#owl.device: - device #" << cudaDeviceID
+              << ": " << prop.name << std::endl;
+
+    CUcontext cudaContext;
+    CUresult res = cuCtxCreate(&cudaContext,0,(CUdevice)cudaDeviceID);
+    if (res != CUDA_SUCCESS)
+      throw Error("Device::create","error in creating cuda context");
+    res = cuCtxSetCurrent(cudaContext);
+    if (res != CUDA_SUCCESS)
+      throw Error("Device::create","error in activating newly created cuda context");
+    
+    CUstream stream;
+    CUDA_CHECK(cudaStreamCreate(&stream));
+
+    OptixDeviceContext optixContext;
+    OPTIX_CHECK(optixDeviceContextCreate(cudaContext, 0, &optixContext));
+
+    PerDevice *perDevice
+      = new PerDevice(self,cudaDeviceID,optixDeviceID,
+                      cudaContext,stream,optixContext);
+    assert(perDevice);
+
+    PerDevice::SP sp = PerDevice::SP(perDevice);
+    OPTIX_CHECK(optixDeviceContextSetLogCallback
+                (optixContext,Context::log_cb,perDevice,4));
+
+    return sp;
+  }
+
+
+  Context::PerDevice::PerDevice(Context *self,
+                                int cudaID,
+                                int optixID,
+                                CUcontext          cudaContext,
+                                CUstream           stream,
+                                OptixDeviceContext optixContext)
+    : self(self),
+      cudaID(cudaID),
+      optixID(optixID),
+      cudaContext(cudaContext),
+      stream(stream),
+      optixContext(optixContext)
+  {
+    /* nothing else to do */
+  }
+
 
     /*! creates a new context with the given device IDs. Invalid
         device IDs get ignored with a warning, but if no device can be
@@ -36,23 +119,22 @@ namespace optix {
         Should never be called directly, only through Context::create() */
   Context::Context(const std::vector<uint32_t> &deviceIDs)
   {
-    Device::g_init();
+    Context::g_init();
+
+    if (deviceIDs.empty())
+      throw optix::Error("Context::create(deviceIDs)",
+                         "context creation called without any devices!?"
+                         );
     
     std::cout << "#owl.context: creating new owl context..." << std::endl;
-    for (auto ID : deviceIDs) {
-      Device::SP device = Device::getDevice(ID);
-      if (device) 
-        devices.push_back(device);
-    }
-    if (devices.empty())
-      throw optix::Error("Context::create(deviceIDs)",
-                         "could not create any devices"
-                         );
+    perDevice.resize(deviceIDs.size());
+    for (int i=0;i<deviceIDs.size();i++)
+      perDevice[i] = PerDevice::create(i,deviceIDs[i],this);
   }
-
-    /*! creates a new context with the given device IDs. Invalid
-        device IDs get ignored with a warning, but if no device can be
-        created at all an error will be thrown */
+  
+  /*! creates a new context with the given device IDs. Invalid
+    device IDs get ignored with a warning, but if no device can be
+    created at all an error will be thrown */
   Context::SP Context::create(const std::vector<uint32_t> &deviceIDs)
   {
     return std::make_shared<Context>(deviceIDs);

@@ -16,15 +16,18 @@
 
 #pragma once
 
-#include "optix/Optix.h"
-#include "optix/Device.h"
+#include "optix/Base.h"
 
 namespace optix {
 
   using gdt::vec2i;
   
   struct Context;
-
+  struct Module;
+  struct Program;
+  typedef std::shared_ptr<Program> ProgramSP;
+  
+  
   /*! the basic abstraction for all classes owned by a optix
       context */
   struct Object {
@@ -50,31 +53,17 @@ namespace optix {
     std::map<std::string,VariableSlot> variableSlots;
   };
 
-  struct Module : public CommonBase
-  {
-    typedef std::shared_ptr<Module> SP;
-    std::string ptxCode;
-  };
-  
-  struct Program : public CommonBase
-  {
-    typedef std::shared_ptr<Program> SP;
-    
-    Module::SP  module;
-    std::string programName;
-  };
-  
   struct GeometryType : public ObjectType {
     typedef std::shared_ptr<GeometryType> SP;
     
     struct Programs {
-      Program::SP intersect;
-      Program::SP bounds;
-      Program::SP anyHit;
-      Program::SP closestHit;
+      ProgramSP intersect;
+      ProgramSP bounds;
+      ProgramSP anyHit;
+      ProgramSP closestHit;
     };
     //! one group of programs per ray type
-    std::vector<Programs> programs;
+    std::vector<Programs> perRayType;
   };
   
   struct ParamObject : public CommonBase {
@@ -105,6 +94,7 @@ namespace optix {
     } GPUSelectionMethod;
   
     typedef std::shared_ptr<Context> SP;
+    typedef std::weak_ptr<Context>   WP;
 
     /*! creates a new context with one or more GPUs as specified in
         the selection method */
@@ -132,11 +122,11 @@ namespace optix {
     
     GeometryObject::SP createGeometryObject(GeometryType::SP type, size_t numPrims);
 
-    Program::SP createRayGenProgram(const std::string &ptxCode,
+    ProgramSP createRayGenProgram(const std::string &ptxCode,
                                     const std::string &programName)
     { OWL_NOTIMPLEMENTED; }
     
-    void setEntryPoint(int entryPointID, Program::SP program)
+    void setEntryPoint(int entryPointID, ProgramSP program)
     { OWL_NOTIMPLEMENTED; }
 
     void launch(int entryPointID, const vec2i &size)
@@ -145,9 +135,68 @@ namespace optix {
     /*! a mutex for this particular context */
     std::mutex mutex;
     
+    /*! mutex that's GLOBALLY present for all operations that do not
+        have a context to operate on */
+    static std::mutex        g_mutex;
+
+    static void g_init();
+    
+    struct PerDevice {
+      typedef std::shared_ptr<PerDevice> SP;
+      typedef std::weak_ptr<PerDevice>   WP;
+
+    private:
+      friend class Context;
+
+      PerDevice(Context *self,
+                int cudaID,
+                int optixID,
+                CUcontext          cudaContext,
+                CUstream           stream,
+                OptixDeviceContext optixContext);
+
+      /*! create the given optix device on given cuda device. will
+          throw an error if for whatever reason this cannot be done */
+      static PerDevice::SP create(int cudaDeviceID,
+                                  int optixDeviceID,
+                                  Context *self);
+
+    public:
+      std::mutex               mutex;
+      Context                 *const self;
+      
+      /*! the ID of this device *AS SEEN BY CUDA* */
+      const int                cudaID;
+      
+      /*! the ID of this device *WITHIN THE CONTEXT* */
+      const int                optixID;
+
+      /*! a cuda context for the given device */
+      const CUcontext          cudaContext;
+    
+      /*! a stream we create for this cude context; you can of course
+        use other streams as well, but this should be the default
+        stream to be used for this device (in order to allow for this
+        device to work independently of other devices */
+      const CUstream           stream;
+
+      /*! the (low-level!) optix device context for this device - NOT to
+        be confused with the (high-level) optix::Context created by
+        this library */
+      const OptixDeviceContext optixContext;
+    };
+
+    size_t                      t_pipelineOptionsChanged = 0;
+    
+    OptixModuleCompileOptions   moduleCompileOptions;
+    OptixPipelineCompileOptions pipelineCompileOptions;
+    OptixPipelineLinkOptions    pipelineLinkOptions;
+    
     /*! list of all devices active in this context */
-    std::vector<Device::SP> devices;
+    std::vector<PerDevice::SP> perDevice;
   };
+
+
   
   /*! base class for any kind of owl/optix exception that this lib
       could possibly throw */
