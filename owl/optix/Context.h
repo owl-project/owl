@@ -25,6 +25,48 @@ namespace optix {
   
   struct Context;
 
+  struct Module : public CommonBase {
+    std::string ptxCode;
+
+    struct PerDevice {
+      ~PerDevice() { destroyIfAlreadyCreated(); }
+      
+      void create(/*! the module we're creating a device
+                      representation for: */
+                  Module *sharedSelf)
+      {
+        destroyIfAlreadyCreated();
+        
+        char log[2048];
+        size_t sizeof_log = sizeof( log );
+        OPTIX_CHECK(optixModuleCreateFromPTX(context->device->optixContext,
+                                             &context->moduleCompileOptions,
+                                             &context->pipelineCompileOptions,
+                                             sharedSelf->ptxCode.c_str(),
+                                             sharedSelf->ptxCode.size(),
+                                             log,sizeof_log,
+                                             &optixModule
+                                             ));
+        if (sizeof_log > 0) PRINT(sizeof_log);
+      }
+      void destroyIfAlreadyCreated()
+      {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (created) {
+          optixModuleDestroy(module);
+          created = false;
+        }
+      }
+      
+      Context::PerDevice *context = nullptr;
+      std::mutex  mutex;
+      OptixModule module;
+      bool        created = false;
+    };
+
+    std::vector<PerDevice> perDevice;
+  };
+  
   /*! the basic abstraction for all classes owned by a optix
       context */
   struct Object {
@@ -144,9 +186,14 @@ namespace optix {
     
     /*! a mutex for this particular context */
     std::mutex mutex;
+
+    struct PerDevice {
+      Device::SP device;
+      
+    };
     
     /*! list of all devices active in this context */
-    std::vector<Device::SP> devices;
+    std::vector<PerDevice> devices;
   };
   
   /*! base class for any kind of owl/optix exception that this lib
