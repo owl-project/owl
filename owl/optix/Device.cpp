@@ -26,6 +26,14 @@ namespace optix {
     context gets created */
   std::vector<Device::SP> Device::g_allDevices;
 
+  Device::SP Device::getDevice(uint32_t deviceID)
+  {
+    std::lock_guard<std::mutex> lock(g_mutex);
+    if (deviceID < g_allDevices.size())
+      return g_allDevices[deviceID];
+    return nullptr;
+  }
+  
   /*! java-style pretty-printer, for debugging */
   std::string Device::toString() 
   { return "optix::Device [cuda device #"+std::to_string(cudaDeviceID)+"]"; }
@@ -49,7 +57,8 @@ namespace optix {
   {
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, cudaDeviceID);
-    std::cout << "#owl: - device #" << cudaDeviceID << ": " << prop.name << std::endl;
+    std::cout << "#owl.device: - device #" << cudaDeviceID
+              << ": " << prop.name << std::endl;
 
     CUcontext cudaContext;
     CUresult res = cuCtxCreate(&cudaContext,0,(CUdevice)cudaDeviceID);
@@ -69,7 +78,7 @@ namespace optix {
 
     return device;
   }
-  
+
   /*! first step in the boot-strappin process: globally initialize
     all devices */
   void Device::g_init()
@@ -89,19 +98,25 @@ namespace optix {
     int numDevices = 0;
     cudaGetDeviceCount(&numDevices);
     if (numDevices == 0)
-      throw std::runtime_error("#owl: could not find a single CUDA capable devices!?");
+      throw Error("Device::g_init","could not find a single CUDA capable device!?");
     
     // and create those devices:
-    std::cout << "#owl: found " << numDevices << " CUDA-capable devices" << std::endl;
+    std::cout << "#owl.device: found " << numDevices << " CUDA-capable devices" << std::endl;
     g_allDevices.resize(numDevices);
+    int numValidDevices = 0;
     for (int i=0;i<numDevices;i++) {
       try {
         g_allDevices[i] = Device::create(i);
-      } catch (Error e) {
-        std::cout << "#owl: error in creating device #"
-                  << i << ": " << e.what() << std::endl;
+        numValidDevices++;
+      } catch (optix::Error e) {
+        std::cout << "#owl.device: error in creating device #"
+                  << i << ": " << e.what() << " (-> ignoring this device)" << std::endl;
       }
     }
+    if (numValidDevices == 0)
+      throw optix::Error("Device::g_init()","could not find *any* optix-capable device");
+
+    std::cout << "#owl.device: found a total of " << numValidDevices << " optix-capable devices" << std::endl;
   }
     
 } // ::optix

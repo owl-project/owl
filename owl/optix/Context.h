@@ -111,7 +111,7 @@ namespace optix {
     /*! creates a new context with the given device IDs. Invalid
         device IDs get ignored with a warning, but if no device can be
         created at all an error will be thrown */
-    static Context::SP create(const std::vector<int> &deviceIDs);
+    static Context::SP create(const std::vector<uint32_t> &deviceIDs);
 
     /*! optix logging callback */
     static void log_cb(unsigned int level,
@@ -119,11 +119,14 @@ namespace optix {
                        const char *message,
                        void * /*cbdata */);
     
-  protected:
     /*! creates a new context with the given device IDs. Invalid
         device IDs get ignored with a warning, but if no device can be
-        created at all an error will be thrown */
-    Context(const std::vector<int> &deviceIDs);
+        created at all an error will be thrown. 
+
+        will throw an error if no device(s) could be found for this context
+
+        Should never be called directly, only through Context::create() */
+    Context(const std::vector<uint32_t> &deviceIDs);
     
     GeometryObject::SP createGeometryObject(GeometryType::SP type, size_t numPrims);
 

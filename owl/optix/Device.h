@@ -48,6 +48,8 @@ namespace optix {
     /*! first step in the boot-strappin process: globally initialize
         all devices */
     static void g_init();
+
+    static Device::SP getDevice(uint32_t deviceID);
     
     /*! perform a cudaSetActive on this device (for given thread) */
     void setActive();

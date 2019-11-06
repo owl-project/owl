@@ -27,30 +27,35 @@ namespace optix {
   }
   
 
-  /*! creates a new context with the given device IDs. Invalid
-    device IDs get ignored with a warning, but if no device can be
-    created at all an error will be thrown */
-  Context::Context(const std::vector<int> &deviceIDs)
+    /*! creates a new context with the given device IDs. Invalid
+        device IDs get ignored with a warning, but if no device can be
+        created at all an error will be thrown. 
+
+        will throw an error if no device(s) could be found for this context
+
+        Should never be called directly, only through Context::create() */
+  Context::Context(const std::vector<uint32_t> &deviceIDs)
   {
     Device::g_init();
     
-    std::cout << "#owl: creating new owl context..." << std::endl;
-  }
-
-  /*! creates a new context with the given device IDs. Invalid
-    device IDs get ignored with a warning, but if no device can be
-    created at all an error will be thrown */
-  Context::SP Context::create(const std::vector<int> &deviceIDs)
-  {
-    Context *context = new Context(deviceIDs);
-    // Context::SP context = std::make_shared<Context>(deviceIDs);
-    if (context->devices.empty()) {
-      delete context;
+    std::cout << "#owl.context: creating new owl context..." << std::endl;
+    for (auto ID : deviceIDs) {
+      Device::SP device = Device::getDevice(ID);
+      if (device) 
+        devices.push_back(device);
+    }
+    if (devices.empty())
       throw optix::Error("Context::create(deviceIDs)",
                          "could not create any devices"
                          );
-    }
-    return Context::SP(context);
+  }
+
+    /*! creates a new context with the given device IDs. Invalid
+        device IDs get ignored with a warning, but if no device can be
+        created at all an error will be thrown */
+  Context::SP Context::create(const std::vector<uint32_t> &deviceIDs)
+  {
+    return std::make_shared<Context>(deviceIDs);
   }
 
   /*! creates a new context with the given device IDs. Invalid
@@ -60,7 +65,7 @@ namespace optix {
   {
     switch(whichGPUs) {
     case Context::GPU_SELECT_FIRST:
-      return create((std::vector<int>){0});
+      return create((std::vector<uint32_t>){0});
     default:
       throw optix::Error("Context::create(GPUSelectionMethod)",
                          "specified GPU Selection method not implemented "
