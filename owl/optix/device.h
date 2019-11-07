@@ -16,12 +16,17 @@
 
 #pragma once
 
-#include "optix_device.h"
-#include "gdt/math/vec.h"
+#include "optix/common.h"
+
+// #include "gdt/math/vec.h"
+// #ifdef __CUDA_ARCH__
+// #include "optix_device.h"
+// #endif
 
 namespace optix {
   using namespace gdt;
 
+#ifdef __CUDA_ARCH__
   // ==================================================================
   // actual device-side "API" built-ins.
   // ==================================================================
@@ -89,11 +94,12 @@ namespace optix {
       (make_8bit(color.z) << 16) +
       (make_8bit(color.w) << 24);
   }
-
+#endif
+  
 }
 
 #define OPTIX_RAYGEN_PROGRAM(programName) \
   extern "C" __global__ \
   void __raygen__##programName
 
-#define OPTIX_PROGRAM_DATA /* TODO: align(16) */
+

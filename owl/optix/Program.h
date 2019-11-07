@@ -70,24 +70,38 @@ namespace optix {
   };
 
 
+  struct HasProgramData {
+    HasProgramData(size_t paramSize)
+      : defaultParams(paramSize)
+    {}
+    
+    void decVar3f(const std::string &varName,
+                  size_t offset,
+                  const vec3f &defaultValue);
+    void decVarBuffer(const std::string &varName,
+                      size_t offsetID,
+                      size_t offsetPointer,
+                      size_t offsetDims);
+    
+    std::vector<uint8_t> defaultParams;
+  };
 
-  struct RayGenProgram {
+  struct RayGenProgram : public HasProgramData {
     typedef std::shared_ptr<RayGenProgram> SP;
     
     RayGenProgram(Context       *const context,
                   Module::SP           module,
                   const std::string   &programName,
                   size_t               paramSize)
-      : context(context),
+      : HasProgramData(paramSize),
+        context(context),
         module(module),
-        programName(programName),
-        defaultParams(paramSize)
+        programName(programName)
     {}
     
     Context       *const context;
     Module::SP           module;
     const std::string    programName;
-    std::vector<uint8_t> defaultParams;
   };
   
 } // ::optix

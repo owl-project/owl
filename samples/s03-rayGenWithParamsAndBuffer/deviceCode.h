@@ -14,7 +14,9 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "optix/device.h"
+#pragma once
+
+#include "optix/common.h"
 
 struct OPTIX_PROGRAM_DATA RayGenParams {
   uint32_t    *fbPointer;

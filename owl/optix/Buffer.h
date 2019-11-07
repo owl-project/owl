@@ -17,7 +17,17 @@
 #pragma once
 
 #include "optix/Context.h"
-#include "optix/Module.h"
-#include "optix/Buffer.h"
-#include "optix/Program.h"
+
+namespace optix {
+
+  struct Buffer : public CommonBase {
+    typedef std::shared_ptr<Buffer> SP;
+
+    /*! java-style pretty-printer, for debugging */
+    virtual std::string toString() override
+    { return "optix::Buffer"; }
+    
+  };
+
+} // ::optix
 

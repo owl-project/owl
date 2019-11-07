@@ -28,7 +28,7 @@ namespace owl_samples {
 
   /* we'll compute an image of given size, with a gradient from top
      to bottom using the given two colors */
-  optix::vec2i imageSize(800,600);
+  optix::vec2i fbSize(800,600);
   optix::vec3f topColor(0,1,0);
   optix::vec3f bottomColor(0,0,1);
   
@@ -37,7 +37,7 @@ namespace owl_samples {
     optix::Context::SP context
       = optix::Context::create();
     optix::Buffer::SP  frameBuffer
-      = context->createHostPinnedBuffer2D(OPTIX_UINT32,imageSize);
+      = context->createHostPinnedBuffer(optix::UINT32,fbSize);
     optix::Module::SP  module
       = context->createModuleFromString(ptxCode);
 
@@ -47,8 +47,12 @@ namespace owl_samples {
       = context->createRayGenProgram(module,"rayGenWithBuffer",
                                      sizeof(RayGenParams));
     /*! ... and declare the parameters this program knows about */
-    rayGen->decVar3f("topColor",offsetof(RayGenParams,topColor),vec3f(1.f));
-    rayGen->decVar3f("bottomColor",offsetof(RayGenParams,bottomColor),vec3f(0.f));
+    rayGen->decVar3f("topColor",
+                     offsetof(RayGenParams,topColor),
+                     optix::vec3f(1.f));
+    rayGen->decVar3f("bottomColor",
+                     offsetof(RayGenParams,bottomColor),
+                     optix::vec3f(0.f));
 
     /* now assign the variables */
     rayGen->decVarBuffer("frameBuffer",
@@ -65,9 +69,9 @@ namespace owl_samples {
 
     // assign to an entry point, and launch
     context->setEntryPoint(0,rayGen);
-    context->launch(0,imageSize);
+    context->launch(0,fbSize);
     const uint32_t *pixels = (const uint32_t*)buffer->map();
-    stbi_write_png(fileName.c_str(),fbSize.x,fbSize.y,4,
+    stbi_write_png("s03-rayGenWithBuffer.png",fbSize.x,fbSize.y,4,
                    pixels.data(),fbSize.x*sizeof(uint32_t));
     buffer->unmap();
     

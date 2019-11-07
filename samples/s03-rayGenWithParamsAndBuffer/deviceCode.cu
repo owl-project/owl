@@ -14,6 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#include "optix/device.h"
 #include "deviceCode.h"
 
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()

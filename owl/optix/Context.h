@@ -21,7 +21,13 @@
 namespace optix {
 
   using gdt::vec2i;
-  
+
+  typedef enum {
+    FLOAT,
+    UINT32,
+    FLOAT3
+  } OptixElementType;
+
   struct Context;
   typedef std::shared_ptr<Context> ContextSP;
 
@@ -30,6 +36,12 @@ namespace optix {
 
   struct Program;
   typedef std::shared_ptr<Program> ProgramSP;
+
+  struct RayGenProgram;
+  typedef std::shared_ptr<RayGenProgram> RayGenProgramSP;
+
+  struct Buffer;
+  typedef std::shared_ptr<Buffer> BufferSP;
 
   struct RayGenProg;
   typedef std::shared_ptr<RayGenProg> RayGenProgSP;
@@ -105,6 +117,7 @@ namespace optix {
     /*! creates a new context with one or more GPUs as specified in
         the selection method */
     static Context::SP create(GPUSelectionMethod whichGPUs=GPU_SELECT_FIRST);
+
     
     /*! creates a new context with the given device IDs. Invalid
         device IDs get ignored with a warning, but if no device can be
@@ -129,6 +142,15 @@ namespace optix {
     GeometryObject::SP createGeometryObject(GeometryType::SP type,
                                             size_t numPrims);
 
+    BufferSP createHostPinnedBuffer(OptixElementType elementType,
+                                    const vec2i &size)
+    { OWL_NOTIMPLEMENTED; }
+
+    RayGenProgramSP createRayGenProgram(ModuleSP module,
+                                        const std::string &programName,
+                                        size_t programDataSize)
+    { OWL_NOTIMPLEMENTED; }
+    
     /*! create a new module object from given ptx string */
     ModuleSP  createModuleFromString(const std::string &ptxCode);
 

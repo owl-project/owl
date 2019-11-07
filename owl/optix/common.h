@@ -14,88 +14,26 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+/*! \file optix/common.h Creates a common set of includes, #defines,
+  and helpers that will be visible across _all_ files, both host _and_
+  device */
+
 #pragma once
 
-// gdt
+// device-safe parts of gdt
+#include "gdt/math/vec.h"
+#include "gdt/math/box.h"
 #include "gdt/math/AffineSpace.h"
-#include "gdt/parallel/parallel_for.h"
-// std
-#include <vector>
-#include <memory>
-#include <mutex>
-#include <map>
 
-
+// include optix itself - optix has some automatic host/device
+// switching mechanism, so including this common.h is viable
 #define OPTIX_COMPATIBILITY 7
-
-#include <cuda_runtime.h>
-
 #include <optix.h>
-#include <optix_function_table.h>
-#include <optix_stubs.h>
 
-//------------------------------------------------------------------------------
-//
-// Local functions
-// TODO: some of these should move to sutil or optix util header
-//
-//------------------------------------------------------------------------------
+namespace optix {
+  using namespace gdt;
+  
+}
 
-#define OPTIX_CHECK( call )                                             \
-  {                                                                     \
-    OptixResult res = call;                                             \
-    if( res != OPTIX_SUCCESS )                                          \
-      {                                                                 \
-        fprintf( stderr, "Optix call (%s) failed with code %d (line %d)\n", #call, res, __LINE__ ); \
-        exit( 2 );                                                      \
-      }                                                                 \
-  }
-
-#define OPTIX_CHECK_LOG( call )                                         \
-  {                                                                     \
-    OptixResult res = call;                                             \
-    if( res != OPTIX_SUCCESS )                                          \
-      {                                                                 \
-        fprintf( stderr, "Optix call (%s) failed with code %d (line %d)\n", #call, res, __LINE__ ); \
-        fprintf( stderr, "Log:\n%s\n", log );                           \
-        exit( 2 );                                                      \
-      }                                                                 \
-  }
-
-#define CUDA_CHECK( call )                                              \
-  {                                                                     \
-    cudaError_t error = call;                                           \
-    if( error != cudaSuccess )                                          \
-      {                                                                 \
-        fprintf( stderr, "CUDA call (%s) failed with code %d (line %d): %s\n", #call, error, __LINE__, cudaGetErrorString( error ) ); \
-        exit( 2 );                                                      \
-      }                                                                 \
-  }
-
-#define CUDA_CHECK2( where, call )                                       \
-  {                                                                     \
-    cudaError_t error = call;                                           \
-    if( error != cudaSuccess )                                          \
-      {                                                                 \
-        if(where) fprintf( stderr, "at %s: CUDA call (%s) failed with code %d (line %d): %s\n", where,#call, error, __LINE__, cudaGetErrorString( error ) ); \
-        fprintf( stderr, "CUDA call (%s) failed with code %d (line %d): %s\n", #call, error, __LINE__, cudaGetErrorString( error ) ); \
-        exit( 2 );                                                      \
-      }                                                                 \
-  }
-
-#define CUDA_SYNC_CHECK()                                               \
-  {                                                                     \
-    cudaDeviceSynchronize();                                            \
-    cudaError_t error = cudaGetLastError();                             \
-    if( error != cudaSuccess )                                          \
-      {                                                                 \
-        fprintf( stderr, "error (%s: line %d): %s\n", __FILE__, __LINE__, cudaGetErrorString( error ) ); \
-        exit( 2 );                                                      \
-      }                                                                 \
-  }
-
-
-#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+\
-                                                    " : not yet implemented")
-
+#define OPTIX_PROGRAM_DATA GDT_ALIGN(16)
 
