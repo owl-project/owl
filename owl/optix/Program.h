@@ -68,6 +68,27 @@ namespace optix {
     Program::SP                program;
     std::vector<PerDevice::SP> perDevice;
   };
+
+
+
+  struct RayGenProgram {
+    typedef std::shared_ptr<RayGenProgram> SP;
+    
+    RayGenProgram(Context       *const context;
+                  Module::SP           module,
+                  const std::string   &programName,
+                  size_t               paramSize)
+      : context(context),
+        module(module),
+        programName(programName),
+        defaultParams(paramSize)
+    {}
+    
+    Context       *const context;
+    Module::SP           module;
+    const std::string    programName;
+    std::vector<uint8_t> defaultParams;
+  };
   
 } // ::optix
 
