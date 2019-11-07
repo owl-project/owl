@@ -130,6 +130,39 @@ namespace optix {
     perDevice.resize(deviceIDs.size());
     for (int i=0;i<deviceIDs.size();i++)
       perDevice[i] = PerDevice::create(i,deviceIDs[i],this);
+
+    // -------------------------------------------------------
+    // initialize shared state data to default values 
+    // -------------------------------------------------------
+    initializePipelineDefaults();
+  }
+    
+  /*! should only once be called by the constructor, to initialize all
+    compile/link options to defaults */
+  void Context::initializePipelineDefaults()
+  {
+    // ------------------------------------------------------------------
+    // module compile options
+    // ------------------------------------------------------------------
+    moduleCompileOptions.maxRegisterCount  = 100;
+    moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
+    moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;//FULL;
+
+    
+    // ------------------------------------------------------------------
+    // pipeline compile options
+    // ------------------------------------------------------------------
+    pipelineCompileOptions.traversableGraphFlags
+      // = instances.empty()
+      // ? OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
+      // : OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+      = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+    
+    pipelineCompileOptions.usesMotionBlur     = false;
+    pipelineCompileOptions.numPayloadValues   = 2;
+    pipelineCompileOptions.numAttributeValues = 2;
+    pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
+    pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
   }
   
   /*! creates a new context with the given device IDs. Invalid

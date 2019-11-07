@@ -123,7 +123,7 @@ namespace optix {
     GeometryObject::SP createGeometryObject(GeometryType::SP type, size_t numPrims);
 
     ProgramSP createRayGenProgram(const std::string &ptxCode,
-                                    const std::string &programName)
+                                  const std::string &programName)
     { OWL_NOTIMPLEMENTED; }
     
     void setEntryPoint(int entryPointID, ProgramSP program)
@@ -188,12 +188,16 @@ namespace optix {
 
     size_t                      t_pipelineOptionsChanged = 0;
     
+    /*! should only once be called by the constructor, to initialize
+      all compile/link options to defaults */
+    void initializePipelineDefaults();
+    
     OptixModuleCompileOptions   moduleCompileOptions;
     OptixPipelineCompileOptions pipelineCompileOptions;
     OptixPipelineLinkOptions    pipelineLinkOptions;
     
     /*! list of all devices active in this context */
-    std::vector<PerDevice::SP> perDevice;
+    std::vector<PerDevice::SP>  perDevice;
   };
 
 
