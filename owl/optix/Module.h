@@ -27,9 +27,6 @@ namespace optix {
     virtual std::string toString() override
     { return "optix::Module"; }
     
-  private:
-    friend class Context;
-    
     static Module::SP create(Context *context,
                       const std::string &ptxCode)
     {

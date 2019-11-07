@@ -42,19 +42,21 @@ namespace optix {
     typedef std::shared_ptr<RayGenProg> SP;
     
     RayGenProg(Context *context,
-             Program::SP program);
+               Program::SP program);
     
     struct PerDevice {
       typedef std::shared_ptr<PerDevice> SP;
 
       PerDevice(Context::PerDevice::SP context,
-                RayGenProg              *const self);
+                Module::PerDevice::SP  module,
+                RayGenProg      *const self);
       
       void create();
       void destroy();
 
-      RayGenProg           *const self;
+      RayGenProg         *const self;
       Context::PerDevice::SP    context;
+      Module::PerDevice::SP     module;
       OptixProgramGroupOptions  pgOptions = {};
       OptixProgramGroupDesc     pgDesc;
       OptixProgramGroup         pg;

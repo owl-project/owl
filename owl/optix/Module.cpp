@@ -53,7 +53,7 @@ namespace optix {
                                          &sizeof_log,
                                          &optixModule
                                          ));
-    if (sizeof_log > 0) PRINT(sizeof_log);
+    if (sizeof_log > 1) PRINT(log);
   }
 
   void Module::PerDevice::destroy()

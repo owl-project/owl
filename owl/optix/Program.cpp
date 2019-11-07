@@ -29,13 +29,49 @@ namespace optix {
     std::lock_guard<std::mutex> lock(context->mutex);
     for (size_t i=0;i<context->perDevice.size();i++)
       perDevice.push_back
-        (std::make_shared<PerDevice>(context->perDevice[i],this));
+        (std::make_shared<PerDevice>(context->perDevice[i],
+                                     program->module->perDevice[i],
+                                     this));
   }
 
   RayGenProg::PerDevice::PerDevice(Context::PerDevice::SP context,
-                                   RayGenProg           *const self)
+                                   Module::PerDevice::SP  module,
+                                   RayGenProg      *const self)
     : context(context),
+      module(module),
       self(self)
-  {}
+  {
+    // for now, create on creation (TODO: change to lazy compilation)
+    create();
+  }
+
+  void RayGenProg::PerDevice::create()
+  {
+    destroy();
+
+    pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
+    pgDesc.raygen.module            = module->optixModule;
+    std::string taggedProgramName   = "__raygen__"+self->program->programName;
+    pgDesc.raygen.entryFunctionName = taggedProgramName.c_str();
+
+    char log[2048];
+    size_t sizeof_log = sizeof( log );
+    OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
+                                        &pgDesc,1,
+                                        &pgOptions,
+                                        log,&sizeof_log,
+                                        &pg
+                                        ));
+    if (sizeof_log > 1) PRINT(log);
+  }
+  
+  void RayGenProg::PerDevice::destroy()
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (created) {
+      optixProgramGroupDestroy(pg);
+      created = false;
+    }
+  }
   
 }
