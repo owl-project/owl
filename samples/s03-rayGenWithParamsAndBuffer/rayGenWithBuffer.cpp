@@ -18,26 +18,39 @@
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
-
+#include 
 
 // use embedded ptx string.
 extern "C" const char ptxCode[];
 
 namespace owl_samples {
 
+  /* we'll compute an image of given size, with a gradient from top
+     to bottom using the given two colors */
+  optix::vec2i imageSize(800,600);
+  optix::vec3f topColor(0,1,0);
+  optix::vec3f bottomColor(0,0,1);
+  
   extern "C" int main(int ac, const char **av)
   {
-    optix::vec2i imageSize(800,600);
-    
     optix::Context::SP context
       = optix::Context::create();
     optix::Buffer::SP  buffer
-      = context->createHostPinnedBuffer(OPTIX_FORMAT_UINT32,imageSize);
+      = context->createHostPinnedBuffer2D(OPTIX_FORMAT_UINT32,imageSize);
     optix::Module::SP  module
       = context->createModuleFromString(ptxCode);
-
-    context->setEntryPoint(0,module,"rayGenWithBuffer");
-
+    
+    optix::RGProgram::SP rayGen
+      = context->createRayGenProgram(module,"rayGenWithBuffer",
+                                     sizeof(RayGenParams));
+    context->setEntryPoint(0,rayGen);
+    
+    rayGen->setParam2i(offsetof(RayGenParams,fbSize),imageSize);
+    rayGen->setParam3f(offsetof(RayGenParams,topColor),topColor);
+    rayGen->setParam3f(offsetof(RayGenParams,bottomColor),bottomColor);
+    rayGen->setParamBufferData(offsetof(RayGenParams,fbPointer),buffer);
+    rayGen->setParamBufferSize(offsetof(RayGenParams,fbSize),buffer);
+    
     context->launch(0,imageSize);
     const uint32_t *pixels = (const uint32_t*)buffer->map();
     stbi_write_png(fileName.c_str(),fbSize.x,fbSize.y,4,
