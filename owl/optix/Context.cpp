@@ -208,22 +208,18 @@ namespace optix {
                               ModuleSP module,
                               const std::string &programName)
   {
-    {
-      std::lock_guard<std::mutex> lock(mutex);
-      if (entryPointID >= entryPoints.size())
-        throw Error("Context::setEntryPoint",
-                    "invalid entry point ID"
-                    " - did you call Context::setNumEntryPoints()?");
-    }
-      
     Program::SP program
       = std::make_shared<Program>(module,programName);
     
-    RayGenProgSP rg
+    RayGenProg::SP rayGenProg
       = std::make_shared<RayGenProg>(this,program);
     
     std::lock_guard<std::mutex> lock(mutex);
-    entryPoints[entryPointID] = rg;
+    if (entryPointID >= entryPoints.size())
+      throw Error("Context::setEntryPoint",
+                  "invalid entry point ID"
+                  " - did you call Context::setNumEntryPoints()?");
+    entryPoints[entryPointID] = rayGenProg;
   }
   
 } // ::optix

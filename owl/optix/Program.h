@@ -39,6 +39,8 @@ namespace optix {
 
 
   struct RayGenProg {
+    typedef std::shared_ptr<RayGenProg> SP;
+    
     RayGenProg(Context *context,
              Program::SP program);
     
