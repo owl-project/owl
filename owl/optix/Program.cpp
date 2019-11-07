@@ -14,22 +14,28 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#pragma once
-
-#include "optix_device.h"
-#include "gdt/math/vec.h"
+#include "optix/Context.h"
+#include "optix/Module.h"
+#include "optix/Program.h"
 
 namespace optix {
-  using namespace gdt;
 
-  inline __device__ vec2i getLaunchIndex()
+  RayGenProg::RayGenProg(Context *context,
+                         Program::SP program)
+    : context(context),
+      program(program)
   {
-    return (vec2i)optixGetLaunchIndex();
+    assert(context);
+    std::lock_guard<std::mutex> lock(context->mutex);
+    for (size_t i=0;i<context->perDevice.size();i++)
+      perDevice.push_back
+        (std::make_shared<PerDevice>(context->perDevice[i],this));
   }
+
+  RayGenProg::PerDevice::PerDevice(Context::PerDevice::SP context,
+                                   RayGenProg           *const self)
+    : context(context),
+      self(self)
+  {}
+  
 }
-
-#define OPTIX_RAYGEN_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __raygen__##programName
-
-

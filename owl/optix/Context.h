@@ -31,6 +31,9 @@ namespace optix {
   struct Program;
   typedef std::shared_ptr<Program> ProgramSP;
 
+  struct RayGenProg;
+  typedef std::shared_ptr<RayGenProg> RayGenProgSP;
+  
   /*! the basic abstraction for all classes owned by a optix
       context */
   struct Object {
@@ -129,7 +132,7 @@ namespace optix {
     /*! create a new module object from given ptx string */
     ModuleSP  createModuleFromString(const std::string &ptxCode);
 
-    std::vector<ProgramSP> entryPoints;
+    std::vector<RayGenProgSP> entryPoints;
     
     /*! set raygen program name and module for given entry point */
     void setEntryPoint(size_t entryPointID,

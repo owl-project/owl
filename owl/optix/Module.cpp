@@ -33,7 +33,10 @@ namespace optix {
                                Module *self)
     : context(context),
       self(self)
-  {}
+  {
+    // for now, create on creation (TODO: change to lazy compilation)
+    create();
+  }
 
   void Module::PerDevice::create()
   {

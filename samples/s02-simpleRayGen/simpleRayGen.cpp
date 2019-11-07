@@ -16,15 +16,15 @@
 
 #include "optix/Optix.h"
 
+// use embedded ptx string.
+extern "C" const char ptxCode[];
+
 namespace owl_samples {
 
-  // use embedded ptx string.
-  extern "C" const char ptxCode[0];
-  
   extern "C" int main(int ac, const char **av)
   {
     optix::Context::SP context = optix::Context::create();
-
+    
     optix::Module::SP  module
       = context->createModuleFromString(ptxCode);
     

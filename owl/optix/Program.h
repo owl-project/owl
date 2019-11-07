@@ -36,6 +36,34 @@ namespace optix {
     Module::SP  const module;
     std::string const programName;
   };
+
+
+  struct RayGenProg {
+    RayGenProg(Context *context,
+             Program::SP program);
     
+    struct PerDevice {
+      typedef std::shared_ptr<PerDevice> SP;
+
+      PerDevice(Context::PerDevice::SP context,
+                RayGenProg              *const self);
+      
+      void create();
+      void destroy();
+
+      RayGenProg           *const self;
+      Context::PerDevice::SP    context;
+      OptixProgramGroupOptions  pgOptions = {};
+      OptixProgramGroupDesc     pgDesc;
+      OptixProgramGroup         pg;
+      std::mutex                mutex;
+      bool                      created = false;
+    };
+
+    Context             *const context;
+    Program::SP                program;
+    std::vector<PerDevice::SP> perDevice;
+  };
+  
 } // ::optix
 
