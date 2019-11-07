@@ -15,6 +15,8 @@
 // ======================================================================== //
 
 #include "optix/Context.h"
+#include "optix/Module.h"
+#include "optix/Program.h"
 #include <optix_function_table_definition.h>
 
 namespace optix {
@@ -118,6 +120,7 @@ namespace optix {
 
         Should never be called directly, only through Context::create() */
   Context::Context(const std::vector<uint32_t> &deviceIDs)
+    : entryPoints(1)    
   {
     Context::g_init();
 
@@ -187,6 +190,32 @@ namespace optix {
                          "(method="+std::to_string((int)whichGPUs)+")"
                          );
     }
+  }
+
+
+  /*! create a new module object from given ptx string */
+  ModuleSP  Context::createModuleFromString(const std::string &ptxCode)
+  {
+    // TODO: add some check here that checks if a module with that
+    // string was already created, and if so, emit a warning if in
+    // profile mode
+    return Module::create(this,ptxCode);
+  }
+    
+
+  /*! set raygen program name and module for given entry point */
+  void Context::setEntryPoint(size_t entryPointID,
+                              ModuleSP module,
+                              const std::string &programName)
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (entryPointID >= entryPoints.size())
+      throw Error("Context::setEntryPoint",
+                  "invalid entry point ID"
+                  " - did you call Context::setNumEntryPoints()?");
+
+    entryPoints[entryPointID]
+      = std::make_shared<Program>(module,programName);
   }
   
 } // ::optix

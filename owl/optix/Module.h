@@ -22,6 +22,23 @@ namespace optix {
 
   struct Module : public CommonBase {
     typedef std::shared_ptr<Module> SP;
+
+    /*! java-style pretty-printer, for debugging */
+    virtual std::string toString() override
+    { return "optix::Module"; }
+    
+  private:
+    friend class Context;
+    
+    static Module::SP create(Context *context,
+                      const std::string &ptxCode)
+    {
+      Module *module = new Module(context,ptxCode);
+      return Module::SP(module);
+    }
+    
+    Module(Context *context,
+           const std::string &ptxCode);
     
     struct PerDevice {
       typedef std::shared_ptr<PerDevice> SP;
@@ -43,21 +60,11 @@ namespace optix {
       Module          *const self;
     };
 
-    Module(Context::SP context,
-           const std::string &ptxCode);
-    
-    std::string ptxCode;
-    Context::WP context;
+    std::string const ptxCode;
+    Context    *const context;
+
     std::vector<PerDevice::SP> perDevice;
   };
   
-  struct Program : public CommonBase
-  {
-    typedef std::shared_ptr<Program> SP;
-    
-    Module::SP  module;
-    std::string programName;
-  };
-    
 } // ::optix
 

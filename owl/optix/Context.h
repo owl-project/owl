@@ -23,11 +23,14 @@ namespace optix {
   using gdt::vec2i;
   
   struct Context;
+  typedef std::shared_ptr<Context> ContextSP;
+
   struct Module;
+  typedef std::shared_ptr<Module> ModuleSP;
+
   struct Program;
   typedef std::shared_ptr<Program> ProgramSP;
-  
-  
+
   /*! the basic abstraction for all classes owned by a optix
       context */
   struct Object {
@@ -120,14 +123,18 @@ namespace optix {
         Should never be called directly, only through Context::create() */
     Context(const std::vector<uint32_t> &deviceIDs);
     
-    GeometryObject::SP createGeometryObject(GeometryType::SP type, size_t numPrims);
+    GeometryObject::SP createGeometryObject(GeometryType::SP type,
+                                            size_t numPrims);
 
-    ProgramSP createRayGenProgram(const std::string &ptxCode,
-                                  const std::string &programName)
-    { OWL_NOTIMPLEMENTED; }
+    /*! create a new module object from given ptx string */
+    ModuleSP  createModuleFromString(const std::string &ptxCode);
+
+    std::vector<ProgramSP> entryPoints;
     
-    void setEntryPoint(int entryPointID, ProgramSP program)
-    { OWL_NOTIMPLEMENTED; }
+    /*! set raygen program name and module for given entry point */
+    void setEntryPoint(size_t entryPointID,
+                       ModuleSP module,
+                       const std::string &programName);
 
     void launch(int entryPointID, const vec2i &size)
     { OWL_NOTIMPLEMENTED; }

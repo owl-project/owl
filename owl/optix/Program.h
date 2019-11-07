@@ -14,25 +14,28 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "optix/Optix.h"
+#pragma once
 
-namespace owl_samples {
+#include "optix/Module.h"
 
-  // use embedded ptx string.
-  extern "C" const char ptxCode[0];
-  
-  extern "C" int main(int ac, const char **av)
-  {
-    optix::Context::SP context = optix::Context::create();
+namespace optix {
 
-    optix::Module::SP  module
-      = context->createModuleFromString(ptxCode);
+  struct Program : public CommonBase {
+    typedef std::shared_ptr<Program> SP;
+
+    Program(Module::SP   module,
+            const std::string &programName)
+      : module(module),
+        programName(programName)
+    {}
+        
+    /*! java-style pretty-printer, for debugging */
+    virtual std::string toString() override
+    { return "optix::Program"; }
     
-    context->setEntryPoint(0,module,"simpleRayGen");
-
-    context->launch(0,optix::vec2i(1));
+    Module::SP  const module;
+    std::string const programName;
+  };
     
-    return 0;
-  }
-  
-}
+} // ::optix
+

@@ -19,8 +19,10 @@
 
 namespace optix {
 
-  Module::Module(Context::SP context,
+  Module::Module(Context *context,
                  const std::string &ptxCode)
+    : context(context),
+      ptxCode(ptxCode)
   {
     for (int i=0;i<context->perDevice.size();i++)
       perDevice.push_back
