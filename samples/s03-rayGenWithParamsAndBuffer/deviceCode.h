@@ -16,11 +16,11 @@
 
 #include "optix/device.h"
 
-struct RayGenParams {
-  uint32_t *fbPointer;
-  vec2i     fbSize;
-  vec3f     colorTop;
-  vec3f     colorBottom;
+struct OPTIX_PROGRAM_DATA RayGenParams {
+  uint32_t    *fbPointer;
+  optix::vec2i fbSize;
+  optix::vec3f topColor;
+  optix::vec3f bottomColor;
 };
 
 

@@ -16,3 +16,4 @@
 
 add_subdirectory(s01-hello)
 add_subdirectory(s02-simpleRayGen)
+add_subdirectory(s03-rayGenWithParamsAndBuffer)

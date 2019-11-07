@@ -18,8 +18,8 @@
 
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
-  const vec2i pixelID = optix::getLaunchIndex();
-  const vec2i fbSize  = optix::getLaunchDims();
+  const optix::vec2i pixelID = optix::getLaunchIndex();
+  const optix::vec2i fbSize  = optix::getLaunchDims();
   if (optix::any_greater_or_equal(pixelID,fbSize))
     return;
   const RayGenParams *const self
@@ -27,11 +27,11 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   const float blend
     = pixelID.y / float(fbSize.y-1.f);
 
-  const vec3f color
+  const optix::vec3f color
     = (1.f-blend)*self->topColor + blend*self->bottomColor;
-  const int pixelID
+  const int pixelIndex
     = pixelID.x+fbSize.x*pixelID.y;
-  self->fbPointer[pixelID]
-    = optix::makeRGBA8(color);
+  self->fbPointer[pixelIndex]
+    = optix::make_rgba8(color);
 }
 
