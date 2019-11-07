@@ -74,7 +74,7 @@ namespace optix {
   struct RayGenProgram {
     typedef std::shared_ptr<RayGenProgram> SP;
     
-    RayGenProgram(Context       *const context;
+    RayGenProgram(Context       *const context,
                   Module::SP           module,
                   const std::string   &programName,
                   size_t               paramSize)
