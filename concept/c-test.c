@@ -19,7 +19,7 @@ int main(int ac, char **av)
   owlTrianglesSetVertices(triangles,vertices);
   owlTrianglesSetIndices(triangles,indices);
   
-  OWLVariable context_world = owlContextGetVariable(context,"world");
+  OWLVariable context_world = owlTrianglesGetVariable(triangles,"world");
   owlBufferRelease(vertices);
   owlBufferRelease(indices);
   owlVariableRelease(context_world);

@@ -40,9 +40,6 @@ OWL_API void owlTrianglesSetIndices(OWLTriangles triangles,
 
 OWL_API OWLVariable owlTrianglesGetVariable(OWLTriangles triangles,
                                             const char *varName);
-OWL_API OWLVariable owlContextGetVariable(OWLContext context,
-                                          const char *varName);
-
 
 OWL_API void owlObjectRelease(OWLObject object);
 OWL_API void owlTrianglesRelease(OWLTriangles triangles);
