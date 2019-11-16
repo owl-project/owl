@@ -79,6 +79,11 @@ namespace owl {
     virtual ~APIHandle();
     template<typename T> inline std::shared_ptr<T> get();
     inline std::shared_ptr<Context> getContext() const { return context; }
+    inline bool isContext() const
+    {
+      // TODO: clean up with proper dynamic_cast ...
+      return ((void*)object.get() == (void*)context.get());
+    }
   private:
     std::shared_ptr<Object>     object;
     std::shared_ptr<Context>    context;
@@ -97,8 +102,6 @@ namespace owl {
     return asT;
   }
     
-
-  
   // struct APIHandle {
   //   virtual void clear() = 0;
   //   virtual ~APIHandle() {}
@@ -108,6 +111,10 @@ namespace owl {
     void track(APIHandle *object)
     {
       assert(object);
+      // if (object->isContext())
+      //   // contexts will NOT track themselves, else
+      //   // 'Context::releaseAll()' will destroy the context itself
+      //   return;
       auto it = active.find(object);
       assert(it == active.end());
       active.insert(object);
@@ -116,6 +123,10 @@ namespace owl {
     void forget(APIHandle *object)
     {
       assert(object);
+      // if (object->isContext())
+      //   // contexts will NOT track themselves, else
+      //   // 'Context::releaseAll()' will destroy the context itself
+      //   return;
       auto it = active.find(object);
       assert(it != active.end());
       active.erase(it);
@@ -149,7 +160,10 @@ namespace owl {
     
     void releaseAll()
     {
-      std::cout << "#owl: context is dying, num api handles not yet released: " << apiHandles.active.size() << std::endl;
+      PING;
+      std::cout << "#owl: context is dying, num api handles (other than context itself) that hvae not yet released: "
+                << (apiHandles.active.size()-1)
+                << std::endl;
       for (auto handle : apiHandles.active)
         delete handle;
     }
@@ -194,9 +208,10 @@ namespace owl {
   {
     PING;
     assert(_context);
-    Context *context = (Context *)_context;
+    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    // Context *context = (Context *)_context;
     context->releaseAll();
-    delete context;
+    // delete _context;
   }
 
   OWL_API OWLBuffer owlBufferCreate(OWLContext _context,
@@ -205,10 +220,12 @@ namespace owl {
                                     const void *init)
   {
     PING;
-    PRINT(_context);
+    assert(_context);
     Context::SP context = ((APIHandle *)_context)->get<Context>();
-    PING;
-    return (OWLBuffer)context->createHandle(context->createBuffer());
+    assert(context);
+    Buffer::SP  buffer  = context->createBuffer();
+    assert(buffer);
+    return (OWLBuffer)context->createHandle(buffer);
   }
 
   OWL_API OWLTriangles owlTrianglesCreate(OWLContext _context,
