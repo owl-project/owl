@@ -9,6 +9,12 @@ add_executable(c-test
 target_link_libraries(c-test
   impl
   )
+# add_executable(test2
+#   test2.c
+#   )
+# target_link_libraries(test2
+#   impl
+#   )
 
 
 

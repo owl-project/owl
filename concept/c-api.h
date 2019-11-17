@@ -19,13 +19,24 @@
 # define OWL_API /* bla */
 #endif
 
-typedef enum {
-  OWL_FLOAT3,
-  OWL_INT3,
-  OWL_BUFFER,
-  OWL_BUFFER_SIZE,
-  OWL_BUFFER_POINTER
-} OWLDataType;
+typedef enum
+  {
+   OWL_FLOAT3,
+   OWL_INT3,
+   OWL_BUFFER,
+   OWL_BUFFER_SIZE,
+   OWL_BUFFER_ID,
+   OWL_BUFFER_POINTER
+  }
+  OWLDataType;
+
+typedef enum
+  {
+   OWL_USER_GEOMETRY,
+   OWL_TRIANGLES
+  }
+  OWLGeometryType;
+              
 
 typedef struct _OWL_int3   { int32_t x,y,z; } OWL_int3;
 typedef struct _OWL_float3 { float   x,y,z; } OWL_float3;

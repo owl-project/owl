@@ -20,9 +20,10 @@ int main(int ac, char **av)
     { 0,1,2 }
   };
   float green[3] = { 0.f, 1.f, 0.f };
-  OWLBuffer    vertices = owlBufferCreate(context,OWL_FLOAT3,3,vertex);
-  OWLBuffer    indices  = owlBufferCreate(context,OWL_INT3,1,index);
+  OWLBuffer    vertices  = owlBufferCreate(context,OWL_FLOAT3,3,vertex);
+  OWLBuffer    indices   = owlBufferCreate(context,OWL_INT3,1,index);
   OWLTriangles triangles = owlTrianglesCreate(context,sizeof(struct TrianglesVars));
+  /* OWLTriangles triangles = owlTrianglesCreate(context,sizeof(struct TrianglesVars)); */
   owlTrianglesDeclareVariable(triangles,"vertex",OWL_BUFFER_POINTER,
                               OWL_OFFSETOF(TrianglesVars,vertex));
   owlTrianglesDeclareVariable(triangles,"index", OWL_BUFFER_POINTER,
