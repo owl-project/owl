@@ -80,9 +80,9 @@ extern char ptxCode[1];
 int main(int ac, char **av)
 {
   OWLContext  context  = owlContextCreate();
-  OWLBuffer   frameBuffer = owlBufferCreate(context,OWL_FLOAT3,3,NULL);
+  OWLBuffer   frameBuffer = owlContextCreateBuffer(context,OWL_FLOAT3,3,NULL);
 
-  OWLModule   module = owlContextCreateModule(ptxCode);
+  OWLModule   module = owlContextCreateModule(context,ptxCode);
   
   // ==================================================================
   // create base quad as triangles geometry
@@ -93,7 +93,9 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
 
   OWLGeometryType diffuseTrianglesType
-    = owlContextCreateGeometryType(context,OWL_TRIANGLES,sizeof(struct TrianglesVars));
+    = owlContextCreateGeometryType(context,
+                                   OWL_GEOMETRY_TRIANGLES,
+                                   sizeof(struct TrianglesVars));
   owlGeometryTypeDeclareVariable(diffuseTrianglesType,"vertex",OWL_BUFFER_POINTER,
                                  OWL_OFFSETOF(TrianglesVars,vertex));
   owlGeometryTypeDeclareVariable(diffuseTrianglesType,"index", OWL_BUFFER_POINTER,
@@ -112,12 +114,14 @@ int main(int ac, char **av)
   OWLGeometry quad = owlContextCreateGeometry(context,diffuseTrianglesType);
   
   // create and set vertex buffer
-  OWLBuffer   vertices  = owlBufferCreate(context,OWL_FLOAT3,4,quad_vertex);
+  OWLBuffer   vertices
+    = owlContextCreateBuffer(context,OWL_FLOAT3,4,quad_vertex);
   owlTrianglesSetVertices(quad,vertices);
   owlBufferRelease(vertices);
 
   // create and set index buffer
-  OWLBuffer   indices   = owlBufferCreate(context,OWL_INT3,2,quad_index);
+  OWLBuffer   indices
+    = owlContextCreateBuffer(context,OWL_INT3,2,quad_index);
   owlTrianglesSetIndices(quad,indices);
   owlBufferRelease(indices);
   
@@ -140,7 +144,9 @@ int main(int ac, char **av)
   // define type
   // ------------------------------------------------------------------
   OWLGeometryType diffuseSphereType
-    = owlContextCreateGeometryType(context,OWL_GEOMETRY_USER,sizeof(struct SphereVars));
+    = owlContextCreateGeometryType(context,
+                                   OWL_GEOMETRY_USER,
+                                   sizeof(struct SphereVars));
   owlGeometryTypeDeclareVariable(diffuseSphereType,"center",
                                  OWL_BUFFER_POINTER,
                                  OWL_OFFSETOF(SphereVars,center));

@@ -23,6 +23,11 @@
 namespace owl {
   using gdt::vec3f;
 
+#define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
+
+#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
+  
+  
 #define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
   
   struct Object : public std::enable_shared_from_this<Object> {
@@ -38,6 +43,20 @@ namespace owl {
     virtual void set(const vec3f &value) { wrongType(); }
   };
 
+  /*! captures the concept of a module that contains one or more
+    programs. */
+  struct Module : public Object {
+    typedef std::shared_ptr<Module> SP;
+
+    Module(const std::string &ptxCode)
+      : ptxCode(ptxCode)
+    {
+      std::cout << "#owl: created module ..." << std::endl;
+    }
+    
+    const std::string ptxCode;
+  };
+  
   template<typename T>
   struct VariableT : public Object {
     typedef std::shared_ptr<VariableT<T>> SP;
@@ -46,11 +65,11 @@ namespace owl {
     T value;
   };
   
-  struct SBTObject : public Object
+  struct SBTObjectType : public Object
   {
-    typedef std::shared_ptr<SBTObject> SP;
+    typedef std::shared_ptr<SBTObjectType> SP;
 
-    SBTObject(size_t varStructSize)
+    SBTObjectType(size_t varStructSize)
       : varStructSize(varStructSize)
     {}
     
@@ -64,12 +83,22 @@ namespace owl {
                          OWLDataType type,
                          size_t offset)
     {
-      PING;
       variables[varName] = std::make_shared<Variable>();
     }
     
-    size_t varStructSize;
+    const size_t varStructSize;
     std::map<std::string,Variable::SP> variables;
+  };
+
+  struct SBTObject : public Object
+  {
+    typedef std::shared_ptr<SBTObject> SP;
+
+    SBTObject(SBTObjectType::SP objectType)
+      : objectType(objectType)
+    {}
+
+    SBTObjectType::SP const objectType;
   };
 
   struct Buffer : public Object
@@ -77,12 +106,74 @@ namespace owl {
     typedef std::shared_ptr<Buffer> SP;
   };
 
-  struct Geometry : public SBTObject {
-    Geometry(size_t varStructSize) : SBTObject(varStructSize) {}
+  struct Geometry;
+  
+  struct GeometryType : public SBTObjectType {
+    typedef std::shared_ptr<GeometryType> SP;
     
-    typedef std::shared_ptr<Geometry> SP;
+    GeometryType(size_t varStructSize)
+      : SBTObjectType(varStructSize)
+    {}
+
+    virtual void setClosestHitProgram(int rayType,
+                                      Module::SP module,
+                                      const std::string &progName)
+    { IGNORING_THIS(); }
+
+    virtual std::shared_ptr<Geometry> createGeometry() = 0;
   };
 
+  struct TrianglesGeometryType : public GeometryType {
+    typedef std::shared_ptr<TrianglesGeometryType> SP;
+    
+    TrianglesGeometryType(size_t varStructSize)
+      : GeometryType(varStructSize)
+    {}
+
+    virtual std::shared_ptr<Geometry> createGeometry() override;
+  };
+
+  struct UserGeometryType : public GeometryType {
+    typedef std::shared_ptr<UserGeometryType> SP;
+    
+    UserGeometryType(size_t varStructSize)
+      : GeometryType(varStructSize)
+    {}
+
+    virtual std::shared_ptr<Geometry> createGeometry() override;
+  };
+
+  struct Geometry : public SBTObject {
+    typedef std::shared_ptr<Geometry> SP;
+
+    Geometry(GeometryType::SP geometryType)
+      : SBTObject(geometryType)
+    {}
+    
+    GeometryType::SP geometryType;
+  };
+
+  struct TrianglesGeometry : public Geometry {
+    typedef std::shared_ptr<TrianglesGeometry> SP;
+
+    TrianglesGeometry(GeometryType::SP geometryType)
+      : Geometry(geometryType)
+    {}
+
+    void setVertices(Buffer::SP vertices)
+    { IGNORING_THIS(); }
+    void setIndices(Buffer::SP indices)
+    { IGNORING_THIS(); }
+  };
+
+  struct UserGeometry : public Geometry {
+    typedef std::shared_ptr<UserGeometry> SP;
+
+    UserGeometry(GeometryType::SP geometryType)
+      : Geometry(geometryType)
+    {}
+  };
+  
   // struct Triangles : public SBTObject {
   //   Triangles(size_t varStructSize) : SBTObject(varStructSize) {}
     
@@ -122,24 +213,15 @@ namespace owl {
       throw std::runtime_error("could not convert APIHandle of type "
                                + std::string(typeid(*object.get()).name())
                                + " to object of type "
-                               + std::string(typeid(T()).name()));
+                               + std::string(typeid(T).name()));
     assert(asT);
     return asT;
   }
     
-  // struct APIHandle {
-  //   virtual void clear() = 0;
-  //   virtual ~APIHandle() {}
-  // };
-
   struct ApiHandles {
     void track(APIHandle *object)
     {
       assert(object);
-      // if (object->isContext())
-      //   // contexts will NOT track themselves, else
-      //   // 'Context::releaseAll()' will destroy the context itself
-      //   return;
       auto it = active.find(object);
       assert(it == active.end());
       active.insert(object);
@@ -148,10 +230,6 @@ namespace owl {
     void forget(APIHandle *object)
     {
       assert(object);
-      // if (object->isContext())
-      //   // contexts will NOT track themselves, else
-      //   // 'Context::releaseAll()' will destroy the context itself
-      //   return;
       auto it = active.find(object);
       assert(it != active.end());
       active.erase(it);
@@ -194,12 +272,14 @@ namespace owl {
     }
 
     Buffer::SP createBuffer();
+    GeometryType::SP createGeometryType(OWLGeometryKind kind,
+                                        size_t varStructSize);
+    Module::SP createModule(const std::string &ptxCode);
     // Triangles::SP createTriangles(size_t varsStructSize);
   };
 
   APIHandle::APIHandle(Object::SP object, Context *context)
   {
-    PING;
     assert(object);
     assert(context);
     this->object  = object;
@@ -211,7 +291,6 @@ namespace owl {
 
   APIHandle::~APIHandle()
   {
-    PING;
     context->apiHandles.forget(this);
     object  = nullptr;
     context = nullptr;
@@ -219,20 +298,17 @@ namespace owl {
   
   OWL_API OWLContext owlContextCreate()
   {
-    PING;
-#if 1
+    LOG_API_CALL();
     Context::SP context = std::make_shared<Context>();
+    std::cout << "#owl.api: context created..." << std::endl;
     return (OWLContext)context->createHandle(context);
-#else
-    Context *context = nullptr;
-    return (OWLContext)context;
-#endif
   }
 
   OWL_API void owlContextLaunch2D(OWLContext context,
                                   OWLLaunchProg launchProg,
                                   int dims_x, int dims_y)
   {
+    LOG_API_CALL();
     OWL_NOTIMPLEMENTED;
   }
 
@@ -241,6 +317,7 @@ namespace owl {
   owlGeometryGetVariable(OWLGeometry geom,
                          const char *varName)
   {
+    LOG_API_CALL();
     OWL_NOTIMPLEMENTED;
   }
 
@@ -248,39 +325,11 @@ namespace owl {
   owlLaunchProgGetVariable(OWLLaunchProg geom,
                            const char *varName)
   {
+    LOG_API_CALL();
     OWL_NOTIMPLEMENTED;
   }
   
-  OWL_API void
-  owlGeometryTypeDeclareVariable(OWLGeometryType object,
-                                 const char *varName,
-                                 OWLDataType type,
-                                 size_t offset)
-  {
-    OWL_NOTIMPLEMENTED;
-  }
 
-
-  OWL_API OWLModule owlContextCreateModule(const char *ptxCode)
-  {
-    OWL_NOTIMPLEMENTED;
-  }
-
-  OWL_API OWLGeometryType
-  owlContextCreateGeometryType(OWLContext context,
-                               OWLGeometryKind kind,
-                               size_t sizeOfVarStruct)
-  {
-    OWL_NOTIMPLEMENTED;
-  }
-
-
-  OWL_API OWLGeometry
-  owlContextCreateGeometry(OWLContext context,
-                           OWLGeometryType type)
-  {
-    OWL_NOTIMPLEMENTED;
-  }
 
   OWL_API OWLLaunchProg
   owlContextCreateLaunchProg(OWLContext context,
@@ -288,6 +337,7 @@ namespace owl {
                              const char *programName,
                              size_t sizeOfVarStruct)
   {
+    LOG_API_CALL();
     OWL_NOTIMPLEMENTED;
   }
 
@@ -296,6 +346,7 @@ namespace owl {
                                 size_t numGeometries,
                                 OWLGeometry *initValues)
   {
+    LOG_API_CALL();
     OWL_NOTIMPLEMENTED;
   }
 
@@ -303,6 +354,7 @@ namespace owl {
   owlContextCreateInstanceGroup(OWLContext context,
                                 size_t numInstances)
   {
+    LOG_API_CALL();
     OWL_NOTIMPLEMENTED;
   }
 
@@ -312,7 +364,7 @@ namespace owl {
 
   OWL_API void owlContextDestroy(OWLContext _context)
   {
-    PING;
+    LOG_API_CALL();
     assert(_context);
     Context::SP context = ((APIHandle *)_context)->get<Context>();
     // Context *context = (Context *)_context;
@@ -320,12 +372,13 @@ namespace owl {
     // delete _context;
   }
 
-  OWL_API OWLBuffer owlBufferCreate(OWLContext _context,
-                                    OWLDataType type,
-                                    int num,
-                                    const void *init)
+  OWL_API OWLBuffer
+  owlContextCreateBuffer(OWLContext _context,
+                         OWLDataType type,
+                         int num,
+                         const void *init)
   {
-    PING;
+    LOG_API_CALL();
     assert(_context);
     Context::SP context = ((APIHandle *)_context)->get<Context>();
     assert(context);
@@ -334,6 +387,60 @@ namespace owl {
     return (OWLBuffer)context->createHandle(buffer);
   }
 
+  OWL_API OWLGeometryType
+  owlContextCreateGeometryType(OWLContext _context,
+                               OWLGeometryKind kind,
+                               size_t varStructSize)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    assert(context);
+    GeometryType::SP geometryType
+      = context->createGeometryType(kind,varStructSize);
+    assert(geometryType);
+    return (OWLGeometryType)context->createHandle(geometryType);
+  }
+
+  OWL_API OWLGeometry
+  owlContextCreateGeometry(OWLContext      _context,
+                           OWLGeometryType _geometryType)
+  {
+    assert(_geometryType);
+    assert(_context);
+
+    Context::SP context
+      = ((APIHandle *)_context)->get<Context>();
+    assert(context);
+
+    GeometryType::SP geometryType
+      = ((APIHandle *)_geometryType)->get<GeometryType>();
+    assert(geometryType);
+
+    Geometry::SP geometry
+      = geometryType->createGeometry();
+    assert(geometry);
+
+    return (OWLGeometry)context->createHandle(geometry);
+  }
+
+  
+  OWL_API OWLModule owlContextCreateModule(OWLContext _context,
+                                           const char *ptxCode)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    assert(ptxCode);
+    
+    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    assert(context);
+    Module::SP  module  = context->createModule(ptxCode);
+    assert(module);
+    return (OWLModule)context->createHandle(module);
+  }
+
+
+  
   // OWL_API OWLTriangles owlTrianglesCreate(OWLContext _context,
   //                                         size_t varsStructSize)
   // {
@@ -355,10 +462,40 @@ namespace owl {
   {
     return std::make_shared<Buffer>();
   }
-  // Triangles::SP Context::createTriangles(size_t varsStructSize)
-  // {
-  //   return std::make_shared<Triangles>(varsStructSize);
-  // }
+
+  GeometryType::SP Context::createGeometryType(OWLGeometryKind kind,
+                                               size_t varStructSize)
+  {
+    switch(kind) {
+    case OWL_GEOMETRY_TRIANGLES:
+      return std::make_shared<TrianglesGeometryType>(varStructSize);
+    case OWL_GEOMETRY_USER:
+      return std::make_shared<UserGeometryType>(varStructSize);
+    default:
+      OWL_NOTIMPLEMENTED;
+    }
+  }
+
+  Module::SP Context::createModule(const std::string &ptxCode)
+  {
+    return std::make_shared<Module>(ptxCode);
+  }
+
+  std::shared_ptr<Geometry> UserGeometryType::createGeometry()
+  {
+    GeometryType::SP self
+      = std::dynamic_pointer_cast<GeometryType>(shared_from_this());
+    assert(self);
+    return std::make_shared<UserGeometry>(self);
+  }
+
+  std::shared_ptr<Geometry> TrianglesGeometryType::createGeometry()
+  {
+    GeometryType::SP self
+      = std::dynamic_pointer_cast<GeometryType>(shared_from_this());
+    assert(self);
+    return std::make_shared<TrianglesGeometry>(self);
+  }
   
 
   // ==================================================================
@@ -379,40 +516,65 @@ namespace owl {
   
 
   OWL_API void owlBufferRelease(OWLBuffer buffer)
-  { releaseObject<Buffer>((APIHandle*)buffer); }
+  {
+    LOG_API_CALL();
+    releaseObject<Buffer>((APIHandle*)buffer);
+  }
   
   OWL_API void owlVariableRelease(OWLVariable variable)
-  { releaseObject<Variable>((APIHandle*)variable); }
+  {
+    LOG_API_CALL();
+    releaseObject<Variable>((APIHandle*)variable);
+  }
   
   OWL_API void owlGeometryRelease(OWLGeometry geometry)
-  { releaseObject<Geometry>((APIHandle*)geometry); }
+  {
+    LOG_API_CALL();
+    releaseObject<Geometry>((APIHandle*)geometry);
+  }
 
   // ==================================================================
   // "Triangles" functions
   // ==================================================================
   OWL_API void
   owlTrianglesSetVertices(OWLGeometry  _triangles,
-                          OWLBuffer    _vertices)
+                          OWLBuffer    _buffer)
   {
-    OWL_NOTIMPLEMENTED;
+    LOG_API_CALL();
+    
+    assert(_triangles);
+    assert(_buffer);
+
+    TrianglesGeometry::SP triangles
+      = ((APIHandle *)_triangles)->get<TrianglesGeometry>();
+    assert(triangles);
+
+    Buffer::SP buffer
+      = ((APIHandle *)_buffer)->get<Buffer>();
+    assert(buffer);
+
+    triangles->setVertices(buffer);
   }
-  // {
-  //   Triangles::SP triangles = ((APIHandle *)_triangles)->get<Triangles>();
-  //   Buffer::SP    vertices   = ((APIHandle *)_vertices)->get<Buffer>();
-  //   triangles->vertices = vertices;
-  // }
 
   OWL_API void
   owlTrianglesSetIndices(OWLGeometry  _triangles,
-                         OWLBuffer    _indices)
+                         OWLBuffer    _buffer)
   {
-    OWL_NOTIMPLEMENTED;
+    LOG_API_CALL();
+    
+    assert(_triangles);
+    assert(_buffer);
+
+    TrianglesGeometry::SP triangles
+      = ((APIHandle *)_triangles)->get<TrianglesGeometry>();
+    assert(triangles);
+
+    Buffer::SP buffer
+      = ((APIHandle *)_buffer)->get<Buffer>();
+    assert(buffer);
+
+    triangles->setIndices(buffer);
   }
-  // {
-  //   Triangles::SP triangles = ((APIHandle *)_triangles)->get<Triangles>();
-  //   Buffer::SP    indices   = ((APIHandle *)_indices)->get<Buffer>();
-  //   triangles->indices = indices;
-  // }
 
   // ==================================================================
   // "GetVariable" functions, for each object type
@@ -450,6 +612,50 @@ namespace owl {
 
     object->declareVariable(varName,type,offset);
   }
+
+  OWL_API void
+  owlGeometryTypeDeclareVariable(OWLGeometryType object,
+                                 const char *varName,
+                                 OWLDataType type,
+                                 size_t offset)
+  {
+    LOG_API_CALL();
+    declareVariable<GeometryType>
+      ((APIHandle *)object,varName,type,offset);
+  }
+
+  // ==================================================================
+  // function pointer setters ....
+  // ==================================================================
+  OWL_API void
+  owlGeometryTypeSetClosestHitProgram(OWLGeometryType _geometryType,
+                                      int             rayType,
+                                      OWLModule       _module,
+                                      const char     *progName)
+  {
+    LOG_API_CALL();
+    
+    assert(_geometryType);
+    assert(_module);
+    assert(_progName);
+
+    GeometryType::SP geometryType
+      = ((APIHandle *)_geometryType)->get<GeometryType>();
+    assert(geometryType);
+
+    Module::SP module
+      = ((APIHandle *)_module)->get<Module>();
+    assert(module);
+
+    geometryType->setClosestHitProgram(rayType,module,progName);
+  }
+
+  
+
+
+
+
+
   
   // OWL_API void owlGeometryTypeDeclareVariable(OWLGeometryType object,
   //                                             const char  *varName,
@@ -463,6 +669,7 @@ namespace owl {
 
   OWL_API void owlVariableSet1f(OWLVariable _variable, const float value)
   {
+    LOG_API_CALL();
     assert(_variable);
     assert(value);
 
@@ -473,6 +680,7 @@ namespace owl {
 
   OWL_API void owlVariableSet3fv(OWLVariable _variable, const float *value)
   {
+    LOG_API_CALL();
     assert(_variable);
     assert(value);
 
@@ -489,15 +697,7 @@ namespace owl {
                            int whichChild,
                            OWLGeometryGroup geometry)
   {
-    OWL_NOTIMPLEMENTED;
-  }
-
-  OWL_API void
-  owlGeometryTypeSetClosestHitProgram(OWLGeometryType type,
-                                      int rayType,
-                                      OWLModule module,
-                                      const char *progName)
-  {
+    LOG_API_CALL();
     OWL_NOTIMPLEMENTED;
   }
 
