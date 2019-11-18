@@ -51,14 +51,11 @@ add_subdirectory(${gdt_dir} EXCLUDE_FROM_ALL)
 #configure_file(optix/config.h.in ${CMAKE_BINARY_DIR}/optix/optix_config.h)
 
 include_directories(${CMAKE_BINARY_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/owl/)
+#include_directories(${PROJECT_SOURCE_DIR}/owl/)
 #include_directories(${PROJECT_SOURCE_DIR}/optix/include/)
 
 # the actual back-end
-#add_subdirectory(owl/optix)
+add_subdirectory(owl/optix)
 
 # the front-end apps: viewer, tools, etc
-#add_subdirectory(samples)
-
-add_subdirectory(concept)
-
+add_subdirectory(samples)

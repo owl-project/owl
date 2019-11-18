@@ -1,4 +1,4 @@
-#include "c-api.h"
+#include "owl/owl.h"
 #include "optix/common.h"
 #include <set>
 #include <map>
