@@ -134,6 +134,19 @@ namespace owl {
     GeometryType::SP geometryType;
   };
 
+  struct Triangles : public Geometry {
+    typedef std::shared_ptr<Triangles> SP;
+
+    Triangles(GeometryType::SP geometryType)
+      : Geometry(geometryType)
+    {}
+
+    void setVertices(Buffer::SP vertices)
+    { IGNORING_THIS(); }
+    void setIndices(Buffer::SP indices)
+    { IGNORING_THIS(); }
+  };
+  
   // struct Triangles : public SBTObject {
   //   Triangles(size_t varStructSize) : SBTObject(varStructSize) {}
     
@@ -497,16 +510,23 @@ namespace owl {
   // ==================================================================
   OWL_API void
   owlTrianglesSetVertices(OWLGeometry  _triangles,
-                          OWLBuffer    _vertices)
+                          OWLBuffer    _buffer)
   {
     LOG_API_CALL();
-    OWL_NOTIMPLEMENTED;
+    
+    assert(_triangles);
+    assert(_buffer);
+
+    Triangles::SP triangles
+      = ((APIHandle *)_triangles)->get<Triangles>();
+    assert(triangles);
+
+    Buffer::SP buffer
+      = ((APIHandle *)_buffer)->get<Buffer>();
+    assert(buffer);
+
+    triangles->setVertices(buffer);
   }
-  // {
-  //   Triangles::SP triangles = ((APIHandle *)_triangles)->get<Triangles>();
-  //   Buffer::SP    vertices   = ((APIHandle *)_vertices)->get<Buffer>();
-  //   triangles->vertices = vertices;
-  // }
 
   OWL_API void
   owlTrianglesSetIndices(OWLGeometry  _triangles,
