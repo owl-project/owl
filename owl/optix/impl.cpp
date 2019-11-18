@@ -165,6 +165,14 @@ namespace owl {
     void setIndices(Buffer::SP indices)
     { IGNORING_THIS(); }
   };
+
+  struct UserGeometry : public Geometry {
+    typedef std::shared_ptr<UserGeometry> SP;
+
+    UserGeometry(GeometryType::SP geometryType)
+      : Geometry(geometryType)
+    {}
+  };
   
   // struct Triangles : public SBTObject {
   //   Triangles(size_t varStructSize) : SBTObject(varStructSize) {}
