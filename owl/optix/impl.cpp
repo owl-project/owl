@@ -107,6 +107,8 @@ namespace owl {
     typedef std::shared_ptr<Buffer> SP;
   };
 
+  struct Geometry;
+  
   struct GeometryType : public SBTObjectType {
     typedef std::shared_ptr<GeometryType> SP;
     
@@ -118,6 +120,8 @@ namespace owl {
                                       Module::SP module,
                                       const std::string &progName)
     { IGNORING_THIS(); }
+
+    virtual std::shared_ptr<Geometry> createObject();
   };
 
   struct Geometry : public SBTObject {
@@ -301,14 +305,6 @@ namespace owl {
   
 
 
-  OWL_API OWLGeometry
-  owlContextCreateGeometry(OWLContext context,
-                           OWLGeometryType type)
-  {
-    LOG_API_CALL();
-    OWL_NOTIMPLEMENTED;
-  }
-
   OWL_API OWLLaunchProg
   owlContextCreateLaunchProg(OWLContext context,
                              OWLModule module,
@@ -380,6 +376,28 @@ namespace owl {
     return (OWLGeometryType)context->createHandle(geometryType);
   }
 
+  OWL_API OWLGeometry
+  owlContextCreateGeometry(OWLContext      _context,
+                           OWLGeometryType _geometryType)
+  {
+    assert(_geometryType);
+    assert(_context);
+
+    Context::SP context
+      = ((APIHandle *)_context)->get<Context>();
+    assert(context);
+
+    GeometryType::SP geometryType
+      = ((APIHandle *)_geometryType)->get<GeometryType>();
+    assert(geometryType);
+
+    Geometry::SP geometry
+      = geometryType->createObject();
+    assert(geometry);
+
+    return (OWLGeometry)context->createHandle(geometry);
+  }
+
   
   OWL_API OWLModule owlContextCreateModule(OWLContext _context,
                                            const char *ptxCode)
@@ -429,9 +447,15 @@ namespace owl {
   {
     return std::make_shared<Module>(ptxCode);
   }
+
+  std::shared_ptr<Geometry> GeometryType::createObject()
+  {
+    GeometryType::SP self
+      = std::dynamic_pointer_cast<GeometryType>(shared_from_this());
+    assert(self);
+    return std::make_shared<Geometry>(self);
+  }
   
-
-
 
   // ==================================================================
   // "RELEASE" functions
@@ -555,6 +579,7 @@ namespace owl {
                                       const char     *progName)
   {
     LOG_API_CALL();
+    
     assert(_geometryType);
     assert(_module);
     assert(_progName);
