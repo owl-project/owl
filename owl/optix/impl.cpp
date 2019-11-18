@@ -23,6 +23,9 @@
 namespace owl {
   using gdt::vec3f;
 
+#define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
+  
+  
 #define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
   
   struct Object : public std::enable_shared_from_this<Object> {
@@ -38,6 +41,20 @@ namespace owl {
     virtual void set(const vec3f &value) { wrongType(); }
   };
 
+  /*! captures the concept of a module that contains one or more
+      programs. */
+  struct Module : public Object {
+    typedef std::shared_ptr<Module> SP;
+
+    Module(const std::string &ptxCode)
+      : ptxCode(ptxCode)
+    {
+      std::cout << "#owl: created module ..." << std::endl;
+    }
+    
+    const std::string ptxCode;
+  };
+  
   template<typename T>
   struct VariableT : public Object {
     typedef std::shared_ptr<VariableT<T>> SP;
@@ -194,12 +211,12 @@ namespace owl {
     }
 
     Buffer::SP createBuffer();
+    Module::SP createModule(const std::string &ptxCode);
     // Triangles::SP createTriangles(size_t varsStructSize);
   };
 
   APIHandle::APIHandle(Object::SP object, Context *context)
   {
-    PING;
     assert(object);
     assert(context);
     this->object  = object;
@@ -219,14 +236,10 @@ namespace owl {
   
   OWL_API OWLContext owlContextCreate()
   {
-    PING;
-#if 1
+    LOG_API_CALL();
     Context::SP context = std::make_shared<Context>();
+    std::cout << "#owl.api: context created..." << std::endl;
     return (OWLContext)context->createHandle(context);
-#else
-    Context *context = nullptr;
-    return (OWLContext)context;
-#endif
   }
 
   OWL_API void owlContextLaunch2D(OWLContext context,
@@ -260,11 +273,6 @@ namespace owl {
     OWL_NOTIMPLEMENTED;
   }
 
-
-  OWL_API OWLModule owlContextCreateModule(const char *ptxCode)
-  {
-    OWL_NOTIMPLEMENTED;
-  }
 
   OWL_API OWLGeometryType
   owlContextCreateGeometryType(OWLContext context,
@@ -312,7 +320,7 @@ namespace owl {
 
   OWL_API void owlContextDestroy(OWLContext _context)
   {
-    PING;
+    LOG_API_CALL();
     assert(_context);
     Context::SP context = ((APIHandle *)_context)->get<Context>();
     // Context *context = (Context *)_context;
@@ -320,12 +328,13 @@ namespace owl {
     // delete _context;
   }
 
-  OWL_API OWLBuffer owlBufferCreate(OWLContext _context,
-                                    OWLDataType type,
-                                    int num,
-                                    const void *init)
+  OWL_API OWLBuffer
+  owlContextCreateBuffer(OWLContext _context,
+                         OWLDataType type,
+                         int num,
+                         const void *init)
   {
-    PING;
+    LOG_API_CALL();
     assert(_context);
     Context::SP context = ((APIHandle *)_context)->get<Context>();
     assert(context);
@@ -334,6 +343,22 @@ namespace owl {
     return (OWLBuffer)context->createHandle(buffer);
   }
 
+  OWL_API OWLModule owlContextCreateModule(OWLContext _context,
+                                           const char *ptxCode)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    assert(ptxCode);
+    
+    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    assert(context);
+    Module::SP  module  = context->createModule(ptxCode);
+    assert(module);
+    return (OWLModule)context->createHandle(module);
+  }
+
+
+  
   // OWL_API OWLTriangles owlTrianglesCreate(OWLContext _context,
   //                                         size_t varsStructSize)
   // {
@@ -355,10 +380,11 @@ namespace owl {
   {
     return std::make_shared<Buffer>();
   }
-  // Triangles::SP Context::createTriangles(size_t varsStructSize)
-  // {
-  //   return std::make_shared<Triangles>(varsStructSize);
-  // }
+
+  Module::SP Context::createModule(const std::string &ptxCode)
+  {
+    return std::make_shared<Module>(ptxCode);
+  }
   
 
   // ==================================================================

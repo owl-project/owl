@@ -78,7 +78,8 @@ OWL_API void
 owlContextDestroy(OWLContext context);
 
 OWL_API OWLModule
-owlContextCreateModule(const char *ptxCode);
+owlContextCreateModule(OWLContext context,
+                       const char *ptxCode);
 
 OWL_API OWLGeometry
 owlContextCreateGeometry(OWLContext context,
@@ -105,10 +106,10 @@ owlContextCreateGeometryType(OWLContext context,
                              size_t sizeOfVarStruct);
 
 OWL_API OWLBuffer
-owlBufferCreate(OWLContext context,
-                OWLDataType type,
-                int num,
-                const void *init);
+owlContextCreateBuffer(OWLContext context,
+                       OWLDataType type,
+                       int num,
+                       const void *init);
 
 /*! executes an optix lauch of given size, with given launch
     program. Note this call is asynchronous, and may _not_ be
