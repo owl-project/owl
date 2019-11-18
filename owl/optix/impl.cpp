@@ -1,3 +1,19 @@
+// ======================================================================== //
+// Copyright 2019 Ingo Wald                                                 //
+//                                                                          //
+// Licensed under the Apache License, Version 2.0 (the "License");          //
+// you may not use this file except in compliance with the License.         //
+// You may obtain a copy of the License at                                  //
+//                                                                          //
+//     http://www.apache.org/licenses/LICENSE-2.0                           //
+//                                                                          //
+// Unless required by applicable law or agreed to in writing, software      //
+// distributed under the License is distributed on an "AS IS" BASIS,        //
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. //
+// See the License for the specific language governing permissions and      //
+// limitations under the License.                                           //
+// ======================================================================== //
+
 #include "owl/owl.h"
 #include "optix/common.h"
 #include <set>
@@ -6,6 +22,8 @@
 
 namespace owl {
   using gdt::vec3f;
+
+#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
   
   struct Object : public std::enable_shared_from_this<Object> {
     typedef std::shared_ptr<Object> SP;
@@ -16,6 +34,7 @@ namespace owl {
     typedef std::shared_ptr<Variable> SP;
     void wrongType() { PING; }
     
+    virtual void set(const float  value) { wrongType(); }
     virtual void set(const vec3f &value) { wrongType(); }
   };
 
@@ -210,6 +229,87 @@ namespace owl {
 #endif
   }
 
+  OWL_API void owlContextLaunch2D(OWLContext context,
+                                  OWLLaunchProg launchProg,
+                                  int dims_x, int dims_y)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+
+  OWL_API OWLVariable
+  owlGeometryGetVariable(OWLGeometry geom,
+                         const char *varName)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+  OWL_API OWLVariable
+  owlLaunchProgGetVariable(OWLLaunchProg geom,
+                           const char *varName)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+  
+  OWL_API void
+  owlGeometryTypeDeclareVariable(OWLGeometryType object,
+                                 const char *varName,
+                                 OWLDataType type,
+                                 size_t offset)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+
+  OWL_API OWLModule owlContextCreateModule(const char *ptxCode)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+  OWL_API OWLGeometryType
+  owlContextCreateGeometryType(OWLContext context,
+                               OWLGeometryKind kind,
+                               size_t sizeOfVarStruct)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+
+  OWL_API OWLGeometry
+  owlContextCreateGeometry(OWLContext context,
+                           OWLGeometryType type)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+  OWL_API OWLLaunchProg
+  owlContextCreateLaunchProg(OWLContext context,
+                             OWLModule module,
+                             const char *programName,
+                             size_t sizeOfVarStruct)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+  OWL_API OWLGeometryGroup
+  owlContextCreateGeometryGroup(OWLContext context,
+                                size_t numGeometries,
+                                OWLGeometry *initValues)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+  OWL_API OWLInstanceGroup
+  owlContextCreateInstanceGroup(OWLContext context,
+                                size_t numInstances)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+
+
+  
+
   OWL_API void owlContextDestroy(OWLContext _context)
   {
     PING;
@@ -287,19 +387,27 @@ namespace owl {
   OWL_API void owlGeometryRelease(OWLGeometry geometry)
   { releaseObject<Geometry>((APIHandle*)geometry); }
 
-  // // ==================================================================
-  // // "Triangles" functions
-  // // ==================================================================
-  // OWL_API void owlTrianglesSetVertices(OWLTriangles _triangles,
-  //                                     OWLBuffer    _vertices)
+  // ==================================================================
+  // "Triangles" functions
+  // ==================================================================
+  OWL_API void
+  owlTrianglesSetVertices(OWLGeometry  _triangles,
+                          OWLBuffer    _vertices)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
   // {
   //   Triangles::SP triangles = ((APIHandle *)_triangles)->get<Triangles>();
   //   Buffer::SP    vertices   = ((APIHandle *)_vertices)->get<Buffer>();
   //   triangles->vertices = vertices;
   // }
 
-  // OWL_API void owlTrianglesSetIndices(OWLTriangles _triangles,
-  //                                     OWLBuffer    _indices)
+  OWL_API void
+  owlTrianglesSetIndices(OWLGeometry  _triangles,
+                         OWLBuffer    _indices)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
   // {
   //   Triangles::SP triangles = ((APIHandle *)_triangles)->get<Triangles>();
   //   Buffer::SP    indices   = ((APIHandle *)_indices)->get<Buffer>();
@@ -353,6 +461,16 @@ namespace owl {
   // "VariableSet" functions, for each element type
   // ==================================================================
 
+  OWL_API void owlVariableSet1f(OWLVariable _variable, const float value)
+  {
+    assert(_variable);
+    assert(value);
+
+    Variable::SP variable = ((APIHandle *)_variable)->get<Variable>();
+    assert(variable);
+    variable->set(value);
+  }
+
   OWL_API void owlVariableSet3fv(OWLVariable _variable, const float *value)
   {
     assert(_variable);
@@ -363,4 +481,24 @@ namespace owl {
     variable->set(*(const vec3f*)value);
   }
   
+  // -------------------------------------------------------
+  // group/hierarchy creation and setting
+  // -------------------------------------------------------
+  OWL_API void
+  owlInstanceGroupSetChild(OWLInstanceGroup group,
+                           int whichChild,
+                           OWLGeometryGroup geometry)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+  OWL_API void
+  owlGeometryTypeSetClosestHitProgram(OWLGeometryType type,
+                                      int rayType,
+                                      OWLModule module,
+                                      const char *progName)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
 }

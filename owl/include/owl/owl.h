@@ -38,6 +38,7 @@ typedef enum
   }
   OWLGeometryKind;
 
+#define OWL_ALL_RAY_TYPES -1
 
 
 typedef float OWL_float;
@@ -68,7 +69,7 @@ typedef struct _OWLGeometryGroup *OWLGeometryGroup;
 typedef struct _OWLInstanceGroup *OWLInstanceGroup;
 typedef struct _OWLLaunchProg    *OWLLaunchProg;
 
-typedef OWLGeometry OWLTriangles;
+// typedef OWLGeometry OWLTriangles;
 
 OWL_API OWLContext
 owlContextCreate();
@@ -119,37 +120,58 @@ owlContextLaunch2D(OWLContext context,
 
 // OWL_API OWLTriangles owlTrianglesCreate(OWLContext context,
 //                                         size_t varsStructSize);
-OWL_API void owlTrianglesSetVertices(OWLTriangles triangles,
+
+// ==================================================================
+// "Triangles" functions
+// ==================================================================
+OWL_API void owlTrianglesSetVertices(OWLGeometry triangles,
                                      OWLBuffer vertices);
-OWL_API void owlTrianglesSetIndices(OWLTriangles triangles,
-                                     OWLBuffer indices);
+OWL_API void owlTrianglesSetIndices(OWLGeometry triangles,
+                                    OWLBuffer indices);
 
-OWL_API void owlGeometryTypeDeclareVariable(OWLGeometryType object,
-                                         const char *varName,
-                                         OWLDataType type,
-                                         size_t offset);
-OWL_API OWLVariable owlGeometryGetVariable(OWLGeometry geom,
-                                           const char *varName);
-OWL_API OWLVariable owlLaunchProgGetVariable(OWLLaunchProg geom,
-                                             const char *varName);
+OWL_API void
+owlGeometryTypeDeclareVariable(OWLGeometryType object,
+                               const char *varName,
+                               OWLDataType type,
+                               size_t offset);
 
+
+// -------------------------------------------------------
+// group/hierarchy creation and setting
+// -------------------------------------------------------
+OWL_API void
+owlInstanceGroupSetChild(OWLInstanceGroup group,
+                         int whichChild,
+                         OWLGeometryGroup geometry);
+
+OWL_API void
+owlGeometryTypeSetClosestHitProgram(OWLGeometryType type,
+                                    int rayType,
+                                    OWLModule module,
+                                    const char *progName);
+
+
+// -------------------------------------------------------
+// Release for the various types
+// -------------------------------------------------------
 OWL_API void owlGeometryRelease(OWLGeometry geometry);
 OWL_API void owlVariableRelease(OWLVariable variable);
 OWL_API void owlBufferRelease(OWLBuffer buffer);
 
-OWL_API void owlInstanceGroupSetChild(OWLInstanceGroup group,
-                                      int whichChild,
-                                      OWLGeometryGroup geometry);
+// -------------------------------------------------------
+// VariableGet for the various types
+// -------------------------------------------------------
+OWL_API OWLVariable
+owlGeometryGetVariable(OWLGeometry geom,
+                       const char *varName);
 
-OWL_API void owlGeometryTypeSetClosestHitProgram(OWLGeometryType type,
-                                                 int rayType,
-                                                 OWLModule module,
-                                                 const char *progName);
+OWL_API OWLVariable
+owlLaunchProgGetVariable(OWLLaunchProg geom,
+                         const char *varName);
 
 // -------------------------------------------------------
-// variable setters
+// VariableSet for different variable types
 // -------------------------------------------------------
 OWL_API void owlVariableSet1f(OWLVariable variable, const float value);
 OWL_API void owlVariableSet3fv(OWLVariable variable, const float *value);
 
-#define OWL_ALL_RAY_TYPES -1
