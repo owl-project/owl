@@ -14,10 +14,16 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+include_directories(${PROJECT_SOURCE_DIR}/owl)
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-add_executable(c-test
-  c-test.c
+add_library(owl
+  impl.cpp
   )
-target_link_libraries(c-test
-  owl
+target_link_libraries(owl
+  tbb
   )
+
+
+
+
+
