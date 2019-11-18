@@ -25,7 +25,7 @@ namespace owl {
 
 #define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
 
-#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << "(...)" << std::endl;
+#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
   
   
 #define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
@@ -218,19 +218,10 @@ namespace owl {
     return asT;
   }
     
-  // struct APIHandle {
-  //   virtual void clear() = 0;
-  //   virtual ~APIHandle() {}
-  // };
-
   struct ApiHandles {
     void track(APIHandle *object)
     {
       assert(object);
-      // if (object->isContext())
-      //   // contexts will NOT track themselves, else
-      //   // 'Context::releaseAll()' will destroy the context itself
-      //   return;
       auto it = active.find(object);
       assert(it == active.end());
       active.insert(object);
@@ -239,10 +230,6 @@ namespace owl {
     void forget(APIHandle *object)
     {
       assert(object);
-      // if (object->isContext())
-      //   // contexts will NOT track themselves, else
-      //   // 'Context::releaseAll()' will destroy the context itself
-      //   return;
       auto it = active.find(object);
       assert(it != active.end());
       active.erase(it);
@@ -304,7 +291,6 @@ namespace owl {
 
   APIHandle::~APIHandle()
   {
-    PING;
     context->apiHandles.forget(this);
     object  = nullptr;
     context = nullptr;
