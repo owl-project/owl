@@ -58,48 +58,65 @@ typedef OptixTraversableHandle OWLDeviceTraversable;
 typedef struct _OWLDeviceBuffer2D { void *d_pointer; OWL_int2 dims; } OWLDeviceBuffer2D;
 
 
-#ifdef __cplusplus
-typedef struct _OWLObject {}   *OWLObject;
-typedef struct _OWLContext   : public _OWLObject {} *OWLContext;
-typedef struct _OWLBuffer    : public _OWLObject {} *OWLBuffer;
-typedef struct _OWLVariable  : public _OWLObject {} *OWLVariable;
-typedef struct _OWLModule    : public _OWLObject {} *OWLModule;
-typedef struct _OWLGeometryGroup : public _OWLObject {} *OWLGeometryGroup;
-typedef struct _OWLInstanceGroup : public _OWLObject {} *OWLInstanceGroup;
-typedef struct _OWLGeometry    : public _OWLObject {} *OWLGeometry;
-typedef struct _OWLGeometryType    : public _OWLObject {} *OWLGeometryType;
-#else
-typedef struct _OWLObject    *OWLObject;
-typedef struct _OWLContext   *OWLContext;
-typedef struct _OWLBuffer    *OWLBuffer;
-typedef struct _OWLGeometry    *OWLGeometry;
-typedef struct _OWLGeometryType    *OWLGeometryType;
-typedef struct _OWLVariable  *OWLVariable;
-typedef struct _OWLModule    *OWLModule;
-typedef struct _OWLGeometryGroup    *OWLGeometryGroup;
-typedef struct _OWLInstanceGroup    *OWLInstanceGroup;
-#endif
+typedef struct _OWLContext       *OWLContext;
+typedef struct _OWLBuffer        *OWLBuffer;
+typedef struct _OWLGeometry      *OWLGeometry;
+typedef struct _OWLGeometryType  *OWLGeometryType;
+typedef struct _OWLVariable      *OWLVariable;
+typedef struct _OWLModule        *OWLModule;
+typedef struct _OWLGeometryGroup *OWLGeometryGroup;
+typedef struct _OWLInstanceGroup *OWLInstanceGroup;
+typedef struct _OWLLaunchProg    *OWLLaunchProg;
 
 typedef OWLGeometry OWLTriangles;
 
-OWL_API OWLContext owlContextCreate();
-OWL_API void owlContextDestroy(OWLContext context);
-OWL_API OWLModule  owlContextCreateModule(const char *ptxCode);
-OWL_API OWLGeometry  owlContextCreateGeometry(OWLContext context,
-                                              OWLGeometryType type);
-OWL_API OWLGeometryGroup  owlContextCreateGeometryGroup(OWLContext context,
-                                                        size_t numGeometries,
-                                                        OWLGeometry *initValues);
-OWL_API OWLInstanceGroup  owlContextCreateInstanceGroup(OWLContext context,
-                                                        size_t numInstances);
+OWL_API OWLContext
+owlContextCreate();
 
-OWL_API OWLGeometryType owlContextCreateGeometryType(OWLContext context,
-                                                     OWLGeometryKind kind,
-                                                     size_t sizeOfArgs);
-OWL_API OWLBuffer owlBufferCreate(OWLContext context,
-                                  OWLDataType type,
-                                  int num,
-                                  const void *init);
+OWL_API void
+owlContextDestroy(OWLContext context);
+
+OWL_API OWLModule
+owlContextCreateModule(const char *ptxCode);
+
+OWL_API OWLGeometry
+owlContextCreateGeometry(OWLContext context,
+                         OWLGeometryType type);
+
+OWL_API OWLLaunchProg
+owlContextCreateLaunchProg(OWLContext context,
+                           OWLModule module,
+                           const char *programName,
+                           size_t sizeOfVarStruct);
+
+OWL_API OWLGeometryGroup
+owlContextCreateGeometryGroup(OWLContext context,
+                              size_t numGeometries,
+                              OWLGeometry *initValues);
+
+OWL_API OWLInstanceGroup
+owlContextCreateInstanceGroup(OWLContext context,
+                              size_t numInstances);
+
+OWL_API OWLGeometryType
+owlContextCreateGeometryType(OWLContext context,
+                             OWLGeometryKind kind,
+                             size_t sizeOfVarStruct);
+
+OWL_API OWLBuffer
+owlBufferCreate(OWLContext context,
+                OWLDataType type,
+                int num,
+                const void *init);
+
+/*! executes an optix lauch of given size, with given launch
+    program. Note this call is asynchronous, and may _not_ be
+    completed by the time this function returns. */
+OWL_API void
+owlContextLaunch2D(OWLContext context,
+                   OWLLaunchProg launchProg,
+                   int dims_x, int dims_y);
+
 // OWL_API OWLTriangles owlTrianglesCreate(OWLContext context,
 //                                         size_t varsStructSize);
 OWL_API void owlTrianglesSetVertices(OWLTriangles triangles,
@@ -113,12 +130,16 @@ OWL_API void owlGeometryTypeDeclareVariable(OWLGeometryType object,
                                          size_t offset);
 OWL_API OWLVariable owlGeometryGetVariable(OWLGeometry geom,
                                            const char *varName);
+OWL_API OWLVariable owlLaunchProgGetVariable(OWLLaunchProg geom,
+                                             const char *varName);
 
-OWL_API void owlObjectRelease(OWLObject object);
-OWL_API void owlTrianglesRelease(OWLTriangles triangles);
+OWL_API void owlGeometryRelease(OWLGeometry geometry);
 OWL_API void owlVariableRelease(OWLVariable variable);
 OWL_API void owlBufferRelease(OWLBuffer buffer);
 
+OWL_API void owlInstanceGroupSetChild(OWLInstanceGroup group,
+                                      int whichChild,
+                                      OWLGeometryGroup geometry);
 
 OWL_API void owlGeometryTypeSetClosestHitProgram(OWLGeometryType type,
                                                  int rayType,

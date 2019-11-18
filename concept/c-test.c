@@ -59,7 +59,7 @@ OWL_float3 camera_from = {-4.f, 3.f,-2.f };
 
 
 
-extern "C" char ptxCode[1];
+extern char ptxCode[1];
 
 int main(int ac, char **av)
 {
@@ -114,6 +114,7 @@ int main(int ac, char **av)
   // ... and put into a trace-able group
   // ------------------------------------------------------------------
   OWLGeometryGroup quadGroup = owlContextCreateGeometryGroup(context,1,&quad);
+  owlGeometryRelease(quad);
 
   // ==================================================================
   // create and set sphere
@@ -124,9 +125,11 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   OWLGeometryType diffuseSphereType
     = owlContextCreateGeometryType(context,OWL_GEOMETRY_USER,sizeof(struct SphereVars));
-  owlGeometryTypeDeclareVariable(diffuseSphereType,"center",OWL_BUFFER_POINTER,
+  owlGeometryTypeDeclareVariable(diffuseSphereType,"center",
+                                 OWL_BUFFER_POINTER,
                                  OWL_OFFSETOF(SphereVars,center));
-  owlGeometryTypeDeclareVariable(diffuseSphereType,"radius", OWL_BUFFER_POINTER,
+  owlGeometryTypeDeclareVariable(diffuseSphereType,"radius",
+                                 OWL_BUFFER_POINTER,
                                  OWL_OFFSETOF(SphereVars,radius));
   owlGeometryTypeDeclareVariable(diffuseSphereType,"color",OWL_FLOAT3,
                                  OWL_OFFSETOF(SphereVars,color));
@@ -140,32 +143,39 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   
   // create actual sphere geometry
-  OWLGeometry sphere = owlContextCreateGeometry(context,diffuseSphereType);
+  OWLGeometry sphere
+    = owlContextCreateGeometry(context,diffuseSphereType);
   
   // create and set color
-  OWLVariable sphereColor = owlGeometryGetVariable(sphere,"color");
+  OWLVariable sphereColor
+    = owlGeometryGetVariable(sphere,"color");
   owlVariableSet3fv(sphereColor,&sphere_color.x);
   owlVariableRelease(sphereColor);
 
   // create and set center
-  OWLVariable sphereCenter = owlGeometryGetVariable(sphere,"center");
+  OWLVariable sphereCenter
+    = owlGeometryGetVariable(sphere,"center");
   owlVariableSet3fv(sphereCenter,&sphere_center.x);
   owlVariableRelease(sphereCenter);
   
   // create and set radius
-  OWLVariable sphereRadius = owlGeometryGetVariable(sphere,"radius");
+  OWLVariable sphereRadius
+    = owlGeometryGetVariable(sphere,"radius");
   owlVariableSet1f(sphereRadius,sphere_radius);
   owlVariableRelease(sphereRadius);
 
   // ------------------------------------------------------------------
   // ... and put into a trace-able group
   // ------------------------------------------------------------------
-  OWLGeometryGroup sphereGroup = owlContextCreateGeometryGroup(context,1,&sphere);
+  OWLGeometryGroup sphereGroup
+    = owlContextCreateGeometryGroup(context,1,&sphere);
+  owlGeometryRelease(sphere);
   
   // ==================================================================
   // create toplevel groupt hat contains both ...
   // ==================================================================
-  OWLInstanceGroup worldGroup = owlContextCreateInstanceGroup(context,2);
+  OWLInstanceGroup worldGroup
+    = owlContextCreateInstanceGroup(context,2);
   owlInstanceGroupSetChild(worldGroup,0,sphereGroup);
   owlInstanceGroupSetChild(worldGroup,1,quadGroup);
                         
@@ -179,16 +189,16 @@ int main(int ac, char **av)
                                  /* size of variables struct */
                                  sizeof(RenderFrameVars));
 
-  OWLVariable bgColor = owlLaunchProgGetVariable(renderFrame,"bgColor");
-  owlVariableSet3fv(bgColor,image_bgColor);
+  OWLVariable bgColor
+    = owlLaunchProgGetVariable(renderFrame,"bgColor");
+  owlVariableSet3fv(bgColor,&image_bgColor.x);
   owlVariableRelease(bgColor);
   
   // ==================================================================
   // launch renderframe program
   // ==================================================================
-  owlContextLaunch2D(context,renderFrame,imgSize[0],imgSize[1]);
+  owlContextLaunch2D(context,renderFrame,image_fbSize.x,image_fbSize.y);
   
-  owlGeometryRelease(triangles);
   owlContextDestroy(context);
 }
 
