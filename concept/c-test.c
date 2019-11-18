@@ -8,6 +8,16 @@ struct TrianglesVars {
   OWL_float3  color;
 };
 
+struct RenderFrameArgs {
+  OWLDeviceTraversable world;
+  OWLDeviceBuffer2D    frameBuffer;
+  OWL_float3 camera_org;
+  OWL_float3 camera_dir_00;
+  OWL_float3 camera_dir_dx;
+  OWL_float3 camera_dir_dy;
+  OWL_float3 bgColor;
+};
+
 int main(int ac, char **av)
 {
   OWLContext  context  = owlContextCreate();
@@ -19,28 +29,49 @@ int main(int ac, char **av)
   int index[][3] = {
     { 0,1,2 }
   };
+  int imgSize[2] = { 800,600 };
+  OWLBuffer    frameBuffer = owlBufferCreate(context,OWL_FLOAT3,3,vertex);
+  
   float green[3] = { 0.f, 1.f, 0.f };
   OWLBuffer    vertices  = owlBufferCreate(context,OWL_FLOAT3,3,vertex);
   OWLBuffer    indices   = owlBufferCreate(context,OWL_INT3,1,index);
-  OWLTriangles triangles = owlTrianglesCreate(context,sizeof(struct TrianglesVars));
-  /* OWLTriangles triangles = owlTrianglesCreate(context,sizeof(struct TrianglesVars)); */
-  owlTrianglesDeclareVariable(triangles,"vertex",OWL_BUFFER_POINTER,
-                              OWL_OFFSETOF(TrianglesVars,vertex));
-  owlTrianglesDeclareVariable(triangles,"index", OWL_BUFFER_POINTER,
-                              OWL_OFFSETOF(TrianglesVars,index));
-  owlTrianglesDeclareVariable(triangles,"diffuseColor",OWL_FLOAT3,
-                              OWL_OFFSETOF(TrianglesVars,color));
+
+  OWLGeometryType diffuseTrianglesType
+    = ownGeometryTypeCreate(OWL_TRIANGLES,sizeof(struct TrianglesVars));
+  owlGeometryTypeDeclareVariable(diffuseTrianglesType,"vertex",OWL_BUFFER_POINTER,
+                                 OWL_OFFSETOF(TrianglesVars,vertex));
+  owlGeometryTypeDeclareVariable(diffuseTrianglesType,"index", OWL_BUFFER_POINTER,
+                                 OWL_OFFSETOF(TrianglesVars,index));
+  owlGeometryTypeDeclareVariable(diffuseTrianglesType,"diffuseColor",OWL_FLOAT3,
+                                 OWL_OFFSETOF(TrianglesVars,color));
   
+  OWLGeometry triangles = owlGeometryCreate(context,diffuseTriangleType);
+
   owlTrianglesSetVertices(triangles,vertices);
+  owlBufferRelease(vertices);
+
   owlTrianglesSetIndices(triangles,indices);
+  owlBufferRelease(indices);
   
   OWLVariable diffuseColor = owlTrianglesGetVariable(triangles,"diffuseColor");
   owlVariableSet3fv(diffuseColor,green);
-  
-  owlBufferRelease(vertices);
-  owlBufferRelease(indices);
   owlVariableRelease(diffuseColor);
-  owlTrianglesRelease(triangles);
+
+
+  // ==================================================================
+  // create and configure launch proram
+  // ==================================================================
+  OWLLaunchProg renderFrame
+    = owlContextCreateLaunchProg(context,sizeof(RenderFrameArgs));
+  {
+  }
+  
+  // ==================================================================
+  // launch renderframe program
+  // ==================================================================
+  owlContextLaunch2D(renderFrame,imgSize[0],imgSize[1]);
+  
+  owlGeometryRelease(triangles);
   owlContextDestroy(context);
 }
 
