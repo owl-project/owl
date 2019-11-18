@@ -58,14 +58,20 @@ namespace owl {
     typedef std::shared_ptr<Buffer> SP;
   };
 
-  struct Triangles : public SBTObject {
-    Triangles(size_t varStructSize) : SBTObject(varStructSize) {}
+  struct Geometry : public SBTObject {
+    Geometry(size_t varStructSize) : SBTObject(varStructSize) {}
     
-    typedef std::shared_ptr<Triangles> SP;
-    
-    std::shared_ptr<Buffer> vertices;
-    std::shared_ptr<Buffer> indices;
+    typedef std::shared_ptr<Geometry> SP;
   };
+
+  // struct Triangles : public SBTObject {
+  //   Triangles(size_t varStructSize) : SBTObject(varStructSize) {}
+    
+  //   typedef std::shared_ptr<Triangles> SP;
+    
+  //   std::shared_ptr<Buffer> vertices;
+  //   std::shared_ptr<Buffer> indices;
+  // };
 
   // ==================================================================
   // apihandle.h
@@ -169,7 +175,7 @@ namespace owl {
     }
 
     Buffer::SP createBuffer();
-    Triangles::SP createTriangles(size_t varsStructSize);
+    // Triangles::SP createTriangles(size_t varsStructSize);
   };
 
   APIHandle::APIHandle(Object::SP object, Context *context)
@@ -228,93 +234,93 @@ namespace owl {
     return (OWLBuffer)context->createHandle(buffer);
   }
 
-  OWL_API OWLTriangles owlTrianglesCreate(OWLContext _context,
-                                          size_t varsStructSize)
-  {
-    assert(_context);
+  // OWL_API OWLTriangles owlTrianglesCreate(OWLContext _context,
+  //                                         size_t varsStructSize)
+  // {
+  //   assert(_context);
     
-    Context::SP   context   = ((APIHandle *)_context)->get<Context>();
-    assert(context);
+  //   Context::SP   context   = ((APIHandle *)_context)->get<Context>();
+  //   assert(context);
     
-    Triangles::SP triangles = context->createTriangles(varsStructSize);
-    assert(triangles);
+  //   Triangles::SP triangles = context->createTriangles(varsStructSize);
+  //   assert(triangles);
     
-    APIHandle *handle       = context->createHandle(triangles);
-    assert(handle);
+  //   APIHandle *handle       = context->createHandle(triangles);
+  //   assert(handle);
     
-    return (OWLTriangles)handle;
-  }
+  //   return (OWLTriangles)handle;
+  // }
 
   Buffer::SP Context::createBuffer()
   {
     return std::make_shared<Buffer>();
   }
-  Triangles::SP Context::createTriangles(size_t varsStructSize)
-  {
-    return std::make_shared<Triangles>(varsStructSize);
-  }
+  // Triangles::SP Context::createTriangles(size_t varsStructSize)
+  // {
+  //   return std::make_shared<Triangles>(varsStructSize);
+  // }
   
 
   // ==================================================================
   // "RELEASE" functions
   // ==================================================================
-  OWL_API void owlObjectRelease(OWLObject objectHandle)
+  template<typename T>
+  void releaseObject(APIHandle *handle)
   {
-    assert(objectHandle);
-    delete (APIHandle *)objectHandle;
+    assert(handle);
+
+    // we don't actually _need_ this object, but let's do this just
+    // for sanity's sake
+    typename T::SP object = handle->get<T>();
+    assert(object);
+
+    delete handle;
   }
+  
 
   OWL_API void owlBufferRelease(OWLBuffer buffer)
-  {
-    assert(buffer);
-    owlObjectRelease((OWLObject)buffer);
-  }
+  { releaseObject<Buffer>((APIHandle*)buffer); }
   
   OWL_API void owlVariableRelease(OWLVariable variable)
-  {
-    assert(variable);
-    owlObjectRelease((OWLObject)variable);
-  }
+  { releaseObject<Variable>((APIHandle*)variable); }
   
-  OWL_API void owlTrianglesRelease(OWLTriangles triangles)
-  {
-    assert(triangles);
-    owlObjectRelease((OWLObject)triangles);
-  }
+  OWL_API void owlGeometryRelease(OWLGeometry geometry)
+  { releaseObject<Geometry>((APIHandle*)geometry); }
 
-  // ==================================================================
-  // "Triangles" functions
-  // ==================================================================
-  OWL_API void owlTrianglesSetVertices(OWLTriangles _triangles,
-                                      OWLBuffer    _vertices)
-  {
-    Triangles::SP triangles = ((APIHandle *)_triangles)->get<Triangles>();
-    Buffer::SP    vertices   = ((APIHandle *)_vertices)->get<Buffer>();
-    triangles->vertices = vertices;
-  }
+  // // ==================================================================
+  // // "Triangles" functions
+  // // ==================================================================
+  // OWL_API void owlTrianglesSetVertices(OWLTriangles _triangles,
+  //                                     OWLBuffer    _vertices)
+  // {
+  //   Triangles::SP triangles = ((APIHandle *)_triangles)->get<Triangles>();
+  //   Buffer::SP    vertices   = ((APIHandle *)_vertices)->get<Buffer>();
+  //   triangles->vertices = vertices;
+  // }
 
-  OWL_API void owlTrianglesSetIndices(OWLTriangles _triangles,
-                                      OWLBuffer    _indices)
-  {
-    Triangles::SP triangles = ((APIHandle *)_triangles)->get<Triangles>();
-    Buffer::SP    indices   = ((APIHandle *)_indices)->get<Buffer>();
-    triangles->indices = indices;
-  }
+  // OWL_API void owlTrianglesSetIndices(OWLTriangles _triangles,
+  //                                     OWLBuffer    _indices)
+  // {
+  //   Triangles::SP triangles = ((APIHandle *)_triangles)->get<Triangles>();
+  //   Buffer::SP    indices   = ((APIHandle *)_indices)->get<Buffer>();
+  //   triangles->indices = indices;
+  // }
 
   // ==================================================================
   // "GetVariable" functions, for each object type
   // ==================================================================
-  OWL_API OWLVariable owlGetVariable(OWLObject _object,
-                                     const char *varName)
-  { 
-    SBTObject::SP object  = ((APIHandle *)_object)->get<SBTObject>();
-    Context::SP   context = ((APIHandle *)_object)->getContext();
-    return (OWLVariable)context->createHandle(object->getVariable(varName));
-  }
+
+  // OWL_API OWLVariable owlGeometryGetVariable(OWLGeometry geometry,
+  //                                            const char *varName)
+  // { 
+  //   SBTObject::SP object  = ((APIHandle *)_object)->get<SBTObject>();
+  //   Context::SP   context = ((APIHandle *)_object)->getContext();
+  //   return (OWLVariable)context->createHandle(object->getVariable(varName));
+  // }
   
-  OWL_API OWLVariable owlTrianglesGetVariable(OWLTriangles _triangles,
-                                              const char *varName)
-  { return (OWLVariable)owlGetVariable((OWLObject)_triangles,varName); }
+  // OWL_API OWLVariable owlTrianglesGetVariable(OWLTriangles _triangles,
+  //                                             const char *varName)
+  // { return (OWLVariable)owlGetVariable((OWLObject)_triangles,varName); }
   
   
   
@@ -323,31 +329,25 @@ namespace owl {
   // ==================================================================
 
   template<typename T>
-  void declareVariable(OWLObject  _object,
+  void declareVariable(APIHandle  *handle,
                        const char *varName,
                        OWLDataType type,
                        size_t      offset)
   {
-    assert(_object);
+    assert(handle);
     assert(varName);
     
-    typename T::SP object = ((APIHandle *)_object)->get<T>();
+    typename T::SP object = handle->get<T>();
     assert(object);
 
     object->declareVariable(varName,type,offset);
   }
   
-  OWL_API void owlDeclareVariable(OWLObject   object,
-                                  const char *varName,
-                                  OWLDataType type,
-                                  size_t      offset)
-  { declareVariable<SBTObject>(object,varName,type,offset); }
-  
-  OWL_API void owlTrianglesDeclareVariable(OWLTriangles object,
-                                           const char  *varName,
-                                           OWLDataType  type,
-                                           size_t       offset)
-  { declareVariable<Triangles>(object,varName,type,offset); }
+  // OWL_API void owlGeometryTypeDeclareVariable(OWLGeometryType object,
+  //                                             const char  *varName,
+  //                                             OWLDataType  type,
+  //                                             size_t       offset)
+  // { declareVariable<Triangles>((APIHandle *)object,varName,type,offset); }
   
   // ==================================================================
   // "VariableSet" functions, for each element type
