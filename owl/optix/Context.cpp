@@ -15,6 +15,8 @@
 // ======================================================================== //
 
 #include "optix/Context.h"
+#include "optix/Module.h"
+#include "optix/Program.h"
 #include <optix_function_table_definition.h>
 
 namespace optix {
@@ -118,6 +120,7 @@ namespace optix {
 
         Should never be called directly, only through Context::create() */
   Context::Context(const std::vector<uint32_t> &deviceIDs)
+    : entryPoints(1)    
   {
     Context::g_init();
 
@@ -130,6 +133,39 @@ namespace optix {
     perDevice.resize(deviceIDs.size());
     for (int i=0;i<deviceIDs.size();i++)
       perDevice[i] = PerDevice::create(i,deviceIDs[i],this);
+
+    // -------------------------------------------------------
+    // initialize shared state data to default values 
+    // -------------------------------------------------------
+    initializePipelineDefaults();
+  }
+    
+  /*! should only once be called by the constructor, to initialize all
+    compile/link options to defaults */
+  void Context::initializePipelineDefaults()
+  {
+    // ------------------------------------------------------------------
+    // module compile options
+    // ------------------------------------------------------------------
+    moduleCompileOptions.maxRegisterCount  = 100;
+    moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
+    moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;//FULL;
+
+    
+    // ------------------------------------------------------------------
+    // pipeline compile options
+    // ------------------------------------------------------------------
+    pipelineCompileOptions.traversableGraphFlags
+      // = instances.empty()
+      // ? OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
+      // : OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+      = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+    
+    pipelineCompileOptions.usesMotionBlur     = false;
+    pipelineCompileOptions.numPayloadValues   = 2;
+    pipelineCompileOptions.numAttributeValues = 2;
+    pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
+    pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
   }
   
   /*! creates a new context with the given device IDs. Invalid
@@ -154,6 +190,36 @@ namespace optix {
                          "(method="+std::to_string((int)whichGPUs)+")"
                          );
     }
+  }
+
+
+  /*! create a new module object from given ptx string */
+  ModuleSP  Context::createModuleFromString(const std::string &ptxCode)
+  {
+    // TODO: add some check here that checks if a module with that
+    // string was already created, and if so, emit a warning if in
+    // profile mode
+    return Module::create(this,ptxCode);
+  }
+    
+
+  /*! set raygen program name and module for given entry point */
+  void Context::setEntryPoint(size_t entryPointID,
+                              ModuleSP module,
+                              const std::string &programName)
+  {
+    Program::SP program
+      = std::make_shared<Program>(module,programName);
+    
+    RayGenProg::SP rayGenProg
+      = std::make_shared<RayGenProg>(this,program);
+    
+    std::lock_guard<std::mutex> lock(mutex);
+    if (entryPointID >= entryPoints.size())
+      throw Error("Context::setEntryPoint",
+                  "invalid entry point ID"
+                  " - did you call Context::setNumEntryPoints()?");
+    entryPoints[entryPointID] = rayGenProg;
   }
   
 } // ::optix

@@ -14,6 +14,13 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-add_subdirectory(s01-hello)
-add_subdirectory(s02-simpleRayGen)
-add_subdirectory(s03-rayGenWithParamsAndBuffer)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(owlRayGenWithBuffer
+  rayGenWithBuffer.cpp
+  ${ptxCode}
+  )
+target_link_libraries(owlRayGenWithBuffer
+  owl-optix
+  )

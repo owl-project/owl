@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "optix/common.h"
+#include "optix/host_common.h"
 
 namespace optix {
 

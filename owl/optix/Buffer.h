@@ -20,48 +20,14 @@
 
 namespace optix {
 
-  struct Module : public CommonBase {
-    typedef std::shared_ptr<Module> SP;
+  struct Buffer : public CommonBase {
+    typedef std::shared_ptr<Buffer> SP;
 
     /*! java-style pretty-printer, for debugging */
     virtual std::string toString() override
-    { return "optix::Module"; }
+    { return "optix::Buffer"; }
     
-    static Module::SP create(Context *context,
-                      const std::string &ptxCode)
-    {
-      Module *module = new Module(context,ptxCode);
-      return Module::SP(module);
-    }
-    
-    Module(Context *context,
-           const std::string &ptxCode);
-    
-    struct PerDevice {
-      typedef std::shared_ptr<PerDevice> SP;
-
-      PerDevice(Context::PerDevice::SP context,
-                Module *self);
-      
-      ~PerDevice() { destroy(); }
-      
-      void create();
-      void destroy();
-      
-      std::mutex  mutex;
-      OptixModule optixModule;
-      
-      bool        created = false;
-      
-      Context::PerDevice::SP context;
-      Module          *const self;
-    };
-
-    std::string const ptxCode;
-    Context    *const context;
-
-    std::vector<PerDevice::SP> perDevice;
   };
-  
+
 } // ::optix
 

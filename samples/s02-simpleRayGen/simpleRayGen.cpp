@@ -16,18 +16,19 @@
 
 #include "optix/Optix.h"
 
+// use embedded ptx string.
+extern "C" const char ptxCode[];
+
 namespace owl_samples {
 
-  // use embedded ptx string.
-  extern "C" const char ptxCode[0];
-  
   extern "C" int main(int ac, const char **av)
   {
     optix::Context::SP context = optix::Context::create();
-
-    optix::Program::SP rgProgram
-      = context->createRayGenProgram(ptxCode,"simpleRayGen");
-    context->setEntryPoint(0,rgProgram);
+    
+    optix::Module::SP  module
+      = context->createModuleFromString(ptxCode);
+    
+    context->setEntryPoint(0,module,"simpleRayGen");
 
     context->launch(0,optix::vec2i(1));
     

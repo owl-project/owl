@@ -14,54 +14,25 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#pragma once
+#include "optix/device.h"
+#include "deviceCode.h"
 
-#include "optix/Context.h"
+OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
+{
+  const optix::vec2i pixelID = optix::getLaunchIndex();
+  const optix::vec2i fbSize  = optix::getLaunchDims();
+  if (optix::any_greater_or_equal(pixelID,fbSize))
+    return;
+  const RayGenParams *const self
+    = optix::getProgramData<RayGenParams>();
+  const float blend
+    = pixelID.y / float(fbSize.y-1.f);
 
-namespace optix {
-
-  struct Module : public CommonBase {
-    typedef std::shared_ptr<Module> SP;
-
-    /*! java-style pretty-printer, for debugging */
-    virtual std::string toString() override
-    { return "optix::Module"; }
-    
-    static Module::SP create(Context *context,
-                      const std::string &ptxCode)
-    {
-      Module *module = new Module(context,ptxCode);
-      return Module::SP(module);
-    }
-    
-    Module(Context *context,
-           const std::string &ptxCode);
-    
-    struct PerDevice {
-      typedef std::shared_ptr<PerDevice> SP;
-
-      PerDevice(Context::PerDevice::SP context,
-                Module *self);
-      
-      ~PerDevice() { destroy(); }
-      
-      void create();
-      void destroy();
-      
-      std::mutex  mutex;
-      OptixModule optixModule;
-      
-      bool        created = false;
-      
-      Context::PerDevice::SP context;
-      Module          *const self;
-    };
-
-    std::string const ptxCode;
-    Context    *const context;
-
-    std::vector<PerDevice::SP> perDevice;
-  };
-  
-} // ::optix
+  const optix::vec3f color
+    = (1.f-blend)*self->topColor + blend*self->bottomColor;
+  const int pixelIndex
+    = pixelID.x+fbSize.x*pixelID.y;
+  self->fbPointer[pixelIndex]
+    = optix::make_rgba8(color);
+}
 

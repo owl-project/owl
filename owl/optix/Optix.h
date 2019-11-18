@@ -18,3 +18,6 @@
 
 #include "optix/Context.h"
 #include "optix/Module.h"
+#include "optix/Buffer.h"
+#include "optix/Program.h"
+

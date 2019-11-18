@@ -16,54 +16,62 @@
 
 #include "optix/Context.h"
 #include "optix/Module.h"
+#include "optix/Program.h"
 
 namespace optix {
 
-  Module::Module(Context *context,
-                 const std::string &ptxCode)
+  RayGenProg::RayGenProg(Context *context,
+                         Program::SP program)
     : context(context),
-      ptxCode(ptxCode)
+      program(program)
   {
-    for (int i=0;i<context->perDevice.size();i++)
+    assert(context);
+    std::lock_guard<std::mutex> lock(context->mutex);
+    for (size_t i=0;i<context->perDevice.size();i++)
       perDevice.push_back
-        (std::make_shared<PerDevice>(context->perDevice[i],this));
+        (std::make_shared<PerDevice>(context->perDevice[i],
+                                     program->module->perDevice[i],
+                                     this));
   }
 
-  Module::PerDevice::PerDevice(Context::PerDevice::SP context,
-                               Module *self)
+  RayGenProg::PerDevice::PerDevice(Context::PerDevice::SP context,
+                                   Module::PerDevice::SP  module,
+                                   RayGenProg      *const self)
     : context(context),
+      module(module),
       self(self)
   {
     // for now, create on creation (TODO: change to lazy compilation)
     create();
   }
 
-  void Module::PerDevice::create()
+  void RayGenProg::PerDevice::create()
   {
     destroy();
-        
+
+    pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
+    pgDesc.raygen.module            = module->optixModule;
+    std::string taggedProgramName   = "__raygen__"+self->program->programName;
+    pgDesc.raygen.entryFunctionName = taggedProgramName.c_str();
+
     char log[2048];
     size_t sizeof_log = sizeof( log );
-    OPTIX_CHECK(optixModuleCreateFromPTX(context->optixContext,
-                                         &context->self->moduleCompileOptions,
-                                         &context->self->pipelineCompileOptions,
-                                         self->ptxCode.c_str(),
-                                         self->ptxCode.size(),
-                                         log,
-                                         &sizeof_log,
-                                         &optixModule
-                                         ));
+    OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
+                                        &pgDesc,1,
+                                        &pgOptions,
+                                        log,&sizeof_log,
+                                        &pg
+                                        ));
     if (sizeof_log > 1) PRINT(log);
   }
-
-  void Module::PerDevice::destroy()
+  
+  void RayGenProg::PerDevice::destroy()
   {
     std::lock_guard<std::mutex> lock(mutex);
     if (created) {
-      optixModuleDestroy(optixModule);
+      optixProgramGroupDestroy(pg);
       created = false;
     }
   }
-    
-} // ::optix
-
+  
+}

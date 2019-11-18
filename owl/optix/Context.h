@@ -21,12 +21,30 @@
 namespace optix {
 
   using gdt::vec2i;
-  
+
+  typedef enum {
+    FLOAT,
+    UINT32,
+    FLOAT3
+  } OptixElementType;
+
   struct Context;
+  typedef std::shared_ptr<Context> ContextSP;
+
   struct Module;
+  typedef std::shared_ptr<Module> ModuleSP;
+
   struct Program;
   typedef std::shared_ptr<Program> ProgramSP;
-  
+
+  struct RayGenProgram;
+  typedef std::shared_ptr<RayGenProgram> RayGenProgramSP;
+
+  struct Buffer;
+  typedef std::shared_ptr<Buffer> BufferSP;
+
+  struct RayGenProg;
+  typedef std::shared_ptr<RayGenProg> RayGenProgSP;
   
   /*! the basic abstraction for all classes owned by a optix
       context */
@@ -99,6 +117,7 @@ namespace optix {
     /*! creates a new context with one or more GPUs as specified in
         the selection method */
     static Context::SP create(GPUSelectionMethod whichGPUs=GPU_SELECT_FIRST);
+
     
     /*! creates a new context with the given device IDs. Invalid
         device IDs get ignored with a warning, but if no device can be
@@ -120,14 +139,27 @@ namespace optix {
         Should never be called directly, only through Context::create() */
     Context(const std::vector<uint32_t> &deviceIDs);
     
-    GeometryObject::SP createGeometryObject(GeometryType::SP type, size_t numPrims);
+    GeometryObject::SP createGeometryObject(GeometryType::SP type,
+                                            size_t numPrims);
 
-    ProgramSP createRayGenProgram(const std::string &ptxCode,
-                                    const std::string &programName)
+    BufferSP createHostPinnedBuffer(OptixElementType elementType,
+                                    const vec2i &size)
+    { OWL_NOTIMPLEMENTED; }
+
+    RayGenProgramSP createRayGenProgram(ModuleSP module,
+                                        const std::string &programName,
+                                        size_t programDataSize)
     { OWL_NOTIMPLEMENTED; }
     
-    void setEntryPoint(int entryPointID, ProgramSP program)
-    { OWL_NOTIMPLEMENTED; }
+    /*! create a new module object from given ptx string */
+    ModuleSP  createModuleFromString(const std::string &ptxCode);
+
+    std::vector<RayGenProgSP> entryPoints;
+    
+    /*! set raygen program name and module for given entry point */
+    void setEntryPoint(size_t entryPointID,
+                       ModuleSP module,
+                       const std::string &programName);
 
     void launch(int entryPointID, const vec2i &size)
     { OWL_NOTIMPLEMENTED; }
@@ -188,12 +220,16 @@ namespace optix {
 
     size_t                      t_pipelineOptionsChanged = 0;
     
+    /*! should only once be called by the constructor, to initialize
+      all compile/link options to defaults */
+    void initializePipelineDefaults();
+    
     OptixModuleCompileOptions   moduleCompileOptions;
     OptixPipelineCompileOptions pipelineCompileOptions;
     OptixPipelineLinkOptions    pipelineLinkOptions;
     
     /*! list of all devices active in this context */
-    std::vector<PerDevice::SP> perDevice;
+    std::vector<PerDevice::SP>  perDevice;
   };
 
 
