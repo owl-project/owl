@@ -34,7 +34,7 @@ typedef enum
 typedef enum
   {
    OWL_GEOMETRY_USER,
-   OWL_TRIANGLES
+   OWL_GEOMETRY_TRIANGLES
   }
   OWLGeometryKind;
 

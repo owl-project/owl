@@ -83,7 +83,6 @@ namespace owl {
                          OWLDataType type,
                          size_t offset)
     {
-      PING;
       variables[varName] = std::make_shared<Variable>();
     }
     
@@ -121,7 +120,27 @@ namespace owl {
                                       const std::string &progName)
     { IGNORING_THIS(); }
 
-    virtual std::shared_ptr<Geometry> createObject();
+    virtual std::shared_ptr<Geometry> createGeometry() = 0;
+  };
+
+  struct TrianglesGeometryType : public GeometryType {
+    typedef std::shared_ptr<TrianglesGeometryType> SP;
+    
+    TrianglesGeometryType(size_t varStructSize)
+      : GeometryType(varStructSize)
+    {}
+
+    virtual std::shared_ptr<Geometry> createGeometry() override;
+  };
+
+  struct UserGeometryType : public GeometryType {
+    typedef std::shared_ptr<UserGeometryType> SP;
+    
+    UserGeometryType(size_t varStructSize)
+      : GeometryType(varStructSize)
+    {}
+
+    virtual std::shared_ptr<Geometry> createGeometry() override;
   };
 
   struct Geometry : public SBTObject {
@@ -134,10 +153,10 @@ namespace owl {
     GeometryType::SP geometryType;
   };
 
-  struct Triangles : public Geometry {
-    typedef std::shared_ptr<Triangles> SP;
+  struct TrianglesGeometry : public Geometry {
+    typedef std::shared_ptr<TrianglesGeometry> SP;
 
-    Triangles(GeometryType::SP geometryType)
+    TrianglesGeometry(GeometryType::SP geometryType)
       : Geometry(geometryType)
     {}
 
@@ -186,7 +205,7 @@ namespace owl {
       throw std::runtime_error("could not convert APIHandle of type "
                                + std::string(typeid(*object.get()).name())
                                + " to object of type "
-                               + std::string(typeid(T()).name()));
+                               + std::string(typeid(T).name()));
     assert(asT);
     return asT;
   }
@@ -405,7 +424,7 @@ namespace owl {
     assert(geometryType);
 
     Geometry::SP geometry
-      = geometryType->createObject();
+      = geometryType->createGeometry();
     assert(geometry);
 
     return (OWLGeometry)context->createHandle(geometry);
@@ -453,7 +472,14 @@ namespace owl {
   GeometryType::SP Context::createGeometryType(OWLGeometryKind kind,
                                                size_t varStructSize)
   {
-    return std::make_shared<GeometryType>(varStructSize);
+    switch(kind) {
+    case OWL_GEOMETRY_TRIANGLES:
+      return std::make_shared<TrianglesGeometryType>(varStructSize);
+    case OWL_GEOMETRY_USER:
+      return std::make_shared<UserGeometryType>(varStructSize);
+    default:
+      OWL_NOTIMPLEMENTED;
+    }
   }
 
   Module::SP Context::createModule(const std::string &ptxCode)
@@ -461,12 +487,20 @@ namespace owl {
     return std::make_shared<Module>(ptxCode);
   }
 
-  std::shared_ptr<Geometry> GeometryType::createObject()
+  std::shared_ptr<Geometry> UserGeometryType::createGeometry()
   {
     GeometryType::SP self
       = std::dynamic_pointer_cast<GeometryType>(shared_from_this());
     assert(self);
-    return std::make_shared<Geometry>(self);
+    return std::make_shared<UserGeometry>(self);
+  }
+
+  std::shared_ptr<Geometry> TrianglesGeometryType::createGeometry()
+  {
+    GeometryType::SP self
+      = std::dynamic_pointer_cast<GeometryType>(shared_from_this());
+    assert(self);
+    return std::make_shared<TrianglesGeometry>(self);
   }
   
 
@@ -517,8 +551,8 @@ namespace owl {
     assert(_triangles);
     assert(_buffer);
 
-    Triangles::SP triangles
-      = ((APIHandle *)_triangles)->get<Triangles>();
+    TrianglesGeometry::SP triangles
+      = ((APIHandle *)_triangles)->get<TrianglesGeometry>();
     assert(triangles);
 
     Buffer::SP buffer
@@ -537,8 +571,8 @@ namespace owl {
     assert(_triangles);
     assert(_buffer);
 
-    Triangles::SP triangles
-      = ((APIHandle *)_triangles)->get<Triangles>();
+    TrianglesGeometry::SP triangles
+      = ((APIHandle *)_triangles)->get<TrianglesGeometry>();
     assert(triangles);
 
     Buffer::SP buffer

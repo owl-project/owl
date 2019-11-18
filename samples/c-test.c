@@ -93,7 +93,9 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
 
   OWLGeometryType diffuseTrianglesType
-    = owlContextCreateGeometryType(context,OWL_TRIANGLES,sizeof(struct TrianglesVars));
+    = owlContextCreateGeometryType(context,
+                                   OWL_GEOMETRY_TRIANGLES,
+                                   sizeof(struct TrianglesVars));
   owlGeometryTypeDeclareVariable(diffuseTrianglesType,"vertex",OWL_BUFFER_POINTER,
                                  OWL_OFFSETOF(TrianglesVars,vertex));
   owlGeometryTypeDeclareVariable(diffuseTrianglesType,"index", OWL_BUFFER_POINTER,
@@ -142,7 +144,9 @@ int main(int ac, char **av)
   // define type
   // ------------------------------------------------------------------
   OWLGeometryType diffuseSphereType
-    = owlContextCreateGeometryType(context,OWL_GEOMETRY_USER,sizeof(struct SphereVars));
+    = owlContextCreateGeometryType(context,
+                                   OWL_GEOMETRY_USER,
+                                   sizeof(struct SphereVars));
   owlGeometryTypeDeclareVariable(diffuseSphereType,"center",
                                  OWL_BUFFER_POINTER,
                                  OWL_OFFSETOF(SphereVars,center));
