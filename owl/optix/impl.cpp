@@ -174,15 +174,6 @@ namespace owl {
     {}
   };
   
-  // struct Triangles : public SBTObject {
-  //   Triangles(size_t varStructSize) : SBTObject(varStructSize) {}
-    
-  //   typedef std::shared_ptr<Triangles> SP;
-    
-  //   std::shared_ptr<Buffer> vertices;
-  //   std::shared_ptr<Buffer> indices;
-  // };
-
   // ==================================================================
   // apihandle.h
   // ==================================================================
@@ -441,23 +432,6 @@ namespace owl {
 
 
   
-  // OWL_API OWLTriangles owlTrianglesCreate(OWLContext _context,
-  //                                         size_t varsStructSize)
-  // {
-  //   assert(_context);
-    
-  //   Context::SP   context   = ((APIHandle *)_context)->get<Context>();
-  //   assert(context);
-    
-  //   Triangles::SP triangles = context->createTriangles(varsStructSize);
-  //   assert(triangles);
-    
-  //   APIHandle *handle       = context->createHandle(triangles);
-  //   assert(handle);
-    
-  //   return (OWLTriangles)handle;
-  // }
-
   Buffer::SP Context::createBuffer()
   {
     return std::make_shared<Buffer>();
@@ -576,24 +550,6 @@ namespace owl {
     triangles->setIndices(buffer);
   }
 
-  // ==================================================================
-  // "GetVariable" functions, for each object type
-  // ==================================================================
-
-  // OWL_API OWLVariable owlGeometryGetVariable(OWLGeometry geometry,
-  //                                            const char *varName)
-  // { 
-  //   SBTObject::SP object  = ((APIHandle *)_object)->get<SBTObject>();
-  //   Context::SP   context = ((APIHandle *)_object)->getContext();
-  //   return (OWLVariable)context->createHandle(object->getVariable(varName));
-  // }
-  
-  // OWL_API OWLVariable owlTrianglesGetVariable(OWLTriangles _triangles,
-  //                                             const char *varName)
-  // { return (OWLVariable)owlGetVariable((OWLObject)_triangles,varName); }
-  
-  
-  
   // ==================================================================
   // "VariableDeclare" functions, for each element type
   // ==================================================================
