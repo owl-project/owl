@@ -55,10 +55,7 @@ include_directories(${PROJECT_SOURCE_DIR}/owl/)
 #include_directories(${PROJECT_SOURCE_DIR}/optix/include/)
 
 # the actual back-end
-#add_subdirectory(owl/optix)
+add_subdirectory(owl/optix)
 
 # the front-end apps: viewer, tools, etc
-#add_subdirectory(samples)
-
-add_subdirectory(concept)
-
+add_subdirectory(samples)
