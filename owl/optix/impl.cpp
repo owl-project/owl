@@ -530,16 +530,23 @@ namespace owl {
 
   OWL_API void
   owlTrianglesSetIndices(OWLGeometry  _triangles,
-                         OWLBuffer    _indices)
+                         OWLBuffer    _buffer)
   {
     LOG_API_CALL();
-    OWL_NOTIMPLEMENTED;
+    
+    assert(_triangles);
+    assert(_buffer);
+
+    Triangles::SP triangles
+      = ((APIHandle *)_triangles)->get<Triangles>();
+    assert(triangles);
+
+    Buffer::SP buffer
+      = ((APIHandle *)_buffer)->get<Buffer>();
+    assert(buffer);
+
+    triangles->setIndices(buffer);
   }
-  // {
-  //   Triangles::SP triangles = ((APIHandle *)_triangles)->get<Triangles>();
-  //   Buffer::SP    indices   = ((APIHandle *)_indices)->get<Buffer>();
-  //   triangles->indices = indices;
-  // }
 
   // ==================================================================
   // "GetVariable" functions, for each object type
