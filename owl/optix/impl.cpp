@@ -23,6 +23,9 @@
 namespace owl {
   using gdt::vec3f;
 
+  struct Context;
+  struct Buffer;
+  
 #define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
 
 #define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
@@ -54,9 +57,17 @@ namespace owl {
     createSetter(Object::SP objectToSetIn) override;
   };
 
+  struct BufferVariable : public AbstractVariable {
+    typedef std::shared_ptr<BufferVariable> SP;
+    
+    virtual std::shared_ptr<BoundVariable>
+    createSetter(Object::SP objectToSetIn) override;
+  };
+  
   struct BoundVariable : public Object {
     typedef std::shared_ptr<BoundVariable> SP;
 
+    virtual void set(const std::shared_ptr<Buffer> &value) { wrongType(); }
     virtual void set(const float &value) { wrongType(); }
     virtual void set(const vec3f &value) { wrongType(); }
 
@@ -87,6 +98,14 @@ namespace owl {
     AbstractVariable::SP self
       = std::dynamic_pointer_cast<AbstractVariable>(shared_from_this());
     return std::make_shared<BoundVariableT<T>>(self,objectToSet);
+  }
+
+  std::shared_ptr<BoundVariable>
+  BufferVariable::createSetter(Object::SP objectToSet)
+  {
+    AbstractVariable::SP self
+      = std::dynamic_pointer_cast<AbstractVariable>(shared_from_this());
+    return std::make_shared<BoundVariableT<std::shared_ptr<Buffer>>>(self,objectToSet);
   }
   
   /*! captures the concept of a module that contains one or more
@@ -119,27 +138,32 @@ namespace owl {
 
     void declareVariable(const std::string &varName,
                          OWLDataType type,
-                         size_t offset)
-    {
-      switch (type) {
-      case OWL_BUFFER_POINTER:
-        PING; 
-        OWL_NOTIMPLEMENTED;
-      case OWL_FLOAT3:
-        variables[varName]
-          = std::make_shared<AbstractVariableT<vec3f>>();
-        break;
-      default:
-        PING; PRINT(type);
-        OWL_NOTIMPLEMENTED;
-      };
-      // variables[varName] = std::make_shared<AbstractVariable>();
-    }
-    
+                         size_t offset);
     const size_t varStructSize;
     std::map<std::string,AbstractVariable::SP> variables;
   };
 
+  void SBTObjectType::declareVariable(const std::string &varName,
+                                      OWLDataType type,
+                                      size_t offset)
+  {
+    switch (type) {
+    case OWL_BUFFER_POINTER:
+      variables[varName]
+        = std::make_shared<BufferVariable>();
+      break;
+    case OWL_FLOAT3:
+      variables[varName]
+        = std::make_shared<AbstractVariableT<vec3f>>();
+      break;
+    default:
+      PING; PRINT(type);
+      OWL_NOTIMPLEMENTED;
+    };
+    // variables[varName] = std::make_shared<AbstractVariable>();
+  }
+    
+  
   struct SBTObject : public Object
   {
     typedef std::shared_ptr<SBTObject> SP;
