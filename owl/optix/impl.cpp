@@ -34,15 +34,61 @@ namespace owl {
     typedef std::shared_ptr<Object> SP;
     virtual ~Object() {}
   };
+
+  struct BoundVariable;
   
-  struct Variable : public Object {
-    typedef std::shared_ptr<Variable> SP;
-    void wrongType() { PING; }
-    
-    virtual void set(const float  value) { wrongType(); }
-    virtual void set(const vec3f &value) { wrongType(); }
+  struct AbstractVariable : public Object {
+
+    typedef std::shared_ptr<AbstractVariable> SP;
+
+    virtual std::shared_ptr<BoundVariable>
+    createSetter(Object::SP objectToSetIn) = 0;
   };
 
+  
+  template<typename T>
+  struct AbstractVariableT : public AbstractVariable {
+    typedef std::shared_ptr<AbstractVariableT<T>> SP;
+    
+    virtual std::shared_ptr<BoundVariable>
+    createSetter(Object::SP objectToSetIn) override;
+  };
+
+  struct BoundVariable : public Object {
+    typedef std::shared_ptr<BoundVariable> SP;
+
+    virtual void set(const float &value) { wrongType(); }
+    virtual void set(const vec3f &value) { wrongType(); }
+
+    void wrongType() { PING; }
+    
+    //! the object we're modifying ...
+    Object::SP             object;
+    //! the variable we're setting in the given object
+    AbstractVariable::SP variable;
+  };
+  
+  template<typename T>
+  struct BoundVariableT : public BoundVariable {
+    typedef std::shared_ptr<BoundVariableT<T>> SP;
+
+    BoundVariableT(AbstractVariable::SP variable,
+                   Object::SP object)
+    {}
+    
+    void set(const T &value) override { PING; }
+    // T value;
+  };
+
+  template<typename T>
+  std::shared_ptr<BoundVariable>
+  AbstractVariableT<T>::createSetter(Object::SP objectToSet)
+  {
+    AbstractVariable::SP self
+      = std::dynamic_pointer_cast<AbstractVariable>(shared_from_this());
+    return std::make_shared<BoundVariableT<T>>(self,objectToSet);
+  }
+  
   /*! captures the concept of a module that contains one or more
     programs. */
   struct Module : public Object {
@@ -57,14 +103,6 @@ namespace owl {
     const std::string ptxCode;
   };
   
-  template<typename T>
-  struct VariableT : public Object {
-    typedef std::shared_ptr<VariableT<T>> SP;
-    
-    void set(const T &value) override { this->value = value; PING; }
-    T value;
-  };
-  
   struct SBTObjectType : public Object
   {
     typedef std::shared_ptr<SBTObjectType> SP;
@@ -73,7 +111,7 @@ namespace owl {
       : varStructSize(varStructSize)
     {}
     
-    inline Variable::SP getVariable(const std::string &varName)
+    inline AbstractVariable::SP getAbstractVariable(const std::string &varName)
     {
       assert(variables.find(varName) != variables.end());
       return variables[varName];
@@ -83,11 +121,23 @@ namespace owl {
                          OWLDataType type,
                          size_t offset)
     {
-      variables[varName] = std::make_shared<Variable>();
+      switch (type) {
+      case OWL_BUFFER_POINTER:
+        PING; 
+        OWL_NOTIMPLEMENTED;
+      case OWL_FLOAT3:
+        variables[varName]
+          = std::make_shared<AbstractVariableT<vec3f>>();
+        break;
+      default:
+        PING; PRINT(type);
+        OWL_NOTIMPLEMENTED;
+      };
+      // variables[varName] = std::make_shared<AbstractVariable>();
     }
     
     const size_t varStructSize;
-    std::map<std::string,Variable::SP> variables;
+    std::map<std::string,AbstractVariable::SP> variables;
   };
 
   struct SBTObject : public Object
@@ -498,7 +548,7 @@ namespace owl {
   OWL_API void owlVariableRelease(OWLVariable variable)
   {
     LOG_API_CALL();
-    releaseObject<Variable>((APIHandle*)variable);
+    releaseObject<BoundVariable>((APIHandle*)variable);
   }
   
   OWL_API void owlGeometryRelease(OWLGeometry geometry)
@@ -623,26 +673,39 @@ namespace owl {
   // "VariableSet" functions, for each element type
   // ==================================================================
 
+  template<typename T>
+  void setBasicTypeVariable(APIHandle *handle, const T &value)
+  {
+    assert(handle);
+
+    BoundVariable::SP variable
+      = handle->get<BoundVariable>();
+    assert(variable);
+
+    variable->set(value);
+  }
+
+  
   OWL_API void owlVariableSet1f(OWLVariable _variable, const float value)
   {
     LOG_API_CALL();
-    assert(_variable);
-    assert(value);
+    setBasicTypeVariable((APIHandle *)_variable,(float)value);
+    // LOG_API_CALL();
+    // assert(_variable);
+    // assert(value);
 
-    Variable::SP variable = ((APIHandle *)_variable)->get<Variable>();
-    assert(variable);
-    variable->set(value);
+    // BoundVariable::SP variable
+    //   = ((APIHandle *)_variable)->get<BoundVariable>();
+    // assert(variable);
+
+    // variable->set(value);
   }
 
   OWL_API void owlVariableSet3fv(OWLVariable _variable, const float *value)
   {
     LOG_API_CALL();
-    assert(_variable);
     assert(value);
-
-    Variable::SP variable = ((APIHandle *)_variable)->get<Variable>();
-    assert(variable);
-    variable->set(*(const vec3f*)value);
+    setBasicTypeVariable((APIHandle *)_variable,*(const vec3f*)value);
   }
   
   // -------------------------------------------------------
@@ -656,5 +719,5 @@ namespace owl {
     LOG_API_CALL();
     OWL_NOTIMPLEMENTED;
   }
-
+  
 }
