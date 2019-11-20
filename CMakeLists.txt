@@ -15,7 +15,7 @@
 # ======================================================================== #
 
 cmake_policy(SET CMP0048 NEW)
-project(Optix VERSION 0.0.1)
+project(Optix-OWL VERSION 0.0.1)
 
 cmake_minimum_required(VERSION 2.8)
 
@@ -45,17 +45,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include_directories(${gdt_dir})
 add_subdirectory(${gdt_dir} EXCLUDE_FROM_ALL)
 
-# -------------------------------------------------------
-# optix itself
-# -------------------------------------------------------
+#include_directories(${CMAKE_BINARY_DIR})
 #configure_file(optix/config.h.in ${CMAKE_BINARY_DIR}/optix/optix_config.h)
 
-include_directories(${CMAKE_BINARY_DIR})
-#include_directories(${PROJECT_SOURCE_DIR}/owl/)
-#include_directories(${PROJECT_SOURCE_DIR}/optix/include/)
+# -------------------------------------------------------
+# owl itself
+# -------------------------------------------------------
+add_subdirectory(owl)
 
-# the actual back-end
-add_subdirectory(owl/optix)
-
-# the front-end apps: viewer, tools, etc
+# -------------------------------------------------------
+# samples/tutorials/tests
+# -------------------------------------------------------
 add_subdirectory(samples)

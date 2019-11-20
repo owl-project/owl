@@ -31,8 +31,9 @@ namespace owl {
 #define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
   
   
-#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
-  
+//#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
+#define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
+
   struct Object : public std::enable_shared_from_this<Object> {
     typedef std::shared_ptr<Object> SP;
     virtual ~Object() {}
@@ -667,7 +668,7 @@ namespace owl {
     
     assert(_geometryType);
     assert(_module);
-    assert(_progName);
+    assert(progName);
 
     GeometryType::SP geometryType
       = ((APIHandle *)_geometryType)->get<GeometryType>();
