@@ -172,7 +172,7 @@ owlGeometryTypeDeclareVariable(OWLGeometryType object,
 // -------------------------------------------------------
 OWL_API void
 owlInstanceGroupSetChild(OWLInstanceGroup group,
-                         int whichChild,
+						 int whichChild,
                          OWLGeometryGroup geometry);
 
 OWL_API void
