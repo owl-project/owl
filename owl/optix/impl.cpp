@@ -464,11 +464,22 @@ namespace owl {
   }
 
   OWL_API OWLVariable
-  owlLaunchProgGetVariable(OWLLaunchProg geom,
+  owlLaunchProgGetVariable(OWLLaunchProg _prog,
                            const char *varName)
   {
-    LOG_API_CALL();
-    OWL_NOTIMPLEMENTED;
+	LOG_API_CALL();
+	assert(varName);
+	assert(_prog);
+	LaunchProg::SP prog = ((APIHandle*)_prog)->get<LaunchProg>();
+	assert(prog);
+
+	BoundVariable::SP var = prog->getBoundVariable(varName);
+	assert(var);
+
+	Context::SP context = ((APIHandle*)_prog)->getContext();
+	assert(context);
+
+	return(OWLVariable)context->createHandle(var);
   }
   
 
