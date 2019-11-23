@@ -19,13 +19,17 @@
 #include <set>
 #include <map>
 #include <vector>
+#include <stack>
 #include <typeinfo>
+#include <mutex>
 
 namespace owl {
   using gdt::vec3f;
 
   struct Context;
   struct Buffer;
+  struct BufferRegistry;
+  struct Geometry;
   struct GeometryGroup;
   struct LaunchProg;
 
@@ -234,11 +238,88 @@ namespace owl {
   struct Buffer : public Object
   {
     typedef std::shared_ptr<Buffer> SP;
+    
+    Buffer(BufferRegistry &buffers);
+    ~Buffer();
+    
     virtual std::string toString() const { return "Buffer"; }
+
+    const int ID;
+  private:
+    BufferRegistry &buffers;
   };
 
-  struct Geometry;
+  /*! registry that tracks mapping between buffers and buffer
+      IDs. Every buffer should have a valid ID, and should be tracked
+      in this registry under this ID */
+  struct BufferRegistry {
+    void forget(Buffer *buffer)
+    {
+      assert(buffer);
+      
+      std::lock_guard<std::mutex> lock(mutex);
+      assert(buffer->ID >= 0);
+      assert(buffer->ID < buffers.size());
+      assert(buffers[buffer->ID] == buffer);
+      buffers[buffer->ID] = nullptr;
+      
+      previouslyReleasedIDs.push(buffer->ID);
+    }
+    
+    void track(Buffer *buffer)
+    {
+      assert(buffer);
+      std::lock_guard<std::mutex> lock(mutex);
+      assert(buffer->ID >= 0);
+      assert(buffer->ID < buffers.size());
+      assert(buffers[buffer->ID] == nullptr);
+      buffers[buffer->ID] = buffer;
+    }
+    
+    int allocID() {
+      std::lock_guard<std::mutex> lock(mutex);
+      if (previouslyReleasedIDs.empty()) {
+        buffers.push_back(nullptr);
+        return buffers.size()-1;
+      } else {
+        int reusedID = previouslyReleasedIDs.top();
+        previouslyReleasedIDs.pop();
+        return reusedID;
+      }
+    }
+    inline Buffer *get(int ID)
+    {
+      std::lock_guard<std::mutex> lock(mutex);
+      
+      assert(ID >= 0);
+      assert(ID < buffers.size());
+      assert(buffers[ID]);
+      return buffers[ID];
+    }
+
+  private:
+    /*! list of all tracked buffers. note this are *NOT* shared-ptr's,
+        else we'd never released buffers because each buffer would
+        always be owned by the registry */
+    std::vector<Buffer *> buffers;
+    
+    /*! list of IDs that have already been allocated before, and have
+        since gotten freed, so can be re-used */
+    std::stack<int> previouslyReleasedIDs;
+    std::mutex mutex;
+  };
+
+  Buffer::Buffer(BufferRegistry &buffers)
+    : ID(buffers.allocID()),
+      buffers(buffers)
+  {
+    buffers.track(this);
+  }
   
+  Buffer::~Buffer()
+  { buffers.forget(this); }
+  
+
   struct GeometryType : public SBTObjectType {
     typedef std::shared_ptr<GeometryType> SP;
     
@@ -389,7 +470,6 @@ namespace owl {
   struct ApiHandles {
     ~ApiHandles()
     {
-      PING;
     }
     
     void track(APIHandle *object)
@@ -443,7 +523,8 @@ namespace owl {
     }
 
     ApiHandles apiHandles;
-
+    BufferRegistry buffers;
+    
     APIHandle *createHandle(Object::SP object)
     {
       assert(object);
@@ -699,7 +780,11 @@ namespace owl {
   
   Buffer::SP Context::createBuffer()
   {
-    return std::make_shared<Buffer>();
+    PING;
+    Buffer::SP buffer = std::make_shared<Buffer>(buffers);
+    PING;
+    assert(buffer);
+    return buffer;
   }
 
   LaunchProg::SP Context::createLaunchProg(Module::SP module,
