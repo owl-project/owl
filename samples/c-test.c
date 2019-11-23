@@ -210,7 +210,10 @@ int main(int ac, char **av)
                                  module,"renderFrame",
                                  /* size of variables struct */
                                  sizeof(struct RenderFrameVars));
-
+  owlLaunchProgDeclareVariable(renderFrame,"bgColor",OWL_FLOAT3,
+                               OWL_OFFSETOF(RenderFrameVars,bgColor));
+  
+  
   OWLVariable bgColor
     = owlLaunchProgGetVariable(renderFrame,"bgColor");
   owlVariableSet3fv(bgColor,&image_bgColor.x);

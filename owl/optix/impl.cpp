@@ -34,11 +34,16 @@ namespace owl {
 #define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
   
   
-//#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
+  //#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
 #define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
 
   struct Object : public std::enable_shared_from_this<Object> {
     typedef std::shared_ptr<Object> SP;
+
+    template<typename T>
+    inline std::shared_ptr<T> as() 
+    { return std::dynamic_pointer_cast<T>(shared_from_this()); }
+    
     virtual ~Object() {}
   };
 
@@ -134,6 +139,11 @@ namespace owl {
       : varStructSize(varStructSize)
     {}
     
+    inline bool hasVariable(const std::string &varName)
+    {
+      return (variables.find(varName) != variables.end());
+    }
+    
     inline AbstractVariable::SP getAbstractVariable(const std::string &varName)
     {
       assert(variables.find(varName) != variables.end());
@@ -175,28 +185,33 @@ namespace owl {
     SBTObject(SBTObjectType::SP objectType)
       : objectType(objectType)
     {}
-
-	BoundVariable::SP getBoundVariable(const std::string &name)
-	{
-		AbstractVariable::SP abstractVariable = objectType->getAbstractVariable(name);
-		return abstractVariable->createSetter(shared_from_this());
-	}
+    
+    bool hasVariable(const std::string &name)
+    {
+      return objectType->hasVariable(name);
+    }
+    
+    BoundVariable::SP getBoundVariable(const std::string &name)
+    {
+      AbstractVariable::SP abstractVariable = objectType->getAbstractVariable(name);
+      return abstractVariable->createSetter(shared_from_this());
+    }
 
     SBTObjectType::SP const objectType;
   };
 
   struct LaunchProgType : public SBTObjectType {
-	  typedef std::shared_ptr<LaunchProgType> SP;
-	  LaunchProgType(size_t varStructSize) : SBTObjectType(varStructSize) {}
+    typedef std::shared_ptr<LaunchProgType> SP;
+    LaunchProgType(size_t varStructSize) : SBTObjectType(varStructSize) {}
   };
   struct LaunchProg : public SBTObject {
-	  typedef std::shared_ptr<LaunchProg> SP;
+    typedef std::shared_ptr<LaunchProg> SP;
 
-	  LaunchProg(Module::SP module,
-		  const std::string &progName,
-		  size_t varStructSize) 
-		  : SBTObject(std::make_shared<LaunchProgType>(varStructSize)) 
-	  {}
+    LaunchProg(Module::SP module,
+               const std::string &progName,
+               size_t varStructSize) 
+      : SBTObject(std::make_shared<LaunchProgType>(varStructSize)) 
+    {}
   };
 
   struct Buffer : public Object
@@ -276,33 +291,33 @@ namespace owl {
   };
   
   struct GeometryGroup : public Group {
-	  typedef std::shared_ptr<GeometryGroup> SP;
+    typedef std::shared_ptr<GeometryGroup> SP;
 
-	  GeometryGroup(size_t numChildren)
-		  : children(numChildren)
-	  {}
-	  void setChild(int childID, Geometry::SP child)
-	  {
-		  assert(childID >= 0);
-		  assert(childID < children.size());
-		  children[childID] = child;
-	  }
-	  std::vector<Geometry::SP> children;
+    GeometryGroup(size_t numChildren)
+      : children(numChildren)
+    {}
+    void setChild(int childID, Geometry::SP child)
+    {
+      assert(childID >= 0);
+      assert(childID < children.size());
+      children[childID] = child;
+    }
+    std::vector<Geometry::SP> children;
   };
 
   struct InstanceGroup : public Group {
-	  typedef std::shared_ptr<InstanceGroup> SP;
+    typedef std::shared_ptr<InstanceGroup> SP;
 
-	  InstanceGroup(size_t numChildren)
-		  : children(numChildren)
-	  {}
-	  void setChild(int childID, Group::SP child)
-	  {
-		  assert(childID >= 0);
-		  assert(childID < children.size());
-		  children[childID] = child;
-	  }
-	  std::vector<Group::SP> children;
+    InstanceGroup(size_t numChildren)
+      : children(numChildren)
+    {}
+    void setChild(int childID, Group::SP child)
+    {
+      assert(childID >= 0);
+      assert(childID < children.size());
+      children[childID] = child;
+    }
+    std::vector<Group::SP> children;
   };
 
   // ==================================================================
@@ -331,18 +346,15 @@ namespace owl {
   {
     assert(object);
     std::shared_ptr<T> asT = std::dynamic_pointer_cast<T>(object);
-	if (object && !asT) {
-		PING;
-		const std::string objectTypeID = typeid(*object.get()).name();
+    if (object && !asT) {
+      const std::string objectTypeID = typeid(*object.get()).name();
 	
-		PRINT(objectTypeID);
-		const std::string tTypeID = typeid(T).name();
-		PRINT(tTypeID);
-		throw std::runtime_error("could not convert APIHandle of type "
-			+ objectTypeID
-			+ " to object of type "
-			+ tTypeID);
-	}
+      const std::string tTypeID = typeid(T).name();
+      throw std::runtime_error("could not convert APIHandle of type "
+                               + objectTypeID
+                               + " to object of type "
+                               + tTypeID);
+    }
     assert(asT);
     return asT;
   }
@@ -400,10 +412,10 @@ namespace owl {
         delete handle;
     }
 
-	InstanceGroup::SP createInstanceGroup(size_t numChildren);
-	GeometryGroup::SP createGeometryGroup(size_t numChildren);
+    InstanceGroup::SP createInstanceGroup(size_t numChildren);
+    GeometryGroup::SP createGeometryGroup(size_t numChildren);
     Buffer::SP createBuffer();
-	LaunchProg::SP createLaunchProg(Module::SP module, const std::string &progName, size_t varStructSize);
+    LaunchProg::SP createLaunchProg(Module::SP module, const std::string &progName, size_t varStructSize);
     GeometryType::SP createGeometryType(OWLGeometryKind kind,
                                         size_t varStructSize);
     Module::SP createModule(const std::string &ptxCode);
@@ -444,42 +456,49 @@ namespace owl {
     OWL_NOTIMPLEMENTED;
   }
 
+
+
+  // ==================================================================
+  // <object>::getVariable
+  // ==================================================================
+  template<typename T>
+  OWLVariable
+  getVariableHelper(APIHandle *handle,
+                    const char *varName)
+  {
+    assert(varName);
+    assert(handle);
+    typename T::SP obj = handle->get<T>();
+    assert(obj);
+
+    if (!obj->hasVariable(varName))
+      throw std::runtime_error("Trying to get reference to variable '"+std::string(varName)+
+                               "' on object that does not have such a variable");
+    
+    BoundVariable::SP var = obj->getBoundVariable(varName);
+    assert(var);
+
+    Context::SP context = handle->getContext();
+    assert(context);
+
+    return(OWLVariable)context->createHandle(var);
+  }
+  
+  
   OWL_API OWLVariable
   owlGeometryGetVariable(OWLGeometry _geom,
                          const char *varName)
   {
     LOG_API_CALL();
-	assert(varName);
-	assert(_geom);
-	Geometry::SP geom = ((APIHandle*)_geom)->get<Geometry>();
-	assert(geom);
-
-	BoundVariable::SP var = geom->getBoundVariable(varName);
-	assert(var);
-
-	Context::SP context = ((APIHandle*)_geom)->getContext();
-	assert(context);
-
-	return(OWLVariable)context->createHandle(var);
+    return getVariableHelper<Geometry>((APIHandle*)_geom,varName);
   }
 
   OWL_API OWLVariable
   owlLaunchProgGetVariable(OWLLaunchProg _prog,
                            const char *varName)
   {
-	LOG_API_CALL();
-	assert(varName);
-	assert(_prog);
-	LaunchProg::SP prog = ((APIHandle*)_prog)->get<LaunchProg>();
-	assert(prog);
-
-	BoundVariable::SP var = prog->getBoundVariable(varName);
-	assert(var);
-
-	Context::SP context = ((APIHandle*)_prog)->getContext();
-	assert(context);
-
-	return(OWLVariable)context->createHandle(var);
+    LOG_API_CALL();
+    return getVariableHelper<LaunchProg>((APIHandle*)_prog,varName);
   }
   
 
@@ -492,18 +511,18 @@ namespace owl {
   {
     LOG_API_CALL();
 
-	assert(_context);
-	Context::SP context = ((APIHandle *)_context)->get<Context>();
-	assert(context);
+    assert(_context);
+    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    assert(context);
 
-	assert(_module);
-	Module::SP module = ((APIHandle *)_module)->get<Module>();
-	assert(module);
+    assert(_module);
+    Module::SP module = ((APIHandle *)_module)->get<Module>();
+    assert(module);
 
-	LaunchProg::SP  launchProg = context->createLaunchProg(module,programName,sizeOfVarStruct);
-	assert(launchProg);
+    LaunchProg::SP  launchProg = context->createLaunchProg(module,programName,sizeOfVarStruct);
+    assert(launchProg);
 
-	return (OWLLaunchProg)context->createHandle(launchProg);
+    return (OWLLaunchProg)context->createHandle(launchProg);
   }
 
   OWL_API OWLGeometryGroup
@@ -511,36 +530,36 @@ namespace owl {
                                 size_t numGeometries,
                                 OWLGeometry *initValues)
   {
-	  LOG_API_CALL();
-	  assert(_context);
-	  Context::SP context = ((APIHandle *)_context)->get<Context>();
-	  assert(context);
-	  GeometryGroup::SP  group = context->createGeometryGroup(numGeometries);
-	  assert(group);
+    LOG_API_CALL();
+    assert(_context);
+    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    assert(context);
+    GeometryGroup::SP  group = context->createGeometryGroup(numGeometries);
+    assert(group);
 
-	  OWLGeometryGroup _group = (OWLGeometryGroup)context->createHandle(group);
-	  if (initValues) {
-		  for (int i = 0; i < numGeometries; i++)
-			  //owlGeometryGroupSetChild(_group, i, initValues[i]);
-			  group->setChild(i, ((APIHandle *)initValues[i])->get<Geometry>());
-	  }
-	  return _group;
+    OWLGeometryGroup _group = (OWLGeometryGroup)context->createHandle(group);
+    if (initValues) {
+      for (int i = 0; i < numGeometries; i++)
+        //owlGeometryGroupSetChild(_group, i, initValues[i]);
+        group->setChild(i, ((APIHandle *)initValues[i])->get<Geometry>());
+    }
+    return _group;
   }
 
   OWL_API OWLInstanceGroup
   owlContextCreateInstanceGroup(OWLContext _context,
                                 size_t numInstances)
   {
-	  LOG_API_CALL();
-	  assert(_context);
-	  Context::SP context = ((APIHandle *)_context)->get<Context>();
-	  assert(context);
-	  InstanceGroup::SP  group = context->createInstanceGroup(numInstances);
-	  assert(group);
+    LOG_API_CALL();
+    assert(_context);
+    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    assert(context);
+    InstanceGroup::SP  group = context->createInstanceGroup(numInstances);
+    assert(group);
 
-	  OWLInstanceGroup _group = (OWLInstanceGroup)context->createHandle(group);
-	  return _group;
-	}
+    OWLInstanceGroup _group = (OWLInstanceGroup)context->createHandle(group);
+    return _group;
+  }
 
 
 
@@ -632,20 +651,20 @@ namespace owl {
   }
 
   LaunchProg::SP Context::createLaunchProg(Module::SP module,
-	  const std::string &progName,
-	  size_t varStructSize)
+                                           const std::string &progName,
+                                           size_t varStructSize)
   {
-	  return std::make_shared<LaunchProg>(module,progName,varStructSize);
+    return std::make_shared<LaunchProg>(module,progName,varStructSize);
   }
 
   GeometryGroup::SP Context::createGeometryGroup(size_t numChildren)
   {
-	  return std::make_shared<GeometryGroup>(numChildren);
+    return std::make_shared<GeometryGroup>(numChildren);
   }
 
   InstanceGroup::SP Context::createInstanceGroup(size_t numChildren)
   {
-	  return std::make_shared<InstanceGroup>(numChildren);
+    return std::make_shared<InstanceGroup>(numChildren);
   }
 
 
@@ -792,6 +811,24 @@ namespace owl {
       ((APIHandle *)object,varName,type,offset);
   }
 
+  OWL_API void
+  owlLaunchProgDeclareVariable(OWLLaunchProg _prog,
+                               const char *varName,
+                               OWLDataType varType,
+                               size_t offset)
+  {
+    LOG_API_CALL();
+
+    assert(_prog);
+    LaunchProg::SP prog = ((APIHandle *)_prog)->get<LaunchProg>();
+    assert(prog);
+
+    LaunchProgType::SP type = prog->objectType->as<LaunchProgType>();
+    assert(type);
+    
+    type->declareVariable(varName,varType,offset);
+  }
+
   // ==================================================================
   // function pointer setters ....
   // ==================================================================
@@ -880,15 +917,15 @@ namespace owl {
   {
     LOG_API_CALL();
 
-	assert(_group);
-	InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+    assert(_group);
+    InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
     assert(group);
 
-	assert(_child);
-	Group::SP child = ((APIHandle *)_child)->get<Group>();
-	assert(child);
+    assert(_child);
+    Group::SP child = ((APIHandle *)_child)->get<Group>();
+    assert(child);
 
-	group->setChild(whichChild, child);
+    group->setChild(whichChild, child);
   }
   
 } // ::owl
