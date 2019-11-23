@@ -40,6 +40,8 @@ namespace owl {
   struct Object : public std::enable_shared_from_this<Object> {
     typedef std::shared_ptr<Object> SP;
 
+    virtual std::string toString() const { return "Object"; }
+    
     template<typename T>
     inline std::shared_ptr<T> as() 
     { return std::dynamic_pointer_cast<T>(shared_from_this()); }
@@ -53,6 +55,8 @@ namespace owl {
 
     typedef std::shared_ptr<AbstractVariable> SP;
 
+    virtual std::string toString() const { return "AbstractVariable"; }
+    
     virtual std::shared_ptr<BoundVariable>
     createSetter(Object::SP objectToSetIn) = 0;
   };
@@ -62,12 +66,16 @@ namespace owl {
   struct AbstractVariableT : public AbstractVariable {
     typedef std::shared_ptr<AbstractVariableT<T>> SP;
     
+    virtual std::string toString() const { return "AbstractVariableT"; }
+    
     virtual std::shared_ptr<BoundVariable>
     createSetter(Object::SP objectToSetIn) override;
   };
 
   struct BufferVariable : public AbstractVariable {
     typedef std::shared_ptr<BufferVariable> SP;
+    
+    virtual std::string toString() const { return "AbstractBufferVariable"; }
     
     virtual std::shared_ptr<BoundVariable>
     createSetter(Object::SP objectToSetIn) override;
@@ -80,6 +88,8 @@ namespace owl {
     virtual void set(const float &value) { wrongType(); }
     virtual void set(const vec3f &value) { wrongType(); }
 
+    virtual std::string toString() const { return "BoundVariable"; }
+    
     void wrongType() { PING; }
     
     //! the object we're modifying ...
@@ -128,6 +138,8 @@ namespace owl {
       std::cout << "#owl: created module ..." << std::endl;
     }
     
+    virtual std::string toString() const { return "Module"; }
+    
     const std::string ptxCode;
   };
   
@@ -150,6 +162,7 @@ namespace owl {
       return variables[varName];
     }
 
+    virtual std::string toString() const { return "SBTObjectType"; }
     void declareVariable(const std::string &varName,
                          OWLDataType type,
                          size_t offset);
@@ -186,6 +199,8 @@ namespace owl {
       : objectType(objectType)
     {}
     
+    virtual std::string toString() const { return "SBTObject"; }
+    
     bool hasVariable(const std::string &name)
     {
       return objectType->hasVariable(name);
@@ -203,6 +218,7 @@ namespace owl {
   struct LaunchProgType : public SBTObjectType {
     typedef std::shared_ptr<LaunchProgType> SP;
     LaunchProgType(size_t varStructSize) : SBTObjectType(varStructSize) {}
+    virtual std::string toString() const { return "LaunchProgType"; }
   };
   struct LaunchProg : public SBTObject {
     typedef std::shared_ptr<LaunchProg> SP;
@@ -212,11 +228,13 @@ namespace owl {
                size_t varStructSize) 
       : SBTObject(std::make_shared<LaunchProgType>(varStructSize)) 
     {}
+    virtual std::string toString() const { return "LaunchProg"; }
   };
 
   struct Buffer : public Object
   {
     typedef std::shared_ptr<Buffer> SP;
+    virtual std::string toString() const { return "Buffer"; }
   };
 
   struct Geometry;
@@ -228,6 +246,7 @@ namespace owl {
       : SBTObjectType(varStructSize)
     {}
 
+    virtual std::string toString() const { return "GeometryType"; }
     virtual void setClosestHitProgram(int rayType,
                                       Module::SP module,
                                       const std::string &progName)
@@ -243,6 +262,7 @@ namespace owl {
       : GeometryType(varStructSize)
     {}
 
+    virtual std::string toString() const { return "TrianlgeGeometryType"; }
     virtual std::shared_ptr<Geometry> createGeometry() override;
   };
 
@@ -253,6 +273,7 @@ namespace owl {
       : GeometryType(varStructSize)
     {}
 
+    virtual std::string toString() const { return "UserGeometryType"; }
     virtual std::shared_ptr<Geometry> createGeometry() override;
   };
 
@@ -262,6 +283,7 @@ namespace owl {
     Geometry(GeometryType::SP geometryType)
       : SBTObject(geometryType)
     {}
+    virtual std::string toString() const { return "Geometry"; }
     
     GeometryType::SP geometryType;
   };
@@ -277,6 +299,7 @@ namespace owl {
     { IGNORING_THIS(); }
     void setIndices(Buffer::SP indices)
     { IGNORING_THIS(); }
+    virtual std::string toString() const { return "TrianglesGeometry"; }
   };
 
   struct UserGeometry : public Geometry {
@@ -285,9 +308,11 @@ namespace owl {
     UserGeometry(GeometryType::SP geometryType)
       : Geometry(geometryType)
     {}
+    virtual std::string toString() const { return "UserGeometry"; }
   };
   
   struct Group : public Object {
+    virtual std::string toString() const { return "Group"; }
   };
   
   struct GeometryGroup : public Group {
@@ -302,6 +327,7 @@ namespace owl {
       assert(childID < children.size());
       children[childID] = child;
     }
+    virtual std::string toString() const { return "GeometryGroup"; }
     std::vector<Geometry::SP> children;
   };
 
@@ -317,6 +343,7 @@ namespace owl {
       assert(childID < children.size());
       children[childID] = child;
     }
+    virtual std::string toString() const { return "InstnaceGroup"; }
     std::vector<Group::SP> children;
   };
 
@@ -337,7 +364,7 @@ namespace owl {
       // TODO: clean up with proper dynamic_cast ...
       return ((void*)object.get() == (void*)context.get());
     }
-  private:
+  // private:
     std::shared_ptr<Object>     object;
     std::shared_ptr<Context>    context;
   };
@@ -360,9 +387,15 @@ namespace owl {
   }
     
   struct ApiHandles {
+    ~ApiHandles()
+    {
+      PING;
+    }
+    
     void track(APIHandle *object)
     {
       assert(object);
+      
       auto it = active.find(object);
       assert(it == active.end());
       active.insert(object);
@@ -374,6 +407,22 @@ namespace owl {
       auto it = active.find(object);
       assert(it != active.end());
       active.erase(it);
+    }
+
+    /*! delete - and thereby, release - all handles that we still
+        own. */
+    void releaseAll()
+    {
+      // create a COPY of the handles we need to destroy, else
+      // destroying the handles modifies the std::set while we're
+      // iterating through it!
+      std::set<APIHandle *> stillActiveHandles = active;
+      for (auto handle : stillActiveHandles)  {
+        assert(handle);
+        delete handle;
+      }
+
+      assert(active.empty());
     }
     
     std::set<APIHandle *> active;
@@ -389,6 +438,7 @@ namespace owl {
     
     virtual ~Context()
     {
+      std::cout << "=======================================================" << std::endl;
       std::cout << "#owl: destroying context" << std::endl;
     }
 
@@ -404,22 +454,22 @@ namespace owl {
     
     void releaseAll()
     {
-      PING;
-      std::cout << "#owl: context is dying, num api handles (other than context itself) that hvae not yet released: "
+      std::cout << "#owl: context is dying, num api handles (other than context itself) "
+                << "that have not yet released: "
                 << (apiHandles.active.size()-1)
                 << std::endl;
-      for (auto handle : apiHandles.active)
-        delete handle;
+      apiHandles.releaseAll();
     }
 
     InstanceGroup::SP createInstanceGroup(size_t numChildren);
     GeometryGroup::SP createGeometryGroup(size_t numChildren);
-    Buffer::SP createBuffer();
-    LaunchProg::SP createLaunchProg(Module::SP module, const std::string &progName, size_t varStructSize);
-    GeometryType::SP createGeometryType(OWLGeometryKind kind,
-                                        size_t varStructSize);
+    Buffer::SP        createBuffer();
+    LaunchProg::SP    createLaunchProg(Module::SP module,
+                                       const std::string &progName,
+                                       size_t varStructSize);
+    GeometryType::SP  createGeometryType(OWLGeometryKind kind,
+                                         size_t varStructSize);
     Module::SP createModule(const std::string &ptxCode);
-    // Triangles::SP createTriangles(size_t varsStructSize);
   };
 
   APIHandle::APIHandle(Object::SP object, Context *context)
@@ -453,7 +503,7 @@ namespace owl {
                                   int dims_x, int dims_y)
   {
     LOG_API_CALL();
-    OWL_NOTIMPLEMENTED;
+    PING;
   }
 
 
@@ -571,6 +621,8 @@ namespace owl {
     LOG_API_CALL();
     assert(_context);
     Context::SP context = ((APIHandle *)_context)->get<Context>();
+    assert(context);
+    
     // Context *context = (Context *)_context;
     context->releaseAll();
     // delete _context;
