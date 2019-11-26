@@ -24,7 +24,9 @@ namespace owl {
 
   /*! a object that is managed/kept track of in a registry that
       assigns linear IDs (so that, for example, the SBT builder can
-      easily iterate over all geometries, all geometry types, etc */
+      easily iterate over all geometries, all geometry types, etc. The
+      sole job of this class is to properly register and unregister
+      itself in the given registry when it gets created/destroyed */
   struct RegisteredObject : public ContextObject {
     RegisteredObject(Context *const context,
                      ObjectRegistry &registry);

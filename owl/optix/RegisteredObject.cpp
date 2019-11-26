@@ -24,10 +24,16 @@ namespace owl {
     : ContextObject(context),
       ID(registry.allocID()),
       registry(registry)
-  {}
+  {
+    assert(this);
+    registry.track(this);
+  }
   
   RegisteredObject::~RegisteredObject()
-  { registry.forget(this); }
+  {
+    assert(this);
+    registry.forget(this);
+  }
     
 } // ::owl
 
