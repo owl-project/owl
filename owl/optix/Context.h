@@ -36,7 +36,8 @@ namespace owl {
 
     ObjectRegistryT<Buffer> buffers;
     ObjectRegistryT<Group>  groups;
-    ObjectRegistryT<RayGen> rayGens;
+    ObjectRegistryT<RayGenType>   rayGenTypes;
+    ObjectRegistryT<RayGen>       rayGens;
     ObjectRegistryT<GeometryType> geometryTypes;
     ObjectRegistryT<Geometry>     geometries;
     

@@ -16,7 +16,8 @@
 
 #pragma once
 
-#include "ObjectRegistry.h"
+#include "SBTObject.h"
+#include "Module.h"
 
 namespace owl {
 
