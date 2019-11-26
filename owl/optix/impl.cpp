@@ -14,545 +14,91 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "owl/owl.h"
-#include "optix/common.h"
-#include <string.h>
-#include <set>
-#include <map>
-#include <vector>
-#include <stack>
-#include <typeinfo>
-#include <mutex>
+#include "Context.h"
 
 namespace owl {
-  using gdt::vec3f;
-
-  struct Context;
-  struct Buffer;
-  template<typename Object> struct ObjectRegistry;
-  struct Geometry;
-  struct GeometryGroup;
-  struct LaunchProg;
-
+  
 #define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
 
-#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
+  struct APIContext;
   
-  
-  //#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
-#define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
-
-  template<size_t alignment>
-  size_t smallestMultipleOf(size_t unalignedSize)
-  {
-    const size_t numBlocks = (unalignedSize+alignment-1)/alignment;
-    return numBlocks*alignment;
-  }
-
-  std::string typeToString(const OWLDataType type)
-  {
-    throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
-                             +": not yet implemented for type #"
-                             +std::to_string((int)type));
-  }
-  
-  struct Object : public std::enable_shared_from_this<Object> {
-    typedef std::shared_ptr<Object> SP;
-
-    virtual std::string toString() const { return "Object"; }
-    
-    template<typename T>
-    inline std::shared_ptr<T> as() 
-    { return std::dynamic_pointer_cast<T>(shared_from_this()); }
-    
-    virtual ~Object() {}
-  };
-
-  template<typename T> const T &assertNotNull(const T &ptr)
-  { assert(ptr); return ptr; }
-  
-  struct Variable;
-  
-  // struct VarDecl : public Object {
-
-  //   typedef std::shared_ptr<VarDecl> SP;
-
-  //   virtual std::string toString() const { return "VarDecl"; }
-
-  //   /*! create an actual instance of this variable */
-  //   virtual std::shared_ptr<Variable> instantiate() = 0;
-  // };
-
-  
-  struct Variable : public Object {
-    typedef std::shared_ptr<Variable> SP;
-
-    Variable(const OWLVarDecl *const varDecl)
-      : varDecl(varDecl)
-    { assert(varDecl); }
-    
-    virtual void set(const std::shared_ptr<Buffer> &value) { wrongType(); }
-    virtual void set(const float &value) { wrongType(); }
-    virtual void set(const vec3f &value) { wrongType(); }
-
-    virtual std::string toString() const { return "Variable"; }
-    
-    void wrongType() { PING; }
-
-    static Variable::SP createInstanceOf(const OWLVarDecl *decl);
-    
-    /*! the variable we're setting in the given object */
-    const OWLVarDecl *const varDecl;
-  };
-  
-  /*! captures the concept of a module that contains one or more
-    programs. */
-  struct Module : public Object {
-    typedef std::shared_ptr<Module> SP;
-
-    Module(const std::string &ptxCode)
-      : ptxCode(ptxCode)
-    {
-      std::cout << "#owl: created module ..." << std::endl;
-    }
-    
-    virtual std::string toString() const { return "Module"; }
-    
-    const std::string ptxCode;
-  };
-  
-  struct SBTObjectType : public Object
-  {
-    typedef std::shared_ptr<SBTObjectType> SP;
-
-    SBTObjectType(size_t varStructSize,
-                  const std::vector<OWLVarDecl> &varDecls)
-      : varStructSize(varStructSize),
-        varDecls(varDecls)
-    {
-      for (auto &var : varDecls)
-        assert(var.name != nullptr);
-      /* TODO: at least in debug mode, do some 'duplicate variable
-         name' and 'overlap of variables' checks etc */
-    }
-    
-    inline int getVariableIdx(const std::string &varName)
-    {
-      for (int i=0;i<varDecls.size();i++) {
-        assert(varDecls[i].name);
-        if (!strcmp(varName.c_str(),varDecls[i].name))
-          return i;
-      }
-      return -1;
-    }
-    inline bool hasVariable(const std::string &varName)
-    {
-      return getVariableIdx(varName) >= 0;
-    }
-
-    virtual std::string toString() const { return "SBTObjectType"; }
-    void declareVariable(const std::string &varName,
-                         OWLDataType type,
-                         size_t offset);
-
-    std::vector<Variable::SP> instantiateVariables();
-    
-    /*! the total size of the variables struct */
-    const size_t         varStructSize;
-
-    /*! the high-level semantic description of variables in the
-        variables struct */
-    const std::vector<OWLVarDecl> varDecls;
-  };
-
-  template<typename ObjectType>
-  struct SBTObject : public Object
-  {
-    typedef std::shared_ptr<SBTObject> SP;
-
-    SBTObject(typename ObjectType::SP const type)
-      : type(type),
-        variables(assertNotNull(type)->instantiateVariables())
-    {}
-    
-    virtual std::string toString() const { return "SBTObject<"+type->toString()+">"; }
-    
-    bool hasVariable(const std::string &name)
-    {
-      return type->hasVariable(name);
-    }
-    
-    Variable::SP getVariable(const std::string &name)
-    {
-      int varID = type->getVariableIdx(name);
-      assert(varID >= 0);
-      assert(varID <  variables.size());
-      Variable::SP var = variables[varID];
-      assert(var);
-      return var;
-    }
-
-    /*! our own type description, that tells us which variables (of
-        which type, etc) we have */
-    typename ObjectType::SP const type;
-
-    /*! the actual variable *values* */
-    const std::vector<Variable::SP> variables;
-  };
-
-  struct LaunchProgType : public SBTObjectType {
-    typedef std::shared_ptr<LaunchProgType> SP;
-    LaunchProgType(Module::SP module,
-                   const std::string &programName,
-                   size_t varStructSize,
-                   const std::vector<OWLVarDecl> &varDecls)
-      : SBTObjectType(varStructSize,varDecls),
-        module(module),
-        progName(progName)
-    {}
-    virtual std::string toString() const { return "LaunchProgType"; }
-    
-    Module::SP module;
-    const std::string &progName;
-  };
-  
-  struct LaunchProg : public SBTObject<LaunchProgType> {
-    typedef std::shared_ptr<LaunchProg> SP;
-    
-    LaunchProg(ObjectRegistry<LaunchProg> &launchProgs,
-               LaunchProgType::SP type);
-    ~LaunchProg();
-    
-    virtual std::string toString() const { return "LaunchProg"; }
-    
-    const int ID;
-  private:
-    ObjectRegistry<LaunchProg> &launchProgs;
-  };
-
-  struct Buffer : public Object
-  {
-    typedef std::shared_ptr<Buffer> SP;
-    
-    Buffer(ObjectRegistry<Buffer> &buffers);
-    ~Buffer();
-    
-    virtual std::string toString() const { return "Buffer"; }
-    const int ID;
-  private:
-    ObjectRegistry<Buffer> &buffers;
-  };
-
-  /*! registry that tracks mapping between buffers and buffer
-      IDs. Every buffer should have a valid ID, and should be tracked
-      in this registry under this ID */
-  template<typename Object>
-  struct ObjectRegistry {
-    inline size_t size() const { return objects.size(); }
-    inline bool   empty() const { return objects.empty(); }
-    
-    void forget(Object *object)
-    {
-      assert(object);
-      
-      std::lock_guard<std::mutex> lock(mutex);
-      assert(object->ID >= 0);
-      assert(object->ID < objects.size());
-      assert(objects[object->ID] == object);
-      objects[object->ID] = nullptr;
-      
-      previouslyReleasedIDs.push(object->ID);
-    }
-    
-    void track(Object *object)
-    {
-      assert(object);
-      std::lock_guard<std::mutex> lock(mutex);
-      assert(object->ID >= 0);
-      assert(object->ID < objects.size());
-      assert(objects[object->ID] == nullptr);
-      objects[object->ID] = object;
-    }
-    
-    int allocID() {
-      std::lock_guard<std::mutex> lock(mutex);
-      if (previouslyReleasedIDs.empty()) {
-        objects.push_back(nullptr);
-        return objects.size()-1;
-      } else {
-        int reusedID = previouslyReleasedIDs.top();
-        previouslyReleasedIDs.pop();
-        return reusedID;
-      }
-    }
-    inline Object *getPtr(int ID)
-    {
-      std::lock_guard<std::mutex> lock(mutex);
-      
-      assert(ID >= 0);
-      assert(ID < objects.size());
-      assert(objects[ID]);
-      return objects[ID];
-    }
-    inline typename Object::SP getSP(int ID)
-    {
-      std::lock_guard<std::mutex> lock(mutex);
-      
-      assert(ID >= 0);
-      assert(ID < objects.size());
-      assert(objects[ID]);
-      return objects[ID]->shared_from_this();
-    }
-
-  private:
-    /*! list of all tracked objects. note this are *NOT* shared-ptr's,
-        else we'd never released objects because each object would
-        always be owned by the registry */
-    std::vector<Object *> objects;
-    
-    /*! list of IDs that have already been allocated before, and have
-        since gotten freed, so can be re-used */
-    std::stack<int> previouslyReleasedIDs;
-    std::mutex mutex;
-  };
-
-
-
-  // /*! registry that tracks mapping between buffers and buffer
-  //     IDs. Every buffer should have a valid ID, and should be tracked
-  //     in this registry under this ID */
-  // struct BufferRegistry {
-  //   void forget(Buffer *buffer)
-  //   {
-  //     assert(buffer);
-      
-  //     std::lock_guard<std::mutex> lock(mutex);
-  //     assert(buffer->ID >= 0);
-  //     assert(buffer->ID < buffers.size());
-  //     assert(buffers[buffer->ID] == buffer);
-  //     buffers[buffer->ID] = nullptr;
-      
-  //     previouslyReleasedIDs.push(buffer->ID);
-  //   }
-    
-  //   void track(Buffer *buffer)
-  //   {
-  //     assert(buffer);
-  //     std::lock_guard<std::mutex> lock(mutex);
-  //     assert(buffer->ID >= 0);
-  //     assert(buffer->ID < buffers.size());
-  //     assert(buffers[buffer->ID] == nullptr);
-  //     buffers[buffer->ID] = buffer;
-  //   }
-    
-  //   int allocID() {
-  //     std::lock_guard<std::mutex> lock(mutex);
-  //     if (previouslyReleasedIDs.empty()) {
-  //       buffers.push_back(nullptr);
-  //       return buffers.size()-1;
-  //     } else {
-  //       int reusedID = previouslyReleasedIDs.top();
-  //       previouslyReleasedIDs.pop();
-  //       return reusedID;
-  //     }
-  //   }
-  //   inline Buffer *get(int ID)
-  //   {
-  //     std::lock_guard<std::mutex> lock(mutex);
-      
-  //     assert(ID >= 0);
-  //     assert(ID < buffers.size());
-  //     assert(buffers[ID]);
-  //     return buffers[ID];
-  //   }
-
-  // private:
-  //   /*! list of all tracked buffers. note this are *NOT* shared-ptr's,
-  //       else we'd never released buffers because each buffer would
-  //       always be owned by the registry */
-  //   std::vector<Buffer *> buffers;
-    
-  //   /*! list of IDs that have already been allocated before, and have
-  //       since gotten freed, so can be re-used */
-  //   std::stack<int> previouslyReleasedIDs;
-  //   std::mutex mutex;
-  // };
-
-
-
-  LaunchProg::LaunchProg(ObjectRegistry<LaunchProg> &launchProgs,
-             LaunchProgType::SP type) 
-    : SBTObject(type),
-      ID(launchProgs.allocID()),
-      launchProgs(launchProgs)
-  {
-    launchProgs.track(this);
-  }
-
-  LaunchProg::~LaunchProg()
-  { launchProgs.forget(this); }
-  
-  Buffer::Buffer(ObjectRegistry<Buffer> &buffers)
-    : ID(buffers.allocID()),
-      buffers(buffers)
-  {
-    buffers.track(this);
-  }
-  
-  Buffer::~Buffer()
-  { buffers.forget(this); }
-  
-
-  struct GeometryType : public SBTObjectType {
-    typedef std::shared_ptr<GeometryType> SP;
-    
-    GeometryType(size_t varStructSize,
-                 const std::vector<OWLVarDecl> &varDecls)
-      : SBTObjectType(varStructSize,varDecls)
-    {}
-
-    virtual std::string toString() const { return "GeometryType"; }
-    virtual void setClosestHitProgram(int rayType,
-                                      Module::SP module,
-                                      const std::string &progName)
-    { IGNORING_THIS(); }
-
-    virtual std::shared_ptr<Geometry> createGeometry() = 0;
-  };
-
-  struct TrianglesGeometryType : public GeometryType {
-    typedef std::shared_ptr<TrianglesGeometryType> SP;
-    
-    TrianglesGeometryType(size_t varStructSize,
-                          const std::vector<OWLVarDecl> &varDecls)
-      : GeometryType(varStructSize,varDecls)
-    {}
-
-    virtual std::string toString() const { return "TrianlgeGeometryType"; }
-    virtual std::shared_ptr<Geometry> createGeometry() override;
-  };
-
-  struct UserGeometryType : public GeometryType {
-    typedef std::shared_ptr<UserGeometryType> SP;
-    
-    UserGeometryType(size_t varStructSize,
-                 const std::vector<OWLVarDecl> &varDecls)
-      : GeometryType(varStructSize,varDecls)
-    {}
-
-    virtual std::string toString() const { return "UserGeometryType"; }
-    virtual std::shared_ptr<Geometry> createGeometry() override;
-  };
-
-  struct Geometry : public SBTObject<GeometryType> {
-    typedef std::shared_ptr<Geometry> SP;
-
-    Geometry(GeometryType::SP geometryType)
-      : SBTObject(geometryType)
-    {}
-    virtual std::string toString() const { return "Geometry"; }
-    
-    GeometryType::SP geometryType;
-  };
-
-  struct TrianglesGeometry : public Geometry {
-    typedef std::shared_ptr<TrianglesGeometry> SP;
-
-    TrianglesGeometry(GeometryType::SP geometryType)
-      : Geometry(geometryType)
-    {}
-
-    void setVertices(Buffer::SP vertices)
-    { IGNORING_THIS(); }
-    void setIndices(Buffer::SP indices)
-    { IGNORING_THIS(); }
-    virtual std::string toString() const { return "TrianglesGeometry"; }
-  };
-
-  struct UserGeometry : public Geometry {
-    typedef std::shared_ptr<UserGeometry> SP;
-
-    UserGeometry(GeometryType::SP geometryType)
-      : Geometry(geometryType)
-    {}
-    virtual std::string toString() const { return "UserGeometry"; }
-  };
-  
-  struct Group : public Object {
-    Group(ObjectRegistry<Group> &groups);
-    ~Group();
-    virtual std::string toString() const { return "Group"; }
-    
-    const int ID;
-  private:
-    ObjectRegistry<Group> &groups;
-  };
-
-
-  Group::Group(ObjectRegistry<Group> &groups)
-    : ID(groups.allocID()),
-      groups(groups)
-  {
-    groups.track(this);
-  }
-  
-  Group::~Group()
-  { groups.forget(this); }
-  
-  
-  struct GeometryGroup : public Group {
-    typedef std::shared_ptr<GeometryGroup> SP;
-
-    GeometryGroup(ObjectRegistry<Group> &groups, size_t numChildren)
-      : Group(groups), geometries(numChildren)
-    {}
-    void setChild(int childID, Geometry::SP child)
-    {
-      assert(childID >= 0);
-      assert(childID < geometries.size());
-      geometries[childID] = child;
-    }
-    virtual std::string toString() const { return "GeometryGroup"; }
-    std::vector<Geometry::SP> geometries;
-  };
-
-  struct InstanceGroup : public Group {
-    typedef std::shared_ptr<InstanceGroup> SP;
-
-    InstanceGroup(ObjectRegistry<Group> &groups, size_t numChildren)
-      : Group(groups), children(numChildren)
-    {}
-    void setChild(int childID, Group::SP child)
-    {
-      assert(childID >= 0);
-      assert(childID < children.size());
-      children[childID] = child;
-    }
-    virtual std::string toString() const { return "InstanceGroup"; }
-    std::vector<Group::SP> children;
-  };
-
-  // ==================================================================
-  // apihandle.h
-  // ==================================================================
-  
-  struct APIHandle;
-
   struct APIHandle {
-    APIHandle(Object::SP object, Context *context);
+    APIHandle(Object::SP object, APIContext *context);
     virtual ~APIHandle();
     template<typename T> inline std::shared_ptr<T> get();
-    inline std::shared_ptr<Context> getContext() const { return context; }
+    inline std::shared_ptr<APIContext> getContext() const { return context; }
     inline bool isContext() const
     {
-      // TODO: clean up with proper dynamic_cast ...
       return ((void*)object.get() == (void*)context.get());
     }
-  // private:
     std::shared_ptr<Object>     object;
-    std::shared_ptr<Context>    context;
+    std::shared_ptr<APIContext> context;
   };
+  
 
+  
+  
+  struct APIContext : public Context {
+    typedef std::shared_ptr<APIContext> SP;
+    
+    APIHandle *createHandle(Object::SP object);
+
+    void track(APIHandle *object);
+    
+    void forget(APIHandle *object);
+
+    /*! delete - and thereby, release - all handles that we still
+      own. */
+    void releaseAll();
+    std::set<APIHandle *> activeHandles;
+  };
+  
+  
+  void APIContext::forget(APIHandle *object)
+  {
+    assert(object);
+    auto it = activeHandles.find(object);
+    assert(it != activeHandles.end());
+    activeHandles.erase(it);
+  }
+
+  void APIContext::releaseAll()
+  {
+    std::cout << "#owl: context is dying, num api handles (other than context itself) "
+              << "that have not yet released: "
+              << (activeHandles.size()-1)
+              << std::endl;
+
+    // create a COPY of the handles we need to destroy, else
+    // destroying the handles modifies the std::set while we're
+    // iterating through it!
+    std::set<APIHandle *> stillActiveHandles = activeHandles;
+    for (auto handle : stillActiveHandles)  {
+      assert(handle);
+      delete handle;
+    }
+
+    assert(activeHandles.empty());
+  }
+  
+  void APIContext::track(APIHandle *object)
+  {
+    assert(object);
+      
+    auto it = activeHandles.find(object);
+    assert(it == activeHandles.end());
+    activeHandles.insert(object);
+  }
+
+  APIHandle *APIContext::createHandle(Object::SP object)
+  {
+    assert(object);
+    APIHandle *handle = new APIHandle(object,this);
+    track(handle);
+    return handle;
+  }
+
+  
   template<typename T> inline std::shared_ptr<T> APIHandle::get()
   {
     assert(object);
@@ -570,115 +116,14 @@ namespace owl {
     return asT;
   }
     
-  struct ApiHandles {
-    ~ApiHandles()
-    {
-    }
-    
-    void track(APIHandle *object)
-    {
-      assert(object);
-      
-      auto it = active.find(object);
-      assert(it == active.end());
-      active.insert(object);
-    }
-    
-    void forget(APIHandle *object)
-    {
-      assert(object);
-      auto it = active.find(object);
-      assert(it != active.end());
-      active.erase(it);
-    }
-
-    /*! delete - and thereby, release - all handles that we still
-        own. */
-    void releaseAll()
-    {
-      // create a COPY of the handles we need to destroy, else
-      // destroying the handles modifies the std::set while we're
-      // iterating through it!
-      std::set<APIHandle *> stillActiveHandles = active;
-      for (auto handle : stillActiveHandles)  {
-        assert(handle);
-        delete handle;
-      }
-
-      assert(active.empty());
-    }
-    
-    std::set<APIHandle *> active;
-  };
-  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  // END apihandle.h
-  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 
   
-  struct Context : public Object {
-    typedef std::shared_ptr<Context> SP;
-    
-    virtual ~Context()
-    {
-      std::cout << "=======================================================" << std::endl;
-      std::cout << "#owl: destroying context" << std::endl;
-    }
-
-    ApiHandles apiHandles;
-    ObjectRegistry<Buffer>     buffers;
-    ObjectRegistry<Group>      groups;
-    ObjectRegistry<LaunchProg> launchProgs;
-    //! TODO: allow changing that via api ..
-    size_t numRayTypes = 1;
-
-    /*! experimentation code for sbt construction */
-    void expBuildSBT();
-    
-    APIHandle *createHandle(Object::SP object)
-    {
-      assert(object);
-      APIHandle *handle = new APIHandle(object,this);
-      apiHandles.track(handle);
-      return handle;
-    }
-    
-    void releaseAll()
-    {
-      std::cout << "#owl: context is dying, num api handles (other than context itself) "
-                << "that have not yet released: "
-                << (apiHandles.active.size()-1)
-                << std::endl;
-      apiHandles.releaseAll();
-    }
-
-    InstanceGroup::SP createInstanceGroup(size_t numChildren);
-    GeometryGroup::SP createGeometryGroup(size_t numChildren);
-    Buffer::SP        createBuffer();
-    
-    LaunchProg::SP
-    createLaunchProg(const std::shared_ptr<LaunchProgType> &type);
-    
-    LaunchProgType::SP
-    createLaunchProgType(Module::SP module,
-                         const std::string &progName,
-                         size_t varStructSize,
-                         const std::vector<OWLVarDecl> &varDecls);
-    
-    GeometryType::SP
-    createGeometryType(OWLGeometryKind kind,
-                       size_t varStructSize,
-                       const std::vector<OWLVarDecl> &varDecls);
-    
-    Module::SP createModule(const std::string &ptxCode);
-  };
-
-  APIHandle::APIHandle(Object::SP object, Context *context)
+  APIHandle::APIHandle(Object::SP object, APIContext *context)
   {
     assert(object);
     assert(context);
     this->object  = object;
-    this->context = std::dynamic_pointer_cast<Context>
+    this->context = std::dynamic_pointer_cast<APIContext>
       (context->shared_from_this());
     assert(this->object);
     assert(this->context);
@@ -686,7 +131,7 @@ namespace owl {
 
   APIHandle::~APIHandle()
   {
-    context->apiHandles.forget(this);
+    context->forget(this);
     object  = nullptr;
     context = nullptr;
   }
@@ -694,66 +139,26 @@ namespace owl {
   OWL_API OWLContext owlContextCreate()
   {
     LOG_API_CALL();
-    Context::SP context = std::make_shared<Context>();
+    APIContext::SP context = std::make_shared<APIContext>();
     std::cout << "#owl.api: context created..." << std::endl;
     return (OWLContext)context->createHandle(context);
   }
 
   OWL_API void owlContextLaunch2D(OWLContext _context,
-                                  OWLLaunchProg _launchProg,
+                                  OWLRayGen _rayGen,
                                   int dims_x, int dims_y)
   {
     LOG_API_CALL();
 
     assert(_context);
-    Context::SP context
-      = ((APIHandle *)_context)->get<Context>();
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
 
     std::cout << "SHOULD BUILD SBT HERE!!!!" << std::endl;
     context->expBuildSBT();
     
     std::cout << "actual launch not yet implemented - ignoring ...." << std::endl;
-  }
-
-
-  void Context::expBuildSBT()
-  {
-    std::cout << "=======================================================" << std::endl;
-    PING;
-    PRINT(groups.size());
-    assert(!groups.empty());
-    
-    std::vector<int> sbtOffsetOfGroup(groups.size());
-    size_t numHitGroupRecords = 0;
-    size_t biggestVarStructSize = 0;
-    for (int groupID=0;groupID<groups.size();groupID++) {
-      sbtOffsetOfGroup[groupID] = numHitGroupRecords;
-      Group::SP group = groups.getSP(groupID);
-      if (!group)
-        continue;
-      GeometryGroup::SP gg
-        = group->as<GeometryGroup>();
-      if (!gg)
-        continue;
-      numHitGroupRecords += numRayTypes * gg->geometries.size();
-
-      for (auto g : gg->geometries) {
-        assert(g);
-        biggestVarStructSize = std::max(biggestVarStructSize,g->type->varStructSize);
-      }
-    }
-    PRINT(numHitGroupRecords);
-    PRINT(biggestVarStructSize);
-
-    size_t alignedSBTRecordSize
-      = OPTIX_SBT_RECORD_HEADER_SIZE
-      + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(biggestVarStructSize);
-    PRINT(alignedSBTRecordSize);
-    size_t hitGroupRecordsSizeInBytes
-      = alignedSBTRecordSize * numHitGroupRecords;
-    
-    std::cout << "=======================================================" << std::endl;
   }
 
 
@@ -777,7 +182,7 @@ namespace owl {
     Variable::SP var = obj->getVariable(varName);
     assert(var);
 
-    Context::SP context = handle->getContext();
+    APIContext::SP context = handle->getContext();
     assert(context);
 
     return(OWLVariable)context->createHandle(var);
@@ -793,11 +198,11 @@ namespace owl {
   }
 
   OWL_API OWLVariable
-  owlLaunchProgGetVariable(OWLLaunchProg _prog,
-                           const char *varName)
+  owlRayGenGetVariable(OWLRayGen _prog,
+                       const char *varName)
   {
     LOG_API_CALL();
-    return getVariableHelper<LaunchProg>((APIHandle*)_prog,varName);
+    return getVariableHelper<RayGen>((APIHandle*)_prog,varName);
   }
   
 
@@ -814,19 +219,19 @@ namespace owl {
     return varDecls;
   }
 
-  OWL_API OWLLaunchProg
-  owlContextCreateLaunchProg(OWLContext _context,
-                             OWLModule _module,
-                             const char *programName,
-                             size_t sizeOfVarStruct,
-                             OWLVarDecl *vars,
-                             size_t      numVars)
+  OWL_API OWLRayGen
+  owlContextCreateRayGen(OWLContext _context,
+                         OWLModule _module,
+                         const char *programName,
+                         size_t sizeOfVarStruct,
+                         OWLVarDecl *vars,
+                         size_t      numVars)
   {
     LOG_API_CALL();
 
     assert(_context);
-    Context::SP context
-      = ((APIHandle *)_context)->get<Context>();
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
     
     assert(_module);
@@ -834,17 +239,17 @@ namespace owl {
       = ((APIHandle *)_module)->get<Module>();
     assert(module);
     
-    LaunchProgType::SP  launchProgType
-      = context->createLaunchProgType(module,programName,
-                                      sizeOfVarStruct,
-                                      checkAndPackVariables(vars,numVars));
-    assert(launchProgType);
+    RayGenType::SP  rayGenType
+      = context->createRayGenType(module,programName,
+                                  sizeOfVarStruct,
+                                  checkAndPackVariables(vars,numVars));
+    assert(rayGenType);
     
-    LaunchProg::SP  launchProg
-      = context->createLaunchProg(launchProgType);
-    assert(launchProg);
+    RayGen::SP  rayGen
+      = context->createRayGen(rayGenType);
+    assert(rayGen);
 
-    return (OWLLaunchProg)context->createHandle(launchProg);
+    return (OWLRayGen)context->createHandle(rayGen);
   }
 
   OWL_API OWLGeometryGroup
@@ -854,7 +259,7 @@ namespace owl {
   {
     LOG_API_CALL();
     assert(_context);
-    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
     GeometryGroup::SP  group = context->createGeometryGroup(numGeometries);
     assert(group);
@@ -874,7 +279,7 @@ namespace owl {
   {
     LOG_API_CALL();
     assert(_context);
-    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
     InstanceGroup::SP  group = context->createInstanceGroup(numInstances);
     assert(group);
@@ -892,7 +297,7 @@ namespace owl {
   {
     LOG_API_CALL();
     assert(_context);
-    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
     
     // Context *context = (Context *)_context;
@@ -908,7 +313,7 @@ namespace owl {
   {
     LOG_API_CALL();
     assert(_context);
-    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
     Buffer::SP  buffer  = context->createBuffer();
     assert(buffer);
@@ -924,7 +329,7 @@ namespace owl {
   {
     LOG_API_CALL();
     assert(_context);
-    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
     GeometryType::SP geometryType
       = context->createGeometryType(kind,varStructSize,
@@ -940,8 +345,8 @@ namespace owl {
     assert(_geometryType);
     assert(_context);
 
-    Context::SP context
-      = ((APIHandle *)_context)->get<Context>();
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
 
     GeometryType::SP geometryType
@@ -963,89 +368,13 @@ namespace owl {
     assert(_context);
     assert(ptxCode);
     
-    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
     Module::SP  module  = context->createModule(ptxCode);
     assert(module);
     return (OWLModule)context->createHandle(module);
   }
 
-
-  
-  Buffer::SP Context::createBuffer()
-  {
-    PING;
-    Buffer::SP buffer = std::make_shared<Buffer>(buffers);
-    PING;
-    assert(buffer);
-    return buffer;
-  }
-
-  LaunchProg::SP
-  Context::createLaunchProg(const std::shared_ptr<LaunchProgType> &type)
-  {
-    return std::make_shared<LaunchProg>(launchProgs,type);
-  }
-
-  GeometryGroup::SP Context::createGeometryGroup(size_t numChildren)
-  {
-    return std::make_shared<GeometryGroup>(groups,numChildren);
-  }
-
-  InstanceGroup::SP Context::createInstanceGroup(size_t numChildren)
-  {
-    return std::make_shared<InstanceGroup>(groups,numChildren);
-  }
-
-
-  LaunchProgType::SP
-  Context::createLaunchProgType(Module::SP module,
-                                const std::string &progName,
-                                size_t varStructSize,
-                                const std::vector<OWLVarDecl> &varDecls)
-  {
-    return std::make_shared<LaunchProgType>(module,progName,
-                                            varStructSize,
-                                            varDecls);
-  }
-  
-
-  GeometryType::SP
-  Context::createGeometryType(OWLGeometryKind kind,
-                              size_t varStructSize,
-                              const std::vector<OWLVarDecl> &varDecls)
-  {
-    switch(kind) {
-    case OWL_GEOMETRY_TRIANGLES:
-      return std::make_shared<TrianglesGeometryType>(varStructSize,varDecls);
-    case OWL_GEOMETRY_USER:
-      return std::make_shared<UserGeometryType>(varStructSize,varDecls);
-    default:
-      OWL_NOTIMPLEMENTED;
-    }
-  }
-
-  Module::SP Context::createModule(const std::string &ptxCode)
-  {
-    return std::make_shared<Module>(ptxCode);
-  }
-
-  std::shared_ptr<Geometry> UserGeometryType::createGeometry()
-  {
-    GeometryType::SP self
-      = std::dynamic_pointer_cast<GeometryType>(shared_from_this());
-    assert(self);
-    return std::make_shared<UserGeometry>(self);
-  }
-
-  std::shared_ptr<Geometry> TrianglesGeometryType::createGeometry()
-  {
-    GeometryType::SP self
-      = std::dynamic_pointer_cast<GeometryType>(shared_from_this());
-    assert(self);
-    return std::make_shared<TrianglesGeometry>(self);
-  }
-  
 
   // ==================================================================
   // "RELEASE" functions
@@ -1256,5 +585,5 @@ namespace owl {
     return variables;
   }
   
-  
+
 } // ::owl

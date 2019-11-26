@@ -215,8 +215,8 @@ int main(int ac, char **av)
     {
      { "bgColor", OWL_FLOAT3, OWL_OFFSETOF(RenderFrameVars,bgColor)},
     };
-  OWLLaunchProg renderFrame
-    = owlContextCreateLaunchProg(context,
+  OWLRayGen renderFrame
+    = owlContextCreateRayGen(context,
                                  /* code to run: */
                                  module,"renderFrame",
                                  /* size of variables struct */
@@ -226,7 +226,7 @@ int main(int ac, char **av)
   
   
   OWLVariable bgColor
-    = owlLaunchProgGetVariable(renderFrame,"bgColor");
+    = owlRayGenGetVariable(renderFrame,"bgColor");
   owlVariableSet3fv(bgColor,&image_bgColor.x);
   owlVariableRelease(bgColor);
   

@@ -106,7 +106,7 @@ typedef struct _OWLVariable      *OWLVariable;
 typedef struct _OWLModule        *OWLModule;
 typedef struct _OWLGeometryGroup *OWLGeometryGroup;
 typedef struct _OWLInstanceGroup *OWLInstanceGroup;
-typedef struct _OWLLaunchProg    *OWLLaunchProg;
+typedef struct _OWLRayGen    *OWLRayGen;
 
 // typedef OWLGeometry OWLTriangles;
 
@@ -124,8 +124,8 @@ OWL_API OWLGeometry
 owlContextCreateGeometry(OWLContext context,
                          OWLGeometryType type);
 
-OWL_API OWLLaunchProg
-owlContextCreateLaunchProg(OWLContext context,
+OWL_API OWLRayGen
+owlContextCreateRayGen(OWLContext context,
                            OWLModule module,
                            const char *programName,
                            size_t sizeOfVarStruct,
@@ -159,7 +159,7 @@ owlContextCreateBuffer(OWLContext context,
     completed by the time this function returns. */
 OWL_API void
 owlContextLaunch2D(OWLContext context,
-                   OWLLaunchProg launchProg,
+                   OWLRayGen rayGen,
                    int dims_x, int dims_y);
 
 // OWL_API OWLTriangles owlTrianglesCreate(OWLContext context,
@@ -203,7 +203,7 @@ owlGeometryGetVariable(OWLGeometry geom,
                        const char *varName);
 
 OWL_API OWLVariable
-owlLaunchProgGetVariable(OWLLaunchProg geom,
+owlRayGenGetVariable(OWLRayGen geom,
                          const char *varName);
 
 // -------------------------------------------------------

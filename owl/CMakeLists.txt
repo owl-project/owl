@@ -19,6 +19,13 @@ include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 add_library(owl
   include/owl/owl.h
   optix/common.h
+
+  optix/RegisteredObject.cpp
+  optix/Buffer.cpp
+  optix/Group.cpp
+  optix/ObjectRegistry.cpp
+  optix/Context.cpp
+  optix/Geometry.cpp
   optix/impl.cpp
   )
 target_link_libraries(owl
