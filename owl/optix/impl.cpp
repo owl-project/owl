@@ -42,6 +42,12 @@ namespace owl {
   //#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
 #define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
 
+  template<size_t alignment>
+  size_t smallestMultipleOf(size_t unalignedSize)
+  {
+    const size_t numBlocks = (unalignedSize+alignment-1)/alignment;
+    return numBlocks*alignment;
+  }
 
   std::string typeToString(const OWLDataType type)
   {
@@ -212,11 +218,16 @@ namespace owl {
   
   struct LaunchProg : public SBTObject<LaunchProgType> {
     typedef std::shared_ptr<LaunchProg> SP;
-
-    LaunchProg(LaunchProgType::SP type) 
-      : SBTObject(type)
-    {}
+    
+    LaunchProg(ObjectRegistry<LaunchProg> &launchProgs,
+               LaunchProgType::SP type);
+    ~LaunchProg();
+    
     virtual std::string toString() const { return "LaunchProg"; }
+    
+    const int ID;
+  private:
+    ObjectRegistry<LaunchProg> &launchProgs;
   };
 
   struct Buffer : public Object
@@ -238,6 +249,7 @@ namespace owl {
   template<typename Object>
   struct ObjectRegistry {
     inline size_t size() const { return objects.size(); }
+    inline bool   empty() const { return objects.empty(); }
     
     void forget(Object *object)
     {
@@ -273,7 +285,7 @@ namespace owl {
         return reusedID;
       }
     }
-    inline Object *get(int ID)
+    inline Object *getPtr(int ID)
     {
       std::lock_guard<std::mutex> lock(mutex);
       
@@ -281,6 +293,15 @@ namespace owl {
       assert(ID < objects.size());
       assert(objects[ID]);
       return objects[ID];
+    }
+    inline typename Object::SP getSP(int ID)
+    {
+      std::lock_guard<std::mutex> lock(mutex);
+      
+      assert(ID >= 0);
+      assert(ID < objects.size());
+      assert(objects[ID]);
+      return objects[ID]->shared_from_this();
     }
 
   private:
@@ -359,6 +380,18 @@ namespace owl {
 
 
 
+  LaunchProg::LaunchProg(ObjectRegistry<LaunchProg> &launchProgs,
+             LaunchProgType::SP type) 
+    : SBTObject(type),
+      ID(launchProgs.allocID()),
+      launchProgs(launchProgs)
+  {
+    launchProgs.track(this);
+  }
+
+  LaunchProg::~LaunchProg()
+  { launchProgs.forget(this); }
+  
   Buffer::Buffer(ObjectRegistry<Buffer> &buffers)
     : ID(buffers.allocID()),
       buffers(buffers)
@@ -471,16 +504,16 @@ namespace owl {
     typedef std::shared_ptr<GeometryGroup> SP;
 
     GeometryGroup(ObjectRegistry<Group> &groups, size_t numChildren)
-      : Group(groups), children(numChildren)
+      : Group(groups), geometries(numChildren)
     {}
     void setChild(int childID, Geometry::SP child)
     {
       assert(childID >= 0);
-      assert(childID < children.size());
-      children[childID] = child;
+      assert(childID < geometries.size());
+      geometries[childID] = child;
     }
     virtual std::string toString() const { return "GeometryGroup"; }
-    std::vector<Geometry::SP> children;
+    std::vector<Geometry::SP> geometries;
   };
 
   struct InstanceGroup : public Group {
@@ -593,8 +626,11 @@ namespace owl {
     }
 
     ApiHandles apiHandles;
-    ObjectRegistry<Buffer> buffers;
-    ObjectRegistry<Group>  groups;
+    ObjectRegistry<Buffer>     buffers;
+    ObjectRegistry<Group>      groups;
+    ObjectRegistry<LaunchProg> launchProgs;
+    //! TODO: allow changing that via api ..
+    size_t numRayTypes = 1;
 
     /*! experimentation code for sbt construction */
     void expBuildSBT();
@@ -677,15 +713,47 @@ namespace owl {
     std::cout << "SHOULD BUILD SBT HERE!!!!" << std::endl;
     context->expBuildSBT();
     
-    std::cout << "actual laumch not yet implemented - ignoring ...." << std::endl;
+    std::cout << "actual launch not yet implemented - ignoring ...." << std::endl;
   }
 
 
   void Context::expBuildSBT()
   {
+    std::cout << "=======================================================" << std::endl;
     PING;
     PRINT(groups.size());
-    PING;
+    assert(!groups.empty());
+    
+    std::vector<int> sbtOffsetOfGroup(groups.size());
+    size_t numHitGroupRecords = 0;
+    size_t biggestVarStructSize = 0;
+    for (int groupID=0;groupID<groups.size();groupID++) {
+      sbtOffsetOfGroup[groupID] = numHitGroupRecords;
+      Group::SP group = groups.getSP(groupID);
+      if (!group)
+        continue;
+      GeometryGroup::SP gg
+        = group->as<GeometryGroup>();
+      if (!gg)
+        continue;
+      numHitGroupRecords += numRayTypes * gg->geometries.size();
+
+      for (auto g : gg->geometries) {
+        assert(g);
+        biggestVarStructSize = std::max(biggestVarStructSize,g->type->varStructSize);
+      }
+    }
+    PRINT(numHitGroupRecords);
+    PRINT(biggestVarStructSize);
+
+    size_t alignedSBTRecordSize
+      = OPTIX_SBT_RECORD_HEADER_SIZE
+      + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(biggestVarStructSize);
+    PRINT(alignedSBTRecordSize);
+    size_t hitGroupRecordsSizeInBytes
+      = alignedSBTRecordSize * numHitGroupRecords;
+    
+    std::cout << "=======================================================" << std::endl;
   }
 
 
@@ -765,7 +833,7 @@ namespace owl {
     Module::SP module
       = ((APIHandle *)_module)->get<Module>();
     assert(module);
-
+    
     LaunchProgType::SP  launchProgType
       = context->createLaunchProgType(module,programName,
                                       sizeOfVarStruct,
@@ -916,7 +984,7 @@ namespace owl {
   LaunchProg::SP
   Context::createLaunchProg(const std::shared_ptr<LaunchProgType> &type)
   {
-    return std::make_shared<LaunchProg>(type);
+    return std::make_shared<LaunchProg>(launchProgs,type);
   }
 
   GeometryGroup::SP Context::createGeometryGroup(size_t numChildren)
