@@ -227,7 +227,6 @@ namespace owl {
     ~Buffer();
     
     virtual std::string toString() const { return "Buffer"; }
-
     const int ID;
   private:
     ObjectRegistry<Buffer> &buffers;
@@ -238,6 +237,8 @@ namespace owl {
       in this registry under this ID */
   template<typename Object>
   struct ObjectRegistry {
+    inline size_t size() const { return objects.size(); }
+    
     void forget(Object *object)
     {
       assert(object);
@@ -445,14 +446,32 @@ namespace owl {
   };
   
   struct Group : public Object {
+    Group(ObjectRegistry<Group> &groups);
+    ~Group();
     virtual std::string toString() const { return "Group"; }
+    
+    const int ID;
+  private:
+    ObjectRegistry<Group> &groups;
   };
+
+
+  Group::Group(ObjectRegistry<Group> &groups)
+    : ID(groups.allocID()),
+      groups(groups)
+  {
+    groups.track(this);
+  }
+  
+  Group::~Group()
+  { groups.forget(this); }
+  
   
   struct GeometryGroup : public Group {
     typedef std::shared_ptr<GeometryGroup> SP;
 
-    GeometryGroup(size_t numChildren)
-      : children(numChildren)
+    GeometryGroup(ObjectRegistry<Group> &groups, size_t numChildren)
+      : Group(groups), children(numChildren)
     {}
     void setChild(int childID, Geometry::SP child)
     {
@@ -467,8 +486,8 @@ namespace owl {
   struct InstanceGroup : public Group {
     typedef std::shared_ptr<InstanceGroup> SP;
 
-    InstanceGroup(size_t numChildren)
-      : children(numChildren)
+    InstanceGroup(ObjectRegistry<Group> &groups, size_t numChildren)
+      : Group(groups), children(numChildren)
     {}
     void setChild(int childID, Group::SP child)
     {
@@ -483,7 +502,6 @@ namespace owl {
   // ==================================================================
   // apihandle.h
   // ==================================================================
-  struct Context;
   
   struct APIHandle;
 
@@ -577,6 +595,9 @@ namespace owl {
     ApiHandles apiHandles;
     ObjectRegistry<Buffer> buffers;
     ObjectRegistry<Group>  groups;
+
+    /*! experimentation code for sbt construction */
+    void expBuildSBT();
     
     APIHandle *createHandle(Object::SP object)
     {
@@ -642,14 +663,30 @@ namespace owl {
     return (OWLContext)context->createHandle(context);
   }
 
-  OWL_API void owlContextLaunch2D(OWLContext context,
-                                  OWLLaunchProg launchProg,
+  OWL_API void owlContextLaunch2D(OWLContext _context,
+                                  OWLLaunchProg _launchProg,
                                   int dims_x, int dims_y)
   {
     LOG_API_CALL();
-    PING;
+
+    assert(_context);
+    Context::SP context
+      = ((APIHandle *)_context)->get<Context>();
+    assert(context);
+
+    std::cout << "SHOULD BUILD SBT HERE!!!!" << std::endl;
+    context->expBuildSBT();
+    
+    std::cout << "actual laumch not yet implemented - ignoring ...." << std::endl;
   }
 
+
+  void Context::expBuildSBT()
+  {
+    PING;
+    PRINT(groups.size());
+    PING;
+  }
 
 
   // ==================================================================
@@ -884,12 +921,12 @@ namespace owl {
 
   GeometryGroup::SP Context::createGeometryGroup(size_t numChildren)
   {
-    return std::make_shared<GeometryGroup>(numChildren);
+    return std::make_shared<GeometryGroup>(groups,numChildren);
   }
 
   InstanceGroup::SP Context::createInstanceGroup(size_t numChildren)
   {
-    return std::make_shared<InstanceGroup>(numChildren);
+    return std::make_shared<InstanceGroup>(groups,numChildren);
   }
 
 
