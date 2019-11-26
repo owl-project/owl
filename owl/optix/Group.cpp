@@ -21,12 +21,14 @@ namespace owl {
 
   GeometryGroup::GeometryGroup(Context *const context,
                                size_t numChildren)
-    : Group(context,context->groups), geometries(numChildren)
+    : Group(context,context->groups),
+      geometries(numChildren)
   {}
   
   InstanceGroup::InstanceGroup(Context *const context,
                                size_t numChildren)
-    : Group(context,context->groups), children(numChildren)
+    : Group(context,context->groups),
+      children(numChildren)
   {}
   
 } // ::owl
