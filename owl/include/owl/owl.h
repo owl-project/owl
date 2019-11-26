@@ -52,9 +52,13 @@
 
 typedef enum
   {
+   OWL_FLOAT=100,
    OWL_FLOAT3,
+
+   OWL_INT=200,
    OWL_INT3,
-   OWL_BUFFER,
+   
+   OWL_BUFFER=1000,
    OWL_BUFFER_SIZE,
    OWL_BUFFER_ID,
    OWL_BUFFER_POINTER
@@ -80,6 +84,11 @@ typedef struct _OWL_float2 { float   x,y; } OWL_float2;
 typedef struct _OWL_int3   { int32_t x,y,z; } OWL_int3;
 typedef struct _OWL_float3 { float   x,y,z; } OWL_float3;
 
+typedef struct _OWLVarDecl {
+  const char *name;
+  OWLDataType type;
+  uint32_t    offset;
+} OWLVarDecl;
 
 // ------------------------------------------------------------------
 // device-objects - size of those _HAS_ to match the device-side
@@ -119,7 +128,9 @@ OWL_API OWLLaunchProg
 owlContextCreateLaunchProg(OWLContext context,
                            OWLModule module,
                            const char *programName,
-                           size_t sizeOfVarStruct);
+                           size_t sizeOfVarStruct,
+                           OWLVarDecl *vars,
+                           size_t      numVars);
 
 OWL_API OWLGeometryGroup
 owlContextCreateGeometryGroup(OWLContext context,
@@ -133,7 +144,9 @@ owlContextCreateInstanceGroup(OWLContext context,
 OWL_API OWLGeometryType
 owlContextCreateGeometryType(OWLContext context,
                              OWLGeometryKind kind,
-                             size_t sizeOfVarStruct);
+                             size_t sizeOfVarStruct,
+                             OWLVarDecl *vars,
+                             size_t      numVars);
 
 OWL_API OWLBuffer
 owlContextCreateBuffer(OWLContext context,
@@ -159,13 +172,6 @@ OWL_API void owlTrianglesSetVertices(OWLGeometry triangles,
                                      OWLBuffer vertices);
 OWL_API void owlTrianglesSetIndices(OWLGeometry triangles,
                                     OWLBuffer indices);
-
-OWL_API void
-owlGeometryTypeDeclareVariable(OWLGeometryType object,
-                               const char *varName,
-                               OWLDataType type,
-                               size_t offset);
-
 
 // -------------------------------------------------------
 // group/hierarchy creation and setting

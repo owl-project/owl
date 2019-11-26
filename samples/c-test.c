@@ -92,16 +92,23 @@ int main(int ac, char **av)
   // define type
   // ------------------------------------------------------------------
 
+  OWLVarDecl diffuseTrianglesVars[] =
+    {
+     { "vertex", OWL_BUFFER_POINTER, OWL_OFFSETOF(TrianglesVars,vertex)},
+     { "color",  OWL_FLOAT3,         OWL_OFFSETOF(TrianglesVars,color)},
+    };
   OWLGeometryType diffuseTrianglesType
     = owlContextCreateGeometryType(context,
                                    OWL_GEOMETRY_TRIANGLES,
-                                   sizeof(struct TrianglesVars));
-  owlGeometryTypeDeclareVariable(diffuseTrianglesType,"vertex",OWL_BUFFER_POINTER,
-                                 OWL_OFFSETOF(TrianglesVars,vertex));
-  owlGeometryTypeDeclareVariable(diffuseTrianglesType,"index", OWL_BUFFER_POINTER,
-                                 OWL_OFFSETOF(TrianglesVars,index));
-  owlGeometryTypeDeclareVariable(diffuseTrianglesType,"color",OWL_FLOAT3,
-                                 OWL_OFFSETOF(TrianglesVars,color));
+                                   sizeof(struct TrianglesVars),
+                                   diffuseTrianglesVars,
+                                   sizeof(diffuseTrianglesVars)/sizeof(OWLVarDecl));
+  /* owlGeometryTypeDeclareVariable(diffuseTrianglesType,"vertex",OWL_BUFFER_POINTER, */
+  /*                                OWL_OFFSETOF(TrianglesVars,vertex)); */
+  /* owlGeometryTypeDeclareVariable(diffuseTrianglesType,"index", OWL_BUFFER_POINTER, */
+  /*                                OWL_OFFSETOF(TrianglesVars,index)); */
+  /* owlGeometryTypeDeclareVariable(diffuseTrianglesType,"color",OWL_FLOAT3, */
+  /*                                OWL_OFFSETOF(TrianglesVars,color)); */
 
   owlGeometryTypeSetClosestHitProgram(diffuseTrianglesType,
                                       OWL_ALL_RAY_TYPES,
@@ -143,18 +150,18 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // define type
   // ------------------------------------------------------------------
+  OWLVarDecl diffuseSphereVars[] =
+    {
+     { "center", OWL_FLOAT3, OWL_OFFSETOF(SphereVars,center)},
+     { "color",  OWL_FLOAT3, OWL_OFFSETOF(SphereVars,color)},
+     { "radius", OWL_FLOAT,  OWL_OFFSETOF(SphereVars,radius)},
+    };
   OWLGeometryType diffuseSphereType
     = owlContextCreateGeometryType(context,
                                    OWL_GEOMETRY_USER,
-                                   sizeof(struct SphereVars));
-  owlGeometryTypeDeclareVariable(diffuseSphereType,"center",
-                                 OWL_BUFFER_POINTER,
-                                 OWL_OFFSETOF(SphereVars,center));
-  owlGeometryTypeDeclareVariable(diffuseSphereType,"radius",
-                                 OWL_BUFFER_POINTER,
-                                 OWL_OFFSETOF(SphereVars,radius));
-  owlGeometryTypeDeclareVariable(diffuseSphereType,"color",OWL_FLOAT3,
-                                 OWL_OFFSETOF(SphereVars,color));
+                                   sizeof(struct SphereVars),
+                                   diffuseSphereVars,
+                                   sizeof(diffuseSphereVars)/sizeof(OWLVarDecl));
   
   owlGeometryTypeSetClosestHitProgram(diffuseSphereType,
                                       OWL_ALL_RAY_TYPES,
@@ -204,14 +211,18 @@ int main(int ac, char **av)
   // ==================================================================
   // create and configure launch proram
   // ==================================================================
+  OWLVarDecl renderFrameVars[] =
+    {
+     { "bgColor", OWL_FLOAT3, OWL_OFFSETOF(RenderFrameVars,bgColor)},
+    };
   OWLLaunchProg renderFrame
     = owlContextCreateLaunchProg(context,
                                  /* code to run: */
                                  module,"renderFrame",
                                  /* size of variables struct */
-                                 sizeof(struct RenderFrameVars));
-  owlLaunchProgDeclareVariable(renderFrame,"bgColor",OWL_FLOAT3,
-                               OWL_OFFSETOF(RenderFrameVars,bgColor));
+                                 sizeof(struct RenderFrameVars),
+                                 renderFrameVars,
+                                 sizeof(renderFrameVars)/sizeof(OWLVarDecl));
   
   
   OWLVariable bgColor

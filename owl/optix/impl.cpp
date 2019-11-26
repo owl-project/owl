@@ -16,6 +16,7 @@
 
 #include "owl/owl.h"
 #include "optix/common.h"
+#include <string.h>
 #include <set>
 #include <map>
 #include <vector>
@@ -28,7 +29,7 @@ namespace owl {
 
   struct Context;
   struct Buffer;
-  struct BufferRegistry;
+  template<typename Object> struct ObjectRegistry;
   struct Geometry;
   struct GeometryGroup;
   struct LaunchProg;
@@ -41,6 +42,14 @@ namespace owl {
   //#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" : not implemented")
 #define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
 
+
+  std::string typeToString(const OWLDataType type)
+  {
+    throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
+                             +": not yet implemented for type #"
+                             +std::to_string((int)type));
+  }
+  
   struct Object : public std::enable_shared_from_this<Object> {
     typedef std::shared_ptr<Object> SP;
 
@@ -53,83 +62,42 @@ namespace owl {
     virtual ~Object() {}
   };
 
-  struct BoundVariable;
+  template<typename T> const T &assertNotNull(const T &ptr)
+  { assert(ptr); return ptr; }
   
-  struct AbstractVariable : public Object {
+  struct Variable;
+  
+  // struct VarDecl : public Object {
 
-    typedef std::shared_ptr<AbstractVariable> SP;
+  //   typedef std::shared_ptr<VarDecl> SP;
 
-    virtual std::string toString() const { return "AbstractVariable"; }
-    
-    virtual std::shared_ptr<BoundVariable>
-    createSetter(Object::SP objectToSetIn) = 0;
-  };
+  //   virtual std::string toString() const { return "VarDecl"; }
+
+  //   /*! create an actual instance of this variable */
+  //   virtual std::shared_ptr<Variable> instantiate() = 0;
+  // };
 
   
-  template<typename T>
-  struct AbstractVariableT : public AbstractVariable {
-    typedef std::shared_ptr<AbstractVariableT<T>> SP;
-    
-    virtual std::string toString() const { return "AbstractVariableT"; }
-    
-    virtual std::shared_ptr<BoundVariable>
-    createSetter(Object::SP objectToSetIn) override;
-  };
+  struct Variable : public Object {
+    typedef std::shared_ptr<Variable> SP;
 
-  struct BufferVariable : public AbstractVariable {
-    typedef std::shared_ptr<BufferVariable> SP;
+    Variable(const OWLVarDecl *const varDecl)
+      : varDecl(varDecl)
+    { assert(varDecl); }
     
-    virtual std::string toString() const { return "AbstractBufferVariable"; }
-    
-    virtual std::shared_ptr<BoundVariable>
-    createSetter(Object::SP objectToSetIn) override;
-  };
-  
-  struct BoundVariable : public Object {
-    typedef std::shared_ptr<BoundVariable> SP;
-
     virtual void set(const std::shared_ptr<Buffer> &value) { wrongType(); }
     virtual void set(const float &value) { wrongType(); }
     virtual void set(const vec3f &value) { wrongType(); }
 
-    virtual std::string toString() const { return "BoundVariable"; }
+    virtual std::string toString() const { return "Variable"; }
     
     void wrongType() { PING; }
+
+    static Variable::SP createInstanceOf(const OWLVarDecl *decl);
     
-    //! the object we're modifying ...
-    Object::SP             object;
-    //! the variable we're setting in the given object
-    AbstractVariable::SP variable;
+    /*! the variable we're setting in the given object */
+    const OWLVarDecl *const varDecl;
   };
-  
-  template<typename T>
-  struct BoundVariableT : public BoundVariable {
-    typedef std::shared_ptr<BoundVariableT<T>> SP;
-
-    BoundVariableT(AbstractVariable::SP variable,
-                   Object::SP object)
-    {}
-    
-    void set(const T &value) override { PING; }
-    // T value;
-  };
-
-  template<typename T>
-  std::shared_ptr<BoundVariable>
-  AbstractVariableT<T>::createSetter(Object::SP objectToSet)
-  {
-    AbstractVariable::SP self
-      = std::dynamic_pointer_cast<AbstractVariable>(shared_from_this());
-    return std::make_shared<BoundVariableT<T>>(self,objectToSet);
-  }
-
-  std::shared_ptr<BoundVariable>
-  BufferVariable::createSetter(Object::SP objectToSet)
-  {
-    AbstractVariable::SP self
-      = std::dynamic_pointer_cast<AbstractVariable>(shared_from_this());
-    return std::make_shared<BoundVariableT<std::shared_ptr<Buffer>>>(self,objectToSet);
-  }
   
   /*! captures the concept of a module that contains one or more
     programs. */
@@ -151,86 +119,102 @@ namespace owl {
   {
     typedef std::shared_ptr<SBTObjectType> SP;
 
-    SBTObjectType(size_t varStructSize)
-      : varStructSize(varStructSize)
-    {}
-    
-    inline bool hasVariable(const std::string &varName)
+    SBTObjectType(size_t varStructSize,
+                  const std::vector<OWLVarDecl> &varDecls)
+      : varStructSize(varStructSize),
+        varDecls(varDecls)
     {
-      return (variables.find(varName) != variables.end());
+      for (auto &var : varDecls)
+        assert(var.name != nullptr);
+      /* TODO: at least in debug mode, do some 'duplicate variable
+         name' and 'overlap of variables' checks etc */
     }
     
-    inline AbstractVariable::SP getAbstractVariable(const std::string &varName)
+    inline int getVariableIdx(const std::string &varName)
     {
-      assert(variables.find(varName) != variables.end());
-      return variables[varName];
+      for (int i=0;i<varDecls.size();i++) {
+        assert(varDecls[i].name);
+        if (!strcmp(varName.c_str(),varDecls[i].name))
+          return i;
+      }
+      return -1;
+    }
+    inline bool hasVariable(const std::string &varName)
+    {
+      return getVariableIdx(varName) >= 0;
     }
 
     virtual std::string toString() const { return "SBTObjectType"; }
     void declareVariable(const std::string &varName,
                          OWLDataType type,
                          size_t offset);
-    const size_t varStructSize;
-    std::map<std::string,AbstractVariable::SP> variables;
+
+    std::vector<Variable::SP> instantiateVariables();
+    
+    /*! the total size of the variables struct */
+    const size_t         varStructSize;
+
+    /*! the high-level semantic description of variables in the
+        variables struct */
+    const std::vector<OWLVarDecl> varDecls;
   };
 
-  void SBTObjectType::declareVariable(const std::string &varName,
-                                      OWLDataType type,
-                                      size_t offset)
-  {
-    switch (type) {
-    case OWL_BUFFER_POINTER:
-      variables[varName]
-        = std::make_shared<BufferVariable>();
-      break;
-    case OWL_FLOAT3:
-      variables[varName]
-        = std::make_shared<AbstractVariableT<vec3f>>();
-      break;
-    default:
-      PING; PRINT(type);
-      OWL_NOTIMPLEMENTED;
-    };
-    // variables[varName] = std::make_shared<AbstractVariable>();
-  }
-    
-  
+  template<typename ObjectType>
   struct SBTObject : public Object
   {
     typedef std::shared_ptr<SBTObject> SP;
 
-    SBTObject(SBTObjectType::SP objectType)
-      : objectType(objectType)
+    SBTObject(typename ObjectType::SP const type)
+      : type(type),
+        variables(assertNotNull(type)->instantiateVariables())
     {}
     
-    virtual std::string toString() const { return "SBTObject"; }
+    virtual std::string toString() const { return "SBTObject<"+type->toString()+">"; }
     
     bool hasVariable(const std::string &name)
     {
-      return objectType->hasVariable(name);
+      return type->hasVariable(name);
     }
     
-    BoundVariable::SP getBoundVariable(const std::string &name)
+    Variable::SP getVariable(const std::string &name)
     {
-      AbstractVariable::SP abstractVariable = objectType->getAbstractVariable(name);
-      return abstractVariable->createSetter(shared_from_this());
+      int varID = type->getVariableIdx(name);
+      assert(varID >= 0);
+      assert(varID <  variables.size());
+      Variable::SP var = variables[varID];
+      assert(var);
+      return var;
     }
 
-    SBTObjectType::SP const objectType;
+    /*! our own type description, that tells us which variables (of
+        which type, etc) we have */
+    typename ObjectType::SP const type;
+
+    /*! the actual variable *values* */
+    const std::vector<Variable::SP> variables;
   };
 
   struct LaunchProgType : public SBTObjectType {
     typedef std::shared_ptr<LaunchProgType> SP;
-    LaunchProgType(size_t varStructSize) : SBTObjectType(varStructSize) {}
+    LaunchProgType(Module::SP module,
+                   const std::string &programName,
+                   size_t varStructSize,
+                   const std::vector<OWLVarDecl> &varDecls)
+      : SBTObjectType(varStructSize,varDecls),
+        module(module),
+        progName(progName)
+    {}
     virtual std::string toString() const { return "LaunchProgType"; }
+    
+    Module::SP module;
+    const std::string &progName;
   };
-  struct LaunchProg : public SBTObject {
+  
+  struct LaunchProg : public SBTObject<LaunchProgType> {
     typedef std::shared_ptr<LaunchProg> SP;
 
-    LaunchProg(Module::SP module,
-               const std::string &progName,
-               size_t varStructSize) 
-      : SBTObject(std::make_shared<LaunchProgType>(varStructSize)) 
+    LaunchProg(LaunchProgType::SP type) 
+      : SBTObject(type)
     {}
     virtual std::string toString() const { return "LaunchProg"; }
   };
@@ -239,69 +223,70 @@ namespace owl {
   {
     typedef std::shared_ptr<Buffer> SP;
     
-    Buffer(BufferRegistry &buffers);
+    Buffer(ObjectRegistry<Buffer> &buffers);
     ~Buffer();
     
     virtual std::string toString() const { return "Buffer"; }
 
     const int ID;
   private:
-    BufferRegistry &buffers;
+    ObjectRegistry<Buffer> &buffers;
   };
 
   /*! registry that tracks mapping between buffers and buffer
       IDs. Every buffer should have a valid ID, and should be tracked
       in this registry under this ID */
-  struct BufferRegistry {
-    void forget(Buffer *buffer)
+  template<typename Object>
+  struct ObjectRegistry {
+    void forget(Object *object)
     {
-      assert(buffer);
+      assert(object);
       
       std::lock_guard<std::mutex> lock(mutex);
-      assert(buffer->ID >= 0);
-      assert(buffer->ID < buffers.size());
-      assert(buffers[buffer->ID] == buffer);
-      buffers[buffer->ID] = nullptr;
+      assert(object->ID >= 0);
+      assert(object->ID < objects.size());
+      assert(objects[object->ID] == object);
+      objects[object->ID] = nullptr;
       
-      previouslyReleasedIDs.push(buffer->ID);
+      previouslyReleasedIDs.push(object->ID);
     }
     
-    void track(Buffer *buffer)
+    void track(Object *object)
     {
-      assert(buffer);
+      assert(object);
       std::lock_guard<std::mutex> lock(mutex);
-      assert(buffer->ID >= 0);
-      assert(buffer->ID < buffers.size());
-      assert(buffers[buffer->ID] == nullptr);
-      buffers[buffer->ID] = buffer;
+      assert(object->ID >= 0);
+      assert(object->ID < objects.size());
+      assert(objects[object->ID] == nullptr);
+      objects[object->ID] = object;
     }
     
     int allocID() {
       std::lock_guard<std::mutex> lock(mutex);
       if (previouslyReleasedIDs.empty()) {
-        buffers.push_back(nullptr);
-        return buffers.size()-1;
+        objects.push_back(nullptr);
+        return objects.size()-1;
       } else {
         int reusedID = previouslyReleasedIDs.top();
         previouslyReleasedIDs.pop();
         return reusedID;
       }
     }
-    inline Buffer *get(int ID)
+    inline Object *get(int ID)
     {
       std::lock_guard<std::mutex> lock(mutex);
       
       assert(ID >= 0);
-      assert(ID < buffers.size());
-      assert(buffers[ID]);
-      return buffers[ID];
+      assert(ID < objects.size());
+      assert(objects[ID]);
+      return objects[ID];
     }
 
   private:
-    /*! list of all tracked buffers. note this are *NOT* shared-ptr's,
-        else we'd never released buffers because each buffer would
+    /*! list of all tracked objects. note this are *NOT* shared-ptr's,
+        else we'd never released objects because each object would
         always be owned by the registry */
-    std::vector<Buffer *> buffers;
+    std::vector<Object *> objects;
     
     /*! list of IDs that have already been allocated before, and have
         since gotten freed, so can be re-used */
@@ -309,7 +294,71 @@ namespace owl {
     std::mutex mutex;
   };
 
-  Buffer::Buffer(BufferRegistry &buffers)
+
+
+  // /*! registry that tracks mapping between buffers and buffer
+  //     IDs. Every buffer should have a valid ID, and should be tracked
+  //     in this registry under this ID */
+  // struct BufferRegistry {
+  //   void forget(Buffer *buffer)
+  //   {
+  //     assert(buffer);
+      
+  //     std::lock_guard<std::mutex> lock(mutex);
+  //     assert(buffer->ID >= 0);
+  //     assert(buffer->ID < buffers.size());
+  //     assert(buffers[buffer->ID] == buffer);
+  //     buffers[buffer->ID] = nullptr;
+      
+  //     previouslyReleasedIDs.push(buffer->ID);
+  //   }
+    
+  //   void track(Buffer *buffer)
+  //   {
+  //     assert(buffer);
+  //     std::lock_guard<std::mutex> lock(mutex);
+  //     assert(buffer->ID >= 0);
+  //     assert(buffer->ID < buffers.size());
+  //     assert(buffers[buffer->ID] == nullptr);
+  //     buffers[buffer->ID] = buffer;
+  //   }
+    
+  //   int allocID() {
+  //     std::lock_guard<std::mutex> lock(mutex);
+  //     if (previouslyReleasedIDs.empty()) {
+  //       buffers.push_back(nullptr);
+  //       return buffers.size()-1;
+  //     } else {
+  //       int reusedID = previouslyReleasedIDs.top();
+  //       previouslyReleasedIDs.pop();
+  //       return reusedID;
+  //     }
+  //   }
+  //   inline Buffer *get(int ID)
+  //   {
+  //     std::lock_guard<std::mutex> lock(mutex);
+      
+  //     assert(ID >= 0);
+  //     assert(ID < buffers.size());
+  //     assert(buffers[ID]);
+  //     return buffers[ID];
+  //   }
+
+  // private:
+  //   /*! list of all tracked buffers. note this are *NOT* shared-ptr's,
+  //       else we'd never released buffers because each buffer would
+  //       always be owned by the registry */
+  //   std::vector<Buffer *> buffers;
+    
+  //   /*! list of IDs that have already been allocated before, and have
+  //       since gotten freed, so can be re-used */
+  //   std::stack<int> previouslyReleasedIDs;
+  //   std::mutex mutex;
+  // };
+
+
+
+  Buffer::Buffer(ObjectRegistry<Buffer> &buffers)
     : ID(buffers.allocID()),
       buffers(buffers)
   {
@@ -323,8 +372,9 @@ namespace owl {
   struct GeometryType : public SBTObjectType {
     typedef std::shared_ptr<GeometryType> SP;
     
-    GeometryType(size_t varStructSize)
-      : SBTObjectType(varStructSize)
+    GeometryType(size_t varStructSize,
+                 const std::vector<OWLVarDecl> &varDecls)
+      : SBTObjectType(varStructSize,varDecls)
     {}
 
     virtual std::string toString() const { return "GeometryType"; }
@@ -339,8 +389,9 @@ namespace owl {
   struct TrianglesGeometryType : public GeometryType {
     typedef std::shared_ptr<TrianglesGeometryType> SP;
     
-    TrianglesGeometryType(size_t varStructSize)
-      : GeometryType(varStructSize)
+    TrianglesGeometryType(size_t varStructSize,
+                          const std::vector<OWLVarDecl> &varDecls)
+      : GeometryType(varStructSize,varDecls)
     {}
 
     virtual std::string toString() const { return "TrianlgeGeometryType"; }
@@ -350,15 +401,16 @@ namespace owl {
   struct UserGeometryType : public GeometryType {
     typedef std::shared_ptr<UserGeometryType> SP;
     
-    UserGeometryType(size_t varStructSize)
-      : GeometryType(varStructSize)
+    UserGeometryType(size_t varStructSize,
+                 const std::vector<OWLVarDecl> &varDecls)
+      : GeometryType(varStructSize,varDecls)
     {}
 
     virtual std::string toString() const { return "UserGeometryType"; }
     virtual std::shared_ptr<Geometry> createGeometry() override;
   };
 
-  struct Geometry : public SBTObject {
+  struct Geometry : public SBTObject<GeometryType> {
     typedef std::shared_ptr<Geometry> SP;
 
     Geometry(GeometryType::SP geometryType)
@@ -424,7 +476,7 @@ namespace owl {
       assert(childID < children.size());
       children[childID] = child;
     }
-    virtual std::string toString() const { return "InstnaceGroup"; }
+    virtual std::string toString() const { return "InstanceGroup"; }
     std::vector<Group::SP> children;
   };
 
@@ -523,7 +575,8 @@ namespace owl {
     }
 
     ApiHandles apiHandles;
-    BufferRegistry buffers;
+    ObjectRegistry<Buffer> buffers;
+    ObjectRegistry<Group>  groups;
     
     APIHandle *createHandle(Object::SP object)
     {
@@ -545,11 +598,21 @@ namespace owl {
     InstanceGroup::SP createInstanceGroup(size_t numChildren);
     GeometryGroup::SP createGeometryGroup(size_t numChildren);
     Buffer::SP        createBuffer();
-    LaunchProg::SP    createLaunchProg(Module::SP module,
-                                       const std::string &progName,
-                                       size_t varStructSize);
-    GeometryType::SP  createGeometryType(OWLGeometryKind kind,
-                                         size_t varStructSize);
+    
+    LaunchProg::SP
+    createLaunchProg(const std::shared_ptr<LaunchProgType> &type);
+    
+    LaunchProgType::SP
+    createLaunchProgType(Module::SP module,
+                         const std::string &progName,
+                         size_t varStructSize,
+                         const std::vector<OWLVarDecl> &varDecls);
+    
+    GeometryType::SP
+    createGeometryType(OWLGeometryKind kind,
+                       size_t varStructSize,
+                       const std::vector<OWLVarDecl> &varDecls);
+    
     Module::SP createModule(const std::string &ptxCode);
   };
 
@@ -606,7 +669,7 @@ namespace owl {
       throw std::runtime_error("Trying to get reference to variable '"+std::string(varName)+
                                "' on object that does not have such a variable");
     
-    BoundVariable::SP var = obj->getBoundVariable(varName);
+    Variable::SP var = obj->getVariable(varName);
     assert(var);
 
     Context::SP context = handle->getContext();
@@ -633,24 +696,47 @@ namespace owl {
   }
   
 
+  std::vector<OWLVarDecl> checkAndPackVariables(const OWLVarDecl *vars,
+                                                size_t      numVars)
+  {
+    // *copy* the vardecls here, so we can catch any potential memory
+    // *access errors early
+    assert(vars);
+    for (int i=0;i<numVars;i++)
+      assert(vars[i].name != nullptr);
+    std::vector<OWLVarDecl> varDecls(numVars);
+    std::copy(vars,vars+numVars,varDecls.begin());
+    return varDecls;
+  }
 
   OWL_API OWLLaunchProg
   owlContextCreateLaunchProg(OWLContext _context,
                              OWLModule _module,
                              const char *programName,
-                             size_t sizeOfVarStruct)
+                             size_t sizeOfVarStruct,
+                             OWLVarDecl *vars,
+                             size_t      numVars)
   {
     LOG_API_CALL();
 
     assert(_context);
-    Context::SP context = ((APIHandle *)_context)->get<Context>();
+    Context::SP context
+      = ((APIHandle *)_context)->get<Context>();
     assert(context);
-
+    
     assert(_module);
-    Module::SP module = ((APIHandle *)_module)->get<Module>();
+    Module::SP module
+      = ((APIHandle *)_module)->get<Module>();
     assert(module);
 
-    LaunchProg::SP  launchProg = context->createLaunchProg(module,programName,sizeOfVarStruct);
+    LaunchProgType::SP  launchProgType
+      = context->createLaunchProgType(module,programName,
+                                      sizeOfVarStruct,
+                                      checkAndPackVariables(vars,numVars));
+    assert(launchProgType);
+    
+    LaunchProg::SP  launchProg
+      = context->createLaunchProg(launchProgType);
     assert(launchProg);
 
     return (OWLLaunchProg)context->createHandle(launchProg);
@@ -727,14 +813,17 @@ namespace owl {
   OWL_API OWLGeometryType
   owlContextCreateGeometryType(OWLContext _context,
                                OWLGeometryKind kind,
-                               size_t varStructSize)
+                               size_t varStructSize,
+                               OWLVarDecl *vars,
+                               size_t      numVars)
   {
     LOG_API_CALL();
     assert(_context);
     Context::SP context = ((APIHandle *)_context)->get<Context>();
     assert(context);
     GeometryType::SP geometryType
-      = context->createGeometryType(kind,varStructSize);
+      = context->createGeometryType(kind,varStructSize,
+                                    checkAndPackVariables(vars,numVars));
     assert(geometryType);
     return (OWLGeometryType)context->createHandle(geometryType);
   }
@@ -787,11 +876,10 @@ namespace owl {
     return buffer;
   }
 
-  LaunchProg::SP Context::createLaunchProg(Module::SP module,
-                                           const std::string &progName,
-                                           size_t varStructSize)
+  LaunchProg::SP
+  Context::createLaunchProg(const std::shared_ptr<LaunchProgType> &type)
   {
-    return std::make_shared<LaunchProg>(module,progName,varStructSize);
+    return std::make_shared<LaunchProg>(type);
   }
 
   GeometryGroup::SP Context::createGeometryGroup(size_t numChildren)
@@ -805,14 +893,28 @@ namespace owl {
   }
 
 
-  GeometryType::SP Context::createGeometryType(OWLGeometryKind kind,
-                                               size_t varStructSize)
+  LaunchProgType::SP
+  Context::createLaunchProgType(Module::SP module,
+                                const std::string &progName,
+                                size_t varStructSize,
+                                const std::vector<OWLVarDecl> &varDecls)
+  {
+    return std::make_shared<LaunchProgType>(module,progName,
+                                            varStructSize,
+                                            varDecls);
+  }
+  
+
+  GeometryType::SP
+  Context::createGeometryType(OWLGeometryKind kind,
+                              size_t varStructSize,
+                              const std::vector<OWLVarDecl> &varDecls)
   {
     switch(kind) {
     case OWL_GEOMETRY_TRIANGLES:
-      return std::make_shared<TrianglesGeometryType>(varStructSize);
+      return std::make_shared<TrianglesGeometryType>(varStructSize,varDecls);
     case OWL_GEOMETRY_USER:
-      return std::make_shared<UserGeometryType>(varStructSize);
+      return std::make_shared<UserGeometryType>(varStructSize,varDecls);
     default:
       OWL_NOTIMPLEMENTED;
     }
@@ -866,7 +968,7 @@ namespace owl {
   OWL_API void owlVariableRelease(OWLVariable variable)
   {
     LOG_API_CALL();
-    releaseObject<BoundVariable>((APIHandle*)variable);
+    releaseObject<Variable>((APIHandle*)variable);
   }
   
   OWL_API void owlGeometryRelease(OWLGeometry geometry)
@@ -919,54 +1021,6 @@ namespace owl {
   }
 
   // ==================================================================
-  // "VariableDeclare" functions, for each element type
-  // ==================================================================
-
-  template<typename T>
-  void declareVariable(APIHandle  *handle,
-                       const char *varName,
-                       OWLDataType type,
-                       size_t      offset)
-  {
-    assert(handle);
-    assert(varName);
-    
-    typename T::SP object = handle->get<T>();
-    assert(object);
-
-    object->declareVariable(varName,type,offset);
-  }
-
-  OWL_API void
-  owlGeometryTypeDeclareVariable(OWLGeometryType object,
-                                 const char *varName,
-                                 OWLDataType type,
-                                 size_t offset)
-  {
-    LOG_API_CALL();
-    declareVariable<GeometryType>
-      ((APIHandle *)object,varName,type,offset);
-  }
-
-  OWL_API void
-  owlLaunchProgDeclareVariable(OWLLaunchProg _prog,
-                               const char *varName,
-                               OWLDataType varType,
-                               size_t offset)
-  {
-    LOG_API_CALL();
-
-    assert(_prog);
-    LaunchProg::SP prog = ((APIHandle *)_prog)->get<LaunchProg>();
-    assert(prog);
-
-    LaunchProgType::SP type = prog->objectType->as<LaunchProgType>();
-    assert(type);
-    
-    type->declareVariable(varName,varType,offset);
-  }
-
-  // ==================================================================
   // function pointer setters ....
   // ==================================================================
   OWL_API void
@@ -992,19 +1046,7 @@ namespace owl {
     geometryType->setClosestHitProgram(rayType,module,progName);
   }
 
-  
 
-
-
-
-
-  
-  // OWL_API void owlGeometryTypeDeclareVariable(OWLGeometryType object,
-  //                                             const char  *varName,
-  //                                             OWLDataType  type,
-  //                                             size_t       offset)
-  // { declareVariable<Triangles>((APIHandle *)object,varName,type,offset); }
-  
   // ==================================================================
   // "VariableSet" functions, for each element type
   // ==================================================================
@@ -1014,8 +1056,8 @@ namespace owl {
   {
     assert(handle);
 
-    BoundVariable::SP variable
-      = handle->get<BoundVariable>();
+    Variable::SP variable
+      = handle->get<Variable>();
     assert(variable);
 
     variable->set(value);
@@ -1026,15 +1068,6 @@ namespace owl {
   {
     LOG_API_CALL();
     setBasicTypeVariable((APIHandle *)_variable,(float)value);
-    // LOG_API_CALL();
-    // assert(_variable);
-    // assert(value);
-
-    // BoundVariable::SP variable
-    //   = ((APIHandle *)_variable)->get<BoundVariable>();
-    // assert(variable);
-
-    // variable->set(value);
   }
 
   OWL_API void owlVariableSet3fv(OWLVariable _variable, const float *value)
@@ -1064,5 +1097,59 @@ namespace owl {
 
     group->setChild(whichChild, child);
   }
+
+
+
+  template<typename T>
+  struct VariableT : public Variable {
+    typedef std::shared_ptr<VariableT<T>> SP;
+
+    VariableT(const OWLVarDecl *const varDecl)
+      : Variable(varDecl)
+    {}
+    
+    void set(const T &value) override { PING; }
+  };
+
+  struct BufferPointerVariable : public Variable {
+    typedef std::shared_ptr<BufferPointerVariable> SP;
+
+    BufferPointerVariable(const OWLVarDecl *const varDecl)
+      : Variable(varDecl)
+    {}
+    void set(const Buffer::SP &value) override { this->buffer = value; }
+
+    Buffer::SP buffer;
+  };
+  
+  Variable::SP Variable::createInstanceOf(const OWLVarDecl *decl)
+  {
+    assert(decl);
+    assert(decl->name);
+    switch(decl->type) {
+    case OWL_FLOAT:
+      return std::make_shared<VariableT<float>>(decl);
+    case OWL_FLOAT3:
+      return std::make_shared<VariableT<vec3f>>(decl);
+    case OWL_BUFFER_POINTER:
+      return std::make_shared<BufferPointerVariable>(decl);
+    }
+    throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
+                             +": not yet implemented for type "
+                             +typeToString(decl->type));
+  }
+    
+
+  /*! create one instance each of a given type's variables */
+  std::vector<Variable::SP> SBTObjectType::instantiateVariables()
+  {
+    std::vector<Variable::SP> variables(varDecls.size());
+    for (size_t i=0;i<varDecls.size();i++) {
+      variables[i] = Variable::createInstanceOf(&varDecls[i]);
+      assert(variables[i]);
+    }
+    return variables;
+  }
+  
   
 } // ::owl
