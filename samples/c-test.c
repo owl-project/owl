@@ -215,8 +215,9 @@ int main(int ac, char **av)
   // ==================================================================
   OWLVarDecl renderFrameVars[] =
     {
-     { "bgColor", OWL_FLOAT3, OWL_OFFSETOF(RenderFrameVars,bgColor)},
-     { "world",   OWL_GROUP,  OWL_OFFSETOF(RenderFrameVars,world)},
+     { "bgColor",     OWL_FLOAT3, OWL_OFFSETOF(RenderFrameVars,bgColor)},
+     { "world",       OWL_GROUP,  OWL_OFFSETOF(RenderFrameVars,world)},
+     { "frameBuffer", OWL_BUFFER, OWL_OFFSETOF(RenderFrameVars,frameBuffer)},
     };
   OWLRayGen renderFrame
     = owlContextCreateRayGen(context,
@@ -239,7 +240,7 @@ int main(int ac, char **av)
   owlVariableRelease(worldVar);
 
   OWLVariable fbVar
-    = owlRayGenGetVariable(renderFrame,"fb");
+    = owlRayGenGetVariable(renderFrame,"frameBuffer");
   owlVariableSetBuffer(fbVar,frameBuffer);
   owlVariableRelease(fbVar);
   

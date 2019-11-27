@@ -50,7 +50,7 @@ namespace owl {
       : GeometryType(context,varStructSize,varDecls)
     {}
 
-    virtual std::string toString() const { return "TrianlgeGeometryType"; }
+    virtual std::string toString() const { return "TriangleGeometryType"; }
     virtual std::shared_ptr<Geometry> createGeometry() override;
   };
 

@@ -41,6 +41,28 @@ namespace owl {
     Buffer::SP buffer;
   };
   
+  struct BufferVariable : public Variable {
+    typedef std::shared_ptr<BufferVariable> SP;
+
+    BufferVariable(const OWLVarDecl *const varDecl)
+      : Variable(varDecl)
+    {}
+    void set(const Buffer::SP &value) override { this->buffer = value; }
+
+    Buffer::SP buffer;
+  };
+  
+  struct GroupVariable : public Variable {
+    typedef std::shared_ptr<GroupVariable> SP;
+
+    GroupVariable(const OWLVarDecl *const varDecl)
+      : Variable(varDecl)
+    {}
+    void set(const Group::SP &value) override { this->group = value; }
+
+    Group::SP group;
+  };
+  
   Variable::SP Variable::createInstanceOf(const OWLVarDecl *decl)
   {
     assert(decl);
@@ -50,6 +72,10 @@ namespace owl {
       return std::make_shared<VariableT<float>>(decl);
     case OWL_FLOAT3:
       return std::make_shared<VariableT<vec3f>>(decl);
+    case OWL_GROUP:
+      return std::make_shared<GroupVariable>(decl);
+    case OWL_BUFFER:
+      return std::make_shared<BufferVariable>(decl);
     case OWL_BUFFER_POINTER:
       return std::make_shared<BufferPointerVariable>(decl);
     }
