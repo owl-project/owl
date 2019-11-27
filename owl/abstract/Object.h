@@ -17,7 +17,7 @@
 #pragma once
 
 #include "owl/owl.h"
-#include "optix/common.h"
+#include "abstract/common.h"
 #include <string.h>
 #include <set>
 #include <map>
