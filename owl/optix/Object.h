@@ -25,6 +25,7 @@
 #include <stack>
 #include <typeinfo>
 #include <mutex>
+#include <atomic>
 
 namespace owl {
   using gdt::vec3f;
@@ -33,17 +34,37 @@ namespace owl {
   
 #define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
 
+  template<size_t alignment>
+  inline size_t smallestMultipleOf(size_t unalignedSize)
+  {
+    const size_t numBlocks = (unalignedSize+alignment-1)/alignment;
+    return numBlocks*alignment;
+  }
+
+  std::string typeToString(OWLDataType type);
+
   struct Context;
 
   /*! common "root" abstraction for every object this library creates */
   struct Object : public std::enable_shared_from_this<Object> {
     typedef std::shared_ptr<Object> SP;
 
+    Object();
+
+    //! pretty-printer, for debugging
     virtual std::string toString() const { return "Object"; }
-    
+
     template<typename T>
     inline std::shared_ptr<T> as() 
     { return std::dynamic_pointer_cast<T>(shared_from_this()); }
+
+    /*! a unique ID we assign to each newly created object - this
+        allows any caching algorithms to check if a given object was
+        replaced with another, even if in some internal array it ends
+        up with the same array index as a previous other object */
+    const size_t uniqueID;
+
+    static std::atomic<uint64_t> nextAvailableID;
   };
 
   

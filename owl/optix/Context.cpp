@@ -21,32 +21,6 @@
 
 namespace owl {
 
-  template<size_t alignment>
-  size_t smallestMultipleOf(size_t unalignedSize)
-  {
-    const size_t numBlocks = (unalignedSize+alignment-1)/alignment;
-    return numBlocks*alignment;
-  }
-
-  std::string typeToString(const OWLDataType type)
-  {
-    switch(type) {
-    case OWL_FLOAT:
-      return "float";
-    case OWL_FLOAT3:
-      return "float3";
-    case OWL_BUFFER:
-      return "OWLBuffer";
-    case OWL_GROUP:
-      return "OWLGroup";
-    default:
-      throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
-                               +": not yet implemented for type #"
-                               +std::to_string((int)type));
-    }
-  }
-  
-  
   Buffer::SP Context::createBuffer()
   {
     PING;
@@ -121,6 +95,55 @@ namespace owl {
     assert(self);
     return std::make_shared<TrianglesGeometry>(context,self);
   }
+
+  namespace ll {
+    struct DeviceMemory {
+    };
+    struct Context {
+      OptixDeviceContext optixContext = nullptr;
+      CUcontext          cudaContext  = nullptr;
+      CUstream           stream       = nullptr;
+    };
+    struct Module {
+      OptixModule module = nullptr;
+    };
+    struct Modules {
+      std::vector<Module> modules;
+    };
+    struct Pipeline {
+      OptixModuleCompileOptions   moduleCompileOptions;
+      OptixPipelineCompileOptions pipelineCompileOptions;
+      OptixPipelineLinkOptions    pipelineLinkOptions;
+    };
+    struct ProgramGroup {
+      OptixProgramGroupOptions  pgOptions = {};
+      OptixProgramGroupDesc     pgDesc;
+      OptixProgramGroup         pg        = nullptr;
+    };
+    struct ProgramGroups {
+      std::vector<ProgramGroup> hitGroupPGs;
+      std::vector<ProgramGroup> rayGenPGs;
+      std::vector<ProgramGroup> missPGs;
+    };
+    struct SBT {
+      OptixShaderBindingTable sbt = {};
+      DeviceMemory raygenRecordsBuffer;
+      DeviceMemory missRecordsBuffer;
+      DeviceMemory hitGroupRecordsBuffer;
+      DeviceMemory launchParamBuffer;
+    };
+    struct Traversable {
+      OptixTraversableHandle traversable;
+    };
+    struct Device {
+      Context        context;
+      Modules        modules;
+      ProgramGroups  programGroups;
+      SBT            sbt;
+    };
+    
+    std::vector<Device> devices;
+  } // ::owl::ll
   
 
   void Context::expBuildSBT()
@@ -129,7 +152,7 @@ namespace owl {
     PING;
     PRINT(groups.size());
     assert(!groups.empty());
-    
+
     std::vector<int> sbtOffsetOfGroup(groups.size());
     size_t numHitGroupRecords = 0;
     size_t biggestVarStructSize = 0;

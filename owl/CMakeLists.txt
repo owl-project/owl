@@ -20,6 +20,7 @@ add_library(owl
   include/owl/owl.h
   optix/common.h
 
+  optix/Object.cpp
   optix/RegisteredObject.cpp
   optix/Buffer.cpp
   optix/Group.cpp
