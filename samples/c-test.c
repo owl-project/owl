@@ -234,7 +234,9 @@ int main(int ac, char **av)
   // launch renderframe program
   // ==================================================================
   owlContextLaunch2D(context,renderFrame,image_fbSize.x,image_fbSize.y);
-  
+
+  owlBufferRelease(frameBuffer);
+  owlRayGenRelease(renderFrame);
   owlContextDestroy(context);
 }
 

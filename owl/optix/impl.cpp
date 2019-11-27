@@ -31,6 +31,11 @@ namespace owl {
     {
       return ((void*)object.get() == (void*)context.get());
     }
+    std::string toString() const
+    {
+      assert(object);
+      return object->toString();
+    }
     std::shared_ptr<Object>     object;
     std::shared_ptr<APIContext> context;
   };
@@ -65,9 +70,11 @@ namespace owl {
   void APIContext::releaseAll()
   {
     std::cout << "#owl: context is dying, num api handles (other than context itself) "
-              << "that have not yet released: "
+              << "that have not yet been released: "
               << (activeHandles.size()-1)
               << std::endl;
+    for (auto handle : activeHandles)
+      std::cout << " - " << handle->toString() << std::endl;
 
     // create a COPY of the handles we need to destroy, else
     // destroying the handles modifies the std::set while we're
@@ -397,6 +404,12 @@ namespace owl {
   {
     LOG_API_CALL();
     releaseObject<Buffer>((APIHandle*)buffer);
+  }
+  
+  OWL_API void owlRayGenRelease(OWLRayGen handle)
+  {
+    LOG_API_CALL();
+    releaseObject<RayGen>((APIHandle*)handle);
   }
   
   OWL_API void owlVariableRelease(OWLVariable variable)

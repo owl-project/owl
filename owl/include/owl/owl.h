@@ -194,6 +194,7 @@ owlGeometryTypeSetClosestHitProgram(OWLGeometryType type,
 OWL_API void owlGeometryRelease(OWLGeometry geometry);
 OWL_API void owlVariableRelease(OWLVariable variable);
 OWL_API void owlBufferRelease(OWLBuffer buffer);
+OWL_API void owlRayGenRelease(OWLRayGen rayGen);
 
 // -------------------------------------------------------
 // VariableGet for the various types
