@@ -585,46 +585,6 @@ namespace owl {
 
 
 
-  template<typename T>
-  struct VariableT : public Variable {
-    typedef std::shared_ptr<VariableT<T>> SP;
-
-    VariableT(const OWLVarDecl *const varDecl)
-      : Variable(varDecl)
-    {}
-    
-    void set(const T &value) override { PING; }
-  };
-
-  struct BufferPointerVariable : public Variable {
-    typedef std::shared_ptr<BufferPointerVariable> SP;
-
-    BufferPointerVariable(const OWLVarDecl *const varDecl)
-      : Variable(varDecl)
-    {}
-    void set(const Buffer::SP &value) override { this->buffer = value; }
-
-    Buffer::SP buffer;
-  };
-  
-  Variable::SP Variable::createInstanceOf(const OWLVarDecl *decl)
-  {
-    assert(decl);
-    assert(decl->name);
-    switch(decl->type) {
-    case OWL_FLOAT:
-      return std::make_shared<VariableT<float>>(decl);
-    case OWL_FLOAT3:
-      return std::make_shared<VariableT<vec3f>>(decl);
-    case OWL_BUFFER_POINTER:
-      return std::make_shared<BufferPointerVariable>(decl);
-    }
-    throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
-                             +": not yet implemented for type "
-                             +typeToString(decl->type));
-  }
-    
-
   /*! create one instance each of a given type's variables */
   std::vector<Variable::SP> SBTObjectType::instantiateVariables()
   {
@@ -636,5 +596,4 @@ namespace owl {
     return variables;
   }
   
-
 } // ::owl

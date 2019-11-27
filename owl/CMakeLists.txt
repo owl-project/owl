@@ -27,6 +27,7 @@ add_library(owl
   optix/Context.cpp
   optix/RayGen.cpp
   optix/Geometry.cpp
+  optix/Variable.cpp
   optix/impl.cpp
   )
 target_link_libraries(owl

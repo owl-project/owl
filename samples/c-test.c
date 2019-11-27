@@ -216,6 +216,7 @@ int main(int ac, char **av)
   OWLVarDecl renderFrameVars[] =
     {
      { "bgColor", OWL_FLOAT3, OWL_OFFSETOF(RenderFrameVars,bgColor)},
+     { "world",   OWL_GROUP,  OWL_OFFSETOF(RenderFrameVars,world)},
     };
   OWLRayGen renderFrame
     = owlContextCreateRayGen(context,

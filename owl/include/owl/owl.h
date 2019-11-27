@@ -61,7 +61,9 @@ typedef enum
    OWL_BUFFER=1000,
    OWL_BUFFER_SIZE,
    OWL_BUFFER_ID,
-   OWL_BUFFER_POINTER
+   OWL_BUFFER_POINTER,
+
+   OWL_GROUP
   }
   OWLDataType;
 

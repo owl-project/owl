@@ -30,9 +30,20 @@ namespace owl {
 
   std::string typeToString(const OWLDataType type)
   {
-    throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
-                             +": not yet implemented for type #"
-                             +std::to_string((int)type));
+    switch(type) {
+    case OWL_FLOAT:
+      return "float";
+    case OWL_FLOAT3:
+      return "float3";
+    case OWL_BUFFER:
+      return "OWLBuffer";
+    case OWL_GROUP:
+      return "OWLGroup";
+    default:
+      throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
+                               +": not yet implemented for type #"
+                               +std::to_string((int)type));
+    }
   }
   
   
