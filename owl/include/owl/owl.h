@@ -9,25 +9,61 @@
 #endif
 #include "optix.h"
 
+
+#if defined(_MSC_VER)
+#  define OWL_DLL_EXPORT __declspec(dllexport)
+#  define OWL_DLL_IMPORT __declspec(dllimport)
+#elif defined(__clang__) || defined(__GNUC__)
+#  define OWL_DLL_EXPORT __attribute__((visibility("default")))
+#  define OWL_DLL_IMPORT __attribute__((visibility("default")))
+#else
+#  define OWL_DLL_EXPORT
+#  define OWL_DLL_IMPORT
+#endif
+
+
+#if defined(OWL_DLL_INTERFACE)
+#  ifdef owl_EXPORTS
+#    define OWL_API OWL_DLL_EXPORT
+#  else
+#    define OWL_API OWL_DLL_IMPORT
+#  endif
+#else
+#  ifdef __cplusplus
+#    define OWL_API extern "C" OWL_DLL_EXPORT
+#  else
+#    define OWL_API /* bla */
+#  endif
+//#  define OWL_API /*static lib*/
+#endif
+//#ifdef __cplusplus
+//# define OWL_API extern "C" OWL_DLL_EXPORT
+//#else
+//# define OWL_API /* bla */
+//#endif
+
+
+
 #define OWL_OFFSETOF(type,member)               \
   ((char *)(&((struct type *)0)-> member )             \
    -                                            \
    (char *)(((struct type *)0)))
 
-#ifdef __cplusplus
-# define OWL_API extern "C"
-#else
-# define OWL_API /* bla */
-#endif
 
 typedef enum
   {
+   OWL_FLOAT=100,
    OWL_FLOAT3,
+
+   OWL_INT=200,
    OWL_INT3,
-   OWL_BUFFER,
+   
+   OWL_BUFFER=1000,
    OWL_BUFFER_SIZE,
    OWL_BUFFER_ID,
-   OWL_BUFFER_POINTER
+   OWL_BUFFER_POINTER,
+
+   OWL_GROUP
   }
   OWLDataType;
 
@@ -50,6 +86,11 @@ typedef struct _OWL_float2 { float   x,y; } OWL_float2;
 typedef struct _OWL_int3   { int32_t x,y,z; } OWL_int3;
 typedef struct _OWL_float3 { float   x,y,z; } OWL_float3;
 
+typedef struct _OWLVarDecl {
+  const char *name;
+  OWLDataType type;
+  uint32_t    offset;
+} OWLVarDecl;
 
 // ------------------------------------------------------------------
 // device-objects - size of those _HAS_ to match the device-side
@@ -65,9 +106,8 @@ typedef struct _OWLGeometry      *OWLGeometry;
 typedef struct _OWLGeometryType  *OWLGeometryType;
 typedef struct _OWLVariable      *OWLVariable;
 typedef struct _OWLModule        *OWLModule;
-typedef struct _OWLGeometryGroup *OWLGeometryGroup;
-typedef struct _OWLInstanceGroup *OWLInstanceGroup;
-typedef struct _OWLLaunchProg    *OWLLaunchProg;
+typedef struct _OWLGroup         *OWLGroup;
+typedef struct _OWLRayGen        *OWLRayGen;
 
 // typedef OWLGeometry OWLTriangles;
 
@@ -85,25 +125,29 @@ OWL_API OWLGeometry
 owlContextCreateGeometry(OWLContext context,
                          OWLGeometryType type);
 
-OWL_API OWLLaunchProg
-owlContextCreateLaunchProg(OWLContext context,
+OWL_API OWLRayGen
+owlContextCreateRayGen(OWLContext context,
                            OWLModule module,
                            const char *programName,
-                           size_t sizeOfVarStruct);
+                           size_t sizeOfVarStruct,
+                           OWLVarDecl *vars,
+                           size_t      numVars);
 
-OWL_API OWLGeometryGroup
+OWL_API OWLGroup
 owlContextCreateGeometryGroup(OWLContext context,
                               size_t numGeometries,
                               OWLGeometry *initValues);
 
-OWL_API OWLInstanceGroup
+OWL_API OWLGroup
 owlContextCreateInstanceGroup(OWLContext context,
                               size_t numInstances);
 
 OWL_API OWLGeometryType
 owlContextCreateGeometryType(OWLContext context,
                              OWLGeometryKind kind,
-                             size_t sizeOfVarStruct);
+                             size_t sizeOfVarStruct,
+                             OWLVarDecl *vars,
+                             size_t      numVars);
 
 OWL_API OWLBuffer
 owlContextCreateBuffer(OWLContext context,
@@ -116,7 +160,7 @@ owlContextCreateBuffer(OWLContext context,
     completed by the time this function returns. */
 OWL_API void
 owlContextLaunch2D(OWLContext context,
-                   OWLLaunchProg launchProg,
+                   OWLRayGen rayGen,
                    int dims_x, int dims_y);
 
 // OWL_API OWLTriangles owlTrianglesCreate(OWLContext context,
@@ -130,20 +174,13 @@ OWL_API void owlTrianglesSetVertices(OWLGeometry triangles,
 OWL_API void owlTrianglesSetIndices(OWLGeometry triangles,
                                     OWLBuffer indices);
 
-OWL_API void
-owlGeometryTypeDeclareVariable(OWLGeometryType object,
-                               const char *varName,
-                               OWLDataType type,
-                               size_t offset);
-
-
 // -------------------------------------------------------
 // group/hierarchy creation and setting
 // -------------------------------------------------------
 OWL_API void
-owlInstanceGroupSetChild(OWLInstanceGroup group,
+owlInstanceGroupSetChild(OWLGroup group,
                          int whichChild,
-                         OWLGeometryGroup geometry);
+                         OWLGroup child);
 
 OWL_API void
 owlGeometryTypeSetClosestHitProgram(OWLGeometryType type,
@@ -158,6 +195,8 @@ owlGeometryTypeSetClosestHitProgram(OWLGeometryType type,
 OWL_API void owlGeometryRelease(OWLGeometry geometry);
 OWL_API void owlVariableRelease(OWLVariable variable);
 OWL_API void owlBufferRelease(OWLBuffer buffer);
+OWL_API void owlRayGenRelease(OWLRayGen rayGen);
+OWL_API void owlGroupRelease(OWLGroup group);
 
 // -------------------------------------------------------
 // VariableGet for the various types
@@ -167,7 +206,7 @@ owlGeometryGetVariable(OWLGeometry geom,
                        const char *varName);
 
 OWL_API OWLVariable
-owlLaunchProgGetVariable(OWLLaunchProg geom,
+owlRayGenGetVariable(OWLRayGen geom,
                          const char *varName);
 
 // -------------------------------------------------------
@@ -175,4 +214,6 @@ owlLaunchProgGetVariable(OWLLaunchProg geom,
 // -------------------------------------------------------
 OWL_API void owlVariableSet1f(OWLVariable variable, const float value);
 OWL_API void owlVariableSet3fv(OWLVariable variable, const float *value);
+OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
+OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
 

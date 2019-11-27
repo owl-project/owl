@@ -92,16 +92,23 @@ int main(int ac, char **av)
   // define type
   // ------------------------------------------------------------------
 
+  OWLVarDecl diffuseTrianglesVars[] =
+    {
+     { "vertex", OWL_BUFFER_POINTER, OWL_OFFSETOF(TrianglesVars,vertex)},
+     { "color",  OWL_FLOAT3,         OWL_OFFSETOF(TrianglesVars,color)},
+    };
   OWLGeometryType diffuseTrianglesType
     = owlContextCreateGeometryType(context,
                                    OWL_GEOMETRY_TRIANGLES,
-                                   sizeof(struct TrianglesVars));
-  owlGeometryTypeDeclareVariable(diffuseTrianglesType,"vertex",OWL_BUFFER_POINTER,
-                                 OWL_OFFSETOF(TrianglesVars,vertex));
-  owlGeometryTypeDeclareVariable(diffuseTrianglesType,"index", OWL_BUFFER_POINTER,
-                                 OWL_OFFSETOF(TrianglesVars,index));
-  owlGeometryTypeDeclareVariable(diffuseTrianglesType,"color",OWL_FLOAT3,
-                                 OWL_OFFSETOF(TrianglesVars,color));
+                                   sizeof(struct TrianglesVars),
+                                   diffuseTrianglesVars,
+                                   sizeof(diffuseTrianglesVars)/sizeof(OWLVarDecl));
+  /* owlGeometryTypeDeclareVariable(diffuseTrianglesType,"vertex",OWL_BUFFER_POINTER, */
+  /*                                OWL_OFFSETOF(TrianglesVars,vertex)); */
+  /* owlGeometryTypeDeclareVariable(diffuseTrianglesType,"index", OWL_BUFFER_POINTER, */
+  /*                                OWL_OFFSETOF(TrianglesVars,index)); */
+  /* owlGeometryTypeDeclareVariable(diffuseTrianglesType,"color",OWL_FLOAT3, */
+  /*                                OWL_OFFSETOF(TrianglesVars,color)); */
 
   owlGeometryTypeSetClosestHitProgram(diffuseTrianglesType,
                                       OWL_ALL_RAY_TYPES,
@@ -133,7 +140,7 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // ... and put into a trace-able group
   // ------------------------------------------------------------------
-  OWLGeometryGroup quadGroup = owlContextCreateGeometryGroup(context,1,&quad);
+  OWLGroup quadGroup = owlContextCreateGeometryGroup(context,1,&quad);
   owlGeometryRelease(quad);
 
   // ==================================================================
@@ -143,18 +150,18 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // define type
   // ------------------------------------------------------------------
+  OWLVarDecl diffuseSphereVars[] =
+    {
+     { "center", OWL_FLOAT3, OWL_OFFSETOF(SphereVars,center)},
+     { "color",  OWL_FLOAT3, OWL_OFFSETOF(SphereVars,color)},
+     { "radius", OWL_FLOAT,  OWL_OFFSETOF(SphereVars,radius)},
+    };
   OWLGeometryType diffuseSphereType
     = owlContextCreateGeometryType(context,
                                    OWL_GEOMETRY_USER,
-                                   sizeof(struct SphereVars));
-  owlGeometryTypeDeclareVariable(diffuseSphereType,"center",
-                                 OWL_BUFFER_POINTER,
-                                 OWL_OFFSETOF(SphereVars,center));
-  owlGeometryTypeDeclareVariable(diffuseSphereType,"radius",
-                                 OWL_BUFFER_POINTER,
-                                 OWL_OFFSETOF(SphereVars,radius));
-  owlGeometryTypeDeclareVariable(diffuseSphereType,"color",OWL_FLOAT3,
-                                 OWL_OFFSETOF(SphereVars,color));
+                                   sizeof(struct SphereVars),
+                                   diffuseSphereVars,
+                                   sizeof(diffuseSphereVars)/sizeof(OWLVarDecl));
   
   owlGeometryTypeSetClosestHitProgram(diffuseSphereType,
                                       OWL_ALL_RAY_TYPES,
@@ -189,38 +196,63 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // ... and put into a trace-able group
   // ------------------------------------------------------------------
-  OWLGeometryGroup sphereGroup
+  OWLGroup sphereGroup
     = owlContextCreateGeometryGroup(context,1,&sphere);
   owlGeometryRelease(sphere);
   
   // ==================================================================
   // create toplevel groupt hat contains both ...
   // ==================================================================
-  OWLInstanceGroup worldGroup
+  OWLGroup worldGroup
     = owlContextCreateInstanceGroup(context,2);
   owlInstanceGroupSetChild(worldGroup,0,sphereGroup);
   owlInstanceGroupSetChild(worldGroup,1,quadGroup);
-                        
+  owlGroupRelease(quadGroup);
+  owlGroupRelease(sphereGroup);
+
   // ==================================================================
   // create and configure launch proram
   // ==================================================================
-  OWLLaunchProg renderFrame
-    = owlContextCreateLaunchProg(context,
+  OWLVarDecl renderFrameVars[] =
+    {
+     { "bgColor",     OWL_FLOAT3, OWL_OFFSETOF(RenderFrameVars,bgColor)},
+     { "world",       OWL_GROUP,  OWL_OFFSETOF(RenderFrameVars,world)},
+     { "frameBuffer", OWL_BUFFER, OWL_OFFSETOF(RenderFrameVars,frameBuffer)},
+    };
+  OWLRayGen renderFrame
+    = owlContextCreateRayGen(context,
                                  /* code to run: */
                                  module,"renderFrame",
                                  /* size of variables struct */
-                                 sizeof(struct RenderFrameVars));
+                                 sizeof(struct RenderFrameVars),
+                                 renderFrameVars,
+                                 sizeof(renderFrameVars)/sizeof(OWLVarDecl));
+  
+  
+  OWLVariable bgColorVar
+    = owlRayGenGetVariable(renderFrame,"bgColor");
+  owlVariableSet3fv(bgColorVar,&image_bgColor.x);
+  owlVariableRelease(bgColorVar);
 
-  OWLVariable bgColor
-    = owlLaunchProgGetVariable(renderFrame,"bgColor");
-  owlVariableSet3fv(bgColor,&image_bgColor.x);
-  owlVariableRelease(bgColor);
+  OWLVariable worldVar
+    = owlRayGenGetVariable(renderFrame,"world");
+  owlVariableSetGroup(worldVar,worldGroup);
+  owlVariableRelease(worldVar);
+
+  OWLVariable fbVar
+    = owlRayGenGetVariable(renderFrame,"frameBuffer");
+  owlVariableSetBuffer(fbVar,frameBuffer);
+  owlVariableRelease(fbVar);
   
   // ==================================================================
   // launch renderframe program
   // ==================================================================
   owlContextLaunch2D(context,renderFrame,image_fbSize.x,image_fbSize.y);
-  
+
+  owlBufferRelease(frameBuffer);
+  owlRayGenRelease(renderFrame);
+  owlGroupRelease(worldGroup);
+
   owlContextDestroy(context);
 }
 
