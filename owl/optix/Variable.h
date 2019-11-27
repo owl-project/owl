@@ -21,6 +21,7 @@
 namespace owl {
 
   struct Buffer;
+  struct Group;
   
   struct Variable : public Object {
     typedef std::shared_ptr<Variable> SP;
@@ -30,6 +31,7 @@ namespace owl {
     { assert(varDecl); }
     
     virtual void set(const std::shared_ptr<Buffer> &value) { mismatchingType(); }
+    virtual void set(const std::shared_ptr<Group>  &value) { mismatchingType(); }
     virtual void set(const float &value) { mismatchingType(); }
     virtual void set(const vec3f &value) { mismatchingType(); }
 

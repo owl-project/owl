@@ -104,9 +104,8 @@ typedef struct _OWLGeometry      *OWLGeometry;
 typedef struct _OWLGeometryType  *OWLGeometryType;
 typedef struct _OWLVariable      *OWLVariable;
 typedef struct _OWLModule        *OWLModule;
-typedef struct _OWLGeometryGroup *OWLGeometryGroup;
-typedef struct _OWLInstanceGroup *OWLInstanceGroup;
-typedef struct _OWLRayGen    *OWLRayGen;
+typedef struct _OWLGroup         *OWLGroup;
+typedef struct _OWLRayGen        *OWLRayGen;
 
 // typedef OWLGeometry OWLTriangles;
 
@@ -132,12 +131,12 @@ owlContextCreateRayGen(OWLContext context,
                            OWLVarDecl *vars,
                            size_t      numVars);
 
-OWL_API OWLGeometryGroup
+OWL_API OWLGroup
 owlContextCreateGeometryGroup(OWLContext context,
                               size_t numGeometries,
                               OWLGeometry *initValues);
 
-OWL_API OWLInstanceGroup
+OWL_API OWLGroup
 owlContextCreateInstanceGroup(OWLContext context,
                               size_t numInstances);
 
@@ -177,9 +176,9 @@ OWL_API void owlTrianglesSetIndices(OWLGeometry triangles,
 // group/hierarchy creation and setting
 // -------------------------------------------------------
 OWL_API void
-owlInstanceGroupSetChild(OWLInstanceGroup group,
-						 int whichChild,
-                         OWLGeometryGroup geometry);
+owlInstanceGroupSetChild(OWLGroup group,
+                         int whichChild,
+                         OWLGroup child);
 
 OWL_API void
 owlGeometryTypeSetClosestHitProgram(OWLGeometryType type,
@@ -195,6 +194,7 @@ OWL_API void owlGeometryRelease(OWLGeometry geometry);
 OWL_API void owlVariableRelease(OWLVariable variable);
 OWL_API void owlBufferRelease(OWLBuffer buffer);
 OWL_API void owlRayGenRelease(OWLRayGen rayGen);
+OWL_API void owlGroupRelease(OWLGroup group);
 
 // -------------------------------------------------------
 // VariableGet for the various types
@@ -212,4 +212,6 @@ owlRayGenGetVariable(OWLRayGen geom,
 // -------------------------------------------------------
 OWL_API void owlVariableSet1f(OWLVariable variable, const float value);
 OWL_API void owlVariableSet3fv(OWLVariable variable, const float *value);
+OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
+OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
 

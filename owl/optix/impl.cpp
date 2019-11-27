@@ -259,7 +259,7 @@ namespace owl {
     return (OWLRayGen)context->createHandle(rayGen);
   }
 
-  OWL_API OWLGeometryGroup
+  OWL_API OWLGroup
   owlContextCreateGeometryGroup(OWLContext _context,
                                 size_t numGeometries,
                                 OWLGeometry *initValues)
@@ -271,16 +271,17 @@ namespace owl {
     GeometryGroup::SP  group = context->createGeometryGroup(numGeometries);
     assert(group);
 
-    OWLGeometryGroup _group = (OWLGeometryGroup)context->createHandle(group);
+    OWLGroup _group = (OWLGroup)context->createHandle(group);
     if (initValues) {
       for (int i = 0; i < numGeometries; i++)
         //owlGeometryGroupSetChild(_group, i, initValues[i]);
         group->setChild(i, ((APIHandle *)initValues[i])->get<Geometry>());
     }
+    assert(_group);
     return _group;
   }
 
-  OWL_API OWLInstanceGroup
+  OWL_API OWLGroup
   owlContextCreateInstanceGroup(OWLContext _context,
                                 size_t numInstances)
   {
@@ -291,7 +292,8 @@ namespace owl {
     InstanceGroup::SP  group = context->createInstanceGroup(numInstances);
     assert(group);
 
-    OWLInstanceGroup _group = (OWLInstanceGroup)context->createHandle(group);
+    OWLGroup _group = (OWLGroup)context->createHandle(group);
+    assert(_group);
     return _group;
   }
 
@@ -404,6 +406,12 @@ namespace owl {
   {
     LOG_API_CALL();
     releaseObject<Buffer>((APIHandle*)buffer);
+  }
+  
+  OWL_API void owlGroupRelease(OWLGroup group)
+  {
+    LOG_API_CALL();
+    releaseObject<Group>((APIHandle*)group);
   }
   
   OWL_API void owlRayGenRelease(OWLRayGen handle)
@@ -523,14 +531,44 @@ namespace owl {
     assert(value);
     setBasicTypeVariable((APIHandle *)_variable,*(const vec3f*)value);
   }
-  
+
+  OWL_API void owlVariableSetGroup(OWLVariable _variable, OWLGroup _group)
+  {
+    LOG_API_CALL();
+
+    APIHandle *handle = (APIHandle*)_group;
+    Group::SP group
+      = handle
+      ? handle->get<Group>()
+      : Group::SP();
+    
+    assert(group);
+
+    setBasicTypeVariable((APIHandle *)_variable,group);
+  }
+
+  OWL_API void owlVariableSetBuffer(OWLVariable _variable, OWLBuffer _buffer)
+  {
+    LOG_API_CALL();
+
+    APIHandle *handle = (APIHandle*)_buffer;
+    Buffer::SP buffer
+      = handle
+      ? handle->get<Buffer>()
+      : Buffer::SP();
+    
+    assert(buffer);
+
+    setBasicTypeVariable((APIHandle *)_variable,buffer);
+  }
+
   // -------------------------------------------------------
   // group/hierarchy creation and setting
   // -------------------------------------------------------
   OWL_API void
-  owlInstanceGroupSetChild(OWLInstanceGroup _group,
+  owlInstanceGroupSetChild(OWLGroup _group,
                            int whichChild,
-                           OWLGeometryGroup _child)
+                           OWLGroup _child)
   {
     LOG_API_CALL();
 

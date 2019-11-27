@@ -140,7 +140,7 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // ... and put into a trace-able group
   // ------------------------------------------------------------------
-  OWLGeometryGroup quadGroup = owlContextCreateGeometryGroup(context,1,&quad);
+  OWLGroup quadGroup = owlContextCreateGeometryGroup(context,1,&quad);
   owlGeometryRelease(quad);
 
   // ==================================================================
@@ -196,18 +196,20 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // ... and put into a trace-able group
   // ------------------------------------------------------------------
-  OWLGeometryGroup sphereGroup
+  OWLGroup sphereGroup
     = owlContextCreateGeometryGroup(context,1,&sphere);
   owlGeometryRelease(sphere);
   
   // ==================================================================
   // create toplevel groupt hat contains both ...
   // ==================================================================
-  OWLInstanceGroup worldGroup
+  OWLGroup worldGroup
     = owlContextCreateInstanceGroup(context,2);
   owlInstanceGroupSetChild(worldGroup,0,sphereGroup);
   owlInstanceGroupSetChild(worldGroup,1,quadGroup);
-                        
+  owlGroupRelease(quadGroup);
+  owlGroupRelease(sphereGroup);
+
   // ==================================================================
   // create and configure launch proram
   // ==================================================================
@@ -225,10 +227,20 @@ int main(int ac, char **av)
                                  sizeof(renderFrameVars)/sizeof(OWLVarDecl));
   
   
-  OWLVariable bgColor
+  OWLVariable bgColorVar
     = owlRayGenGetVariable(renderFrame,"bgColor");
-  owlVariableSet3fv(bgColor,&image_bgColor.x);
-  owlVariableRelease(bgColor);
+  owlVariableSet3fv(bgColorVar,&image_bgColor.x);
+  owlVariableRelease(bgColorVar);
+
+  OWLVariable worldVar
+    = owlRayGenGetVariable(renderFrame,"world");
+  owlVariableSetGroup(worldVar,worldGroup);
+  owlVariableRelease(worldVar);
+
+  OWLVariable fbVar
+    = owlRayGenGetVariable(renderFrame,"fb");
+  owlVariableSetBuffer(fbVar,frameBuffer);
+  owlVariableRelease(fbVar);
   
   // ==================================================================
   // launch renderframe program
@@ -237,6 +249,8 @@ int main(int ac, char **av)
 
   owlBufferRelease(frameBuffer);
   owlRayGenRelease(renderFrame);
+  owlGroupRelease(worldGroup);
+
   owlContextDestroy(context);
 }
 
