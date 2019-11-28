@@ -35,8 +35,13 @@ add_library(owl
   abstract/RayGen.cpp
   abstract/Geometry.cpp
   abstract/Variable.cpp
+
+  ll/Device.cpp
   )
+
 target_link_libraries(owl
+  ${CUDA_LIBRARIES}
+  ${CUDA_CUDA_LIBRARY}
  # tbb
   )
 

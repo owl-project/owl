@@ -18,21 +18,8 @@
 
 #include "owl/owl.h"
 #include "abstract/common.h"
-#include <string.h>
-#include <set>
-#include <map>
-#include <vector>
-#include <stack>
-#include <typeinfo>
-#include <mutex>
-#include <atomic>
 
 namespace owl {
-  using gdt::vec3f;
-
-#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
-  
-#define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
 
   template<size_t alignment>
   inline size_t smallestMultipleOf(size_t unalignedSize)

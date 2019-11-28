@@ -14,32 +14,13 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-/*! \file optix/common.h Creates a common set of includes, #defines,
-  and helpers that will be visible across _all_ files, both host _and_
-  device */
+#include "../owl/ll/Device.h"
 
-#pragma once
-
-// device-safe parts of gdt
-#include "gdt/math/vec.h"
-#include "gdt/math/box.h"
-#include "gdt/math/AffineSpace.h"
-
-#include <string.h>
-#include <set>
-#include <map>
-#include <vector>
-#include <stack>
-#include <typeinfo>
-#include <mutex>
-#include <atomic>
-
-namespace owl {
-  using gdt::vec3f;
+int main(int ac, char **av)
+{
+  owl::ll::Devices::SP devices
+    = owl::ll::Devices::create();
+  std::cout << "#######################################################" << std::endl;
+  std::cout << "actual ll-work here ..." << std::endl;
+  std::cout << "#######################################################" << std::endl;
 }
-
-#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
-  
-#define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
-
-
