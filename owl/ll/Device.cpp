@@ -79,6 +79,16 @@ namespace owl {
     Device::~Device()
     {
       destroyPipeline();
+      
+      modules.destroyOptixHandles(context.get());
+      const int deviceID = context->owlDeviceID;
+
+      context = nullptr;
+      
+      std::cout
+        << GDT_TERMINAL_GREEN
+        << "#owl.ll: successfully destroyed owl device #" << deviceID
+        << GDT_TERMINAL_DEFAULT << std::endl;
     }
 
     void Context::destroyPipeline()
@@ -158,6 +168,7 @@ namespace owl {
       
       char log[2048];
       size_t sizeof_log = sizeof( log );
+      
       for (int moduleID=0;moduleID<modules.size();moduleID++) {
         Module &module = modules[moduleID];
         assert(module.module == nullptr);
@@ -171,7 +182,10 @@ namespace owl {
                                                  &module.module
                                              ));
         assert(module.module != nullptr);
-        std::cout << "#owl.ll: created module #" << moduleID << std::endl;
+        std::cout
+          << GDT_TERMINAL_GREEN
+          << "#owl.ll: created module #" << moduleID
+          << GDT_TERMINAL_DEFAULT << std::endl;
       }
     }
 
@@ -195,17 +209,24 @@ namespace owl {
     void Device::buildOptixPrograms()
     {
       OptixProgramGroupOptions pgOptions = {};
+      OptixProgramGroupDesc    pgDesc    = {};
 
+      // ------------------------------------------------------------------
+      // rayGen programs
+      // ------------------------------------------------------------------
       for (int pgID=0;pgID<rayGenPGs.size();pgID++) {
         RayGenPG &pg     = rayGenPGs[pgID];
         Module   *module = modules.get(pg.program.moduleID);
-        OptixProgramGroupDesc pgDesc    = {};
         pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
+        std::string annotatedProgName
+          = pg.program.progName
+          ? std::string("__raygen__")+pg.program.progName
+          : "";
         if (module) {
           assert(module->module != nullptr);
           assert(pg.program.progName != nullptr);
           pgDesc.raygen.module            = module->module;
-          pgDesc.raygen.entryFunctionName = pg.program.progName;
+          pgDesc.raygen.entryFunctionName = annotatedProgName.c_str();
         } else {
           pgDesc.raygen.module            = nullptr;
           pgDesc.raygen.entryFunctionName = nullptr;
@@ -221,11 +242,105 @@ namespace owl {
                                             ));
       }
       
+      // ------------------------------------------------------------------
+      // miss programs
+      // ------------------------------------------------------------------
+      for (int pgID=0;pgID<missPGs.size();pgID++) {
+        MissPG &pg     = missPGs[pgID];
+        Module *module = modules.get(pg.program.moduleID);
+        pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_MISS;
+        std::string annotatedProgName
+          = pg.program.progName
+          ? std::string("__miss__")+pg.program.progName
+          : "";
+        if (module) {
+          assert(module->module != nullptr);
+          assert(pg.program.progName != nullptr);
+          pgDesc.miss.module            = module->module;
+          pgDesc.miss.entryFunctionName = annotatedProgName.c_str();
+        } else {
+          pgDesc.miss.module            = nullptr;
+          pgDesc.miss.entryFunctionName = nullptr;
+        }
+        char log[2048];
+        size_t sizeof_log = sizeof( log );
+        OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
+                                            &pgDesc,
+                                            1,
+                                            &pgOptions,
+                                            log,&sizeof_log,
+                                            &pg.pg
+                                            ));
+      }
+      
+      // ------------------------------------------------------------------
+      // hitGroup programs
+      // ------------------------------------------------------------------
+      for (int pgID=0;pgID<hitGroupPGs.size();pgID++) {
+        HitGroupPG &pg   = hitGroupPGs[pgID];
+        pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
+
+        // ----------- closest hit -----------
+        Module *moduleCH = modules.get(pg.closestHit.moduleID);
+        std::string annotatedProgNameCH
+          = pg.closestHit.progName
+          ? std::string("__closesthit__")+pg.closestHit.progName
+          : "";
+        if (moduleCH) {
+          assert(moduleCH->module != nullptr);
+          assert(pg.closestHit.progName != nullptr);
+          pgDesc.hitgroup.moduleCH            = moduleCH->module;
+          pgDesc.hitgroup.entryFunctionNameCH = annotatedProgNameCH.c_str();
+        } else {
+          pgDesc.hitgroup.moduleCH            = nullptr;
+          pgDesc.hitgroup.entryFunctionNameCH = nullptr;
+        }
+        // ----------- any hit -----------
+        Module *moduleAH = modules.get(pg.anyHit.moduleID);
+        std::string annotatedProgNameAH
+          = pg.anyHit.progName
+          ? std::string("__anyhit__")+pg.anyHit.progName
+          : "";
+        if (moduleAH) {
+          assert(moduleAH->module != nullptr);
+          assert(pg.anyHit.progName != nullptr);
+          pgDesc.hitgroup.moduleAH            = moduleAH->module;
+          pgDesc.hitgroup.entryFunctionNameAH = annotatedProgNameAH.c_str();
+        } else {
+          pgDesc.hitgroup.moduleAH            = nullptr;
+          pgDesc.hitgroup.entryFunctionNameAH = nullptr;
+        }
+
+        char log[2048];
+        size_t sizeof_log = sizeof( log );
+        OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
+                                            &pgDesc,
+                                            1,
+                                            &pgOptions,
+                                            log,&sizeof_log,
+                                            &pg.pg
+                                            ));
+      }
+      
     }
     
     void Device::destroyOptixPrograms()
     {
-      PING;
+      // ---------------------- rayGen ----------------------
+      for (auto &pg : rayGenPGs) {
+        if (pg.pg) optixProgramGroupDestroy(pg.pg);
+        pg.pg = nullptr;
+      }
+      // ---------------------- hitGroup ----------------------
+      for (auto &pg : hitGroupPGs) {
+        if (pg.pg) optixProgramGroupDestroy(pg.pg);
+        pg.pg = nullptr;
+      }
+      // ---------------------- miss ----------------------
+      for (auto &pg : missPGs) {
+        if (pg.pg) optixProgramGroupDestroy(pg.pg);
+        pg.pg = nullptr;
+      }
     }
 
     void Device::allocHitGroupPGs(size_t count)
@@ -368,8 +483,10 @@ namespace owl {
       : devices(devices)
     {
       assert(!devices.empty());
-      std::cout << "#owl.ll: created device group with "
-                << devices.size() << " device(s)" << std::endl;
+      std::cout << GDT_TERMINAL_GREEN
+                << "#owl.ll: created device group with "
+                << devices.size() << " device(s)"
+                << GDT_TERMINAL_DEFAULT << std::endl;
     }
     
   } // ::owl::ll

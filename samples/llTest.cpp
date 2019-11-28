@@ -30,23 +30,25 @@ int main(int ac, char **av)
   ll->allocHitGroupPGs(1);
   ll->setHitGroupClosestHit(/*program ID*/0,
                             /*module:*/0,
-                            "__closestHit__TriangleMesh");
+                            "TriangleMesh");
   
   ll->allocRayGenPGs(1);
   ll->setRayGenPG(/*program ID*/0,
                   /*module:*/0,
-                  "__raygen__default");
+                  "simpleRayGen");
   
   ll->allocMissPGs(1);
   ll->setMissPG(/*program ID*/0,
                 /*module:*/0,
-                "__miss__default");
+                "defaultRayType");
   ll->buildPrograms();
 
   
   ll->createPipeline();
-  
+
+  std::cout << GDT_TERMINAL_BLUE;
   std::cout << "#######################################################" << std::endl;
   std::cout << "actual ll-work here ..." << std::endl;
   std::cout << "#######################################################" << std::endl;
+  std::cout << GDT_TERMINAL_DEFAULT;
 }
