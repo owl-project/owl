@@ -22,6 +22,8 @@
 
 namespace owl {
   namespace ll {
+    struct ProgramGroups;
+    struct Device;
     
     struct Context {
       typedef std::shared_ptr<Context> SP;
@@ -38,16 +40,41 @@ namespace owl {
       const int          cudaDeviceID;
 
       void setActive() { CUDA_CHECK(cudaSetDevice(cudaDeviceID)); }
+
+      void createPipeline(Device *device);
+      void destroyPipeline();
       
       OptixDeviceContext optixContext = nullptr;
       CUcontext          cudaContext  = nullptr;
       CUstream           stream       = nullptr;
+
+      OptixPipelineCompileOptions pipelineCompileOptions = {};
+      OptixPipelineLinkOptions    pipelineLinkOptions    = {};
+      OptixModuleCompileOptions   moduleCompileOptions   = {};
+      OptixPipeline               pipeline               = nullptr;
     };
     
     struct Module {
       OptixModule module = nullptr;
+      const char *ptxCode;
+      void create(Context *context);
     };
     struct Modules {
+      ~Modules() {
+        assert(noActiveHandles());
+      }
+      bool noActiveHandles() {
+        for (auto &module : modules) if (module.module != nullptr) return false;
+        return true;
+      }
+      size_t size() const { return modules.size(); }
+      void alloc(size_t size);
+      /*! will destroy the *optix handles*, but will *not* clear the
+        modules vector itself */
+      void destroyOptixHandles(Context *context);
+      void buildOptixHandles(Context *context);
+      void set(size_t slot, const char *ptxCode);
+      
       std::vector<Module> modules;
     };
     
@@ -56,33 +83,26 @@ namespace owl {
       OptixProgramGroupDesc     pgDesc;
       OptixProgramGroup         pg        = nullptr;
     };
-    struct ProgramGroups {
-      std::vector<ProgramGroup> hitGroupPGs;
-      std::vector<ProgramGroup> rayGenPGs;
-      std::vector<ProgramGroup> missPGs;
+    struct Program {
+      const char *progName = nullptr;
+      int         moduleID = -1;
     };
-
-    struct Pipeline {
-      typedef std::shared_ptr<Pipeline> SP;
-      
-      Pipeline(Context::SP context)
-        : context(context)
-      {
-        pipelineLinkOptions.overrideUsesMotionBlur = false;
-        pipelineLinkOptions.maxTraceDepth          = 2;
-      }
-      Pipeline()
-      { destroy(); }
-      
-      void create(ProgramGroups &pgs);
-      void destroy();
-
-      Context::SP                 context;
-      OptixPipeline               pipeline               = nullptr;
-      OptixPipelineCompileOptions pipelineCompileOptions = {};
-      OptixPipelineLinkOptions    pipelineLinkOptions    = {};
-      OptixModuleCompileOptions   moduleCompileOptions   = {};
+    struct RayGenPG : public ProgramGroup {
+      Program program;
     };
+    struct MissPG : public ProgramGroup {
+      Program program;
+    };
+    struct HitGroupPG : public ProgramGroup {
+      Program anyHit;
+      Program closestHit;
+      Program intersect;
+    };
+    // struct ProgramGroups {
+    //   std::vector<HitGroupPG> hitGroupPGs;
+    //   std::vector<RayGenPG> rayGenPGs;
+    //   std::vector<MissPG> missPGs;
+    // };
 
     struct SBT {
       OptixShaderBindingTable sbt = {};
@@ -102,16 +122,38 @@ namespace owl {
           exception if for any reason that cannot be done */
       Device(int owlDeviceID, int cudaDeviceID);
       ~Device();
-      
-      void createPipeline()  { assert(pipeline); pipeline->create(programGroups); }
-      void destroyPipeline() { assert(pipeline); pipeline->destroy(); }
 
-      Context::SP    context;
-      Pipeline::SP   pipeline;
+      void createPipeline()  { context->createPipeline(this); }
+      void destroyPipeline()
+      {
+        context->destroyPipeline();
+      }
+
+      void rebuildModules()
+      {
+        // modules shouldn't be rebuilt while a pipeline is still using them(?)
+        assert(context->pipeline == nullptr);
+        modules.destroyOptixHandles(context.get());
+        modules.buildOptixHandles(context.get());
+      }
+
+      void setHitGroupClosestHit(int pgID, int moduleID, const char *progName);
+      void setRayGenPG(int pgID, int moduleID, const char *progName);
+      void setMissPG(int pgID, int moduleID, const char *progName);
       
-      Modules        modules;
-      ProgramGroups  programGroups;
-      SBT            sbt;
+      void allocModules(size_t count)
+      { modules.alloc(count); }
+      void allocHitGroupPGs(size_t count);
+      void allocRayGenPGs(size_t count);
+      void allocMissPGs(size_t count);
+      
+      Context::SP             context;
+      
+      Modules                 modules;
+      std::vector<HitGroupPG> hitGroupPGs;
+      std::vector<RayGenPG>   rayGenPGs;
+      std::vector<MissPG>     missPGs;
+      SBT                     sbt;
     };
     
     struct Devices {
@@ -119,8 +161,31 @@ namespace owl {
 
       Devices(const std::vector<Device::SP> &devices);
 
+      void allocModules(size_t count)
+      { for (auto device : devices) device->allocModules(count); }
+      void setModule(size_t slot, const char *ptxCode)
+      { for (auto device : devices) device->modules.set(slot,ptxCode); }
+      void rebuildModules()
+      {
+        for (auto device : devices)
+          device->rebuildModules();
+      }
       void createPipeline()
       { for (auto device : devices) device->createPipeline(); }
+      
+      void allocHitGroupPGs(size_t count)
+      { for (auto device : devices) device->allocHitGroupPGs(count); }
+      void allocRayGenPGs(size_t count)
+      { for (auto device : devices) device->allocRayGenPGs(count); }
+      void allocMissPGs(size_t count)
+      { for (auto device : devices) device->allocMissPGs(count); }
+
+      void setHitGroupClosestHit(int pgID, int moduleID, const char *progName)
+      { for (auto device : devices) device->setHitGroupClosestHit(pgID,moduleID,progName); }
+      void setRayGenPG(int pgID, int moduleID, const char *progName)
+      { for (auto device : devices) device->setRayGenPG(pgID,moduleID,progName); }
+      void setMissPG(int pgID, int moduleID, const char *progName)
+      { for (auto device : devices) device->setMissPG(pgID,moduleID,progName); }
       
       /* create an instance of this object that has properly
          initialized devices for given cuda device IDs */

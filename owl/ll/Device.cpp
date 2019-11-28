@@ -69,8 +69,7 @@ namespace owl {
     /*! construct a new owl device on given cuda device. throws an
       exception if for any reason that cannot be done */
     Device::Device(int owlDeviceID, int cudaDeviceID)
-      : context(std::make_shared<Context>(owlDeviceID,cudaDeviceID)),
-        pipeline(std::make_shared<Pipeline>(context))
+      : context(std::make_shared<Context>(owlDeviceID,cudaDeviceID))
     {
       std::cout << "#owl.ll: successfully created owl device #" << owlDeviceID
                 << " on CUDA device #" << cudaDeviceID << std::endl;
@@ -82,32 +81,152 @@ namespace owl {
       destroyPipeline();
     }
 
-    void Pipeline::destroy()
+    void Context::destroyPipeline()
     {
       if (pipeline) {
-        context->setActive();
+        setActive();
         OPTIX_CHECK(optixPipelineDestroy(pipeline));
         pipeline = nullptr;
       }
     }
-    
-    void Pipeline::create(ProgramGroups &pgs)
+
+    /*! will destroy the *optix handles*, but will *not* clear the
+        modules vector itself */
+    void Modules::destroyOptixHandles(Context *context)
     {
-      destroy();
+      for (auto &module : modules) {
+        if (module.module) {
+          optixModuleDestroy(module.module);
+          module.module = nullptr;
+        }
+      }
+    }
+
+
+    void Device::setHitGroupClosestHit(int pgID,
+                                       int moduleID,
+                                       const char *progName)
+    {
+      assert(pgID >= 0);
+      assert(pgID < hitGroupPGs.size());
       
-      context->setActive();
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      hitGroupPGs[pgID].closestHit.moduleID = moduleID;
+      hitGroupPGs[pgID].closestHit.progName = progName;
+    }
+    
+    void Device::setRayGenPG(int pgID, int moduleID, const char *progName)
+    {
+      assert(pgID >= 0);
+      assert(pgID < rayGenPGs.size());
+      
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      rayGenPGs[pgID].program.moduleID = moduleID;
+      rayGenPGs[pgID].program.progName = progName;
+    }
+    void Device::setMissPG(int pgID, int moduleID, const char *progName)
+    {
+      assert(pgID >= 0);
+      assert(pgID < missPGs.size());
+      
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      missPGs[pgID].program.moduleID = moduleID;
+      missPGs[pgID].program.progName = progName;
+    }
+    
+    
+    void Modules::buildOptixHandles(Context *context)
+    {
+      PRINT(modules.size());
+      assert(!modules.empty());
+      std::cout << "#owl.ll(" << context->owlDeviceID << "): "
+                << "building " << modules.size() << " modules" << std::endl;
+      // first - free all old modules
+      for (auto &module : modules) {
+        if (!module.module) continue;
+        optixModuleDestroy(module.module);
+        module.module = nullptr;
+      }
+    }
+
+    void Modules::alloc(size_t count)
+    {
+      assert(modules.empty());
+      PING; PRINT(count);
+      modules.resize(count);
+      PRINT(modules.size());
+    }
+
+    void Modules::set(size_t slot, const char *ptxCode)
+    {
+      assert(!modules.empty());
+      
+      assert(slot >= 0);
+      assert(slot < modules.size());
+
+      assert(!modules[slot].module);
+      modules[slot].ptxCode = ptxCode;
+      PRINT(modules.size());
+    }
+    
+    void Device::allocHitGroupPGs(size_t count)
+    {
+      assert(hitGroupPGs.empty());
+      hitGroupPGs.resize(count);
+    }
+    
+    void Device::allocRayGenPGs(size_t count)
+    {
+      assert(rayGenPGs.empty());
+      rayGenPGs.resize(count);
+    }
+    
+    void Device::allocMissPGs(size_t count)
+    {
+      assert(missPGs.empty());
+      missPGs.resize(count);
+    }
+      
+
+    void Context::createPipeline(Device *device)
+    {
+      if (pipeline != nullptr)
+        throw std::runtime_error("pipeline already created!?");
+      
+      setActive();
       std::vector<OptixProgramGroup> allPGs;
-      for (auto &pg : pgs.rayGenPGs)
+      assert(!device->rayGenPGs.empty());
+      for (auto &pg : device->rayGenPGs)
         allPGs.push_back(pg.pg);
-      for (auto &pg : pgs.hitGroupPGs)
+      assert(!device->hitGroupPGs.empty());
+      for (auto &pg : device->hitGroupPGs)
         allPGs.push_back(pg.pg);
-      for (auto &pg : pgs.missPGs)
+      assert(!device->missPGs.empty());
+      for (auto &pg : device->missPGs)
         allPGs.push_back(pg.pg);
+
+      if (allPGs.empty())
+        throw std::runtime_error("trying to create a pipeline w/ 0 programs!?");
       
       char log[2048];
       size_t sizeof_log = sizeof( log );
       
-      OPTIX_CHECK(optixPipelineCreate(context->optixContext,
+      OPTIX_CHECK(optixPipelineCreate(optixContext,
                                       &pipelineCompileOptions,
                                       &pipelineLinkOptions,
                                       allPGs.data(),

@@ -16,10 +16,34 @@
 
 #include "../owl/ll/Device.h"
 
+extern char ptxCode[1];
+
 int main(int ac, char **av)
 {
-  owl::ll::Devices::SP devices
+  owl::ll::Devices::SP ll
     = owl::ll::Devices::create();
+
+  ll->allocModules(1);
+  ll->setModule(0,ptxCode);
+  ll->rebuildModules();
+  
+  ll->allocHitGroupPGs(1);
+  ll->setHitGroupClosestHit(/*program ID*/0,
+                            /*module:*/0,
+                            "__closestHit__TriangleMesh");
+  
+  ll->allocRayGenPGs(1);
+  ll->setRayGenPG(/*program ID*/0,
+                  /*module:*/0,
+                  "__raygen__default");
+  
+  ll->allocMissPGs(1);
+  ll->setMissPG(/*program ID*/0,
+                /*module:*/0,
+                "__miss__default");
+    
+  ll->createPipeline();
+  
   std::cout << "#######################################################" << std::endl;
   std::cout << "actual ll-work here ..." << std::endl;
   std::cout << "#######################################################" << std::endl;
