@@ -74,13 +74,13 @@ namespace owl {
       void destroyOptixHandles(Context *context);
       void buildOptixHandles(Context *context);
       void set(size_t slot, const char *ptxCode);
-      
+      Module *get(int moduleID) { return moduleID < 0?nullptr:&modules[moduleID]; }
       std::vector<Module> modules;
     };
     
     struct ProgramGroup {
-      OptixProgramGroupOptions  pgOptions = {};
-      OptixProgramGroupDesc     pgDesc;
+      // OptixProgramGroupOptions  pgOptions = {};
+      // OptixProgramGroupDesc     pgDesc;
       OptixProgramGroup         pg        = nullptr;
     };
     struct Program {
@@ -129,12 +129,20 @@ namespace owl {
         context->destroyPipeline();
       }
 
-      void rebuildModules()
+      void buildModules()
       {
         // modules shouldn't be rebuilt while a pipeline is still using them(?)
         assert(context->pipeline == nullptr);
         modules.destroyOptixHandles(context.get());
         modules.buildOptixHandles(context.get());
+      }
+
+      void buildPrograms()
+      {
+        // programs shouldn't be rebuilt while a pipeline is still using them(?)
+        assert(context->pipeline == nullptr);
+        destroyOptixPrograms();
+        buildOptixPrograms();
       }
 
       void setHitGroupClosestHit(int pgID, int moduleID, const char *progName);
@@ -146,6 +154,8 @@ namespace owl {
       void allocHitGroupPGs(size_t count);
       void allocRayGenPGs(size_t count);
       void allocMissPGs(size_t count);
+      void buildOptixPrograms();
+      void destroyOptixPrograms();
       
       Context::SP             context;
       
@@ -153,6 +163,7 @@ namespace owl {
       std::vector<HitGroupPG> hitGroupPGs;
       std::vector<RayGenPG>   rayGenPGs;
       std::vector<MissPG>     missPGs;
+      
       SBT                     sbt;
     };
     
@@ -165,10 +176,15 @@ namespace owl {
       { for (auto device : devices) device->allocModules(count); }
       void setModule(size_t slot, const char *ptxCode)
       { for (auto device : devices) device->modules.set(slot,ptxCode); }
-      void rebuildModules()
+      void buildModules()
       {
         for (auto device : devices)
-          device->rebuildModules();
+          device->buildModules();
+      }
+      void buildPrograms()
+      {
+        for (auto device : devices)
+          device->buildPrograms();
       }
       void createPipeline()
       { for (auto device : devices) device->createPipeline(); }

@@ -90,19 +90,6 @@ namespace owl {
       }
     }
 
-    /*! will destroy the *optix handles*, but will *not* clear the
-        modules vector itself */
-    void Modules::destroyOptixHandles(Context *context)
-    {
-      for (auto &module : modules) {
-        if (module.module) {
-          optixModuleDestroy(module.module);
-          module.module = nullptr;
-        }
-      }
-    }
-
-
     void Device::setHitGroupClosestHit(int pgID,
                                        int moduleID,
                                        const char *progName)
@@ -134,6 +121,7 @@ namespace owl {
       rayGenPGs[pgID].program.moduleID = moduleID;
       rayGenPGs[pgID].program.progName = progName;
     }
+    
     void Device::setMissPG(int pgID, int moduleID, const char *progName)
     {
       assert(pgID >= 0);
@@ -149,27 +137,48 @@ namespace owl {
       missPGs[pgID].program.progName = progName;
     }
     
-    
+    /*! will destroy the *optix handles*, but will *not* clear the
+        modules vector itself */
+    void Modules::destroyOptixHandles(Context *context)
+    {
+      for (auto &module : modules) {
+        if (module.module != nullptr) {
+          optixModuleDestroy(module.module);
+          module.module = nullptr;
+        }
+      }
+    }
+
+
     void Modules::buildOptixHandles(Context *context)
     {
-      PRINT(modules.size());
       assert(!modules.empty());
       std::cout << "#owl.ll(" << context->owlDeviceID << "): "
                 << "building " << modules.size() << " modules" << std::endl;
-      // first - free all old modules
-      for (auto &module : modules) {
-        if (!module.module) continue;
-        optixModuleDestroy(module.module);
-        module.module = nullptr;
+      
+      char log[2048];
+      size_t sizeof_log = sizeof( log );
+      for (int moduleID=0;moduleID<modules.size();moduleID++) {
+        Module &module = modules[moduleID];
+        assert(module.module == nullptr);
+        OPTIX_CHECK(optixModuleCreateFromPTX(context->optixContext,
+                                             &context->moduleCompileOptions,
+                                             &context->pipelineCompileOptions,
+                                             module.ptxCode,
+                                             strlen(module.ptxCode),
+                                             nullptr,      // Log string
+                                             0,            // Log string sizse
+                                             &module.module
+                                             ));
+        assert(module.module != nullptr);
+        std::cout << "#owl.ll: created module #" << moduleID << std::endl;
       }
     }
 
     void Modules::alloc(size_t count)
     {
       assert(modules.empty());
-      PING; PRINT(count);
       modules.resize(count);
-      PRINT(modules.size());
     }
 
     void Modules::set(size_t slot, const char *ptxCode)
@@ -181,9 +190,44 @@ namespace owl {
 
       assert(!modules[slot].module);
       modules[slot].ptxCode = ptxCode;
-      PRINT(modules.size());
+    }
+
+    void Device::buildOptixPrograms()
+    {
+      OptixProgramGroupOptions pgOptions = {};
+
+      for (int pgID=0;pgID<rayGenPGs.size();pgID++) {
+        RayGenPG &pg     = rayGenPGs[pgID];
+        Module   *module = modules.get(pg.program.moduleID);
+        OptixProgramGroupDesc pgDesc    = {};
+        pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
+        if (module) {
+          assert(module->module != nullptr);
+          assert(pg.program.progName != nullptr);
+          pgDesc.raygen.module            = module->module;
+          pgDesc.raygen.entryFunctionName = pg.program.progName;
+        } else {
+          pgDesc.raygen.module            = nullptr;
+          pgDesc.raygen.entryFunctionName = nullptr;
+        }
+        char log[2048];
+        size_t sizeof_log = sizeof( log );
+        OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
+                                            &pgDesc,
+                                            1,
+                                            &pgOptions,
+                                            log,&sizeof_log,
+                                            &pg.pg
+                                            ));
+      }
+      
     }
     
+    void Device::destroyOptixPrograms()
+    {
+      PING;
+    }
+
     void Device::allocHitGroupPGs(size_t count)
     {
       assert(hitGroupPGs.empty());

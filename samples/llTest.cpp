@@ -25,7 +25,7 @@ int main(int ac, char **av)
 
   ll->allocModules(1);
   ll->setModule(0,ptxCode);
-  ll->rebuildModules();
+  ll->buildModules();
   
   ll->allocHitGroupPGs(1);
   ll->setHitGroupClosestHit(/*program ID*/0,
@@ -41,7 +41,9 @@ int main(int ac, char **av)
   ll->setMissPG(/*program ID*/0,
                 /*module:*/0,
                 "__miss__default");
-    
+  ll->buildPrograms();
+
+  
   ll->createPipeline();
   
   std::cout << "#######################################################" << std::endl;
