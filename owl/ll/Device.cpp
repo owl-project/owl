@@ -161,14 +161,14 @@ namespace owl {
       for (int moduleID=0;moduleID<modules.size();moduleID++) {
         Module &module = modules[moduleID];
         assert(module.module == nullptr);
-        OPTIX_CHECK(optixModuleCreateFromPTX(context->optixContext,
-                                             &context->moduleCompileOptions,
-                                             &context->pipelineCompileOptions,
-                                             module.ptxCode,
-                                             strlen(module.ptxCode),
-                                             nullptr,      // Log string
-                                             0,            // Log string sizse
-                                             &module.module
+        OPTIX_CHECK_LOG(optixModuleCreateFromPTX(context->optixContext,
+                                                 &context->moduleCompileOptions,
+                                                 &context->pipelineCompileOptions,
+                                                 module.ptxCode,
+                                                 strlen(module.ptxCode),
+                                                 log,      // Log string
+                                                 &sizeof_log,// Log string sizse
+                                                 &module.module
                                              ));
         assert(module.module != nullptr);
         std::cout << "#owl.ll: created module #" << moduleID << std::endl;
