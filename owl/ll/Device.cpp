@@ -415,7 +415,7 @@ namespace owl {
     
     /* create an instance of this object that has properly
        initialized devices */
-    Devices::SP Devices::create(const int *deviceIDs,
+    DeviceGroup::SP DeviceGroup::create(const int *deviceIDs,
                                 size_t     numDevices)
     {
       assert((deviceIDs == nullptr && numDevices == 0)
@@ -476,10 +476,10 @@ namespace owl {
       if (devices.empty())
         throw std::runtime_error("fatal error - could not find/create any optix devices");
       
-      return std::make_shared<Devices>(devices);
+      return std::make_shared<DeviceGroup>(devices);
     }
 
-    Devices::Devices(const std::vector<Device::SP> &devices)
+    DeviceGroup::DeviceGroup(const std::vector<Device::SP> &devices)
       : devices(devices)
     {
       assert(!devices.empty());

@@ -18,11 +18,37 @@
 
 extern char ptxCode[1];
 
+gdt::vec3f unitCube_vertices[8] =
+  {
+   { 0.f,0.f,0.f },
+   { 1.f,0.f,0.f },
+   { 0.f,1.f,0.f },
+   { 1.f,1.f,0.f },
+   { 0.f,0.f,1.f },
+   { 1.f,0.f,1.f },
+   { 0.f,1.f,1.f },
+   { 1.f,1.f,1.f }
+  };
+
+gdt::vec3i unitCube_indices[] =
+  {
+   { 0,1,3 }, { 2,3,0 },
+   { 5,7,6 }, { 5,6,4 },
+   { 0,4,5 }, { 0,5,1 },
+   { 2,3,7 }, { 2,7,6 },
+   { 1,5,7 }, { 1,7,3 },
+   { 4,0,2 }, { 4,2,6 }
+  };
+
+
 int main(int ac, char **av)
 {
-  owl::ll::Devices::SP ll
-    = owl::ll::Devices::create();
+  owl::ll::DeviceGroup::SP ll
+    = owl::ll::DeviceGroup::create();
 
+  // ##################################################################
+  // set up all the *CODE* we want to run
+  // ##################################################################
   ll->allocModules(1);
   ll->setModule(0,ptxCode);
   ll->buildModules();
@@ -42,9 +68,18 @@ int main(int ac, char **av)
                 /*module:*/0,
                 "defaultRayType");
   ll->buildPrograms();
-
-  
   ll->createPipeline();
+
+
+  // ##################################################################
+  // set up all the *GEOMETRIES* we want to run that code on
+  // ##################################################################
+  ll->reallocGeometries(1);
+  ll->createGeometryTriangles(/* geom ID    */0,
+                              /* type/PG ID */0,
+                              /* primcount  */1);
+  
+  ll->reallocGroups(1);
 
   std::cout << GDT_TERMINAL_BLUE;
   std::cout << "#######################################################" << std::endl;
