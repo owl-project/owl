@@ -16,9 +16,13 @@
 
 #include "../owl/ll/Device.h"
 
+using gdt::vec3f;
+using gdt::vec3i;
+
 extern char ptxCode[1];
 
-gdt::vec3f unitCube_vertices[8] =
+const int NUM_VERTICES = 8;
+vec3f vertices[NUM_VERTICES] =
   {
    { 0.f,0.f,0.f },
    { 1.f,0.f,0.f },
@@ -30,7 +34,8 @@ gdt::vec3f unitCube_vertices[8] =
    { 1.f,1.f,1.f }
   };
 
-gdt::vec3i unitCube_indices[] =
+const int NUM_INDICES = 12;
+vec3i indices[NUM_INDICES] =
   {
    { 0,1,3 }, { 2,3,0 },
    { 5,7,6 }, { 5,6,4 },
@@ -74,12 +79,34 @@ int main(int ac, char **av)
   // ##################################################################
   // set up all the *GEOMETRIES* we want to run that code on
   // ##################################################################
+
+  // ------------------------------------------------------------------
+  // alloc buffers
+  // ------------------------------------------------------------------
+  enum { VERTEX_BUFFER=0,INDEX_BUFFER,NUM_BUFFERS };
+  ll->reallocBuffers(NUM_BUFFERS);
+  ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
+  ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),vertices);
+  
+  // ------------------------------------------------------------------
+  // alloc geometry
+  // ------------------------------------------------------------------
   ll->reallocGeometries(1);
-  ll->createGeometryTriangles(/* geom ID    */0,
-                              /* type/PG ID */0,
-                              /* primcount  */1);
+  ll->createTrianglesGeometry(/* geom ID    */0,
+                              /* type/PG ID */0);
+  ll->triangleGeometrySetVertices(/* geom ID     */ 0,
+                                  /* buffer ID */0,
+                                  /* meta info */NUM_VERTICES,sizeof(vec3f),0);
+  ll->triangleGeometrySetIndices(/* geom ID     */ 0,
+                                 /* buffer ID */1,
+                                 /* meta info */sizeof(vec3i),0);
   
   ll->reallocGroups(1);
+  int geomsInGroup[] = { 0 };
+  ll->createTrianglesGeometryGroup(/* group ID */0,
+                                   /* geoms in group, pointer */ geomsInGroup,
+                                   /* geoms in group, count   */ 1);
+                           
 
   std::cout << GDT_TERMINAL_BLUE;
   std::cout << "#######################################################" << std::endl;
