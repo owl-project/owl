@@ -14,51 +14,25 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#pragma once
-
-#include "owl/owl.h"
-#include "optix/common.h"
-#include <string.h>
-#include <set>
-#include <map>
-#include <vector>
-#include <stack>
-#include <typeinfo>
-#include <mutex>
+#include "abstract/Context.h"
 
 namespace owl {
-  using gdt::vec3f;
 
-#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
+  struct APIHandle;
   
-#define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
-
-  struct Context;
-
-  /*! common "root" abstraction for every object this library creates */
-  struct Object : public std::enable_shared_from_this<Object> {
-    typedef std::shared_ptr<Object> SP;
-
-    virtual std::string toString() const { return "Object"; }
+  struct APIContext : public Context {
+    typedef std::shared_ptr<APIContext> SP;
     
-    template<typename T>
-    inline std::shared_ptr<T> as() 
-    { return std::dynamic_pointer_cast<T>(shared_from_this()); }
-  };
+    APIHandle *createHandle(Object::SP object);
 
+    void track(APIHandle *object);
+    
+    void forget(APIHandle *object);
+
+    /*! delete - and thereby, release - all handles that we still
+      own. */
+    void releaseAll();
+    std::set<APIHandle *> activeHandles;
+  };
   
-  /*! a object that belongs to a context */
-  struct ContextObject : public Object {
-    typedef std::shared_ptr<ContextObject> SP;
-    
-    ContextObject(Context *const context)
-      : context(context)
-    {}
-    
-    virtual std::string toString() const { return "ContextObject"; }
-    
-    Context *const context;
-  };
-
-} // ::owl
-
+} // ::owl  

@@ -14,39 +14,13 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-
 #include "Context.h"
 #include "Module.h"
 #include "Geometry.h"
+#include "ll/Device.h"
 
 namespace owl {
 
-  template<size_t alignment>
-  size_t smallestMultipleOf(size_t unalignedSize)
-  {
-    const size_t numBlocks = (unalignedSize+alignment-1)/alignment;
-    return numBlocks*alignment;
-  }
-
-  std::string typeToString(const OWLDataType type)
-  {
-    switch(type) {
-    case OWL_FLOAT:
-      return "float";
-    case OWL_FLOAT3:
-      return "float3";
-    case OWL_BUFFER:
-      return "OWLBuffer";
-    case OWL_GROUP:
-      return "OWLGroup";
-    default:
-      throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
-                               +": not yet implemented for type #"
-                               +std::to_string((int)type));
-    }
-  }
-  
-  
   Buffer::SP Context::createBuffer()
   {
     PING;
@@ -121,7 +95,7 @@ namespace owl {
     assert(self);
     return std::make_shared<TrianglesGeometry>(context,self);
   }
-  
+
 
   void Context::expBuildSBT()
   {
@@ -129,7 +103,7 @@ namespace owl {
     PING;
     PRINT(groups.size());
     assert(!groups.empty());
-    
+
     std::vector<int> sbtOffsetOfGroup(groups.size());
     size_t numHitGroupRecords = 0;
     size_t biggestVarStructSize = 0;

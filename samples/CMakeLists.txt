@@ -26,3 +26,13 @@ target_link_libraries(c-test
   owl
   )
 
+
+include_directories(${PROJECT_SOURCE_DIR}/owl)
+add_executable(llTest
+  llTest.cpp
+  ${ptxCode}
+  )
+target_link_libraries(llTest
+  owl
+  )
+

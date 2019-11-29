@@ -18,19 +18,30 @@ include_directories(${PROJECT_SOURCE_DIR}/owl)
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 add_library(owl
   include/owl/owl.h
-  optix/common.h
 
-  optix/RegisteredObject.cpp
-  optix/Buffer.cpp
-  optix/Group.cpp
-  optix/ObjectRegistry.cpp
-  optix/Context.cpp
-  optix/RayGen.cpp
-  optix/Geometry.cpp
-  optix/Variable.cpp
-  optix/impl.cpp
+  api/impl.cpp
+  api/APIContext.h
+  api/APIContext.cpp
+  api/APIHandle.h
+  api/APIHandle.cpp
+  
+  abstract/Object.cpp
+  abstract/RegisteredObject.cpp
+  abstract/SBTObject.cpp
+  abstract/Buffer.cpp
+  abstract/Group.cpp
+  abstract/ObjectRegistry.cpp
+  abstract/Context.cpp
+  abstract/RayGen.cpp
+  abstract/Geometry.cpp
+  abstract/Variable.cpp
+
+  ll/Device.cpp
   )
+
 target_link_libraries(owl
+  ${CUDA_LIBRARIES}
+  ${CUDA_CUDA_LIBRARY}
  # tbb
   )
 

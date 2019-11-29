@@ -25,15 +25,21 @@
 #include "gdt/math/box.h"
 #include "gdt/math/AffineSpace.h"
 
-// include optix itself - optix has some automatic host/device
-// switching mechanism, so including this common.h is viable
-#define OPTIX_COMPATIBILITY 7
-#include <optix.h>
+#include <string.h>
+#include <set>
+#include <map>
+#include <vector>
+#include <stack>
+#include <typeinfo>
+#include <mutex>
+#include <atomic>
 
-namespace optix {
-  using namespace gdt;
-  
+namespace owl {
+  using gdt::vec3f;
 }
 
-#define OPTIX_PROGRAM_DATA GDT_ALIGN(16)
+#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
+  
+#define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
+
 

@@ -34,8 +34,8 @@ namespace owl {
       std::cout << "#owl: destroying context" << std::endl;
     }
 
-    ObjectRegistryT<Buffer> buffers;
-    ObjectRegistryT<Group>  groups;
+    ObjectRegistryT<Buffer>       buffers;
+    ObjectRegistryT<Group>        groups;
     ObjectRegistryT<RayGenType>   rayGenTypes;
     ObjectRegistryT<RayGen>       rayGens;
     ObjectRegistryT<GeometryType> geometryTypes;

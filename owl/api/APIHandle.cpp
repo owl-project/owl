@@ -14,39 +14,27 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// #include "optix/device.h"
+#include "APIContext.h"
+#include "APIHandle.h"
 
-#define OPTIX_RAYGEN_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __raygen__##programName
+namespace owl {
 
-#define OPTIX_CLOSEST_HIT_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __closesthit__##programName
+  APIHandle::APIHandle(Object::SP object, APIContext *context)
+  {
+    assert(object);
+    assert(context);
+    this->object  = object;
+    this->context = std::dynamic_pointer_cast<APIContext>
+      (context->shared_from_this());
+    assert(this->object);
+    assert(this->context);
+  }
 
-#define OPTIX_MISS_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __miss__##programName
+  APIHandle::~APIHandle()
+  {
+    context->forget(this);
+    object  = nullptr;
+    context = nullptr;
+  }
 
-OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
-{
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
-}
-
-OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
-{
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
-}
-
-OPTIX_MISS_PROGRAM(defaultRayType)()
-{
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
-}
-
-
-__global__ void foo()
-{}
-
+} // ::owl  

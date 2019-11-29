@@ -14,39 +14,34 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// #include "optix/device.h"
+#include "Object.h"
 
-#define OPTIX_RAYGEN_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __raygen__##programName
+namespace owl {
 
-#define OPTIX_CLOSEST_HIT_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __closesthit__##programName
+  std::atomic<uint64_t> Object::nextAvailableID;
 
-#define OPTIX_MISS_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __miss__##programName
+  Object::Object()
+    : uniqueID(nextAvailableID++)
+  {}
+    
+  std::string typeToString(OWLDataType type)
+  {
+    switch(type) {
+    case OWL_FLOAT:
+      return "float";
+    case OWL_FLOAT3:
+      return "float3";
+    case OWL_BUFFER:
+      return "OWLBuffer";
+    case OWL_GROUP:
+      return "OWLGroup";
+    default:
+      throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
+                               +": not yet implemented for type #"
+                               +std::to_string((int)type));
+    }
+  }
+  
+} // ::owl
 
-OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
-{
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
-}
-
-OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
-{
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
-}
-
-OPTIX_MISS_PROGRAM(defaultRayType)()
-{
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
-}
-
-
-__global__ void foo()
-{}
 

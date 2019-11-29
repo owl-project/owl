@@ -14,134 +14,12 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Context.h"
+#include "APIContext.h"
+#include "APIHandle.h"
 
 namespace owl {
   
 #define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
-
-  struct APIContext;
-  
-  struct APIHandle {
-    APIHandle(Object::SP object, APIContext *context);
-    virtual ~APIHandle();
-    template<typename T> inline std::shared_ptr<T> get();
-    inline std::shared_ptr<APIContext> getContext() const { return context; }
-    inline bool isContext() const
-    {
-      return ((void*)object.get() == (void*)context.get());
-    }
-    std::string toString() const
-    {
-      assert(object);
-      return object->toString();
-    }
-    std::shared_ptr<Object>     object;
-    std::shared_ptr<APIContext> context;
-  };
-  
-
-  
-  
-  struct APIContext : public Context {
-    typedef std::shared_ptr<APIContext> SP;
-    
-    APIHandle *createHandle(Object::SP object);
-
-    void track(APIHandle *object);
-    
-    void forget(APIHandle *object);
-
-    /*! delete - and thereby, release - all handles that we still
-      own. */
-    void releaseAll();
-    std::set<APIHandle *> activeHandles;
-  };
-  
-  
-  void APIContext::forget(APIHandle *object)
-  {
-    assert(object);
-    auto it = activeHandles.find(object);
-    assert(it != activeHandles.end());
-    activeHandles.erase(it);
-  }
-
-  void APIContext::releaseAll()
-  {
-    std::cout << "#owl: context is dying, num api handles (other than context itself) "
-              << "that have not yet been released: "
-              << (activeHandles.size()-1)
-              << std::endl;
-    for (auto handle : activeHandles)
-      std::cout << " - " << handle->toString() << std::endl;
-
-    // create a COPY of the handles we need to destroy, else
-    // destroying the handles modifies the std::set while we're
-    // iterating through it!
-    std::set<APIHandle *> stillActiveHandles = activeHandles;
-    for (auto handle : stillActiveHandles)  {
-      assert(handle);
-      delete handle;
-    }
-
-    assert(activeHandles.empty());
-  }
-  
-  void APIContext::track(APIHandle *object)
-  {
-    assert(object);
-      
-    auto it = activeHandles.find(object);
-    assert(it == activeHandles.end());
-    activeHandles.insert(object);
-  }
-
-  APIHandle *APIContext::createHandle(Object::SP object)
-  {
-    assert(object);
-    APIHandle *handle = new APIHandle(object,this);
-    track(handle);
-    return handle;
-  }
-
-  
-  template<typename T> inline std::shared_ptr<T> APIHandle::get()
-  {
-    assert(object);
-    std::shared_ptr<T> asT = std::dynamic_pointer_cast<T>(object);
-    if (object && !asT) {
-      const std::string objectTypeID = typeid(*object.get()).name();
-	
-      const std::string tTypeID = typeid(T).name();
-      throw std::runtime_error("could not convert APIHandle of type "
-                               + objectTypeID
-                               + " to object of type "
-                               + tTypeID);
-    }
-    assert(asT);
-    return asT;
-  }
-    
-
-  
-  APIHandle::APIHandle(Object::SP object, APIContext *context)
-  {
-    assert(object);
-    assert(context);
-    this->object  = object;
-    this->context = std::dynamic_pointer_cast<APIContext>
-      (context->shared_from_this());
-    assert(this->object);
-    assert(this->context);
-  }
-
-  APIHandle::~APIHandle()
-  {
-    context->forget(this);
-    object  = nullptr;
-    context = nullptr;
-  }
   
   OWL_API OWLContext owlContextCreate()
   {
@@ -507,7 +385,7 @@ namespace owl {
   // ==================================================================
 
   template<typename T>
-  void setBasicTypeVariable(APIHandle *handle, const T &value)
+  void setVariable(APIHandle *handle, const T &value)
   {
     assert(handle);
 
@@ -522,14 +400,14 @@ namespace owl {
   OWL_API void owlVariableSet1f(OWLVariable _variable, const float value)
   {
     LOG_API_CALL();
-    setBasicTypeVariable((APIHandle *)_variable,(float)value);
+    setVariable((APIHandle *)_variable,(float)value);
   }
 
   OWL_API void owlVariableSet3fv(OWLVariable _variable, const float *value)
   {
     LOG_API_CALL();
     assert(value);
-    setBasicTypeVariable((APIHandle *)_variable,*(const vec3f*)value);
+    setVariable((APIHandle *)_variable,*(const vec3f*)value);
   }
 
   OWL_API void owlVariableSetGroup(OWLVariable _variable, OWLGroup _group)
@@ -544,7 +422,7 @@ namespace owl {
     
     assert(group);
 
-    setBasicTypeVariable((APIHandle *)_variable,group);
+    setVariable((APIHandle *)_variable,group);
   }
 
   OWL_API void owlVariableSetBuffer(OWLVariable _variable, OWLBuffer _buffer)
@@ -559,7 +437,7 @@ namespace owl {
     
     assert(buffer);
 
-    setBasicTypeVariable((APIHandle *)_variable,buffer);
+    setVariable((APIHandle *)_variable,buffer);
   }
 
   // -------------------------------------------------------
@@ -584,16 +462,4 @@ namespace owl {
   }
 
 
-
-  /*! create one instance each of a given type's variables */
-  std::vector<Variable::SP> SBTObjectType::instantiateVariables()
-  {
-    std::vector<Variable::SP> variables(varDecls.size());
-    for (size_t i=0;i<varDecls.size();i++) {
-      variables[i] = Variable::createInstanceOf(&varDecls[i]);
-      assert(variables[i]);
-    }
-    return variables;
-  }
-  
 } // ::owl

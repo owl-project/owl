@@ -28,30 +28,10 @@ namespace owl {
     SBTObjectType(Context *const context,
                   ObjectRegistry &registry,
                   size_t varStructSize,
-                  const std::vector<OWLVarDecl> &varDecls)
-      : RegisteredObject(context,registry),
-        varStructSize(varStructSize),
-        varDecls(varDecls)
-    {
-      for (auto &var : varDecls)
-        assert(var.name != nullptr);
-      /* TODO: at least in debug mode, do some 'duplicate variable
-         name' and 'overlap of variables' checks etc */
-    }
+                  const std::vector<OWLVarDecl> &varDecls);
     
-    inline int getVariableIdx(const std::string &varName)
-    {
-      for (int i=0;i<varDecls.size();i++) {
-        assert(varDecls[i].name);
-        if (!strcmp(varName.c_str(),varDecls[i].name))
-          return i;
-      }
-      return -1;
-    }
-    inline bool hasVariable(const std::string &varName)
-    {
-      return getVariableIdx(varName) >= 0;
-    }
+    int getVariableIdx(const std::string &varName);
+    bool hasVariable(const std::string &varName);
 
     virtual std::string toString() const { return "SBTObjectType"; }
     void declareVariable(const std::string &varName,
