@@ -219,8 +219,14 @@ namespace owl {
       
       void allocModules(size_t count)
       { modules.alloc(count); }
+      /*! each geometry will always use "numRayTypes" successive hit
+          groups (one per ray type), so this must be a multiple of the
+          number of ray types to be used */
       void allocHitGroupPGs(size_t count);
       void allocRayGenPGs(size_t count);
+      /*! each geometry will always use "numRayTypes" successive hit
+          groups (one per ray type), so this must be a multiple of the
+          number of ray types to be used */
       void allocMissPGs(size_t count);
 
       /*! resize the array of geometry IDs. this can be either a
