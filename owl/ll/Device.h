@@ -205,6 +205,7 @@ namespace owl {
         modules.buildOptixHandles(context.get());
       }
 
+      /*! (re-)builds all optix programs, with current pipeline settings */
       void buildPrograms()
       {
         // programs shouldn't be rebuilt while a pipeline is still using them(?)
@@ -277,8 +278,18 @@ namespace owl {
         // set to null, which should automatically destroy
         geometries[ID] = nullptr;
       }
-      
+
+      /*! for each valid program group, use optix to compile/build the
+          acutal program to an optix-usable form (ie, this builds the
+          OptixProgramGroup object for each PG) */
       void buildOptixPrograms();
+
+      /*! destroys all currently active OptixProgramGroup group
+          objects in all our PG vectors, but NOT those PG vectors
+          themselves; ie, we can always call 'buildOptixPrograms' to
+          re-build them (which allows, for example, to
+          'destroyOptixPrograms', chance compile/link options, and
+          rebuild them) */
       void destroyOptixPrograms();
       
       Context::SP               context;
