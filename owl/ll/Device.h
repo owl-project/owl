@@ -26,7 +26,7 @@ namespace owl {
     struct Device;
     
     struct Context {
-      typedef std::shared_ptr<Context> SP;
+      // typedef std::shared_ptr<Context> SP;
       
       Context(int owlDeviceID, int cudaDeviceID);
       ~Context();
@@ -127,7 +127,7 @@ namespace owl {
       DeviceMemory launchParamBuffer;
     };
 
-    typedef enum { TRIANGLES, USER } GeometryType;
+    typedef enum { TRIANGLES, USER } GeomType;
     
     // struct StridedDeviceData
     // {
@@ -150,38 +150,38 @@ namespace owl {
       const size_t elementSize;
       /*! only for error checking - we do NOT do reference counting
           ourselves, but will use this to track erorrs like destroying
-          a geometry/group that is still being refrerenced by a
+          a geom/group that is still being refrerenced by a
           group. Note we wil *NOT* automatically free a buffer if
           refcount reaches zero - this is ONLY for sanity checking
           during object deletion */
       int numTimesReferenced = 0;
     };
     
-    struct Geometry {
-      Geometry(int logicalHitGroupID)
+    struct Geom {
+      Geom(int logicalHitGroupID)
         : logicalHitGroupID(logicalHitGroupID)
       {}
-      virtual GeometryType type() = 0;
+      virtual GeomType type() = 0;
       
       /*! only for error checking - we do NOT do reference counting
           ourselves, but will use this to track erorrs like destroying
-          a geometry/group that is still being refrerenced by a
+          a geom/group that is still being refrerenced by a
           group. Note we wil *NOT* automatically free a buffer if
           refcount reaches zero - this is ONLY for sanity checking
           during object deletion */
       int numTimesReferenced = 0;
       const int logicalHitGroupID;
     };
-    struct UserGeometry : public Geometry {
-      virtual GeometryType type() { return USER; }
+    struct UserGeom : public Geom {
+      virtual GeomType type() { return USER; }
       
       DeviceMemory bounds;
     };
-    struct TrianglesGeometry : public Geometry {
-      TrianglesGeometry(int logicalHitGroupID)
-        : Geometry(logicalHitGroupID)
+    struct TrianglesGeom : public Geom {
+      TrianglesGeom(int logicalHitGroupID)
+        : Geom(logicalHitGroupID)
       {}
-      virtual GeometryType type() { return TRIANGLES; }
+      virtual GeomType type() { return TRIANGLES; }
 
       void  *vertexPointer = nullptr;
       size_t vertexStride  = 0;
@@ -191,40 +191,56 @@ namespace owl {
     };
     
     struct Group {
-      virtual bool containsGeometry() = 0;
-      inline  bool containsInstances() { return !containsGeometry(); }
+      virtual bool containsGeom() = 0;
+      inline  bool containsInstances() { return !containsGeom(); }
+
+      virtual void destroyAccel(Context *context) = 0;
+      virtual void buildAccel(Context *context) = 0;
       
       std::vector<int>       elements;
-      OptixTraversableHandle traversable;
+      OptixTraversableHandle traversable = 0;
       DeviceMemory           bvhMemory;
 
       /*! only for error checking - we do NOT do reference counting
           ourselves, but will use this to track erorrs like destroying
-          a geometry/group that is still being refrerenced by a
+          a geom/group that is still being refrerenced by a
           group. */
       int numTimesReferenced = 0;
     };
     struct InstanceGroup : public Group {
-      virtual bool containsGeometry() { return false; }
+      virtual bool containsGeom() { return false; }
+      
+      virtual void destroyAccel(Context *context) override
+      { OWL_NOTIMPLEMENTED; }
+      virtual void buildAccel(Context *context) override
+      { OWL_NOTIMPLEMENTED; }
     };
-    struct GeometryGroup : public Group {
-      GeometryGroup(size_t numChildren)
+    struct GeomGroup : public Group {
+      GeomGroup(size_t numChildren)
         : children(numChildren)
       {}
       
-      virtual bool containsGeometry() { return true; }
-      virtual GeometryType geometryType() = 0;
+      virtual bool containsGeom() { return true; }
+      virtual GeomType geomType() = 0;
 
-      std::vector<Geometry *> children;
+      std::vector<Geom *> children;
     };
-    struct TrianglesGeometryGroup : public GeometryGroup {
-      TrianglesGeometryGroup(size_t numChildren)
-        : GeometryGroup(numChildren)
+    struct TrianglesGeomGroup : public GeomGroup {
+      TrianglesGeomGroup(size_t numChildren)
+        : GeomGroup(numChildren)
       {}
-      virtual GeometryType geometryType() { return TRIANGLES; }
+      virtual GeomType geomType() { return TRIANGLES; }
+      
+      virtual void destroyAccel(Context *context) override;
+      virtual void buildAccel(Context *context) override;
     };
-    struct UserGeometryGroup : public GeometryGroup {
-      virtual GeometryType geometryType() { return USER; }
+    struct UserGeomGroup : public GeomGroup {
+      virtual GeomType geomType() { return USER; }
+      
+      virtual void destroyAccel(Context *context) override
+      { OWL_NOTIMPLEMENTED; }
+      virtual void buildAccel(Context *context) override
+      { OWL_NOTIMPLEMENTED; }
     };
 
 
@@ -250,8 +266,8 @@ namespace owl {
       {
         // modules shouldn't be rebuilt while a pipeline is still using them(?)
         assert(context->pipeline == nullptr);
-        modules.destroyOptixHandles(context.get());
-        modules.buildOptixHandles(context.get());
+        modules.destroyOptixHandles(context);
+        modules.buildOptixHandles(context);
       }
 
       /*! (re-)builds all optix programs, with current pipeline settings */
@@ -269,30 +285,30 @@ namespace owl {
       
       void allocModules(size_t count)
       { modules.alloc(count); }
-      /*! each geometry will always use "numRayTypes" successive hit
+      /*! each geom will always use "numRayTypes" successive hit
           groups (one per ray type), so this must be a multiple of the
           number of ray types to be used */
       void allocHitGroupPGs(size_t count);
       void allocRayGenPGs(size_t count);
-      /*! each geometry will always use "numRayTypes" successive hit
+      /*! each geom will always use "numRayTypes" successive hit
           groups (one per ray type), so this must be a multiple of the
           number of ray types to be used */
       void allocMissPGs(size_t count);
 
-      /*! resize the array of geometry IDs. this can be either a
+      /*! resize the array of geom IDs. this can be either a
           'grow' or a 'shrink', but 'shrink' is only allowed if all
-          geometries that would get 'lost' have alreay been
+          geoms that would get 'lost' have alreay been
           destroyed */
-      void reallocGeometries(size_t newCount)
+      void reallocGeoms(size_t newCount)
       {
-        for (int idxWeWouldLose=newCount;idxWeWouldLose<geometries.size();idxWeWouldLose++)
-          assert("realloc would lose a geometry that was not properly destroyed" &&
-                 geometries[idxWeWouldLose] == nullptr);
-        geometries.resize(newCount);
+        for (int idxWeWouldLose=newCount;idxWeWouldLose<geoms.size();idxWeWouldLose++)
+          assert("realloc would lose a geom that was not properly destroyed" &&
+                 geoms[idxWeWouldLose] == nullptr);
+        geoms.resize(newCount);
       }
 
 
-      void createTrianglesGeometry(int geomID,
+      void createTrianglesGeom(int geomID,
                                    /*! the "logical" hit group ID:
                                        will always count 0,1,2... evne
                                        if we are using multiple ray
@@ -303,25 +319,25 @@ namespace owl {
                                    int logicalHitGroupID)
       {
         assert("check ID is valid" && geomID >= 0);
-        assert("check ID is valid" && geomID < geometries.size());
-        assert("check given ID isn't still in use" && geometries[geomID] == nullptr);
+        assert("check ID is valid" && geomID < geoms.size());
+        assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
 
         assert("check valid hit group ID" && logicalHitGroupID >= 0);
         assert("check valid hit group ID"
                && logicalHitGroupID*context->numRayTypes < hitGroupPGs.size());
         
-        geometries[geomID] = new TrianglesGeometry(logicalHitGroupID);
-        assert("check 'new' was successful" && geometries[geomID] != nullptr);
+        geoms[geomID] = new TrianglesGeom(logicalHitGroupID);
+        assert("check 'new' was successful" && geoms[geomID] != nullptr);
       }
 
-      /*! resize the array of geometry IDs. this can be either a
+      /*! resize the array of geom IDs. this can be either a
           'grow' or a 'shrink', but 'shrink' is only allowed if all
-          geometries that would get 'lost' have alreay been
+          geoms that would get 'lost' have alreay been
           destroyed */
       void reallocGroups(size_t newCount)
       {
         for (int idxWeWouldLose=newCount;idxWeWouldLose<groups.size();idxWeWouldLose++)
-          assert("realloc would lose a geometry that was not properly destroyed" &&
+          assert("realloc would lose a geom that was not properly destroyed" &&
                  groups[idxWeWouldLose] == nullptr);
         groups.resize(newCount);
       }
@@ -333,12 +349,12 @@ namespace owl {
       void reallocBuffers(size_t newCount)
       {
         for (int idxWeWouldLose=newCount;idxWeWouldLose<buffers.size();idxWeWouldLose++)
-          assert("realloc would lose a geometry that was not properly destroyed" &&
+          assert("realloc would lose a geom that was not properly destroyed" &&
                  buffers[idxWeWouldLose] == nullptr);
         buffers.resize(newCount);
       }
       
-      void createTrianglesGeometryGroup(int groupID,
+      void createTrianglesGeomGroup(int groupID,
                                         int *geomIDs,
                                         int geomCount)
       {
@@ -350,7 +366,7 @@ namespace owl {
                ((geomIDs == nullptr && geomCount == 0) ||
                 (geomIDs != nullptr && geomCount >  0)));
         
-        TrianglesGeometryGroup *group = new TrianglesGeometryGroup(geomCount);
+        TrianglesGeomGroup *group = new TrianglesGeomGroup(geomCount);
         assert("check 'new' was successful" && group != nullptr);
         groups[groupID] = group;
 
@@ -358,8 +374,8 @@ namespace owl {
         for (int childID=0;childID<geomCount;childID++) {
           int geomID = geomIDs[childID];
           assert("check geom child geom ID is valid" && geomID >= 0);
-          assert("check geom child geom ID is valid" && geomID <  geometries.size());
-          Geometry *geom = geometries[geomID];
+          assert("check geom child geom ID is valid" && geomID <  geoms.size());
+          Geom *geom = geoms[geomID];
           assert("check geom indexed child geom valid" && geom != nullptr);
           assert("check geom is valid type" && geom->type() == TRIANGLES);
           geom->numTimesReferenced++;
@@ -371,23 +387,23 @@ namespace owl {
                               size_t elementCount,
                               size_t elementSize,
                               const void *initData);
-      void trianglesGeometrySetVertexBuffer(int geomID,
+      void trianglesGeomSetVertexBuffer(int geomID,
                                             int bufferID,
                                             int stride,
                                             int offset);
-      void trianglesGeometrySetIndexBuffer(int geomID,
+      void trianglesGeomSetIndexBuffer(int geomID,
                                            int bufferID,
                                            int count,
                                            int stride,
                                            int offset);
       
-      void destroyGeometry(size_t ID)
+      void destroyGeom(size_t ID)
       {
         assert("check for valid ID" && ID >= 0);
-        assert("check for valid ID" && ID < geometries.size());
-        assert("check still valid"  && geometries[ID] != nullptr);
+        assert("check for valid ID" && ID < geoms.size());
+        assert("check still valid"  && geoms[ID] != nullptr);
         // set to null, which should automatically destroy
-        geometries[ID] = nullptr;
+        geoms[ID] = nullptr;
       }
 
       /*! for each valid program group, use optix to compile/build the
@@ -403,15 +419,29 @@ namespace owl {
         rebuild them) */
       void destroyOptixPrograms();
 
+      // ------------------------------------------------------------------
+      // group related struff
+      // ------------------------------------------------------------------
+      void groupBuildAccel(int groupID);
 
       // accessor helpers:
-      Geometry *checkGetGeometry(int geomID)
+      Geom *checkGetGeom(int geomID)
       {
         assert("check valid geom ID" && geomID >= 0);
-        assert("check valid geom ID" && geomID <  geometries.size());
-        Geometry *geometry = geometries[geomID];
-        assert("check valid geometry" && geometry != nullptr);
-        return geometry;
+        assert("check valid geom ID" && geomID <  geoms.size());
+        Geom *geom = geoms[geomID];
+        assert("check valid geom" && geom != nullptr);
+        return geom;
+      }
+
+      // accessor helpers:
+      Group *checkGetGroup(int groupID)
+      {
+        assert("check valid group ID" && groupID >= 0);
+        assert("check valid group ID" && groupID <  groups.size());
+        Group *group = groups[groupID];
+        assert("check valid group" && group != nullptr);
+        return group;
       }
 
       Buffer *checkGetBuffer(int bufferID)
@@ -424,24 +454,24 @@ namespace owl {
       }
 
       // accessor helpers:
-      TrianglesGeometry *checkGetTrianglesGeometry(int geomID)
+      TrianglesGeom *checkGetTrianglesGeom(int geomID)
       {
-        Geometry *geometry = checkGetGeometry(geomID);
-        assert(geometry);
-        TrianglesGeometry *asTriangles
-          = dynamic_cast<TrianglesGeometry*>(geometry);
+        Geom *geom = checkGetGeom(geomID);
+        assert(geom);
+        TrianglesGeom *asTriangles
+          = dynamic_cast<TrianglesGeom*>(geom);
         assert("check geom is triangle geom" && asTriangles != nullptr);
         return asTriangles;
       }
 
       
-      Context::SP               context;
+      Context                  *context;
       
       Modules                   modules;
       std::vector<HitGroupPG>   hitGroupPGs;
       std::vector<RayGenPG>     rayGenPGs;
       std::vector<MissPG>       missPGs;
-      std::vector<Geometry *>   geometries;
+      std::vector<Geom *>   geoms;
       std::vector<Group *>      groups;
       std::vector<Buffer *>     buffers;
       SBT                       sbt;
@@ -483,9 +513,9 @@ namespace owl {
       void setMissPG(int pgID, int moduleID, const char *progName)
       { for (auto device : devices) device->setMissPG(pgID,moduleID,progName); }
       
-      /*! resize the array of geometry IDs. this can be either a
+      /*! resize the array of geom IDs. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
-        geometries that would get 'lost' have alreay been
+        geoms that would get 'lost' have alreay been
         destroyed */
       void reallocGroups(size_t newCount)
       { for (auto device : devices) device->reallocGroups(newCount); }
@@ -493,14 +523,14 @@ namespace owl {
       void reallocBuffers(size_t newCount)
       { for (auto device : devices) device->reallocBuffers(newCount); }
       
-      /*! resize the array of geometry IDs. this can be either a
+      /*! resize the array of geom IDs. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
-        geometries that would get 'lost' have alreay been
+        geoms that would get 'lost' have alreay been
         destroyed */
-      void reallocGeometries(size_t newCount)
-      { for (auto device : devices) device->reallocGeometries(newCount); }
+      void reallocGeoms(size_t newCount)
+      { for (auto device : devices) device->reallocGeoms(newCount); }
 
-      void createTrianglesGeometry(int geomID,
+      void createTrianglesGeom(int geomID,
                                    /*! the "logical" hit group ID:
                                      will always count 0,1,2... evne
                                      if we are using multiple ray
@@ -511,10 +541,10 @@ namespace owl {
                                    int logicalHitGroupID)
       {
         for (auto device : devices)
-          device->createTrianglesGeometry(geomID,logicalHitGroupID);
+          device->createTrianglesGeom(geomID,logicalHitGroupID);
       }
       
-      void createTrianglesGeometryGroup(int groupID,
+      void createTrianglesGeomGroup(int groupID,
                                         int *geomIDs, int geomCount)
       {
         assert("check for valid combinations of child list" &&
@@ -522,7 +552,7 @@ namespace owl {
                 (geomIDs != nullptr && geomCount >  0)));
         
         for (auto device : devices) {
-          device->createTrianglesGeometryGroup(groupID,geomIDs,geomCount);
+          device->createTrianglesGeomGroup(groupID,geomIDs,geomCount);
         }
       }
 
@@ -530,15 +560,20 @@ namespace owl {
                               size_t elementCount,
                               size_t elementSize,
                               const void *initData);
-      void trianglesGeometrySetVertexBuffer(int geomID,
+      void trianglesGeomSetVertexBuffer(int geomID,
                                             int bufferID,
                                             int stride,
                                             int offset);
-      void trianglesGeometrySetIndexBuffer(int geomID,
+      void trianglesGeomSetIndexBuffer(int geomID,
                                            int bufferID,
                                            int count,
                                            int stride,
                                            int offset);
+      void groupBuildAccel(int groupID)
+      {
+        for (auto device : devices) 
+          device->groupBuildAccel(groupID);
+      }
       
       /* create an instance of this object that has properly
          initialized devices for given cuda device IDs */

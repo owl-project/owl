@@ -77,7 +77,7 @@ int main(int ac, char **av)
 
 
   // ##################################################################
-  // set up all the *GEOMETRIES* we want to run that code on
+  // set up all the *GEOMS* we want to run that code on
   // ##################################################################
 
   // ------------------------------------------------------------------
@@ -89,25 +89,25 @@ int main(int ac, char **av)
   ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),vertices);
   
   // ------------------------------------------------------------------
-  // alloc geometry
+  // alloc geom
   // ------------------------------------------------------------------
-  ll->reallocGeometries(1);
-  ll->createTrianglesGeometry(/* geom ID    */0,
+  ll->reallocGeoms(1);
+  ll->createTrianglesGeom(/* geom ID    */0,
                               /* type/PG ID */0);
-  ll->trianglesGeometrySetVertexBuffer(/* geom ID     */ 0,
+  ll->trianglesGeomSetVertexBuffer(/* geom ID     */ 0,
                                        /* buffer ID */0,
                                        /* meta info */sizeof(vec3f),0);
-  ll->trianglesGeometrySetIndexBuffer(/* geom ID     */ 0,
+  ll->trianglesGeomSetIndexBuffer(/* geom ID     */ 0,
                                       /* buffer ID */1,
                                       /* meta info */NUM_INDICES,sizeof(vec3i),0);
   
   ll->reallocGroups(1);
   int geomsInGroup[] = { 0 };
-  ll->createTrianglesGeometryGroup(/* group ID */0,
+  ll->createTrianglesGeomGroup(/* group ID */0,
                                    /* geoms in group, pointer */ geomsInGroup,
                                    /* geoms in group, count   */ 1);
-                           
-
+  ll->groupBuildAccel(0);
+  
   std::cout << GDT_TERMINAL_BLUE;
   std::cout << "#######################################################" << std::endl;
   std::cout << "actual ll-work here ..." << std::endl;

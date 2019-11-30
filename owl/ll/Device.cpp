@@ -69,7 +69,7 @@ namespace owl {
     /*! construct a new owl device on given cuda device. throws an
       exception if for any reason that cannot be done */
     Device::Device(int owlDeviceID, int cudaDeviceID)
-      : context(std::make_shared<Context>(owlDeviceID,cudaDeviceID))
+      : context(new Context(owlDeviceID,cudaDeviceID))
     {
       std::cout << "#owl.ll: successfully created owl device #" << owlDeviceID
                 << " on CUDA device #" << cudaDeviceID << std::endl;
@@ -80,14 +80,16 @@ namespace owl {
     {
       destroyPipeline();
       
-      modules.destroyOptixHandles(context.get());
+      modules.destroyOptixHandles(context);
       const int deviceID = context->owlDeviceID;
 
+      std::cout << "#owl.ll(" << deviceID << ") : deleting context" << std::endl;
+      delete context;
       context = nullptr;
       
       std::cout
         << GDT_TERMINAL_GREEN
-        << "#owl.ll: successfully destroyed owl device #" << deviceID
+        << "#owl.ll(" << deviceID << "): successfully destroyed owl device ..."
         << GDT_TERMINAL_DEFAULT << std::endl;
     }
 
@@ -523,14 +525,14 @@ namespace owl {
       return (void*)((unsigned char *)ptr + offset);
     }
     
-    void Device::trianglesGeometrySetVertexBuffer(int geomID,
+    void Device::trianglesGeomSetVertexBuffer(int geomID,
                                                   int bufferID,
                                                   int stride,
                                                   int offset)
     {
-      TrianglesGeometry *triangles
-        = checkGetTrianglesGeometry(geomID);
-      assert("double-check valid geometry" && triangles);
+      TrianglesGeom *triangles
+        = checkGetTrianglesGeom(geomID);
+      assert("double-check valid geom" && triangles);
       
       Buffer   *buffer
         = checkGetBuffer(bufferID);
@@ -540,15 +542,15 @@ namespace owl {
       triangles->vertexStride  = stride;
     }
     
-    void Device::trianglesGeometrySetIndexBuffer(int geomID,
+    void Device::trianglesGeomSetIndexBuffer(int geomID,
                                                   int bufferID,
                                                   int count,
                                                   int stride,
                                                   int offset)
     {
-      TrianglesGeometry *triangles
-        = checkGetTrianglesGeometry(geomID);
-      assert("double-check valid geometry" && triangles);
+      TrianglesGeom *triangles
+        = checkGetTrianglesGeom(geomID);
+      assert("double-check valid geom" && triangles);
       
       Buffer   *buffer
         = checkGetBuffer(bufferID);
@@ -559,27 +561,47 @@ namespace owl {
       triangles->indexStride  = stride;
     }
     
-    void DeviceGroup::trianglesGeometrySetVertexBuffer(int geomID,
+    void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
                                                        int bufferID,
                                                        int stride,
                                                        int offset)
     {
       for (auto device : devices) {
-        device->trianglesGeometrySetVertexBuffer(geomID,bufferID,stride,offset);
+        device->trianglesGeomSetVertexBuffer(geomID,bufferID,stride,offset);
       }
     }
     
-    void DeviceGroup::trianglesGeometrySetIndexBuffer(int geomID,
+    void DeviceGroup::trianglesGeomSetIndexBuffer(int geomID,
                                                       int bufferID,
                                                       int count,
                                                       int stride,
                                                       int offset)
     {
       for (auto device : devices) {
-        device->trianglesGeometrySetIndexBuffer(geomID,bufferID,count,stride,offset);
+        device->trianglesGeomSetIndexBuffer(geomID,bufferID,count,stride,offset);
       }
     }
 
+    void Device::groupBuildAccel(int groupID)
+    {
+      Group *group = checkGetGroup(groupID);
+      group->destroyAccel(context);
+      group->buildAccel(context);
+    }
+
+
+    void TrianglesGeomGroup::destroyAccel(Context *context) 
+    {
+      context->pushActive();
+      if (traversable) {
+        bvhMemory.free();
+        traversable = 0;
+      }
+      context->popActive();
+    }
+    
+    void TrianglesGeomGroup::buildAccel(Context *context) 
+    { OWL_NOTIMPLEMENTED; }
     
   } // ::owl::ll
 } //::owl
