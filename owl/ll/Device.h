@@ -40,7 +40,20 @@ namespace owl {
       const int          cudaDeviceID;
 
       void setActive() { CUDA_CHECK(cudaSetDevice(cudaDeviceID)); }
-
+      void pushActive()
+      {
+        assert("check we're not already pushed" && savedActiveDeviceID == -1);
+        CUDA_CHECK(cudaGetDevice(&savedActiveDeviceID));
+        setActive();
+      }
+      void popActive()
+      {
+        assert("check we do have a saved device" && savedActiveDeviceID >= 0);
+        CUDA_CHECK(cudaSetDevice(savedActiveDeviceID));
+        savedActiveDeviceID = -1;
+      }
+      int  savedActiveDeviceID = -1;
+      
       void createPipeline(Device *device);
       void destroyPipeline();
       
@@ -115,19 +128,24 @@ namespace owl {
     };
 
     typedef enum { TRIANGLES, USER } GeometryType;
-    struct StridedBuffer : public DeviceMemory {
-      size_t stride = 0;
-      size_t offset = 0;
-      size_t count  = 0;
-      bool   memoryIsOwnedByUs = false;
-    };
+    
+    // struct StridedDeviceData
+    // {
+    //   size_t stride    = 0;
+    //   size_t offset    = 0;
+    //   size_t count     = 0;
+    //   void  *d_pointer = 0;
+    // };
 
-    struct Buffer {
+    struct Buffer : public DeviceMemory {
       Buffer(const size_t elementCount,
              const size_t elementSize)
         : elementCount(elementCount),
           elementSize(elementSize)
-      {}
+      {
+        assert(elementSize > 0);
+        alloc(elementCount*elementSize);
+      }
       const size_t elementCount;
       const size_t elementSize;
       /*! only for error checking - we do NOT do reference counting
@@ -157,7 +175,7 @@ namespace owl {
     struct UserGeometry : public Geometry {
       virtual GeometryType type() { return USER; }
       
-      StridedBuffer bounds;
+      DeviceMemory bounds;
     };
     struct TrianglesGeometry : public Geometry {
       TrianglesGeometry(int logicalHitGroupID)
@@ -165,14 +183,11 @@ namespace owl {
       {}
       virtual GeometryType type() { return TRIANGLES; }
 
-      StridedBuffer vertices;
-      StridedBuffer indices;
-      
-      DeviceMemory indicesBuffer;
-      size_t       indicesStride;
-      size_t       indicesCount;
-      //! whether it was *us* that alloc'ed the indices array, or somebody else
-      bool         indicesAreOurs;
+      void  *vertexPointer = nullptr;
+      size_t vertexStride  = 0;
+      void  *indexPointer  = nullptr;
+      size_t indexStride   = 0;
+      size_t indexCount    = 0;
     };
     
     struct Group {
@@ -352,6 +367,20 @@ namespace owl {
         }
       }
 
+      void createDeviceBuffer(int bufferID,
+                              size_t elementCount,
+                              size_t elementSize,
+                              const void *initData);
+      void trianglesGeometrySetVertexBuffer(int geomID,
+                                            int bufferID,
+                                            int stride,
+                                            int offset);
+      void trianglesGeometrySetIndexBuffer(int geomID,
+                                           int bufferID,
+                                           int count,
+                                           int stride,
+                                           int offset);
+      
       void destroyGeometry(size_t ID)
       {
         assert("check for valid ID" && ID >= 0);
@@ -367,12 +396,44 @@ namespace owl {
       void buildOptixPrograms();
 
       /*! destroys all currently active OptixProgramGroup group
-          objects in all our PG vectors, but NOT those PG vectors
-          themselves; ie, we can always call 'buildOptixPrograms' to
-          re-build them (which allows, for example, to
-          'destroyOptixPrograms', chance compile/link options, and
-          rebuild them) */
+        objects in all our PG vectors, but NOT those PG vectors
+        themselves; ie, we can always call 'buildOptixPrograms' to
+        re-build them (which allows, for example, to
+        'destroyOptixPrograms', chance compile/link options, and
+        rebuild them) */
       void destroyOptixPrograms();
+
+
+      // accessor helpers:
+      Geometry *checkGetGeometry(int geomID)
+      {
+        assert("check valid geom ID" && geomID >= 0);
+        assert("check valid geom ID" && geomID <  geometries.size());
+        Geometry *geometry = geometries[geomID];
+        assert("check valid geometry" && geometry != nullptr);
+        return geometry;
+      }
+
+      Buffer *checkGetBuffer(int bufferID)
+      {
+        assert("check valid geom ID" && bufferID >= 0);
+        assert("check valid geom ID" && bufferID <  buffers.size());
+        Buffer *buffer = buffers[bufferID];
+        assert("check valid buffer" && buffer != nullptr);
+        return buffer;
+      }
+
+      // accessor helpers:
+      TrianglesGeometry *checkGetTrianglesGeometry(int geomID)
+      {
+        Geometry *geometry = checkGetGeometry(geomID);
+        assert(geometry);
+        TrianglesGeometry *asTriangles
+          = dynamic_cast<TrianglesGeometry*>(geometry);
+        assert("check geom is triangle geom" && asTriangles != nullptr);
+        return asTriangles;
+      }
+
       
       Context::SP               context;
       
@@ -423,9 +484,9 @@ namespace owl {
       { for (auto device : devices) device->setMissPG(pgID,moduleID,progName); }
       
       /*! resize the array of geometry IDs. this can be either a
-          'grow' or a 'shrink', but 'shrink' is only allowed if all
-          geometries that would get 'lost' have alreay been
-          destroyed */
+        'grow' or a 'shrink', but 'shrink' is only allowed if all
+        geometries that would get 'lost' have alreay been
+        destroyed */
       void reallocGroups(size_t newCount)
       { for (auto device : devices) device->reallocGroups(newCount); }
       
@@ -433,20 +494,20 @@ namespace owl {
       { for (auto device : devices) device->reallocBuffers(newCount); }
       
       /*! resize the array of geometry IDs. this can be either a
-          'grow' or a 'shrink', but 'shrink' is only allowed if all
-          geometries that would get 'lost' have alreay been
-          destroyed */
+        'grow' or a 'shrink', but 'shrink' is only allowed if all
+        geometries that would get 'lost' have alreay been
+        destroyed */
       void reallocGeometries(size_t newCount)
       { for (auto device : devices) device->reallocGeometries(newCount); }
 
       void createTrianglesGeometry(int geomID,
                                    /*! the "logical" hit group ID:
-                                       will always count 0,1,2... evne
-                                       if we are using multiple ray
-                                       types; the actual hit group
-                                       used when building the SBT will
-                                       then be 'logicalHitGroupID *
-                                       numRayTypes) */
+                                     will always count 0,1,2... evne
+                                     if we are using multiple ray
+                                     types; the actual hit group
+                                     used when building the SBT will
+                                     then be 'logicalHitGroupID *
+                                     numRayTypes) */
                                    int logicalHitGroupID)
       {
         for (auto device : devices)
@@ -469,15 +530,15 @@ namespace owl {
                               size_t elementCount,
                               size_t elementSize,
                               const void *initData);
-      void triangleGeometrySetVertices(int geomID,
-                                       int bufferID,
-                                       int count,
-                                       int stride,
-                                       int offset);
-      void triangleGeometrySetIndices(int geomID,
-                                      int bufferID,
-                                      int stride,
-                                      int offset);
+      void trianglesGeometrySetVertexBuffer(int geomID,
+                                            int bufferID,
+                                            int stride,
+                                            int offset);
+      void trianglesGeometrySetIndexBuffer(int geomID,
+                                           int bufferID,
+                                           int count,
+                                           int stride,
+                                           int offset);
       
       /* create an instance of this object that has properly
          initialized devices for given cuda device IDs */

@@ -94,9 +94,10 @@ namespace owl {
     void Context::destroyPipeline()
     {
       if (pipeline) {
-        setActive();
+        // pushActive();
         OPTIX_CHECK(optixPipelineDestroy(pipeline));
         pipeline = nullptr;
+        // popActive();
       }
     }
 
@@ -367,7 +368,6 @@ namespace owl {
       if (pipeline != nullptr)
         throw std::runtime_error("pipeline already created!?");
       
-      setActive();
       std::vector<OptixProgramGroup> allPGs;
       assert(!device->rayGenPGs.empty());
       for (auto &pg : device->rayGenPGs)
@@ -488,6 +488,98 @@ namespace owl {
                 << devices.size() << " device(s)"
                 << GDT_TERMINAL_DEFAULT << std::endl;
     }
+    
+
+    void Device::createDeviceBuffer(int bufferID,
+                                    size_t elementCount,
+                                    size_t elementSize,
+                                    const void *initData)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID <  buffers.size());
+      assert("check buffer ID available" && buffers[bufferID] == nullptr);
+      context->pushActive();
+      Buffer *buffer = new Buffer(elementCount,elementSize);
+      if (initData)
+        buffer->upload(initData,"createDeviceBuffer: uploading initData");
+      assert("check buffer properly created" && buffer != nullptr);
+      buffers[bufferID] = buffer;
+      context->popActive();
+    }
+    
+    void DeviceGroup::createDeviceBuffer(int bufferID,
+                                         size_t elementCount,
+                                         size_t elementSize,
+                                         const void *initData)
+    {
+      for (auto device : devices) {
+        device->createDeviceBuffer(bufferID,elementCount,elementSize,initData);
+      }
+    }
+
+    inline void *addPointerOffset(void *ptr, size_t offset)
+    {
+      if (ptr == nullptr) return nullptr;
+      return (void*)((unsigned char *)ptr + offset);
+    }
+    
+    void Device::trianglesGeometrySetVertexBuffer(int geomID,
+                                                  int bufferID,
+                                                  int stride,
+                                                  int offset)
+    {
+      TrianglesGeometry *triangles
+        = checkGetTrianglesGeometry(geomID);
+      assert("double-check valid geometry" && triangles);
+      
+      Buffer   *buffer
+        = checkGetBuffer(bufferID);
+      assert("double-check valid buffer" && buffer);
+
+      triangles->vertexPointer = addPointerOffset(buffer->get(),offset);
+      triangles->vertexStride  = stride;
+    }
+    
+    void Device::trianglesGeometrySetIndexBuffer(int geomID,
+                                                  int bufferID,
+                                                  int count,
+                                                  int stride,
+                                                  int offset)
+    {
+      TrianglesGeometry *triangles
+        = checkGetTrianglesGeometry(geomID);
+      assert("double-check valid geometry" && triangles);
+      
+      Buffer   *buffer
+        = checkGetBuffer(bufferID);
+      assert("double-check valid buffer" && buffer);
+
+      triangles->indexPointer = addPointerOffset(buffer->get(),offset);
+      triangles->indexCount   = count;
+      triangles->indexStride  = stride;
+    }
+    
+    void DeviceGroup::trianglesGeometrySetVertexBuffer(int geomID,
+                                                       int bufferID,
+                                                       int stride,
+                                                       int offset)
+    {
+      for (auto device : devices) {
+        device->trianglesGeometrySetVertexBuffer(geomID,bufferID,stride,offset);
+      }
+    }
+    
+    void DeviceGroup::trianglesGeometrySetIndexBuffer(int geomID,
+                                                      int bufferID,
+                                                      int count,
+                                                      int stride,
+                                                      int offset)
+    {
+      for (auto device : devices) {
+        device->trianglesGeometrySetIndexBuffer(geomID,bufferID,count,stride,offset);
+      }
+    }
+
     
   } // ::owl::ll
 } //::owl
