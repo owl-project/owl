@@ -45,3 +45,5 @@
       }                                                                 \
   }
 
+#define OPTIX_CALL( call ) OPTIX_CHECK(optix##call)
+
