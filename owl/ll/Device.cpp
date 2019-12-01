@@ -526,9 +526,10 @@ namespace owl {
     }
     
     void Device::trianglesGeomSetVertexBuffer(int geomID,
-                                                  int bufferID,
-                                                  int stride,
-                                                  int offset)
+                                              int bufferID,
+                                              int count,
+                                              int stride,
+                                              int offset)
     {
       TrianglesGeom *triangles
         = checkGetTrianglesGeom(geomID);
@@ -540,13 +541,14 @@ namespace owl {
 
       triangles->vertexPointer = addPointerOffset(buffer->get(),offset);
       triangles->vertexStride  = stride;
+      triangles->vertexCount   = count;
     }
     
     void Device::trianglesGeomSetIndexBuffer(int geomID,
-                                                  int bufferID,
-                                                  int count,
-                                                  int stride,
-                                                  int offset)
+                                             int bufferID,
+                                             int count,
+                                             int stride,
+                                             int offset)
     {
       TrianglesGeom *triangles
         = checkGetTrianglesGeom(geomID);
@@ -562,12 +564,13 @@ namespace owl {
     }
     
     void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
-                                                       int bufferID,
-                                                       int stride,
-                                                       int offset)
+                                                   int bufferID,
+                                                   int count,
+                                                   int stride,
+                                                   int offset)
     {
       for (auto device : devices) {
-        device->trianglesGeomSetVertexBuffer(geomID,bufferID,stride,offset);
+        device->trianglesGeomSetVertexBuffer(geomID,bufferID,count,stride,offset);
       }
     }
     
@@ -601,7 +604,162 @@ namespace owl {
     }
     
     void TrianglesGeomGroup::buildAccel(Context *context) 
-    { OWL_NOTIMPLEMENTED; }
+    {
+      assert("check does not yet exist" && traversable == 0);
+      assert("check does not yet exist" && !bvhMemory.valid());
+      
+      int numRayTypes = 1;
+      
+      context->pushActive();
+      std::cout << "#owl.ll: building triangles accel over "
+                << children.size() << " geometries" << std::endl;
+
+      // ==================================================================
+      // create triangle inputs
+      // ==================================================================
+      //! the N build inputs that go into the builder
+      std::vector<OptixBuildInput> triangleInputs(children.size());
+      /*! *arrays* of the vertex pointers - the buildinputs cointina
+           *pointers* to the pointers, so need a temp copy here */
+      std::vector<CUdeviceptr> vertexPointers(children.size());
+      std::vector<CUdeviceptr> indexPointers(children.size());
+
+      // now go over all children to set up the buildinputs
+      for (int childID=0;childID<children.size();childID++) {
+        // the three fields we're setting:
+        CUdeviceptr     &d_vertices    = vertexPointers[childID];
+        CUdeviceptr     &d_indices     = indexPointers[childID];
+        OptixBuildInput &triangleInput = triangleInputs[childID];
+
+        // the child wer're setting them with (with sanity checks)
+        Geom *geom = children[childID];
+        assert("double-check geom isn't null" && geom != nullptr);
+        assert("sanity check refcount" && geom->numTimesReferenced >= 0);
+       
+        TrianglesGeom *tris = dynamic_cast<TrianglesGeom*>(geom);
+        assert("double-check it's really triangles" && tris != nullptr);
+
+
+        // now fill in the values:
+        d_vertices = (CUdeviceptr )tris->vertexPointer;
+        d_indices  = (CUdeviceptr )tris->indexPointer;
+        triangleInput.type                              = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
+        triangleInput.triangleArray.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
+        triangleInput.triangleArray.vertexStrideInBytes = tris->vertexStride;
+        triangleInput.triangleArray.numVertices         = tris->vertexCount;
+        triangleInput.triangleArray.vertexBuffers       = &d_vertices;
+      
+        triangleInput.triangleArray.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
+        triangleInput.triangleArray.indexStrideInBytes  = tris->indexStride;
+        triangleInput.triangleArray.numIndexTriplets    = tris->indexCount;
+        triangleInput.triangleArray.indexBuffer         = d_indices;
+      
+        // we always have exactly one SBT entry per shape (ie, triangle
+        // mesh), and no per-primitive materials:
+        triangleInput.triangleArray.flags                       = 0;
+        // ??? OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
+        triangleInput.triangleArray.numSbtRecords               = numRayTypes;
+        triangleInput.triangleArray.sbtIndexOffsetBuffer        = 0; 
+        triangleInput.triangleArray.sbtIndexOffsetSizeInBytes   = 0; 
+        triangleInput.triangleArray.sbtIndexOffsetStrideInBytes = 0; 
+      }
+      
+      // ==================================================================
+      // BLAS setup: buildinputs set up, build the blas
+      // ==================================================================
+      
+      // ------------------------------------------------------------------
+      // first: compute temp memory for bvh
+      // ------------------------------------------------------------------
+      OptixAccelBuildOptions accelOptions = {};
+      accelOptions.buildFlags             = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+      accelOptions.motionOptions.numKeys  = 1;
+      accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
+      
+      OptixAccelBufferSizes blasBufferSizes;
+      OPTIX_CHECK(optixAccelComputeMemoryUsage
+                  (context->optixContext,
+                   &accelOptions,
+                   triangleInputs.data(),
+                   triangleInputs.size(),
+                   &blasBufferSizes
+                   ));
+      PRINT(blasBufferSizes.tempSizeInBytes);
+      PRINT(blasBufferSizes.outputSizeInBytes);
+      
+      // ------------------------------------------------------------------
+      // ... and allocate buffers: temp buffer, initial (uncompacted)
+      // BVH buffer, and a one-single-size_t buffer to store the
+      // compacted size in
+      // ------------------------------------------------------------------
+
+      // temp memory:
+      DeviceMemory tempBuffer;
+      tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
+
+      // buffer for initial, uncompacted bvh
+      DeviceMemory outputBuffer;
+      outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
+
+      // single size-t buffer to store compacted size in
+      DeviceMemory compactedSizeBuffer;
+      compactedSizeBuffer.alloc(sizeof(uint64_t));
+      
+      // ------------------------------------------------------------------
+      // now execute initial, uncompacted build
+      // ------------------------------------------------------------------
+      OptixAccelEmitDesc emitDesc;
+      emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+      emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
+      
+      OPTIX_CHECK(optixAccelBuild(context->optixContext,
+                                  /* todo: stream */0,
+                                  &accelOptions,
+                                  // array of build inputs:
+                                  triangleInputs.data(),
+                                  triangleInputs.size(),
+                                  // buffer of temp memory:
+                                  (CUdeviceptr)tempBuffer.get(),
+                                  tempBuffer.size(),
+                                  // where we store initial, uncomp bvh:
+                                  (CUdeviceptr)outputBuffer.get(),
+                                  outputBuffer.size(),
+                                  /* the traversable we're building: */ 
+                                  &traversable,
+                                  /* we're also querying compacted size: */
+                                  &emitDesc,1
+                                  ));
+      CUDA_SYNC_CHECK();
+      
+      // ==================================================================
+      // perform compaction
+      // ==================================================================
+
+      // download builder's compacted size from device
+      uint64_t compactedSize;
+      compactedSizeBuffer.download(&compactedSize);
+
+      // alloc the buffer...
+      bvhMemory.alloc(compactedSize);
+      // ... and perform compaction
+      OPTIX_CALL(AccelCompact(context->optixContext,
+                             /*TODO: stream:*/0,
+                              // OPTIX_COPY_MODE_COMPACT,
+                              traversable,
+                              (CUdeviceptr)bvhMemory.get(),
+                              bvhMemory.size(),
+                              &traversable));
+      CUDA_SYNC_CHECK();
+      
+      // ==================================================================
+      // aaaaaand .... clean up
+      // ==================================================================
+      outputBuffer.free(); // << the UNcompacted, temporary output buffer
+      tempBuffer.free();
+      compactedSizeBuffer.free();
+      
+      context->popActive();
+    }
     
   } // ::owl::ll
 } //::owl

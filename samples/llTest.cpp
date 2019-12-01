@@ -95,11 +95,11 @@ int main(int ac, char **av)
   ll->createTrianglesGeom(/* geom ID    */0,
                               /* type/PG ID */0);
   ll->trianglesGeomSetVertexBuffer(/* geom ID     */ 0,
-                                       /* buffer ID */0,
-                                       /* meta info */sizeof(vec3f),0);
+                                   /* buffer ID */0,
+                                   /* meta info */NUM_VERTICES,sizeof(vec3f),0);
   ll->trianglesGeomSetIndexBuffer(/* geom ID     */ 0,
-                                      /* buffer ID */1,
-                                      /* meta info */NUM_INDICES,sizeof(vec3i),0);
+                                  /* buffer ID */1,
+                                  /* meta info */NUM_INDICES,sizeof(vec3i),0);
   
   ll->reallocGroups(1);
   int geomsInGroup[] = { 0 };

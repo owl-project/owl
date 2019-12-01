@@ -185,6 +185,7 @@ namespace owl {
 
       void  *vertexPointer = nullptr;
       size_t vertexStride  = 0;
+      size_t vertexCount   = 0;
       void  *indexPointer  = nullptr;
       size_t indexStride   = 0;
       size_t indexCount    = 0;
@@ -388,9 +389,10 @@ namespace owl {
                               size_t elementSize,
                               const void *initData);
       void trianglesGeomSetVertexBuffer(int geomID,
-                                            int bufferID,
-                                            int stride,
-                                            int offset);
+                                        int bufferID,
+                                        int count,
+                                        int stride,
+                                        int offset);
       void trianglesGeomSetIndexBuffer(int geomID,
                                            int bufferID,
                                            int count,
@@ -561,14 +563,15 @@ namespace owl {
                               size_t elementSize,
                               const void *initData);
       void trianglesGeomSetVertexBuffer(int geomID,
-                                            int bufferID,
-                                            int stride,
-                                            int offset);
+                                        int bufferID,
+                                        int count,
+                                        int stride,
+                                        int offset);
       void trianglesGeomSetIndexBuffer(int geomID,
-                                           int bufferID,
-                                           int count,
-                                           int stride,
-                                           int offset);
+                                       int bufferID,
+                                       int count,
+                                       int stride,
+                                       int offset);
       void groupBuildAccel(int groupID)
       {
         for (auto device : devices) 
