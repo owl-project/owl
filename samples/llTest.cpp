@@ -45,7 +45,11 @@ vec3i indices[NUM_INDICES] =
    { 4,0,2 }, { 4,2,6 }
   };
 
-
+struct TriangleGroupData
+{
+  vec3f color;
+};
+  
 int main(int ac, char **av)
 {
   owl::ll::DeviceGroup::SP ll
@@ -107,6 +111,17 @@ int main(int ac, char **av)
                                    /* geoms in group, pointer */ geomsInGroup,
                                    /* geoms in group, count   */ 1);
   ll->groupBuildAccel(0);
+  
+  // ------------------------------------------------------------------
+  // build SBT
+  // ------------------------------------------------------------------
+  const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
+  ll->sbtHitGroupsBuild(maxHitGroupDataSize,
+                        [](void *output,
+                           int devID, int geomID, int rayID,
+                           void *cbData) {
+                          ((TriangleGroupData*)output)->color = vec3f(0,1,0);
+                        },/*ignore*/nullptr);
   
   std::cout << GDT_TERMINAL_BLUE;
   std::cout << "#######################################################" << std::endl;

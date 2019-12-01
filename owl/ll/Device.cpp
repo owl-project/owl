@@ -17,6 +17,35 @@
 #include "Device.h"
 #include <optix_function_table_definition.h>
 
+#define LOG(message)                                          \
+  std::cout << "#owl.ll(" << context->owlDeviceID << ") : "   \
+  << message                                                  \
+  << std::endl
+
+#define LOG_OK(message)                                 \
+  std::cout << GDT_TERMINAL_GREEN                       \
+  << "#owl.ll(" << context->owlDeviceID << ") : "       \
+  << message << GDT_TERMINAL_DEFAULT << std::endl
+
+#define CLOG(message)                                          \
+  std::cout << "#owl.ll(" << owlDeviceID << ") : "   \
+  << message                                                  \
+  << std::endl
+
+#define CLOG_OK(message)                                 \
+  std::cout << GDT_TERMINAL_GREEN                       \
+  << "#owl.ll(" << owlDeviceID << ") : "       \
+  << message << GDT_TERMINAL_DEFAULT << std::endl
+
+#define GLOG(message)                                         \
+  std::cout << "#owl.ll: "                                    \
+  << message                                                  \
+  << std::endl
+
+#define GLOG_OK(message)                                \
+  std::cout << GDT_TERMINAL_GREEN                       \
+  << "#owl.ll: "                                        \
+  << message << GDT_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
   namespace ll {
@@ -36,12 +65,11 @@ namespace owl {
       : owlDeviceID(owlDeviceID),
         cudaDeviceID(cudaDeviceID)
     {
-      std::cout << "#owl.ll: trying to create owl device on CUDA device #"
-                << cudaDeviceID << std::endl;
-
+      CLOG("trying to create owl device on CUDA device #" << cudaDeviceID);
+      
       cudaDeviceProp prop;
       cudaGetDeviceProperties(&prop, cudaDeviceID);
-      std::cout << "#owl.ll: - device: " << prop.name << std::endl;
+      CLOG(" - device: " << prop.name);
 
       CUDA_CHECK(cudaSetDevice(cudaDeviceID));
       CUDA_CHECK(cudaStreamCreate(&stream));
@@ -59,10 +87,10 @@ namespace owl {
       exception if for any reason that cannot be done */
     Context::~Context()
     {
-      std::cout << "#owl.ll: destroying owl device #"
-                << owlDeviceID
-                << " on CUDA device #" 
-                << cudaDeviceID << std::endl;
+      CLOG("destroying owl device #"
+          << owlDeviceID
+          << " on CUDA device #" 
+          << cudaDeviceID);
     }
 
     
@@ -72,8 +100,8 @@ namespace owl {
     Device::Device(int owlDeviceID, int cudaDeviceID)
       : context(new Context(owlDeviceID,cudaDeviceID))
     {
-      std::cout << "#owl.ll: successfully created owl device #" << owlDeviceID
-                << " on CUDA device #" << cudaDeviceID << std::endl;
+      LOG("successfully created owl device #" << owlDeviceID
+          << " on CUDA device #" << cudaDeviceID);
     }
     
 
@@ -87,11 +115,8 @@ namespace owl {
       std::cout << "#owl.ll(" << deviceID << ") : deleting context" << std::endl;
       delete context;
       context = nullptr;
-      
-      std::cout
-        << GDT_TERMINAL_GREEN
-        << "#owl.ll(" << deviceID << "): successfully destroyed owl device ..."
-        << GDT_TERMINAL_DEFAULT << std::endl;
+
+      LOG_OK("successfully destroyed owl device ...");
     }
 
     void Context::destroyPipeline()
@@ -152,7 +177,7 @@ namespace owl {
     }
     
     /*! will destroy the *optix handles*, but will *not* clear the
-        modules vector itself */
+      modules vector itself */
     void Modules::destroyOptixHandles(Context *context)
     {
       for (auto &module : modules) {
@@ -167,8 +192,7 @@ namespace owl {
     void Modules::buildOptixHandles(Context *context)
     {
       assert(!modules.empty());
-      std::cout << "#owl.ll(" << context->owlDeviceID << "): "
-                << "building " << modules.size() << " modules" << std::endl;
+      LOG("building " << modules.size() << " modules");
       
       char log[2048];
       size_t sizeof_log = sizeof( log );
@@ -184,12 +208,9 @@ namespace owl {
                                                  log,      // Log string
                                                  &sizeof_log,// Log string sizse
                                                  &module.module
-                                             ));
+                                                 ));
         assert(module.module != nullptr);
-        std::cout
-          << GDT_TERMINAL_GREEN
-          << "#owl.ll: created module #" << moduleID
-          << GDT_TERMINAL_DEFAULT << std::endl;
+        LOG_OK("created module #" << moduleID);
       }
     }
 
@@ -419,7 +440,7 @@ namespace owl {
     /* create an instance of this object that has properly
        initialized devices */
     DeviceGroup::SP DeviceGroup::create(const int *deviceIDs,
-                                size_t     numDevices)
+                                        size_t     numDevices)
     {
       assert((deviceIDs == nullptr && numDevices == 0)
              ||
@@ -428,7 +449,7 @@ namespace owl {
       // ------------------------------------------------------------------
       // init cuda, and error-out if no cuda devices exist
       // ------------------------------------------------------------------
-      std::cout << "#owl.ll: initializing CUDA" << std::endl;
+      GLOG("initializing CUDA");
       cudaFree(0);
       
       int totalNumDevices = 0;
@@ -459,16 +480,17 @@ namespace owl {
       // ------------------------------------------------------------------
       // create actual devices, ignoring those that failed to initialize
       // ------------------------------------------------------------------
-      std::vector<Device::SP> devices;
+      std::vector<Device *> devices;
       for (int i=0;i<numDevices;i++) {
         try {
-          Device::SP dev = std::make_shared<Device>(devices.size(),deviceIDs[i]);
+          Device *dev = new Device(devices.size(),deviceIDs[i]);
           assert(dev);
           devices.push_back(dev);
         } catch (std::exception &e) {
-          std::cout << "#owl.ll: Error creating optix device on CUDA device #"
+          std::cout << GDT_TERMINAL_RED
+                    << "#owl.ll: Error creating optix device on CUDA device #"
                     << deviceIDs[i] << ": " << e.what() << " ... dropping this device"
-                    << std::endl;
+                    << GDT_TERMINAL_DEFAULT << std::endl;
         }
       }
 
@@ -482,7 +504,7 @@ namespace owl {
       return std::make_shared<DeviceGroup>(devices);
     }
 
-    DeviceGroup::DeviceGroup(const std::vector<Device::SP> &devices)
+    DeviceGroup::DeviceGroup(const std::vector<Device *> &devices)
       : devices(devices)
     {
       assert(!devices.empty());
@@ -615,8 +637,6 @@ namespace owl {
       assert("check does not yet exist" && traversable == 0);
       assert("check does not yet exist" && !bvhMemory.valid());
       
-      int numRayTypes = 1;
-      
       context->pushActive();
       std::cout << "#owl.ll(" << context->owlDeviceID << "): building triangles accel over "
                 << children.size() << " geometries" << std::endl;
@@ -668,7 +688,7 @@ namespace owl {
         // we always have exactly one SBT entry per shape (ie, triangle
         // mesh), and no per-primitive materials:
         triangleInput.triangleArray.flags                       = triangleInputFlags;
-        triangleInput.triangleArray.numSbtRecords               = numRayTypes;
+        triangleInput.triangleArray.numSbtRecords               = context->numRayTypes;
         triangleInput.triangleArray.sbtIndexOffsetBuffer        = 0; 
         triangleInput.triangleArray.sbtIndexOffsetSizeInBytes   = 0; 
         triangleInput.triangleArray.sbtIndexOffsetStrideInBytes = 0; 
@@ -694,8 +714,6 @@ namespace owl {
                    triangleInputs.size(),
                    &blasBufferSizes
                    ));
-      PRINT(blasBufferSizes.tempSizeInBytes);
-      PRINT(blasBufferSizes.outputSizeInBytes);
       
       // ------------------------------------------------------------------
       // ... and allocate buffers: temp buffer, initial (uncompacted)
@@ -776,6 +794,14 @@ namespace owl {
         << GDT_TERMINAL_DEFAULT << std::endl;
     }
     
+    void Device::sbtHitGroupsBuild(size_t maxHitGroupDataSize,
+                                   WriteHitGroupCallBack writeHitGroupCallBack,
+                                   void *callBackData)
+    {
+      LOG("building sbt hit groups");
+      LOG_OK("done building sbt hit groups");
+    }
+      
   } // ::owl::ll
 } //::owl
 

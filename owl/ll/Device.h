@@ -25,8 +25,29 @@ namespace owl {
     struct ProgramGroups;
     struct Device;
     
+    /*! callback with which the app can specify what data is to be
+      written into the SBT for a given geometry, ray type, and
+      device */
+    typedef void
+    WriteHitGroupCallBack(void *hitGroupToWrite,
+                          /*! ID of the device we're
+                            writing for (differnet
+                            devices may need to write
+                            differnet pointers */
+                          int deviceID,
+                          /*! the geometry ID for which
+                            we're generating the SBT
+                            entry for */
+                          int geomID,
+                          /*! the ray type for which
+                            we're generating the SBT
+                            entry for */
+                          int rayType,
+                          /*! the raw void pointer the app has passed
+                              during sbtHitGroupsBuild() */
+                          void *callBackData);
+    
     struct Context {
-      // typedef std::shared_ptr<Context> SP;
       
       Context(int owlDeviceID, int cudaDeviceID);
       ~Context();
@@ -246,7 +267,6 @@ namespace owl {
 
 
     struct Device {
-      typedef std::shared_ptr<Device> SP;
 
       /*! construct a new owl device on given cuda device. throws an
           exception if for any reason that cannot be done */
@@ -466,6 +486,9 @@ namespace owl {
         return asTriangles;
       }
 
+      void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
+                             WriteHitGroupCallBack writeHitGroupCallBack,
+                             void *callBackData);
       
       Context                  *context;
       
@@ -482,8 +505,19 @@ namespace owl {
     struct DeviceGroup {
       typedef std::shared_ptr<DeviceGroup> SP;
 
-      DeviceGroup(const std::vector<Device::SP> &devices);
-
+      DeviceGroup(const std::vector<Device *> &devices);
+      DeviceGroup()
+      {
+        std::cout << "#owl.ll: destroying devices" << std::endl;
+        for (auto device : devices) {
+          assert(device);
+          delete device;
+        }
+        std::cout << GDT_TERMINAL_GREEN
+                  << "#owl.ll: all devices properly destroyed"
+                  << GDT_TERMINAL_DEFAULT << std::endl;
+      }
+      
       void allocModules(size_t count)
       { for (auto device : devices) device->allocModules(count); }
       void setModule(size_t slot, const char *ptxCode)
@@ -578,12 +612,25 @@ namespace owl {
           device->groupBuildAccel(groupID);
       }
       
+      void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
+                             WriteHitGroupCallBack writeHitGroupCallBack,
+                             void *callBackData)
+      {
+        for (auto device : devices) 
+          device->sbtHitGroupsBuild(maxHitGroupDataSize,
+                                    writeHitGroupCallBack,
+                                    callBackData);
+      }
+
       /* create an instance of this object that has properly
-         initialized devices for given cuda device IDs */
+         initialized devices for given cuda device IDs. Note this is
+         the only shared_ptr we use on that abstractoin level, but
+         here we use one to force a proper destruction of the
+         device */
       static DeviceGroup::SP create(const int *deviceIDs  = nullptr,
                                     size_t     numDevices = 0);
-      
-      const std::vector<Device::SP> devices;
+
+      const std::vector<Device *> devices;
     };
     
   } // ::owl::ll
