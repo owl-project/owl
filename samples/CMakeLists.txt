@@ -33,6 +33,6 @@ add_executable(llTest
   ${ptxCode}
   )
 target_link_libraries(llTest
-  owl
+  owl-ll
   )
 

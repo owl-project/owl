@@ -795,6 +795,10 @@ namespace owl {
                                    void *callBackData)
     {
       LOG("building sbt hit groups");
+	  size_t numGeoms = geom.size();
+	  size_t numHitGroupRecords = numGeoms * numRayTypes;
+	  size_t hitGroupRecordSize = HIT_GROUP_HEADER_SIZE + smallestMultipleOf<OPTIX_HIT_GROUP_ALIGNMENT>(maxHitGroupDataSize);
+	  size_t totalHitGroupRecordsArraySize = numHitGroupRecords * hitGroupRecordSize;
       LOG_OK("done building sbt hit groups");
     }
       

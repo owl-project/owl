@@ -573,7 +573,7 @@ namespace owl {
                                      types; the actual hit group
                                      used when building the SBT will
                                      then be 'logicalHitGroupID *
-                                     numRayTypes) */
+                                     rayTypeCount) */
                                    int logicalHitGroupID)
       {
         for (auto device : devices)
