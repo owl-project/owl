@@ -18,23 +18,23 @@
 #include <optix_function_table_definition.h>
 
 #define LOG(message)                                          \
-  std::cout << "#owl.ll(" << context->owlDeviceID << ") : "   \
+  std::cout << "#owl.ll(" << context->owlDeviceID << "): "   \
   << message                                                  \
   << std::endl
 
 #define LOG_OK(message)                                 \
   std::cout << GDT_TERMINAL_GREEN                       \
-  << "#owl.ll(" << context->owlDeviceID << ") : "       \
+  << "#owl.ll(" << context->owlDeviceID << "): "       \
   << message << GDT_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                          \
-  std::cout << "#owl.ll(" << owlDeviceID << ") : "   \
+  std::cout << "#owl.ll(" << owlDeviceID << "): "   \
   << message                                                  \
   << std::endl
 
 #define CLOG_OK(message)                                 \
   std::cout << GDT_TERMINAL_GREEN                       \
-  << "#owl.ll(" << owlDeviceID << ") : "       \
+  << "#owl.ll(" << owlDeviceID << "): "       \
   << message << GDT_TERMINAL_DEFAULT << std::endl
 
 #define GLOG(message)                                         \
@@ -527,11 +527,10 @@ namespace owl {
       Buffer *buffer = new Buffer(elementCount,elementSize);
       if (initData) {
         buffer->upload(initData,"createDeviceBuffer: uploading initData");
-        std::cout << "uploading " << elementCount
-                  << " items of size " << elementSize
-                  << " from host ptr " << initData
-                  << " to device ptr " << buffer->get()
-                  << std::endl;
+        LOG("uploading " << elementCount
+            << " items of size " << elementSize
+            << " from host ptr " << initData
+            << " to device ptr " << buffer->get());
       }
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
@@ -638,8 +637,8 @@ namespace owl {
       assert("check does not yet exist" && !bvhMemory.valid());
       
       context->pushActive();
-      std::cout << "#owl.ll(" << context->owlDeviceID << "): building triangles accel over "
-                << children.size() << " geometries" << std::endl;
+      LOG("building triangles accel over "
+          << children.size() << " geometries");
       
       // ==================================================================
       // create triangle inputs
@@ -787,11 +786,8 @@ namespace owl {
       compactedSizeBuffer.free();
       
       context->popActive();
-      
-      std::cout
-        << GDT_TERMINAL_GREEN
-        << "#owl.ll(" << context->owlDeviceID << "): successfully build triangles geom group accel"
-        << GDT_TERMINAL_DEFAULT << std::endl;
+
+      LOG_OK("successfully build triangles geom group accel");
     }
     
     void Device::sbtHitGroupsBuild(size_t maxHitGroupDataSize,
@@ -804,4 +800,4 @@ namespace owl {
       
   } // ::owl::ll
 } //::owl
-
+  
