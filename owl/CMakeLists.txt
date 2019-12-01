@@ -17,14 +17,23 @@
 include_directories(${PROJECT_SOURCE_DIR}/owl)
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 add_library(owl
-  include/owl/owl.h
 
+  ../submodules/gdt/gdt/gdt.h
+  ../submodules/gdt/gdt/math/vec.h
+
+  ../submodules/gdt/cmake/configure_optix.cmake
+  ../submodules/gdt/cmake/configure_cuda.cmake
+  ../submodules/gdt/cmake/configure_build_type.cmake
+
+  include/owl/owl.h
+  
   api/impl.cpp
   api/APIContext.h
   api/APIContext.cpp
   api/APIHandle.h
   api/APIHandle.cpp
   
+  abstract/common.h
   abstract/Object.cpp
   abstract/RegisteredObject.cpp
   abstract/SBTObject.cpp

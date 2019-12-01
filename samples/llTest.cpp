@@ -19,7 +19,7 @@
 using gdt::vec3f;
 using gdt::vec3i;
 
-extern char ptxCode[1];
+extern "C" char ptxCode[];
 
 const int NUM_VERTICES = 8;
 vec3f vertices[NUM_VERTICES] =

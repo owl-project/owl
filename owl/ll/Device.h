@@ -322,7 +322,7 @@ namespace owl {
           destroyed */
       void reallocGeoms(size_t newCount)
       {
-        for (int idxWeWouldLose=newCount;idxWeWouldLose<geoms.size();idxWeWouldLose++)
+        for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)geoms.size();idxWeWouldLose++)
           assert("realloc would lose a geom that was not properly destroyed" &&
                  geoms[idxWeWouldLose] == nullptr);
         geoms.resize(newCount);
@@ -357,7 +357,7 @@ namespace owl {
           destroyed */
       void reallocGroups(size_t newCount)
       {
-        for (int idxWeWouldLose=newCount;idxWeWouldLose<groups.size();idxWeWouldLose++)
+        for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
           assert("realloc would lose a geom that was not properly destroyed" &&
                  groups[idxWeWouldLose] == nullptr);
         groups.resize(newCount);
@@ -369,7 +369,7 @@ namespace owl {
           destroyed */
       void reallocBuffers(size_t newCount)
       {
-        for (int idxWeWouldLose=newCount;idxWeWouldLose<buffers.size();idxWeWouldLose++)
+        for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
           assert("realloc would lose a geom that was not properly destroyed" &&
                  buffers[idxWeWouldLose] == nullptr);
         buffers.resize(newCount);

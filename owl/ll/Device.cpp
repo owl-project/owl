@@ -413,7 +413,7 @@ namespace owl {
                                       &pipelineCompileOptions,
                                       &pipelineLinkOptions,
                                       allPGs.data(),
-                                      allPGs.size(),
+		  (uint32_t)allPGs.size(),
                                       log,&sizeof_log,
                                       &pipeline
                                       ));
@@ -483,7 +483,7 @@ namespace owl {
       std::vector<Device *> devices;
       for (int i=0;i<numDevices;i++) {
         try {
-          Device *dev = new Device(devices.size(),deviceIDs[i]);
+          Device *dev = new Device((int)devices.size(),deviceIDs[i]);
           assert(dev);
           devices.push_back(dev);
         } catch (std::exception &e) {
@@ -675,13 +675,13 @@ namespace owl {
         d_indices  = (CUdeviceptr )tris->indexPointer;
         triangleInput.type                              = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
         triangleInput.triangleArray.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
-        triangleInput.triangleArray.vertexStrideInBytes = tris->vertexStride;
-        triangleInput.triangleArray.numVertices         = tris->vertexCount;
+        triangleInput.triangleArray.vertexStrideInBytes = (uint32_t)tris->vertexStride;
+        triangleInput.triangleArray.numVertices         = (uint32_t)tris->vertexCount;
         triangleInput.triangleArray.vertexBuffers       = &d_vertices;
       
         triangleInput.triangleArray.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-        triangleInput.triangleArray.indexStrideInBytes  = tris->indexStride;
-        triangleInput.triangleArray.numIndexTriplets    = tris->indexCount;
+        triangleInput.triangleArray.indexStrideInBytes  = (uint32_t)tris->indexStride;
+        triangleInput.triangleArray.numIndexTriplets    = (uint32_t)tris->indexCount;
         triangleInput.triangleArray.indexBuffer         = d_indices;
       
         // we always have exactly one SBT entry per shape (ie, triangle
@@ -710,7 +710,7 @@ namespace owl {
                   (context->optixContext,
                    &accelOptions,
                    triangleInputs.data(),
-                   triangleInputs.size(),
+                   (uint32_t)triangleInputs.size(),
                    &blasBufferSizes
                    ));
       
@@ -744,17 +744,17 @@ namespace owl {
                                   &accelOptions,
                                   // array of build inputs:
                                   triangleInputs.data(),
-                                  triangleInputs.size(),
+		  (uint32_t)triangleInputs.size(),
                                   // buffer of temp memory:
                                   (CUdeviceptr)tempBuffer.get(),
-                                  tempBuffer.size(),
+                                  (uint32_t)tempBuffer.size(),
                                   // where we store initial, uncomp bvh:
                                   (CUdeviceptr)outputBuffer.get(),
                                   outputBuffer.size(),
                                   /* the traversable we're building: */ 
                                   &traversable,
                                   /* we're also querying compacted size: */
-                                  &emitDesc,1
+                                  &emitDesc,1u
                                   ));
       CUDA_SYNC_CHECK();
       
