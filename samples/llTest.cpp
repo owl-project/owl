@@ -86,7 +86,7 @@ int main(int ac, char **av)
   enum { VERTEX_BUFFER=0,INDEX_BUFFER,NUM_BUFFERS };
   ll->reallocBuffers(NUM_BUFFERS);
   ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
-  ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),vertices);
+  ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
   
   // ------------------------------------------------------------------
   // alloc geom
@@ -95,10 +95,10 @@ int main(int ac, char **av)
   ll->createTrianglesGeom(/* geom ID    */0,
                               /* type/PG ID */0);
   ll->trianglesGeomSetVertexBuffer(/* geom ID     */ 0,
-                                   /* buffer ID */0,
+                                   /* buffer ID */VERTEX_BUFFER,
                                    /* meta info */NUM_VERTICES,sizeof(vec3f),0);
   ll->trianglesGeomSetIndexBuffer(/* geom ID     */ 0,
-                                  /* buffer ID */1,
+                                  /* buffer ID */INDEX_BUFFER,
                                   /* meta info */NUM_INDICES,sizeof(vec3i),0);
   
   ll->reallocGroups(1);

@@ -17,9 +17,10 @@
 #include "Device.h"
 #include <optix_function_table_definition.h>
 
+
 namespace owl {
   namespace ll {
-
+    
     static void context_log_cb(unsigned int level,
                                const char *tag,
                                const char *message,
@@ -502,8 +503,14 @@ namespace owl {
       assert("check buffer ID available" && buffers[bufferID] == nullptr);
       context->pushActive();
       Buffer *buffer = new Buffer(elementCount,elementSize);
-      if (initData)
+      if (initData) {
         buffer->upload(initData,"createDeviceBuffer: uploading initData");
+        std::cout << "uploading " << elementCount
+                  << " items of size " << elementSize
+                  << " from host ptr " << initData
+                  << " to device ptr " << buffer->get()
+                  << std::endl;
+      }
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
       context->popActive();
@@ -611,9 +618,9 @@ namespace owl {
       int numRayTypes = 1;
       
       context->pushActive();
-      std::cout << "#owl.ll: building triangles accel over "
+      std::cout << "#owl.ll(" << context->owlDeviceID << "): building triangles accel over "
                 << children.size() << " geometries" << std::endl;
-
+      
       // ==================================================================
       // create triangle inputs
       // ==================================================================
@@ -623,6 +630,10 @@ namespace owl {
            *pointers* to the pointers, so need a temp copy here */
       std::vector<CUdeviceptr> vertexPointers(children.size());
       std::vector<CUdeviceptr> indexPointers(children.size());
+
+      // for now we use the same flags for all geoms
+      uint32_t triangleInputFlags[1] = { 0 };
+      // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
 
       // now go over all children to set up the buildinputs
       for (int childID=0;childID<children.size();childID++) {
@@ -656,8 +667,7 @@ namespace owl {
       
         // we always have exactly one SBT entry per shape (ie, triangle
         // mesh), and no per-primitive materials:
-        triangleInput.triangleArray.flags                       = 0;
-        // ??? OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
+        triangleInput.triangleArray.flags                       = triangleInputFlags;
         triangleInput.triangleArray.numSbtRecords               = numRayTypes;
         triangleInput.triangleArray.sbtIndexOffsetBuffer        = 0; 
         triangleInput.triangleArray.sbtIndexOffsetSizeInBytes   = 0; 
@@ -759,6 +769,11 @@ namespace owl {
       compactedSizeBuffer.free();
       
       context->popActive();
+      
+      std::cout
+        << GDT_TERMINAL_GREEN
+        << "#owl.ll(" << context->owlDeviceID << "): successfully build triangles geom group accel"
+        << GDT_TERMINAL_DEFAULT << std::endl;
     }
     
   } // ::owl::ll
