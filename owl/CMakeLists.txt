@@ -14,30 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+include_directories(${PROJECT_SOURCE_DIR}/ll)
 include_directories(${PROJECT_SOURCE_DIR}/owl)
-
-add_library(owl-ll
-
-  ../submodules/gdt/gdt/gdt.h
-  ../submodules/gdt/gdt/math/vec.h
-
-  ../submodules/gdt/cmake/configure_optix.cmake
-  ../submodules/gdt/cmake/configure_cuda.cmake
-  ../submodules/gdt/cmake/configure_build_type.cmake
-
-  ll/common.h
-
-  ll/Device.h
-  ll/Device.cpp
-  
-  ll/DeviceGroup.h
-  ll/DeviceGroup.cpp
-  )
-target_link_libraries(owl-ll
-  ${CUDA_LIBRARIES}
-  ${CUDA_CUDA_LIBRARY}
- # tbb
-  )
 
 add_library(owl
 
@@ -65,9 +43,6 @@ include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
 target_link_libraries(owl
   owl-ll
-  ${CUDA_LIBRARIES}
-  ${CUDA_CUDA_LIBRARY}
- # tbb
   )
 
 

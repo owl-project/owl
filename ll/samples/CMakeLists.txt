@@ -14,6 +14,15 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-add_subdirectory(s01-hello)
-add_subdirectory(s02-simpleRayGen)
-add_subdirectory(s03-rayGenWithParamsAndBuffer)
+include_directories(${PROJECT_SOURCE_DIR}/ll)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(llTest
+  llTest.cpp
+  ${ptxCode}
+  )
+target_link_libraries(llTest
+  owl-ll
+  )
+

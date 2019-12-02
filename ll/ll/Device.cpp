@@ -698,6 +698,9 @@ namespace owl {
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
       assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
+      sbt.hitGroupRecordSize = hitGroupRecordSize;
+      sbt.hitGroupRecordCount = numHitGroupRecords;
+
       size_t totalHitGroupRecordsArraySize
         = numHitGroupRecords * hitGroupRecordSize;
       std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
@@ -760,6 +763,8 @@ namespace owl {
       size_t rayGenRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxRayGenDataSize);
+      sbt.rayGenRecordSize = rayGenRecordSize;
+      sbt.rayGenRecordCount = numRayGenRecords;
       assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
       size_t totalRayGenRecordsArraySize
         = numRayGenRecords * rayGenRecordSize;
@@ -823,6 +828,8 @@ namespace owl {
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxMissProgDataSize);
       assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
+      sbt.missProgRecordSize = missProgRecordSize;
+      sbt.missProgRecordCount = numMissProgRecords;
       size_t totalMissProgRecordsArraySize
         = numMissProgRecords * missProgRecordSize;
       std::vector<uint8_t> missProgRecords(totalMissProgRecordsArraySize);
@@ -870,7 +877,48 @@ namespace owl {
     void Device::launch(int rgID, const vec2i &dims)
     {
       LOG("launching ...");
+      assert("check valid launch dims" && dims.x > 0);
+      assert("check valid launch dims" && dims.y > 0);
+      assert("check valid ray gen program ID" && rgID >= 0);
+      assert("check valid ray gen program ID" && rgID <  rayGenPGs.size());
+
+      assert("check raygen records built" && sbt.rayGenRecordCount != 0);
+      sbt.sbt.raygenRecord
+        = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
+                                        rgID * sbt.rayGenRecordSize);
+      
+      assert("check miss records built" && sbt.missProgRecordCount != 0);
+      sbt.sbt.missRecordBase
+        = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
+      sbt.sbt.missRecordStrideInBytes
+        = sbt.missProgRecordSize;
+      sbt.sbt.missRecordCount
+        = sbt.missProgRecordCount;
+      
+      assert("check hit records built" && sbt.hitGroupRecordCount != 0);
+      sbt.sbt.hitgroupRecordBase
+        = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
+      sbt.sbt.hitgroupRecordStrideInBytes
+        = sbt.hitGroupRecordSize;
+      sbt.sbt.hitgroupRecordCount
+        = sbt.hitGroupRecordCount;
+
+      if (!sbt.launchParamsBuffer.valid()) {
+        LOG("creating dummy launch params buffer ...");
+        sbt.launchParamsBuffer.alloc(8);
+      }
+      
+      // launchParamsBuffer.upload((void *)device_launchParams);
+      OPTIX_CALL(Launch(context->pipeline,
+                        context->stream,
+                        (CUdeviceptr)sbt.launchParamsBuffer.get(),
+                        sbt.launchParamsBuffer.sizeInBytes,
+                        &sbt.sbt,
+                        dims.x,dims.y,1
+                        ));
+
       PING;
+      cudaDeviceSynchronize();
     }
     
     

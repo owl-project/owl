@@ -121,10 +121,20 @@ namespace owl {
 
     struct SBT {
       OptixShaderBindingTable sbt = {};
+      
+      size_t rayGenRecordCount   = 0;
+      size_t rayGenRecordSize   = 0;
       DeviceMemory rayGenRecordsBuffer;
-      DeviceMemory missProgRecordsBuffer;
+
+      size_t hitGroupRecordSize = 0;
+      size_t hitGroupRecordCount = 0;
       DeviceMemory hitGroupRecordsBuffer;
-      DeviceMemory launchParamBuffer;
+
+      size_t missProgRecordSize = 0;
+      size_t missProgRecordCount = 0;
+      DeviceMemory missProgRecordsBuffer;
+
+      DeviceMemory launchParamsBuffer;
     };
 
     typedef enum { TRIANGLES, USER } GeomType;

@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "../owl/ll/DeviceGroup.h"
+#include "ll/DeviceGroup.h"
 
 using gdt::vec2i;
 using gdt::vec3f;

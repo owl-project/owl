@@ -14,25 +14,26 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-cuda_compile_and_embed(ptxCode
-  deviceCode.cu
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+add_library(owl-ll
+  ll/common.h
+
+  ll/Device.h
+  ll/Device.cpp
+  
+  ll/DeviceGroup.h
+  ll/DeviceGroup.cpp
   )
-add_executable(c-test
-  c-test.c
-  ${ptxCode}
-  )
-target_link_libraries(c-test
-  owl
+target_link_libraries(owl-ll
+  owl-common
+  ${CUDA_LIBRARIES}
+  ${CUDA_CUDA_LIBRARY}
   )
 
+add_subdirectory(samples)
 
-include_directories(${PROJECT_SOURCE_DIR}/owl)
-add_executable(llTest
-  llTest.cpp
-  ${ptxCode}
-  )
-target_link_libraries(llTest
-  owl-ll
-  )
+
+
+
 
