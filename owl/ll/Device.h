@@ -526,13 +526,8 @@ namespace owl {
         for (auto device : devices)
           device->buildModules();
       }
-      void buildPrograms()
-      {
-        for (auto device : devices)
-          device->buildPrograms();
-      }
-      void createPipeline()
-      { for (auto device : devices) device->createPipeline(); }
+      void createPipeline();
+      void buildPrograms();
       
       void allocHitGroupPGs(size_t count)
       { for (auto device : devices) device->allocHitGroupPGs(count); }

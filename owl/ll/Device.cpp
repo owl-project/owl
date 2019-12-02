@@ -189,6 +189,20 @@ namespace owl {
     }
 
 
+    void DeviceGroup::buildPrograms()
+    {
+      for (auto device : devices)
+        device->buildPrograms();
+      GLOG_OK("device programs (re-)built");
+    }
+    
+    void DeviceGroup::createPipeline()
+    {
+      for (auto device : devices)
+        device->createPipeline();
+      GLOG_OK("optix pipeline created");
+    }
+
     void Modules::buildOptixHandles(Context *context)
     {
       assert(!modules.empty());

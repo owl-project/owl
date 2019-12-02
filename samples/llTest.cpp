@@ -55,6 +55,12 @@ int main(int ac, char **av)
   owl::ll::DeviceGroup::SP ll
     = owl::ll::DeviceGroup::create();
 
+  std::cout << GDT_TERMINAL_BLUE;
+  std::cout << "#######################################################" << std::endl;
+  std::cout << "llTest - building pipeline ..." << std::endl;
+  std::cout << "#######################################################" << std::endl;
+  std::cout << GDT_TERMINAL_DEFAULT;
+
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
@@ -79,6 +85,11 @@ int main(int ac, char **av)
   ll->buildPrograms();
   ll->createPipeline();
 
+  std::cout << GDT_TERMINAL_BLUE;
+  std::cout << "#######################################################" << std::endl;
+  std::cout << "llTest - building geometries ..." << std::endl;
+  std::cout << "#######################################################" << std::endl;
+  std::cout << GDT_TERMINAL_DEFAULT;
 
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
@@ -97,7 +108,7 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   ll->reallocGeoms(1);
   ll->createTrianglesGeom(/* geom ID    */0,
-                              /* type/PG ID */0);
+                          /* type/PG ID */0);
   ll->trianglesGeomSetVertexBuffer(/* geom ID     */ 0,
                                    /* buffer ID */VERTEX_BUFFER,
                                    /* meta info */NUM_VERTICES,sizeof(vec3f),0);
@@ -108,10 +119,15 @@ int main(int ac, char **av)
   ll->reallocGroups(1);
   int geomsInGroup[] = { 0 };
   ll->createTrianglesGeomGroup(/* group ID */0,
-                                   /* geoms in group, pointer */ geomsInGroup,
-                                   /* geoms in group, count   */ 1);
+                               /* geoms in group, pointer */ geomsInGroup,
+                               /* geoms in group, count   */ 1);
   ll->groupBuildAccel(0);
   
+  std::cout << GDT_TERMINAL_BLUE;
+  std::cout << "#######################################################" << std::endl;
+  std::cout << "llTest - building SBT ..." << std::endl;
+  std::cout << "#######################################################" << std::endl;
+  std::cout << GDT_TERMINAL_DEFAULT;
   // ------------------------------------------------------------------
   // build SBT
   // ------------------------------------------------------------------
@@ -125,7 +141,7 @@ int main(int ac, char **av)
   
   std::cout << GDT_TERMINAL_BLUE;
   std::cout << "#######################################################" << std::endl;
-  std::cout << "actual ll-work here ..." << std::endl;
+  std::cout << "llTest - app is done ..." << std::endl;
   std::cout << "#######################################################" << std::endl;
   std::cout << GDT_TERMINAL_DEFAULT;
 }
