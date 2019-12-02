@@ -44,10 +44,9 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   if (pixelID.y >= rg.fbSize.y) return;
   
   const int fbOfs = pixelID.x+rg.fbSize.x*pixelID.y;
+  int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
   rg.fbPtr[fbOfs]
-    = (fbOfs%2)
-    ? rg.color1
-    : rg.color0;
+    = optix::make_rgba((pattern&1) ? rg.color1 : rg.color0);
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()

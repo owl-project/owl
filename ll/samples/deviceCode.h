@@ -74,7 +74,7 @@ namespace optix {
     return min(255,max(0,int(f*256.f)));
   }
 
-  inline __device__ uint32_t make_rgba8(const vec3f color)
+  inline __device__ uint32_t make_rgba(const vec3f color)
   {
     return
       (make_8bit(color.x) << 0) +
@@ -82,7 +82,7 @@ namespace optix {
       (make_8bit(color.z) << 16) +
       (0xffU << 24);
   }
-  inline __device__ uint32_t make_rgba8(const vec4f color)
+  inline __device__ uint32_t make_rgba(const vec4f color)
   {
     return
       (make_8bit(color.x) << 0) +
@@ -106,7 +106,7 @@ struct RayGenData
 {
   int deviceIndex;
   int deviceCount;
-  vec3f *fbPtr;
+  uint32_t *fbPtr;
   vec2i  fbSize;
   vec3f  color0;
   vec3f  color1;

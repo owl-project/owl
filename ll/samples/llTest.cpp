@@ -17,9 +17,16 @@
 #include "ll/DeviceGroup.h"
 #include "deviceCode.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb/stb_image_write.h"
+
 #define LOG(message)                                    \
   std::cout << GDT_TERMINAL_BLUE;                       \
-  std::cout << "----------- " << message << std::endl;  \
+  std::cout << "#ll.sample(main): " << message << std::endl;  \
+  std::cout << GDT_TERMINAL_DEFAULT;
+#define LOG_OK(message)                                    \
+  std::cout << GDT_TERMINAL_LIGHT_BLUE;                       \
+  std::cout << "#ll.sample(main): " << message << std::endl;  \
   std::cout << GDT_TERMINAL_DEFAULT;
 
 extern "C" char ptxCode[];
@@ -62,7 +69,7 @@ int main(int ac, char **av)
   owl::ll::DeviceGroup::SP ll
     = owl::ll::DeviceGroup::create();
 
-  LOG("llTest - building pipeline ...");
+  LOG("building pipeline ...");
   std::cout << GDT_TERMINAL_DEFAULT;
 
   // ##################################################################
@@ -89,7 +96,7 @@ int main(int ac, char **av)
   ll->buildPrograms();
   ll->createPipeline();
 
-  LOG("llTest - building geometries ...");
+  LOG("building geometries ...");
 
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
@@ -102,7 +109,7 @@ int main(int ac, char **av)
   ll->reallocBuffers(NUM_BUFFERS);
   ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
   ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(vec3f));
+  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
   
   // ------------------------------------------------------------------
   // alloc geom
@@ -125,7 +132,7 @@ int main(int ac, char **av)
                                /* geoms in group, count   */ 1);
   ll->groupBuildAccel(TRIANGLES_GROUP);
 
-  LOG("llTest - building SBT ...");
+  LOG("building SBT ...");
   // ------------------------------------------------------------------
   // build SBT
   // ------------------------------------------------------------------
@@ -161,18 +168,28 @@ int main(int ac, char **av)
                         RayGenData *rg = (RayGenData*)output;
                         rg->deviceIndex   = devID;
                         rg->deviceCount = ll->getDeviceCount();
-                        rg->color0 = vec3f(0,0,0);
-                        rg->color1 = vec3f(1,1,1);
+                        rg->color0 = vec3f(.8,.8,.8);
+                        rg->color1 = vec3f(.7,0,0);
                         rg->fbSize = fbSize;
-                        rg->fbPtr  = (vec3f*)ll->bufferGetPointer(FRAME_BUFFER,devID);
+                        rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
                         rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
                       });
   
-  LOG("llTest - everything set up ... trying to launch ...");
+  LOG_OK("everything set up ...");
+  LOG("trying to launch ...");
   ll->launch(0,fbSize);
+  // todo: explicit sync?
   
-  LOG("llTest - destroying devicegroup ...");
+  LOG("done with launch, writing picture ...");
+  // for host pinned mem it doesn't matter which device we query...
+  const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
+                 fb,fbSize.x*sizeof(uint32_t));
+  LOG_OK("written rendered frame buffer to file "<<outFileName);
+
+  
+  LOG("destroying devicegroup ...");
   owl::ll::DeviceGroup::destroy(ll);
   
-  LOG("llTest - app is done ...");
+  LOG_OK("seems all wen't ok; app is done, this should be the last output ...");
 }
