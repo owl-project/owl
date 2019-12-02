@@ -17,7 +17,7 @@
 #pragma once
 
 #include "owl/owl.h"
-#include "abstract/common.h"
+#include "ll/common.h"
 
 namespace owl {
 

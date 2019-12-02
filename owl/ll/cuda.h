@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "abstract/common.h"
+#include "ll/common.h"
 
 #include <cuda_runtime.h>
 

@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "abstract/common.h"
 #include "ll/optix.h"
 #include "ll/DeviceMemory.h"
 

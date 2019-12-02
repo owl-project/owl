@@ -25,7 +25,7 @@ add_library(owl-ll
   ../submodules/gdt/cmake/configure_cuda.cmake
   ../submodules/gdt/cmake/configure_build_type.cmake
 
-  abstract/common.h
+  ll/common.h
 
   ll/Device.h
   ll/Device.cpp
