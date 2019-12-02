@@ -795,7 +795,11 @@ namespace owl {
                                    const void *callBackUserData)
     {
       LOG("building sbt hit groups");
-      // TODO: destroyhitgroups
+      context->pushActive();
+      // TODO: move this to explicit destroyhitgroups
+      if (sbt.hitGroupRecordsBuffer.valid())
+        sbt.hitGroupRecordsBuffer.free();
+
       size_t numGeoms = geoms.size();
       size_t numHitGroupRecords = numGeoms * context->numRayTypes;
       size_t hitGroupRecordSize
@@ -804,16 +808,36 @@ namespace owl {
       assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
       size_t totalHitGroupRecordsArraySize
         = numHitGroupRecords * hitGroupRecordSize;
-      PRINT(totalHitGroupRecordsArraySize);
       std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
       for (int geomID=0;geomID<(int)geoms.size();geomID++)
         for (int rayType=0;rayType<context->numRayTypes;rayType++) {
           int recordID = rayType + geomID*context->numRayTypes;
+          // ------------------------------------------------------------------
+          // compute pointer to entire record:
+          // ------------------------------------------------------------------
           uint8_t *sbtRecord
             = hitGroupRecords.data() + recordID*hitGroupRecordSize;
+
+          // ------------------------------------------------------------------
+          // pack record header with the corresponding hit group:
+          // ------------------------------------------------------------------
+          // first, compute pointer to record:
           char    *sbtRecordHeader = (char *)sbtRecord;
+          // then, get gemetry we want to write (to find its hit group ID)...
+          const Geom *geom = checkGetGeom(geomID);
+          // ... find the PG that goes into the record header...
+          const HitGroupPG &hgPG
+            = hitGroupPGs[rayType + geom->logicalHitGroupID*context->numRayTypes];
+          // ... and tell optix to write that into the record
+          OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
+          
+          // ------------------------------------------------------------------
+          // finally, let the user fill in the record's payload using
+          // the callback
+          // ------------------------------------------------------------------
           uint8_t *sbtRecordData
             = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
+
           
           writeHitGroupCallBack(sbtRecordData,
                                 context->owlDeviceID,
@@ -823,6 +847,7 @@ namespace owl {
         }
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
+      context->popActive();
       LOG_OK("done building sbt hit groups");
     }
       
