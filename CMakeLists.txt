@@ -15,7 +15,7 @@
 # ======================================================================== #
 
 cmake_policy(SET CMP0048 NEW)
-project(Optix-OWL VERSION 0.0.1)
+project(Optix-OWL VERSION 0.1.0)
 
 cmake_minimum_required(VERSION 2.8)
 

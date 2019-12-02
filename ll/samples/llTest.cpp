@@ -181,8 +181,9 @@ int main(int ac, char **av)
   LOG_OK("everything set up ...");
 
   // ##################################################################
-  // and finally, launch everything ....
+  // now that everything is readly: launch it ....
   // ##################################################################
+  
   LOG("trying to launch ...");
   ll->launch(0,fbSize);
   // todo: explicit sync?
@@ -194,6 +195,9 @@ int main(int ac, char **av)
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);
 
+  // ##################################################################
+  // and finally, clean up
+  // ##################################################################
   
   LOG("destroying devicegroup ...");
   owl::ll::DeviceGroup::destroy(ll);
