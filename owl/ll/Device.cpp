@@ -496,6 +496,18 @@ namespace owl {
       group->buildAccel(context);
     }
 
+    /*! return given group's current traversable. note this function
+      will *not* check if the group has alreadybeen built, if it
+      has to be rebuilt, etc. */
+    OptixTraversableHandle Device::groupGetTraversable(int groupID)
+    {
+      return checkGetGroup(groupID)->traversable;
+    }
+      
+    
+
+    
+
 
     void TrianglesGeomGroup::destroyAccel(Context *context) 
     {
@@ -726,6 +738,65 @@ namespace owl {
         }
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
+      context->popActive();
+      LOG_OK("done building (and uploading) sbt hit groups");
+    }
+      
+    void Device::sbtRayGensBuild(size_t maxRayGenDataSize,
+                                 WriteRayGenCallBack writeRayGenCallBack,
+                                 const void *callBackUserData)
+    {
+      LOG("building sbt hit groups");
+      context->pushActive();
+      // TODO: move this to explicit destroyhitgroups
+      if (sbt.rayGenRecordsBuffer.valid())
+        sbt.rayGenRecordsBuffer.free();
+
+      size_t numRayGenRecords = rayGenPGs.size();
+      size_t rayGenRecordSize
+        = OPTIX_SBT_RECORD_HEADER_SIZE
+        + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxRayGenDataSize);
+      assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
+      size_t totalRayGenRecordsArraySize
+        = numRayGenRecords * rayGenRecordSize;
+      std::vector<uint8_t> rayGenRecords(totalRayGenRecordsArraySize);
+
+      // ------------------------------------------------------------------
+      // now, write all records (only on the host so far): we need to
+      // write one record per geometry, per ray type
+      // ------------------------------------------------------------------
+      for (int rgID=0;rgID<(int)rayGenPGs.size();rgID++) {
+        // ------------------------------------------------------------------
+        // compute pointer to entire record:
+        // ------------------------------------------------------------------
+        const int recordID = rgID;
+        uint8_t *const sbtRecord
+          = rayGenRecords.data() + recordID*rayGenRecordSize;
+        
+        // ------------------------------------------------------------------
+          // pack record header with the corresponding hit group:
+          // ------------------------------------------------------------------
+          // first, compute pointer to record:
+        char    *const sbtRecordHeader = (char *)sbtRecord;
+        // ... find the PG that goes into the record header...
+        const RayGenPG &rgPG
+          = rayGenPGs[rgID];
+        // ... and tell optix to write that into the record
+        OPTIX_CALL(SbtRecordPackHeader(rgPG.pg,sbtRecordHeader));
+          
+        // ------------------------------------------------------------------
+        // finally, let the user fill in the record's payload using
+        // the callback
+        // ------------------------------------------------------------------
+        uint8_t *const sbtRecordData
+          = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
+        writeRayGenCallBack(sbtRecordData,
+                            context->owlDeviceID,
+                            rgID,
+                            callBackUserData);
+      }
+      sbt.rayGenRecordsBuffer.alloc(rayGenRecords.size());
+      sbt.rayGenRecordsBuffer.upload(rayGenRecords);
       context->popActive();
       LOG_OK("done building (and uploading) sbt hit groups");
     }

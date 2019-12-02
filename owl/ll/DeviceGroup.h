@@ -47,19 +47,19 @@ namespace owl {
       written into the SBT for a given geometry, ray type, and
       device */
     typedef void
-    WriteRayGensCallBack(uint8_t *rayGenToWrite,
-                         /*! ID of the device we're
-                           writing for (differnet
-                           devices may need to write
-                           different pointers */
-                         int deviceID,
-                         /*! the geometry ID for which
-                           we're generating the SBT
-                           entry for */
-                         int rayGenID,
-                         /*! the raw void pointer the app has passed
-                         during sbtHitGroupsBuild() */
-                         const void *callBackUserData);
+    WriteRayGenCallBack(uint8_t *rayGenToWrite,
+                        /*! ID of the device we're
+                          writing for (differnet
+                          devices may need to write
+                          different pointers */
+                        int deviceID,
+                        /*! the geometry ID for which
+                          we're generating the SBT
+                          entry for */
+                        int rayGenID,
+                        /*! the raw void pointer the app has passed
+                          during sbtHitGroupsBuild() */
+                        const void *callBackUserData);
     
     struct Device;
     
@@ -124,13 +124,30 @@ namespace owl {
                                        int stride,
                                        int offset);
       void groupBuildAccel(int groupID);
+      OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
+      
       void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
                              WriteHitGroupCallBack writeHitGroupCallBack,
                              void *callBackData);
       void sbtRayGensBuild(size_t maxRayGenDataSize,
                            WriteRayGenCallBack WriteRayGenCallBack,
                            void *callBackData);
+      template<typename Lambda>
+      void sbtRayGensBuild(size_t maxRayGenDataSize,
+                           const Lambda &l)
+      {
+        this->sbtRayGensBuild(maxRayGenDataSize,
+                              [](uint8_t *output,
+                                 int devID, int rgID, 
+                                 const void *cbData) {
+                                const Lambda *lambda = (const Lambda *)cbData;
+                                (*lambda)(output,devID,rgID,cbData);
+                              },(void *)&l);
+      }
 
+
+
+      
       /* create an instance of this object that has properly
          initialized devices for given cuda device IDs. Note this is
          the only shared_ptr we use on that abstractoin level, but
@@ -140,6 +157,10 @@ namespace owl {
                                     size_t     numDevices = 0);
       static void destroy(DeviceGroup::SP &ll) { ll = nullptr; }
 
+      /*! accessor helpers that first checks the validity of the given
+          device ID, then returns the given device */
+      Device *checkGetDevice(int deviceID);
+      
       const std::vector<Device *> devices;
     };
     

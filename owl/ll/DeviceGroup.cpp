@@ -46,6 +46,17 @@ namespace owl {
       LOG_OK("all devices properly destroyed");
     }
 
+    /*! accessor helpers that first checks the validity of the given
+      device ID, then returns the given device */
+    Device *DeviceGroup::checkGetDevice(int deviceID)
+    {
+      assert("check valid device ID" && deviceID >= 0);
+      assert("check valid device ID" && deviceID <  devices.size());
+      Device *device = devices[deviceID];
+      assert("check valid device" && device != nullptr);
+      return device;
+    }
+
     void DeviceGroup::allocModules(size_t count)
     { for (auto device : devices) device->allocModules(count); }
     
@@ -167,7 +178,12 @@ namespace owl {
       for (auto device : devices) 
         device->groupBuildAccel(groupID);
     }
-    
+
+    OptixTraversableHandle DeviceGroup::groupGetTraversable(int groupID, int deviceID)
+    {
+      return checkGetDevice(deviceID)->groupGetTraversable(groupID);
+    }
+
     void DeviceGroup::sbtHitGroupsBuild(size_t maxHitGroupDataSize,
                                         WriteHitGroupCallBack writeHitGroupCallBack,
                                         void *callBackData)
@@ -176,6 +192,16 @@ namespace owl {
         device->sbtHitGroupsBuild(maxHitGroupDataSize,
                                   writeHitGroupCallBack,
                                   callBackData);
+    }
+    
+    void DeviceGroup::sbtRayGensBuild(size_t maxRayGenDataSize,
+                                        WriteRayGenCallBack writeRayGenCallBack,
+                                        void *callBackData)
+    {
+      for (auto device : devices) 
+        device->sbtRayGensBuild(maxRayGenDataSize,
+                                writeRayGenCallBack,
+                                callBackData);
     }
     
     /* create an instance of this object that has properly

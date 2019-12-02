@@ -121,7 +121,7 @@ namespace owl {
 
     struct SBT {
       OptixShaderBindingTable sbt = {};
-      DeviceMemory raygenRecordsBuffer;
+      DeviceMemory rayGenRecordsBuffer;
       DeviceMemory missRecordsBuffer;
       DeviceMemory hitGroupRecordsBuffer;
       DeviceMemory launchParamBuffer;
@@ -289,6 +289,7 @@ namespace owl {
           groups (one per ray type), so this must be a multiple of the
           number of ray types to be used */
       void allocHitGroupPGs(size_t count);
+
       void allocRayGenPGs(size_t count);
       /*! each geom will always use "numRayTypes" successive hit
           groups (one per ray type), so this must be a multiple of the
@@ -424,7 +425,12 @@ namespace owl {
       // group related struff
       // ------------------------------------------------------------------
       void groupBuildAccel(int groupID);
-
+      
+      /*! return given group's current traversable. note this function
+          will *not* check if the group has alreadybeen built, if it
+          has to be rebuilt, etc. */
+      OptixTraversableHandle groupGetTraversable(int groupID);
+      
       // accessor helpers:
       Geom *checkGetGeom(int geomID)
       {
@@ -468,6 +474,9 @@ namespace owl {
       void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
                              WriteHitGroupCallBack writeHitGroupCallBack,
                              const void *callBackUserData);
+      void sbtRayGensBuild(size_t maxRayGenDataSize,
+                           WriteRayGenCallBack writeRayGenCallBack,
+                           const void *callBackUserData);
       
       Context                  *context;
       

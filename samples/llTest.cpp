@@ -63,6 +63,24 @@ struct RayGenData
   OptixTraversableHandle world;
 };
 
+// template<typename Lambda>
+// void rayGensBuild(owl::ll::DeviceGroup::SP ll,
+//                   size_t maxRayGenDataSize,
+//                   const Lambda &l)
+// {
+//   ll->sbtRayGensBuild(maxRayGenDataSize,
+//                       [](uint8_t *output,
+//                          int devID, int rgID, 
+//                          const void *cbData) {
+//                         // RayGenData *rg = (RayGenData*)output;
+//                         // rg->color0 = vec3f(0,0,0);
+//                         // rg->color1 = vec3f(1,1,1);
+//                         const Lambda *lambda = (const Lambda *)cbData;
+//                         (*lambda)(output,devID,rgID,cbData);
+//                       },(void *)&l);
+// }
+
+
 int main(int ac, char **av)
 {
   std::cout << GDT_TERMINAL_BLUE;
@@ -127,13 +145,14 @@ int main(int ac, char **av)
   ll->trianglesGeomSetIndexBuffer(/* geom ID     */ 0,
                                   /* buffer ID */INDEX_BUFFER,
                                   /* meta info */NUM_INDICES,sizeof(vec3i),0);
-  
-  ll->reallocGroups(1);
+
+  enum { TRIANGLES_GROUP=0,NUM_GROUPS };
+  ll->reallocGroups(NUM_GROUPS);
   int geomsInGroup[] = { 0 };
-  ll->createTrianglesGeomGroup(/* group ID */0,
+  ll->createTrianglesGeomGroup(/* group ID */TRIANGLES_GROUP,
                                /* geoms in group, pointer */ geomsInGroup,
                                /* geoms in group, count   */ 1);
-  ll->groupBuildAccel(0);
+  ll->groupBuildAccel(TRIANGLES_GROUP);
 
   LOG("llTest - building SBT ...");
   // ------------------------------------------------------------------
@@ -151,6 +170,8 @@ int main(int ac, char **av)
   
   // ----------- build raygens -----------
   const size_t maxRayGenDataSize = sizeof(RayGenData);
+
+#if 0
   ll->sbtRayGensBuild(maxRayGenDataSize,
                       [](uint8_t *output,
                          int devID, int rgID, 
@@ -158,8 +179,20 @@ int main(int ac, char **av)
                         RayGenData *rg = (RayGenData*)output;
                         rg->color0 = vec3f(0,0,0);
                         rg->color1 = vec3f(1,1,1);
-                        rg->world  = ll->groupGetTraversable(devID);
-                      },/*ignore*/nullptr);
+                        owl::ll::DeviceGroup *ll = (owl::ll::DeviceGroup *)cbData;
+                        rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+                      },ll.get());
+#else
+  ll->sbtRayGensBuild(maxRayGenDataSize,
+                      [&](uint8_t *output,
+                          int devID, int rgID, 
+                          const void *cbData) {
+                        RayGenData *rg = (RayGenData*)output;
+                        rg->color0 = vec3f(0,0,0);
+                        rg->color1 = vec3f(1,1,1);
+                        rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+                      });
+#endif
   
 
   LOG("llTest - destroying devicegroup ...");
