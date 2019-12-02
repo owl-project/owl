@@ -44,20 +44,6 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   if (pixelID.x >= rg.fbSize.x) return;
   if (pixelID.y >= rg.fbSize.y) return;
 
-// static __forceinline__ __device__ void optixTrace( OptixTraversableHandle handle,
-//                                                    float3                 rayOrigin,
-//                                                    float3                 rayDirection,
-//                                                    float                  tmin,
-//                                                    float                  tmax,
-//                                                    float                  rayTime,
-//                                                    OptixVisibilityMask    visibilityMask,
-//                                                    unsigned int           rayFlags,
-//                                                    unsigned int           SBToffset,
-//                                                    unsigned int           SBTstride,
-//                                                    unsigned int           missSBTIndex,
-//                                                    unsigned int&          p0,
-//                                                    unsigned int&          p1 );
-
   const int numRayTypes = 1;
   const int rayType = 0;
 
@@ -72,16 +58,24 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     unsigned int           SBToffset = rayType;
     unsigned int           SBTstride = numRayTypes;
     unsigned int           missSBTIndex = rayType;
-    unsigned int&          p0,
-    unsigned int&          p1 );
-float3 org = make_float3(0,0,0);
-  float3 dir = make_float3(0,1,0);
-  const uint32_t prd0 = 0;
-  const uint32_t prd1 = 0;
-  optixTrace(rg.world,
-             org,dir,1e-3f,1e+10f,0.f,0x0,
-             rayType,numRayTypes,rayType,prd0,prd1);
-  
+    unsigned int           p0 = 0;
+    unsigned int           p1 = 0;
+
+    optixTrace(handle,
+               rayOrigin,
+               rayDirection,
+               tmin,
+               tmax,
+               rayTime,
+               visibilityMask,
+               rayFlags,
+               SBToffset,
+               SBTstride,
+               missSBTIndex,
+               p0,
+               p1 );
+    
+    
   const int fbOfs = pixelID.x+rg.fbSize.x*pixelID.y;
   int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
   rg.fbPtr[fbOfs]
