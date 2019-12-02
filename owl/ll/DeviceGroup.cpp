@@ -17,13 +17,13 @@
 #include "ll/Device.h"
 #include "ll/DeviceGroup.h"
 
-#define GLOG(message)                           \
+#define LOG(message)                           \
   std::cout << "#owl.ll: "                      \
   << message                                    \
   << std::endl
 
-#define GLOG_OK(message)                                \
-  std::cout << GDT_TERMINAL_GREEN                       \
+#define LOG_OK(message)                                \
+  std::cout << GDT_TERMINAL_LIGHT_GREEN                 \
   << "#owl.ll: "                                        \
   << message << GDT_TERMINAL_DEFAULT << std::endl
 
@@ -34,18 +34,16 @@ namespace owl {
       : devices(devices)
     {
       assert(!devices.empty());
-      GLOG_OK("successfully created device group with "
-              << devices.size() << " device(s)");
     }
-    
+
     DeviceGroup::~DeviceGroup()
     {
-      GLOG("destroying devices");
+      LOG("destroying devices");
       for (auto device : devices) {
         assert(device);
         delete device;
       }
-      GLOG("all devices properly destroyed");
+      LOG_OK("all devices properly destroyed");
     }
 
     void DeviceGroup::allocModules(size_t count)
@@ -58,6 +56,7 @@ namespace owl {
     {
       for (auto device : devices)
         device->buildModules();
+      LOG_OK("module(s) successfully (re-)built");
     }
     
     void DeviceGroup::allocHitGroupPGs(size_t count)
@@ -121,14 +120,14 @@ namespace owl {
     {
       for (auto device : devices)
         device->buildPrograms();
-      GLOG_OK("device programs (re-)built");
+      LOG_OK("device programs (re-)built");
     }
     
     void DeviceGroup::createPipeline()
     {
       for (auto device : devices)
         device->createPipeline();
-      GLOG_OK("optix pipeline created");
+      LOG_OK("optix pipeline created");
     }
 
     void DeviceGroup::createDeviceBuffer(int bufferID,
@@ -191,14 +190,14 @@ namespace owl {
       // ------------------------------------------------------------------
       // init cuda, and error-out if no cuda devices exist
       // ------------------------------------------------------------------
-      GLOG("initializing CUDA");
+      LOG("initializing CUDA");
       cudaFree(0);
       
       int totalNumDevices = 0;
       cudaGetDeviceCount(&totalNumDevices);
       if (totalNumDevices == 0)
         throw std::runtime_error("#owl.ll: no CUDA capable devices found!");
-      std::cout << "#owl.ll: found " << totalNumDevices << " CUDA device(s)" << std::endl;
+      LOG_OK("found " << totalNumDevices << " CUDA device(s)");
 
       
       // ------------------------------------------------------------------
@@ -242,7 +241,8 @@ namespace owl {
       // ------------------------------------------------------------------
       if (devices.empty())
         throw std::runtime_error("fatal error - could not find/create any optix devices");
-      
+
+      LOG_OK("successfully created device group with " << devices.size() << " devices");
       return std::make_shared<DeviceGroup>(devices);
     }
 

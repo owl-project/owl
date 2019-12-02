@@ -138,6 +138,7 @@ namespace owl {
          device */
       static DeviceGroup::SP create(const int *deviceIDs  = nullptr,
                                     size_t     numDevices = 0);
+      static void destroy(DeviceGroup::SP &ll) { ll = nullptr; }
 
       const std::vector<Device *> devices;
     };
