@@ -899,6 +899,7 @@ namespace owl {
 
     void Device::launch(int rgID, const vec2i &dims)
     {
+      context->pushActive();
       LOG("launching ...");
       assert("check valid launch dims" && dims.x > 0);
       assert("check valid launch dims" && dims.y > 0);
@@ -930,7 +931,7 @@ namespace owl {
         LOG("creating dummy launch params buffer ...");
         sbt.launchParamsBuffer.alloc(8);
       }
-      
+
       // launchParamsBuffer.upload((void *)device_launchParams);
       OPTIX_CALL(Launch(context->pipeline,
                         context->stream,
@@ -940,8 +941,8 @@ namespace owl {
                         dims.x,dims.y,1
                         ));
 
-      PING;
       cudaDeviceSynchronize();
+      context->popActive();
     }
     
     

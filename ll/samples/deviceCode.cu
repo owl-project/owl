@@ -30,8 +30,24 @@
 
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  printf("Hello OptiX From your First RayGen Program\n");
+  // RayGenData &rgData = *(RayGenData*)optix::getProgramDataPointer();
+  const RayGenData &rg = optix::getProgramData<RayGenData>();
+  const vec2i pixelID = optix::getLaunchIndex();
+  if (pixelID == optix::vec2i(0)) {
+    printf("%sHello OptiX From your First RayGen Program (on device %i/%i)%s\n",
+           GDT_TERMINAL_LIGHT_RED,
+           rg.deviceIndex,
+           rg.deviceCount,
+           GDT_TERMINAL_DEFAULT);
+  }
+  if (pixelID.x >= rg.fbSize.x) return;
+  if (pixelID.y >= rg.fbSize.y) return;
+  
+  const int fbOfs = pixelID.x+rg.fbSize.x*pixelID.y;
+  rg.fbPtr[fbOfs]
+    = (fbOfs%2)
+    ? rg.color1
+    : rg.color0;
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()

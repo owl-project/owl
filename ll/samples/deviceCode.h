@@ -18,6 +18,81 @@
 // the 'actual' optix
 #include <optix.h>
 
+// TODO: move this to common api
+namespace optix {
+  using namespace gdt;
+
+#ifdef __CUDA_ARCH__
+  // ==================================================================
+  // actual device-side "API" built-ins.
+  // ==================================================================
+
+  inline __device__ vec2i getLaunchIndex()
+  {
+    return (vec2i)optixGetLaunchIndex();
+  }
+
+  /*! return dimensions of a 2-dimensional optix launch. For 1- or
+    3-dimensional launches we'll need separate functions */
+  inline __device__ vec2i getLaunchDims()
+  {
+    return (vec2i)optixGetLaunchIndex();
+  }
+
+  /*! return pointer to currently running program's "SBT Data" (which
+      is pretty much what in owl we call the Program Data/Program
+      Variables Struct. This method returns an untyped pointer, for
+      automatic type conversion see the getProgramData<T> template */
+  inline __device__ const void *getProgramDataPointer()
+  {
+    return (const void*)optixGetSbtDataPointer();
+  }
+
+  /*! convenience type-tagged version of \see
+      getProgramDataPointer. Note this function does _not_ perform any
+      type-checks, it's just hard-casting the SBT pointer to the
+      expected type. */
+  template<typename T>
+  inline __device__ const T &getProgramData()
+  {
+    return *(const T*)getProgramDataPointer();
+  }
+
+
+  // ==================================================================
+  // general convenience/helper functions - may move to samples
+  // ==================================================================
+  inline __device__ float linear_to_srgb(float x) {
+    if (x <= 0.0031308f) {
+      return 12.92f * x;
+    }
+    return 1.055f * pow(x, 1.f/2.4f) - 0.055f;
+  }
+
+  inline __device__ uint32_t make_8bit(const float f)
+  {
+    return min(255,max(0,int(f*256.f)));
+  }
+
+  inline __device__ uint32_t make_rgba8(const vec3f color)
+  {
+    return
+      (make_8bit(color.x) << 0) +
+      (make_8bit(color.y) << 8) +
+      (make_8bit(color.z) << 16) +
+      (0xffU << 24);
+  }
+  inline __device__ uint32_t make_rgba8(const vec4f color)
+  {
+    return
+      (make_8bit(color.x) << 0) +
+      (make_8bit(color.y) << 8) +
+      (make_8bit(color.z) << 16) +
+      (make_8bit(color.w) << 24);
+  }
+#endif
+}
+
 using gdt::vec2i;
 using gdt::vec3f;
 using gdt::vec3i;
