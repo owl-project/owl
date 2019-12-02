@@ -104,7 +104,7 @@ namespace owl {
     PRINT(groups.size());
     assert(!groups.empty());
 
-    std::vector<int> sbtOffsetOfGroup(groups.size());
+    std::vector<size_t> sbtOffsetOfGroup(groups.size());
     size_t numHitGroupRecords = 0;
     size_t biggestVarStructSize = 0;
     for (int groupID=0;groupID<groups.size();groupID++) {

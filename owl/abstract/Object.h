@@ -21,13 +21,6 @@
 
 namespace owl {
 
-  template<size_t alignment>
-  inline size_t smallestMultipleOf(size_t unalignedSize)
-  {
-    const size_t numBlocks = (unalignedSize+alignment-1)/alignment;
-    return numBlocks*alignment;
-  }
-
   std::string typeToString(OWLDataType type);
 
   struct Context;

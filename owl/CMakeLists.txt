@@ -15,10 +15,31 @@
 # ======================================================================== #
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-add_library(owl
-  include/owl/owl.h
 
+add_library(owl-ll
+
+  ../submodules/gdt/gdt/gdt.h
+  ../submodules/gdt/gdt/math/vec.h
+
+  ../submodules/gdt/cmake/configure_optix.cmake
+  ../submodules/gdt/cmake/configure_cuda.cmake
+  ../submodules/gdt/cmake/configure_build_type.cmake
+
+  abstract/common.h
+
+  ll/Device.h
+  ll/Device.cpp
+  )
+target_link_libraries(owl-ll
+  ${CUDA_LIBRARIES}
+  ${CUDA_CUDA_LIBRARY}
+ # tbb
+  )
+
+add_library(owl
+
+  include/owl/owl.h
+  
   api/impl.cpp
   api/APIContext.h
   api/APIContext.cpp
@@ -35,11 +56,12 @@ add_library(owl
   abstract/RayGen.cpp
   abstract/Geometry.cpp
   abstract/Variable.cpp
-
-  ll/Device.cpp
   )
 
+include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+
 target_link_libraries(owl
+  owl-ll
   ${CUDA_LIBRARIES}
   ${CUDA_CUDA_LIBRARY}
  # tbb

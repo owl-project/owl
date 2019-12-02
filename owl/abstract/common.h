@@ -36,10 +36,18 @@
 
 namespace owl {
   using gdt::vec3f;
+
+  template<size_t alignment>
+  inline size_t smallestMultipleOf(size_t unalignedSize)
+  {
+    const size_t numBlocks = (unalignedSize+alignment-1)/alignment;
+    return numBlocks*alignment;
+  }
 }
 
 #define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
   
 #define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
+
 
 

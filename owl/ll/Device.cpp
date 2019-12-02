@@ -413,7 +413,7 @@ namespace owl {
                                       &pipelineCompileOptions,
                                       &pipelineLinkOptions,
                                       allPGs.data(),
-                                      allPGs.size(),
+		  (uint32_t)allPGs.size(),
                                       log,&sizeof_log,
                                       &pipeline
                                       ));
@@ -483,7 +483,7 @@ namespace owl {
       std::vector<Device *> devices;
       for (int i=0;i<numDevices;i++) {
         try {
-          Device *dev = new Device(devices.size(),deviceIDs[i]);
+          Device *dev = new Device((int)devices.size(),deviceIDs[i]);
           assert(dev);
           devices.push_back(dev);
         } catch (std::exception &e) {
@@ -675,13 +675,13 @@ namespace owl {
         d_indices  = (CUdeviceptr )tris->indexPointer;
         triangleInput.type                              = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
         triangleInput.triangleArray.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
-        triangleInput.triangleArray.vertexStrideInBytes = tris->vertexStride;
-        triangleInput.triangleArray.numVertices         = tris->vertexCount;
+        triangleInput.triangleArray.vertexStrideInBytes = (uint32_t)tris->vertexStride;
+        triangleInput.triangleArray.numVertices         = (uint32_t)tris->vertexCount;
         triangleInput.triangleArray.vertexBuffers       = &d_vertices;
       
         triangleInput.triangleArray.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-        triangleInput.triangleArray.indexStrideInBytes  = tris->indexStride;
-        triangleInput.triangleArray.numIndexTriplets    = tris->indexCount;
+        triangleInput.triangleArray.indexStrideInBytes  = (uint32_t)tris->indexStride;
+        triangleInput.triangleArray.numIndexTriplets    = (uint32_t)tris->indexCount;
         triangleInput.triangleArray.indexBuffer         = d_indices;
       
         // we always have exactly one SBT entry per shape (ie, triangle
@@ -710,7 +710,7 @@ namespace owl {
                   (context->optixContext,
                    &accelOptions,
                    triangleInputs.data(),
-                   triangleInputs.size(),
+                   (uint32_t)triangleInputs.size(),
                    &blasBufferSizes
                    ));
       
@@ -744,17 +744,17 @@ namespace owl {
                                   &accelOptions,
                                   // array of build inputs:
                                   triangleInputs.data(),
-                                  triangleInputs.size(),
+		  (uint32_t)triangleInputs.size(),
                                   // buffer of temp memory:
                                   (CUdeviceptr)tempBuffer.get(),
-                                  tempBuffer.size(),
+                                  (uint32_t)tempBuffer.size(),
                                   // where we store initial, uncomp bvh:
                                   (CUdeviceptr)outputBuffer.get(),
                                   outputBuffer.size(),
                                   /* the traversable we're building: */ 
                                   &traversable,
                                   /* we're also querying compacted size: */
-                                  &emitDesc,1
+                                  &emitDesc,1u
                                   ));
       CUDA_SYNC_CHECK();
       
@@ -792,10 +792,66 @@ namespace owl {
     
     void Device::sbtHitGroupsBuild(size_t maxHitGroupDataSize,
                                    WriteHitGroupCallBack writeHitGroupCallBack,
-                                   void *callBackData)
+                                   const void *callBackUserData)
     {
       LOG("building sbt hit groups");
-      LOG_OK("done building sbt hit groups");
+      context->pushActive();
+      // TODO: move this to explicit destroyhitgroups
+      if (sbt.hitGroupRecordsBuffer.valid())
+        sbt.hitGroupRecordsBuffer.free();
+
+      size_t numGeoms = geoms.size();
+      size_t numHitGroupRecords = numGeoms * context->numRayTypes;
+      size_t hitGroupRecordSize
+        = OPTIX_SBT_RECORD_HEADER_SIZE
+        + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitGroupDataSize);
+      assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
+      size_t totalHitGroupRecordsArraySize
+        = numHitGroupRecords * hitGroupRecordSize;
+      std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
+
+      // ------------------------------------------------------------------
+      // now, write all records (only on the host so far): we need to
+      // write one record per geometry, per ray type
+      // ------------------------------------------------------------------
+      for (int geomID=0;geomID<(int)geoms.size();geomID++)
+        for (int rayType=0;rayType<context->numRayTypes;rayType++) {
+          // ------------------------------------------------------------------
+          // compute pointer to entire record:
+          // ------------------------------------------------------------------
+          const int recordID = rayType + geomID*context->numRayTypes;
+          uint8_t *const sbtRecord
+            = hitGroupRecords.data() + recordID*hitGroupRecordSize;
+
+          // ------------------------------------------------------------------
+          // pack record header with the corresponding hit group:
+          // ------------------------------------------------------------------
+          // first, compute pointer to record:
+          char    *const sbtRecordHeader = (char *)sbtRecord;
+          // then, get gemetry we want to write (to find its hit group ID)...
+          const Geom *const geom = checkGetGeom(geomID);
+          // ... find the PG that goes into the record header...
+          const HitGroupPG &hgPG
+            = hitGroupPGs[rayType + geom->logicalHitGroupID*context->numRayTypes];
+          // ... and tell optix to write that into the record
+          OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
+          
+          // ------------------------------------------------------------------
+          // finally, let the user fill in the record's payload using
+          // the callback
+          // ------------------------------------------------------------------
+          uint8_t *const sbtRecordData
+            = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
+          writeHitGroupCallBack(sbtRecordData,
+                                context->owlDeviceID,
+                                geomID,
+                                rayType,
+                                callBackUserData);
+        }
+      sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
+      sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
+      context->popActive();
+      LOG_OK("done building (and uploading) sbt hit groups");
     }
       
   } // ::owl::ll

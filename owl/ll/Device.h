@@ -29,7 +29,7 @@ namespace owl {
       written into the SBT for a given geometry, ray type, and
       device */
     typedef void
-    WriteHitGroupCallBack(void *hitGroupToWrite,
+    WriteHitGroupCallBack(uint8_t *hitGroupToWrite,
                           /*! ID of the device we're
                             writing for (differnet
                             devices may need to write
@@ -45,7 +45,7 @@ namespace owl {
                           int rayType,
                           /*! the raw void pointer the app has passed
                               during sbtHitGroupsBuild() */
-                          void *callBackData);
+                          const void *callBackUserData);
     
     struct Context {
       
@@ -322,7 +322,7 @@ namespace owl {
           destroyed */
       void reallocGeoms(size_t newCount)
       {
-        for (int idxWeWouldLose=newCount;idxWeWouldLose<geoms.size();idxWeWouldLose++)
+        for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)geoms.size();idxWeWouldLose++)
           assert("realloc would lose a geom that was not properly destroyed" &&
                  geoms[idxWeWouldLose] == nullptr);
         geoms.resize(newCount);
@@ -357,7 +357,7 @@ namespace owl {
           destroyed */
       void reallocGroups(size_t newCount)
       {
-        for (int idxWeWouldLose=newCount;idxWeWouldLose<groups.size();idxWeWouldLose++)
+        for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
           assert("realloc would lose a geom that was not properly destroyed" &&
                  groups[idxWeWouldLose] == nullptr);
         groups.resize(newCount);
@@ -369,7 +369,7 @@ namespace owl {
           destroyed */
       void reallocBuffers(size_t newCount)
       {
-        for (int idxWeWouldLose=newCount;idxWeWouldLose<buffers.size();idxWeWouldLose++)
+        for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
           assert("realloc would lose a geom that was not properly destroyed" &&
                  buffers[idxWeWouldLose] == nullptr);
         buffers.resize(newCount);
@@ -488,7 +488,7 @@ namespace owl {
 
       void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
                              WriteHitGroupCallBack writeHitGroupCallBack,
-                             void *callBackData);
+                             const void *callBackUserData);
       
       Context                  *context;
       
@@ -573,7 +573,7 @@ namespace owl {
                                      types; the actual hit group
                                      used when building the SBT will
                                      then be 'logicalHitGroupID *
-                                     numRayTypes) */
+                                     rayTypeCount) */
                                    int logicalHitGroupID)
       {
         for (auto device : devices)
