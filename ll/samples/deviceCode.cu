@@ -15,6 +15,7 @@
 // ======================================================================== //
 
 #include "deviceCode.h"
+#include <optix_device.h>
 
 #define OPTIX_RAYGEN_PROGRAM(programName) \
   extern "C" __global__ \
@@ -42,6 +43,44 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   }
   if (pixelID.x >= rg.fbSize.x) return;
   if (pixelID.y >= rg.fbSize.y) return;
+
+// static __forceinline__ __device__ void optixTrace( OptixTraversableHandle handle,
+//                                                    float3                 rayOrigin,
+//                                                    float3                 rayDirection,
+//                                                    float                  tmin,
+//                                                    float                  tmax,
+//                                                    float                  rayTime,
+//                                                    OptixVisibilityMask    visibilityMask,
+//                                                    unsigned int           rayFlags,
+//                                                    unsigned int           SBToffset,
+//                                                    unsigned int           SBTstride,
+//                                                    unsigned int           missSBTIndex,
+//                                                    unsigned int&          p0,
+//                                                    unsigned int&          p1 );
+
+  const int numRayTypes = 1;
+  const int rayType = 0;
+
+  OptixTraversableHandle handle = rg.world;
+  float3                 rayOrigin = make_float3(0,0,0);
+    float3                 rayDirection = make_float3(0,1,0);
+    float                  tmin = 1e-3f;
+    float                  tmax = 1e+10f;
+    float                  rayTime = 0.f;
+    OptixVisibilityMask    visibilityMask = 0;
+    unsigned int           rayFlags = 0;
+    unsigned int           SBToffset = rayType;
+    unsigned int           SBTstride = numRayTypes;
+    unsigned int           missSBTIndex = rayType;
+    unsigned int&          p0,
+    unsigned int&          p1 );
+float3 org = make_float3(0,0,0);
+  float3 dir = make_float3(0,1,0);
+  const uint32_t prd0 = 0;
+  const uint32_t prd1 = 0;
+  optixTrace(rg.world,
+             org,dir,1e-3f,1e+10f,0.f,0x0,
+             rayType,numRayTypes,rayType,prd0,prd1);
   
   const int fbOfs = pixelID.x+rg.fbSize.x*pixelID.y;
   int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
@@ -51,12 +90,14 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
+  printf("hit!!!\n");
   // if (optix::getLaunchIndex() == optix::vec2i(0))
   //   printf("Hello OptiX From your First RayGen Program\n");
 }
 
 OPTIX_MISS_PROGRAM(defaultRayType)()
 {
+  printf("miss!!!\n");
   // if (optix::getLaunchIndex() == optix::vec2i(0))
   //   printf("Hello OptiX From your First RayGen Program\n");
 }
