@@ -124,6 +124,10 @@ int main(int ac, char **av)
                                   /* buffer ID */INDEX_BUFFER,
                                   /* meta info */NUM_INDICES,sizeof(vec3i),0);
 
+  // ##################################################################
+  // set up all *ACCELS* we need to trace into those groups
+  // ##################################################################
+
   enum { TRIANGLES_GROUP=0,NUM_GROUPS };
   ll->reallocGroups(NUM_GROUPS);
   int geomsInGroup[] = { 0 };
@@ -132,10 +136,10 @@ int main(int ac, char **av)
                                /* geoms in group, count   */ 1);
   ll->groupBuildAccel(TRIANGLES_GROUP);
 
+  // ##################################################################
+  // build *SBT* required to trace the groups
+  // ##################################################################
   LOG("building SBT ...");
-  // ------------------------------------------------------------------
-  // build SBT
-  // ------------------------------------------------------------------
 
   // ----------- build hitgroups -----------
   const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
@@ -174,8 +178,11 @@ int main(int ac, char **av)
                         rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
                         rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
                       });
-  
   LOG_OK("everything set up ...");
+
+  // ##################################################################
+  // and finally, launch everything ....
+  // ##################################################################
   LOG("trying to launch ...");
   ll->launch(0,fbSize);
   // todo: explicit sync?
