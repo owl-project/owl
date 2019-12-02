@@ -25,38 +25,56 @@ namespace owl {
       written into the SBT for a given geometry, ray type, and
       device */
     typedef void
-    WriteHitGroupCallBack(uint8_t *hitGroupToWrite,
-                          /*! ID of the device we're
-                            writing for (differnet
-                            devices may need to write
-                            different pointers */
-                          int deviceID,
-                          /*! the geometry ID for which
-                            we're generating the SBT
-                            entry for */
-                          int geomID,
-                          /*! the ray type for which
-                            we're generating the SBT
-                            entry for */
-                          int rayType,
-                          /*! the raw void pointer the app has passed
-                            during sbtHitGroupsBuild() */
-                          const void *callBackUserData);
+    WriteHitProgDataCB(uint8_t *hitProgDataToWrite,
+                       /*! ID of the device we're
+                         writing for (differnet
+                         devices may need to write
+                         different pointers */
+                       int deviceID,
+                       /*! the geometry ID for which
+                         we're generating the SBT
+                         entry for */
+                       int geomID,
+                       /*! the ray type for which
+                         we're generating the SBT
+                         entry for */
+                       int rayType,
+                       /*! the raw void pointer the app has passed
+                         during sbtHitGroupsBuild() */
+                       const void *callBackUserData);
     
     /*! callback with which the app can specify what data is to be
       written into the SBT for a given geometry, ray type, and
       device */
     typedef void
-    WriteRayGenCallBack(uint8_t *rayGenToWrite,
+    WriteRayGenDataCB(uint8_t *rayGenDataToWrite,
+                      /*! ID of the device we're
+                        writing for (differnet
+                        devices may need to write
+                        different pointers */
+                      int deviceID,
+                      /*! the geometry ID for which
+                        we're generating the SBT
+                        entry for */
+                      int rayGenID,
+                      /*! the raw void pointer the app has passed
+                        during sbtHitGroupsBuild() */
+                      const void *callBackUserData);
+    
+    /*! callback with which the app can specify what data is to be
+      written into the SBT for a given geometry, ray type, and
+      device */
+    typedef void
+    WriteMissProgDataCB(uint8_t *missProgDataToWrite,
                         /*! ID of the device we're
                           writing for (differnet
                           devices may need to write
                           different pointers */
                         int deviceID,
-                        /*! the geometry ID for which
+                        /*! the ray type for which
                           we're generating the SBT
                           entry for */
-                        int rayGenID,
+                        int rayType,
                         /*! the raw void pointer the app has passed
                           during sbtHitGroupsBuild() */
                         const void *callBackUserData);
@@ -76,12 +94,12 @@ namespace owl {
       void buildPrograms();
       
       void allocHitGroupPGs(size_t count);
-      void allocRayGenPGs(size_t count);
-      void allocMissPGs(size_t count);
+      void allocRayGens(size_t count);
+      void allocMissProgs(size_t count);
 
       void setHitGroupClosestHit(int pgID, int moduleID, const char *progName);
-      void setRayGenPG(int pgID, int moduleID, const char *progName);
-      void setMissPG(int pgID, int moduleID, const char *progName);
+      void setRayGen(int pgID, int moduleID, const char *progName);
+      void setMissProg(int pgID, int moduleID, const char *progName);
       
       /*! resize the array of geom IDs. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
@@ -127,11 +145,14 @@ namespace owl {
       OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
       
       void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
-                             WriteHitGroupCallBack writeHitGroupCallBack,
+                             WriteHitProgDataCB writeHitProgDataCB,
                              void *callBackData);
       void sbtRayGensBuild(size_t maxRayGenDataSize,
-                           WriteRayGenCallBack WriteRayGenCallBack,
+                           WriteRayGenDataCB WriteRayGenDataCB,
                            void *callBackData);
+      void sbtMissProgsBuild(size_t maxMissProgDataSize,
+                             WriteMissProgDataCB WriteMissProgDataCB,
+                             void *callBackData);
       template<typename Lambda>
       void sbtRayGensBuild(size_t maxRayGenDataSize,
                            const Lambda &l)
@@ -143,6 +164,18 @@ namespace owl {
                                 const Lambda *lambda = (const Lambda *)cbData;
                                 (*lambda)(output,devID,rgID,cbData);
                               },(void *)&l);
+      }
+      template<typename Lambda>
+      void sbtMissProgsBuild(size_t maxMissProgDataSize,
+                             const Lambda &l)
+      {
+        this->sbtMissProgsBuild(maxMissProgDataSize,
+                                [](uint8_t *output,
+                                   int devID, int rayType, 
+                                   const void *cbData) {
+                                  const Lambda *lambda = (const Lambda *)cbData;
+                                  (*lambda)(output,devID,rayType,cbData);
+                                },(void *)&l);
       }
 
 
@@ -158,7 +191,7 @@ namespace owl {
       static void destroy(DeviceGroup::SP &ll) { ll = nullptr; }
 
       /*! accessor helpers that first checks the validity of the given
-          device ID, then returns the given device */
+        device ID, then returns the given device */
       Device *checkGetDevice(int deviceID);
       
       const std::vector<Device *> devices;

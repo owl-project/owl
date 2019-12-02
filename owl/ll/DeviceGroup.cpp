@@ -17,12 +17,12 @@
 #include "ll/Device.h"
 #include "ll/DeviceGroup.h"
 
-#define LOG(message)                           \
+#define LOG(message)                            \
   std::cout << "#owl.ll: "                      \
   << message                                    \
   << std::endl
 
-#define LOG_OK(message)                                \
+#define LOG_OK(message)                                 \
   std::cout << GDT_TERMINAL_LIGHT_GREEN                 \
   << "#owl.ll: "                                        \
   << message << GDT_TERMINAL_DEFAULT << std::endl
@@ -73,20 +73,20 @@ namespace owl {
     void DeviceGroup::allocHitGroupPGs(size_t count)
     { for (auto device : devices) device->allocHitGroupPGs(count); }
     
-    void DeviceGroup::allocRayGenPGs(size_t count)
-    { for (auto device : devices) device->allocRayGenPGs(count); }
+    void DeviceGroup::allocRayGens(size_t count)
+    { for (auto device : devices) device->allocRayGens(count); }
     
-    void DeviceGroup::allocMissPGs(size_t count)
-    { for (auto device : devices) device->allocMissPGs(count); }
+    void DeviceGroup::allocMissProgs(size_t count)
+    { for (auto device : devices) device->allocMissProgs(count); }
 
     void DeviceGroup::setHitGroupClosestHit(int pgID, int moduleID, const char *progName)
     { for (auto device : devices) device->setHitGroupClosestHit(pgID,moduleID,progName); }
     
-    void DeviceGroup::setRayGenPG(int pgID, int moduleID, const char *progName)
-    { for (auto device : devices) device->setRayGenPG(pgID,moduleID,progName); }
+    void DeviceGroup::setRayGen(int pgID, int moduleID, const char *progName)
+    { for (auto device : devices) device->setRayGen(pgID,moduleID,progName); }
     
-    void DeviceGroup::setMissPG(int pgID, int moduleID, const char *progName)
-    { for (auto device : devices) device->setMissPG(pgID,moduleID,progName); }
+    void DeviceGroup::setMissProg(int pgID, int moduleID, const char *progName)
+    { for (auto device : devices) device->setMissProg(pgID,moduleID,progName); }
 
     /*! resize the array of geom IDs. this can be either a
       'grow' or a 'shrink', but 'shrink' is only allowed if all
@@ -185,23 +185,33 @@ namespace owl {
     }
 
     void DeviceGroup::sbtHitGroupsBuild(size_t maxHitGroupDataSize,
-                                        WriteHitGroupCallBack writeHitGroupCallBack,
+                                        WriteHitProgDataCB writeHitProgDataCB,
                                         void *callBackData)
     {
       for (auto device : devices) 
         device->sbtHitGroupsBuild(maxHitGroupDataSize,
-                                  writeHitGroupCallBack,
+                                  writeHitProgDataCB,
                                   callBackData);
     }
     
     void DeviceGroup::sbtRayGensBuild(size_t maxRayGenDataSize,
-                                        WriteRayGenCallBack writeRayGenCallBack,
-                                        void *callBackData)
+                                      WriteRayGenDataCB writeRayGenCB,
+                                      void *callBackData)
     {
       for (auto device : devices) 
         device->sbtRayGensBuild(maxRayGenDataSize,
-                                writeRayGenCallBack,
+                                writeRayGenCB,
                                 callBackData);
+    }
+    
+    void DeviceGroup::sbtMissProgsBuild(size_t maxMissProgDataSize,
+                                        WriteMissProgDataCB writeMissProgCB,
+                                        void *callBackData)
+    {
+      for (auto device : devices) 
+        device->sbtMissProgsBuild(maxMissProgDataSize,
+                                  writeMissProgCB,
+                                  callBackData);
     }
     
     /* create an instance of this object that has properly

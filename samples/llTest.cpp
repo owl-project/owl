@@ -107,15 +107,15 @@ int main(int ac, char **av)
                             /*module:*/0,
                             "TriangleMesh");
   
-  ll->allocRayGenPGs(1);
-  ll->setRayGenPG(/*program ID*/0,
-                  /*module:*/0,
-                  "simpleRayGen");
-  
-  ll->allocMissPGs(1);
-  ll->setMissPG(/*program ID*/0,
+  ll->allocRayGens(1);
+  ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
-                "defaultRayType");
+                "simpleRayGen");
+  
+  ll->allocMissProgs(1);
+  ll->setMissProg(/*program ID*/0,
+                  /*module:*/0,
+                  "defaultRayType");
   ll->buildPrograms();
   ll->createPipeline();
 
@@ -171,18 +171,6 @@ int main(int ac, char **av)
   // ----------- build raygens -----------
   const size_t maxRayGenDataSize = sizeof(RayGenData);
 
-#if 0
-  ll->sbtRayGensBuild(maxRayGenDataSize,
-                      [](uint8_t *output,
-                         int devID, int rgID, 
-                         const void *cbData) {
-                        RayGenData *rg = (RayGenData*)output;
-                        rg->color0 = vec3f(0,0,0);
-                        rg->color1 = vec3f(1,1,1);
-                        owl::ll::DeviceGroup *ll = (owl::ll::DeviceGroup *)cbData;
-                        rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
-                      },ll.get());
-#else
   ll->sbtRayGensBuild(maxRayGenDataSize,
                       [&](uint8_t *output,
                           int devID, int rgID, 
@@ -192,7 +180,16 @@ int main(int ac, char **av)
                         rg->color1 = vec3f(1,1,1);
                         rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
                       });
-#endif
+  
+  // ----------- build miss prog(s) -----------
+  const size_t maxMissProgDataSize = /* we don't have any: */0;
+
+  ll->sbtMissProgsBuild(maxMissProgDataSize,
+                        [&](uint8_t *output,
+                            int devID, int rayType, 
+                            const void *cbData) {
+                          /* we don't have any ... */
+                        });
   
 
   LOG("llTest - destroying devicegroup ...");
