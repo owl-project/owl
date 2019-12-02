@@ -49,7 +49,15 @@ struct TriangleGroupData
 {
   vec3f color;
 };
-  
+
+
+struct RayGenData
+{
+  vec3f color0;
+  vec3f color1;
+  OptixTraversableHandle world;
+};
+
 int main(int ac, char **av)
 {
   owl::ll::DeviceGroup::SP ll
@@ -128,9 +136,12 @@ int main(int ac, char **av)
   std::cout << "llTest - building SBT ..." << std::endl;
   std::cout << "#######################################################" << std::endl;
   std::cout << GDT_TERMINAL_DEFAULT;
+  
   // ------------------------------------------------------------------
   // build SBT
   // ------------------------------------------------------------------
+
+  // ----------- build hitgroups -----------
   const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
   ll->sbtHitGroupsBuild(maxHitGroupDataSize,
                         [](uint8_t *output,
@@ -138,6 +149,18 @@ int main(int ac, char **av)
                            const void *cbData) {
                           ((TriangleGroupData*)output)->color = vec3f(0,1,0);
                         },/*ignore*/nullptr);
+  
+  // ----------- build raygens -----------
+  const size_t maxRayGenDataSize = sizeof(RayGenData);
+  ll->sbtRayGensBuild(maxRayGenDataSize,
+                      [](uint8_t *output,
+                         int devID, int rgID, 
+                         const void *cbData) {
+                        RayGenData *rg = (RayGenData*)output;
+                        rg->color0 = vec3f(0,0,0);
+                        rg->color1 = vec3f(1,1,1);
+                        rg->world  = ll->groupGetTraversable(devID);
+                      },/*ignore*/nullptr);
   
   std::cout << GDT_TERMINAL_BLUE;
   std::cout << "#######################################################" << std::endl;
