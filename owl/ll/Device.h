@@ -18,33 +18,13 @@
 
 #include "ll/optix.h"
 #include "ll/DeviceMemory.h"
+// for the hit group callback type, which is part of the API
+#include "ll/DeviceGroup.h"
 
 namespace owl {
   namespace ll {
     struct ProgramGroups;
     struct Device;
-    
-    /*! callback with which the app can specify what data is to be
-      written into the SBT for a given geometry, ray type, and
-      device */
-    typedef void
-    WriteHitGroupCallBack(uint8_t *hitGroupToWrite,
-                          /*! ID of the device we're
-                            writing for (differnet
-                            devices may need to write
-                            differnet pointers */
-                          int deviceID,
-                          /*! the geometry ID for which
-                            we're generating the SBT
-                            entry for */
-                          int geomID,
-                          /*! the ray type for which
-                            we're generating the SBT
-                            entry for */
-                          int rayType,
-                          /*! the raw void pointer the app has passed
-                              during sbtHitGroupsBuild() */
-                          const void *callBackUserData);
     
     struct Context {
       
@@ -499,132 +479,6 @@ namespace owl {
       std::vector<Group *>      groups;
       std::vector<Buffer *>     buffers;
       SBT                       sbt;
-    };
-    
-    struct DeviceGroup {
-      typedef std::shared_ptr<DeviceGroup> SP;
-
-      DeviceGroup(const std::vector<Device *> &devices);
-      DeviceGroup()
-      {
-        std::cout << "#owl.ll: destroying devices" << std::endl;
-        for (auto device : devices) {
-          assert(device);
-          delete device;
-        }
-        std::cout << GDT_TERMINAL_GREEN
-                  << "#owl.ll: all devices properly destroyed"
-                  << GDT_TERMINAL_DEFAULT << std::endl;
-      }
-      
-      void allocModules(size_t count)
-      { for (auto device : devices) device->allocModules(count); }
-      void setModule(size_t slot, const char *ptxCode)
-      { for (auto device : devices) device->modules.set(slot,ptxCode); }
-      void buildModules()
-      {
-        for (auto device : devices)
-          device->buildModules();
-      }
-      void createPipeline();
-      void buildPrograms();
-      
-      void allocHitGroupPGs(size_t count)
-      { for (auto device : devices) device->allocHitGroupPGs(count); }
-      void allocRayGenPGs(size_t count)
-      { for (auto device : devices) device->allocRayGenPGs(count); }
-      void allocMissPGs(size_t count)
-      { for (auto device : devices) device->allocMissPGs(count); }
-
-      void setHitGroupClosestHit(int pgID, int moduleID, const char *progName)
-      { for (auto device : devices) device->setHitGroupClosestHit(pgID,moduleID,progName); }
-      void setRayGenPG(int pgID, int moduleID, const char *progName)
-      { for (auto device : devices) device->setRayGenPG(pgID,moduleID,progName); }
-      void setMissPG(int pgID, int moduleID, const char *progName)
-      { for (auto device : devices) device->setMissPG(pgID,moduleID,progName); }
-      
-      /*! resize the array of geom IDs. this can be either a
-        'grow' or a 'shrink', but 'shrink' is only allowed if all
-        geoms that would get 'lost' have alreay been
-        destroyed */
-      void reallocGroups(size_t newCount)
-      { for (auto device : devices) device->reallocGroups(newCount); }
-      
-      void reallocBuffers(size_t newCount)
-      { for (auto device : devices) device->reallocBuffers(newCount); }
-      
-      /*! resize the array of geom IDs. this can be either a
-        'grow' or a 'shrink', but 'shrink' is only allowed if all
-        geoms that would get 'lost' have alreay been
-        destroyed */
-      void reallocGeoms(size_t newCount)
-      { for (auto device : devices) device->reallocGeoms(newCount); }
-
-      void createTrianglesGeom(int geomID,
-                                   /*! the "logical" hit group ID:
-                                     will always count 0,1,2... evne
-                                     if we are using multiple ray
-                                     types; the actual hit group
-                                     used when building the SBT will
-                                     then be 'logicalHitGroupID *
-                                     rayTypeCount) */
-                                   int logicalHitGroupID)
-      {
-        for (auto device : devices)
-          device->createTrianglesGeom(geomID,logicalHitGroupID);
-      }
-      
-      void createTrianglesGeomGroup(int groupID,
-                                        int *geomIDs, int geomCount)
-      {
-        assert("check for valid combinations of child list" &&
-               ((geomIDs == nullptr && geomCount == 0) ||
-                (geomIDs != nullptr && geomCount >  0)));
-        
-        for (auto device : devices) {
-          device->createTrianglesGeomGroup(groupID,geomIDs,geomCount);
-        }
-      }
-
-      void createDeviceBuffer(int bufferID,
-                              size_t elementCount,
-                              size_t elementSize,
-                              const void *initData);
-      void trianglesGeomSetVertexBuffer(int geomID,
-                                        int bufferID,
-                                        int count,
-                                        int stride,
-                                        int offset);
-      void trianglesGeomSetIndexBuffer(int geomID,
-                                       int bufferID,
-                                       int count,
-                                       int stride,
-                                       int offset);
-      void groupBuildAccel(int groupID)
-      {
-        for (auto device : devices) 
-          device->groupBuildAccel(groupID);
-      }
-      
-      void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
-                             WriteHitGroupCallBack writeHitGroupCallBack,
-                             void *callBackData)
-      {
-        for (auto device : devices) 
-          device->sbtHitGroupsBuild(maxHitGroupDataSize,
-                                    writeHitGroupCallBack,
-                                    callBackData);
-      }
-
-      /* create an instance of this object that has properly
-         initialized devices for given cuda device IDs. Note this is
-         the only shared_ptr we use on that abstractoin level, but
-         here we use one to force a proper destruction of the
-         device */
-      static DeviceGroup::SP create(const int *deviceIDs  = nullptr,
-                                    size_t     numDevices = 0);
-
-      const std::vector<Device *> devices;
     };
     
   } // ::owl::ll

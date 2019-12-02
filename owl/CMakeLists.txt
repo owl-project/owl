@@ -29,6 +29,9 @@ add_library(owl-ll
 
   ll/Device.h
   ll/Device.cpp
+  
+  ll/DeviceGroup.h
+  ll/DeviceGroup.cpp
   )
 target_link_libraries(owl-ll
   ${CUDA_LIBRARIES}

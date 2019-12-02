@@ -37,16 +37,6 @@
   << "#owl.ll(" << owlDeviceID << "): "       \
   << message << GDT_TERMINAL_DEFAULT << std::endl
 
-#define GLOG(message)                                         \
-  std::cout << "#owl.ll: "                                    \
-  << message                                                  \
-  << std::endl
-
-#define GLOG_OK(message)                                \
-  std::cout << GDT_TERMINAL_GREEN                       \
-  << "#owl.ll: "                                        \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
-
 namespace owl {
   namespace ll {
     
@@ -188,20 +178,6 @@ namespace owl {
       }
     }
 
-
-    void DeviceGroup::buildPrograms()
-    {
-      for (auto device : devices)
-        device->buildPrograms();
-      GLOG_OK("device programs (re-)built");
-    }
-    
-    void DeviceGroup::createPipeline()
-    {
-      for (auto device : devices)
-        device->createPipeline();
-      GLOG_OK("optix pipeline created");
-    }
 
     void Modules::buildOptixHandles(Context *context)
     {
@@ -451,84 +427,6 @@ namespace owl {
 
 
     
-    /* create an instance of this object that has properly
-       initialized devices */
-    DeviceGroup::SP DeviceGroup::create(const int *deviceIDs,
-                                        size_t     numDevices)
-    {
-      assert((deviceIDs == nullptr && numDevices == 0)
-             ||
-             (deviceIDs != nullptr && numDevices > 0));
-
-      // ------------------------------------------------------------------
-      // init cuda, and error-out if no cuda devices exist
-      // ------------------------------------------------------------------
-      GLOG("initializing CUDA");
-      cudaFree(0);
-      
-      int totalNumDevices = 0;
-      cudaGetDeviceCount(&totalNumDevices);
-      if (totalNumDevices == 0)
-        throw std::runtime_error("#owl.ll: no CUDA capable devices found!");
-      std::cout << "#owl.ll: found " << totalNumDevices << " CUDA device(s)" << std::endl;
-
-      
-      // ------------------------------------------------------------------
-      // init optix itself
-      // ------------------------------------------------------------------
-      std::cout << "#owl.ll: initializing optix 7" << std::endl;
-      OPTIX_CHECK(optixInit());
-
-      // ------------------------------------------------------------------
-      // check if a device ID list was passed, and if not, create one
-      // ------------------------------------------------------------------
-      std::vector<int> allDeviceIDs;
-      if (deviceIDs == nullptr) {
-        for (int i=0;i<totalNumDevices;i++) allDeviceIDs.push_back(i);
-        numDevices = allDeviceIDs.size();
-        deviceIDs  = allDeviceIDs.data();
-      }
-      // from here on, we need a non-empty list of requested device IDs
-      assert(deviceIDs != nullptr && numDevices > 0);
-      
-      // ------------------------------------------------------------------
-      // create actual devices, ignoring those that failed to initialize
-      // ------------------------------------------------------------------
-      std::vector<Device *> devices;
-      for (int i=0;i<numDevices;i++) {
-        try {
-          Device *dev = new Device((int)devices.size(),deviceIDs[i]);
-          assert(dev);
-          devices.push_back(dev);
-        } catch (std::exception &e) {
-          std::cout << GDT_TERMINAL_RED
-                    << "#owl.ll: Error creating optix device on CUDA device #"
-                    << deviceIDs[i] << ": " << e.what() << " ... dropping this device"
-                    << GDT_TERMINAL_DEFAULT << std::endl;
-        }
-      }
-
-      // ------------------------------------------------------------------
-      // some final sanity check that we managed to create at least
-      // one device...
-      // ------------------------------------------------------------------
-      if (devices.empty())
-        throw std::runtime_error("fatal error - could not find/create any optix devices");
-      
-      return std::make_shared<DeviceGroup>(devices);
-    }
-
-    DeviceGroup::DeviceGroup(const std::vector<Device *> &devices)
-      : devices(devices)
-    {
-      assert(!devices.empty());
-      std::cout << GDT_TERMINAL_GREEN
-                << "#owl.ll: created device group with "
-                << devices.size() << " device(s)"
-                << GDT_TERMINAL_DEFAULT << std::endl;
-    }
-    
-
     void Device::createDeviceBuffer(int bufferID,
                                     size_t elementCount,
                                     size_t elementSize,
@@ -549,22 +447,6 @@ namespace owl {
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
       context->popActive();
-    }
-    
-    void DeviceGroup::createDeviceBuffer(int bufferID,
-                                         size_t elementCount,
-                                         size_t elementSize,
-                                         const void *initData)
-    {
-      for (auto device : devices) {
-        device->createDeviceBuffer(bufferID,elementCount,elementSize,initData);
-      }
-    }
-
-    inline void *addPointerOffset(void *ptr, size_t offset)
-    {
-      if (ptr == nullptr) return nullptr;
-      return (void*)((unsigned char *)ptr + offset);
     }
     
     void Device::trianglesGeomSetVertexBuffer(int geomID,
@@ -605,28 +487,6 @@ namespace owl {
       triangles->indexStride  = stride;
     }
     
-    void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
-                                                   int bufferID,
-                                                   int count,
-                                                   int stride,
-                                                   int offset)
-    {
-      for (auto device : devices) {
-        device->trianglesGeomSetVertexBuffer(geomID,bufferID,count,stride,offset);
-      }
-    }
-    
-    void DeviceGroup::trianglesGeomSetIndexBuffer(int geomID,
-                                                      int bufferID,
-                                                      int count,
-                                                      int stride,
-                                                      int offset)
-    {
-      for (auto device : devices) {
-        device->trianglesGeomSetIndexBuffer(geomID,bufferID,count,stride,offset);
-      }
-    }
-
     void Device::groupBuildAccel(int groupID)
     {
       Group *group = checkGetGroup(groupID);
