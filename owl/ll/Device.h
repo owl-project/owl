@@ -16,36 +16,15 @@
 
 #pragma once
 
-#include "abstract/common.h"
 #include "ll/optix.h"
 #include "ll/DeviceMemory.h"
+// for the hit group callback type, which is part of the API
+#include "ll/DeviceGroup.h"
 
 namespace owl {
   namespace ll {
     struct ProgramGroups;
     struct Device;
-    
-    /*! callback with which the app can specify what data is to be
-      written into the SBT for a given geometry, ray type, and
-      device */
-    typedef void
-    WriteHitGroupCallBack(uint8_t *hitGroupToWrite,
-                          /*! ID of the device we're
-                            writing for (differnet
-                            devices may need to write
-                            differnet pointers */
-                          int deviceID,
-                          /*! the geometry ID for which
-                            we're generating the SBT
-                            entry for */
-                          int geomID,
-                          /*! the ray type for which
-                            we're generating the SBT
-                            entry for */
-                          int rayType,
-                          /*! the raw void pointer the app has passed
-                              during sbtHitGroupsBuild() */
-                          const void *callBackUserData);
     
     struct Context {
       
@@ -126,7 +105,7 @@ namespace owl {
     struct RayGenPG : public ProgramGroup {
       Program program;
     };
-    struct MissPG : public ProgramGroup {
+    struct MissProgPG : public ProgramGroup {
       Program program;
     };
     struct HitGroupPG : public ProgramGroup {
@@ -137,13 +116,13 @@ namespace owl {
     // struct ProgramGroups {
     //   std::vector<HitGroupPG> hitGroupPGs;
     //   std::vector<RayGenPG> rayGenPGs;
-    //   std::vector<MissPG> missPGs;
+    //   std::vector<MissPG> missProgPGs;
     // };
 
     struct SBT {
       OptixShaderBindingTable sbt = {};
-      DeviceMemory raygenRecordsBuffer;
-      DeviceMemory missRecordsBuffer;
+      DeviceMemory rayGenRecordsBuffer;
+      DeviceMemory missProgRecordsBuffer;
       DeviceMemory hitGroupRecordsBuffer;
       DeviceMemory launchParamBuffer;
     };
@@ -170,11 +149,11 @@ namespace owl {
       const size_t elementCount;
       const size_t elementSize;
       /*! only for error checking - we do NOT do reference counting
-          ourselves, but will use this to track erorrs like destroying
-          a geom/group that is still being refrerenced by a
-          group. Note we wil *NOT* automatically free a buffer if
-          refcount reaches zero - this is ONLY for sanity checking
-          during object deletion */
+        ourselves, but will use this to track erorrs like destroying
+        a geom/group that is still being refrerenced by a
+        group. Note we wil *NOT* automatically free a buffer if
+        refcount reaches zero - this is ONLY for sanity checking
+        during object deletion */
       int numTimesReferenced = 0;
     };
     
@@ -185,11 +164,11 @@ namespace owl {
       virtual GeomType type() = 0;
       
       /*! only for error checking - we do NOT do reference counting
-          ourselves, but will use this to track erorrs like destroying
-          a geom/group that is still being refrerenced by a
-          group. Note we wil *NOT* automatically free a buffer if
-          refcount reaches zero - this is ONLY for sanity checking
-          during object deletion */
+        ourselves, but will use this to track erorrs like destroying
+        a geom/group that is still being refrerenced by a
+        group. Note we wil *NOT* automatically free a buffer if
+        refcount reaches zero - this is ONLY for sanity checking
+        during object deletion */
       int numTimesReferenced = 0;
       const int logicalHitGroupID;
     };
@@ -224,9 +203,9 @@ namespace owl {
       DeviceMemory           bvhMemory;
 
       /*! only for error checking - we do NOT do reference counting
-          ourselves, but will use this to track erorrs like destroying
-          a geom/group that is still being refrerenced by a
-          group. */
+        ourselves, but will use this to track erorrs like destroying
+        a geom/group that is still being refrerenced by a
+        group. */
       int numTimesReferenced = 0;
     };
     struct InstanceGroup : public Group {
@@ -269,7 +248,7 @@ namespace owl {
     struct Device {
 
       /*! construct a new owl device on given cuda device. throws an
-          exception if for any reason that cannot be done */
+        exception if for any reason that cannot be done */
       Device(int owlDeviceID, int cudaDeviceID);
       ~Device();
 
@@ -301,25 +280,26 @@ namespace owl {
       }
 
       void setHitGroupClosestHit(int pgID, int moduleID, const char *progName);
-      void setRayGenPG(int pgID, int moduleID, const char *progName);
-      void setMissPG(int pgID, int moduleID, const char *progName);
+      void setRayGen(int pgID, int moduleID, const char *progName);
+      void setMissProg(int pgID, int moduleID, const char *progName);
       
       void allocModules(size_t count)
       { modules.alloc(count); }
       /*! each geom will always use "numRayTypes" successive hit
-          groups (one per ray type), so this must be a multiple of the
-          number of ray types to be used */
+        groups (one per ray type), so this must be a multiple of the
+        number of ray types to be used */
       void allocHitGroupPGs(size_t count);
-      void allocRayGenPGs(size_t count);
+
+      void allocRayGens(size_t count);
       /*! each geom will always use "numRayTypes" successive hit
-          groups (one per ray type), so this must be a multiple of the
-          number of ray types to be used */
-      void allocMissPGs(size_t count);
+        groups (one per ray type), so this must be a multiple of the
+        number of ray types to be used */
+      void allocMissProgs(size_t count);
 
       /*! resize the array of geom IDs. this can be either a
-          'grow' or a 'shrink', but 'shrink' is only allowed if all
-          geoms that would get 'lost' have alreay been
-          destroyed */
+        'grow' or a 'shrink', but 'shrink' is only allowed if all
+        geoms that would get 'lost' have alreay been
+        destroyed */
       void reallocGeoms(size_t newCount)
       {
         for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)geoms.size();idxWeWouldLose++)
@@ -330,14 +310,14 @@ namespace owl {
 
 
       void createTrianglesGeom(int geomID,
-                                   /*! the "logical" hit group ID:
-                                       will always count 0,1,2... evne
-                                       if we are using multiple ray
-                                       types; the actual hit group
-                                       used when building the SBT will
-                                       then be 'logicalHitGroupID *
-                                       numRayTypes) */
-                                   int logicalHitGroupID)
+                               /*! the "logical" hit group ID:
+                                 will always count 0,1,2... evne
+                                 if we are using multiple ray
+                                 types; the actual hit group
+                                 used when building the SBT will
+                                 then be 'logicalHitGroupID *
+                                 numRayTypes) */
+                               int logicalHitGroupID)
       {
         assert("check ID is valid" && geomID >= 0);
         assert("check ID is valid" && geomID < geoms.size());
@@ -352,9 +332,9 @@ namespace owl {
       }
 
       /*! resize the array of geom IDs. this can be either a
-          'grow' or a 'shrink', but 'shrink' is only allowed if all
-          geoms that would get 'lost' have alreay been
-          destroyed */
+        'grow' or a 'shrink', but 'shrink' is only allowed if all
+        geoms that would get 'lost' have alreay been
+        destroyed */
       void reallocGroups(size_t newCount)
       {
         for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
@@ -364,9 +344,9 @@ namespace owl {
       }
 
       /*! resize the array of buffer handles. this can be either a
-          'grow' or a 'shrink', but 'shrink' is only allowed if all
-          buffer handles that would get 'lost' have alreay been
-          destroyed */
+        'grow' or a 'shrink', but 'shrink' is only allowed if all
+        buffer handles that would get 'lost' have alreay been
+        destroyed */
       void reallocBuffers(size_t newCount)
       {
         for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
@@ -376,8 +356,8 @@ namespace owl {
       }
       
       void createTrianglesGeomGroup(int groupID,
-                                        int *geomIDs,
-                                        int geomCount)
+                                    int *geomIDs,
+                                    int geomCount)
       {
         assert("check for valid ID" && groupID >= 0);
         assert("check for valid ID" && groupID < groups.size());
@@ -414,10 +394,10 @@ namespace owl {
                                         int stride,
                                         int offset);
       void trianglesGeomSetIndexBuffer(int geomID,
-                                           int bufferID,
-                                           int count,
-                                           int stride,
-                                           int offset);
+                                       int bufferID,
+                                       int count,
+                                       int stride,
+                                       int offset);
       
       void destroyGeom(size_t ID)
       {
@@ -429,8 +409,8 @@ namespace owl {
       }
 
       /*! for each valid program group, use optix to compile/build the
-          acutal program to an optix-usable form (ie, this builds the
-          OptixProgramGroup object for each PG) */
+        acutal program to an optix-usable form (ie, this builds the
+        OptixProgramGroup object for each PG) */
       void buildOptixPrograms();
 
       /*! destroys all currently active OptixProgramGroup group
@@ -445,7 +425,12 @@ namespace owl {
       // group related struff
       // ------------------------------------------------------------------
       void groupBuildAccel(int groupID);
-
+      
+      /*! return given group's current traversable. note this function
+        will *not* check if the group has alreadybeen built, if it
+        has to be rebuilt, etc. */
+      OptixTraversableHandle groupGetTraversable(int groupID);
+      
       // accessor helpers:
       Geom *checkGetGeom(int geomID)
       {
@@ -486,151 +471,28 @@ namespace owl {
         return asTriangles;
       }
 
-      void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
-                             WriteHitGroupCallBack writeHitGroupCallBack,
+      void sbtHitGroupsBuild(size_t maxHitProgDataSize,
+                             WriteHitProgDataCB writeHitProgDataCB,
                              const void *callBackUserData);
+      void sbtRayGensBuild(size_t maxRayGenDataSize,
+                           WriteRayGenDataCB writeRayGenDataCB,
+                           const void *callBackUserData);
+      void sbtMissProgsBuild(size_t maxMissProgDataSize,
+                             WriteMissProgDataCB writeMissProgDataCB,
+                             const void *callBackUserData);
+
+      void launch(int rgID, const vec2i &dims);
       
       Context                  *context;
       
       Modules                   modules;
       std::vector<HitGroupPG>   hitGroupPGs;
       std::vector<RayGenPG>     rayGenPGs;
-      std::vector<MissPG>       missPGs;
-      std::vector<Geom *>   geoms;
+      std::vector<MissProgPG>   missProgPGs;
+      std::vector<Geom *>       geoms;
       std::vector<Group *>      groups;
       std::vector<Buffer *>     buffers;
       SBT                       sbt;
-    };
-    
-    struct DeviceGroup {
-      typedef std::shared_ptr<DeviceGroup> SP;
-
-      DeviceGroup(const std::vector<Device *> &devices);
-      DeviceGroup()
-      {
-        std::cout << "#owl.ll: destroying devices" << std::endl;
-        for (auto device : devices) {
-          assert(device);
-          delete device;
-        }
-        std::cout << GDT_TERMINAL_GREEN
-                  << "#owl.ll: all devices properly destroyed"
-                  << GDT_TERMINAL_DEFAULT << std::endl;
-      }
-      
-      void allocModules(size_t count)
-      { for (auto device : devices) device->allocModules(count); }
-      void setModule(size_t slot, const char *ptxCode)
-      { for (auto device : devices) device->modules.set(slot,ptxCode); }
-      void buildModules()
-      {
-        for (auto device : devices)
-          device->buildModules();
-      }
-      void buildPrograms()
-      {
-        for (auto device : devices)
-          device->buildPrograms();
-      }
-      void createPipeline()
-      { for (auto device : devices) device->createPipeline(); }
-      
-      void allocHitGroupPGs(size_t count)
-      { for (auto device : devices) device->allocHitGroupPGs(count); }
-      void allocRayGenPGs(size_t count)
-      { for (auto device : devices) device->allocRayGenPGs(count); }
-      void allocMissPGs(size_t count)
-      { for (auto device : devices) device->allocMissPGs(count); }
-
-      void setHitGroupClosestHit(int pgID, int moduleID, const char *progName)
-      { for (auto device : devices) device->setHitGroupClosestHit(pgID,moduleID,progName); }
-      void setRayGenPG(int pgID, int moduleID, const char *progName)
-      { for (auto device : devices) device->setRayGenPG(pgID,moduleID,progName); }
-      void setMissPG(int pgID, int moduleID, const char *progName)
-      { for (auto device : devices) device->setMissPG(pgID,moduleID,progName); }
-      
-      /*! resize the array of geom IDs. this can be either a
-        'grow' or a 'shrink', but 'shrink' is only allowed if all
-        geoms that would get 'lost' have alreay been
-        destroyed */
-      void reallocGroups(size_t newCount)
-      { for (auto device : devices) device->reallocGroups(newCount); }
-      
-      void reallocBuffers(size_t newCount)
-      { for (auto device : devices) device->reallocBuffers(newCount); }
-      
-      /*! resize the array of geom IDs. this can be either a
-        'grow' or a 'shrink', but 'shrink' is only allowed if all
-        geoms that would get 'lost' have alreay been
-        destroyed */
-      void reallocGeoms(size_t newCount)
-      { for (auto device : devices) device->reallocGeoms(newCount); }
-
-      void createTrianglesGeom(int geomID,
-                                   /*! the "logical" hit group ID:
-                                     will always count 0,1,2... evne
-                                     if we are using multiple ray
-                                     types; the actual hit group
-                                     used when building the SBT will
-                                     then be 'logicalHitGroupID *
-                                     rayTypeCount) */
-                                   int logicalHitGroupID)
-      {
-        for (auto device : devices)
-          device->createTrianglesGeom(geomID,logicalHitGroupID);
-      }
-      
-      void createTrianglesGeomGroup(int groupID,
-                                        int *geomIDs, int geomCount)
-      {
-        assert("check for valid combinations of child list" &&
-               ((geomIDs == nullptr && geomCount == 0) ||
-                (geomIDs != nullptr && geomCount >  0)));
-        
-        for (auto device : devices) {
-          device->createTrianglesGeomGroup(groupID,geomIDs,geomCount);
-        }
-      }
-
-      void createDeviceBuffer(int bufferID,
-                              size_t elementCount,
-                              size_t elementSize,
-                              const void *initData);
-      void trianglesGeomSetVertexBuffer(int geomID,
-                                        int bufferID,
-                                        int count,
-                                        int stride,
-                                        int offset);
-      void trianglesGeomSetIndexBuffer(int geomID,
-                                       int bufferID,
-                                       int count,
-                                       int stride,
-                                       int offset);
-      void groupBuildAccel(int groupID)
-      {
-        for (auto device : devices) 
-          device->groupBuildAccel(groupID);
-      }
-      
-      void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
-                             WriteHitGroupCallBack writeHitGroupCallBack,
-                             void *callBackData)
-      {
-        for (auto device : devices) 
-          device->sbtHitGroupsBuild(maxHitGroupDataSize,
-                                    writeHitGroupCallBack,
-                                    callBackData);
-      }
-
-      /* create an instance of this object that has properly
-         initialized devices for given cuda device IDs. Note this is
-         the only shared_ptr we use on that abstractoin level, but
-         here we use one to force a proper destruction of the
-         device */
-      static DeviceGroup::SP create(const int *deviceIDs  = nullptr,
-                                    size_t     numDevices = 0);
-
-      const std::vector<Device *> devices;
     };
     
   } // ::owl::ll

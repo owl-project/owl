@@ -14,10 +14,16 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "../owl/ll/Device.h"
+#include "../owl/ll/DeviceGroup.h"
 
+using gdt::vec2i;
 using gdt::vec3f;
 using gdt::vec3i;
+
+#define LOG(message)                                    \
+  std::cout << GDT_TERMINAL_BLUE;                       \
+  std::cout << "----------- " << message << std::endl;  \
+  std::cout << GDT_TERMINAL_DEFAULT;
 
 extern "C" char ptxCode[];
 
@@ -49,11 +55,31 @@ struct TriangleGroupData
 {
   vec3f color;
 };
-  
+
+struct RayGenData
+{
+  vec3f color0;
+  vec3f color1;
+  OptixTraversableHandle world;
+};
+
+struct MissProgData
+{
+};
+
 int main(int ac, char **av)
 {
+  std::cout << GDT_TERMINAL_BLUE;
+  std::cout << "###########################################################" << std::endl;
+  std::cout << "llTest: mini-app for testing low-level optix wrapper api..." << std::endl;
+  std::cout << "###########################################################" << std::endl;
+  std::cout << GDT_TERMINAL_DEFAULT;
+
   owl::ll::DeviceGroup::SP ll
     = owl::ll::DeviceGroup::create();
+
+  LOG("llTest - building pipeline ...");
+  std::cout << GDT_TERMINAL_DEFAULT;
 
   // ##################################################################
   // set up all the *CODE* we want to run
@@ -67,18 +93,19 @@ int main(int ac, char **av)
                             /*module:*/0,
                             "TriangleMesh");
   
-  ll->allocRayGenPGs(1);
-  ll->setRayGenPG(/*program ID*/0,
-                  /*module:*/0,
-                  "simpleRayGen");
-  
-  ll->allocMissPGs(1);
-  ll->setMissPG(/*program ID*/0,
+  ll->allocRayGens(1);
+  ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
-                "defaultRayType");
+                "simpleRayGen");
+  
+  ll->allocMissProgs(1);
+  ll->setMissProg(/*program ID*/0,
+                  /*module:*/0,
+                  "defaultRayType");
   ll->buildPrograms();
   ll->createPipeline();
 
+  LOG("llTest - building geometries ...");
 
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
@@ -97,35 +124,66 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   ll->reallocGeoms(1);
   ll->createTrianglesGeom(/* geom ID    */0,
-                              /* type/PG ID */0);
+                          /* type/PG ID */0);
   ll->trianglesGeomSetVertexBuffer(/* geom ID     */ 0,
                                    /* buffer ID */VERTEX_BUFFER,
                                    /* meta info */NUM_VERTICES,sizeof(vec3f),0);
   ll->trianglesGeomSetIndexBuffer(/* geom ID     */ 0,
                                   /* buffer ID */INDEX_BUFFER,
                                   /* meta info */NUM_INDICES,sizeof(vec3i),0);
-  
-  ll->reallocGroups(1);
+
+  enum { TRIANGLES_GROUP=0,NUM_GROUPS };
+  ll->reallocGroups(NUM_GROUPS);
   int geomsInGroup[] = { 0 };
-  ll->createTrianglesGeomGroup(/* group ID */0,
-                                   /* geoms in group, pointer */ geomsInGroup,
-                                   /* geoms in group, count   */ 1);
-  ll->groupBuildAccel(0);
-  
+  ll->createTrianglesGeomGroup(/* group ID */TRIANGLES_GROUP,
+                               /* geoms in group, pointer */ geomsInGroup,
+                               /* geoms in group, count   */ 1);
+  ll->groupBuildAccel(TRIANGLES_GROUP);
+
+  LOG("llTest - building SBT ...");
   // ------------------------------------------------------------------
   // build SBT
   // ------------------------------------------------------------------
+
+  // ----------- build hitgroups -----------
   const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
   ll->sbtHitGroupsBuild(maxHitGroupDataSize,
-                        [](uint8_t *output,
-                           int devID, int geomID, int rayID,
-                           const void *cbData) {
+                        [&](uint8_t *output,
+                            int devID,
+                            int geomID,
+                            int rayID,
+                            const void *cbData) {
                           ((TriangleGroupData*)output)->color = vec3f(0,1,0);
-                        },/*ignore*/nullptr);
+                        });
   
-  std::cout << GDT_TERMINAL_BLUE;
-  std::cout << "#######################################################" << std::endl;
-  std::cout << "actual ll-work here ..." << std::endl;
-  std::cout << "#######################################################" << std::endl;
-  std::cout << GDT_TERMINAL_DEFAULT;
+  // ----------- build raygens -----------
+  const size_t maxRayGenDataSize = sizeof(RayGenData);
+  ll->sbtRayGensBuild(maxRayGenDataSize,
+                      [&](uint8_t *output,
+                          int devID,
+                          int rgID, 
+                          const void *cbData) {
+                        RayGenData *rg = (RayGenData*)output;
+                        rg->color0 = vec3f(0,0,0);
+                        rg->color1 = vec3f(1,1,1);
+                        rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+                      });
+  
+  // ----------- build miss prog(s) -----------
+  const size_t maxMissProgDataSize = sizeof(MissProgData);
+  ll->sbtMissProgsBuild(maxMissProgDataSize,
+                        [&](uint8_t *output,
+                            int devID,
+                            int rayType, 
+                            const void *cbData) {
+                          /* we don't have any ... */
+                        });
+  
+  LOG("llTest - everything set up ... trying to launch ...");
+  ll->launch(0,vec2i(10,10));
+  
+  LOG("llTest - destroying devicegroup ...");
+  owl::ll::DeviceGroup::destroy(ll);
+  
+  LOG("llTest - app is done ...");
 }

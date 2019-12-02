@@ -43,6 +43,13 @@ namespace owl {
     const size_t numBlocks = (unalignedSize+alignment-1)/alignment;
     return numBlocks*alignment;
   }
+  
+  inline void *addPointerOffset(void *ptr, size_t offset)
+  {
+    if (ptr == nullptr) return nullptr;
+    return (void*)((unsigned char *)ptr + offset);
+  }
+    
 }
 
 #define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
