@@ -34,7 +34,7 @@
 
 #define CLOG_OK(message)                                 \
   std::cout << GDT_TERMINAL_GREEN                       \
-  << "#owl.ll(" << owlDeviceID << "): "       \
+  << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << GDT_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
@@ -100,13 +100,15 @@ namespace owl {
       destroyPipeline();
       
       modules.destroyOptixHandles(context);
-      const int deviceID = context->owlDeviceID;
+      const int owlDeviceID = context->owlDeviceID;
 
-      std::cout << "#owl.ll(" << deviceID << ") : deleting context" << std::endl;
+      LOG("deleting context");
       delete context;
       context = nullptr;
 
-      LOG_OK("successfully destroyed owl device ...");
+      // iw - use CLOG here - regular LOG() will try to access
+      // context, which by now is no longer available
+      CLOG_OK("successfully destroyed owl device ...");
     }
 
     void Context::destroyPipeline()
