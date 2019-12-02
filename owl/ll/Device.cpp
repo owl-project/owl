@@ -809,22 +809,27 @@ namespace owl {
       size_t totalHitGroupRecordsArraySize
         = numHitGroupRecords * hitGroupRecordSize;
       std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
+
+      // ------------------------------------------------------------------
+      // now, write all records (only on the host so far): we need to
+      // write one record per geometry, per ray type
+      // ------------------------------------------------------------------
       for (int geomID=0;geomID<(int)geoms.size();geomID++)
         for (int rayType=0;rayType<context->numRayTypes;rayType++) {
-          int recordID = rayType + geomID*context->numRayTypes;
           // ------------------------------------------------------------------
           // compute pointer to entire record:
           // ------------------------------------------------------------------
-          uint8_t *sbtRecord
+          const int recordID = rayType + geomID*context->numRayTypes;
+          uint8_t *const sbtRecord
             = hitGroupRecords.data() + recordID*hitGroupRecordSize;
 
           // ------------------------------------------------------------------
           // pack record header with the corresponding hit group:
           // ------------------------------------------------------------------
           // first, compute pointer to record:
-          char    *sbtRecordHeader = (char *)sbtRecord;
+          char    *const sbtRecordHeader = (char *)sbtRecord;
           // then, get gemetry we want to write (to find its hit group ID)...
-          const Geom *geom = checkGetGeom(geomID);
+          const Geom *const geom = checkGetGeom(geomID);
           // ... find the PG that goes into the record header...
           const HitGroupPG &hgPG
             = hitGroupPGs[rayType + geom->logicalHitGroupID*context->numRayTypes];
@@ -835,10 +840,8 @@ namespace owl {
           // finally, let the user fill in the record's payload using
           // the callback
           // ------------------------------------------------------------------
-          uint8_t *sbtRecordData
+          uint8_t *const sbtRecordData
             = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
-
-          
           writeHitGroupCallBack(sbtRecordData,
                                 context->owlDeviceID,
                                 geomID,
