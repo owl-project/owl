@@ -15,10 +15,7 @@
 // ======================================================================== //
 
 #include "ll/DeviceGroup.h"
-
-using gdt::vec2i;
-using gdt::vec3f;
-using gdt::vec3i;
+#include "deviceCode.h"
 
 #define LOG(message)                                    \
   std::cout << GDT_TERMINAL_BLUE;                       \
@@ -51,21 +48,8 @@ vec3i indices[NUM_INDICES] =
    { 4,0,2 }, { 4,2,6 }
   };
 
-struct TriangleGroupData
-{
-  vec3f color;
-};
-
-struct RayGenData
-{
-  vec3f color0;
-  vec3f color1;
-  OptixTraversableHandle world;
-};
-
-struct MissProgData
-{
-};
+const char *outFileName = "llTest.png";
+const vec2i fbSize(800,600);
 
 int main(int ac, char **av)
 {
@@ -114,10 +98,11 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // alloc buffers
   // ------------------------------------------------------------------
-  enum { VERTEX_BUFFER=0,INDEX_BUFFER,NUM_BUFFERS };
+  enum { VERTEX_BUFFER=0,INDEX_BUFFER,FRAME_BUFFER,NUM_BUFFERS };
   ll->reallocBuffers(NUM_BUFFERS);
   ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
   ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
+  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(vec3f));
   
   // ------------------------------------------------------------------
   // alloc geom
@@ -156,19 +141,6 @@ int main(int ac, char **av)
                           ((TriangleGroupData*)output)->color = vec3f(0,1,0);
                         });
   
-  // ----------- build raygens -----------
-  const size_t maxRayGenDataSize = sizeof(RayGenData);
-  ll->sbtRayGensBuild(maxRayGenDataSize,
-                      [&](uint8_t *output,
-                          int devID,
-                          int rgID, 
-                          const void *cbData) {
-                        RayGenData *rg = (RayGenData*)output;
-                        rg->color0 = vec3f(0,0,0);
-                        rg->color1 = vec3f(1,1,1);
-                        rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
-                      });
-  
   // ----------- build miss prog(s) -----------
   const size_t maxMissProgDataSize = sizeof(MissProgData);
   ll->sbtMissProgsBuild(maxMissProgDataSize,
@@ -179,8 +151,25 @@ int main(int ac, char **av)
                           /* we don't have any ... */
                         });
   
+  // ----------- build raygens -----------
+  const size_t maxRayGenDataSize = sizeof(RayGenData);
+  ll->sbtRayGensBuild(maxRayGenDataSize,
+                      [&](uint8_t *output,
+                          int devID,
+                          int rgID, 
+                          const void *cbData) {
+                        RayGenData *rg = (RayGenData*)output;
+                        rg->deviceIndex   = devID;
+                        rg->deviceCount = ll->getDeviceCount();
+                        rg->color0 = vec3f(0,0,0);
+                        rg->color1 = vec3f(1,1,1);
+                        rg->fbSize = fbSize;
+                        rg->fbPtr  = (vec3f*)ll->bufferGetPointer(FRAME_BUFFER,devID);
+                        rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+                      });
+  
   LOG("llTest - everything set up ... trying to launch ...");
-  ll->launch(0,vec2i(10,10));
+  ll->launch(0,fbSize);
   
   LOG("llTest - destroying devicegroup ...");
   owl::ll::DeviceGroup::destroy(ll);

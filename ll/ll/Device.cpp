@@ -442,14 +442,29 @@ namespace owl {
       assert("check valid buffer ID" && bufferID <  buffers.size());
       assert("check buffer ID available" && buffers[bufferID] == nullptr);
       context->pushActive();
-      Buffer *buffer = new Buffer(elementCount,elementSize);
+      DeviceBuffer *buffer = new DeviceBuffer(elementCount,elementSize);
       if (initData) {
-        buffer->upload(initData,"createDeviceBuffer: uploading initData");
+        buffer->devMem.upload(initData,"createDeviceBuffer: uploading initData");
         LOG("uploading " << elementCount
             << " items of size " << elementSize
             << " from host ptr " << initData
-            << " to device ptr " << buffer->get());
+            << " to device ptr " << buffer->devMem.get());
       }
+      assert("check buffer properly created" && buffer != nullptr);
+      buffers[bufferID] = buffer;
+      context->popActive();
+    }
+    
+    void Device::createHostPinnedBuffer(int bufferID,
+                                        size_t elementCount,
+                                        size_t elementSize,
+                                        HostPinnedMemory::SP pinnedMem)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID <  buffers.size());
+      assert("check buffer ID available" && buffers[bufferID] == nullptr);
+      context->pushActive();
+      Buffer *buffer = new HostPinnedBuffer(elementCount,elementSize,pinnedMem);
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
       context->popActive();
@@ -473,6 +488,14 @@ namespace owl {
       triangles->vertexStride  = stride;
       triangles->vertexCount   = count;
     }
+
+    /*! returns the given buffers device pointer */
+    void *Device::bufferGetPointer(int bufferID)
+    {
+      return (void*)checkGetBuffer(bufferID)->d_pointer;
+    }
+      
+    
     
     void Device::trianglesGeomSetIndexBuffer(int geomID,
                                              int bufferID,

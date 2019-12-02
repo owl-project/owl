@@ -22,6 +22,14 @@ namespace owl {
   namespace ll {
 
     using gdt::vec2i;
+
+    struct HostPinnedMemory
+    {
+      typedef std::shared_ptr<HostPinnedMemory> SP;
+      HostPinnedMemory(size_t amount);
+      ~HostPinnedMemory();
+      void *pointer;
+    };
     
     /*! callback with which the app can specify what data is to be
       written into the SBT for a given geometry, ray type, and
@@ -133,6 +141,14 @@ namespace owl {
                               size_t elementCount,
                               size_t elementSize,
                               const void *initData);
+      void createHostPinnedBuffer(int bufferID,
+                                  size_t elementCount,
+                                  size_t elementSize);
+      
+      /*! returns the given device's buffer address on the specified
+          device */
+      void *bufferGetPointer(int bufferID, int devID);
+      
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int bufferID,
                                         int count,
@@ -196,7 +212,7 @@ namespace owl {
                                 },(void *)&l);
       }
 
-
+      size_t getDeviceCount() const { return devices.size(); }
       void launch(int rgID, const vec2i &dims);
 
       

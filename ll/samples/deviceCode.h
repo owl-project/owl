@@ -14,35 +14,31 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "deviceCode.h"
+#include "gdt/math/vec.h"
+// the 'actual' optix
+#include <optix.h>
 
-#define OPTIX_RAYGEN_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __raygen__##programName
+using gdt::vec2i;
+using gdt::vec3f;
+using gdt::vec3i;
 
-#define OPTIX_CLOSEST_HIT_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __closesthit__##programName
-
-#define OPTIX_MISS_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __miss__##programName
-
-OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
+struct TriangleGroupData
 {
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  printf("Hello OptiX From your First RayGen Program\n");
-}
+  vec3f color;
+};
 
-OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
+struct RayGenData
 {
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
-}
+  int deviceIndex;
+  int deviceCount;
+  vec3f *fbPtr;
+  vec2i  fbSize;
+  vec3f  color0;
+  vec3f  color1;
+  OptixTraversableHandle world;
+};
 
-OPTIX_MISS_PROGRAM(defaultRayType)()
+struct MissProgData
 {
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
-}
+};
 

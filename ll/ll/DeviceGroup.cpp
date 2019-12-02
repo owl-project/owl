@@ -29,6 +29,19 @@
 
 namespace owl {
   namespace ll {
+
+    HostPinnedMemory::HostPinnedMemory(size_t amount)
+    {
+      CUDA_CALL(MallocHost((void**)&pointer, amount));
+      assert(pointer != nullptr);
+    }
+    
+    HostPinnedMemory::~HostPinnedMemory()
+    {
+      assert(pointer != nullptr);
+      CUDA_CALL(FreeHost(pointer));
+      pointer = nullptr;
+    }
     
     DeviceGroup::DeviceGroup(const std::vector<Device *> &devices)
       : devices(devices)
@@ -151,6 +164,17 @@ namespace owl {
       }
     }
 
+    void DeviceGroup::createHostPinnedBuffer(int bufferID,
+                                             size_t elementCount,
+                                             size_t elementSize)
+    {
+      HostPinnedMemory::SP pinned
+        = std::make_shared<HostPinnedMemory>(elementCount*elementSize);
+      for (auto device : devices) {
+        device->createHostPinnedBuffer(bufferID,elementCount,elementSize,pinned);
+      }
+    }
+
     void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
                                                    int bufferID,
                                                    int count,
@@ -214,6 +238,13 @@ namespace owl {
                                   callBackData);
     }
 
+      /*! returns the given device's buffer address on the specified
+          device */
+    void *DeviceGroup::bufferGetPointer(int bufferID, int devID)
+    {
+      return checkGetDevice(devID)->bufferGetPointer(bufferID);
+    }
+      
     void DeviceGroup::launch(int rgID, const vec2i &dims)
     {
       for (auto device : devices) device->launch(rgID,dims);

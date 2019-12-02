@@ -147,17 +147,22 @@ namespace owl {
     //   void  *d_pointer = 0;
     // };
 
-    struct Buffer : public DeviceMemory {
+    struct Buffer {
       Buffer(const size_t elementCount,
              const size_t elementSize)
         : elementCount(elementCount),
           elementSize(elementSize)
       {
         assert(elementSize > 0);
-        alloc(elementCount*elementSize);
       }
+      virtual ~Buffer()
+      {
+        assert(numTimesReferenced == 0);
+      }
+      inline void *get() const { return d_pointer; }
       const size_t elementCount;
       const size_t elementSize;
+      void        *d_pointer = nullptr;
       /*! only for error checking - we do NOT do reference counting
         ourselves, but will use this to track erorrs like destroying
         a geom/group that is still being refrerenced by a
@@ -166,7 +171,36 @@ namespace owl {
         during object deletion */
       int numTimesReferenced = 0;
     };
+
+    struct DeviceBuffer : public Buffer
+    {
+      DeviceBuffer(const size_t elementCount,
+                   const size_t elementSize)
+        : Buffer(elementCount, elementSize)
+      {
+        devMem.alloc(elementCount*elementSize);
+        d_pointer = devMem.get();
+      }
+      ~DeviceBuffer()
+      {
+        devMem.free();
+      }
+      DeviceMemory devMem;
+    };
     
+    struct HostPinnedBuffer : public Buffer
+    {
+      HostPinnedBuffer(const size_t elementCount,
+                       const size_t elementSize,
+                       HostPinnedMemory::SP pinnedMem)
+        : Buffer(elementCount, elementSize),
+          pinnedMem(pinnedMem)
+      {
+        d_pointer = pinnedMem->pointer;
+      }
+      HostPinnedMemory::SP pinnedMem;
+    };
+      
     struct Geom {
       Geom(int logicalHitGroupID)
         : logicalHitGroupID(logicalHitGroupID)
@@ -394,10 +428,16 @@ namespace owl {
         }
       }
 
+      /*! returns the given buffers device pointer */
+      void *bufferGetPointer(int bufferID);
       void createDeviceBuffer(int bufferID,
                               size_t elementCount,
                               size_t elementSize,
                               const void *initData);
+      void createHostPinnedBuffer(int bufferID,
+                                  size_t elementCount,
+                                  size_t elementSize,
+                                  HostPinnedMemory::SP pinnedMem);
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int bufferID,
                                         int count,

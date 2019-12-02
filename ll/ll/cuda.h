@@ -31,6 +31,8 @@
     }                                                                   \
   }
 
+#define CUDA_CALL(call) CUDA_CHECK(cuda##call)
+
 #define CUDA_CHECK2( where, call )                                      \
   {                                                                     \
     cudaError_t rc = call;                                              \
