@@ -480,6 +480,8 @@ namespace owl {
       void sbtMissProgsBuild(size_t maxMissProgDataSize,
                              WriteMissProgDataCB writeMissProgDataCB,
                              const void *callBackUserData);
+
+      void launch(int rgID, const vec2i &dims);
       
       Context                  *context;
       

@@ -16,6 +16,7 @@
 
 #include "../owl/ll/DeviceGroup.h"
 
+using gdt::vec2i;
 using gdt::vec3f;
 using gdt::vec3i;
 
@@ -55,7 +56,6 @@ struct TriangleGroupData
   vec3f color;
 };
 
-
 struct RayGenData
 {
   vec3f color0;
@@ -63,23 +63,9 @@ struct RayGenData
   OptixTraversableHandle world;
 };
 
-// template<typename Lambda>
-// void rayGensBuild(owl::ll::DeviceGroup::SP ll,
-//                   size_t maxRayGenDataSize,
-//                   const Lambda &l)
-// {
-//   ll->sbtRayGensBuild(maxRayGenDataSize,
-//                       [](uint8_t *output,
-//                          int devID, int rgID, 
-//                          const void *cbData) {
-//                         // RayGenData *rg = (RayGenData*)output;
-//                         // rg->color0 = vec3f(0,0,0);
-//                         // rg->color1 = vec3f(1,1,1);
-//                         const Lambda *lambda = (const Lambda *)cbData;
-//                         (*lambda)(output,devID,rgID,cbData);
-//                       },(void *)&l);
-// }
-
+struct MissProgData
+{
+};
 
 int main(int ac, char **av)
 {
@@ -172,7 +158,6 @@ int main(int ac, char **av)
   
   // ----------- build raygens -----------
   const size_t maxRayGenDataSize = sizeof(RayGenData);
-
   ll->sbtRayGensBuild(maxRayGenDataSize,
                       [&](uint8_t *output,
                           int devID,
@@ -185,8 +170,7 @@ int main(int ac, char **av)
                       });
   
   // ----------- build miss prog(s) -----------
-  const size_t maxMissProgDataSize = /* we don't have any: */0;
-
+  const size_t maxMissProgDataSize = sizeof(MissProgData);
   ll->sbtMissProgsBuild(maxMissProgDataSize,
                         [&](uint8_t *output,
                             int devID,
@@ -195,7 +179,9 @@ int main(int ac, char **av)
                           /* we don't have any ... */
                         });
   
-
+  LOG("llTest - everything set up ... trying to launch ...");
+  ll->launch(0,vec2i(10,10));
+  
   LOG("llTest - destroying devicegroup ...");
   owl::ll::DeviceGroup::destroy(ll);
   

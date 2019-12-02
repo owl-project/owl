@@ -866,7 +866,14 @@ namespace owl {
       context->popActive();
       LOG_OK("done building (and uploading) sbt miss prog records");
     }
-      
+
+    void Device::launch(int rgID, const vec2i &dims)
+    {
+      LOG("launching ...");
+      PING;
+    }
+    
+    
   } // ::owl::ll
 } //::owl
   

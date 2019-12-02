@@ -21,6 +21,8 @@
 namespace owl {
   namespace ll {
 
+    using gdt::vec2i;
+    
     /*! callback with which the app can specify what data is to be
       written into the SBT for a given geometry, ray type, and
       device */
@@ -195,6 +197,7 @@ namespace owl {
       }
 
 
+      void launch(int rgID, const vec2i &dims);
 
       
       /* create an instance of this object that has properly

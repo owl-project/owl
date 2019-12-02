@@ -213,6 +213,11 @@ namespace owl {
                                   writeMissProgCB,
                                   callBackData);
     }
+
+    void DeviceGroup::launch(int rgID, const vec2i &dims)
+    {
+      for (auto device : devices) device->launch(rgID,dims);
+    }
     
     /* create an instance of this object that has properly
        initialized devices */
