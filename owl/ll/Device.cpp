@@ -90,8 +90,8 @@ namespace owl {
     Device::Device(int owlDeviceID, int cudaDeviceID)
       : context(new Context(owlDeviceID,cudaDeviceID))
     {
-      LOG("successfully created owl device #" << owlDeviceID
-          << " on CUDA device #" << cudaDeviceID);
+      LOG_OK("successfully created owl device #" << owlDeviceID
+             << " on CUDA device #" << cudaDeviceID);
     }
     
 

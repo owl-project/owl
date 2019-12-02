@@ -19,6 +19,11 @@
 using gdt::vec3f;
 using gdt::vec3i;
 
+#define LOG(message)                                    \
+  std::cout << GDT_TERMINAL_BLUE;                       \
+  std::cout << "----------- " << message << std::endl;  \
+  std::cout << GDT_TERMINAL_DEFAULT;
+
 extern "C" char ptxCode[];
 
 const int NUM_VERTICES = 8;
@@ -52,13 +57,16 @@ struct TriangleGroupData
   
 int main(int ac, char **av)
 {
+  std::cout << GDT_TERMINAL_BLUE;
+  std::cout << "###########################################################" << std::endl;
+  std::cout << "llTest: mini-app for testing low-level optix wrapper api..." << std::endl;
+  std::cout << "###########################################################" << std::endl;
+  std::cout << GDT_TERMINAL_DEFAULT;
+
   owl::ll::DeviceGroup::SP ll
     = owl::ll::DeviceGroup::create();
 
-  std::cout << GDT_TERMINAL_BLUE;
-  std::cout << "#######################################################" << std::endl;
-  std::cout << "llTest - building pipeline ..." << std::endl;
-  std::cout << "#######################################################" << std::endl;
+  LOG("llTest - building pipeline ...");
   std::cout << GDT_TERMINAL_DEFAULT;
 
   // ##################################################################
@@ -85,11 +93,7 @@ int main(int ac, char **av)
   ll->buildPrograms();
   ll->createPipeline();
 
-  std::cout << GDT_TERMINAL_BLUE;
-  std::cout << "#######################################################" << std::endl;
-  std::cout << "llTest - building geometries ..." << std::endl;
-  std::cout << "#######################################################" << std::endl;
-  std::cout << GDT_TERMINAL_DEFAULT;
+  LOG("llTest - building geometries ...");
 
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
@@ -122,12 +126,8 @@ int main(int ac, char **av)
                                /* geoms in group, pointer */ geomsInGroup,
                                /* geoms in group, count   */ 1);
   ll->groupBuildAccel(0);
-  
-  std::cout << GDT_TERMINAL_BLUE;
-  std::cout << "#######################################################" << std::endl;
-  std::cout << "llTest - building SBT ..." << std::endl;
-  std::cout << "#######################################################" << std::endl;
-  std::cout << GDT_TERMINAL_DEFAULT;
+
+  LOG("llTest - building SBT ...");
   // ------------------------------------------------------------------
   // build SBT
   // ------------------------------------------------------------------
@@ -138,10 +138,8 @@ int main(int ac, char **av)
                            const void *cbData) {
                           ((TriangleGroupData*)output)->color = vec3f(0,1,0);
                         },/*ignore*/nullptr);
-  
-  std::cout << GDT_TERMINAL_BLUE;
-  std::cout << "#######################################################" << std::endl;
-  std::cout << "llTest - app is done ..." << std::endl;
-  std::cout << "#######################################################" << std::endl;
-  std::cout << GDT_TERMINAL_DEFAULT;
+
+  LOG("llTest - destroying devicegroup ...");
+  owl::ll::DeviceGroup::destroy(ll);
+  LOG("llTest - app is done ...");
 }
