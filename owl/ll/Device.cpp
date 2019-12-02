@@ -851,7 +851,7 @@ namespace owl {
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       context->popActive();
-      LOG_OK("done building sbt hit groups");
+      LOG_OK("done building (and uploading) sbt hit groups");
     }
       
   } // ::owl::ll
