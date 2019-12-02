@@ -117,9 +117,9 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
   ll->sbtHitGroupsBuild(maxHitGroupDataSize,
-                        [](void *output,
+                        [](uint8_t *output,
                            int devID, int geomID, int rayID,
-                           void *cbData) {
+                           const void *cbData) {
                           ((TriangleGroupData*)output)->color = vec3f(0,1,0);
                         },/*ignore*/nullptr);
   

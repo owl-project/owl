@@ -792,7 +792,7 @@ namespace owl {
     
     void Device::sbtHitGroupsBuild(size_t maxHitGroupDataSize,
                                    WriteHitGroupCallBack writeHitGroupCallBack,
-                                   void *callBackData)
+                                   const void *callBackUserData)
     {
       LOG("building sbt hit groups");
       // TODO: destroyhitgroups
@@ -801,18 +801,28 @@ namespace owl {
       size_t hitGroupRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitGroupDataSize);
+      assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
       size_t totalHitGroupRecordsArraySize
         = numHitGroupRecords * hitGroupRecordSize;
       PRINT(totalHitGroupRecordsArraySize);
-      std::vector<unsigned char> hitGroupRecords(totalHitGroupRecordsArraySize);
-      for (size_t geomID=0;geomID<geoms.size();geomID++)
-        for (int rayType=0;rayType<context->numRayTypes;tayType++) {
-          unsigned char *sbtRecord
-            = addPointerOffset(hitGroupRecords.data(),recordID*hitGroupRecordSize);
+      std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
+      for (int geomID=0;geomID<(int)geoms.size();geomID++)
+        for (int rayType=0;rayType<context->numRayTypes;rayType++) {
+          int recordID = rayType + geomID*context->numRayTypes;
+          uint8_t *sbtRecord
+            = hitGroupRecords.data() + recordID*hitGroupRecordSize;
+          char    *sbtRecordHeader = (char *)sbtRecord;
+          uint8_t *sbtRecordData
+            = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
           
+          writeHitGroupCallBack(sbtRecordData,
+                                context->owlDeviceID,
+                                geomID,
+                                rayType,
+                                callBackUserData);
         }
-      sbt.hitGroupRecordsMemory.alloc(hitGroupRecords.size());
-      sbt.hitGroupRecordsMemory.upload(hitGroupRecords);
+      sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
+      sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       LOG_OK("done building sbt hit groups");
     }
       

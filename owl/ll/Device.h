@@ -29,7 +29,7 @@ namespace owl {
       written into the SBT for a given geometry, ray type, and
       device */
     typedef void
-    WriteHitGroupCallBack(void *hitGroupToWrite,
+    WriteHitGroupCallBack(uint8_t *hitGroupToWrite,
                           /*! ID of the device we're
                             writing for (differnet
                             devices may need to write
@@ -45,7 +45,7 @@ namespace owl {
                           int rayType,
                           /*! the raw void pointer the app has passed
                               during sbtHitGroupsBuild() */
-                          void *callBackData);
+                          const void *callBackUserData);
     
     struct Context {
       
@@ -488,7 +488,7 @@ namespace owl {
 
       void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
                              WriteHitGroupCallBack writeHitGroupCallBack,
-                             void *callBackData);
+                             const void *callBackUserData);
       
       Context                  *context;
       
