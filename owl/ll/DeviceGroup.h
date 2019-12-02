@@ -154,6 +154,21 @@ namespace owl {
                              WriteMissProgDataCB WriteMissProgDataCB,
                              void *callBackData);
       template<typename Lambda>
+      void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
+                             const Lambda &l)
+      {
+        this->sbtHitGroupsBuild(maxHitGroupDataSize,
+                              [](uint8_t *output,
+                                 int devID,
+                                 int geomID,
+                                 int rayType,
+                                 const void *cbData) {
+                                const Lambda *lambda = (const Lambda *)cbData;
+                                (*lambda)(output,devID,geomID,rayType,cbData);
+                              },(void *)&l);
+      }
+
+      template<typename Lambda>
       void sbtRayGensBuild(size_t maxRayGenDataSize,
                            const Lambda &l)
       {
@@ -165,6 +180,7 @@ namespace owl {
                                 (*lambda)(output,devID,rgID,cbData);
                               },(void *)&l);
       }
+
       template<typename Lambda>
       void sbtMissProgsBuild(size_t maxMissProgDataSize,
                              const Lambda &l)

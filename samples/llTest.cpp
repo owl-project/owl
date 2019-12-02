@@ -162,18 +162,21 @@ int main(int ac, char **av)
   // ----------- build hitgroups -----------
   const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
   ll->sbtHitGroupsBuild(maxHitGroupDataSize,
-                        [](uint8_t *output,
-                           int devID, int geomID, int rayID,
-                           const void *cbData) {
+                        [&](uint8_t *output,
+                            int devID,
+                            int geomID,
+                            int rayID,
+                            const void *cbData) {
                           ((TriangleGroupData*)output)->color = vec3f(0,1,0);
-                        },/*ignore*/nullptr);
+                        });
   
   // ----------- build raygens -----------
   const size_t maxRayGenDataSize = sizeof(RayGenData);
 
   ll->sbtRayGensBuild(maxRayGenDataSize,
                       [&](uint8_t *output,
-                          int devID, int rgID, 
+                          int devID,
+                          int rgID, 
                           const void *cbData) {
                         RayGenData *rg = (RayGenData*)output;
                         rg->color0 = vec3f(0,0,0);
@@ -186,7 +189,8 @@ int main(int ac, char **av)
 
   ll->sbtMissProgsBuild(maxMissProgDataSize,
                         [&](uint8_t *output,
-                            int devID, int rayType, 
+                            int devID,
+                            int rayType, 
                             const void *cbData) {
                           /* we don't have any ... */
                         });
