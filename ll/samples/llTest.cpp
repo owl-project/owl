@@ -34,14 +34,14 @@ extern "C" char ptxCode[];
 const int NUM_VERTICES = 8;
 vec3f vertices[NUM_VERTICES] =
   {
-   { 0.f,0.f,0.f },
-   { 1.f,0.f,0.f },
-   { 0.f,1.f,0.f },
-   { 1.f,1.f,0.f },
-   { 0.f,0.f,1.f },
-   { 1.f,0.f,1.f },
-   { 0.f,1.f,1.f },
-   { 1.f,1.f,1.f }
+   { -1.f,-1.f,-1.f },
+   { +1.f,-1.f,-1.f },
+   { -1.f,+1.f,-1.f },
+   { +1.f,+1.f,-1.f },
+   { -1.f,-1.f,+1.f },
+   { +1.f,-1.f,+1.f },
+   { -1.f,+1.f,+1.f },
+   { +1.f,+1.f,+1.f }
   };
 
 const int NUM_INDICES = 12;

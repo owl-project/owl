@@ -71,6 +71,37 @@ namespace owl {
       OPTIX_CHECK(optixDeviceContextCreate(cudaContext, 0, &optixContext));
       OPTIX_CHECK(optixDeviceContextSetLogCallback
                   (optixContext,context_log_cb,this,4));
+
+      // ------------------------------------------------------------------
+      // configure default module compile options
+      // ------------------------------------------------------------------
+      moduleCompileOptions.maxRegisterCount  = 100;
+      moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
+      moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
+
+      // ------------------------------------------------------------------
+      // configure default pipeline compile options
+      // ------------------------------------------------------------------
+      pipelineCompileOptions = {};
+      pipelineCompileOptions.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
+      // = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+      pipelineCompileOptions.usesMotionBlur     = false;
+      pipelineCompileOptions.numPayloadValues   = 2;
+      pipelineCompileOptions.numAttributeValues = 2;
+      pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
+      pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
+      // pipelineCompileOptions.traversalDepth
+      //   = need_tri_level
+      //   ? OPTIX_TRAVERSAL_LEVEL_ANY
+      //   : OPTIX_TRAVERSAL_LEVEL_TWO;
+      
+      // ------------------------------------------------------------------
+      // configure default pipeline link options
+      // ------------------------------------------------------------------
+      pipelineLinkOptions.overrideUsesMotionBlur = false;
+      pipelineLinkOptions.maxTraceDepth          = 2;
+      pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
+      
     }
 
     /*! construct a new owl device on given cuda device. throws an
@@ -82,7 +113,6 @@ namespace owl {
            << " on CUDA device #" 
            << cudaDeviceID);
     }
-
     
     
     /*! construct a new owl device on given cuda device. throws an
@@ -97,6 +127,7 @@ namespace owl {
 
     Device::~Device()
     {
+      
       destroyPipeline();
       
       modules.destroyOptixHandles(context);

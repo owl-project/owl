@@ -47,19 +47,22 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   const int numRayTypes = 1;
   const int rayType = 0;
 
+  RayGenData prd = rg;
+  
   OptixTraversableHandle handle = rg.world;
-  float3                 rayOrigin = make_float3(0,0,0);
-    float3                 rayDirection = make_float3(0,1,0);
+  float3                 rayOrigin = make_float3(-3,-2,-4);
+  float3                 rayDirection = make_float3(3,2,4);
     float                  tmin = 1e-3f;
     float                  tmax = 1e+10f;
     float                  rayTime = 0.f;
-    OptixVisibilityMask    visibilityMask = 0;
+    OptixVisibilityMask    visibilityMask = (OptixVisibilityMask)-1;
     unsigned int           rayFlags = 0;
     unsigned int           SBToffset = rayType;
     unsigned int           SBTstride = numRayTypes;
     unsigned int           missSBTIndex = rayType;
     unsigned int           p0 = 0;
     unsigned int           p1 = 0;
+    optix::packPointer(&prd,p0,p1 );
 
     optixTrace(handle,
                rayOrigin,
@@ -84,15 +87,13 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
-  printf("hit!!!\n");
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
+  if (optix::getLaunchIndex() == optix::vec2i(400,300))
+    printf("hit!!!\n");
 }
 
 OPTIX_MISS_PROGRAM(defaultRayType)()
 {
-  printf("miss!!!\n");
-  // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
+  if (optix::getLaunchIndex() == optix::vec2i(400,300))
+    printf("miss!!!\n");
 }
 
