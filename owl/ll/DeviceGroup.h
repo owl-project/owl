@@ -17,6 +17,9 @@
 #pragma once
 
 #include "ll/optix.h"
+#ifdef __CUDA_ARCH__
+#  error "this file should only ever get included on the device side"
+#endif
 
 namespace owl {
   namespace ll {

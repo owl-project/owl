@@ -31,10 +31,10 @@
 
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
-  // RayGenData &rgData = *(RayGenData*)optix::getProgramDataPointer();
-  const RayGenData &self = optix::getProgramData<RayGenData>();
-  const vec2i pixelID = optix::getLaunchIndex();
-  if (pixelID == optix::vec2i(0)) {
+  // RayGenData &rgData = *(RayGenData*)owl::getProgramDataPointer();
+  const RayGenData &self = owl::getProgramData<RayGenData>();
+  const vec2i pixelID = owl::getLaunchIndex();
+  if (pixelID == owl::vec2i(0)) {
     printf("%sHello OptiX From your First RayGen Program (on device %i/%i)%s\n",
            GDT_TERMINAL_LIGHT_RED,
            self.deviceIndex,
@@ -69,7 +69,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   unsigned int           missSBTIndex = rayType;
   unsigned int           p0 = 0;
   unsigned int           p1 = 0;
-  optix::packPointer(&color,p0,p1 );
+  owl::packPointer(&color,p0,p1 );
 
   optixTrace(handle,
              rayOrigin,
@@ -87,14 +87,14 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
-    = optix::make_rgba(color);
+    = owl::make_rgba(color);
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
-  vec3f &prd = optix::getPRD<vec3f>();
+  vec3f &prd = owl::getPRD<vec3f>();
 
-  const TriangleGroupData &self = optix::getProgramData<TriangleGroupData>();
+  const TriangleGroupData &self = owl::getProgramData<TriangleGroupData>();
   
   // compute normal:
   const int   primID = optixGetPrimitiveIndex();
@@ -110,11 +110,11 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 
 OPTIX_MISS_PROGRAM(defaultRayType)()
 {
-  const vec2i pixelID = optix::getLaunchIndex();
+  const vec2i pixelID = owl::getLaunchIndex();
 
-  const MissProgData &self = optix::getProgramData<MissProgData>();
+  const MissProgData &self = owl::getProgramData<MissProgData>();
   
-  vec3f &prd = optix::getPRD<vec3f>();
+  vec3f &prd = owl::getPRD<vec3f>();
   int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
   prd = (pattern&1) ? self.color1 : self.color0;
 }
