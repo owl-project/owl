@@ -133,15 +133,16 @@ int main(int ac, char **av)
                 (i&4) ? -3:+3);
     std::vector<vec3f> vertices;
     for (auto v : unitVertices)
-      vertices.push_back(v+delta);
-    ll->createDeviceBuffer(VERTEX_BUFFER_000+i,NUM_VERTICES,sizeof(vec3f),vertices.data());
+      vertices.push_back(1.5f*v+delta);
+    ll->createDeviceBuffer(VERTEX_BUFFER_000+i,NUM_VERTICES,
+                           sizeof(vec3f),vertices.data());
     
     ll->createTrianglesGeom(/* geom ID    */i,
                             /* type/PG ID */0);
-    ll->trianglesGeomSetVertexBuffer(/* geom ID     */ 0,
+    ll->trianglesGeomSetVertexBuffer(/* geom ID     */ i,
                                      /* buffer ID */VERTEX_BUFFER_000+i,
                                      /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-    ll->trianglesGeomSetIndexBuffer(/* geom ID     */ 0,
+    ll->trianglesGeomSetIndexBuffer(/* geom ID     */ i,
                                     /* buffer ID */INDEX_BUFFER,
                                     /* meta info */NUM_INDICES,sizeof(vec3i),0);
   }
