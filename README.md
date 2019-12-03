@@ -7,11 +7,11 @@ Directory Structure
 
 - `owl/`: The Optix Wrappers *library*
   - `owl/ll/`: the owl *low-level* API layer
-  - `owl/ng/`: the owl *node graph* API layer (WIP)
+  - `owl/ng/`: the owl *node graph* API layer (currently disabled because not yet working)
 
 - `samples/`: Samples/Tutorials/TestCases for OWL
   - `samples/ll/`: samples for the ll layer
-  - `samples/ng/`: samples for the ng layer
+  - `samples/ng/`: samples for the ng layer (currently disabled because not yet working)
 
 Revision History
 ================
