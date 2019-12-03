@@ -59,7 +59,15 @@ int main(int ac, char **av)
   ll->setHitGroupClosestHit(/*program ID*/0,
                             /*module:*/0,
                             "Sphere");
-  
+#if 0
+  ll->setHitGroupIntersectProg(/*program ID*/0,
+                               /*module:*/0,
+                               "Sphere");
+  ll->setHitGroupBoundsProg(/*program ID*/0,
+                            /*module:*/0,
+                            "Sphere",
+                            sizeof(SphereBoundsData));
+#endif
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
