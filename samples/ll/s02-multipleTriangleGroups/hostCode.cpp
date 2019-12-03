@@ -94,7 +94,7 @@ int main(int ac, char **av)
   ll->allocMissProgs(1);
   ll->setMissProg(/*program ID*/0,
                   /*module:*/0,
-                  "defaultRayType");
+                  "miss");
   ll->buildPrograms();
   ll->createPipeline();
 
