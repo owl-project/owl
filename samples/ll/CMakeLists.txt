@@ -14,8 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# low-level interface
-add_subdirectory(ll)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
 
-# node graph layer
-add_subdirectory(ng)
+add_subdirectory(s01-simpleTriangles)
+add_subdirectory(s02-multipleTriangleGroups)
+

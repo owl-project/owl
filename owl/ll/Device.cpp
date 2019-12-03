@@ -614,29 +614,34 @@ namespace owl {
        
         TrianglesGeom *tris = dynamic_cast<TrianglesGeom*>(geom);
         assert("double-check it's really triangles" && tris != nullptr);
-
-
+        PRINT(tris);
+        
         // now fill in the values:
         d_vertices = (CUdeviceptr )tris->vertexPointer;
+        assert("triangles geom has vertex array set" && d_vertices);
+        
         d_indices  = (CUdeviceptr )tris->indexPointer;
-        triangleInput.type                              = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
-        triangleInput.triangleArray.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
-        triangleInput.triangleArray.vertexStrideInBytes = (uint32_t)tris->vertexStride;
-        triangleInput.triangleArray.numVertices         = (uint32_t)tris->vertexCount;
-        triangleInput.triangleArray.vertexBuffers       = &d_vertices;
+        assert("triangles geom has index array set" && d_indices);
+
+        triangleInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
+        auto &ta = triangleInput.triangleArray;
+        ta.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
+        ta.vertexStrideInBytes = (uint32_t)tris->vertexStride;
+        ta.numVertices         = (uint32_t)tris->vertexCount;
+        ta.vertexBuffers       = &d_vertices;
       
-        triangleInput.triangleArray.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-        triangleInput.triangleArray.indexStrideInBytes  = (uint32_t)tris->indexStride;
-        triangleInput.triangleArray.numIndexTriplets    = (uint32_t)tris->indexCount;
-        triangleInput.triangleArray.indexBuffer         = d_indices;
+        ta.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
+        ta.indexStrideInBytes  = (uint32_t)tris->indexStride;
+        ta.numIndexTriplets    = (uint32_t)tris->indexCount;
+        ta.indexBuffer         = d_indices;
       
         // we always have exactly one SBT entry per shape (ie, triangle
         // mesh), and no per-primitive materials:
-        triangleInput.triangleArray.flags                       = triangleInputFlags;
-        triangleInput.triangleArray.numSbtRecords               = context->numRayTypes;
-        triangleInput.triangleArray.sbtIndexOffsetBuffer        = 0; 
-        triangleInput.triangleArray.sbtIndexOffsetSizeInBytes   = 0; 
-        triangleInput.triangleArray.sbtIndexOffsetStrideInBytes = 0; 
+        ta.flags                       = triangleInputFlags;
+        ta.numSbtRecords               = context->numRayTypes;
+        ta.sbtIndexOffsetBuffer        = 0; 
+        ta.sbtIndexOffsetSizeInBytes   = 0; 
+        ta.sbtIndexOffsetStrideInBytes = 0; 
       }
       
       // ==================================================================

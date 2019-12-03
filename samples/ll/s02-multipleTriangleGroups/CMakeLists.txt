@@ -14,8 +14,16 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# low-level interface
-add_subdirectory(ll)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(ll02-multipleTriangleGroups
+  hostCode.cpp
+  ${ptxCode}
+  )
+target_link_libraries(ll02-multipleTriangleGroups
+  owl-ll
+  )
 
-# node graph layer
-add_subdirectory(ng)
+

@@ -14,8 +14,25 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# low-level interface
-add_subdirectory(ll)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
+   
+add_library(owl-ll
+  common.h
 
-# node graph layer
-add_subdirectory(ng)
+  Device.h
+  Device.cpp
+  
+  DeviceGroup.h
+  DeviceGroup.cpp
+  )
+target_link_libraries(owl-ll
+  owl-common
+  ${CUDA_LIBRARIES}
+  ${CUDA_CUDA_LIBRARY}
+  )
+
+
+
+
+
+

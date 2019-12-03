@@ -18,14 +18,15 @@
 // the 'actual' optix
 #include <optix.h>
 
-// TODO: move this to common api
-namespace optix {
-  using namespace gdt;
+// ==================================================================
+// actual device-side "API" built-ins.
+// ==================================================================
 
-#ifdef __CUDA_ARCH__
-  // ==================================================================
-  // actual device-side "API" built-ins.
-  // ==================================================================
+#ifndef __CUDA_ARCH__
+#  error "this file should only ever get included on the device side"
+#endif
+
+namespace owl {
 
   inline __device__ vec2i getLaunchIndex()
   {
@@ -119,40 +120,5 @@ namespace optix {
   static __forceinline__ __device__ T &getPRD()
   { return *(T*)getPRDPointer(); }
 
-#endif
-}
-
-using gdt::vec2i;
-using gdt::vec2f;
-using gdt::vec3f;
-using gdt::vec3i;
-
-struct TriangleGroupData
-{
-  vec3f color;
-  vec3i *index;
-  vec3f *vertex;
-};
-
-struct RayGenData
-{
-  int deviceIndex;
-  int deviceCount;
-  uint32_t *fbPtr;
-  vec2i  fbSize;
-  OptixTraversableHandle world;
-
-  struct {
-    vec3f pos;
-    vec3f dir_00;
-    vec3f dir_du;
-    vec3f dir_dv;
-  } camera;
-};
-
-struct MissProgData
-{
-  vec3f  color0;
-  vec3f  color1;
-};
+} // ::owl
 
