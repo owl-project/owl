@@ -17,18 +17,6 @@
 #include "deviceCode.h"
 #include <optix_device.h>
 
-#define OPTIX_RAYGEN_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __raygen__##programName
-
-#define OPTIX_CLOSEST_HIT_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __closesthit__##programName
-
-#define OPTIX_MISS_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __miss__##programName
-
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
   // RayGenData &rgData = *(RayGenData*)owl::getProgramDataPointer();
@@ -44,46 +32,20 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   if (pixelID.x >= self.fbSize.x) return;
   if (pixelID.y >= self.fbSize.y) return;
 
-  const int numRayTypes = 1;
-  const int rayType = 0;
-
-  // that's the PRD:
-  vec3f color;
-
   const vec2f screen = (vec2f(pixelID)+vec2f(.5f)) / vec2f(self.fbSize);
-  
-  OptixTraversableHandle handle = self.world;
-  float3                 rayOrigin 
-    = self.camera.pos;//make_float3(-3,-2,-4);
-  float3                 rayDirection// = make_float3(3,2,4);
+  owl::Ray ray;
+  ray.origin    
+    = self.camera.pos;
+  ray.direction 
     = normalize(self.camera.dir_00
                 + screen.u * self.camera.dir_du
                 + screen.v * self.camera.dir_dv);
-  float                  tmin = 1e-3f;
-  float                  tmax = 1e+10f;
-  float                  rayTime = 0.f;
-  OptixVisibilityMask    visibilityMask = (OptixVisibilityMask)-1;
-  unsigned int           rayFlags = 0;
-  unsigned int           SBToffset = rayType;
-  unsigned int           SBTstride = numRayTypes;
-  unsigned int           missSBTIndex = rayType;
-  unsigned int           p0 = 0;
-  unsigned int           p1 = 0;
-  owl::packPointer(&color,p0,p1 );
 
-  optixTrace(handle,
-             rayOrigin,
-             rayDirection,
-             tmin,
-             tmax,
-             rayTime,
-             visibilityMask,
-             rayFlags,
-             SBToffset,
-             SBTstride,
-             missSBTIndex,
-             p0,
-             p1 );
+  vec3f color;
+  owl::trace(/*accel to trace against*/self.world,
+             /*the ray to trace*/ ray,
+             /*numRayTypes*/1,
+             /*prd*/color);
     
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
@@ -108,7 +70,7 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*self.color;
 }
 
-OPTIX_MISS_PROGRAM(defaultRayType)()
+OPTIX_MISS_PROGRAM(miss)()
 {
   const vec2i pixelID = owl::getLaunchIndex();
 
@@ -117,26 +79,5 @@ OPTIX_MISS_PROGRAM(defaultRayType)()
   vec3f &prd = owl::getPRD<vec3f>();
   int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
   prd = (pattern&1) ? self.color1 : self.color0;
-}
-
-
-inline __device__ void __boundsFunc__SphereGeom(box3f &bounds,
-                                     int primID,
-                                     void *geomData)
-{
-  printf("bounds kernel for prim %i\n",primID);
-  // bounds.lower = vec3f(-1.f);
-  // bounds.lower = vec3f(+1.f);
-}
-
-extern "C" __global__ void SphereGeom__boundsFuncKernel__(void  *geomData,
-                                                          box3f *boundsArray,
-                                                          int    numPrims)
-{
-  int primID = threadIdx.x;
-  if (primID < numPrims)
-    printf("boundskernel - %i\n",primID);
-  // if (primID < numPrims)
-  //   __boundsFunc__SphereGeom(boundsArray[primID],primID,geomData);
 }
 
