@@ -94,15 +94,10 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
   vec3f &prd = owl::getPRD<vec3f>();
 
-  const TriangleGroupData &self = owl::getProgramData<TriangleGroupData>();
+  const SphereGeomData &self = owl::getProgramData<SphereGeomData>();
   
   // compute normal:
-  const int   primID = optixGetPrimitiveIndex();
-  const vec3i index  = self.index[primID];
-  const vec3f &A     = self.vertex[index.x];
-  const vec3f &B     = self.vertex[index.y];
-  const vec3f &C     = self.vertex[index.z];
-  const vec3f Ng     = normalize(cross(B-A,C-A));
+  const vec3f Ng     = vec3f(1,1,1);//normalize(cross(B-A,C-A));
 
   const vec3f rayDir = optixGetWorldRayDirection();
   prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*self.color;

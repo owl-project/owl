@@ -18,11 +18,11 @@
 
 using namespace owl;
 
-struct TriangleGroupData
+struct SphereGeomData
 {
+  vec3f center;
+  float radius;
   vec3f color;
-  vec3i *index;
-  vec3f *vertex;
 };
 
 struct RayGenData

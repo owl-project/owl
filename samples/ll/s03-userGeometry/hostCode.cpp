@@ -31,30 +31,6 @@
 
 extern "C" char ptxCode[];
 
-const int NUM_VERTICES = 8;
-vec3f unitVertices[NUM_VERTICES] =
-  {
-   { -1.f,-1.f,-1.f },
-   { +1.f,-1.f,-1.f },
-   { -1.f,+1.f,-1.f },
-   { +1.f,+1.f,-1.f },
-   { -1.f,-1.f,+1.f },
-   { +1.f,-1.f,+1.f },
-   { -1.f,+1.f,+1.f },
-   { +1.f,+1.f,+1.f }
-  };
-
-const int NUM_INDICES = 12;
-vec3i indices[NUM_INDICES] =
-  {
-   { 0,1,3 }, { 2,3,0 },
-   { 5,7,6 }, { 5,6,4 },
-   { 0,4,5 }, { 0,5,1 },
-   { 2,3,7 }, { 2,7,6 },
-   { 1,5,7 }, { 1,7,3 },
-   { 4,0,2 }, { 4,2,6 }
-  };
-
 const char *outFileName = "ll02-multipleTriangleGroups.png";
 const vec2i fbSize(800,600);
 const vec3f lookFrom(-16.f,-12.f,-8.f);
@@ -66,7 +42,7 @@ int main(int ac, char **av)
 {
   std::cout << GDT_TERMINAL_BLUE;
   std::cout << "###########################################################" << std::endl;
-  std::cout << "llTest: mini-app for testing low-level optix wrapper api..." << std::endl;
+  std::cout << "ll03-userGeom - renders 8 user-geometry sphres..." << std::endl;
   std::cout << "###########################################################" << std::endl;
   std::cout << GDT_TERMINAL_DEFAULT;
 
@@ -86,7 +62,7 @@ int main(int ac, char **av)
   ll->allocHitGroupPGs(1);
   ll->setHitGroupClosestHit(/*program ID*/0,
                             /*module:*/0,
-                            "TriangleMesh");
+                            "Sphere");
   
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
@@ -109,18 +85,8 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // alloc buffers
   // ------------------------------------------------------------------
-  enum { INDEX_BUFFER=0,
-         VERTEX_BUFFER_000,
-         VERTEX_BUFFER_001,
-         VERTEX_BUFFER_010,
-         VERTEX_BUFFER_011,
-         VERTEX_BUFFER_100,
-         VERTEX_BUFFER_101,
-         VERTEX_BUFFER_110,
-         VERTEX_BUFFER_111,
-         FRAME_BUFFER,NUM_BUFFERS };
+  enum { FRAME_BUFFER=0,NUM_BUFFERS };
   ll->reallocBuffers(NUM_BUFFERS);
-  ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
@@ -128,36 +94,21 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   ll->reallocGeoms(8);
   for (int i=0;i<8;i++) {
-    vec3f delta((i&1) ? -3:+3,
-                (i&2) ? -3:+3,
-                (i&4) ? -3:+3);
-    std::vector<vec3f> vertices;
-    for (auto v : unitVertices)
-      vertices.push_back(1.5f*v+delta);
-    ll->createDeviceBuffer(VERTEX_BUFFER_000+i,NUM_VERTICES,
-                           sizeof(vec3f),vertices.data());
-    
-    ll->createTrianglesGeom(/* geom ID    */i,
-                            /* type/PG ID */0);
-    ll->trianglesGeomSetVertexBuffer(/* geom ID     */ i,
-                                     /* buffer ID */VERTEX_BUFFER_000+i,
-                                     /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-    ll->trianglesGeomSetIndexBuffer(/* geom ID     */ i,
-                                    /* buffer ID */INDEX_BUFFER,
-                                    /* meta info */NUM_INDICES,sizeof(vec3i),0);
+    ll->createUserGeom(/* geom ID    */i,
+                       /* type/PG ID */0);
   }
 
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
   // ##################################################################
   
-  enum { TRIANGLES_GROUP=0,NUM_GROUPS };
+  enum { SPHERES_GROUP=0,NUM_GROUPS };
   ll->reallocGroups(NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  ll->createTrianglesGeomGroup(/* group ID */TRIANGLES_GROUP,
+  ll->createTrianglesGeomGroup(/* group ID */SPHERES_GROUP,
                                /* geoms in group, pointer */ geomsInGroup,
                                /* geoms in group, count   */ 8);
-  ll->groupBuildAccel(TRIANGLES_GROUP);
+  ll->groupBuildAccel(SPHERES_GROUP);
 
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -169,9 +120,12 @@ int main(int ac, char **av)
   ll->sbtHitGroupsBuild
     (maxHitGroupDataSize,
      [&](uint8_t *output,int devID,int geomID,int rayID,const void *cbData) {
-      TriangleGroupData &self = *(TriangleGroupData*)output;
-      self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
-      self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER_000+geomID,devID);
+      
+      SphereGeomData &self = *(SphereGeomData*)output;
+      self.center = vec3f((geomID&1) ? -1.5f:+1.5f,
+                          (geomID&2) ? -1.5f:+1.5f,
+                          (geomID&4) ? -1.5f:+1.5f);
+      self.radius = 1.f;
       self.color  = gdt::randomColor(geomID);
     });
   
@@ -199,7 +153,7 @@ int main(int ac, char **av)
                         rg->deviceCount = ll->getDeviceCount();
                         rg->fbSize = fbSize;
                         rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-                        rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+                        rg->world  = ll->groupGetTraversable(SPHERES_GROUP,devID);
 
                         // compute camera frame:
                         vec3f &pos = rg->camera.pos;
