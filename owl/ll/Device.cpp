@@ -614,7 +614,6 @@ namespace owl {
        
         TrianglesGeom *tris = dynamic_cast<TrianglesGeom*>(geom);
         assert("double-check it's really triangles" && tris != nullptr);
-        PRINT(tris);
         
         // now fill in the values:
         d_vertices = (CUdeviceptr )tris->vertexPointer;
