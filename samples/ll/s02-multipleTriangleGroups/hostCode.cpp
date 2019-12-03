@@ -238,5 +238,5 @@ int main(int ac, char **av)
   LOG("destroying devicegroup ...");
   owl::ll::DeviceGroup::destroy(ll);
   
-  LOG_OK("seems all wen't ok; app is done, this should be the last output ...");
+  LOG_OK("seems all went ok; app is done, this should be the last output ...");
 }
