@@ -14,54 +14,47 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+/*! \file optix/common.h Creates a common set of includes, #defines,
+  and helpers that will be visible across _all_ files, both host _and_
+  device */
+
 #pragma once
 
-#include "optix/Context.h"
+// device-safe parts of gdt
+#include "gdt/math/vec.h"
+#include "gdt/math/box.h"
+#include "gdt/math/AffineSpace.h"
 
-namespace optix {
+#include <string.h>
+#include <set>
+#include <map>
+#include <vector>
+#include <stack>
+#include <typeinfo>
+#include <mutex>
+#include <atomic>
 
-  struct Module : public CommonBase {
-    typedef std::shared_ptr<Module> SP;
+namespace owl {
+  using gdt::vec3f;
 
-    /*! java-style pretty-printer, for debugging */
-    virtual std::string toString() override
-    { return "optix::Module"; }
-    
-    static Module::SP create(Context *context,
-                      const std::string &ptxCode)
-    {
-      Module *module = new Module(context,ptxCode);
-      return Module::SP(module);
-    }
-    
-    Module(Context *context,
-           const std::string &ptxCode);
-    
-    struct PerDevice {
-      typedef std::shared_ptr<PerDevice> SP;
-
-      PerDevice(Context::PerDevice::SP context,
-                Module *self);
-      
-      ~PerDevice() { destroy(); }
-      
-      void create();
-      void destroy();
-      
-      std::mutex  mutex;
-      OptixModule optixModule;
-      
-      bool        created = false;
-      
-      Context::PerDevice::SP context;
-      Module          *const self;
-    };
-
-    std::string const ptxCode;
-    Context    *const context;
-
-    std::vector<PerDevice::SP> perDevice;
-  };
+  template<size_t alignment>
+  inline size_t smallestMultipleOf(size_t unalignedSize)
+  {
+    const size_t numBlocks = (unalignedSize+alignment-1)/alignment;
+    return numBlocks*alignment;
+  }
   
-} // ::optix
+  inline void *addPointerOffset(void *ptr, size_t offset)
+  {
+    if (ptr == nullptr) return nullptr;
+    return (void*)((unsigned char *)ptr + offset);
+  }
+    
+}
+
+#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
+  
+#define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
+
+
 

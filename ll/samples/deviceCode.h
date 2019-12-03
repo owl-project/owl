@@ -14,15 +14,11 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#pragma once
+#include "gdt/math/vec.h"
+// the 'actual' optix
+#include <optix.h>
 
-#include "optix/common.h"
-
-// #include "gdt/math/vec.h"
-// #ifdef __CUDA_ARCH__
-// #include "optix_device.h"
-// #endif
-
+// TODO: move this to common api
 namespace optix {
   using namespace gdt;
 
@@ -57,9 +53,9 @@ namespace optix {
       type-checks, it's just hard-casting the SBT pointer to the
       expected type. */
   template<typename T>
-  inline __device__ const T *getProgramData()
+  inline __device__ const T &getProgramData()
   {
-    return (const T*)getProgramDataPointer();
+    return *(const T*)getProgramDataPointer();
   }
 
 
@@ -78,7 +74,7 @@ namespace optix {
     return min(255,max(0,int(f*256.f)));
   }
 
-  inline __device__ uint32_t make_rgba8(const vec3f color)
+  inline __device__ uint32_t make_rgba(const vec3f color)
   {
     return
       (make_8bit(color.x) << 0) +
@@ -86,7 +82,7 @@ namespace optix {
       (make_8bit(color.z) << 16) +
       (0xffU << 24);
   }
-  inline __device__ uint32_t make_rgba8(const vec4f color)
+  inline __device__ uint32_t make_rgba(const vec4f color)
   {
     return
       (make_8bit(color.x) << 0) +
@@ -94,12 +90,69 @@ namespace optix {
       (make_8bit(color.z) << 16) +
       (make_8bit(color.w) << 24);
   }
+
+
+  static __forceinline__ __device__ void* unpackPointer( uint32_t i0, uint32_t i1 )
+  {
+    const uint64_t uptr = static_cast<uint64_t>( i0 ) << 32 | i1;
+    void*           ptr = reinterpret_cast<void*>( uptr ); 
+    return ptr;
+  }
+
+
+  static __forceinline__ __device__ void  packPointer( void* ptr, uint32_t& i0, uint32_t& i1 )
+  {
+    const uint64_t uptr = reinterpret_cast<uint64_t>( ptr );
+    i0 = uptr >> 32;
+    i1 = uptr & 0x00000000ffffffff;
+  }
+
+
+  static __forceinline__ __device__ void *getPRDPointer()
+  { 
+    const uint32_t u0 = optixGetPayload_0();
+    const uint32_t u1 = optixGetPayload_1();
+    return unpackPointer(u0, u1);
+  }
+
+  template<typename T>
+  static __forceinline__ __device__ T &getPRD()
+  { return *(T*)getPRDPointer(); }
+
 #endif
-  
 }
 
-#define OPTIX_RAYGEN_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __raygen__##programName
+using gdt::vec2i;
+using gdt::vec2f;
+using gdt::vec3f;
+using gdt::vec3i;
 
+struct TriangleGroupData
+{
+  vec3f color;
+  vec3i *index;
+  vec3f *vertex;
+};
+
+struct RayGenData
+{
+  int deviceIndex;
+  int deviceCount;
+  uint32_t *fbPtr;
+  vec2i  fbSize;
+  OptixTraversableHandle world;
+
+  struct {
+    vec3f pos;
+    vec3f dir_00;
+    vec3f dir_du;
+    vec3f dir_dv;
+  } camera;
+};
+
+struct MissProgData
+{
+  vec3f  color0;
+  vec3f  color1;
+};
 

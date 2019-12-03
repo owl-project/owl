@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "abstract/common.h"
+#include "ll/common.h"
 
 #include <cuda_runtime.h>
 
@@ -30,6 +30,8 @@
       exit(2);                                                          \
     }                                                                   \
   }
+
+#define CUDA_CALL(call) CUDA_CHECK(cuda##call)
 
 #define CUDA_CHECK2( where, call )                                      \
   {                                                                     \

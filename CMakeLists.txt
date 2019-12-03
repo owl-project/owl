@@ -15,7 +15,7 @@
 # ======================================================================== #
 
 cmake_policy(SET CMP0048 NEW)
-project(Optix-OWL VERSION 0.0.1)
+project(Optix-OWL VERSION 0.2.0)
 
 cmake_minimum_required(VERSION 2.8)
 
@@ -44,16 +44,27 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ------------------------------------------------------------------
 include_directories(${gdt_dir})
 add_subdirectory(${gdt_dir} EXCLUDE_FROM_ALL)
+add_library(owl-common
+
+  submodules/gdt/gdt/gdt.h
+  submodules/gdt/gdt/gdt.cpp
+  submodules/gdt/gdt/math/vec.h
+
+  submodules/gdt/cmake/configure_optix.cmake
+  submodules/gdt/cmake/configure_cuda.cmake
+  submodules/gdt/cmake/configure_build_type.cmake
+  )
 
 #include_directories(${CMAKE_BINARY_DIR})
 #configure_file(optix/config.h.in ${CMAKE_BINARY_DIR}/optix/optix_config.h)
 
 # -------------------------------------------------------
-# owl itself
+# the low-level library
+# -------------------------------------------------------
+add_subdirectory(ll)
+
+# -------------------------------------------------------
+# the low-level library
 # -------------------------------------------------------
 add_subdirectory(owl)
 
-# -------------------------------------------------------
-# samples/tutorials/tests
-# -------------------------------------------------------
-add_subdirectory(samples)

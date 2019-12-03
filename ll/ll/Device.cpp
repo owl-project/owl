@@ -17,34 +17,24 @@
 #include "Device.h"
 #include <optix_function_table_definition.h>
 
-#define LOG(message)                                          \
-  std::cout << "#owl.ll(" << context->owlDeviceID << "): "   \
-  << message                                                  \
+#define LOG(message)                                            \
+  std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
+  << message                                                    \
   << std::endl
 
 #define LOG_OK(message)                                 \
   std::cout << GDT_TERMINAL_GREEN                       \
-  << "#owl.ll(" << context->owlDeviceID << "): "       \
+  << "#owl.ll(" << context->owlDeviceID << "): "        \
   << message << GDT_TERMINAL_DEFAULT << std::endl
 
-#define CLOG(message)                                          \
-  std::cout << "#owl.ll(" << owlDeviceID << "): "   \
-  << message                                                  \
+#define CLOG(message)                                   \
+  std::cout << "#owl.ll(" << owlDeviceID << "): "       \
+  << message                                            \
   << std::endl
 
-#define CLOG_OK(message)                                 \
+#define CLOG_OK(message)                                \
   std::cout << GDT_TERMINAL_GREEN                       \
-  << "#owl.ll(" << owlDeviceID << "): "       \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
-
-#define GLOG(message)                                         \
-  std::cout << "#owl.ll: "                                    \
-  << message                                                  \
-  << std::endl
-
-#define GLOG_OK(message)                                \
-  std::cout << GDT_TERMINAL_GREEN                       \
-  << "#owl.ll: "                                        \
+  << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << GDT_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
@@ -81,6 +71,37 @@ namespace owl {
       OPTIX_CHECK(optixDeviceContextCreate(cudaContext, 0, &optixContext));
       OPTIX_CHECK(optixDeviceContextSetLogCallback
                   (optixContext,context_log_cb,this,4));
+
+      // ------------------------------------------------------------------
+      // configure default module compile options
+      // ------------------------------------------------------------------
+      moduleCompileOptions.maxRegisterCount  = 100;
+      moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
+      moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
+
+      // ------------------------------------------------------------------
+      // configure default pipeline compile options
+      // ------------------------------------------------------------------
+      pipelineCompileOptions = {};
+      pipelineCompileOptions.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
+      // = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+      pipelineCompileOptions.usesMotionBlur     = false;
+      pipelineCompileOptions.numPayloadValues   = 2;
+      pipelineCompileOptions.numAttributeValues = 2;
+      pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
+      pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
+      // pipelineCompileOptions.traversalDepth
+      //   = need_tri_level
+      //   ? OPTIX_TRAVERSAL_LEVEL_ANY
+      //   : OPTIX_TRAVERSAL_LEVEL_TWO;
+      
+      // ------------------------------------------------------------------
+      // configure default pipeline link options
+      // ------------------------------------------------------------------
+      pipelineLinkOptions.overrideUsesMotionBlur = false;
+      pipelineLinkOptions.maxTraceDepth          = 2;
+      pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
+      
     }
 
     /*! construct a new owl device on given cuda device. throws an
@@ -88,11 +109,10 @@ namespace owl {
     Context::~Context()
     {
       CLOG("destroying owl device #"
-          << owlDeviceID
-          << " on CUDA device #" 
-          << cudaDeviceID);
+           << owlDeviceID
+           << " on CUDA device #" 
+           << cudaDeviceID);
     }
-
     
     
     /*! construct a new owl device on given cuda device. throws an
@@ -100,23 +120,26 @@ namespace owl {
     Device::Device(int owlDeviceID, int cudaDeviceID)
       : context(new Context(owlDeviceID,cudaDeviceID))
     {
-      LOG("successfully created owl device #" << owlDeviceID
-          << " on CUDA device #" << cudaDeviceID);
+      LOG_OK("successfully created owl device #" << owlDeviceID
+             << " on CUDA device #" << cudaDeviceID);
     }
     
 
     Device::~Device()
     {
+      
       destroyPipeline();
       
       modules.destroyOptixHandles(context);
-      const int deviceID = context->owlDeviceID;
+      const int owlDeviceID = context->owlDeviceID;
 
-      std::cout << "#owl.ll(" << deviceID << ") : deleting context" << std::endl;
+      LOG("deleting context");
       delete context;
       context = nullptr;
 
-      LOG_OK("successfully destroyed owl device ...");
+      // iw - use CLOG here - regular LOG() will try to access
+      // context, which by now is no longer available
+      CLOG_OK("successfully destroyed owl device ...");
     }
 
     void Context::destroyPipeline()
@@ -146,7 +169,9 @@ namespace owl {
       hitGroupPGs[pgID].closestHit.progName = progName;
     }
     
-    void Device::setRayGenPG(int pgID, int moduleID, const char *progName)
+    void Device::setRayGen(int pgID,
+                           int moduleID,
+                           const char *progName)
     {
       assert(pgID >= 0);
       assert(pgID < rayGenPGs.size());
@@ -161,10 +186,12 @@ namespace owl {
       rayGenPGs[pgID].program.progName = progName;
     }
     
-    void Device::setMissPG(int pgID, int moduleID, const char *progName)
+    void Device::setMissProg(int pgID,
+                             int moduleID,
+                             const char *progName)
     {
       assert(pgID >= 0);
-      assert(pgID < missPGs.size());
+      assert(pgID < missProgPGs.size());
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -172,8 +199,8 @@ namespace owl {
              ||
              (moduleID >= 0  && progName != nullptr));
 
-      missPGs[pgID].program.moduleID = moduleID;
-      missPGs[pgID].program.progName = progName;
+      missProgPGs[pgID].program.moduleID = moduleID;
+      missProgPGs[pgID].program.progName = progName;
     }
     
     /*! will destroy the *optix handles*, but will *not* clear the
@@ -270,8 +297,8 @@ namespace owl {
       // ------------------------------------------------------------------
       // miss programs
       // ------------------------------------------------------------------
-      for (int pgID=0;pgID<missPGs.size();pgID++) {
-        MissPG &pg     = missPGs[pgID];
+      for (int pgID=0;pgID<missProgPGs.size();pgID++) {
+        MissProgPG &pg     = missProgPGs[pgID];
         Module *module = modules.get(pg.program.moduleID);
         pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_MISS;
         std::string annotatedProgName
@@ -362,7 +389,7 @@ namespace owl {
         pg.pg = nullptr;
       }
       // ---------------------- miss ----------------------
-      for (auto &pg : missPGs) {
+      for (auto &pg : missProgPGs) {
         if (pg.pg) optixProgramGroupDestroy(pg.pg);
         pg.pg = nullptr;
       }
@@ -374,16 +401,16 @@ namespace owl {
       hitGroupPGs.resize(count);
     }
     
-    void Device::allocRayGenPGs(size_t count)
+    void Device::allocRayGens(size_t count)
     {
       assert(rayGenPGs.empty());
       rayGenPGs.resize(count);
     }
     
-    void Device::allocMissPGs(size_t count)
+    void Device::allocMissProgs(size_t count)
     {
-      assert(missPGs.empty());
-      missPGs.resize(count);
+      assert(missProgPGs.empty());
+      missProgPGs.resize(count);
     }
       
 
@@ -399,8 +426,8 @@ namespace owl {
       assert(!device->hitGroupPGs.empty());
       for (auto &pg : device->hitGroupPGs)
         allPGs.push_back(pg.pg);
-      assert(!device->missPGs.empty());
-      for (auto &pg : device->missPGs)
+      assert(!device->missProgPGs.empty());
+      for (auto &pg : device->missProgPGs)
         allPGs.push_back(pg.pg);
 
       if (allPGs.empty())
@@ -413,7 +440,7 @@ namespace owl {
                                       &pipelineCompileOptions,
                                       &pipelineLinkOptions,
                                       allPGs.data(),
-		  (uint32_t)allPGs.size(),
+                                      (uint32_t)allPGs.size(),
                                       log,&sizeof_log,
                                       &pipeline
                                       ));
@@ -437,84 +464,6 @@ namespace owl {
 
 
     
-    /* create an instance of this object that has properly
-       initialized devices */
-    DeviceGroup::SP DeviceGroup::create(const int *deviceIDs,
-                                        size_t     numDevices)
-    {
-      assert((deviceIDs == nullptr && numDevices == 0)
-             ||
-             (deviceIDs != nullptr && numDevices > 0));
-
-      // ------------------------------------------------------------------
-      // init cuda, and error-out if no cuda devices exist
-      // ------------------------------------------------------------------
-      GLOG("initializing CUDA");
-      cudaFree(0);
-      
-      int totalNumDevices = 0;
-      cudaGetDeviceCount(&totalNumDevices);
-      if (totalNumDevices == 0)
-        throw std::runtime_error("#owl.ll: no CUDA capable devices found!");
-      std::cout << "#owl.ll: found " << totalNumDevices << " CUDA device(s)" << std::endl;
-
-      
-      // ------------------------------------------------------------------
-      // init optix itself
-      // ------------------------------------------------------------------
-      std::cout << "#owl.ll: initializing optix 7" << std::endl;
-      OPTIX_CHECK(optixInit());
-
-      // ------------------------------------------------------------------
-      // check if a device ID list was passed, and if not, create one
-      // ------------------------------------------------------------------
-      std::vector<int> allDeviceIDs;
-      if (deviceIDs == nullptr) {
-        for (int i=0;i<totalNumDevices;i++) allDeviceIDs.push_back(i);
-        numDevices = allDeviceIDs.size();
-        deviceIDs  = allDeviceIDs.data();
-      }
-      // from here on, we need a non-empty list of requested device IDs
-      assert(deviceIDs != nullptr && numDevices > 0);
-      
-      // ------------------------------------------------------------------
-      // create actual devices, ignoring those that failed to initialize
-      // ------------------------------------------------------------------
-      std::vector<Device *> devices;
-      for (int i=0;i<numDevices;i++) {
-        try {
-          Device *dev = new Device((int)devices.size(),deviceIDs[i]);
-          assert(dev);
-          devices.push_back(dev);
-        } catch (std::exception &e) {
-          std::cout << GDT_TERMINAL_RED
-                    << "#owl.ll: Error creating optix device on CUDA device #"
-                    << deviceIDs[i] << ": " << e.what() << " ... dropping this device"
-                    << GDT_TERMINAL_DEFAULT << std::endl;
-        }
-      }
-
-      // ------------------------------------------------------------------
-      // some final sanity check that we managed to create at least
-      // one device...
-      // ------------------------------------------------------------------
-      if (devices.empty())
-        throw std::runtime_error("fatal error - could not find/create any optix devices");
-      
-      return std::make_shared<DeviceGroup>(devices);
-    }
-
-    DeviceGroup::DeviceGroup(const std::vector<Device *> &devices)
-      : devices(devices)
-    {
-      assert(!devices.empty());
-      std::cout << GDT_TERMINAL_GREEN
-                << "#owl.ll: created device group with "
-                << devices.size() << " device(s)"
-                << GDT_TERMINAL_DEFAULT << std::endl;
-    }
-    
-
     void Device::createDeviceBuffer(int bufferID,
                                     size_t elementCount,
                                     size_t elementSize,
@@ -524,33 +473,32 @@ namespace owl {
       assert("check valid buffer ID" && bufferID <  buffers.size());
       assert("check buffer ID available" && buffers[bufferID] == nullptr);
       context->pushActive();
-      Buffer *buffer = new Buffer(elementCount,elementSize);
+      DeviceBuffer *buffer = new DeviceBuffer(elementCount,elementSize);
       if (initData) {
-        buffer->upload(initData,"createDeviceBuffer: uploading initData");
+        buffer->devMem.upload(initData,"createDeviceBuffer: uploading initData");
         LOG("uploading " << elementCount
             << " items of size " << elementSize
             << " from host ptr " << initData
-            << " to device ptr " << buffer->get());
+            << " to device ptr " << buffer->devMem.get());
       }
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
       context->popActive();
     }
     
-    void DeviceGroup::createDeviceBuffer(int bufferID,
-                                         size_t elementCount,
-                                         size_t elementSize,
-                                         const void *initData)
+    void Device::createHostPinnedBuffer(int bufferID,
+                                        size_t elementCount,
+                                        size_t elementSize,
+                                        HostPinnedMemory::SP pinnedMem)
     {
-      for (auto device : devices) {
-        device->createDeviceBuffer(bufferID,elementCount,elementSize,initData);
-      }
-    }
-
-    inline void *addPointerOffset(void *ptr, size_t offset)
-    {
-      if (ptr == nullptr) return nullptr;
-      return (void*)((unsigned char *)ptr + offset);
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID <  buffers.size());
+      assert("check buffer ID available" && buffers[bufferID] == nullptr);
+      context->pushActive();
+      Buffer *buffer = new HostPinnedBuffer(elementCount,elementSize,pinnedMem);
+      assert("check buffer properly created" && buffer != nullptr);
+      buffers[bufferID] = buffer;
+      context->popActive();
     }
     
     void Device::trianglesGeomSetVertexBuffer(int geomID,
@@ -571,6 +519,14 @@ namespace owl {
       triangles->vertexStride  = stride;
       triangles->vertexCount   = count;
     }
+
+    /*! returns the given buffers device pointer */
+    void *Device::bufferGetPointer(int bufferID)
+    {
+      return (void*)checkGetBuffer(bufferID)->d_pointer;
+    }
+      
+    
     
     void Device::trianglesGeomSetIndexBuffer(int geomID,
                                              int bufferID,
@@ -591,34 +547,24 @@ namespace owl {
       triangles->indexStride  = stride;
     }
     
-    void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
-                                                   int bufferID,
-                                                   int count,
-                                                   int stride,
-                                                   int offset)
-    {
-      for (auto device : devices) {
-        device->trianglesGeomSetVertexBuffer(geomID,bufferID,count,stride,offset);
-      }
-    }
-    
-    void DeviceGroup::trianglesGeomSetIndexBuffer(int geomID,
-                                                      int bufferID,
-                                                      int count,
-                                                      int stride,
-                                                      int offset)
-    {
-      for (auto device : devices) {
-        device->trianglesGeomSetIndexBuffer(geomID,bufferID,count,stride,offset);
-      }
-    }
-
     void Device::groupBuildAccel(int groupID)
     {
       Group *group = checkGetGroup(groupID);
       group->destroyAccel(context);
       group->buildAccel(context);
     }
+
+    /*! return given group's current traversable. note this function
+      will *not* check if the group has alreadybeen built, if it
+      has to be rebuilt, etc. */
+    OptixTraversableHandle Device::groupGetTraversable(int groupID)
+    {
+      return checkGetGroup(groupID)->traversable;
+    }
+      
+    
+
+    
 
 
     void TrianglesGeomGroup::destroyAccel(Context *context) 
@@ -646,7 +592,7 @@ namespace owl {
       //! the N build inputs that go into the builder
       std::vector<OptixBuildInput> triangleInputs(children.size());
       /*! *arrays* of the vertex pointers - the buildinputs cointina
-           *pointers* to the pointers, so need a temp copy here */
+       *pointers* to the pointers, so need a temp copy here */
       std::vector<CUdeviceptr> vertexPointers(children.size());
       std::vector<CUdeviceptr> indexPointers(children.size());
 
@@ -744,7 +690,7 @@ namespace owl {
                                   &accelOptions,
                                   // array of build inputs:
                                   triangleInputs.data(),
-		  (uint32_t)triangleInputs.size(),
+                                  (uint32_t)triangleInputs.size(),
                                   // buffer of temp memory:
                                   (CUdeviceptr)tempBuffer.get(),
                                   (uint32_t)tempBuffer.size(),
@@ -770,7 +716,7 @@ namespace owl {
       bvhMemory.alloc(compactedSize);
       // ... and perform compaction
       OPTIX_CALL(AccelCompact(context->optixContext,
-                             /*TODO: stream:*/0,
+                              /*TODO: stream:*/0,
                               // OPTIX_COPY_MODE_COMPACT,
                               traversable,
                               (CUdeviceptr)bvhMemory.get(),
@@ -790,11 +736,11 @@ namespace owl {
       LOG_OK("successfully build triangles geom group accel");
     }
     
-    void Device::sbtHitGroupsBuild(size_t maxHitGroupDataSize,
-                                   WriteHitGroupCallBack writeHitGroupCallBack,
+    void Device::sbtHitGroupsBuild(size_t maxHitProgDataSize,
+                                   WriteHitProgDataCB writeHitProgDataCB,
                                    const void *callBackUserData)
     {
-      LOG("building sbt hit groups");
+      LOG("building sbt hit group records");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.hitGroupRecordsBuffer.valid())
@@ -804,8 +750,11 @@ namespace owl {
       size_t numHitGroupRecords = numGeoms * context->numRayTypes;
       size_t hitGroupRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
-        + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitGroupDataSize);
+        + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
       assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
+      sbt.hitGroupRecordSize = hitGroupRecordSize;
+      sbt.hitGroupRecordCount = numHitGroupRecords;
+
       size_t totalHitGroupRecordsArraySize
         = numHitGroupRecords * hitGroupRecordSize;
       std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
@@ -842,18 +791,192 @@ namespace owl {
           // ------------------------------------------------------------------
           uint8_t *const sbtRecordData
             = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
-          writeHitGroupCallBack(sbtRecordData,
-                                context->owlDeviceID,
-                                geomID,
-                                rayType,
-                                callBackUserData);
+          writeHitProgDataCB(sbtRecordData,
+                                   context->owlDeviceID,
+                                   geomID,
+                                   rayType,
+                                   callBackUserData);
         }
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       context->popActive();
-      LOG_OK("done building (and uploading) sbt hit groups");
+      LOG_OK("done building (and uploading) sbt hit group records");
     }
       
+    void Device::sbtRayGensBuild(size_t maxRayGenDataSize,
+                                 WriteRayGenDataCB writeRayGenDataCB,
+                                 const void *callBackUserData)
+    {
+      LOG("building sbt ray gen records");
+      context->pushActive();
+      // TODO: move this to explicit destroyhitgroups
+      if (sbt.rayGenRecordsBuffer.valid())
+        sbt.rayGenRecordsBuffer.free();
+
+      size_t numRayGenRecords = rayGenPGs.size();
+      size_t rayGenRecordSize
+        = OPTIX_SBT_RECORD_HEADER_SIZE
+        + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxRayGenDataSize);
+      sbt.rayGenRecordSize = rayGenRecordSize;
+      sbt.rayGenRecordCount = numRayGenRecords;
+      assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
+      size_t totalRayGenRecordsArraySize
+        = numRayGenRecords * rayGenRecordSize;
+      std::vector<uint8_t> rayGenRecords(totalRayGenRecordsArraySize);
+
+      // ------------------------------------------------------------------
+      // now, write all records (only on the host so far): we need to
+      // write one record per geometry, per ray type
+      // ------------------------------------------------------------------
+      for (int rgID=0;rgID<(int)rayGenPGs.size();rgID++) {
+        // ------------------------------------------------------------------
+        // compute pointer to entire record:
+        // ------------------------------------------------------------------
+        const int recordID = rgID;
+        uint8_t *const sbtRecord
+          = rayGenRecords.data() + recordID*rayGenRecordSize;
+        
+        // ------------------------------------------------------------------
+        // pack record header with the corresponding hit group:
+        // ------------------------------------------------------------------
+        // first, compute pointer to record:
+        char    *const sbtRecordHeader = (char *)sbtRecord;
+        // ... find the PG that goes into the record header...
+        const RayGenPG &rgPG
+          = rayGenPGs[rgID];
+        // ... and tell optix to write that into the record
+        OPTIX_CALL(SbtRecordPackHeader(rgPG.pg,sbtRecordHeader));
+          
+        // ------------------------------------------------------------------
+        // finally, let the user fill in the record's payload using
+        // the callback
+        // ------------------------------------------------------------------
+        uint8_t *const sbtRecordData
+          = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
+        writeRayGenDataCB(sbtRecordData,
+                                context->owlDeviceID,
+                                rgID,
+                                callBackUserData);
+      }
+      sbt.rayGenRecordsBuffer.alloc(rayGenRecords.size());
+      sbt.rayGenRecordsBuffer.upload(rayGenRecords);
+      context->popActive();
+      LOG_OK("done building (and uploading) sbt ray gen records");
+    }
+      
+    void Device::sbtMissProgsBuild(size_t maxMissProgDataSize,
+                                   WriteMissProgDataCB writeMissProgDataCB,
+                                   const void *callBackUserData)
+    {
+      LOG("building sbt miss prog records");
+      assert("check correct number of miss progs"
+             && missProgPGs.size() == context->numRayTypes);
+      
+      context->pushActive();
+      // TODO: move this to explicit destroyhitgroups
+      if (sbt.missProgRecordsBuffer.valid())
+        sbt.missProgRecordsBuffer.free();
+
+      size_t numMissProgRecords = missProgPGs.size();
+      size_t missProgRecordSize
+        = OPTIX_SBT_RECORD_HEADER_SIZE
+        + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxMissProgDataSize);
+      assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
+      sbt.missProgRecordSize = missProgRecordSize;
+      sbt.missProgRecordCount = numMissProgRecords;
+      size_t totalMissProgRecordsArraySize
+        = numMissProgRecords * missProgRecordSize;
+      std::vector<uint8_t> missProgRecords(totalMissProgRecordsArraySize);
+
+      // ------------------------------------------------------------------
+      // now, write all records (only on the host so far): we need to
+      // write one record per geometry, per ray type
+      // ------------------------------------------------------------------
+      for (int rgID=0;rgID<(int)missProgPGs.size();rgID++) {
+        // ------------------------------------------------------------------
+        // compute pointer to entire record:
+        // ------------------------------------------------------------------
+        const int recordID = rgID;
+        uint8_t *const sbtRecord
+          = missProgRecords.data() + recordID*missProgRecordSize;
+        
+        // ------------------------------------------------------------------
+        // pack record header with the corresponding hit group:
+        // ------------------------------------------------------------------
+        // first, compute pointer to record:
+        char    *const sbtRecordHeader = (char *)sbtRecord;
+        // ... find the PG that goes into the record header...
+        const MissProgPG &rgPG
+          = missProgPGs[rgID];
+        // ... and tell optix to write that into the record
+        OPTIX_CALL(SbtRecordPackHeader(rgPG.pg,sbtRecordHeader));
+          
+        // ------------------------------------------------------------------
+        // finally, let the user fill in the record's payload using
+        // the callback
+        // ------------------------------------------------------------------
+        uint8_t *const sbtRecordData
+          = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
+        writeMissProgDataCB(sbtRecordData,
+                                  context->owlDeviceID,
+                                  rgID,
+                                  callBackUserData);
+      }
+      sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
+      sbt.missProgRecordsBuffer.upload(missProgRecords);
+      context->popActive();
+      LOG_OK("done building (and uploading) sbt miss prog records");
+    }
+
+    void Device::launch(int rgID, const vec2i &dims)
+    {
+      context->pushActive();
+      LOG("launching ...");
+      assert("check valid launch dims" && dims.x > 0);
+      assert("check valid launch dims" && dims.y > 0);
+      assert("check valid ray gen program ID" && rgID >= 0);
+      assert("check valid ray gen program ID" && rgID <  rayGenPGs.size());
+
+      assert("check raygen records built" && sbt.rayGenRecordCount != 0);
+      sbt.sbt.raygenRecord
+        = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
+                                        rgID * sbt.rayGenRecordSize);
+      
+      assert("check miss records built" && sbt.missProgRecordCount != 0);
+      sbt.sbt.missRecordBase
+        = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
+      sbt.sbt.missRecordStrideInBytes
+        = sbt.missProgRecordSize;
+      sbt.sbt.missRecordCount
+        = sbt.missProgRecordCount;
+      
+      assert("check hit records built" && sbt.hitGroupRecordCount != 0);
+      sbt.sbt.hitgroupRecordBase
+        = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
+      sbt.sbt.hitgroupRecordStrideInBytes
+        = sbt.hitGroupRecordSize;
+      sbt.sbt.hitgroupRecordCount
+        = sbt.hitGroupRecordCount;
+
+      if (!sbt.launchParamsBuffer.valid()) {
+        LOG("creating dummy launch params buffer ...");
+        sbt.launchParamsBuffer.alloc(8);
+      }
+
+      // launchParamsBuffer.upload((void *)device_launchParams);
+      OPTIX_CALL(Launch(context->pipeline,
+                        context->stream,
+                        (CUdeviceptr)sbt.launchParamsBuffer.get(),
+                        sbt.launchParamsBuffer.sizeInBytes,
+                        &sbt.sbt,
+                        dims.x,dims.y,1
+                        ));
+
+      cudaDeviceSynchronize();
+      context->popActive();
+    }
+    
+    
   } // ::owl::ll
 } //::owl
   

@@ -14,13 +14,15 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(owlSimpleRayGen
-  simpleRayGen.cpp
+add_executable(c-test
+  c-test.c
   ${ptxCode}
   )
-target_link_libraries(owlSimpleRayGen
-  owl-optix
+target_link_libraries(c-test
+  owl
   )
+

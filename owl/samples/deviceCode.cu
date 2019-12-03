@@ -31,7 +31,7 @@
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
   // if (optix::getLaunchIndex() == optix::vec2i(0))
-  //   printf("Hello OptiX From your First RayGen Program\n");
+  printf("Hello OptiX From your First RayGen Program\n");
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
