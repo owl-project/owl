@@ -15,7 +15,15 @@
 # ======================================================================== #
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(ll01-simpleTriangles
+  hostCode.cpp
+  ${ptxCode}
+  )
+target_link_libraries(ll01-simpleTriangles
+  owl-ll
+  )
 
-add_subdirectory(s01-simpleTriangles)
-add_subdirectory(s02-multipleTriangleGroups)
 

@@ -18,16 +18,15 @@
 // the 'actual' optix
 #include <optix.h>
 
+// ==================================================================
+// actual device-side "API" built-ins.
+// ==================================================================
+
 #ifndef __CUDA_ARCH__
 #  error "this file should only ever get included on the device side"
 #endif
 
-// TODO: move this to common api
 namespace owl {
-
-  // ==================================================================
-  // actual device-side "API" built-ins.
-  // ==================================================================
 
   inline __device__ vec2i getLaunchIndex()
   {

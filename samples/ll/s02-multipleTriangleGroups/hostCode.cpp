@@ -32,7 +32,7 @@
 extern "C" char ptxCode[];
 
 const int NUM_VERTICES = 8;
-vec3f vertices[NUM_VERTICES] =
+vec3f unitVertices[NUM_VERTICES] =
   {
    { -1.f,-1.f,-1.f },
    { +1.f,-1.f,-1.f },
@@ -55,9 +55,9 @@ vec3i indices[NUM_INDICES] =
    { 4,0,2 }, { 4,2,6 }
   };
 
-const char *outFileName = "llTest.png";
+const char *outFileName = "ll02-multipleTriangleGroups.png";
 const vec2i fbSize(800,600);
-const vec3f lookFrom(-4.f,-3.f,-2.f);
+const vec3f lookFrom(-16.f,-12.f,-8.f);
 const vec3f lookAt(0.f,0.f,0.f);
 const vec3f lookUp(0.f,1.f,0.f);
 const float cosFovy = 0.66f;
@@ -109,35 +109,53 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // alloc buffers
   // ------------------------------------------------------------------
-  enum { VERTEX_BUFFER=0,INDEX_BUFFER,FRAME_BUFFER,NUM_BUFFERS };
+  enum { INDEX_BUFFER=0,
+         VERTEX_BUFFER_000,
+         VERTEX_BUFFER_001,
+         VERTEX_BUFFER_010,
+         VERTEX_BUFFER_011,
+         VERTEX_BUFFER_100,
+         VERTEX_BUFFER_101,
+         VERTEX_BUFFER_110,
+         VERTEX_BUFFER_111,
+         FRAME_BUFFER,NUM_BUFFERS };
   ll->reallocBuffers(NUM_BUFFERS);
-  ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
   ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
-  
+
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  ll->reallocGeoms(1);
-  ll->createTrianglesGeom(/* geom ID    */0,
-                          /* type/PG ID */0);
-  ll->trianglesGeomSetVertexBuffer(/* geom ID     */ 0,
-                                   /* buffer ID */VERTEX_BUFFER,
-                                   /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer(/* geom ID     */ 0,
-                                  /* buffer ID */INDEX_BUFFER,
-                                  /* meta info */NUM_INDICES,sizeof(vec3i),0);
+  ll->reallocGeoms(8);
+  for (int i=0;i<8;i++) {
+    vec3f delta((i&1) ? -3:+3,
+                (i&2) ? -3:+3,
+                (i&4) ? -3:+3);
+    std::vector<vec3f> vertices;
+    for (auto v : unitVertices)
+      vertices.push_back(v+delta);
+    ll->createDeviceBuffer(VERTEX_BUFFER_000+i,NUM_VERTICES,sizeof(vec3f),vertices.data());
+    
+    ll->createTrianglesGeom(/* geom ID    */i,
+                            /* type/PG ID */0);
+    ll->trianglesGeomSetVertexBuffer(/* geom ID     */ 0,
+                                     /* buffer ID */VERTEX_BUFFER_000+i,
+                                     /* meta info */NUM_VERTICES,sizeof(vec3f),0);
+    ll->trianglesGeomSetIndexBuffer(/* geom ID     */ 0,
+                                    /* buffer ID */INDEX_BUFFER,
+                                    /* meta info */NUM_INDICES,sizeof(vec3i),0);
+  }
 
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
   // ##################################################################
-
+  
   enum { TRIANGLES_GROUP=0,NUM_GROUPS };
   ll->reallocGroups(NUM_GROUPS);
-  int geomsInGroup[] = { 0 };
+  int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
   ll->createTrianglesGeomGroup(/* group ID */TRIANGLES_GROUP,
                                /* geoms in group, pointer */ geomsInGroup,
-                               /* geoms in group, count   */ 1);
+                               /* geoms in group, count   */ 8);
   ll->groupBuildAccel(TRIANGLES_GROUP);
 
   // ##################################################################
@@ -151,9 +169,9 @@ int main(int ac, char **av)
     (maxHitGroupDataSize,
      [&](uint8_t *output,int devID,int geomID,int rayID,const void *cbData) {
       TriangleGroupData &self = *(TriangleGroupData*)output;
-      self.color  = vec3f(0,1,0);
       self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
-      self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);
+      self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER_000+geomID,devID);
+      self.color  = gdt::randomColor(geomID);
     });
   
   // ----------- build miss prog(s) -----------
