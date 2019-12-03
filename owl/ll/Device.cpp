@@ -409,6 +409,11 @@ namespace owl {
     {
       assert(geomTypes.empty());
       geomTypes.resize(count);
+      for (auto &gt : geomTypes) {
+        if (gt.perRayType.empty())
+          gt.perRayType.resize(context->numRayTypes);
+        assert(gt.perRayType.size() == context->numRayTypes);
+      }
     }
     
     void Device::allocRayGens(size_t count)
