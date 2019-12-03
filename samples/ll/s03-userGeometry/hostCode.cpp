@@ -31,7 +31,7 @@
 
 extern "C" char ptxCode[];
 
-const char *outFileName = "ll02-multipleTriangleGroups.png";
+const char *outFileName = "ll03-userGeometry.png";
 const vec2i fbSize(800,600);
 const vec3f lookFrom(-16.f,-12.f,-8.f);
 const vec3f lookAt(0.f,0.f,0.f);
@@ -40,11 +40,7 @@ const float cosFovy = 0.66f;
 
 int main(int ac, char **av)
 {
-  std::cout << GDT_TERMINAL_BLUE;
-  std::cout << "###########################################################" << std::endl;
-  std::cout << "ll03-userGeom - renders 8 user-geometry sphres..." << std::endl;
-  std::cout << "###########################################################" << std::endl;
-  std::cout << GDT_TERMINAL_DEFAULT;
+  LOG("ll example '" << av[0] << "' starting up");
 
   owl::ll::DeviceGroup::SP ll
     = owl::ll::DeviceGroup::create();
@@ -95,7 +91,8 @@ int main(int ac, char **av)
   ll->reallocGeoms(8);
   for (int i=0;i<8;i++) {
     ll->createUserGeom(/* geom ID    */i,
-                       /* type/PG ID */0);
+                       /* type/PG ID */0,
+                       /* numprims   */1);
   }
 
   // ##################################################################
@@ -116,7 +113,7 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
+  const size_t maxHitGroupDataSize = sizeof(SphereGeomData);
   ll->sbtHitGroupsBuild
     (maxHitGroupDataSize,
      [&](uint8_t *output,int devID,int geomID,int rayID,const void *cbData) {

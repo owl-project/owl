@@ -217,9 +217,14 @@ namespace owl {
       const int logicalHitGroupID;
     };
     struct UserGeom : public Geom {
+      UserGeom(int logicalHitGroupID, int numPrims)
+        : Geom(logicalHitGroupID),
+          numPrims(numPrims)
+      {}
       virtual GeomType type() { return USER; }
       
       DeviceMemory bounds;
+      size_t       numPrims;
     };
     struct TrianglesGeom : public Geom {
       TrianglesGeom(int logicalHitGroupID)
@@ -352,6 +357,28 @@ namespace owl {
         geoms.resize(newCount);
       }
 
+      void createUserGeom(int geomID,
+                          /*! the "logical" hit group ID:
+                            will always count 0,1,2... evne
+                            if we are using multiple ray
+                            types; the actual hit group
+                            used when building the SBT will
+                            then be 'logicalHitGroupID *
+                            numRayTypes) */
+                          int logicalHitGroupID,
+                          int numPrims)
+      {
+        assert("check ID is valid" && geomID >= 0);
+        assert("check ID is valid" && geomID < geoms.size());
+        assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
+
+        assert("check valid hit group ID" && logicalHitGroupID >= 0);
+        assert("check valid hit group ID"
+               && logicalHitGroupID*context->numRayTypes < hitGroupPGs.size());
+        
+        geoms[geomID] = new UserGeom(logicalHitGroupID,numPrims);
+        assert("check 'new' was successful" && geoms[geomID] != nullptr);
+      }
 
       void createTrianglesGeom(int geomID,
                                /*! the "logical" hit group ID:

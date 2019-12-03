@@ -64,11 +64,7 @@ const float cosFovy = 0.66f;
 
 int main(int ac, char **av)
 {
-  std::cout << GDT_TERMINAL_BLUE;
-  std::cout << "###########################################################" << std::endl;
-  std::cout << "llTest: mini-app for testing low-level optix wrapper api..." << std::endl;
-  std::cout << "###########################################################" << std::endl;
-  std::cout << GDT_TERMINAL_DEFAULT;
+  LOG("ll example '" << av[0] << "' starting up");
 
   owl::ll::DeviceGroup::SP ll
     = owl::ll::DeviceGroup::create();

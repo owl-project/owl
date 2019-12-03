@@ -137,6 +137,17 @@ namespace owl {
                                  rayTypeCount) */
                                int logicalHitGroupID);
       
+      void createUserGeom(int geomID,
+                          /*! the "logical" hit group ID:
+                            will always count 0,1,2... evne
+                            if we are using multiple ray
+                            types; the actual hit group
+                            used when building the SBT will
+                            then be 'logicalHitGroupID *
+                            rayTypeCount) */
+                          int logicalHitGroupID,
+                          int numPrims);
+      
       void createTrianglesGeomGroup(int groupID,
                                     int *geomIDs, int geomCount);
 
