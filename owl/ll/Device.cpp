@@ -234,7 +234,7 @@ namespace owl {
       return line.str();
     }
     
-    inline bool containsInvalidOptixInternalCall(const std::string &line)
+    inline bool ptxContainsInvalidOptixInternalCall(const std::string &line)
     {
       static const char *optix_internal_symbols[] = {
 #if 1
@@ -256,14 +256,14 @@ namespace owl {
       return false;
     }
     
-    std::string killAllInternalOptixSymbols(const char *orignalPtxCode)
+    std::string killAllInternalOptixSymbolsFromPtxString(const char *orignalPtxCode)
     {
       std::vector<std::string> lines;
       std::stringstream fixed;
 
       for (const char *s = orignalPtxCode; *s; ) {
         std::string line = getNextLine(s);
-        if (containsInvalidOptixInternalCall(line))
+        if (ptxContainsInvalidOptixInternalCall(line))
           fixed << "//dropped: " << line;
         else
           fixed << line;
@@ -284,7 +284,7 @@ namespace owl {
         assert(module.module == nullptr);
 
 
-#if 1
+#if 0
         {
           const char *ptxCode = module.ptxCode;
           PING;
@@ -294,7 +294,8 @@ namespace owl {
           CUmodule boundsModule = 0;
           PING;
           PRINT(ptxCode);
-          std::string fixedPtxCode = killAllInternalOptixSymbols(ptxCode);
+          const std::string fixedPtxCode
+            = killAllInternalOptixSymbolsFromPtxString(ptxCode);
           PRINT(fixedPtxCode);
           char log[2000] = "(no log yet)";
           CUjit_option options[] = {
@@ -333,11 +334,12 @@ namespace owl {
             exit(0);
           }
 
-          PING;
-          vec3i blockDims(1,1,1);
-          vec3i gridDims(32,1,1);
-
+          // size of each thread block during bounds function call
+          int boundsFuncBlockSize = 128;
           int numPrims = 3;
+          vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
+          vec3i gridDims(boundsFuncBlockSize,1,1);
+
           void  *d_geomData = nullptr;
           vec3f *d_boundsArray = nullptr;
           void  *args[] = {

@@ -134,7 +134,8 @@ extern "C" __global__ void SphereGeom__boundsFuncKernel__(void  *geomData,
                                                           int    numPrims)
 {
   int primID = threadIdx.x;
-  printf("boundskernel - %i\n",primID);
+  if (primID < numPrims)
+    printf("boundskernel - %i\n",primID);
   // if (primID < numPrims)
   //   __boundsFunc__SphereGeom(boundsArray[primID],primID,geomData);
 }
