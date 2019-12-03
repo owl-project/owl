@@ -223,6 +223,53 @@ namespace owl {
       }
     }
 
+    std::string getNextLine(const char *&s)
+    {
+      std::stringstream line;
+      while (*s) {
+        char c = *s++;
+        line << c;
+        if (c == '\n') break;
+      }
+      return line.str();
+    }
+    
+    inline bool containsInvalidOptixInternalCall(const std::string &line)
+    {
+      static const char *optix_internal_symbols[] = {
+#if 1
+        " _optix_",
+#else
+        " _optix_get_sbt",
+        " _optix_trace",
+        " _optix_get_world_ray_direction",
+        " _optix_get_launch_index",
+        " _optix_read_primitive",
+        " _optix_get_payload",
+#endif
+        nullptr
+      };
+      for (const char **testSym = optix_internal_symbols; *testSym; ++testSym) {
+        if (line.find(*testSym) != line.npos)
+          return true;
+      }
+      return false;
+    }
+    
+    std::string killAllInternalOptixSymbols(const char *orignalPtxCode)
+    {
+      std::vector<std::string> lines;
+      std::stringstream fixed;
+
+      for (const char *s = orignalPtxCode; *s; ) {
+        std::string line = getNextLine(s);
+        if (containsInvalidOptixInternalCall(line))
+          fixed << "//dropped: " << line;
+        else
+          fixed << line;
+      }
+      return fixed.str();
+    }
 
     void Modules::buildOptixHandles(Context *context)
     {
@@ -235,6 +282,90 @@ namespace owl {
       for (int moduleID=0;moduleID<modules.size();moduleID++) {
         Module &module = modules[moduleID];
         assert(module.module == nullptr);
+
+
+#if 1
+        {
+          const char *ptxCode = module.ptxCode;
+          PING;
+          std::cout << "quick module test ..." << std::endl;
+          context->pushActive();
+          CUresult rc = (CUresult)0;
+          CUmodule boundsModule = 0;
+          PING;
+          PRINT(ptxCode);
+          std::string fixedPtxCode = killAllInternalOptixSymbols(ptxCode);
+          PRINT(fixedPtxCode);
+          char log[2000] = "(no log yet)";
+          CUjit_option options[] = {
+            CU_JIT_TARGET_FROM_CUCONTEXT,
+            CU_JIT_ERROR_LOG_BUFFER,
+            CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
+          };
+          void *optionValues[] = {
+            (void*)0,
+            (void*)log,
+            (void*)sizeof(log)
+          };
+          // rc = cuModuleLoadData(&boundsModule, (void *)ptxCode);
+          rc = cuModuleLoadDataEx(&boundsModule, (void *)fixedPtxCode.c_str(),
+                                  3, options, optionValues);
+          PRINT(boundsModule);
+          if (rc) {
+            const char *errName = 0;
+            cuGetErrorName(rc,&errName);
+            PRINT(errName);
+            PRINT(log);
+            exit(0);
+          }
+
+          PING;
+          CUfunction boundsFuncKernel = 0;
+          const char *boundsFuncKernelName = "SphereGeom__boundsFuncKernel__";
+          rc = cuModuleGetFunction(&boundsFuncKernel, boundsModule,
+                                   boundsFuncKernelName);
+          PRINT(boundsFuncKernel);
+          if (rc) {
+            const char *errName = 0;
+            cuGetErrorName(rc,&errName);
+            PRINT(errName);
+            PRINT(log);
+            exit(0);
+          }
+
+          PING;
+          vec3i blockDims(1,1,1);
+          vec3i gridDims(32,1,1);
+
+          int numPrims = 3;
+          void  *d_geomData = nullptr;
+          vec3f *d_boundsArray = nullptr;
+          void  *args[] = {
+            &d_geomData,
+            &d_boundsArray,
+            (void *)&numPrims
+          };
+          rc = cuLaunchKernel(boundsFuncKernel,
+                              blockDims.x,blockDims.y,blockDims.z,
+                              gridDims.x,gridDims.y,gridDims.z,
+                              0, 0, args, 0);
+          PING;
+          if (rc) {
+            const char *errName = 0;
+            cuGetErrorName(rc,&errName);
+            PRINT(errName);
+            PRINT(log);
+            exit(0);
+          }
+          PING;
+          cudaDeviceSynchronize();
+          PING;
+          exit(0);
+        }
+#endif      
+
+
+        
         OPTIX_CHECK_LOG(optixModuleCreateFromPTX(context->optixContext,
                                                  &context->moduleCompileOptions,
                                                  &context->pipelineCompileOptions,
@@ -255,7 +386,8 @@ namespace owl {
       modules.resize(count);
     }
 
-    void Modules::set(size_t slot, const char *ptxCode)
+    void Modules::set(size_t slot,
+                      const char *ptxCode)
     {
       assert(!modules.empty());
       
@@ -1184,7 +1316,130 @@ namespace owl {
       context->popActive();
     }
     
+    void Device::createUserGeom(int geomID,
+                                /*! the "logical" hit group ID:
+                                  will always count 0,1,2... evne
+                                  if we are using multiple ray
+                                  types; the actual hit group
+                                  used when building the SBT will
+                                  then be 'geomTypeID *
+                                  numRayTypes) */
+                                int geomTypeID,
+                                int numPrims)
+    {
+      assert("check ID is valid" && geomID >= 0);
+      assert("check ID is valid" && geomID < geoms.size());
+      assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
+
+      assert("check valid hit group ID" && geomTypeID >= 0);
+      assert("check valid hit group ID" && geomTypeID <  geomTypes.size());
+        
+      geoms[geomID] = new UserGeom(geomTypeID,numPrims);
+      assert("check 'new' was successful" && geoms[geomID] != nullptr);
+    }
     
+    void Device::createTrianglesGeom(int geomID,
+                                     /*! the "logical" hit group ID:
+                                       will always count 0,1,2... evne
+                                       if we are using multiple ray
+                                       types; the actual hit group
+                                       used when building the SBT will
+                                       then be 'geomTypeID *
+                                       numRayTypes) */
+                                     int geomTypeID)
+    {
+      assert("check ID is valid" && geomID >= 0);
+      assert("check ID is valid" && geomID < geoms.size());
+      assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
+
+      assert("check valid hit group ID" && geomTypeID >= 0);
+      assert("check valid hit group ID" && geomTypeID < geomTypes.size());
+        
+      geoms[geomID] = new TrianglesGeom(geomTypeID);
+      assert("check 'new' was successful" && geoms[geomID] != nullptr);
+    }
+
+    /*! resize the array of geom IDs. this can be either a
+      'grow' or a 'shrink', but 'shrink' is only allowed if all
+      geoms that would get 'lost' have alreay been
+      destroyed */
+    void Device::reallocGroups(size_t newCount)
+    {
+      for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
+        assert("realloc would lose a geom that was not properly destroyed" &&
+               groups[idxWeWouldLose] == nullptr);
+      groups.resize(newCount);
+    }
+    /*! resize the array of buffer handles. this can be either a
+      'grow' or a 'shrink', but 'shrink' is only allowed if all
+      buffer handles that would get 'lost' have alreay been
+      destroyed */
+    void Device::reallocBuffers(size_t newCount)
+    {
+      for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
+        assert("realloc would lose a geom that was not properly destroyed" &&
+               buffers[idxWeWouldLose] == nullptr);
+      buffers.resize(newCount);
+    }
+
+    void Device::createTrianglesGeomGroup(int groupID,
+                                          int *geomIDs,
+                                          int geomCount)
+    {
+      assert("check for valid ID" && groupID >= 0);
+      assert("check for valid ID" && groupID < groups.size());
+      assert("check group ID is available" && groups[groupID] ==nullptr);
+        
+      assert("check for valid combinations of child list" &&
+             ((geomIDs == nullptr && geomCount == 0) ||
+              (geomIDs != nullptr && geomCount >  0)));
+        
+      TrianglesGeomGroup *group = new TrianglesGeomGroup(geomCount);
+      assert("check 'new' was successful" && group != nullptr);
+      groups[groupID] = group;
+
+      // set children - todo: move to separate (api?) function(s)!?
+      for (int childID=0;childID<geomCount;childID++) {
+        int geomID = geomIDs[childID];
+        assert("check geom child geom ID is valid" && geomID >= 0);
+        assert("check geom child geom ID is valid" && geomID <  geoms.size());
+        Geom *geom = geoms[geomID];
+        assert("check geom indexed child geom valid" && geom != nullptr);
+        assert("check geom is valid type" && geom->primType() == TRIANGLES);
+        geom->numTimesReferenced++;
+        group->children[childID] = geom;
+      }
+    }
+    
+    void Device::createUserGeomGroup(int groupID,
+                                     int *geomIDs,
+                                     int geomCount)
+    {
+      assert("check for valid ID" && groupID >= 0);
+      assert("check for valid ID" && groupID < groups.size());
+      assert("check group ID is available" && groups[groupID] ==nullptr);
+        
+      assert("check for valid combinations of child list" &&
+             ((geomIDs == nullptr && geomCount == 0) ||
+              (geomIDs != nullptr && geomCount >  0)));
+        
+      UserGeomGroup *group = new UserGeomGroup(geomCount);
+      assert("check 'new' was successful" && group != nullptr);
+      groups[groupID] = group;
+
+      // set children - todo: move to separate (api?) function(s)!?
+      for (int childID=0;childID<geomCount;childID++) {
+        int geomID = geomIDs[childID];
+        assert("check geom child geom ID is valid" && geomID >= 0);
+        assert("check geom child geom ID is valid" && geomID <  geoms.size());
+        Geom *geom = geoms[geomID];
+        assert("check geom indexed child geom valid" && geom != nullptr);
+        assert("check geom is valid type" && geom->primType() == USER);
+        geom->numTimesReferenced++;
+        group->children[childID] = geom;
+      }
+    }
+
   } // ::owl::ll
 } //::owl
   

@@ -119,3 +119,23 @@ OPTIX_MISS_PROGRAM(defaultRayType)()
   prd = (pattern&1) ? self.color1 : self.color0;
 }
 
+
+inline __device__ void __boundsFunc__SphereGeom(box3f &bounds,
+                                     int primID,
+                                     void *geomData)
+{
+  printf("bounds kernel for prim %i\n",primID);
+  // bounds.lower = vec3f(-1.f);
+  // bounds.lower = vec3f(+1.f);
+}
+
+extern "C" __global__ void SphereGeom__boundsFuncKernel__(void  *geomData,
+                                                          box3f *boundsArray,
+                                                          int    numPrims)
+{
+  int primID = threadIdx.x;
+  printf("boundskernel - %i\n",primID);
+  // if (primID < numPrims)
+  //   __boundsFunc__SphereGeom(boundsArray[primID],primID,geomData);
+}
+

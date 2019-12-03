@@ -363,18 +363,7 @@ namespace owl {
                             then be 'geomTypeID *
                             numRayTypes) */
                           int geomTypeID,
-                          int numPrims)
-      {
-        assert("check ID is valid" && geomID >= 0);
-        assert("check ID is valid" && geomID < geoms.size());
-        assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
-
-        assert("check valid hit group ID" && geomTypeID >= 0);
-        assert("check valid hit group ID" && geomTypeID <  geomTypes.size());
-        
-        geoms[geomID] = new UserGeom(geomTypeID,numPrims);
-        assert("check 'new' was successful" && geoms[geomID] != nullptr);
-      }
+                          int numPrims);
 
       void createTrianglesGeom(int geomID,
                                /*! the "logical" hit group ID:
@@ -384,100 +373,27 @@ namespace owl {
                                  used when building the SBT will
                                  then be 'geomTypeID *
                                  numRayTypes) */
-                               int geomTypeID)
-      {
-        assert("check ID is valid" && geomID >= 0);
-        assert("check ID is valid" && geomID < geoms.size());
-        assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
-
-        assert("check valid hit group ID" && geomTypeID >= 0);
-        assert("check valid hit group ID" && geomTypeID < geomTypes.size());
-        
-        geoms[geomID] = new TrianglesGeom(geomTypeID);
-        assert("check 'new' was successful" && geoms[geomID] != nullptr);
-      }
+                               int geomTypeID);
 
       /*! resize the array of geom IDs. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed */
-      void reallocGroups(size_t newCount)
-      {
-        for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
-          assert("realloc would lose a geom that was not properly destroyed" &&
-                 groups[idxWeWouldLose] == nullptr);
-        groups.resize(newCount);
-      }
+      void reallocGroups(size_t newCount);
 
       /*! resize the array of buffer handles. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         buffer handles that would get 'lost' have alreay been
         destroyed */
-      void reallocBuffers(size_t newCount)
-      {
-        for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
-          assert("realloc would lose a geom that was not properly destroyed" &&
-                 buffers[idxWeWouldLose] == nullptr);
-        buffers.resize(newCount);
-      }
+      void reallocBuffers(size_t newCount);
       
       void createTrianglesGeomGroup(int groupID,
                                     int *geomIDs,
-                                    int geomCount)
-      {
-        assert("check for valid ID" && groupID >= 0);
-        assert("check for valid ID" && groupID < groups.size());
-        assert("check group ID is available" && groups[groupID] ==nullptr);
-        
-        assert("check for valid combinations of child list" &&
-               ((geomIDs == nullptr && geomCount == 0) ||
-                (geomIDs != nullptr && geomCount >  0)));
-        
-        TrianglesGeomGroup *group = new TrianglesGeomGroup(geomCount);
-        assert("check 'new' was successful" && group != nullptr);
-        groups[groupID] = group;
-
-        // set children - todo: move to separate (api?) function(s)!?
-        for (int childID=0;childID<geomCount;childID++) {
-          int geomID = geomIDs[childID];
-          assert("check geom child geom ID is valid" && geomID >= 0);
-          assert("check geom child geom ID is valid" && geomID <  geoms.size());
-          Geom *geom = geoms[geomID];
-          assert("check geom indexed child geom valid" && geom != nullptr);
-          assert("check geom is valid type" && geom->primType() == TRIANGLES);
-          geom->numTimesReferenced++;
-          group->children[childID] = geom;
-        }
-      }
+                                    int geomCount);
 
       void createUserGeomGroup(int groupID,
                                int *geomIDs,
-                               int geomCount)
-      {
-        assert("check for valid ID" && groupID >= 0);
-        assert("check for valid ID" && groupID < groups.size());
-        assert("check group ID is available" && groups[groupID] ==nullptr);
-        
-        assert("check for valid combinations of child list" &&
-               ((geomIDs == nullptr && geomCount == 0) ||
-                (geomIDs != nullptr && geomCount >  0)));
-        
-        UserGeomGroup *group = new UserGeomGroup(geomCount);
-        assert("check 'new' was successful" && group != nullptr);
-        groups[groupID] = group;
-
-        // set children - todo: move to separate (api?) function(s)!?
-        for (int childID=0;childID<geomCount;childID++) {
-          int geomID = geomIDs[childID];
-          assert("check geom child geom ID is valid" && geomID >= 0);
-          assert("check geom child geom ID is valid" && geomID <  geoms.size());
-          Geom *geom = geoms[geomID];
-          assert("check geom indexed child geom valid" && geom != nullptr);
-          assert("check geom is valid type" && geom->primType() == USER);
-          geom->numTimesReferenced++;
-          group->children[childID] = geom;
-        }
-      }
+                               int geomCount);
 
       /*! returns the given buffers device pointer */
       void *bufferGetPointer(int bufferID);
