@@ -14,8 +14,15 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# low-level interface
-add_subdirectory(ll)
+include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(c-test
+  c-test.c
+  ${ptxCode}
+  )
+target_link_libraries(c-test
+  owl-ng
+  )
 
-# node graph layer
-add_subdirectory(ng)

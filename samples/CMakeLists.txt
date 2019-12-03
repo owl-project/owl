@@ -14,26 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+# low-level interface
+add_subdirectory(ll)
 
-add_library(owl-ll
-  ll/common.h
-
-  ll/Device.h
-  ll/Device.cpp
-  
-  ll/DeviceGroup.h
-  ll/DeviceGroup.cpp
-  )
-target_link_libraries(owl-ll
-  owl-common
-  ${CUDA_LIBRARIES}
-  ${CUDA_CUDA_LIBRARY}
-  )
-
-add_subdirectory(samples)
-
-
-
-
-
+# node graph layer
+add_subdirectory(ng)

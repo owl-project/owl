@@ -59,12 +59,12 @@ add_library(owl-common
 #configure_file(optix/config.h.in ${CMAKE_BINARY_DIR}/optix/optix_config.h)
 
 # -------------------------------------------------------
-# the low-level library
-# -------------------------------------------------------
-add_subdirectory(ll)
-
-# -------------------------------------------------------
-# the low-level library
+# owl itself
 # -------------------------------------------------------
 add_subdirectory(owl)
+
+# -------------------------------------------------------
+# tutorial/samples
+# -------------------------------------------------------
+add_subdirectory(samples)
 

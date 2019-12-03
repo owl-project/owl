@@ -14,15 +14,15 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(c-test
-  c-test.c
+add_executable(llTest
+  llTest.cpp
   ${ptxCode}
   )
-target_link_libraries(c-test
-  owl
+target_link_libraries(llTest
+  owl-ll
   )
 
