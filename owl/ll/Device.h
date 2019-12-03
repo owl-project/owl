@@ -215,7 +215,7 @@ namespace owl {
       {}
       virtual GeomType type() { return USER; }
       
-      DeviceMemory bounds;
+      DeviceMemory boundsBuffer;
       size_t       numPrims;
     };
     struct TrianglesGeom : public Geom {
@@ -282,10 +282,8 @@ namespace owl {
       {}
       virtual GeomType geomType() { return USER; }
       
-      virtual void destroyAccel(Context *context) override
-      { OWL_NOTIMPLEMENTED; }
-      virtual void buildAccel(Context *context) override
-      { OWL_NOTIMPLEMENTED; }
+      virtual void destroyAccel(Context *context) override;
+      virtual void buildAccel(Context *context) override;
     };
 
 

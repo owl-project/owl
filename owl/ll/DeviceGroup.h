@@ -24,8 +24,6 @@
 namespace owl {
   namespace ll {
 
-    using gdt::vec2i;
-
     struct HostPinnedMemory
     {
       typedef std::shared_ptr<HostPinnedMemory> SP;

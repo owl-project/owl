@@ -20,6 +20,7 @@
 
 #include <optix.h>
 #include <gdt/math/vec.h>
+#include <gdt/math/box.h>
 
 namespace owl {
   using namespace gdt;

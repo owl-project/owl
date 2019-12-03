@@ -740,6 +740,193 @@ namespace owl {
       LOG_OK("successfully build triangles geom group accel");
     }
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    void UserGeomGroup::destroyAccel(Context *context) 
+    {
+      context->pushActive();
+      if (traversable) {
+        bvhMemory.free();
+        traversable = 0;
+      }
+      context->popActive();
+    }
+    
+    void UserGeomGroup::buildAccel(Context *context) 
+    {
+      assert("check does not yet exist" && traversable == 0);
+      assert("check does not yet exist" && !bvhMemory.valid());
+      
+      context->pushActive();
+      LOG("building user accel over "
+          << children.size() << " geometries");
+      
+      // ==================================================================
+      // create triangle inputs
+      // ==================================================================
+      //! the N build inputs that go into the builder
+      std::vector<OptixBuildInput> userGeomInputs(children.size());
+      /*! *arrays* of the vertex pointers - the buildinputs cointina
+       *pointers* to the pointers, so need a temp copy here */
+      std::vector<CUdeviceptr> boundsPointers(children.size());
+
+      // for now we use the same flags for all geoms
+      uint32_t userGeomInputFlags[1] = { 0 };
+      // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
+
+      // now go over all children to set up the buildinputs
+      for (int childID=0;childID<children.size();childID++) {
+        // the three fields we're setting:
+
+        CUdeviceptr     &d_bounds = boundsPointers[childID];
+        OptixBuildInput &userGeomInput = userGeomInputs[childID];
+        
+        // the child wer're setting them with (with sanity checks)
+        Geom *geom = children[childID];
+        assert("double-check geom isn't null" && geom != nullptr);
+        assert("sanity check refcount" && geom->numTimesReferenced >= 0);
+       
+        UserGeom *userGeom = dynamic_cast<UserGeom*>(geom);
+        assert("double-check it's really user"
+               && userGeom != nullptr);
+        assert("user geom has valid bounds buffer"
+               && userGeom->boundsBuffer.valid());
+        d_bounds = userGeom->boundsBuffer.d_pointer;
+        
+        userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
+        auto &aa = userGeomInput.aabbArray;
+        aa.aabbBuffers   = &d_bounds;
+        aa.numPrimitives = userGeom->numPrims;
+        aa.strideInBytes = sizeof(box3f);
+        aa.primitiveIndexOffset = 0;
+      
+        // we always have exactly one SBT entry per shape (ie, triangle
+        // mesh), and no per-primitive materials:
+        aa.flags                       = userGeomInputFlags;
+        aa.numSbtRecords               = context->numRayTypes;
+        aa.sbtIndexOffsetBuffer        = 0; 
+        aa.sbtIndexOffsetSizeInBytes   = 0; 
+        aa.sbtIndexOffsetStrideInBytes = 0; 
+      }
+      
+      // ==================================================================
+      // BLAS setup: buildinputs set up, build the blas
+      // ==================================================================
+      
+      // ------------------------------------------------------------------
+      // first: compute temp memory for bvh
+      // ------------------------------------------------------------------
+      OptixAccelBuildOptions accelOptions = {};
+      accelOptions.buildFlags             = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+      accelOptions.motionOptions.numKeys  = 1;
+      accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
+      
+      OptixAccelBufferSizes blasBufferSizes;
+      OPTIX_CHECK(optixAccelComputeMemoryUsage
+                  (context->optixContext,
+                   &accelOptions,
+                   userGeomInputs.data(),
+                   (uint32_t)userGeomInputs.size(),
+                   &blasBufferSizes
+                   ));
+      
+      // ------------------------------------------------------------------
+      // ... and allocate buffers: temp buffer, initial (uncompacted)
+      // BVH buffer, and a one-single-size_t buffer to store the
+      // compacted size in
+      // ------------------------------------------------------------------
+
+      // temp memory:
+      DeviceMemory tempBuffer;
+      tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
+
+      // buffer for initial, uncompacted bvh
+      DeviceMemory outputBuffer;
+      outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
+
+      // single size-t buffer to store compacted size in
+      DeviceMemory compactedSizeBuffer;
+      compactedSizeBuffer.alloc(sizeof(uint64_t));
+      
+      // ------------------------------------------------------------------
+      // now execute initial, uncompacted build
+      // ------------------------------------------------------------------
+      OptixAccelEmitDesc emitDesc;
+      emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+      emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
+      
+      OPTIX_CHECK(optixAccelBuild(context->optixContext,
+                                  /* todo: stream */0,
+                                  &accelOptions,
+                                  // array of build inputs:
+                                  userGeomInputs.data(),
+                                  (uint32_t)userGeomInputs.size(),
+                                  // buffer of temp memory:
+                                  (CUdeviceptr)tempBuffer.get(),
+                                  (uint32_t)tempBuffer.size(),
+                                  // where we store initial, uncomp bvh:
+                                  (CUdeviceptr)outputBuffer.get(),
+                                  outputBuffer.size(),
+                                  /* the traversable we're building: */ 
+                                  &traversable,
+                                  /* we're also querying compacted size: */
+                                  &emitDesc,1u
+                                  ));
+      CUDA_SYNC_CHECK();
+      
+      // ==================================================================
+      // perform compaction
+      // ==================================================================
+
+      // download builder's compacted size from device
+      uint64_t compactedSize;
+      compactedSizeBuffer.download(&compactedSize);
+
+      // alloc the buffer...
+      bvhMemory.alloc(compactedSize);
+      // ... and perform compaction
+      OPTIX_CALL(AccelCompact(context->optixContext,
+                              /*TODO: stream:*/0,
+                              // OPTIX_COPY_MODE_COMPACT,
+                              traversable,
+                              (CUdeviceptr)bvhMemory.get(),
+                              bvhMemory.size(),
+                              &traversable));
+      CUDA_SYNC_CHECK();
+      
+      // ==================================================================
+      // aaaaaand .... clean up
+      // ==================================================================
+      outputBuffer.free(); // << the UNcompacted, temporary output buffer
+      tempBuffer.free();
+      compactedSizeBuffer.free();
+      
+      context->popActive();
+
+      LOG_OK("successfully build user geom group accel");
+    }
+    
+
+
+
+
+
+
+
+
     void Device::sbtHitGroupsBuild(size_t maxHitProgDataSize,
                                    WriteHitProgDataCB writeHitProgDataCB,
                                    const void *callBackUserData)
