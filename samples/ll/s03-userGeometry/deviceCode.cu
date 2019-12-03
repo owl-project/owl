@@ -114,25 +114,36 @@ OPTIX_MISS_PROGRAM(defaultRayType)()
   prd = (pattern&1) ? self.color1 : self.color0;
 }
 
-
-
-inline __device__ void __boundsFunc__SphereGeom(box3f &bounds,
-                                     int primID,
-                                     void *geomData)
+/* defines the wrapper stuff to actually launch all the bounds
+   programs from the host - todo: move to deviceAPI.h once working */
+#define OPTIX_BOUNDS_PROGRAM(progName)                                  \
+  /* fwd decl for the kernel func to call */                            \
+  inline __device__ void __boundsFunc__##progName(void *geomData,       \
+                                                  box3f &bounds,        \
+                                                  int primID);          \
+                                                                        \
+  /* the '__global__' kernel we can get a function handle on */         \
+  extern "C" __global__                                                 \
+  void __boundsFuncKernel__##progName(void  *geomData,                  \
+                                      box3f *boundsArray,               \
+                                      int    numPrims)                  \
+  {                                                                     \
+    int primID = threadIdx.x;                                           \
+    if (primID < numPrims) {                                            \
+      printf("boundskernel - %i\n",primID);                             \
+      __boundsFunc__##progName(geomData,boundsArray[primID],primID);    \
+    }                                                                   \
+  }                                                                     \
+                                                                        \
+  /* now the actual device code that the user is writing: */            \
+  inline __device__ void __boundsFunc__##progName                       \
+  /* program args and body supplied by user ... */
+  
+  
+OPTIX_BOUNDS_PROGRAM(Sphere)(void  *geomData,
+                             box3f &primBounds,
+                             int    primID)
 {
-  printf("bounds kernel for prim %i\n",primID);
-  // bounds.lower = vec3f(-1.f);
-  // bounds.lower = vec3f(+1.f);
-}
-
-extern "C" __global__ void SphereGeom__boundsFuncKernel__(void  *geomData,
-                                                          box3f *boundsArray,
-                                                          int    numPrims)
-{
-  int primID = threadIdx.x;
-  if (primID < numPrims)
-    printf("boundskernel - %i\n",primID);
-  // if (primID < numPrims)
-  //   __boundsFunc__SphereGeom(boundsArray[primID],primID,geomData);
+  printf("sphere bounds kernel for prim %i\n",primID);
 }
 
