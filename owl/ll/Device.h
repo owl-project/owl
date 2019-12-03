@@ -139,14 +139,6 @@ namespace owl {
 
     typedef enum { TRIANGLES, USER } GeomType;
     
-    // struct StridedDeviceData
-    // {
-    //   size_t stride    = 0;
-    //   size_t offset    = 0;
-    //   size_t count     = 0;
-    //   void  *d_pointer = 0;
-    // };
-
     struct Buffer {
       Buffer(const size_t elementCount,
              const size_t elementSize)
@@ -285,6 +277,9 @@ namespace owl {
       virtual void buildAccel(Context *context) override;
     };
     struct UserGeomGroup : public GeomGroup {
+      UserGeomGroup(size_t numChildren)
+        : GeomGroup(numChildren)
+      {}
       virtual GeomType geomType() { return USER; }
       
       virtual void destroyAccel(Context *context) override
@@ -450,6 +445,35 @@ namespace owl {
           Geom *geom = geoms[geomID];
           assert("check geom indexed child geom valid" && geom != nullptr);
           assert("check geom is valid type" && geom->type() == TRIANGLES);
+          geom->numTimesReferenced++;
+          group->children[childID] = geom;
+        }
+      }
+
+      void createUserGeomGroup(int groupID,
+                                    int *geomIDs,
+                                    int geomCount)
+      {
+        assert("check for valid ID" && groupID >= 0);
+        assert("check for valid ID" && groupID < groups.size());
+        assert("check group ID is available" && groups[groupID] ==nullptr);
+        
+        assert("check for valid combinations of child list" &&
+               ((geomIDs == nullptr && geomCount == 0) ||
+                (geomIDs != nullptr && geomCount >  0)));
+        
+        UserGeomGroup *group = new UserGeomGroup(geomCount);
+        assert("check 'new' was successful" && group != nullptr);
+        groups[groupID] = group;
+
+        // set children - todo: move to separate (api?) function(s)!?
+        for (int childID=0;childID<geomCount;childID++) {
+          int geomID = geomIDs[childID];
+          assert("check geom child geom ID is valid" && geomID >= 0);
+          assert("check geom child geom ID is valid" && geomID <  geoms.size());
+          Geom *geom = geoms[geomID];
+          assert("check geom indexed child geom valid" && geom != nullptr);
+          assert("check geom is valid type" && geom->type() == USER);
           geom->numTimesReferenced++;
           group->children[childID] = geom;
         }

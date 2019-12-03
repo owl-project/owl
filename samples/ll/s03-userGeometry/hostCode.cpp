@@ -102,9 +102,9 @@ int main(int ac, char **av)
   enum { SPHERES_GROUP=0,NUM_GROUPS };
   ll->reallocGroups(NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  ll->createTrianglesGeomGroup(/* group ID */SPHERES_GROUP,
-                               /* geoms in group, pointer */ geomsInGroup,
-                               /* geoms in group, count   */ 8);
+  ll->createUserGeomGroup(/* group ID */SPHERES_GROUP,
+                          /* geoms in group, pointer */ geomsInGroup,
+                          /* geoms in group, count   */ 8);
   ll->groupBuildAccel(SPHERES_GROUP);
 
   // ##################################################################

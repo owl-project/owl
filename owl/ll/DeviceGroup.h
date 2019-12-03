@@ -150,6 +150,8 @@ namespace owl {
       
       void createTrianglesGeomGroup(int groupID,
                                     int *geomIDs, int geomCount);
+      void createUserGeomGroup(int groupID,
+                               int *geomIDs, int geomCount);
 
       void createDeviceBuffer(int bufferID,
                               size_t elementCount,

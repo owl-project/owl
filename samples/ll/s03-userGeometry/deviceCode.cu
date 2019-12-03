@@ -90,7 +90,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     = owl::make_rgba(color);
 }
 
-OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
+OPTIX_CLOSEST_HIT_PROGRAM(Sphere)()
 {
   vec3f &prd = owl::getPRD<vec3f>();
 
