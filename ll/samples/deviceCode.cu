@@ -32,68 +32,90 @@
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
   // RayGenData &rgData = *(RayGenData*)optix::getProgramDataPointer();
-  const RayGenData &rg = optix::getProgramData<RayGenData>();
+  const RayGenData &self = optix::getProgramData<RayGenData>();
   const vec2i pixelID = optix::getLaunchIndex();
   if (pixelID == optix::vec2i(0)) {
     printf("%sHello OptiX From your First RayGen Program (on device %i/%i)%s\n",
            GDT_TERMINAL_LIGHT_RED,
-           rg.deviceIndex,
-           rg.deviceCount,
+           self.deviceIndex,
+           self.deviceCount,
            GDT_TERMINAL_DEFAULT);
   }
-  if (pixelID.x >= rg.fbSize.x) return;
-  if (pixelID.y >= rg.fbSize.y) return;
+  if (pixelID.x >= self.fbSize.x) return;
+  if (pixelID.y >= self.fbSize.y) return;
 
   const int numRayTypes = 1;
   const int rayType = 0;
 
-  RayGenData prd = rg;
-  
-  OptixTraversableHandle handle = rg.world;
-  float3                 rayOrigin = make_float3(-3,-2,-4);
-  float3                 rayDirection = make_float3(3,2,4);
-    float                  tmin = 1e-3f;
-    float                  tmax = 1e+10f;
-    float                  rayTime = 0.f;
-    OptixVisibilityMask    visibilityMask = (OptixVisibilityMask)-1;
-    unsigned int           rayFlags = 0;
-    unsigned int           SBToffset = rayType;
-    unsigned int           SBTstride = numRayTypes;
-    unsigned int           missSBTIndex = rayType;
-    unsigned int           p0 = 0;
-    unsigned int           p1 = 0;
-    optix::packPointer(&prd,p0,p1 );
+  // that's the PRD:
+  vec3f color;
 
-    optixTrace(handle,
-               rayOrigin,
-               rayDirection,
-               tmin,
-               tmax,
-               rayTime,
-               visibilityMask,
-               rayFlags,
-               SBToffset,
-               SBTstride,
-               missSBTIndex,
-               p0,
-               p1 );
+  const vec2f screen = (vec2f(pixelID)+vec2f(.5f)) / vec2f(self.fbSize);
+  
+  OptixTraversableHandle handle = self.world;
+  float3                 rayOrigin 
+    = self.camera.pos;//make_float3(-3,-2,-4);
+  float3                 rayDirection// = make_float3(3,2,4);
+    = normalize(self.camera.dir_00
+                + screen.u * self.camera.dir_du
+                + screen.v * self.camera.dir_dv);
+  float                  tmin = 1e-3f;
+  float                  tmax = 1e+10f;
+  float                  rayTime = 0.f;
+  OptixVisibilityMask    visibilityMask = (OptixVisibilityMask)-1;
+  unsigned int           rayFlags = 0;
+  unsigned int           SBToffset = rayType;
+  unsigned int           SBTstride = numRayTypes;
+  unsigned int           missSBTIndex = rayType;
+  unsigned int           p0 = 0;
+  unsigned int           p1 = 0;
+  optix::packPointer(&color,p0,p1 );
+
+  optixTrace(handle,
+             rayOrigin,
+             rayDirection,
+             tmin,
+             tmax,
+             rayTime,
+             visibilityMask,
+             rayFlags,
+             SBToffset,
+             SBTstride,
+             missSBTIndex,
+             p0,
+             p1 );
     
-    
-  const int fbOfs = pixelID.x+rg.fbSize.x*pixelID.y;
-  int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
-  rg.fbPtr[fbOfs]
-    = optix::make_rgba((pattern&1) ? rg.color1 : rg.color0);
+  const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
+  self.fbPtr[fbOfs]
+    = optix::make_rgba(color);
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
-  if (optix::getLaunchIndex() == optix::vec2i(400,300))
-    printf("hit!!!\n");
+  vec3f &prd = optix::getPRD<vec3f>();
+
+  const TriangleGroupData &self = optix::getProgramData<TriangleGroupData>();
+  
+  // compute normal:
+  const int   primID = optixGetPrimitiveIndex();
+  const vec3i index  = self.index[primID];
+  const vec3f &A     = self.vertex[index.x];
+  const vec3f &B     = self.vertex[index.y];
+  const vec3f &C     = self.vertex[index.z];
+  const vec3f Ng     = normalize(cross(B-A,C-A));
+
+  const vec3f rayDir = optixGetWorldRayDirection();
+  prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*self.color;
 }
 
 OPTIX_MISS_PROGRAM(defaultRayType)()
 {
-  if (optix::getLaunchIndex() == optix::vec2i(400,300))
-    printf("miss!!!\n");
+  const vec2i pixelID = optix::getLaunchIndex();
+
+  const MissProgData &self = optix::getProgramData<MissProgData>();
+  
+  vec3f &prd = optix::getPRD<vec3f>();
+  int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
+  prd = (pattern&1) ? self.color1 : self.color0;
 }
 

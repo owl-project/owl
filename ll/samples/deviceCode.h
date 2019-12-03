@@ -108,23 +108,30 @@ namespace optix {
   }
 
 
-  static __forceinline__ __device__ void * getPRD()
+  static __forceinline__ __device__ void *getPRDPointer()
   { 
     const uint32_t u0 = optixGetPayload_0();
     const uint32_t u1 = optixGetPayload_1();
     return unpackPointer(u0, u1);
   }
-    
+
+  template<typename T>
+  static __forceinline__ __device__ T &getPRD()
+  { return *(T*)getPRDPointer(); }
+
 #endif
 }
 
 using gdt::vec2i;
+using gdt::vec2f;
 using gdt::vec3f;
 using gdt::vec3i;
 
 struct TriangleGroupData
 {
   vec3f color;
+  vec3i *index;
+  vec3f *vertex;
 };
 
 struct RayGenData
@@ -133,12 +140,19 @@ struct RayGenData
   int deviceCount;
   uint32_t *fbPtr;
   vec2i  fbSize;
-  vec3f  color0;
-  vec3f  color1;
   OptixTraversableHandle world;
+
+  struct {
+    vec3f pos;
+    vec3f dir_00;
+    vec3f dir_du;
+    vec3f dir_dv;
+  } camera;
 };
 
 struct MissProgData
 {
+  vec3f  color0;
+  vec3f  color1;
 };
 

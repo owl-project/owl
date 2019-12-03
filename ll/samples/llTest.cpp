@@ -57,6 +57,10 @@ vec3i indices[NUM_INDICES] =
 
 const char *outFileName = "llTest.png";
 const vec2i fbSize(800,600);
+const vec3f lookFrom(-4.f,-3.f,-2.f);
+const vec3f lookAt(0.f,0.f,0.f);
+const vec3f lookUp(0.f,1.f,0.f);
+const float cosFovy = 0.66f;
 
 int main(int ac, char **av)
 {
@@ -143,14 +147,14 @@ int main(int ac, char **av)
 
   // ----------- build hitgroups -----------
   const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
-  ll->sbtHitGroupsBuild(maxHitGroupDataSize,
-                        [&](uint8_t *output,
-                            int devID,
-                            int geomID,
-                            int rayID,
-                            const void *cbData) {
-                          ((TriangleGroupData*)output)->color = vec3f(0,1,0);
-                        });
+  ll->sbtHitGroupsBuild
+    (maxHitGroupDataSize,
+     [&](uint8_t *output,int devID,int geomID,int rayID,const void *cbData) {
+      TriangleGroupData &self = *(TriangleGroupData*)output;
+      self.color  = vec3f(0,1,0);
+      self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
+      self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);
+    });
   
   // ----------- build miss prog(s) -----------
   const size_t maxMissProgDataSize = sizeof(MissProgData);
@@ -160,6 +164,8 @@ int main(int ac, char **av)
                             int rayType, 
                             const void *cbData) {
                           /* we don't have any ... */
+                          ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
+                          ((MissProgData*)output)->color1 = vec3f(.8f,.8f,.8f);
                         });
   
   // ----------- build raygens -----------
@@ -172,11 +178,22 @@ int main(int ac, char **av)
                         RayGenData *rg = (RayGenData*)output;
                         rg->deviceIndex   = devID;
                         rg->deviceCount = ll->getDeviceCount();
-                        rg->color0 = vec3f(.8,.8,.8);
-                        rg->color1 = vec3f(.7,0,0);
                         rg->fbSize = fbSize;
                         rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
                         rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+
+                        // compute camera frame:
+                        vec3f &pos = rg->camera.pos;
+                        vec3f &d00 = rg->camera.dir_00;
+                        vec3f &ddu = rg->camera.dir_du;
+                        vec3f &ddv = rg->camera.dir_dv;
+                        float aspect = fbSize.x / float(fbSize.y);
+                        pos = lookFrom;
+                        d00 = normalize(lookAt-lookFrom);
+                        ddu = cosFovy * aspect * normalize(cross(d00,lookUp));
+                        ddv = cosFovy * normalize(cross(ddu,d00));
+                        d00 -= 0.5f * ddu;
+                        d00 -= 0.5f * ddv;
                       });
   LOG_OK("everything set up ...");
 
