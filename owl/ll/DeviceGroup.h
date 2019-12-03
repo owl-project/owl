@@ -69,7 +69,7 @@ namespace owl {
                         entry for */
                       int rayGenID,
                       /*! the raw void pointer the app has passed
-                        during sbtHitGroupsBuild() */
+                        during sbtGeomTypesBuild() */
                       const void *callBackUserData);
     
     /*! callback with which the app can specify what data is to be
@@ -87,7 +87,7 @@ namespace owl {
                           entry for */
                         int rayType,
                         /*! the raw void pointer the app has passed
-                          during sbtHitGroupsBuild() */
+                          during sbtMissProgsBuildd() */
                         const void *callBackUserData);
     
     struct Device;
@@ -104,11 +104,11 @@ namespace owl {
       void createPipeline();
       void buildPrograms();
       
-      void allocHitGroupPGs(size_t count);
+      void allocGeomTypes(size_t count);
       void allocRayGens(size_t count);
       void allocMissProgs(size_t count);
 
-      void setHitGroupClosestHit(int pgID, int moduleID, const char *progName);
+      void setGeomTypeClosestHit(int pgID, int rayTypeID, int moduleID, const char *progName);
       void setRayGen(int pgID, int moduleID, const char *progName);
       void setMissProg(int pgID, int moduleID, const char *progName);
       
@@ -131,9 +131,9 @@ namespace owl {
                                  if we are using multiple ray
                                  types; the actual hit group
                                  used when building the SBT will
-                                 then be 'logicalHitGroupID *
+                                 then be 'geomTypeID *
                                  rayTypeCount) */
-                               int logicalHitGroupID);
+                               int geomTypeID);
       
       void createUserGeom(int geomID,
                           /*! the "logical" hit group ID:
@@ -141,9 +141,9 @@ namespace owl {
                             if we are using multiple ray
                             types; the actual hit group
                             used when building the SBT will
-                            then be 'logicalHitGroupID *
+                            then be 'geomTypeID *
                             rayTypeCount) */
-                          int logicalHitGroupID,
+                          int geomTypeID,
                           int numPrims);
       
       void createTrianglesGeomGroup(int groupID,
@@ -176,7 +176,7 @@ namespace owl {
       void groupBuildAccel(int groupID);
       OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
       
-      void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
+      void sbtGeomTypesBuild(size_t maxHitGroupDataSize,
                              WriteHitProgDataCB writeHitProgDataCB,
                              void *callBackData);
       void sbtRayGensBuild(size_t maxRayGenDataSize,
@@ -186,10 +186,10 @@ namespace owl {
                              WriteMissProgDataCB WriteMissProgDataCB,
                              void *callBackData);
       template<typename Lambda>
-      void sbtHitGroupsBuild(size_t maxHitGroupDataSize,
+      void sbtGeomTypesBuild(size_t maxHitGroupDataSize,
                              const Lambda &l)
       {
-        this->sbtHitGroupsBuild(maxHitGroupDataSize,
+        this->sbtGeomTypesBuild(maxHitGroupDataSize,
                               [](uint8_t *output,
                                  int devID,
                                  int geomID,

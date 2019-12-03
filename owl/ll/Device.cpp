@@ -152,12 +152,19 @@ namespace owl {
       }
     }
 
-    void Device::setHitGroupClosestHit(int pgID,
+    void Device::setGeomTypeClosestHit(int geomTypeID,
+                                       int rayTypeID,
                                        int moduleID,
                                        const char *progName)
     {
-      assert(pgID >= 0);
-      assert(pgID < hitGroupPGs.size());
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      
+      assert(rayTypeID >= 0);
+      assert(rayTypeID < context->numRayTypes);
+      assert(rayTypeID < geomType.perRayType.size());
+      auto &hitGroup = geomType.perRayType[rayTypeID];
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -165,8 +172,9 @@ namespace owl {
              ||
              (moduleID >= 0  && progName != nullptr));
 
-      hitGroupPGs[pgID].closestHit.moduleID = moduleID;
-      hitGroupPGs[pgID].closestHit.progName = progName;
+      assert("check hitgroup isn't currently active" && hitGroup.pg == nullptr);
+      hitGroup.closestHit.moduleID = moduleID;
+      hitGroup.closestHit.progName = progName;
     }
     
     void Device::setRayGen(int pgID,
@@ -328,51 +336,52 @@ namespace owl {
       // ------------------------------------------------------------------
       // hitGroup programs
       // ------------------------------------------------------------------
-      for (int pgID=0;pgID<hitGroupPGs.size();pgID++) {
-        HitGroupPG &pg   = hitGroupPGs[pgID];
-        pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
+      for (int geomTypeID=0;geomTypeID<geomTypes.size();geomTypeID++)
+        for (auto &pg : geomTypes[geomTypeID].perRayType) {
+          assert("check program group not already active" && pg.pg == nullptr);
+          pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
 
-        // ----------- closest hit -----------
-        Module *moduleCH = modules.get(pg.closestHit.moduleID);
-        std::string annotatedProgNameCH
-          = pg.closestHit.progName
-          ? std::string("__closesthit__")+pg.closestHit.progName
-          : "";
-        if (moduleCH) {
-          assert(moduleCH->module != nullptr);
-          assert(pg.closestHit.progName != nullptr);
-          pgDesc.hitgroup.moduleCH            = moduleCH->module;
-          pgDesc.hitgroup.entryFunctionNameCH = annotatedProgNameCH.c_str();
-        } else {
-          pgDesc.hitgroup.moduleCH            = nullptr;
-          pgDesc.hitgroup.entryFunctionNameCH = nullptr;
-        }
-        // ----------- any hit -----------
-        Module *moduleAH = modules.get(pg.anyHit.moduleID);
-        std::string annotatedProgNameAH
-          = pg.anyHit.progName
-          ? std::string("__anyhit__")+pg.anyHit.progName
-          : "";
-        if (moduleAH) {
-          assert(moduleAH->module != nullptr);
-          assert(pg.anyHit.progName != nullptr);
-          pgDesc.hitgroup.moduleAH            = moduleAH->module;
-          pgDesc.hitgroup.entryFunctionNameAH = annotatedProgNameAH.c_str();
-        } else {
-          pgDesc.hitgroup.moduleAH            = nullptr;
-          pgDesc.hitgroup.entryFunctionNameAH = nullptr;
-        }
+          // ----------- closest hit -----------
+          Module *moduleCH = modules.get(pg.closestHit.moduleID);
+          std::string annotatedProgNameCH
+            = pg.closestHit.progName
+            ? std::string("__closesthit__")+pg.closestHit.progName
+            : "";
+          if (moduleCH) {
+            assert(moduleCH->module != nullptr);
+            assert(pg.closestHit.progName != nullptr);
+            pgDesc.hitgroup.moduleCH            = moduleCH->module;
+            pgDesc.hitgroup.entryFunctionNameCH = annotatedProgNameCH.c_str();
+          } else {
+            pgDesc.hitgroup.moduleCH            = nullptr;
+            pgDesc.hitgroup.entryFunctionNameCH = nullptr;
+          }
+          // ----------- any hit -----------
+          Module *moduleAH = modules.get(pg.anyHit.moduleID);
+          std::string annotatedProgNameAH
+            = pg.anyHit.progName
+            ? std::string("__anyhit__")+pg.anyHit.progName
+            : "";
+          if (moduleAH) {
+            assert(moduleAH->module != nullptr);
+            assert(pg.anyHit.progName != nullptr);
+            pgDesc.hitgroup.moduleAH            = moduleAH->module;
+            pgDesc.hitgroup.entryFunctionNameAH = annotatedProgNameAH.c_str();
+          } else {
+            pgDesc.hitgroup.moduleAH            = nullptr;
+            pgDesc.hitgroup.entryFunctionNameAH = nullptr;
+          }
 
-        char log[2048];
-        size_t sizeof_log = sizeof( log );
-        OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
-                                            &pgDesc,
-                                            1,
-                                            &pgOptions,
-                                            log,&sizeof_log,
-                                            &pg.pg
-                                            ));
-      }
+          char log[2048];
+          size_t sizeof_log = sizeof( log );
+          OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
+                                              &pgDesc,
+                                              1,
+                                              &pgOptions,
+                                              log,&sizeof_log,
+                                              &pg.pg
+                                              ));
+        }
       
     }
     
@@ -384,10 +393,11 @@ namespace owl {
         pg.pg = nullptr;
       }
       // ---------------------- hitGroup ----------------------
-      for (auto &pg : hitGroupPGs) {
-        if (pg.pg) optixProgramGroupDestroy(pg.pg);
-        pg.pg = nullptr;
-      }
+      for (auto &geomType : geomTypes) 
+        for (auto &pg : geomType.perRayType) {
+          if (pg.pg) optixProgramGroupDestroy(pg.pg);
+          pg.pg = nullptr;
+        }
       // ---------------------- miss ----------------------
       for (auto &pg : missProgPGs) {
         if (pg.pg) optixProgramGroupDestroy(pg.pg);
@@ -395,10 +405,10 @@ namespace owl {
       }
     }
 
-    void Device::allocHitGroupPGs(size_t count)
+    void Device::allocGeomTypes(size_t count)
     {
-      assert(hitGroupPGs.empty());
-      hitGroupPGs.resize(count);
+      assert(geomTypes.empty());
+      geomTypes.resize(count);
     }
     
     void Device::allocRayGens(size_t count)
@@ -423,9 +433,10 @@ namespace owl {
       assert(!device->rayGenPGs.empty());
       for (auto &pg : device->rayGenPGs)
         allPGs.push_back(pg.pg);
-      assert(!device->hitGroupPGs.empty());
-      for (auto &pg : device->hitGroupPGs)
-        allPGs.push_back(pg.pg);
+      assert(!device->geomTypes.empty());
+      for (auto &geomType : device->geomTypes)
+        for (auto &pg : geomType.perRayType)
+          allPGs.push_back(pg.pg);
       assert(!device->missProgPGs.empty());
       for (auto &pg : device->missProgPGs)
         allPGs.push_back(pg.pg);
@@ -927,7 +938,7 @@ namespace owl {
 
 
 
-    void Device::sbtHitGroupsBuild(size_t maxHitProgDataSize,
+    void Device::sbtGeomTypesBuild(size_t maxHitProgDataSize,
                                    WriteHitProgDataCB writeHitProgDataCB,
                                    const void *callBackUserData)
     {
@@ -955,11 +966,11 @@ namespace owl {
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
       for (int geomID=0;geomID<(int)geoms.size();geomID++)
-        for (int rayType=0;rayType<context->numRayTypes;rayType++) {
+        for (int rayTypeID=0;rayTypeID<context->numRayTypes;rayTypeID++) {
           // ------------------------------------------------------------------
           // compute pointer to entire record:
           // ------------------------------------------------------------------
-          const int recordID = rayType + geomID*context->numRayTypes;
+          const int recordID = rayTypeID + geomID*context->numRayTypes;
           uint8_t *const sbtRecord
             = hitGroupRecords.data() + recordID*hitGroupRecordSize;
 
@@ -971,8 +982,9 @@ namespace owl {
           // then, get gemetry we want to write (to find its hit group ID)...
           const Geom *const geom = checkGetGeom(geomID);
           // ... find the PG that goes into the record header...
+          auto &geomType = geomTypes[geom->geomTypeID];
           const HitGroupPG &hgPG
-            = hitGroupPGs[rayType + geom->logicalHitGroupID*context->numRayTypes];
+            = geomType.perRayType[rayTypeID];
           // ... and tell optix to write that into the record
           OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
           
@@ -983,10 +995,10 @@ namespace owl {
           uint8_t *const sbtRecordData
             = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
           writeHitProgDataCB(sbtRecordData,
-                                   context->owlDeviceID,
-                                   geomID,
-                                   rayType,
-                                   callBackUserData);
+                             context->owlDeviceID,
+                             geomID,
+                             rayTypeID,
+                             callBackUserData);
         }
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
@@ -1045,9 +1057,9 @@ namespace owl {
         uint8_t *const sbtRecordData
           = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
         writeRayGenDataCB(sbtRecordData,
-                                context->owlDeviceID,
-                                rgID,
-                                callBackUserData);
+                          context->owlDeviceID,
+                          rgID,
+                          callBackUserData);
       }
       sbt.rayGenRecordsBuffer.alloc(rayGenRecords.size());
       sbt.rayGenRecordsBuffer.upload(rayGenRecords);
@@ -1109,9 +1121,9 @@ namespace owl {
         uint8_t *const sbtRecordData
           = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
         writeMissProgDataCB(sbtRecordData,
-                                  context->owlDeviceID,
-                                  rgID,
-                                  callBackUserData);
+                            context->owlDeviceID,
+                            rgID,
+                            callBackUserData);
       }
       sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
       sbt.missProgRecordsBuffer.upload(missProgRecords);

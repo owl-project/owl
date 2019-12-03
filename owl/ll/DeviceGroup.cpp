@@ -83,8 +83,8 @@ namespace owl {
       LOG_OK("module(s) successfully (re-)built");
     }
     
-    void DeviceGroup::allocHitGroupPGs(size_t count)
-    { for (auto device : devices) device->allocHitGroupPGs(count); }
+    void DeviceGroup::allocGeomTypes(size_t count)
+    { for (auto device : devices) device->allocGeomTypes(count); }
     
     void DeviceGroup::allocRayGens(size_t count)
     { for (auto device : devices) device->allocRayGens(count); }
@@ -92,8 +92,14 @@ namespace owl {
     void DeviceGroup::allocMissProgs(size_t count)
     { for (auto device : devices) device->allocMissProgs(count); }
 
-    void DeviceGroup::setHitGroupClosestHit(int pgID, int moduleID, const char *progName)
-    { for (auto device : devices) device->setHitGroupClosestHit(pgID,moduleID,progName); }
+    void DeviceGroup::setGeomTypeClosestHit(int geomTypeID,
+                                            int rayTypeID,
+                                            int moduleID,
+                                            const char *progName)
+    {
+      for (auto device : devices)
+        device->setGeomTypeClosestHit(geomTypeID,rayTypeID,moduleID,progName);
+    }
     
     void DeviceGroup::setRayGen(int pgID, int moduleID, const char *progName)
     { for (auto device : devices) device->setRayGen(pgID,moduleID,progName); }
@@ -237,12 +243,12 @@ namespace owl {
       return checkGetDevice(deviceID)->groupGetTraversable(groupID);
     }
 
-    void DeviceGroup::sbtHitGroupsBuild(size_t maxHitGroupDataSize,
+    void DeviceGroup::sbtGeomTypesBuild(size_t maxHitGroupDataSize,
                                         WriteHitProgDataCB writeHitProgDataCB,
                                         void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtHitGroupsBuild(maxHitGroupDataSize,
+        device->sbtGeomTypesBuild(maxHitGroupDataSize,
                                   writeHitProgDataCB,
                                   callBackData);
     }

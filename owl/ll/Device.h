@@ -113,6 +113,10 @@ namespace owl {
       Program closestHit;
       Program intersect;
     };
+    struct GeomType {
+      std::vector<HitGroupPG> perRayType;
+      Program boundsProg;
+    };
     // struct ProgramGroups {
     //   std::vector<HitGroupPG> hitGroupPGs;
     //   std::vector<RayGenPG> rayGenPGs;
@@ -137,7 +141,7 @@ namespace owl {
       DeviceMemory launchParamsBuffer;
     };
 
-    typedef enum { TRIANGLES, USER } GeomType;
+    typedef enum { TRIANGLES, USER } PrimType;
     
     struct Buffer {
       Buffer(const size_t elementCount,
@@ -194,10 +198,10 @@ namespace owl {
     };
       
     struct Geom {
-      Geom(int logicalHitGroupID)
-        : logicalHitGroupID(logicalHitGroupID)
+      Geom(int geomTypeID)
+        : geomTypeID(geomTypeID)
       {}
-      virtual GeomType type() = 0;
+      virtual PrimType primType() = 0;
       
       /*! only for error checking - we do NOT do reference counting
         ourselves, but will use this to track erorrs like destroying
@@ -206,23 +210,23 @@ namespace owl {
         refcount reaches zero - this is ONLY for sanity checking
         during object deletion */
       int numTimesReferenced = 0;
-      const int logicalHitGroupID;
+      const int geomTypeID;
     };
     struct UserGeom : public Geom {
-      UserGeom(int logicalHitGroupID, int numPrims)
-        : Geom(logicalHitGroupID),
+      UserGeom(int geomTypeID, int numPrims)
+        : Geom(geomTypeID),
           numPrims(numPrims)
       {}
-      virtual GeomType type() { return USER; }
+      virtual PrimType primType() { return USER; }
       
       DeviceMemory boundsBuffer;
       size_t       numPrims;
     };
     struct TrianglesGeom : public Geom {
-      TrianglesGeom(int logicalHitGroupID)
-        : Geom(logicalHitGroupID)
+      TrianglesGeom(int geomTypeID)
+        : Geom(geomTypeID)
       {}
-      virtual GeomType type() { return TRIANGLES; }
+      virtual PrimType primType() { return TRIANGLES; }
 
       void  *vertexPointer = nullptr;
       size_t vertexStride  = 0;
@@ -263,7 +267,7 @@ namespace owl {
       {}
       
       virtual bool containsGeom() { return true; }
-      virtual GeomType geomType() = 0;
+      virtual PrimType primType() = 0;
 
       std::vector<Geom *> children;
     };
@@ -271,7 +275,7 @@ namespace owl {
       TrianglesGeomGroup(size_t numChildren)
         : GeomGroup(numChildren)
       {}
-      virtual GeomType geomType() { return TRIANGLES; }
+      virtual PrimType primType() { return TRIANGLES; }
       
       virtual void destroyAccel(Context *context) override;
       virtual void buildAccel(Context *context) override;
@@ -280,7 +284,7 @@ namespace owl {
       UserGeomGroup(size_t numChildren)
         : GeomGroup(numChildren)
       {}
-      virtual GeomType geomType() { return USER; }
+      virtual PrimType primType() { return USER; }
       
       virtual void destroyAccel(Context *context) override;
       virtual void buildAccel(Context *context) override;
@@ -321,7 +325,7 @@ namespace owl {
         buildOptixPrograms();
       }
 
-      void setHitGroupClosestHit(int pgID, int moduleID, const char *progName);
+      void setGeomTypeClosestHit(int pgID, int rayTypeID, int moduleID, const char *progName);
       void setRayGen(int pgID, int moduleID, const char *progName);
       void setMissProg(int pgID, int moduleID, const char *progName);
       
@@ -330,7 +334,7 @@ namespace owl {
       /*! each geom will always use "numRayTypes" successive hit
         groups (one per ray type), so this must be a multiple of the
         number of ray types to be used */
-      void allocHitGroupPGs(size_t count);
+      void allocGeomTypes(size_t count);
 
       void allocRayGens(size_t count);
       /*! each geom will always use "numRayTypes" successive hit
@@ -356,20 +360,19 @@ namespace owl {
                             if we are using multiple ray
                             types; the actual hit group
                             used when building the SBT will
-                            then be 'logicalHitGroupID *
+                            then be 'geomTypeID *
                             numRayTypes) */
-                          int logicalHitGroupID,
+                          int geomTypeID,
                           int numPrims)
       {
         assert("check ID is valid" && geomID >= 0);
         assert("check ID is valid" && geomID < geoms.size());
         assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
 
-        assert("check valid hit group ID" && logicalHitGroupID >= 0);
-        assert("check valid hit group ID"
-               && logicalHitGroupID*context->numRayTypes < hitGroupPGs.size());
+        assert("check valid hit group ID" && geomTypeID >= 0);
+        assert("check valid hit group ID" && geomTypeID <  geomTypes.size());
         
-        geoms[geomID] = new UserGeom(logicalHitGroupID,numPrims);
+        geoms[geomID] = new UserGeom(geomTypeID,numPrims);
         assert("check 'new' was successful" && geoms[geomID] != nullptr);
       }
 
@@ -379,19 +382,18 @@ namespace owl {
                                  if we are using multiple ray
                                  types; the actual hit group
                                  used when building the SBT will
-                                 then be 'logicalHitGroupID *
+                                 then be 'geomTypeID *
                                  numRayTypes) */
-                               int logicalHitGroupID)
+                               int geomTypeID)
       {
         assert("check ID is valid" && geomID >= 0);
         assert("check ID is valid" && geomID < geoms.size());
         assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
 
-        assert("check valid hit group ID" && logicalHitGroupID >= 0);
-        assert("check valid hit group ID"
-               && logicalHitGroupID*context->numRayTypes < hitGroupPGs.size());
+        assert("check valid hit group ID" && geomTypeID >= 0);
+        assert("check valid hit group ID" && geomTypeID < geomTypes.size());
         
-        geoms[geomID] = new TrianglesGeom(logicalHitGroupID);
+        geoms[geomID] = new TrianglesGeom(geomTypeID);
         assert("check 'new' was successful" && geoms[geomID] != nullptr);
       }
 
@@ -442,15 +444,15 @@ namespace owl {
           assert("check geom child geom ID is valid" && geomID <  geoms.size());
           Geom *geom = geoms[geomID];
           assert("check geom indexed child geom valid" && geom != nullptr);
-          assert("check geom is valid type" && geom->type() == TRIANGLES);
+          assert("check geom is valid type" && geom->primType() == TRIANGLES);
           geom->numTimesReferenced++;
           group->children[childID] = geom;
         }
       }
 
       void createUserGeomGroup(int groupID,
-                                    int *geomIDs,
-                                    int geomCount)
+                               int *geomIDs,
+                               int geomCount)
       {
         assert("check for valid ID" && groupID >= 0);
         assert("check for valid ID" && groupID < groups.size());
@@ -471,7 +473,7 @@ namespace owl {
           assert("check geom child geom ID is valid" && geomID <  geoms.size());
           Geom *geom = geoms[geomID];
           assert("check geom indexed child geom valid" && geom != nullptr);
-          assert("check geom is valid type" && geom->type() == USER);
+          assert("check geom is valid type" && geom->primType() == USER);
           geom->numTimesReferenced++;
           group->children[childID] = geom;
         }
@@ -570,7 +572,7 @@ namespace owl {
         return asTriangles;
       }
 
-      void sbtHitGroupsBuild(size_t maxHitProgDataSize,
+      void sbtGeomTypesBuild(size_t maxHitProgDataSize,
                              WriteHitProgDataCB writeHitProgDataCB,
                              const void *callBackUserData);
       void sbtRayGensBuild(size_t maxRayGenDataSize,
@@ -585,7 +587,7 @@ namespace owl {
       Context                  *context;
       
       Modules                   modules;
-      std::vector<HitGroupPG>   hitGroupPGs;
+      std::vector<GeomType>     geomTypes;
       std::vector<RayGenPG>     rayGenPGs;
       std::vector<MissProgPG>   missProgPGs;
       std::vector<Geom *>       geoms;

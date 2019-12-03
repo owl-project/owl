@@ -55,8 +55,10 @@ int main(int ac, char **av)
   ll->setModule(0,ptxCode);
   ll->buildModules();
   
-  ll->allocHitGroupPGs(1);
-  ll->setHitGroupClosestHit(/*program ID*/0,
+  enum { SPHERE_GEOM_TYPE=0,NUM_GEOM_TYPES };
+  ll->allocGeomTypes(NUM_GEOM_TYPES);
+  ll->setGeomTypeClosestHit(/*program ID*/SPHERE_GEOM_TYPE,
+                            /*ray type  */0,
                             /*module:*/0,
                             "Sphere");
 #if 0
@@ -122,7 +124,7 @@ int main(int ac, char **av)
 
   // ----------- build hitgroups -----------
   const size_t maxHitGroupDataSize = sizeof(SphereGeomData);
-  ll->sbtHitGroupsBuild
+  ll->sbtGeomTypesBuild
     (maxHitGroupDataSize,
      [&](uint8_t *output,int devID,int geomID,int rayID,const void *cbData) {
       
