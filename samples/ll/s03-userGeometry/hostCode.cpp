@@ -57,14 +57,15 @@ int main(int ac, char **av)
   
   enum { SPHERE_GEOM_TYPE=0,NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->setGeomTypeClosestHit(/*program ID*/SPHERE_GEOM_TYPE,
+  ll->setGeomTypeClosestHit(/*geom type ID*/SPHERE_GEOM_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
                             "Sphere");
+  ll->setGeomTypeIntersect(/*geom type ID*/SPHERE_GEOM_TYPE,
+                           /*ray type  */0,
+                           /*module:*/0,
+                           "Sphere");
 #if 0
-  ll->setHitGroupIntersectProg(/*program ID*/0,
-                               /*module:*/0,
-                               "Sphere");
   ll->setHitGroupBoundsProg(/*program ID*/0,
                             /*module:*/0,
                             "Sphere",

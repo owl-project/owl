@@ -108,7 +108,14 @@ namespace owl {
       void allocRayGens(size_t count);
       void allocMissProgs(size_t count);
 
-      void setGeomTypeClosestHit(int pgID, int rayTypeID, int moduleID, const char *progName);
+      void setGeomTypeClosestHit(int pgID,
+                                 int rayTypeID,
+                                 int moduleID,
+                                 const char *progName);
+      void setGeomTypeIntersect(int pgID,
+                                int rayTypeID,
+                                int moduleID,
+                                const char *progName);
       void setRayGen(int pgID, int moduleID, const char *progName);
       void setMissProg(int pgID, int moduleID, const char *progName);
       

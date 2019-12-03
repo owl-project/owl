@@ -325,7 +325,24 @@ namespace owl {
         buildOptixPrograms();
       }
 
-      void setGeomTypeClosestHit(int pgID, int rayTypeID, int moduleID, const char *progName);
+      /*! set closest hit program for given geometry type and ray
+          type. Note progName will *not* be copied, so the pointer
+          must remain valid as long as this geom may ever get
+          recompiled */
+      void setGeomTypeClosestHit(int geomTypeID,
+                                 int rayTypeID,
+                                 int moduleID,
+                                 const char *progName);
+      
+      /*! set intersect program for given geometry type and ray type
+        (only allowed for user geometry types). Note progName will
+        *not* be copied, so the pointer must remain valid as long as
+        this geom may ever get recompiled */
+      void setGeomTypeIntersect(int geomTypeID,
+                                int rayTypeID,
+                                int moduleID,
+                                const char *progName);
+      
       void setRayGen(int pgID, int moduleID, const char *progName);
       void setMissProg(int pgID, int moduleID, const char *progName);
       
