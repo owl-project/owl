@@ -33,9 +33,14 @@
 #include <typeinfo>
 #include <mutex>
 #include <atomic>
+#include <sstream>
 
 namespace owl {
+  using gdt::vec2f;
   using gdt::vec3f;
+  using gdt::vec2i;
+  using gdt::vec3i;
+  using gdt::box3f;
 
   template<size_t alignment>
   inline size_t smallestMultipleOf(size_t unalignedSize)

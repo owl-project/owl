@@ -83,8 +83,8 @@ namespace owl {
       LOG_OK("module(s) successfully (re-)built");
     }
     
-    void DeviceGroup::allocHitGroupPGs(size_t count)
-    { for (auto device : devices) device->allocHitGroupPGs(count); }
+    void DeviceGroup::allocGeomTypes(size_t count)
+    { for (auto device : devices) device->allocGeomTypes(count); }
     
     void DeviceGroup::allocRayGens(size_t count)
     { for (auto device : devices) device->allocRayGens(count); }
@@ -92,8 +92,14 @@ namespace owl {
     void DeviceGroup::allocMissProgs(size_t count)
     { for (auto device : devices) device->allocMissProgs(count); }
 
-    void DeviceGroup::setHitGroupClosestHit(int pgID, int moduleID, const char *progName)
-    { for (auto device : devices) device->setHitGroupClosestHit(pgID,moduleID,progName); }
+    void DeviceGroup::setGeomTypeClosestHit(int geomTypeID,
+                                            int rayTypeID,
+                                            int moduleID,
+                                            const char *progName)
+    {
+      for (auto device : devices)
+        device->setGeomTypeClosestHit(geomTypeID,rayTypeID,moduleID,progName);
+    }
     
     void DeviceGroup::setRayGen(int pgID, int moduleID, const char *progName)
     { for (auto device : devices) device->setRayGen(pgID,moduleID,progName); }
@@ -114,6 +120,21 @@ namespace owl {
     void DeviceGroup::reallocGeoms(size_t newCount)
     { for (auto device : devices) device->reallocGeoms(newCount); }
 
+    void DeviceGroup::createUserGeom(int geomID,
+                                     /*! the "logical" hit group ID:
+                                       will always count 0,1,2... evne
+                                       if we are using multiple ray
+                                       types; the actual hit group
+                                       used when building the SBT will
+                                       then be 'logicalHitGroupID *
+                                       rayTypeCount) */
+                                     int logicalHitGroupID,
+                                     int numPrims)
+    {
+      for (auto device : devices)
+        device->createUserGeom(geomID,logicalHitGroupID,numPrims);
+    }
+      
     void DeviceGroup::createTrianglesGeom(int geomID,
                                           /*! the "logical" hit group ID:
                                             will always count 0,1,2... evne
@@ -129,7 +150,8 @@ namespace owl {
     }
 
     void DeviceGroup::createTrianglesGeomGroup(int groupID,
-                                               int *geomIDs, int geomCount)
+                                               int *geomIDs,
+                                               int geomCount)
     {
       assert("check for valid combinations of child list" &&
              ((geomIDs == nullptr && geomCount == 0) ||
@@ -137,6 +159,19 @@ namespace owl {
         
       for (auto device : devices) {
         device->createTrianglesGeomGroup(groupID,geomIDs,geomCount);
+      }
+    }
+
+    void DeviceGroup::createUserGeomGroup(int groupID,
+                                          int *geomIDs,
+                                          int geomCount)
+    {
+      assert("check for valid combinations of child list" &&
+             ((geomIDs == nullptr && geomCount == 0) ||
+              (geomIDs != nullptr && geomCount >  0)));
+        
+      for (auto device : devices) {
+        device->createUserGeomGroup(groupID,geomIDs,geomCount);
       }
     }
 
@@ -208,12 +243,12 @@ namespace owl {
       return checkGetDevice(deviceID)->groupGetTraversable(groupID);
     }
 
-    void DeviceGroup::sbtHitGroupsBuild(size_t maxHitGroupDataSize,
+    void DeviceGroup::sbtGeomTypesBuild(size_t maxHitGroupDataSize,
                                         WriteHitProgDataCB writeHitProgDataCB,
                                         void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtHitGroupsBuild(maxHitGroupDataSize,
+        device->sbtGeomTypesBuild(maxHitGroupDataSize,
                                   writeHitProgDataCB,
                                   callBackData);
     }

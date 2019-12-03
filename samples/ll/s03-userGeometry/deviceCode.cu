@@ -90,19 +90,14 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     = owl::make_rgba(color);
 }
 
-OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
+OPTIX_CLOSEST_HIT_PROGRAM(Sphere)()
 {
   vec3f &prd = owl::getPRD<vec3f>();
 
-  const TriangleGroupData &self = owl::getProgramData<TriangleGroupData>();
+  const SphereGeomData &self = owl::getProgramData<SphereGeomData>();
   
   // compute normal:
-  const int   primID = optixGetPrimitiveIndex();
-  const vec3i index  = self.index[primID];
-  const vec3f &A     = self.vertex[index.x];
-  const vec3f &B     = self.vertex[index.y];
-  const vec3f &C     = self.vertex[index.z];
-  const vec3f Ng     = normalize(cross(B-A,C-A));
+  const vec3f Ng     = vec3f(1,1,1);//normalize(cross(B-A,C-A));
 
   const vec3f rayDir = optixGetWorldRayDirection();
   prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*self.color;
@@ -117,26 +112,5 @@ OPTIX_MISS_PROGRAM(defaultRayType)()
   vec3f &prd = owl::getPRD<vec3f>();
   int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
   prd = (pattern&1) ? self.color1 : self.color0;
-}
-
-
-inline __device__ void __boundsFunc__SphereGeom(box3f &bounds,
-                                     int primID,
-                                     void *geomData)
-{
-  printf("bounds kernel for prim %i\n",primID);
-  // bounds.lower = vec3f(-1.f);
-  // bounds.lower = vec3f(+1.f);
-}
-
-extern "C" __global__ void SphereGeom__boundsFuncKernel__(void  *geomData,
-                                                          box3f *boundsArray,
-                                                          int    numPrims)
-{
-  int primID = threadIdx.x;
-  if (primID < numPrims)
-    printf("boundskernel - %i\n",primID);
-  // if (primID < numPrims)
-  //   __boundsFunc__SphereGeom(boundsArray[primID],primID,geomData);
 }
 

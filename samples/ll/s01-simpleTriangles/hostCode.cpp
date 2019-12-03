@@ -64,11 +64,7 @@ const float cosFovy = 0.66f;
 
 int main(int ac, char **av)
 {
-  std::cout << GDT_TERMINAL_BLUE;
-  std::cout << "###########################################################" << std::endl;
-  std::cout << "llTest: mini-app for testing low-level optix wrapper api..." << std::endl;
-  std::cout << "###########################################################" << std::endl;
-  std::cout << GDT_TERMINAL_DEFAULT;
+  LOG("ll example '" << av[0] << "' starting up");
 
   owl::ll::DeviceGroup::SP ll
     = owl::ll::DeviceGroup::create();
@@ -83,8 +79,10 @@ int main(int ac, char **av)
   ll->setModule(0,ptxCode);
   ll->buildModules();
   
-  ll->allocHitGroupPGs(1);
-  ll->setHitGroupClosestHit(/*program ID*/0,
+  enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
+  ll->allocGeomTypes(NUM_GEOM_TYPES);
+  ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
+                            /*ray type  */0,
                             /*module:*/0,
                             "TriangleMesh");
   
@@ -118,13 +116,14 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  ll->reallocGeoms(1);
-  ll->createTrianglesGeom(/* geom ID    */0,
-                          /* type/PG ID */0);
-  ll->trianglesGeomSetVertexBuffer(/* geom ID     */ 0,
+  enum { TRIANGLES_GEOM=0,NUM_GEOMS };
+  ll->reallocGeoms(NUM_GEOMS);
+  ll->createTrianglesGeom(/* geom ID    */TRIANGLES_GEOM,
+                          /* type/PG ID */TRIANGLES_GEOM_TYPE);
+  ll->trianglesGeomSetVertexBuffer(/* geom ID   */TRIANGLES_GEOM,
                                    /* buffer ID */VERTEX_BUFFER,
                                    /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer(/* geom ID     */ 0,
+  ll->trianglesGeomSetIndexBuffer(/* geom ID   */TRIANGLES_GEOM,
                                   /* buffer ID */INDEX_BUFFER,
                                   /* meta info */NUM_INDICES,sizeof(vec3i),0);
 
@@ -147,7 +146,7 @@ int main(int ac, char **av)
 
   // ----------- build hitgroups -----------
   const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
-  ll->sbtHitGroupsBuild
+  ll->sbtGeomTypesBuild
     (maxHitGroupDataSize,
      [&](uint8_t *output,int devID,int geomID,int rayID,const void *cbData) {
       TriangleGroupData &self = *(TriangleGroupData*)output;
@@ -219,5 +218,5 @@ int main(int ac, char **av)
   LOG("destroying devicegroup ...");
   owl::ll::DeviceGroup::destroy(ll);
   
-  LOG_OK("seems all wen't ok; app is done, this should be the last output ...");
+  LOG_OK("seems all went ok; app is done, this should be the last output ...");
 }

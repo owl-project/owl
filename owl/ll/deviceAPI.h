@@ -15,6 +15,7 @@
 // ======================================================================== //
 
 #include "gdt/math/vec.h"
+#include "gdt/math/box.h"
 // the 'actual' optix
 #include <optix.h>
 

@@ -14,20 +14,36 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-/*! \file owl/ll/owl-ll.h Main "api" functoin that swtiches between
-    host- and device-side apis based on whether we're compiling for
-    device- or host-side */
+#include "ll/llowl.h"
 
-#include <optix.h>
-#include <gdt/math/vec.h>
-#include <gdt/math/box.h>
+using namespace owl;
 
-namespace owl {
-  using namespace gdt;
-}
+struct SphereGeomData
+{
+  vec3f center;
+  float radius;
+  vec3f color;
+};
 
-#ifdef __CUDA_ARCH__
-#  include "deviceAPI.h"
-#else
-#  include "DeviceGroup.h"
-#endif
+struct RayGenData
+{
+  int deviceIndex;
+  int deviceCount;
+  uint32_t *fbPtr;
+  vec2i  fbSize;
+  OptixTraversableHandle world;
+
+  struct {
+    vec3f pos;
+    vec3f dir_00;
+    vec3f dir_du;
+    vec3f dir_dv;
+  } camera;
+};
+
+struct MissProgData
+{
+  vec3f  color0;
+  vec3f  color1;
+};
+

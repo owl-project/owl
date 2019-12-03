@@ -152,12 +152,19 @@ namespace owl {
       }
     }
 
-    void Device::setHitGroupClosestHit(int pgID,
+    void Device::setGeomTypeClosestHit(int geomTypeID,
+                                       int rayTypeID,
                                        int moduleID,
                                        const char *progName)
     {
-      assert(pgID >= 0);
-      assert(pgID < hitGroupPGs.size());
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      
+      assert(rayTypeID >= 0);
+      assert(rayTypeID < context->numRayTypes);
+      assert(rayTypeID < geomType.perRayType.size());
+      auto &hitGroup = geomType.perRayType[rayTypeID];
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -165,8 +172,9 @@ namespace owl {
              ||
              (moduleID >= 0  && progName != nullptr));
 
-      hitGroupPGs[pgID].closestHit.moduleID = moduleID;
-      hitGroupPGs[pgID].closestHit.progName = progName;
+      assert("check hitgroup isn't currently active" && hitGroup.pg == nullptr);
+      hitGroup.closestHit.moduleID = moduleID;
+      hitGroup.closestHit.progName = progName;
     }
     
     void Device::setRayGen(int pgID,
@@ -215,6 +223,53 @@ namespace owl {
       }
     }
 
+    std::string getNextLine(const char *&s)
+    {
+      std::stringstream line;
+      while (*s) {
+        char c = *s++;
+        line << c;
+        if (c == '\n') break;
+      }
+      return line.str();
+    }
+    
+    inline bool ptxContainsInvalidOptixInternalCall(const std::string &line)
+    {
+      static const char *optix_internal_symbols[] = {
+#if 1
+        " _optix_",
+#else
+        " _optix_get_sbt",
+        " _optix_trace",
+        " _optix_get_world_ray_direction",
+        " _optix_get_launch_index",
+        " _optix_read_primitive",
+        " _optix_get_payload",
+#endif
+        nullptr
+      };
+      for (const char **testSym = optix_internal_symbols; *testSym; ++testSym) {
+        if (line.find(*testSym) != line.npos)
+          return true;
+      }
+      return false;
+    }
+    
+    std::string killAllInternalOptixSymbolsFromPtxString(const char *orignalPtxCode)
+    {
+      std::vector<std::string> lines;
+      std::stringstream fixed;
+
+      for (const char *s = orignalPtxCode; *s; ) {
+        std::string line = getNextLine(s);
+        if (ptxContainsInvalidOptixInternalCall(line))
+          fixed << "//dropped: " << line;
+        else
+          fixed << line;
+      }
+      return fixed.str();
+    }
 
     void Modules::buildOptixHandles(Context *context)
     {
@@ -227,6 +282,92 @@ namespace owl {
       for (int moduleID=0;moduleID<modules.size();moduleID++) {
         Module &module = modules[moduleID];
         assert(module.module == nullptr);
+
+
+#if 0
+        {
+          const char *ptxCode = module.ptxCode;
+          PING;
+          std::cout << "quick module test ..." << std::endl;
+          context->pushActive();
+          CUresult rc = (CUresult)0;
+          CUmodule boundsModule = 0;
+          PING;
+          PRINT(ptxCode);
+          const std::string fixedPtxCode
+            = killAllInternalOptixSymbolsFromPtxString(ptxCode);
+          PRINT(fixedPtxCode);
+          char log[2000] = "(no log yet)";
+          CUjit_option options[] = {
+            CU_JIT_TARGET_FROM_CUCONTEXT,
+            CU_JIT_ERROR_LOG_BUFFER,
+            CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
+          };
+          void *optionValues[] = {
+            (void*)0,
+            (void*)log,
+            (void*)sizeof(log)
+          };
+          // rc = cuModuleLoadData(&boundsModule, (void *)ptxCode);
+          rc = cuModuleLoadDataEx(&boundsModule, (void *)fixedPtxCode.c_str(),
+                                  3, options, optionValues);
+          PRINT(boundsModule);
+          if (rc) {
+            const char *errName = 0;
+            cuGetErrorName(rc,&errName);
+            PRINT(errName);
+            PRINT(log);
+            exit(0);
+          }
+
+          PING;
+          CUfunction boundsFuncKernel = 0;
+          const char *boundsFuncKernelName = "SphereGeom__boundsFuncKernel__";
+          rc = cuModuleGetFunction(&boundsFuncKernel, boundsModule,
+                                   boundsFuncKernelName);
+          PRINT(boundsFuncKernel);
+          if (rc) {
+            const char *errName = 0;
+            cuGetErrorName(rc,&errName);
+            PRINT(errName);
+            PRINT(log);
+            exit(0);
+          }
+
+          // size of each thread block during bounds function call
+          int boundsFuncBlockSize = 128;
+          int numPrims = 3;
+          vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
+          vec3i gridDims(boundsFuncBlockSize,1,1);
+
+          void  *d_geomData = nullptr;
+          vec3f *d_boundsArray = nullptr;
+          void  *args[] = {
+            &d_geomData,
+            &d_boundsArray,
+            (void *)&numPrims
+          };
+          rc = cuLaunchKernel(boundsFuncKernel,
+                              blockDims.x,blockDims.y,blockDims.z,
+                              gridDims.x,gridDims.y,gridDims.z,
+                              0, 0, args, 0);
+          PING;
+          if (rc) {
+            const char *errName = 0;
+            cuGetErrorName(rc,&errName);
+            PRINT(errName);
+            PRINT(log);
+            exit(0);
+          }
+          PING;
+          cudaDeviceSynchronize();
+          PING;
+          exit(0);
+        }
+#endif      
+
+
+        
         OPTIX_CHECK_LOG(optixModuleCreateFromPTX(context->optixContext,
                                                  &context->moduleCompileOptions,
                                                  &context->pipelineCompileOptions,
@@ -247,7 +388,8 @@ namespace owl {
       modules.resize(count);
     }
 
-    void Modules::set(size_t slot, const char *ptxCode)
+    void Modules::set(size_t slot,
+                      const char *ptxCode)
     {
       assert(!modules.empty());
       
@@ -328,51 +470,52 @@ namespace owl {
       // ------------------------------------------------------------------
       // hitGroup programs
       // ------------------------------------------------------------------
-      for (int pgID=0;pgID<hitGroupPGs.size();pgID++) {
-        HitGroupPG &pg   = hitGroupPGs[pgID];
-        pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
+      for (int geomTypeID=0;geomTypeID<geomTypes.size();geomTypeID++)
+        for (auto &pg : geomTypes[geomTypeID].perRayType) {
+          assert("check program group not already active" && pg.pg == nullptr);
+          pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
 
-        // ----------- closest hit -----------
-        Module *moduleCH = modules.get(pg.closestHit.moduleID);
-        std::string annotatedProgNameCH
-          = pg.closestHit.progName
-          ? std::string("__closesthit__")+pg.closestHit.progName
-          : "";
-        if (moduleCH) {
-          assert(moduleCH->module != nullptr);
-          assert(pg.closestHit.progName != nullptr);
-          pgDesc.hitgroup.moduleCH            = moduleCH->module;
-          pgDesc.hitgroup.entryFunctionNameCH = annotatedProgNameCH.c_str();
-        } else {
-          pgDesc.hitgroup.moduleCH            = nullptr;
-          pgDesc.hitgroup.entryFunctionNameCH = nullptr;
-        }
-        // ----------- any hit -----------
-        Module *moduleAH = modules.get(pg.anyHit.moduleID);
-        std::string annotatedProgNameAH
-          = pg.anyHit.progName
-          ? std::string("__anyhit__")+pg.anyHit.progName
-          : "";
-        if (moduleAH) {
-          assert(moduleAH->module != nullptr);
-          assert(pg.anyHit.progName != nullptr);
-          pgDesc.hitgroup.moduleAH            = moduleAH->module;
-          pgDesc.hitgroup.entryFunctionNameAH = annotatedProgNameAH.c_str();
-        } else {
-          pgDesc.hitgroup.moduleAH            = nullptr;
-          pgDesc.hitgroup.entryFunctionNameAH = nullptr;
-        }
+          // ----------- closest hit -----------
+          Module *moduleCH = modules.get(pg.closestHit.moduleID);
+          std::string annotatedProgNameCH
+            = pg.closestHit.progName
+            ? std::string("__closesthit__")+pg.closestHit.progName
+            : "";
+          if (moduleCH) {
+            assert(moduleCH->module != nullptr);
+            assert(pg.closestHit.progName != nullptr);
+            pgDesc.hitgroup.moduleCH            = moduleCH->module;
+            pgDesc.hitgroup.entryFunctionNameCH = annotatedProgNameCH.c_str();
+          } else {
+            pgDesc.hitgroup.moduleCH            = nullptr;
+            pgDesc.hitgroup.entryFunctionNameCH = nullptr;
+          }
+          // ----------- any hit -----------
+          Module *moduleAH = modules.get(pg.anyHit.moduleID);
+          std::string annotatedProgNameAH
+            = pg.anyHit.progName
+            ? std::string("__anyhit__")+pg.anyHit.progName
+            : "";
+          if (moduleAH) {
+            assert(moduleAH->module != nullptr);
+            assert(pg.anyHit.progName != nullptr);
+            pgDesc.hitgroup.moduleAH            = moduleAH->module;
+            pgDesc.hitgroup.entryFunctionNameAH = annotatedProgNameAH.c_str();
+          } else {
+            pgDesc.hitgroup.moduleAH            = nullptr;
+            pgDesc.hitgroup.entryFunctionNameAH = nullptr;
+          }
 
-        char log[2048];
-        size_t sizeof_log = sizeof( log );
-        OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
-                                            &pgDesc,
-                                            1,
-                                            &pgOptions,
-                                            log,&sizeof_log,
-                                            &pg.pg
-                                            ));
-      }
+          char log[2048];
+          size_t sizeof_log = sizeof( log );
+          OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
+                                              &pgDesc,
+                                              1,
+                                              &pgOptions,
+                                              log,&sizeof_log,
+                                              &pg.pg
+                                              ));
+        }
       
     }
     
@@ -384,10 +527,11 @@ namespace owl {
         pg.pg = nullptr;
       }
       // ---------------------- hitGroup ----------------------
-      for (auto &pg : hitGroupPGs) {
-        if (pg.pg) optixProgramGroupDestroy(pg.pg);
-        pg.pg = nullptr;
-      }
+      for (auto &geomType : geomTypes) 
+        for (auto &pg : geomType.perRayType) {
+          if (pg.pg) optixProgramGroupDestroy(pg.pg);
+          pg.pg = nullptr;
+        }
       // ---------------------- miss ----------------------
       for (auto &pg : missProgPGs) {
         if (pg.pg) optixProgramGroupDestroy(pg.pg);
@@ -395,10 +539,15 @@ namespace owl {
       }
     }
 
-    void Device::allocHitGroupPGs(size_t count)
+    void Device::allocGeomTypes(size_t count)
     {
-      assert(hitGroupPGs.empty());
-      hitGroupPGs.resize(count);
+      assert(geomTypes.empty());
+      geomTypes.resize(count);
+      for (auto &gt : geomTypes) {
+        if (gt.perRayType.empty())
+          gt.perRayType.resize(context->numRayTypes);
+        assert(gt.perRayType.size() == context->numRayTypes);
+      }
     }
     
     void Device::allocRayGens(size_t count)
@@ -423,9 +572,10 @@ namespace owl {
       assert(!device->rayGenPGs.empty());
       for (auto &pg : device->rayGenPGs)
         allPGs.push_back(pg.pg);
-      assert(!device->hitGroupPGs.empty());
-      for (auto &pg : device->hitGroupPGs)
-        allPGs.push_back(pg.pg);
+      assert(!device->geomTypes.empty());
+      for (auto &geomType : device->geomTypes)
+        for (auto &pg : geomType.perRayType)
+          allPGs.push_back(pg.pg);
       assert(!device->missProgPGs.empty());
       for (auto &pg : device->missProgPGs)
         allPGs.push_back(pg.pg);
@@ -614,7 +764,6 @@ namespace owl {
        
         TrianglesGeom *tris = dynamic_cast<TrianglesGeom*>(geom);
         assert("double-check it's really triangles" && tris != nullptr);
-        PRINT(tris);
         
         // now fill in the values:
         d_vertices = (CUdeviceptr )tris->vertexPointer;
@@ -741,7 +890,194 @@ namespace owl {
       LOG_OK("successfully build triangles geom group accel");
     }
     
-    void Device::sbtHitGroupsBuild(size_t maxHitProgDataSize,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    void UserGeomGroup::destroyAccel(Context *context) 
+    {
+      context->pushActive();
+      if (traversable) {
+        bvhMemory.free();
+        traversable = 0;
+      }
+      context->popActive();
+    }
+    
+    void UserGeomGroup::buildAccel(Context *context) 
+    {
+      assert("check does not yet exist" && traversable == 0);
+      assert("check does not yet exist" && !bvhMemory.valid());
+      
+      context->pushActive();
+      LOG("building user accel over "
+          << children.size() << " geometries");
+      
+      // ==================================================================
+      // create triangle inputs
+      // ==================================================================
+      //! the N build inputs that go into the builder
+      std::vector<OptixBuildInput> userGeomInputs(children.size());
+      /*! *arrays* of the vertex pointers - the buildinputs cointina
+       *pointers* to the pointers, so need a temp copy here */
+      std::vector<CUdeviceptr> boundsPointers(children.size());
+
+      // for now we use the same flags for all geoms
+      uint32_t userGeomInputFlags[1] = { 0 };
+      // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
+
+      // now go over all children to set up the buildinputs
+      for (int childID=0;childID<children.size();childID++) {
+        // the three fields we're setting:
+
+        CUdeviceptr     &d_bounds = boundsPointers[childID];
+        OptixBuildInput &userGeomInput = userGeomInputs[childID];
+        
+        // the child wer're setting them with (with sanity checks)
+        Geom *geom = children[childID];
+        assert("double-check geom isn't null" && geom != nullptr);
+        assert("sanity check refcount" && geom->numTimesReferenced >= 0);
+       
+        UserGeom *userGeom = dynamic_cast<UserGeom*>(geom);
+        assert("double-check it's really user"
+               && userGeom != nullptr);
+        assert("user geom has valid bounds buffer"
+               && userGeom->boundsBuffer.valid());
+        d_bounds = userGeom->boundsBuffer.d_pointer;
+        
+        userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
+        auto &aa = userGeomInput.aabbArray;
+        aa.aabbBuffers   = &d_bounds;
+        aa.numPrimitives = userGeom->numPrims;
+        aa.strideInBytes = sizeof(box3f);
+        aa.primitiveIndexOffset = 0;
+      
+        // we always have exactly one SBT entry per shape (ie, triangle
+        // mesh), and no per-primitive materials:
+        aa.flags                       = userGeomInputFlags;
+        aa.numSbtRecords               = context->numRayTypes;
+        aa.sbtIndexOffsetBuffer        = 0; 
+        aa.sbtIndexOffsetSizeInBytes   = 0; 
+        aa.sbtIndexOffsetStrideInBytes = 0; 
+      }
+      
+      // ==================================================================
+      // BLAS setup: buildinputs set up, build the blas
+      // ==================================================================
+      
+      // ------------------------------------------------------------------
+      // first: compute temp memory for bvh
+      // ------------------------------------------------------------------
+      OptixAccelBuildOptions accelOptions = {};
+      accelOptions.buildFlags             = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+      accelOptions.motionOptions.numKeys  = 1;
+      accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
+      
+      OptixAccelBufferSizes blasBufferSizes;
+      OPTIX_CHECK(optixAccelComputeMemoryUsage
+                  (context->optixContext,
+                   &accelOptions,
+                   userGeomInputs.data(),
+                   (uint32_t)userGeomInputs.size(),
+                   &blasBufferSizes
+                   ));
+      
+      // ------------------------------------------------------------------
+      // ... and allocate buffers: temp buffer, initial (uncompacted)
+      // BVH buffer, and a one-single-size_t buffer to store the
+      // compacted size in
+      // ------------------------------------------------------------------
+
+      // temp memory:
+      DeviceMemory tempBuffer;
+      tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
+
+      // buffer for initial, uncompacted bvh
+      DeviceMemory outputBuffer;
+      outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
+
+      // single size-t buffer to store compacted size in
+      DeviceMemory compactedSizeBuffer;
+      compactedSizeBuffer.alloc(sizeof(uint64_t));
+      
+      // ------------------------------------------------------------------
+      // now execute initial, uncompacted build
+      // ------------------------------------------------------------------
+      OptixAccelEmitDesc emitDesc;
+      emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+      emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
+      
+      OPTIX_CHECK(optixAccelBuild(context->optixContext,
+                                  /* todo: stream */0,
+                                  &accelOptions,
+                                  // array of build inputs:
+                                  userGeomInputs.data(),
+                                  (uint32_t)userGeomInputs.size(),
+                                  // buffer of temp memory:
+                                  (CUdeviceptr)tempBuffer.get(),
+                                  (uint32_t)tempBuffer.size(),
+                                  // where we store initial, uncomp bvh:
+                                  (CUdeviceptr)outputBuffer.get(),
+                                  outputBuffer.size(),
+                                  /* the traversable we're building: */ 
+                                  &traversable,
+                                  /* we're also querying compacted size: */
+                                  &emitDesc,1u
+                                  ));
+      CUDA_SYNC_CHECK();
+      
+      // ==================================================================
+      // perform compaction
+      // ==================================================================
+
+      // download builder's compacted size from device
+      uint64_t compactedSize;
+      compactedSizeBuffer.download(&compactedSize);
+
+      // alloc the buffer...
+      bvhMemory.alloc(compactedSize);
+      // ... and perform compaction
+      OPTIX_CALL(AccelCompact(context->optixContext,
+                              /*TODO: stream:*/0,
+                              // OPTIX_COPY_MODE_COMPACT,
+                              traversable,
+                              (CUdeviceptr)bvhMemory.get(),
+                              bvhMemory.size(),
+                              &traversable));
+      CUDA_SYNC_CHECK();
+      
+      // ==================================================================
+      // aaaaaand .... clean up
+      // ==================================================================
+      outputBuffer.free(); // << the UNcompacted, temporary output buffer
+      tempBuffer.free();
+      compactedSizeBuffer.free();
+      
+      context->popActive();
+
+      LOG_OK("successfully build user geom group accel");
+    }
+    
+
+
+
+
+
+
+
+
+    void Device::sbtGeomTypesBuild(size_t maxHitProgDataSize,
                                    WriteHitProgDataCB writeHitProgDataCB,
                                    const void *callBackUserData)
     {
@@ -769,11 +1105,11 @@ namespace owl {
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
       for (int geomID=0;geomID<(int)geoms.size();geomID++)
-        for (int rayType=0;rayType<context->numRayTypes;rayType++) {
+        for (int rayTypeID=0;rayTypeID<context->numRayTypes;rayTypeID++) {
           // ------------------------------------------------------------------
           // compute pointer to entire record:
           // ------------------------------------------------------------------
-          const int recordID = rayType + geomID*context->numRayTypes;
+          const int recordID = rayTypeID + geomID*context->numRayTypes;
           uint8_t *const sbtRecord
             = hitGroupRecords.data() + recordID*hitGroupRecordSize;
 
@@ -785,8 +1121,9 @@ namespace owl {
           // then, get gemetry we want to write (to find its hit group ID)...
           const Geom *const geom = checkGetGeom(geomID);
           // ... find the PG that goes into the record header...
+          auto &geomType = geomTypes[geom->geomTypeID];
           const HitGroupPG &hgPG
-            = hitGroupPGs[rayType + geom->logicalHitGroupID*context->numRayTypes];
+            = geomType.perRayType[rayTypeID];
           // ... and tell optix to write that into the record
           OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
           
@@ -797,10 +1134,10 @@ namespace owl {
           uint8_t *const sbtRecordData
             = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
           writeHitProgDataCB(sbtRecordData,
-                                   context->owlDeviceID,
-                                   geomID,
-                                   rayType,
-                                   callBackUserData);
+                             context->owlDeviceID,
+                             geomID,
+                             rayTypeID,
+                             callBackUserData);
         }
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
@@ -859,9 +1196,9 @@ namespace owl {
         uint8_t *const sbtRecordData
           = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
         writeRayGenDataCB(sbtRecordData,
-                                context->owlDeviceID,
-                                rgID,
-                                callBackUserData);
+                          context->owlDeviceID,
+                          rgID,
+                          callBackUserData);
       }
       sbt.rayGenRecordsBuffer.alloc(rayGenRecords.size());
       sbt.rayGenRecordsBuffer.upload(rayGenRecords);
@@ -923,9 +1260,9 @@ namespace owl {
         uint8_t *const sbtRecordData
           = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
         writeMissProgDataCB(sbtRecordData,
-                                  context->owlDeviceID,
-                                  rgID,
-                                  callBackUserData);
+                            context->owlDeviceID,
+                            rgID,
+                            callBackUserData);
       }
       sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
       sbt.missProgRecordsBuffer.upload(missProgRecords);
@@ -981,7 +1318,130 @@ namespace owl {
       context->popActive();
     }
     
+    void Device::createUserGeom(int geomID,
+                                /*! the "logical" hit group ID:
+                                  will always count 0,1,2... evne
+                                  if we are using multiple ray
+                                  types; the actual hit group
+                                  used when building the SBT will
+                                  then be 'geomTypeID *
+                                  numRayTypes) */
+                                int geomTypeID,
+                                int numPrims)
+    {
+      assert("check ID is valid" && geomID >= 0);
+      assert("check ID is valid" && geomID < geoms.size());
+      assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
+
+      assert("check valid hit group ID" && geomTypeID >= 0);
+      assert("check valid hit group ID" && geomTypeID <  geomTypes.size());
+        
+      geoms[geomID] = new UserGeom(geomTypeID,numPrims);
+      assert("check 'new' was successful" && geoms[geomID] != nullptr);
+    }
     
+    void Device::createTrianglesGeom(int geomID,
+                                     /*! the "logical" hit group ID:
+                                       will always count 0,1,2... evne
+                                       if we are using multiple ray
+                                       types; the actual hit group
+                                       used when building the SBT will
+                                       then be 'geomTypeID *
+                                       numRayTypes) */
+                                     int geomTypeID)
+    {
+      assert("check ID is valid" && geomID >= 0);
+      assert("check ID is valid" && geomID < geoms.size());
+      assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
+
+      assert("check valid hit group ID" && geomTypeID >= 0);
+      assert("check valid hit group ID" && geomTypeID < geomTypes.size());
+        
+      geoms[geomID] = new TrianglesGeom(geomTypeID);
+      assert("check 'new' was successful" && geoms[geomID] != nullptr);
+    }
+
+    /*! resize the array of geom IDs. this can be either a
+      'grow' or a 'shrink', but 'shrink' is only allowed if all
+      geoms that would get 'lost' have alreay been
+      destroyed */
+    void Device::reallocGroups(size_t newCount)
+    {
+      for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
+        assert("realloc would lose a geom that was not properly destroyed" &&
+               groups[idxWeWouldLose] == nullptr);
+      groups.resize(newCount);
+    }
+    /*! resize the array of buffer handles. this can be either a
+      'grow' or a 'shrink', but 'shrink' is only allowed if all
+      buffer handles that would get 'lost' have alreay been
+      destroyed */
+    void Device::reallocBuffers(size_t newCount)
+    {
+      for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
+        assert("realloc would lose a geom that was not properly destroyed" &&
+               buffers[idxWeWouldLose] == nullptr);
+      buffers.resize(newCount);
+    }
+
+    void Device::createTrianglesGeomGroup(int groupID,
+                                          int *geomIDs,
+                                          int geomCount)
+    {
+      assert("check for valid ID" && groupID >= 0);
+      assert("check for valid ID" && groupID < groups.size());
+      assert("check group ID is available" && groups[groupID] ==nullptr);
+        
+      assert("check for valid combinations of child list" &&
+             ((geomIDs == nullptr && geomCount == 0) ||
+              (geomIDs != nullptr && geomCount >  0)));
+        
+      TrianglesGeomGroup *group = new TrianglesGeomGroup(geomCount);
+      assert("check 'new' was successful" && group != nullptr);
+      groups[groupID] = group;
+
+      // set children - todo: move to separate (api?) function(s)!?
+      for (int childID=0;childID<geomCount;childID++) {
+        int geomID = geomIDs[childID];
+        assert("check geom child geom ID is valid" && geomID >= 0);
+        assert("check geom child geom ID is valid" && geomID <  geoms.size());
+        Geom *geom = geoms[geomID];
+        assert("check geom indexed child geom valid" && geom != nullptr);
+        assert("check geom is valid type" && geom->primType() == TRIANGLES);
+        geom->numTimesReferenced++;
+        group->children[childID] = geom;
+      }
+    }
+    
+    void Device::createUserGeomGroup(int groupID,
+                                     int *geomIDs,
+                                     int geomCount)
+    {
+      assert("check for valid ID" && groupID >= 0);
+      assert("check for valid ID" && groupID < groups.size());
+      assert("check group ID is available" && groups[groupID] ==nullptr);
+        
+      assert("check for valid combinations of child list" &&
+             ((geomIDs == nullptr && geomCount == 0) ||
+              (geomIDs != nullptr && geomCount >  0)));
+        
+      UserGeomGroup *group = new UserGeomGroup(geomCount);
+      assert("check 'new' was successful" && group != nullptr);
+      groups[groupID] = group;
+
+      // set children - todo: move to separate (api?) function(s)!?
+      for (int childID=0;childID<geomCount;childID++) {
+        int geomID = geomIDs[childID];
+        assert("check geom child geom ID is valid" && geomID >= 0);
+        assert("check geom child geom ID is valid" && geomID <  geoms.size());
+        Geom *geom = geoms[geomID];
+        assert("check geom indexed child geom valid" && geom != nullptr);
+        assert("check geom is valid type" && geom->primType() == USER);
+        geom->numTimesReferenced++;
+        group->children[childID] = geom;
+      }
+    }
+
   } // ::owl::ll
 } //::owl
   
