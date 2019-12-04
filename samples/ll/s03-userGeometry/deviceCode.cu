@@ -17,6 +17,43 @@
 #include "deviceCode.h"
 #include <optix_device.h>
 
+OPTIX_INTERSECT_PROGRAM(Sphere)()
+{
+  const SphereGeomData &self = owl::getProgramData<SphereGeomData>();
+  // get index of primitive we are to intersect (for this example,
+  // this will always be 0, because we have N differnent *geoms* with
+  // one prim each.
+  int primID = optixGetPrimitiveIndex();
+  
+  const vec3f org   = optixGetWorldRayOrigin();
+  const vec3f dir   = optixGetWorldRayDirection();
+  float hit_t = optixGetRayTmax();
+  float tmin = optixGetRayTmin();
+
+  const vec3f  oc = org - self.center;
+  const float  a = dot(dir,dir);
+  const float  b = dot(oc, dir);
+  const float  c = dot(oc, oc) - self.radius * self.radius;
+  const float  discriminant = b * b - a * c;
+  
+  if (discriminant < 0.f) return;
+
+  {
+    float temp = (-b - sqrtf(discriminant)) / a;
+    if (temp < hit_t && temp > tmin) 
+      hit_t = temp;
+  }
+      
+  {
+    float temp = (-b + sqrtf(discriminant)) / a;
+    if (temp < hit_t && temp > tmin) 
+      hit_t = temp;
+  }
+  if (hit_t < optixGetRayTmax()) {
+    optixReportIntersection(hit_t, 0);
+  }
+}
+
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
   // RayGenData &rgData = *(RayGenData*)owl::getProgramDataPointer();
@@ -50,20 +87,6 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
     = owl::make_rgba(color);
-}
-
-OPTIX_INTERSECT_PROGRAM(Sphere)()
-{
-  const SphereGeomData &self = owl::getProgramData<SphereGeomData>();
-  
-  // get index of primitive we are to intersect (for this example,
-  // this will always be 0, because we have N differnent *geoms* with
-  // one prim each.
-  int primID = optixGetPrimitiveIndex();
-  printf("isec program %f %f %f ...\n",
-         self.center.x,
-         self.center.y,
-         self.center.z);
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(Sphere)()
