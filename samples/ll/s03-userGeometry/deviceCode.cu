@@ -72,11 +72,11 @@ OPTIX_CLOSEST_HIT_PROGRAM(Sphere)()
 
   const SphereGeomData &self = owl::getProgramData<SphereGeomData>();
   
-  const vec3f org = optixGetWorldRayOrigin();
-  const vec3f dir = optixGetWorldRayDirection();
-  
-  // compute normal:
-  const vec3f Ng     = vec3f(1,1,1);//normalize(cross(B-A,C-A));
+  const vec3f org   = optixGetWorldRayOrigin();
+  const vec3f dir   = optixGetWorldRayDirection();
+  const float hit_t = optixGetRayTmax();
+  const vec3f hit_P = org + hit_t * dir;
+  const vec3f Ng     = normalize(hit_P-self.center);
 
   prd = (.2f + .8f*fabs(dot(dir,Ng)))*self.color;
 }
