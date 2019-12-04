@@ -152,6 +152,66 @@ namespace owl {
       }
     }
 
+    /*! set bounding box program for given geometry type, using a
+      bounding box program to be called on the device. note that
+      unlike other programs (intersect, closesthit, anyhit) these
+      programs are not 'per ray type', but exist only once per
+      geometry type. obviously only allowed for user geometry
+      typed. */
+    void Device::setGeomTypeBoundsProgDevice(int geomTypeID,
+                                             int moduleID,
+                                             const char *progName,
+                                             size_t geomDataSize)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      geomType.boundsProg.moduleID = moduleID;
+      geomType.boundsProg.progName = progName;
+      geomType.boundsProgDataSize  = geomDataSize;
+    }
+      
+    /*! set intersect program for given geometry type and ray type
+      (only allowed for user geometry types). Note progName will
+      *not* be copied, so the pointer must remain valid as long as
+      this geom may ever get recompiled */
+    void Device::setGeomTypeIntersect(int geomTypeID,
+                                      int rayTypeID,
+                                      int moduleID,
+                                      const char *progName)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      
+      assert(rayTypeID >= 0);
+      assert(rayTypeID < context->numRayTypes);
+      assert(rayTypeID < geomType.perRayType.size());
+      auto &hitGroup = geomType.perRayType[rayTypeID];
+
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      assert("check hitgroup isn't currently active"
+             && hitGroup.pg == nullptr);
+      hitGroup.intersect.moduleID = moduleID;
+      hitGroup.intersect.progName = progName;
+    }
+    
+    /*! set closest hit program for given geometry type and ray
+      type. Note progName will *not* be copied, so the pointer
+      must remain valid as long as this geom may ever get
+      recompiled */
     void Device::setGeomTypeClosestHit(int geomTypeID,
                                        int rayTypeID,
                                        int moduleID,
@@ -223,6 +283,53 @@ namespace owl {
       }
     }
 
+    std::string getNextLine(const char *&s)
+    {
+      std::stringstream line;
+      while (*s) {
+        char c = *s++;
+        line << c;
+        if (c == '\n') break;
+      }
+      return line.str();
+    }
+    
+    inline bool ptxContainsInvalidOptixInternalCall(const std::string &line)
+    {
+      static const char *optix_internal_symbols[] = {
+#if 1
+        " _optix_",
+#else
+        " _optix_get_sbt",
+        " _optix_trace",
+        " _optix_get_world_ray_direction",
+        " _optix_get_launch_index",
+        " _optix_read_primitive",
+        " _optix_get_payload",
+#endif
+        nullptr
+      };
+      for (const char **testSym = optix_internal_symbols; *testSym; ++testSym) {
+        if (line.find(*testSym) != line.npos)
+          return true;
+      }
+      return false;
+    }
+    
+    std::string killAllInternalOptixSymbolsFromPtxString(const char *orignalPtxCode)
+    {
+      std::vector<std::string> lines;
+      std::stringstream fixed;
+
+      for (const char *s = orignalPtxCode; *s; ) {
+        std::string line = getNextLine(s);
+        if (ptxContainsInvalidOptixInternalCall(line))
+          fixed << "//dropped: " << line;
+        else
+          fixed << line;
+      }
+      return fixed.str();
+    }
 
     void Modules::buildOptixHandles(Context *context)
     {
@@ -235,6 +342,92 @@ namespace owl {
       for (int moduleID=0;moduleID<modules.size();moduleID++) {
         Module &module = modules[moduleID];
         assert(module.module == nullptr);
+
+
+#if 0
+        {
+          const char *ptxCode = module.ptxCode;
+          PING;
+          std::cout << "quick module test ..." << std::endl;
+          context->pushActive();
+          CUresult rc = (CUresult)0;
+          CUmodule boundsModule = 0;
+          PING;
+          PRINT(ptxCode);
+          const std::string fixedPtxCode
+            = killAllInternalOptixSymbolsFromPtxString(ptxCode);
+          PRINT(fixedPtxCode);
+          char log[2000] = "(no log yet)";
+          CUjit_option options[] = {
+            CU_JIT_TARGET_FROM_CUCONTEXT,
+            CU_JIT_ERROR_LOG_BUFFER,
+            CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
+          };
+          void *optionValues[] = {
+            (void*)0,
+            (void*)log,
+            (void*)sizeof(log)
+          };
+          // rc = cuModuleLoadData(&boundsModule, (void *)ptxCode);
+          rc = cuModuleLoadDataEx(&boundsModule, (void *)fixedPtxCode.c_str(),
+                                  3, options, optionValues);
+          PRINT(boundsModule);
+          if (rc) {
+            const char *errName = 0;
+            cuGetErrorName(rc,&errName);
+            PRINT(errName);
+            PRINT(log);
+            exit(0);
+          }
+
+          PING;
+          CUfunction boundsFuncKernel = 0;
+          const char *boundsFuncKernelName = "SphereGeom__boundsFuncKernel__";
+          rc = cuModuleGetFunction(&boundsFuncKernel, boundsModule,
+                                   boundsFuncKernelName);
+          PRINT(boundsFuncKernel);
+          if (rc) {
+            const char *errName = 0;
+            cuGetErrorName(rc,&errName);
+            PRINT(errName);
+            PRINT(log);
+            exit(0);
+          }
+
+          // size of each thread block during bounds function call
+          int boundsFuncBlockSize = 128;
+          int numPrims = 3;
+          vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
+          vec3i gridDims(boundsFuncBlockSize,1,1);
+
+          void  *d_geomData = nullptr;
+          vec3f *d_boundsArray = nullptr;
+          void  *args[] = {
+            &d_geomData,
+            &d_boundsArray,
+            (void *)&numPrims
+          };
+          rc = cuLaunchKernel(boundsFuncKernel,
+                              blockDims.x,blockDims.y,blockDims.z,
+                              gridDims.x,gridDims.y,gridDims.z,
+                              0, 0, args, 0);
+          PING;
+          if (rc) {
+            const char *errName = 0;
+            cuGetErrorName(rc,&errName);
+            PRINT(errName);
+            PRINT(log);
+            exit(0);
+          }
+          PING;
+          cudaDeviceSynchronize();
+          PING;
+          exit(0);
+        }
+#endif      
+
+
+        
         OPTIX_CHECK_LOG(optixModuleCreateFromPTX(context->optixContext,
                                                  &context->moduleCompileOptions,
                                                  &context->pipelineCompileOptions,
@@ -255,7 +448,8 @@ namespace owl {
       modules.resize(count);
     }
 
-    void Modules::set(size_t slot, const char *ptxCode)
+    void Modules::set(size_t slot,
+                      const char *ptxCode)
     {
       assert(!modules.empty());
       
@@ -370,6 +564,23 @@ namespace owl {
           } else {
             pgDesc.hitgroup.moduleAH            = nullptr;
             pgDesc.hitgroup.entryFunctionNameAH = nullptr;
+          }
+          // ----------- intersect -----------
+          Module *moduleIS = modules.get(pg.intersect.moduleID);
+          std::string annotatedProgNameIS
+            = pg.intersect.progName
+            ? std::string("__intersection__")+pg.intersect.progName
+            : "";
+          PRINT(annotatedProgNameIS);
+          if (moduleIS) {
+            PING;
+            assert(moduleIS->module != nullptr);
+            assert(pg.intersect.progName != nullptr);
+            pgDesc.hitgroup.moduleIS            = moduleIS->module;
+            pgDesc.hitgroup.entryFunctionNameIS = annotatedProgNameIS.c_str();
+          } else {
+            pgDesc.hitgroup.moduleIS            = nullptr;
+            pgDesc.hitgroup.entryFunctionNameIS = nullptr;
           }
 
           char log[2048];
@@ -517,6 +728,29 @@ namespace owl {
       context->popActive();
     }
     
+    /*! set a buffer of bounding boxes that this user geometry will
+      use when building the accel structure. this is one of
+      multiple ways of specifying the bounding boxes for a user
+      gometry (the other two being a) setting the geometry type's
+      boundsFunc, or b) setting a host-callback fr computing the
+      bounds). Only one of the three methods can be set at any
+      given time */
+    void Device::userGeomSetBoundsBuffer(int geomID,
+                                         int bufferID)
+    {
+      UserGeom *user
+        = checkGetUserGeom(geomID);
+      assert("double-check valid geom" && user);
+      
+      Buffer   *buffer
+        = checkGetBuffer(bufferID);
+      assert("double-check valid buffer" && buffer);
+
+      size_t offset = 0; // don't support offset/stride yet
+      user->d_boundsMemory = addPointerOffset(buffer->get(),offset);
+    }
+    
+
     void Device::trianglesGeomSetVertexBuffer(int geomID,
                                               int bufferID,
                                               int count,
@@ -818,9 +1052,12 @@ namespace owl {
         UserGeom *userGeom = dynamic_cast<UserGeom*>(geom);
         assert("double-check it's really user"
                && userGeom != nullptr);
-        assert("user geom has valid bounds buffer"
-               && userGeom->boundsBuffer.valid());
-        d_bounds = userGeom->boundsBuffer.d_pointer;
+        assert("user geom has valid bounds buffer *or* user-supplied bounds"
+               && (userGeom->boundsBuffer.valid() || userGeom->d_boundsMemory));
+        d_bounds
+          = userGeom->d_boundsMemory
+          ? (CUdeviceptr)userGeom->d_boundsMemory
+          : userGeom->boundsBuffer.d_pointer;
         
         userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
         auto &aa = userGeomInput.aabbArray;
@@ -858,6 +1095,7 @@ namespace owl {
                    (uint32_t)userGeomInputs.size(),
                    &blasBufferSizes
                    ));
+      PRINT(blasBufferSizes.outputSizeInBytes);
       
       // ------------------------------------------------------------------
       // ... and allocate buffers: temp buffer, initial (uncompacted)
@@ -910,7 +1148,8 @@ namespace owl {
       // download builder's compacted size from device
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
-
+      PRINT(compactedSize);
+      
       // alloc the buffer...
       bvhMemory.alloc(compactedSize);
       // ... and perform compaction
@@ -1184,7 +1423,130 @@ namespace owl {
       context->popActive();
     }
     
+    void Device::createUserGeom(int geomID,
+                                /*! the "logical" hit group ID:
+                                  will always count 0,1,2... evne
+                                  if we are using multiple ray
+                                  types; the actual hit group
+                                  used when building the SBT will
+                                  then be 'geomTypeID *
+                                  numRayTypes) */
+                                int geomTypeID,
+                                int numPrims)
+    {
+      assert("check ID is valid" && geomID >= 0);
+      assert("check ID is valid" && geomID < geoms.size());
+      assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
+
+      assert("check valid hit group ID" && geomTypeID >= 0);
+      assert("check valid hit group ID" && geomTypeID <  geomTypes.size());
+        
+      geoms[geomID] = new UserGeom(geomTypeID,numPrims);
+      assert("check 'new' was successful" && geoms[geomID] != nullptr);
+    }
     
+    void Device::createTrianglesGeom(int geomID,
+                                     /*! the "logical" hit group ID:
+                                       will always count 0,1,2... evne
+                                       if we are using multiple ray
+                                       types; the actual hit group
+                                       used when building the SBT will
+                                       then be 'geomTypeID *
+                                       numRayTypes) */
+                                     int geomTypeID)
+    {
+      assert("check ID is valid" && geomID >= 0);
+      assert("check ID is valid" && geomID < geoms.size());
+      assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
+
+      assert("check valid hit group ID" && geomTypeID >= 0);
+      assert("check valid hit group ID" && geomTypeID < geomTypes.size());
+        
+      geoms[geomID] = new TrianglesGeom(geomTypeID);
+      assert("check 'new' was successful" && geoms[geomID] != nullptr);
+    }
+
+    /*! resize the array of geom IDs. this can be either a
+      'grow' or a 'shrink', but 'shrink' is only allowed if all
+      geoms that would get 'lost' have alreay been
+      destroyed */
+    void Device::reallocGroups(size_t newCount)
+    {
+      for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
+        assert("realloc would lose a geom that was not properly destroyed" &&
+               groups[idxWeWouldLose] == nullptr);
+      groups.resize(newCount);
+    }
+    /*! resize the array of buffer handles. this can be either a
+      'grow' or a 'shrink', but 'shrink' is only allowed if all
+      buffer handles that would get 'lost' have alreay been
+      destroyed */
+    void Device::reallocBuffers(size_t newCount)
+    {
+      for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
+        assert("realloc would lose a geom that was not properly destroyed" &&
+               buffers[idxWeWouldLose] == nullptr);
+      buffers.resize(newCount);
+    }
+
+    void Device::createTrianglesGeomGroup(int groupID,
+                                          int *geomIDs,
+                                          int geomCount)
+    {
+      assert("check for valid ID" && groupID >= 0);
+      assert("check for valid ID" && groupID < groups.size());
+      assert("check group ID is available" && groups[groupID] ==nullptr);
+        
+      assert("check for valid combinations of child list" &&
+             ((geomIDs == nullptr && geomCount == 0) ||
+              (geomIDs != nullptr && geomCount >  0)));
+        
+      TrianglesGeomGroup *group = new TrianglesGeomGroup(geomCount);
+      assert("check 'new' was successful" && group != nullptr);
+      groups[groupID] = group;
+
+      // set children - todo: move to separate (api?) function(s)!?
+      for (int childID=0;childID<geomCount;childID++) {
+        int geomID = geomIDs[childID];
+        assert("check geom child geom ID is valid" && geomID >= 0);
+        assert("check geom child geom ID is valid" && geomID <  geoms.size());
+        Geom *geom = geoms[geomID];
+        assert("check geom indexed child geom valid" && geom != nullptr);
+        assert("check geom is valid type" && geom->primType() == TRIANGLES);
+        geom->numTimesReferenced++;
+        group->children[childID] = geom;
+      }
+    }
+    
+    void Device::createUserGeomGroup(int groupID,
+                                     int *geomIDs,
+                                     int geomCount)
+    {
+      assert("check for valid ID" && groupID >= 0);
+      assert("check for valid ID" && groupID < groups.size());
+      assert("check group ID is available" && groups[groupID] ==nullptr);
+        
+      assert("check for valid combinations of child list" &&
+             ((geomIDs == nullptr && geomCount == 0) ||
+              (geomIDs != nullptr && geomCount >  0)));
+        
+      UserGeomGroup *group = new UserGeomGroup(geomCount);
+      assert("check 'new' was successful" && group != nullptr);
+      groups[groupID] = group;
+
+      // set children - todo: move to separate (api?) function(s)!?
+      for (int childID=0;childID<geomCount;childID++) {
+        int geomID = geomIDs[childID];
+        assert("check geom child geom ID is valid" && geomID >= 0);
+        assert("check geom child geom ID is valid" && geomID <  geoms.size());
+        Geom *geom = geoms[geomID];
+        assert("check geom indexed child geom valid" && geom != nullptr);
+        assert("check geom is valid type" && geom->primType() == USER);
+        geom->numTimesReferenced++;
+        group->children[childID] = geom;
+      }
+    }
+
   } // ::owl::ll
 } //::owl
   

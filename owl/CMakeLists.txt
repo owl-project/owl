@@ -18,4 +18,4 @@
 add_subdirectory(ll)
 
 # node graph layer
-add_subdirectory(ng)
+# currently disabled: add_subdirectory(ng)

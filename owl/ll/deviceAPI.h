@@ -121,5 +121,83 @@ namespace owl {
   static __forceinline__ __device__ T &getPRD()
   { return *(T*)getPRDPointer(); }
 
+
+  struct Ray {
+    vec3f origin, direction;
+    int   rayType = 0;
+    float tmin=0.f,tmax=1e30f,time=0.f;
+  };
+
+
+  template<typename PRD>
+  inline __device__
+  void trace(OptixTraversableHandle traversable,
+             const Ray &ray,
+             int numRayTypes,
+             PRD &prd)
+  {
+    unsigned int           p0 = 0;
+    unsigned int           p1 = 0;
+    owl::packPointer(&prd,p0,p1);
+    
+    optixTrace(traversable,
+               (const float3&)ray.origin,
+               (const float3&)ray.direction,
+               ray.tmin,
+               ray.tmax,
+               ray.time,
+               (OptixVisibilityMask)-1,
+               /*rayFlags     */0u,
+               /*SBToffset    */ray.rayType,
+               /*SBTstride    */numRayTypes,
+               /*missSBTIndex */ray.rayType,
+               p0,
+               p1);
+  }
+  
 } // ::owl
 
+#define OPTIX_RAYGEN_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __raygen__##programName
+
+#define OPTIX_CLOSEST_HIT_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __closesthit__##programName
+
+#define OPTIX_INTERSECT_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __intersection__##programName
+
+#define OPTIX_MISS_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __miss__##programName
+
+
+
+/* defines the wrapper stuff to actually launch all the bounds
+   programs from the host - todo: move to deviceAPI.h once working */
+#define OPTIX_BOUNDS_PROGRAM(progName)                                  \
+  /* fwd decl for the kernel func to call */                            \
+  inline __device__ void __boundsFunc__##progName(void *geomData,       \
+                                                  box3f &bounds,        \
+                                                  int primID);          \
+                                                                        \
+  /* the '__global__' kernel we can get a function handle on */         \
+  extern "C" __global__                                                 \
+  void __boundsFuncKernel__##progName(void  *geomData,                  \
+                                      box3f *boundsArray,               \
+                                      int    numPrims)                  \
+  {                                                                     \
+    int primID = threadIdx.x;                                           \
+    if (primID < numPrims) {                                            \
+      printf("boundskernel - %i\n",primID);                             \
+      __boundsFunc__##progName(geomData,boundsArray[primID],primID);    \
+    }                                                                   \
+  }                                                                     \
+                                                                        \
+  /* now the actual device code that the user is writing: */            \
+  inline __device__ void __boundsFunc__##progName                       \
+  /* program args and body supplied by user ... */
+  
+  

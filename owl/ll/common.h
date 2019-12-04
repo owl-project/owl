@@ -33,6 +33,7 @@
 #include <typeinfo>
 #include <mutex>
 #include <atomic>
+#include <sstream>
 
 namespace owl {
   using gdt::vec2f;

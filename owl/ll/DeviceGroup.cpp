@@ -92,6 +92,23 @@ namespace owl {
     void DeviceGroup::allocMissProgs(size_t count)
     { for (auto device : devices) device->allocMissProgs(count); }
 
+    /*! set bounding box program for given geometry type, using a
+      bounding box program to be called on the device. note that
+      unlike other programs (intersect, closesthit, anyhit) these
+      programs are not 'per ray type', but exist only once per
+      geometry type. obviously only allowed for user geometry
+      typed. */
+    void DeviceGroup::setGeomTypeBoundsProgDevice(int geomTypeID,
+                                                  int moduleID,
+                                                  const char *progName,
+                                                  size_t geomDataSize)
+    {
+      for (auto device : devices)
+        device->setGeomTypeBoundsProgDevice(geomTypeID,moduleID,progName,
+                                            geomDataSize);
+    }
+    
+      
     void DeviceGroup::setGeomTypeClosestHit(int geomTypeID,
                                             int rayTypeID,
                                             int moduleID,
@@ -99,6 +116,15 @@ namespace owl {
     {
       for (auto device : devices)
         device->setGeomTypeClosestHit(geomTypeID,rayTypeID,moduleID,progName);
+    }
+    
+    void DeviceGroup::setGeomTypeIntersect(int geomTypeID,
+                                            int rayTypeID,
+                                            int moduleID,
+                                            const char *progName)
+    {
+      for (auto device : devices)
+        device->setGeomTypeIntersect(geomTypeID,rayTypeID,moduleID,progName);
     }
     
     void DeviceGroup::setRayGen(int pgID, int moduleID, const char *progName)
@@ -194,9 +220,8 @@ namespace owl {
                                          size_t elementSize,
                                          const void *initData)
     {
-      for (auto device : devices) {
+      for (auto device : devices) 
         device->createDeviceBuffer(bufferID,elementCount,elementSize,initData);
-      }
     }
 
     void DeviceGroup::createHostPinnedBuffer(int bufferID,
@@ -205,20 +230,33 @@ namespace owl {
     {
       HostPinnedMemory::SP pinned
         = std::make_shared<HostPinnedMemory>(elementCount*elementSize);
-      for (auto device : devices) {
+      for (auto device : devices) 
         device->createHostPinnedBuffer(bufferID,elementCount,elementSize,pinned);
-      }
     }
 
+      
+    /*! set a buffer of bounding boxes that this user geometry will
+      use when building the accel structure. this is one of
+      multiple ways of specifying the bounding boxes for a user
+      gometry (the other two being a) setting the geometry type's
+      boundsFunc, or b) setting a host-callback fr computing the
+      bounds). Only one of the three methods can be set at any
+      given time */
+    void DeviceGroup::userGeomSetBoundsBuffer(int geomID,
+                                              int bufferID)
+    {
+      for (auto device : devices) 
+        device->userGeomSetBoundsBuffer(geomID,bufferID);
+    }
+    
     void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
                                                    int bufferID,
                                                    int count,
                                                    int stride,
                                                    int offset)
     {
-      for (auto device : devices) {
+      for (auto device : devices) 
         device->trianglesGeomSetVertexBuffer(geomID,bufferID,count,stride,offset);
-      }
     }
     
     void DeviceGroup::trianglesGeomSetIndexBuffer(int geomID,
