@@ -14,6 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#define BOUNDS_ON_HOST 0
+
 #include "ll/DeviceGroup.h"
 #include "deviceCode.h"
 
@@ -78,7 +80,7 @@ int main(int ac, char **av)
                            /*module:*/0,
                            "Sphere");
 
-#if 1
+#if BOUNDS_ON_HOST
 #else
   ll->setGeomTypeBoundsProgDevice(/*program ID*/0,
                                   /*module:*/0,
@@ -107,6 +109,7 @@ int main(int ac, char **av)
   // alloc buffers
   // ------------------------------------------------------------------
   enum { FRAME_BUFFER=0,
+#if BOUNDS_ON_HOST
          BOUNDS_BUFFER_000,
          BOUNDS_BUFFER_001,
          BOUNDS_BUFFER_010,
@@ -115,6 +118,7 @@ int main(int ac, char **av)
          BOUNDS_BUFFER_101,
          BOUNDS_BUFFER_110,
          BOUNDS_BUFFER_111,
+#endif
          NUM_BUFFERS };
   ll->reallocBuffers(NUM_BUFFERS);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
@@ -123,6 +127,7 @@ int main(int ac, char **av)
   // alloc geom
   // ------------------------------------------------------------------
   ll->reallocGeoms(8);
+#if BOUNDS_ON_HOST
   for (int i=0;i<8;i++) {
     box3f sphereBounds = box3f()
       .extend(sphereCenters[i]-sphereRadius)
@@ -134,6 +139,7 @@ int main(int ac, char **av)
                        /* numprims   */1);
     ll->userGeomSetBoundsBuffer(i,BOUNDS_BUFFER_000+i);
   }
+#endif
 
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups

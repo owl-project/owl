@@ -1037,6 +1037,7 @@ namespace owl {
       uint32_t userGeomInputFlags[1] = { 0 };
       // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
 
+      PING;
       // now go over all children to set up the buildinputs
       for (int childID=0;childID<children.size();childID++) {
         // the three fields we're setting:
@@ -1074,6 +1075,7 @@ namespace owl {
         aa.sbtIndexOffsetSizeInBytes   = 0; 
         aa.sbtIndexOffsetStrideInBytes = 0; 
       }
+      PING;
       
       // ==================================================================
       // BLAS setup: buildinputs set up, build the blas
