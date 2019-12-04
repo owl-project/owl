@@ -16,6 +16,18 @@ Directory Structure
 Revision History
 ================
 
+v0.3.x - User Geometries
+------------------------
+
+*v0.3.0*: First example of user geometry working
+
+- can create user geometries through `createUserGeom`, and set
+  type's isec program through `setGeomTypeIntersect`
+- supports passing of new `userGeomSetBoundsBuffer` fct to pass user
+  geoms through a buffer
+- first example (8 sphere geometries, each with one sphere per geom)
+  available as `s03-userGeometry`
+
 v0.2.x
 ------
 
