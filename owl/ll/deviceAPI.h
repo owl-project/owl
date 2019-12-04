@@ -173,3 +173,31 @@ namespace owl {
   extern "C" __global__ \
   void __miss__##programName
 
+
+
+/* defines the wrapper stuff to actually launch all the bounds
+   programs from the host - todo: move to deviceAPI.h once working */
+#define OPTIX_BOUNDS_PROGRAM(progName)                                  \
+  /* fwd decl for the kernel func to call */                            \
+  inline __device__ void __boundsFunc__##progName(void *geomData,       \
+                                                  box3f &bounds,        \
+                                                  int primID);          \
+                                                                        \
+  /* the '__global__' kernel we can get a function handle on */         \
+  extern "C" __global__                                                 \
+  void __boundsFuncKernel__##progName(void  *geomData,                  \
+                                      box3f *boundsArray,               \
+                                      int    numPrims)                  \
+  {                                                                     \
+    int primID = threadIdx.x;                                           \
+    if (primID < numPrims) {                                            \
+      printf("boundskernel - %i\n",primID);                             \
+      __boundsFunc__##progName(geomData,boundsArray[primID],primID);    \
+    }                                                                   \
+  }                                                                     \
+                                                                        \
+  /* now the actual device code that the user is writing: */            \
+  inline __device__ void __boundsFunc__##progName                       \
+  /* program args and body supplied by user ... */
+  
+  
