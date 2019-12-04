@@ -116,12 +116,8 @@ namespace owl {
     struct GeomType {
       std::vector<HitGroupPG> perRayType;
       Program boundsProg;
+      size_t  boundsProgDataSize = 0;
     };
-    // struct ProgramGroups {
-    //   std::vector<HitGroupPG> hitGroupPGs;
-    //   std::vector<RayGenPG> rayGenPGs;
-    //   std::vector<MissPG> missProgPGs;
-    // };
 
     struct SBT {
       OptixShaderBindingTable sbt = {};
@@ -325,6 +321,17 @@ namespace owl {
         buildOptixPrograms();
       }
 
+      /*! set bounding box program for given geometry type, using a
+          bounding box program to be called on the device. note that
+          unlike other programs (intersect, closesthit, anyhit) these
+          programs are not 'per ray type', but exist only once per
+          geometry type. obviously only allowed for user geometry
+          typed. */
+      void setGeomTypeBoundsProgDevice(int geomTypeID,
+                                       int moduleID,
+                                       const char *progName,
+                                       size_t geomDataSize);
+      
       /*! set closest hit program for given geometry type and ray
           type. Note progName will *not* be copied, so the pointer
           must remain valid as long as this geom may ever get

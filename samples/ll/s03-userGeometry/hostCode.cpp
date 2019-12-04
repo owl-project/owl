@@ -65,12 +65,10 @@ int main(int ac, char **av)
                            /*ray type  */0,
                            /*module:*/0,
                            "Sphere");
-#if 0
-  ll->setHitGroupBoundsProg(/*program ID*/0,
-                            /*module:*/0,
-                            "Sphere",
-                            sizeof(SphereBoundsData));
-#endif
+  ll->setGeomTypeBoundsProgDevice(/*program ID*/0,
+                                  /*module:*/0,
+                                  "Sphere",
+                                  sizeof(SphereGeomData));
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,

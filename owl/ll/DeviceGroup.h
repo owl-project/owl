@@ -108,6 +108,17 @@ namespace owl {
       void allocRayGens(size_t count);
       void allocMissProgs(size_t count);
 
+      /*! set bounding box program for given geometry type, using a
+          bounding box program to be called on the device. note that
+          unlike other programs (intersect, closesthit, anyhit) these
+          programs are not 'per ray type', but exist only once per
+          geometry type. obviously only allowed for user geometry
+          typed. */
+      void setGeomTypeBoundsProgDevice(int geomTypeID,
+                                       int moduleID,
+                                       const char *progName,
+                                       size_t geomDataSize);
+      
       void setGeomTypeClosestHit(int pgID,
                                  int rayTypeID,
                                  int moduleID,

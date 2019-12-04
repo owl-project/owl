@@ -152,6 +152,32 @@ namespace owl {
       }
     }
 
+    /*! set bounding box program for given geometry type, using a
+      bounding box program to be called on the device. note that
+      unlike other programs (intersect, closesthit, anyhit) these
+      programs are not 'per ray type', but exist only once per
+      geometry type. obviously only allowed for user geometry
+      typed. */
+    void Device::setGeomTypeBoundsProgDevice(int geomTypeID,
+                                             int moduleID,
+                                             const char *progName,
+                                             size_t geomDataSize)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      geomType.boundsProg.moduleID = moduleID;
+      geomType.boundsProg.progName = progName;
+      geomType.boundsProgDataSize  = geomDataSize;
+    }
+      
     /*! set intersect program for given geometry type and ray type
       (only allowed for user geometry types). Note progName will
       *not* be copied, so the pointer must remain valid as long as
