@@ -220,9 +220,8 @@ namespace owl {
                                          size_t elementSize,
                                          const void *initData)
     {
-      for (auto device : devices) {
+      for (auto device : devices) 
         device->createDeviceBuffer(bufferID,elementCount,elementSize,initData);
-      }
     }
 
     void DeviceGroup::createHostPinnedBuffer(int bufferID,
@@ -231,20 +230,33 @@ namespace owl {
     {
       HostPinnedMemory::SP pinned
         = std::make_shared<HostPinnedMemory>(elementCount*elementSize);
-      for (auto device : devices) {
+      for (auto device : devices) 
         device->createHostPinnedBuffer(bufferID,elementCount,elementSize,pinned);
-      }
     }
 
+      
+    /*! set a buffer of bounding boxes that this user geometry will
+      use when building the accel structure. this is one of
+      multiple ways of specifying the bounding boxes for a user
+      gometry (the other two being a) setting the geometry type's
+      boundsFunc, or b) setting a host-callback fr computing the
+      bounds). Only one of the three methods can be set at any
+      given time */
+    void DeviceGroup::userGeomSetBoundsBuffer(int geomID,
+                                              int bufferID)
+    {
+      for (auto device : devices) 
+        device->userGeomSetBoundsBuffer(geomID,bufferID);
+    }
+    
     void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
                                                    int bufferID,
                                                    int count,
                                                    int stride,
                                                    int offset)
     {
-      for (auto device : devices) {
+      for (auto device : devices) 
         device->trianglesGeomSetVertexBuffer(geomID,bufferID,count,stride,offset);
-      }
     }
     
     void DeviceGroup::trianglesGeomSetIndexBuffer(int geomID,

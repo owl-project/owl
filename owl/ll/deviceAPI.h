@@ -165,6 +165,10 @@ namespace owl {
   extern "C" __global__ \
   void __closesthit__##programName
 
+#define OPTIX_INTERSECT_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __intersection__##programName
+
 #define OPTIX_MISS_PROGRAM(programName) \
   extern "C" __global__ \
   void __miss__##programName

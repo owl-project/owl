@@ -181,6 +181,15 @@ namespace owl {
           device */
       void *bufferGetPointer(int bufferID, int devID);
       
+      /*! set a buffer of bounding boxes that this user geometry will
+          use when building the accel structure. this is one of
+          multiple ways of specifying the bounding boxes for a user
+          gometry (the other two being a) setting the geometry type's
+          boundsFunc, or b) setting a host-callback fr computing the
+          bounds). Only one of the three methods can be set at any
+          given time */
+      void userGeomSetBoundsBuffer(int geomID, int bufferID);
+
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int bufferID,
                                         int count,

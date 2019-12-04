@@ -33,10 +33,22 @@ extern "C" char ptxCode[];
 
 const char *outFileName = "ll03-userGeometry.png";
 const vec2i fbSize(800,600);
-const vec3f lookFrom(-16.f,-12.f,-8.f);
+const vec3f lookFrom(-4.f,-3.f,-2.f);
 const vec3f lookAt(0.f,0.f,0.f);
 const vec3f lookUp(0.f,1.f,0.f);
 const float cosFovy = 0.66f;
+
+const vec3f sphereCenters[8] = {
+  { -1.f, -1.f, -1.f },
+  { -1.f, -1.f, +1.f },
+  { -1.f, +1.f, -1.f },
+  { -1.f, +1.f, +1.f },
+  { +1.f, -1.f, -1.f },
+  { +1.f, -1.f, +1.f },
+  { +1.f, +1.f, -1.f },
+  { +1.f, +1.f, +1.f },
+};
+const float sphereRadius = 0.6f;
 
 int main(int ac, char **av)
 {
@@ -65,10 +77,14 @@ int main(int ac, char **av)
                            /*ray type  */0,
                            /*module:*/0,
                            "Sphere");
+
+#if 1
+#else
   ll->setGeomTypeBoundsProgDevice(/*program ID*/0,
                                   /*module:*/0,
                                   "Sphere",
                                   sizeof(SphereGeomData));
+#endif
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
@@ -77,7 +93,7 @@ int main(int ac, char **av)
   ll->allocMissProgs(1);
   ll->setMissProg(/*program ID*/0,
                   /*module:*/0,
-                  "defaultRayType");
+                  "miss");
   ll->buildPrograms();
   ll->createPipeline();
 
@@ -90,7 +106,16 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // alloc buffers
   // ------------------------------------------------------------------
-  enum { FRAME_BUFFER=0,NUM_BUFFERS };
+  enum { FRAME_BUFFER=0,
+         BOUNDS_BUFFER_000,
+         BOUNDS_BUFFER_001,
+         BOUNDS_BUFFER_010,
+         BOUNDS_BUFFER_011,
+         BOUNDS_BUFFER_100,
+         BOUNDS_BUFFER_101,
+         BOUNDS_BUFFER_110,
+         BOUNDS_BUFFER_111,
+         NUM_BUFFERS };
   ll->reallocBuffers(NUM_BUFFERS);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
@@ -99,9 +124,15 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   ll->reallocGeoms(8);
   for (int i=0;i<8;i++) {
+    box3f sphereBounds = box3f()
+      .extend(sphereCenters[i]-sphereRadius)
+      .extend(sphereCenters[i]+sphereRadius);
+    ll->createDeviceBuffer(BOUNDS_BUFFER_000+i,1,sizeof(box3f),
+                     &sphereBounds);
     ll->createUserGeom(/* geom ID    */i,
                        /* type/PG ID */0,
                        /* numprims   */1);
+    ll->userGeomSetBoundsBuffer(i,BOUNDS_BUFFER_000+i);
   }
 
   // ##################################################################
@@ -128,10 +159,8 @@ int main(int ac, char **av)
      [&](uint8_t *output,int devID,int geomID,int rayID,const void *cbData) {
       
       SphereGeomData &self = *(SphereGeomData*)output;
-      self.center = vec3f((geomID&1) ? -1.5f:+1.5f,
-                          (geomID&2) ? -1.5f:+1.5f,
-                          (geomID&4) ? -1.5f:+1.5f);
-      self.radius = 1.f;
+      self.center = sphereCenters[geomID];
+      self.radius = sphereRadius;
       self.color  = gdt::randomColor(geomID);
     });
   

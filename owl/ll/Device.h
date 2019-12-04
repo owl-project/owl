@@ -214,9 +214,15 @@ namespace owl {
           numPrims(numPrims)
       {}
       virtual PrimType primType() { return USER; }
-      
+
+      /*! the pointer to the device-side bounds array. Note this
+          pointer _can_ be the same as 'boundsBuffer' (if *we* manage
+          that memory), but in the case of user-supplied bounds buffer
+          it is also possible that boundsBuffer is not allocated, and
+          d_boundsArray points to the user-supplied buffer */
+      void        *d_boundsMemory = nullptr;
       DeviceMemory boundsBuffer;
-      size_t       numPrims;
+      size_t       numPrims      = 0;
     };
     struct TrianglesGeom : public Geom {
       TrianglesGeom(int geomTypeID)
@@ -429,6 +435,16 @@ namespace owl {
                                   size_t elementCount,
                                   size_t elementSize,
                                   HostPinnedMemory::SP pinnedMem);
+
+      /*! set a buffer of bounding boxes that this user geometry will
+          use when building the accel structure. this is one of
+          multiple ways of specifying the bounding boxes for a user
+          gometry (the other two being a) setting the geometry type's
+          boundsFunc, or b) setting a host-callback fr computing the
+          bounds). Only one of the three methods can be set at any
+          given time */
+      void userGeomSetBoundsBuffer(int geomID, int bufferID);
+      
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int bufferID,
                                         int count,
@@ -510,6 +526,17 @@ namespace owl {
           = dynamic_cast<TrianglesGeom*>(geom);
         assert("check geom is triangle geom" && asTriangles != nullptr);
         return asTriangles;
+      }
+
+      // accessor helpers:
+      UserGeom *checkGetUserGeom(int geomID)
+      {
+        Geom *geom = checkGetGeom(geomID);
+        assert(geom);
+        UserGeom *asUser
+          = dynamic_cast<UserGeom*>(geom);
+        assert("check geom is triangle geom" && asUser != nullptr);
+        return asUser;
       }
 
       void sbtGeomTypesBuild(size_t maxHitProgDataSize,
