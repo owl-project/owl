@@ -116,12 +116,8 @@ namespace owl {
     struct GeomType {
       std::vector<HitGroupPG> perRayType;
       Program boundsProg;
+      size_t  boundsProgDataSize = 0;
     };
-    // struct ProgramGroups {
-    //   std::vector<HitGroupPG> hitGroupPGs;
-    //   std::vector<RayGenPG> rayGenPGs;
-    //   std::vector<MissPG> missProgPGs;
-    // };
 
     struct SBT {
       OptixShaderBindingTable sbt = {};
@@ -218,9 +214,15 @@ namespace owl {
           numPrims(numPrims)
       {}
       virtual PrimType primType() { return USER; }
-      
+
+      /*! the pointer to the device-side bounds array. Note this
+          pointer _can_ be the same as 'boundsBuffer' (if *we* manage
+          that memory), but in the case of user-supplied bounds buffer
+          it is also possible that boundsBuffer is not allocated, and
+          d_boundsArray points to the user-supplied buffer */
+      void        *d_boundsMemory = nullptr;
       DeviceMemory boundsBuffer;
-      size_t       numPrims;
+      size_t       numPrims      = 0;
     };
     struct TrianglesGeom : public Geom {
       TrianglesGeom(int geomTypeID)
@@ -325,7 +327,35 @@ namespace owl {
         buildOptixPrograms();
       }
 
-      void setGeomTypeClosestHit(int pgID, int rayTypeID, int moduleID, const char *progName);
+      /*! set bounding box program for given geometry type, using a
+          bounding box program to be called on the device. note that
+          unlike other programs (intersect, closesthit, anyhit) these
+          programs are not 'per ray type', but exist only once per
+          geometry type. obviously only allowed for user geometry
+          typed. */
+      void setGeomTypeBoundsProgDevice(int geomTypeID,
+                                       int moduleID,
+                                       const char *progName,
+                                       size_t geomDataSize);
+      
+      /*! set closest hit program for given geometry type and ray
+          type. Note progName will *not* be copied, so the pointer
+          must remain valid as long as this geom may ever get
+          recompiled */
+      void setGeomTypeClosestHit(int geomTypeID,
+                                 int rayTypeID,
+                                 int moduleID,
+                                 const char *progName);
+      
+      /*! set intersect program for given geometry type and ray type
+        (only allowed for user geometry types). Note progName will
+        *not* be copied, so the pointer must remain valid as long as
+        this geom may ever get recompiled */
+      void setGeomTypeIntersect(int geomTypeID,
+                                int rayTypeID,
+                                int moduleID,
+                                const char *progName);
+      
       void setRayGen(int pgID, int moduleID, const char *progName);
       void setMissProg(int pgID, int moduleID, const char *progName);
       
@@ -405,6 +435,16 @@ namespace owl {
                                   size_t elementCount,
                                   size_t elementSize,
                                   HostPinnedMemory::SP pinnedMem);
+
+      /*! set a buffer of bounding boxes that this user geometry will
+          use when building the accel structure. this is one of
+          multiple ways of specifying the bounding boxes for a user
+          gometry (the other two being a) setting the geometry type's
+          boundsFunc, or b) setting a host-callback fr computing the
+          bounds). Only one of the three methods can be set at any
+          given time */
+      void userGeomSetBoundsBuffer(int geomID, int bufferID);
+      
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int bufferID,
                                         int count,
@@ -486,6 +526,17 @@ namespace owl {
           = dynamic_cast<TrianglesGeom*>(geom);
         assert("check geom is triangle geom" && asTriangles != nullptr);
         return asTriangles;
+      }
+
+      // accessor helpers:
+      UserGeom *checkGetUserGeom(int geomID)
+      {
+        Geom *geom = checkGetGeom(geomID);
+        assert(geom);
+        UserGeom *asUser
+          = dynamic_cast<UserGeom*>(geom);
+        assert("check geom is triangle geom" && asUser != nullptr);
+        return asUser;
       }
 
       void sbtGeomTypesBuild(size_t maxHitProgDataSize,

@@ -17,17 +17,42 @@
 #include "deviceCode.h"
 #include <optix_device.h>
 
-#define OPTIX_RAYGEN_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __raygen__##programName
+OPTIX_INTERSECT_PROGRAM(Sphere)()
+{
+  const SphereGeomData &self = owl::getProgramData<SphereGeomData>();
+  // get index of primitive we are to intersect (for this example,
+  // this will always be 0, because we have N differnent *geoms* with
+  // one prim each.
+  int primID = optixGetPrimitiveIndex();
+  
+  const vec3f org   = optixGetWorldRayOrigin();
+  const vec3f dir   = optixGetWorldRayDirection();
+  float hit_t = optixGetRayTmax();
+  float tmin = optixGetRayTmin();
 
-#define OPTIX_CLOSEST_HIT_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __closesthit__##programName
+  const vec3f  oc = org - self.center;
+  const float  a = dot(dir,dir);
+  const float  b = dot(oc, dir);
+  const float  c = dot(oc, oc) - self.radius * self.radius;
+  const float  discriminant = b * b - a * c;
+  
+  if (discriminant < 0.f) return;
 
-#define OPTIX_MISS_PROGRAM(programName) \
-  extern "C" __global__ \
-  void __miss__##programName
+  {
+    float temp = (-b - sqrtf(discriminant)) / a;
+    if (temp < hit_t && temp > tmin) 
+      hit_t = temp;
+  }
+      
+  {
+    float temp = (-b + sqrtf(discriminant)) / a;
+    if (temp < hit_t && temp > tmin) 
+      hit_t = temp;
+  }
+  if (hit_t < optixGetRayTmax()) {
+    optixReportIntersection(hit_t, 0);
+  }
+}
 
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
@@ -44,46 +69,20 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   if (pixelID.x >= self.fbSize.x) return;
   if (pixelID.y >= self.fbSize.y) return;
 
-  const int numRayTypes = 1;
-  const int rayType = 0;
-
-  // that's the PRD:
-  vec3f color;
-
   const vec2f screen = (vec2f(pixelID)+vec2f(.5f)) / vec2f(self.fbSize);
-  
-  OptixTraversableHandle handle = self.world;
-  float3                 rayOrigin 
-    = self.camera.pos;//make_float3(-3,-2,-4);
-  float3                 rayDirection// = make_float3(3,2,4);
+  owl::Ray ray;
+  ray.origin    
+    = self.camera.pos;
+  ray.direction 
     = normalize(self.camera.dir_00
                 + screen.u * self.camera.dir_du
                 + screen.v * self.camera.dir_dv);
-  float                  tmin = 1e-3f;
-  float                  tmax = 1e+10f;
-  float                  rayTime = 0.f;
-  OptixVisibilityMask    visibilityMask = (OptixVisibilityMask)-1;
-  unsigned int           rayFlags = 0;
-  unsigned int           SBToffset = rayType;
-  unsigned int           SBTstride = numRayTypes;
-  unsigned int           missSBTIndex = rayType;
-  unsigned int           p0 = 0;
-  unsigned int           p1 = 0;
-  owl::packPointer(&color,p0,p1 );
 
-  optixTrace(handle,
-             rayOrigin,
-             rayDirection,
-             tmin,
-             tmax,
-             rayTime,
-             visibilityMask,
-             rayFlags,
-             SBToffset,
-             SBTstride,
-             missSBTIndex,
-             p0,
-             p1 );
+  vec3f color;
+  owl::trace(/*accel to trace against*/self.world,
+             /*the ray to trace*/ ray,
+             /*numRayTypes*/1,
+             /*prd*/color);
     
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
@@ -96,14 +95,16 @@ OPTIX_CLOSEST_HIT_PROGRAM(Sphere)()
 
   const SphereGeomData &self = owl::getProgramData<SphereGeomData>();
   
-  // compute normal:
-  const vec3f Ng     = vec3f(1,1,1);//normalize(cross(B-A,C-A));
+  const vec3f org   = optixGetWorldRayOrigin();
+  const vec3f dir   = optixGetWorldRayDirection();
+  const float hit_t = optixGetRayTmax();
+  const vec3f hit_P = org + hit_t * dir;
+  const vec3f Ng     = normalize(hit_P-self.center);
 
-  const vec3f rayDir = optixGetWorldRayDirection();
-  prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*self.color;
+  prd = (.2f + .8f*fabs(dot(dir,Ng)))*self.color;
 }
 
-OPTIX_MISS_PROGRAM(defaultRayType)()
+OPTIX_MISS_PROGRAM(miss)()
 {
   const vec2i pixelID = owl::getLaunchIndex();
 
@@ -116,23 +117,36 @@ OPTIX_MISS_PROGRAM(defaultRayType)()
 
 
 
-inline __device__ void __boundsFunc__SphereGeom(box3f &bounds,
-                                     int primID,
-                                     void *geomData)
+/* defines the wrapper stuff to actually launch all the bounds
+   programs from the host - todo: move to deviceAPI.h once working */
+#define OPTIX_BOUNDS_PROGRAM(progName)                                  \
+  /* fwd decl for the kernel func to call */                            \
+  inline __device__ void __boundsFunc__##progName(void *geomData,       \
+                                                  box3f &bounds,        \
+                                                  int primID);          \
+                                                                        \
+  /* the '__global__' kernel we can get a function handle on */         \
+  extern "C" __global__                                                 \
+  void __boundsFuncKernel__##progName(void  *geomData,                  \
+                                      box3f *boundsArray,               \
+                                      int    numPrims)                  \
+  {                                                                     \
+    int primID = threadIdx.x;                                           \
+    if (primID < numPrims) {                                            \
+      printf("boundskernel - %i\n",primID);                             \
+      __boundsFunc__##progName(geomData,boundsArray[primID],primID);    \
+    }                                                                   \
+  }                                                                     \
+                                                                        \
+  /* now the actual device code that the user is writing: */            \
+  inline __device__ void __boundsFunc__##progName                       \
+  /* program args and body supplied by user ... */
+  
+  
+OPTIX_BOUNDS_PROGRAM(Sphere)(void  *geomData,
+                             box3f &primBounds,
+                             int    primID)
 {
-  printf("bounds kernel for prim %i\n",primID);
-  // bounds.lower = vec3f(-1.f);
-  // bounds.lower = vec3f(+1.f);
-}
-
-extern "C" __global__ void SphereGeom__boundsFuncKernel__(void  *geomData,
-                                                          box3f *boundsArray,
-                                                          int    numPrims)
-{
-  int primID = threadIdx.x;
-  if (primID < numPrims)
-    printf("boundskernel - %i\n",primID);
-  // if (primID < numPrims)
-  //   __boundsFunc__SphereGeom(boundsArray[primID],primID,geomData);
+  printf("sphere bounds kernel for prim %i\n",primID);
 }
 

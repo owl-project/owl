@@ -152,6 +152,66 @@ namespace owl {
       }
     }
 
+    /*! set bounding box program for given geometry type, using a
+      bounding box program to be called on the device. note that
+      unlike other programs (intersect, closesthit, anyhit) these
+      programs are not 'per ray type', but exist only once per
+      geometry type. obviously only allowed for user geometry
+      typed. */
+    void Device::setGeomTypeBoundsProgDevice(int geomTypeID,
+                                             int moduleID,
+                                             const char *progName,
+                                             size_t geomDataSize)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      geomType.boundsProg.moduleID = moduleID;
+      geomType.boundsProg.progName = progName;
+      geomType.boundsProgDataSize  = geomDataSize;
+    }
+      
+    /*! set intersect program for given geometry type and ray type
+      (only allowed for user geometry types). Note progName will
+      *not* be copied, so the pointer must remain valid as long as
+      this geom may ever get recompiled */
+    void Device::setGeomTypeIntersect(int geomTypeID,
+                                      int rayTypeID,
+                                      int moduleID,
+                                      const char *progName)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      
+      assert(rayTypeID >= 0);
+      assert(rayTypeID < context->numRayTypes);
+      assert(rayTypeID < geomType.perRayType.size());
+      auto &hitGroup = geomType.perRayType[rayTypeID];
+
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      assert("check hitgroup isn't currently active"
+             && hitGroup.pg == nullptr);
+      hitGroup.intersect.moduleID = moduleID;
+      hitGroup.intersect.progName = progName;
+    }
+    
+    /*! set closest hit program for given geometry type and ray
+      type. Note progName will *not* be copied, so the pointer
+      must remain valid as long as this geom may ever get
+      recompiled */
     void Device::setGeomTypeClosestHit(int geomTypeID,
                                        int rayTypeID,
                                        int moduleID,
@@ -505,6 +565,23 @@ namespace owl {
             pgDesc.hitgroup.moduleAH            = nullptr;
             pgDesc.hitgroup.entryFunctionNameAH = nullptr;
           }
+          // ----------- intersect -----------
+          Module *moduleIS = modules.get(pg.intersect.moduleID);
+          std::string annotatedProgNameIS
+            = pg.intersect.progName
+            ? std::string("__intersection__")+pg.intersect.progName
+            : "";
+          PRINT(annotatedProgNameIS);
+          if (moduleIS) {
+            PING;
+            assert(moduleIS->module != nullptr);
+            assert(pg.intersect.progName != nullptr);
+            pgDesc.hitgroup.moduleIS            = moduleIS->module;
+            pgDesc.hitgroup.entryFunctionNameIS = annotatedProgNameIS.c_str();
+          } else {
+            pgDesc.hitgroup.moduleIS            = nullptr;
+            pgDesc.hitgroup.entryFunctionNameIS = nullptr;
+          }
 
           char log[2048];
           size_t sizeof_log = sizeof( log );
@@ -651,6 +728,29 @@ namespace owl {
       context->popActive();
     }
     
+    /*! set a buffer of bounding boxes that this user geometry will
+      use when building the accel structure. this is one of
+      multiple ways of specifying the bounding boxes for a user
+      gometry (the other two being a) setting the geometry type's
+      boundsFunc, or b) setting a host-callback fr computing the
+      bounds). Only one of the three methods can be set at any
+      given time */
+    void Device::userGeomSetBoundsBuffer(int geomID,
+                                         int bufferID)
+    {
+      UserGeom *user
+        = checkGetUserGeom(geomID);
+      assert("double-check valid geom" && user);
+      
+      Buffer   *buffer
+        = checkGetBuffer(bufferID);
+      assert("double-check valid buffer" && buffer);
+
+      size_t offset = 0; // don't support offset/stride yet
+      user->d_boundsMemory = addPointerOffset(buffer->get(),offset);
+    }
+    
+
     void Device::trianglesGeomSetVertexBuffer(int geomID,
                                               int bufferID,
                                               int count,
@@ -952,9 +1052,12 @@ namespace owl {
         UserGeom *userGeom = dynamic_cast<UserGeom*>(geom);
         assert("double-check it's really user"
                && userGeom != nullptr);
-        assert("user geom has valid bounds buffer"
-               && userGeom->boundsBuffer.valid());
-        d_bounds = userGeom->boundsBuffer.d_pointer;
+        assert("user geom has valid bounds buffer *or* user-supplied bounds"
+               && (userGeom->boundsBuffer.valid() || userGeom->d_boundsMemory));
+        d_bounds
+          = userGeom->d_boundsMemory
+          ? (CUdeviceptr)userGeom->d_boundsMemory
+          : userGeom->boundsBuffer.d_pointer;
         
         userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
         auto &aa = userGeomInput.aabbArray;
@@ -992,6 +1095,7 @@ namespace owl {
                    (uint32_t)userGeomInputs.size(),
                    &blasBufferSizes
                    ));
+      PRINT(blasBufferSizes.outputSizeInBytes);
       
       // ------------------------------------------------------------------
       // ... and allocate buffers: temp buffer, initial (uncompacted)
@@ -1044,7 +1148,8 @@ namespace owl {
       // download builder's compacted size from device
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
-
+      PRINT(compactedSize);
+      
       // alloc the buffer...
       bvhMemory.alloc(compactedSize);
       // ... and perform compaction
