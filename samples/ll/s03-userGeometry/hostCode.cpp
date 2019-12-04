@@ -127,19 +127,19 @@ int main(int ac, char **av)
   // alloc geom
   // ------------------------------------------------------------------
   ll->reallocGeoms(8);
-#if BOUNDS_ON_HOST
   for (int i=0;i<8;i++) {
+    ll->createUserGeom(/* geom ID    */i,
+                       /* type/PG ID */0,
+                       /* numprims   */1);
+#if BOUNDS_ON_HOST
     box3f sphereBounds = box3f()
       .extend(sphereCenters[i]-sphereRadius)
       .extend(sphereCenters[i]+sphereRadius);
     ll->createDeviceBuffer(BOUNDS_BUFFER_000+i,1,sizeof(box3f),
                      &sphereBounds);
-    ll->createUserGeom(/* geom ID    */i,
-                       /* type/PG ID */0,
-                       /* numprims   */1);
     ll->userGeomSetBoundsBuffer(i,BOUNDS_BUFFER_000+i);
-  }
 #endif
+  }
 
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
