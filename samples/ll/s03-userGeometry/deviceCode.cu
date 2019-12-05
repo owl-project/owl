@@ -17,6 +17,27 @@
 #include "deviceCode.h"
 #include <optix_device.h>
 
+#if 1
+// not yet used in this example - ll03 still supplies bounds from the
+// host through a buffer
+OPTIX_BOUNDS_PROGRAM(Sphere)(const void  *geomData,
+                             box3f       &primBounds,
+                             const int    primID)
+{
+  printf("ON DEVICE: sphere bounds kernel for prim %i\n",primID);
+  printf("geomdata : %lx\n",geomData);
+  const SphereGeomData &self = *(const SphereGeomData*)geomData;
+  printf("sphere %f %f %f / %f\n",
+         self.center.x,
+         self.center.y,
+         self.center.z,
+         self.radius);
+  primBounds = box3f()
+    .extend(self.center - self.radius)
+    .extend(self.center + self.radius);
+}
+#endif
+
 OPTIX_INTERSECT_PROGRAM(Sphere)()
 {
   const SphereGeomData &self = owl::getProgramData<SphereGeomData>();
@@ -25,16 +46,16 @@ OPTIX_INTERSECT_PROGRAM(Sphere)()
   // one prim each.
   int primID = optixGetPrimitiveIndex();
   
-  const vec3f org   = optixGetWorldRayOrigin();
-  const vec3f dir   = optixGetWorldRayDirection();
-  float hit_t = optixGetRayTmax();
-  float tmin = optixGetRayTmin();
+  const vec3f org  = optixGetWorldRayOrigin();
+  const vec3f dir  = optixGetWorldRayDirection();
+  float hit_t      = optixGetRayTmax();
+  const float tmin = optixGetRayTmin();
 
-  const vec3f  oc = org - self.center;
-  const float  a = dot(dir,dir);
-  const float  b = dot(oc, dir);
-  const float  c = dot(oc, oc) - self.radius * self.radius;
-  const float  discriminant = b * b - a * c;
+  const vec3f oc = org - self.center;
+  const float a = dot(dir,dir);
+  const float b = dot(oc, dir);
+  const float c = dot(oc, oc) - self.radius * self.radius;
+  const float discriminant = b * b - a * c;
   
   if (discriminant < 0.f) return;
 
@@ -52,41 +73,6 @@ OPTIX_INTERSECT_PROGRAM(Sphere)()
   if (hit_t < optixGetRayTmax()) {
     optixReportIntersection(hit_t, 0);
   }
-}
-
-OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
-{
-  // RayGenData &rgData = *(RayGenData*)owl::getProgramDataPointer();
-  const RayGenData &self = owl::getProgramData<RayGenData>();
-  const vec2i pixelID = owl::getLaunchIndex();
-  if (pixelID == owl::vec2i(0)) {
-    printf("%sHello OptiX From your First RayGen Program (on device %i/%i)%s\n",
-           GDT_TERMINAL_LIGHT_RED,
-           self.deviceIndex,
-           self.deviceCount,
-           GDT_TERMINAL_DEFAULT);
-  }
-  if (pixelID.x >= self.fbSize.x) return;
-  if (pixelID.y >= self.fbSize.y) return;
-
-  const vec2f screen = (vec2f(pixelID)+vec2f(.5f)) / vec2f(self.fbSize);
-  owl::Ray ray;
-  ray.origin    
-    = self.camera.pos;
-  ray.direction 
-    = normalize(self.camera.dir_00
-                + screen.u * self.camera.dir_du
-                + screen.v * self.camera.dir_dv);
-
-  vec3f color;
-  owl::trace(/*accel to trace against*/self.world,
-             /*the ray to trace*/ ray,
-             /*numRayTypes*/1,
-             /*prd*/color);
-    
-  const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
-  self.fbPtr[fbOfs]
-    = owl::make_rgba(color);
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(Sphere)()
@@ -115,38 +101,32 @@ OPTIX_MISS_PROGRAM(miss)()
   prd = (pattern&1) ? self.color1 : self.color0;
 }
 
-
-
-/* defines the wrapper stuff to actually launch all the bounds
-   programs from the host - todo: move to deviceAPI.h once working */
-#define OPTIX_BOUNDS_PROGRAM(progName)                                  \
-  /* fwd decl for the kernel func to call */                            \
-  inline __device__ void __boundsFunc__##progName(void *geomData,       \
-                                                  box3f &bounds,        \
-                                                  int primID);          \
-                                                                        \
-  /* the '__global__' kernel we can get a function handle on */         \
-  extern "C" __global__                                                 \
-  void __boundsFuncKernel__##progName(void  *geomData,                  \
-                                      box3f *boundsArray,               \
-                                      int    numPrims)                  \
-  {                                                                     \
-    int primID = threadIdx.x;                                           \
-    if (primID < numPrims) {                                            \
-      printf("boundskernel - %i\n",primID);                             \
-      __boundsFunc__##progName(geomData,boundsArray[primID],primID);    \
-    }                                                                   \
-  }                                                                     \
-                                                                        \
-  /* now the actual device code that the user is writing: */            \
-  inline __device__ void __boundsFunc__##progName                       \
-  /* program args and body supplied by user ... */
-  
-  
-OPTIX_BOUNDS_PROGRAM(Sphere)(void  *geomData,
-                             box3f &primBounds,
-                             int    primID)
+OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
-  printf("sphere bounds kernel for prim %i\n",primID);
+  const RayGenData &self = owl::getProgramData<RayGenData>();
+  const vec2i pixelID = owl::getLaunchIndex();
+  
+  if (pixelID.x >= self.fbSize.x) return;
+  if (pixelID.y >= self.fbSize.y) return;
+
+  const vec2f screen = (vec2f(pixelID)+vec2f(.5f)) / vec2f(self.fbSize);
+  owl::Ray ray;
+  ray.origin    
+    = self.camera.pos;
+  ray.direction 
+    = normalize(self.camera.dir_00
+                + screen.u * self.camera.dir_du
+                + screen.v * self.camera.dir_dv);
+
+  vec3f color;
+  owl::trace(/*accel to trace against*/self.world,
+             /*the ray to trace*/ ray,
+             /*numRayTypes*/1,
+             /*prd*/color);
+    
+  const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
+  self.fbPtr[fbOfs]
+    = owl::make_rgba(color);
 }
+
 
