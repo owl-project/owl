@@ -232,7 +232,7 @@ namespace owl {
           it is also possible that boundsBuffer is not allocated, and
           d_boundsArray points to the user-supplied buffer */
       void        *d_boundsMemory = nullptr;
-      DeviceMemory boundsBuffer;
+      DeviceMemory internalBufferForBoundsProgram;
       size_t       numPrims      = 0;
     };
     struct TrianglesGeom : public Geom {
