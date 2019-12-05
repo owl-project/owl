@@ -17,20 +17,6 @@
 #include "deviceCode.h"
 #include <optix_device.h>
 
-#if 1
-// not yet used in this example - ll03 still supplies bounds from the
-// host through a buffer
-OPTIX_BOUNDS_PROGRAM(Sphere)(const void  *geomData,
-                             box3f       &primBounds,
-                             const int    primID)
-{
-  const SphereGeomData &self = *(const SphereGeomData*)geomData;
-  primBounds = box3f()
-    .extend(self.center - self.radius)
-    .extend(self.center + self.radius);
-}
-#endif
-
 OPTIX_INTERSECT_PROGRAM(Sphere)()
 {
   const SphereGeomData &self = owl::getProgramData<SphereGeomData>();

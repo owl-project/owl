@@ -15,9 +15,15 @@
 # ======================================================================== #
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(ll03-userGeometry-boundsBuffer
+  hostCode.cpp
+  ${ptxCode}
+  )
+target_link_libraries(ll03-userGeometry-boundsBuffer
+  owl-ll
+  )
 
-file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
-foreach(sample ${samples})
-  add_subdirectory(${sample})
-endforeach()
 
