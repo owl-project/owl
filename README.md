@@ -19,6 +19,11 @@ Revision History
 v0.3.x - User Geometries
 ------------------------
 
+*v0.3.4*: first 'serious' example: RTOW-finalChapter on OWL
+
+- added `s05-rtow` example that runs Pete's "final chapter" example 
+  (iterative version) on top of OWL, with multi-device, different material, etc.
+
 *v0.3.3*: major bugfix in bounds program for geoms w/ more than 128 prims.
 
 *v0.3.2*: added two explicit examples for uesr geom - one with
