@@ -19,6 +19,8 @@ Revision History
 v0.3.x - User Geometries
 ------------------------
 
+*v0.3.3*: major bugfix in bounds program for geoms w/ more than 128 prims.
+
 *v0.3.2*: added two explicit examples for uesr geom - one with
   host-generation of bounds passed thrugh buffer, and one with bounds
   program
