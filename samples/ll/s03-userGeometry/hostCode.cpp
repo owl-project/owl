@@ -151,6 +151,19 @@ int main(int ac, char **av)
   ll->createUserGeomGroup(/* group ID */SPHERES_GROUP,
                           /* geoms in group, pointer */ geomsInGroup,
                           /* geoms in group, count   */ 8);
+#if BOUNDS_ON_HOST
+  // in this mode, we supply the boudns through a buffer, so don't
+  // build them on the device at all ...
+#else
+  ll->groupBuildPrimitiveBounds
+    (SPHERES_GROUP,sizeof(SphereGeomData),
+     [&](uint8_t *output, int devID, int geomID, int childID) {
+      SphereGeomData &self = *(SphereGeomData*)output;
+      self.center = sphereCenters[geomID];
+      self.radius = sphereRadius;
+      // self.color  = gdt::randomColor(geomID);
+    });
+#endif
   ll->groupBuildAccel(SPHERES_GROUP);
 
   // ##################################################################
@@ -162,7 +175,7 @@ int main(int ac, char **av)
   const size_t maxHitGroupDataSize = sizeof(SphereGeomData);
   ll->sbtGeomTypesBuild
     (maxHitGroupDataSize,
-     [&](uint8_t *output,int devID,int geomID,int rayID,const void *cbData) {
+     [&](uint8_t *output,int devID,int geomID,int childID) {
       
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
@@ -172,43 +185,43 @@ int main(int ac, char **av)
   
   // ----------- build miss prog(s) -----------
   const size_t maxMissProgDataSize = sizeof(MissProgData);
-  ll->sbtMissProgsBuild(maxMissProgDataSize,
-                        [&](uint8_t *output,
-                            int devID,
-                            int rayType, 
-                            const void *cbData) {
-                          /* we don't have any ... */
-                          ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
-                          ((MissProgData*)output)->color1 = vec3f(.8f,.8f,.8f);
-                        });
+  ll->sbtMissProgsBuild
+    (maxMissProgDataSize,
+     [&](uint8_t *output,
+         int devID,
+         int rayType) {
+      /* we don't have any ... */
+      ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
+      ((MissProgData*)output)->color1 = vec3f(.8f,.8f,.8f);
+    });
   
   // ----------- build raygens -----------
   const size_t maxRayGenDataSize = sizeof(RayGenData);
-  ll->sbtRayGensBuild(maxRayGenDataSize,
-                      [&](uint8_t *output,
-                          int devID,
-                          int rgID, 
-                          const void *cbData) {
-                        RayGenData *rg = (RayGenData*)output;
-                        rg->deviceIndex   = devID;
-                        rg->deviceCount = ll->getDeviceCount();
-                        rg->fbSize = fbSize;
-                        rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-                        rg->world  = ll->groupGetTraversable(SPHERES_GROUP,devID);
+  ll->sbtRayGensBuild
+    (maxRayGenDataSize,
+     [&](uint8_t *output,
+         int devID,
+         int rgID) {
+      RayGenData *rg = (RayGenData*)output;
+      rg->deviceIndex   = devID;
+      rg->deviceCount = ll->getDeviceCount();
+      rg->fbSize = fbSize;
+      rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
+      rg->world  = ll->groupGetTraversable(SPHERES_GROUP,devID);
 
-                        // compute camera frame:
-                        vec3f &pos = rg->camera.pos;
-                        vec3f &d00 = rg->camera.dir_00;
-                        vec3f &ddu = rg->camera.dir_du;
-                        vec3f &ddv = rg->camera.dir_dv;
-                        float aspect = fbSize.x / float(fbSize.y);
-                        pos = lookFrom;
-                        d00 = normalize(lookAt-lookFrom);
-                        ddu = cosFovy * aspect * normalize(cross(d00,lookUp));
-                        ddv = cosFovy * normalize(cross(ddu,d00));
-                        d00 -= 0.5f * ddu;
-                        d00 -= 0.5f * ddv;
-                      });
+      // compute camera frame:
+      vec3f &pos = rg->camera.pos;
+      vec3f &d00 = rg->camera.dir_00;
+      vec3f &ddu = rg->camera.dir_du;
+      vec3f &ddv = rg->camera.dir_dv;
+      float aspect = fbSize.x / float(fbSize.y);
+      pos = lookFrom;
+      d00 = normalize(lookAt-lookFrom);
+      ddu = cosFovy * aspect * normalize(cross(d00,lookUp));
+      ddv = cosFovy * normalize(cross(ddu,d00));
+      d00 -= 0.5f * ddu;
+      d00 -= 0.5f * ddv;
+    });
   LOG_OK("everything set up ...");
 
   // ##################################################################

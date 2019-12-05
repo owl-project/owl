@@ -1443,7 +1443,7 @@ namespace owl {
       assert("check valid hit group ID" && geomTypeID >= 0);
       assert("check valid hit group ID" && geomTypeID <  geomTypes.size());
         
-      geoms[geomID] = new UserGeom(geomTypeID,numPrims);
+      geoms[geomID] = new UserGeom(geomID,geomTypeID,numPrims);
       assert("check 'new' was successful" && geoms[geomID] != nullptr);
     }
     
@@ -1464,7 +1464,7 @@ namespace owl {
       assert("check valid hit group ID" && geomTypeID >= 0);
       assert("check valid hit group ID" && geomTypeID < geomTypes.size());
         
-      geoms[geomID] = new TrianglesGeom(geomTypeID);
+      geoms[geomID] = new TrianglesGeom(geomID,geomTypeID);
       assert("check 'new' was successful" && geoms[geomID] != nullptr);
     }
 
@@ -1549,6 +1549,34 @@ namespace owl {
       }
     }
 
+
+
+    void Device::groupBuildPrimitiveBounds(int groupID,
+                                           size_t maxGeomDataSize,
+                                           WriteUserGeomBoundsDataCB cb,
+                                           void *cbData)
+    {
+      PING;
+      UserGeomGroup *ugg
+        = checkGetUserGeomGroup(groupID);
+      
+      std::vector<uint8_t> userGeomData(maxGeomDataSize);
+      for (int childID=0;childID<ugg->children.size();childID++) {
+        Geom *child = ugg->children[childID];
+        assert("double-check valid child geom" && child != nullptr);
+        assert(child);
+        UserGeom *ug = (UserGeom *)child;
+        ug->boundsBuffer.alloc(ug->numPrims);
+        ug->d_boundsMemory = ug->boundsBuffer.get();
+
+        PING;
+        cb(userGeomData.data(),context->owlDeviceID,
+           ug->geomID,childID,cbData); 
+        PING;
+        exit(0);
+      }
+    }
+    
   } // ::owl::ll
 } //::owl
   
