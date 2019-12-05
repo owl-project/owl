@@ -39,6 +39,8 @@ include(configure_build_type)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+enable_testing()
+
 # ------------------------------------------------------------------
 # import gdt submodules itself: gdt, and viewer
 # ------------------------------------------------------------------
