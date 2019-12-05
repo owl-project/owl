@@ -17,24 +17,51 @@
 #include "deviceCode.h"
 #include <optix_device.h>
 
-// not yet used in this example - ll03 still supplies bounds from the
-// host through a buffer
-OPTIX_BOUNDS_PROGRAM(LambertianSpheres)(const void  *geomData,
-                                        box3f       &primBounds,
-                                        const int    primID)
+
+// ==================================================================
+// bounding box programs - since these don't actually use the material
+// they're all the same irrespective of geometry type, so use a
+// template ...
+// ==================================================================
+template<typename SphereGeomType>
+inline __device__ void boundsProg(const void *geomData,
+                                  box3f &primBounds,
+                                  const int primID)
 {
-  const LambertianSpheresGeom &self = *(const LambertianSpheresGeom*)geomData;
+  const SphereGeomType &self = *(const SphereGeomType*)geomData;
   const Sphere sphere = self.prims[primID].sphere;
   primBounds = box3f()
     .extend(sphere.center - sphere.radius)
     .extend(sphere.center + sphere.radius);
 }
 
-OPTIX_INTERSECT_PROGRAM(LambertianSpheres)()
+OPTIX_BOUNDS_PROGRAM(MetalSpheres)(const void  *geomData,
+                                        box3f       &primBounds,
+                                        const int    primID)
+{ boundsProg<MetalSpheresGeom>(geomData,primBounds,primID); }
+
+OPTIX_BOUNDS_PROGRAM(LambertianSpheres)(const void  *geomData,
+                                        box3f       &primBounds,
+                                        const int    primID)
+{ boundsProg<LambertianSpheresGeom>(geomData,primBounds,primID); }
+
+OPTIX_BOUNDS_PROGRAM(DielectricSpheres)(const void  *geomData,
+                                        box3f       &primBounds,
+                                        const int    primID)
+{ boundsProg<DielectricSpheresGeom>(geomData,primBounds,primID); }
+
+
+// ==================================================================
+// intersect programs - still all the same, since they don't use the
+// material, either
+// ==================================================================
+
+template<typename SpheresGeomType>
+inline __device__ void intersectProg()
 {
   const int primID = optixGetPrimitiveIndex();
-  const LambertianSphere &self
-    = owl::getProgramData<LambertianSpheresGeom>().prims[primID];
+  const auto &self
+    = owl::getProgramData<SpheresGeomType>().prims[primID];
   
   const vec3f org  = optixGetWorldRayOrigin();
   const vec3f dir  = optixGetWorldRayDirection();
@@ -65,6 +92,38 @@ OPTIX_INTERSECT_PROGRAM(LambertianSpheres)()
   }
 }
 
+
+OPTIX_INTERSECT_PROGRAM(MetalSpheres)()
+{ intersectProg<MetalSpheresGeom>(); }
+
+OPTIX_INTERSECT_PROGRAM(LambertianSpheres)()
+{ intersectProg<LambertianSpheresGeom>(); }
+
+OPTIX_INTERSECT_PROGRAM(DielectricSpheres)()
+{ intersectProg<DielectricSpheresGeom>(); }
+
+
+// ==================================================================
+// plumbing for closest hit
+// ==================================================================
+
+OPTIX_CLOSEST_HIT_PROGRAM(MetalSpheres)()
+{
+  const int primID = optixGetPrimitiveIndex();
+  const MetalSphere &self
+    = owl::getProgramData<MetalSpheresGeom>().prims[primID];
+  
+  vec3f &prd = owl::getPRD<vec3f>();
+
+  const vec3f org   = optixGetWorldRayOrigin();
+  const vec3f dir   = optixGetWorldRayDirection();
+  const float hit_t = optixGetRayTmax();
+  const vec3f hit_P = org + hit_t * dir;
+  const vec3f Ng    = normalize(hit_P-self.sphere.center);
+
+  prd = (.2f + .8f*fabs(dot(dir,Ng)))*self.metal.albedo;
+}
+
 OPTIX_CLOSEST_HIT_PROGRAM(LambertianSpheres)()
 {
   const int primID = optixGetPrimitiveIndex();
@@ -81,6 +140,35 @@ OPTIX_CLOSEST_HIT_PROGRAM(LambertianSpheres)()
 
   prd = (.2f + .8f*fabs(dot(dir,Ng)))*self.lambertian.albedo;
 }
+
+
+OPTIX_CLOSEST_HIT_PROGRAM(DielectricSpheres)()
+{
+  const int primID = optixGetPrimitiveIndex();
+  const DielectricSphere &self
+    = owl::getProgramData<DielectricSpheresGeom>().prims[primID];
+  
+  vec3f &prd = owl::getPRD<vec3f>();
+
+  const vec3f org   = optixGetWorldRayOrigin();
+  const vec3f dir   = optixGetWorldRayDirection();
+  const float hit_t = optixGetRayTmax();
+  const vec3f hit_P = org + hit_t * dir;
+  const vec3f Ng    = normalize(hit_P-self.sphere.center);
+
+  prd = (.2f + .8f*fabs(dot(dir,Ng)));//*self.dielectric.albedo;
+}
+
+
+
+
+
+
+
+
+// ==================================================================
+// miss and raygen
+// ==================================================================
 
 OPTIX_MISS_PROGRAM(miss)()
 {

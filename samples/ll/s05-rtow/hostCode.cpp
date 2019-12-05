@@ -96,6 +96,8 @@ int main(int ac, char **av)
   createScene();
   LOG_OK("created scene:");
   LOG_OK(" num lambertian spheres: " << lambertianSpheres.size());
+  LOG_OK(" num dielectric spheres: " << dielectricSpheres.size());
+  LOG_OK(" num metal spheres     : " << metalSpheres.size());
   
   
   owl::ll::DeviceGroup::SP ll
@@ -128,7 +130,33 @@ int main(int ac, char **av)
                                   /*module:*/0,
                                   "LambertianSpheres",
                                   sizeof(LambertianSpheresGeom));
+
+  ll->setGeomTypeClosestHit(/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
+                            /*ray type  */0,
+                            /*module:*/0,
+                            "DielectricSpheres");
+  ll->setGeomTypeIntersect(/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
+                           /*ray type  */0,
+                           /*module:*/0,
+                           "DielectricSpheres");
+  ll->setGeomTypeBoundsProgDevice(/*program ID*/DIELECTRIC_SPHERES_TYPE,
+                                  /*module:*/0,
+                                  "DielectricSpheres",
+                                  sizeof(DielectricSpheresGeom));
   
+  ll->setGeomTypeClosestHit(/*geom type ID*/METAL_SPHERES_TYPE,
+                            /*ray type  */0,
+                            /*module:*/0,
+                            "MetalSpheres");
+  ll->setGeomTypeIntersect(/*geom type ID*/METAL_SPHERES_TYPE,
+                           /*ray type  */0,
+                           /*module:*/0,
+                           "MetalSpheres");
+  ll->setGeomTypeBoundsProgDevice(/*program ID*/METAL_SPHERES_TYPE,
+                                  /*module:*/0,
+                                  "MetalSpheres",
+                                  sizeof(MetalSpheresGeom));
+
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
@@ -152,6 +180,8 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   enum { FRAME_BUFFER=0,
          LAMBERTIAN_SPHERES_BUFFER,
+         DIELECTRIC_SPHERES_BUFFER,
+         METAL_SPHERES_BUFFER,
          NUM_BUFFERS };
   ll->reallocBuffers(NUM_BUFFERS);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
@@ -160,6 +190,8 @@ int main(int ac, char **av)
   // alloc geom
   // ------------------------------------------------------------------
   enum { LAMBERTIAN_SPHERES_GEOM=0,
+         DIELECTRIC_SPHERES_GEOM,
+         METAL_SPHERES_GEOM,
          NUM_GEOMS };
   ll->reallocGeoms(NUM_GEOMS);
   ll->createUserGeom(/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
@@ -169,6 +201,20 @@ int main(int ac, char **av)
                          lambertianSpheres.size(),
                          sizeof(lambertianSpheres[0]),
                          lambertianSpheres.data());
+  ll->createUserGeom(/* geom ID    */DIELECTRIC_SPHERES_GEOM,
+                     /* type/PG ID */DIELECTRIC_SPHERES_TYPE,
+                     /* numprims   */dielectricSpheres.size());
+  ll->createDeviceBuffer(DIELECTRIC_SPHERES_BUFFER,
+                         dielectricSpheres.size(),
+                         sizeof(dielectricSpheres[0]),
+                         dielectricSpheres.data());
+  ll->createUserGeom(/* geom ID    */METAL_SPHERES_GEOM,
+                     /* type/PG ID */METAL_SPHERES_TYPE,
+                     /* numprims   */metalSpheres.size());
+  ll->createDeviceBuffer(METAL_SPHERES_BUFFER,
+                         metalSpheres.size(),
+                         sizeof(metalSpheres[0]),
+                         metalSpheres.data());
   
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
@@ -177,7 +223,11 @@ int main(int ac, char **av)
   enum { WORLD_GROUP=0,
          NUM_GROUPS };
   ll->reallocGroups(NUM_GROUPS);
-  int geomsInGroup[] = { LAMBERTIAN_SPHERES_GEOM };
+  int geomsInGroup[] = {
+                        LAMBERTIAN_SPHERES_GEOM,
+                        DIELECTRIC_SPHERES_GEOM,
+                        METAL_SPHERES_GEOM
+  };
   ll->createUserGeomGroup(/* group ID */WORLD_GROUP,
                           /* geoms in group, pointer */ geomsInGroup,
                           /* geoms in group, count   */ NUM_GEOMS);
@@ -190,6 +240,14 @@ int main(int ac, char **av)
        case LAMBERTIAN_SPHERES_GEOM:
          ((LambertianSpheresGeom*)output)->prims
            = (LambertianSphere*)ll->bufferGetPointer(LAMBERTIAN_SPHERES_BUFFER,devID);
+         break;
+       case DIELECTRIC_SPHERES_GEOM:
+         ((DielectricSpheresGeom*)output)->prims
+           = (DielectricSphere*)ll->bufferGetPointer(DIELECTRIC_SPHERES_BUFFER,devID);
+         break;
+       case METAL_SPHERES_GEOM:
+         ((MetalSpheresGeom*)output)->prims
+           = (MetalSphere*)ll->bufferGetPointer(METAL_SPHERES_BUFFER,devID);
          break;
        default:
          assert(0);
@@ -214,6 +272,14 @@ int main(int ac, char **av)
        case LAMBERTIAN_SPHERES_GEOM:
          ((LambertianSpheresGeom*)output)->prims
            = (LambertianSphere*)ll->bufferGetPointer(LAMBERTIAN_SPHERES_BUFFER,devID);
+         break;
+       case DIELECTRIC_SPHERES_GEOM:
+         ((DielectricSpheresGeom*)output)->prims
+           = (DielectricSphere*)ll->bufferGetPointer(DIELECTRIC_SPHERES_BUFFER,devID);
+         break;
+       case METAL_SPHERES_GEOM:
+         ((MetalSpheresGeom*)output)->prims
+           = (MetalSphere*)ll->bufferGetPointer(METAL_SPHERES_BUFFER,devID);
          break;
        default:
          assert(0);
