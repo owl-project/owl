@@ -25,5 +25,8 @@ add_executable(ll05-rtow
 target_link_libraries(ll05-rtow
   owl-ll
   )
+add_test(ll05-rtow
+  ${CMAKE_BINARY_DIR}/ll05-rtow)
+
 
 

@@ -25,5 +25,6 @@ add_executable(ll02-multipleTriangleGroups
 target_link_libraries(ll02-multipleTriangleGroups
   owl-ll
   )
+add_test(ll02-multipleTriangleGroups ${CMAKE_BINARY_DIR}/ll02-multipleTriangleGroups)
 
 

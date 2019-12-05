@@ -25,5 +25,6 @@ add_executable(ll01-simpleTriangles
 target_link_libraries(ll01-simpleTriangles
   owl-ll
   )
+add_test(ll01-simpleTriangles ${CMAKE_BINARY_DIR}/ll01-simpleTriangles)
 
 
