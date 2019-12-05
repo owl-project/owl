@@ -189,7 +189,7 @@ namespace owl {
                                       box3f *const boundsArray,               \
                                       const int    numPrims)                  \
   {                                                                     \
-    int primID = threadIdx.x;                                           \
+    int primID = threadIdx.x + blockDim.x*blockIdx.x;                 \
     if (primID < numPrims) {                                            \
       __boundsFunc__##progName(geomData,boundsArray[primID],primID);    \
     }                                                                   \

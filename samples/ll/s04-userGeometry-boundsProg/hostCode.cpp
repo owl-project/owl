@@ -33,7 +33,7 @@
 
 extern "C" char ptxCode[];
 
-const char *outFileName = "ll03-userGeometry.png";
+const char *outFileName = "ll04-userGeometry-boundsProg.png";
 const vec2i fbSize(800,600);
 const vec3f lookFrom(-4.f,-3.f,-2.f);
 const vec3f lookAt(0.f,0.f,0.f);
@@ -188,7 +188,6 @@ int main(int ac, char **av)
      [&](uint8_t *output,
          int devID,
          int rayType) {
-      /* we don't have any ... */
       ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
       ((MissProgData*)output)->color1 = vec3f(.8f,.8f,.8f);
     });
