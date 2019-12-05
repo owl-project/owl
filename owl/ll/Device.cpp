@@ -736,7 +736,6 @@ namespace owl {
       Buffer   *buffer
         = checkGetBuffer(bufferID);
       assert("double-check valid buffer" && buffer);
-
       size_t offset = 0; // don't support offset/stride yet
       user->d_boundsMemory = addPointerOffset(buffer->get(),offset);
     }
@@ -1014,7 +1013,6 @@ namespace owl {
       context->pushActive();
       LOG("building user accel over "
           << children.size() << " geometries");
-      
       // ==================================================================
       // create triangle inputs
       // ==================================================================
@@ -1024,11 +1022,10 @@ namespace owl {
        *pointers* to the pointers, so need a temp copy here */
       std::vector<CUdeviceptr> boundsPointers(children.size());
 
-      // for now we use the same flags for all geoms
+     // for now we use the same flags for all geoms
       uint32_t userGeomInputFlags[1] = { 0 };
       // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
 
-      PING;
       // now go over all children to set up the buildinputs
       for (int childID=0;childID<children.size();childID++) {
         // the three fields we're setting:
@@ -1045,11 +1042,9 @@ namespace owl {
         assert("double-check it's really user"
                && userGeom != nullptr);
         assert("user geom has valid bounds buffer *or* user-supplied bounds"
-               && (userGeom->boundsBuffer.valid() || userGeom->d_boundsMemory));
-        d_bounds
-          = userGeom->d_boundsMemory
-          ? (CUdeviceptr)userGeom->d_boundsMemory
-          : userGeom->boundsBuffer.d_pointer;
+               && (userGeom->internalBufferForBoundsProgram.valid()
+                   || userGeom->d_boundsMemory));
+        d_bounds = (CUdeviceptr)userGeom->d_boundsMemory;
         
         userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
         auto &aa = userGeomInput.aabbArray;
@@ -1066,7 +1061,6 @@ namespace owl {
         aa.sbtIndexOffsetSizeInBytes   = 0; 
         aa.sbtIndexOffsetStrideInBytes = 0; 
       }
-      PING;
       
       // ==================================================================
       // BLAS setup: buildinputs set up, build the blas
@@ -1556,8 +1550,8 @@ namespace owl {
         assert("double-check valid child geom" && child != nullptr);
         assert(child);
         UserGeom *ug = (UserGeom *)child;
-        ug->boundsBuffer.alloc(ug->numPrims);
-        ug->d_boundsMemory = ug->boundsBuffer.get();
+        ug->internalBufferForBoundsProgram.alloc(ug->numPrims);
+        ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
 
         LOG("calling user geom callback to set up user geometry bounds call data");
         cb(userGeomData.data(),context->owlDeviceID,
