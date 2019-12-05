@@ -159,12 +159,8 @@ int main(int ac, char **av)
     (SPHERES_GROUP,sizeof(SphereGeomData),
      [&](uint8_t *output, int devID, int geomID, int childID) {
       SphereGeomData &self = *(SphereGeomData*)output;
-      PING;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
-      PRINT(self.center);
-      PRINT(self.radius);
-      // self.color  = gdt::randomColor(geomID);
     });
 #endif
   ll->groupBuildAccel(SPHERES_GROUP);
@@ -179,7 +175,6 @@ int main(int ac, char **av)
   ll->sbtGeomTypesBuild
     (maxHitGroupDataSize,
      [&](uint8_t *output,int devID,int geomID,int childID) {
-      
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;

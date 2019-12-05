@@ -24,14 +24,7 @@ OPTIX_BOUNDS_PROGRAM(Sphere)(const void  *geomData,
                              box3f       &primBounds,
                              const int    primID)
 {
-  printf("ON DEVICE: sphere bounds kernel for prim %i\n",primID);
-  printf("geomdata : %lx\n",geomData);
   const SphereGeomData &self = *(const SphereGeomData*)geomData;
-  printf("sphere %f %f %f / %f\n",
-         self.center.x,
-         self.center.y,
-         self.center.z,
-         self.radius);
   primBounds = box3f()
     .extend(self.center - self.radius)
     .extend(self.center + self.radius);
