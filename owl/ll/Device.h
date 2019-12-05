@@ -70,7 +70,16 @@ namespace owl {
     };
     
     struct Module {
+      /*! for all *optix* programs we can directly buidl the PTX code
+          into a module using optixbuildmodule - this is the result of
+          that operation */
       OptixModule module = nullptr;
+      
+      /*! for the *bounds* function we have to build a *separate*
+          module because this one is built outside of optix, and thus
+          does not have the internal _optix_xyz() symbols in it */
+      CUmodule    boundsModule = 0;
+      
       const char *ptxCode;
       void create(Context *context);
     };
@@ -116,7 +125,8 @@ namespace owl {
     struct GeomType {
       std::vector<HitGroupPG> perRayType;
       Program boundsProg;
-      size_t  boundsProgDataSize = 0;
+      size_t  boundsProgDataSize = 0; // do we still need this!?
+      CUfunction boundsFuncKernel;
     };
 
     struct SBT {
@@ -497,6 +507,15 @@ namespace owl {
         Geom *geom = geoms[geomID];
         assert("check valid geom" && geom != nullptr);
         return geom;
+      }
+
+      GeomType *checkGetGeomType(int geomTypeID)
+      {
+        assert("check valid geomType ID" && geomTypeID >= 0);
+        assert("check valid geomType ID" && geomTypeID <  geomTypes.size());
+        GeomType *geomType = &geomTypes[geomTypeID];
+        assert("check valid geomType" && geomType != nullptr);
+        return geomType;
       }
 
       // accessor helpers:

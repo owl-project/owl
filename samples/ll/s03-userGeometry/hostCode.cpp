@@ -159,8 +159,11 @@ int main(int ac, char **av)
     (SPHERES_GROUP,sizeof(SphereGeomData),
      [&](uint8_t *output, int devID, int geomID, int childID) {
       SphereGeomData &self = *(SphereGeomData*)output;
+      PING;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
+      PRINT(self.center);
+      PRINT(self.radius);
       // self.color  = gdt::randomColor(geomID);
     });
 #endif
