@@ -1088,7 +1088,6 @@ namespace owl {
                    (uint32_t)userGeomInputs.size(),
                    &blasBufferSizes
                    ));
-      PRINT(blasBufferSizes.outputSizeInBytes);
       
       // ------------------------------------------------------------------
       // ... and allocate buffers: temp buffer, initial (uncompacted)
@@ -1141,7 +1140,6 @@ namespace owl {
       // download builder's compacted size from device
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
-      PRINT(compactedSize);
       
       // alloc the buffer...
       bvhMemory.alloc(compactedSize);
@@ -1547,7 +1545,6 @@ namespace owl {
                                            WriteUserGeomBoundsDataCB cb,
                                            void *cbData)
     {
-      PING;
       UserGeomGroup *ugg
         = checkGetUserGeomGroup(groupID);
       
@@ -1562,7 +1559,6 @@ namespace owl {
         ug->boundsBuffer.alloc(ug->numPrims);
         ug->d_boundsMemory = ug->boundsBuffer.get();
 
-        PING;
         LOG("calling user geom callback to set up user geometry bounds call data");
         cb(userGeomData.data(),context->owlDeviceID,
            ug->geomID,childID,cbData); 
@@ -1573,11 +1569,9 @@ namespace owl {
         vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
         vec3i gridDims(boundsFuncBlockSize,1,1);
 
-        PRINT(*(vec3f*)userGeomData.data());
         tempMem.upload(userGeomData);
         
         void  *d_geomData = tempMem.get();//nullptr;
-        PRINT(d_geomData);
         vec3f *d_boundsArray = (vec3f*)ug->d_boundsMemory;
         void  *args[] = {
           &d_geomData,
@@ -1587,13 +1581,11 @@ namespace owl {
 
         DeviceMemory tempMem;
         GeomType *gt = checkGetGeomType(ug->geomTypeID);
-        PING;
         CUresult rc
           = cuLaunchKernel(gt->boundsFuncKernel,
                            blockDims.x,blockDims.y,blockDims.z,
                            gridDims.x,gridDims.y,gridDims.z,
                            0, 0, args, 0);
-        PING;
         if (rc) {
           const char *errName = 0;
           cuGetErrorName(rc,&errName);

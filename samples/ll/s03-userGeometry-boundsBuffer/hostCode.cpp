@@ -14,8 +14,6 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#define BOUNDS_ON_HOST 0
-
 #include "ll/DeviceGroup.h"
 #include "deviceCode.h"
 
@@ -33,7 +31,7 @@
 
 extern "C" char ptxCode[];
 
-const char *outFileName = "ll03-userGeometry.png";
+const char *outFileName = "ll03-userGeometry-boundsBuffer.png";
 const vec2i fbSize(800,600);
 const vec3f lookFrom(-4.f,-3.f,-2.f);
 const vec3f lookAt(0.f,0.f,0.f);
@@ -80,13 +78,6 @@ int main(int ac, char **av)
                            /*module:*/0,
                            "Sphere");
 
-#if BOUNDS_ON_HOST
-#else
-  ll->setGeomTypeBoundsProgDevice(/*program ID*/0,
-                                  /*module:*/0,
-                                  "Sphere",
-                                  sizeof(SphereGeomData));
-#endif
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
@@ -109,7 +100,6 @@ int main(int ac, char **av)
   // alloc buffers
   // ------------------------------------------------------------------
   enum { FRAME_BUFFER=0,
-#if BOUNDS_ON_HOST
          BOUNDS_BUFFER_000,
          BOUNDS_BUFFER_001,
          BOUNDS_BUFFER_010,
@@ -118,7 +108,6 @@ int main(int ac, char **av)
          BOUNDS_BUFFER_101,
          BOUNDS_BUFFER_110,
          BOUNDS_BUFFER_111,
-#endif
          NUM_BUFFERS };
   ll->reallocBuffers(NUM_BUFFERS);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
@@ -131,14 +120,12 @@ int main(int ac, char **av)
     ll->createUserGeom(/* geom ID    */i,
                        /* type/PG ID */0,
                        /* numprims   */1);
-#if BOUNDS_ON_HOST
     box3f sphereBounds = box3f()
       .extend(sphereCenters[i]-sphereRadius)
       .extend(sphereCenters[i]+sphereRadius);
     ll->createDeviceBuffer(BOUNDS_BUFFER_000+i,1,sizeof(box3f),
                      &sphereBounds);
     ll->userGeomSetBoundsBuffer(i,BOUNDS_BUFFER_000+i);
-#endif
   }
 
   // ##################################################################
@@ -151,22 +138,8 @@ int main(int ac, char **av)
   ll->createUserGeomGroup(/* group ID */SPHERES_GROUP,
                           /* geoms in group, pointer */ geomsInGroup,
                           /* geoms in group, count   */ 8);
-#if BOUNDS_ON_HOST
   // in this mode, we supply the boudns through a buffer, so don't
   // build them on the device at all ...
-#else
-  ll->groupBuildPrimitiveBounds
-    (SPHERES_GROUP,sizeof(SphereGeomData),
-     [&](uint8_t *output, int devID, int geomID, int childID) {
-      SphereGeomData &self = *(SphereGeomData*)output;
-      PING;
-      self.center = sphereCenters[geomID];
-      self.radius = sphereRadius;
-      PRINT(self.center);
-      PRINT(self.radius);
-      // self.color  = gdt::randomColor(geomID);
-    });
-#endif
   ll->groupBuildAccel(SPHERES_GROUP);
 
   // ##################################################################
@@ -179,7 +152,6 @@ int main(int ac, char **av)
   ll->sbtGeomTypesBuild
     (maxHitGroupDataSize,
      [&](uint8_t *output,int devID,int geomID,int childID) {
-      
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
@@ -193,7 +165,6 @@ int main(int ac, char **av)
      [&](uint8_t *output,
          int devID,
          int rayType) {
-      /* we don't have any ... */
       ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
       ((MissProgData*)output)->color1 = vec3f(.8f,.8f,.8f);
     });

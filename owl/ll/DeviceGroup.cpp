@@ -362,7 +362,7 @@ namespace owl {
       // ------------------------------------------------------------------
       std::cout << "#owl.ll: initializing optix 7" << std::endl;
       OPTIX_CHECK(optixInit());
-
+      
       // ------------------------------------------------------------------
       // check if a device ID list was passed, and if not, create one
       // ------------------------------------------------------------------

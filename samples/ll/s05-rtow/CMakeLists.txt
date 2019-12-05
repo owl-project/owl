@@ -18,11 +18,11 @@ include_directories(${PROJECT_SOURCE_DIR}/owl)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(ll03-userGeometry
+add_executable(ll05-rtow
   hostCode.cpp
   ${ptxCode}
   )
-target_link_libraries(ll03-userGeometry
+target_link_libraries(ll05-rtow
   owl-ll
   )
 
