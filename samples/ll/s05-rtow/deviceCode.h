@@ -50,15 +50,15 @@ struct Dielectric {
 
 struct MetalSphere {
   Sphere sphere;
-  Metal metal;
+  Metal  material;
 };
 struct DielectricSphere {
   Sphere sphere;
-  Dielectric dielectric;
+  Dielectric material;
 };
 struct LambertianSphere {
   Sphere sphere;
-  Lambertian lambertian;
+  Lambertian material;
 };
 
 // ==================================================================

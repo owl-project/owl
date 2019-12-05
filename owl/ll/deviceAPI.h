@@ -123,6 +123,18 @@ namespace owl {
 
 
   struct Ray {
+    inline __device__ Ray() {}
+    inline __device__ Ray(const vec3f &origin,
+                          const vec3f &direction,
+                          int rayType,
+                          float tmin,
+                          float tmax)
+      : origin(origin),
+        direction(direction),
+        rayType(rayType),
+        tmin(tmin),
+        tmax(tmax)
+    {}
     vec3f origin, direction;
     int   rayType = 0;
     float tmin=0.f,tmax=1e30f,time=0.f;

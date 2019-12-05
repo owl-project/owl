@@ -36,7 +36,7 @@
 extern "C" char ptxCode[];
 
 const char *outFileName = "ll05-rtow.png";
-const vec2i fbSize(800,600);
+const vec2i fbSize(1600,800);
 const vec3f lookFrom(13, 2, 3);
 const vec3f lookAt(0, 0, 0);
 // const vec3f lookFrom(-4.f,-3.f,-2.f);
