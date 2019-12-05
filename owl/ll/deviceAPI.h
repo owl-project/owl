@@ -179,19 +179,18 @@ namespace owl {
    programs from the host - todo: move to deviceAPI.h once working */
 #define OPTIX_BOUNDS_PROGRAM(progName)                                  \
   /* fwd decl for the kernel func to call */                            \
-  inline __device__ void __boundsFunc__##progName(void *geomData,       \
+  inline __device__ void __boundsFunc__##progName(const void *geomData,       \
                                                   box3f &bounds,        \
-                                                  int primID);          \
+                                                  const int primID);          \
                                                                         \
   /* the '__global__' kernel we can get a function handle on */         \
   extern "C" __global__                                                 \
-  void __boundsFuncKernel__##progName(void  *geomData,                  \
-                                      box3f *boundsArray,               \
-                                      int    numPrims)                  \
+  void __boundsFuncKernel__##progName(const void  *geomData,                  \
+                                      box3f *const boundsArray,               \
+                                      const int    numPrims)                  \
   {                                                                     \
     int primID = threadIdx.x;                                           \
     if (primID < numPrims) {                                            \
-      printf("boundskernel - %i\n",primID);                             \
       __boundsFunc__##progName(geomData,boundsArray[primID],primID);    \
     }                                                                   \
   }                                                                     \

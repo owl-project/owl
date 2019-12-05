@@ -333,6 +333,8 @@ namespace owl {
 
     void Modules::buildOptixHandles(Context *context)
     {
+      context->pushActive();
+      
       assert(!modules.empty());
       LOG("building " << modules.size() << " modules");
       
@@ -343,91 +345,10 @@ namespace owl {
         Module &module = modules[moduleID];
         assert(module.module == nullptr);
 
+        // ------------------------------------------------------------------
+        // first, build the *optix*-flavor of the module from that PTX string
+        // ------------------------------------------------------------------
 
-#if 0
-        {
-          const char *ptxCode = module.ptxCode;
-          PING;
-          std::cout << "quick module test ..." << std::endl;
-          context->pushActive();
-          CUresult rc = (CUresult)0;
-          CUmodule boundsModule = 0;
-          PING;
-          PRINT(ptxCode);
-          const std::string fixedPtxCode
-            = killAllInternalOptixSymbolsFromPtxString(ptxCode);
-          PRINT(fixedPtxCode);
-          char log[2000] = "(no log yet)";
-          CUjit_option options[] = {
-            CU_JIT_TARGET_FROM_CUCONTEXT,
-            CU_JIT_ERROR_LOG_BUFFER,
-            CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
-          };
-          void *optionValues[] = {
-            (void*)0,
-            (void*)log,
-            (void*)sizeof(log)
-          };
-          // rc = cuModuleLoadData(&boundsModule, (void *)ptxCode);
-          rc = cuModuleLoadDataEx(&boundsModule, (void *)fixedPtxCode.c_str(),
-                                  3, options, optionValues);
-          PRINT(boundsModule);
-          if (rc) {
-            const char *errName = 0;
-            cuGetErrorName(rc,&errName);
-            PRINT(errName);
-            PRINT(log);
-            exit(0);
-          }
-
-          PING;
-          CUfunction boundsFuncKernel = 0;
-          const char *boundsFuncKernelName = "SphereGeom__boundsFuncKernel__";
-          rc = cuModuleGetFunction(&boundsFuncKernel, boundsModule,
-                                   boundsFuncKernelName);
-          PRINT(boundsFuncKernel);
-          if (rc) {
-            const char *errName = 0;
-            cuGetErrorName(rc,&errName);
-            PRINT(errName);
-            PRINT(log);
-            exit(0);
-          }
-
-          // size of each thread block during bounds function call
-          int boundsFuncBlockSize = 128;
-          int numPrims = 3;
-          vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
-          vec3i gridDims(boundsFuncBlockSize,1,1);
-
-          void  *d_geomData = nullptr;
-          vec3f *d_boundsArray = nullptr;
-          void  *args[] = {
-            &d_geomData,
-            &d_boundsArray,
-            (void *)&numPrims
-          };
-          rc = cuLaunchKernel(boundsFuncKernel,
-                              blockDims.x,blockDims.y,blockDims.z,
-                              gridDims.x,gridDims.y,gridDims.z,
-                              0, 0, args, 0);
-          PING;
-          if (rc) {
-            const char *errName = 0;
-            cuGetErrorName(rc,&errName);
-            PRINT(errName);
-            PRINT(log);
-            exit(0);
-          }
-          PING;
-          cudaDeviceSynchronize();
-          PING;
-          exit(0);
-        }
-#endif      
-
-
-        
         OPTIX_CHECK_LOG(optixModuleCreateFromPTX(context->optixContext,
                                                  &context->moduleCompileOptions,
                                                  &context->pipelineCompileOptions,
@@ -438,8 +359,48 @@ namespace owl {
                                                  &module.module
                                                  ));
         assert(module.module != nullptr);
-        LOG_OK("created module #" << moduleID);
+
+        // ------------------------------------------------------------------
+        // now, buidl separate cuda-only module that does not contain
+        // any optix-internal symbols. Note this does not actually
+        // *remove* any potentially existing anyhit/closesthit/etc
+        // programs in this module - it just removed all optix-related
+        // calls from this module, but leaves the remaining (now
+        // dysfunctional) anyhit/closesthit/etc programs still in that
+        // PTX code. It woudl obviously be cleaner to completely
+        // remove those programs, but that would require significantly
+        // more advanced parsing of the PTX string, so right now we'll
+        // just leave them in (and as it's in a module that never gets
+        // used by optix, this should actually be OK)
+        // ------------------------------------------------------------------
+        const char *ptxCode = module.ptxCode;
+        LOG("generating second, 'non-optix' version of that module, too");
+        CUresult rc = (CUresult)0;
+        const std::string fixedPtxCode
+          = killAllInternalOptixSymbolsFromPtxString(ptxCode);
+        char log[2000] = "(no log yet)";
+        CUjit_option options[] = {
+          CU_JIT_TARGET_FROM_CUCONTEXT,
+          CU_JIT_ERROR_LOG_BUFFER,
+          CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
+        };
+        void *optionValues[] = {
+          (void*)0,
+          (void*)log,
+          (void*)sizeof(log)
+        };
+        rc = cuModuleLoadDataEx(&module.boundsModule, (void *)fixedPtxCode.c_str(),
+                                3, options, optionValues);
+        if (rc = CUDA_SUCCESS) {
+          const char *errName = 0;
+          cuGetErrorName(rc,&errName);
+          PRINT(errName);
+          PRINT(log);
+          exit(0);
+        }
+        LOG_OK("created module #" << moduleID << " (both optix and cuda)");
       }
+      context->popActive();
     }
 
     void Modules::alloc(size_t count)
@@ -530,8 +491,9 @@ namespace owl {
       // ------------------------------------------------------------------
       // hitGroup programs
       // ------------------------------------------------------------------
-      for (int geomTypeID=0;geomTypeID<geomTypes.size();geomTypeID++)
-        for (auto &pg : geomTypes[geomTypeID].perRayType) {
+      for (int geomTypeID=0;geomTypeID<geomTypes.size();geomTypeID++) {
+        auto &geomType = geomTypes[geomTypeID];
+        for (auto &pg : geomType.perRayType) {
           assert("check program group not already active" && pg.pg == nullptr);
           pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
 
@@ -571,9 +533,7 @@ namespace owl {
             = pg.intersect.progName
             ? std::string("__intersection__")+pg.intersect.progName
             : "";
-          PRINT(annotatedProgNameIS);
           if (moduleIS) {
-            PING;
             assert(moduleIS->module != nullptr);
             assert(pg.intersect.progName != nullptr);
             pgDesc.hitgroup.moduleIS            = moduleIS->module;
@@ -582,7 +542,6 @@ namespace owl {
             pgDesc.hitgroup.moduleIS            = nullptr;
             pgDesc.hitgroup.entryFunctionNameIS = nullptr;
           }
-
           char log[2048];
           size_t sizeof_log = sizeof( log );
           OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
@@ -593,7 +552,39 @@ namespace owl {
                                               &pg.pg
                                               ));
         }
-      
+
+        // ----------- bounds -----------
+        if (geomType.boundsProg.moduleID >= 0 &&
+            geomType.boundsProg.progName != nullptr) {
+          LOG("building bounds function ....");
+          Module *module = modules.get(geomType.boundsProg.moduleID);
+          assert(module);
+          assert(module->boundsModule);
+
+          const std::string annotatedProgName
+            = std::string("__boundsFuncKernel__")
+            + geomType.boundsProg.progName;
+          
+          CUresult rc = cuModuleGetFunction(&geomType.boundsFuncKernel,
+                                   module->boundsModule,
+                                   annotatedProgName.c_str());
+          switch(rc) {
+          case CUDA_SUCCESS:
+            /* all OK, nothing to do */
+            LOG_OK("found bounds function " << annotatedProgName << " ... perfect!");
+            break;
+          case CUDA_ERROR_NOT_FOUND:
+            throw std::runtime_error("in "+std::string(__PRETTY_FUNCTION__)
+                                     +": could not find OPTIX_BOUNDS_PROGRAM("
+                                     +geomType.boundsProg.progName+")");
+          default:
+            const char *errName = 0;
+            cuGetErrorName(rc,&errName);
+            PRINT(errName);
+            exit(0);
+          }
+        }
+      }
     }
     
     void Device::destroyOptixPrograms()
@@ -1037,6 +1028,7 @@ namespace owl {
       uint32_t userGeomInputFlags[1] = { 0 };
       // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
 
+      PING;
       // now go over all children to set up the buildinputs
       for (int childID=0;childID<children.size();childID++) {
         // the three fields we're setting:
@@ -1074,6 +1066,7 @@ namespace owl {
         aa.sbtIndexOffsetSizeInBytes   = 0; 
         aa.sbtIndexOffsetStrideInBytes = 0; 
       }
+      PING;
       
       // ==================================================================
       // BLAS setup: buildinputs set up, build the blas
@@ -1441,7 +1434,7 @@ namespace owl {
       assert("check valid hit group ID" && geomTypeID >= 0);
       assert("check valid hit group ID" && geomTypeID <  geomTypes.size());
         
-      geoms[geomID] = new UserGeom(geomTypeID,numPrims);
+      geoms[geomID] = new UserGeom(geomID,geomTypeID,numPrims);
       assert("check 'new' was successful" && geoms[geomID] != nullptr);
     }
     
@@ -1462,7 +1455,7 @@ namespace owl {
       assert("check valid hit group ID" && geomTypeID >= 0);
       assert("check valid hit group ID" && geomTypeID < geomTypes.size());
         
-      geoms[geomID] = new TrianglesGeom(geomTypeID);
+      geoms[geomID] = new TrianglesGeom(geomID,geomTypeID);
       assert("check 'new' was successful" && geoms[geomID] != nullptr);
     }
 
@@ -1547,6 +1540,71 @@ namespace owl {
       }
     }
 
+
+
+    void Device::groupBuildPrimitiveBounds(int groupID,
+                                           size_t maxGeomDataSize,
+                                           WriteUserGeomBoundsDataCB cb,
+                                           void *cbData)
+    {
+      PING;
+      UserGeomGroup *ugg
+        = checkGetUserGeomGroup(groupID);
+      
+      std::vector<uint8_t> userGeomData(maxGeomDataSize);
+      DeviceMemory tempMem;
+      tempMem.alloc(maxGeomDataSize);
+      for (int childID=0;childID<ugg->children.size();childID++) {
+        Geom *child = ugg->children[childID];
+        assert("double-check valid child geom" && child != nullptr);
+        assert(child);
+        UserGeom *ug = (UserGeom *)child;
+        ug->boundsBuffer.alloc(ug->numPrims);
+        ug->d_boundsMemory = ug->boundsBuffer.get();
+
+        PING;
+        LOG("calling user geom callback to set up user geometry bounds call data");
+        cb(userGeomData.data(),context->owlDeviceID,
+           ug->geomID,childID,cbData); 
+
+        // size of each thread block during bounds function call
+        int boundsFuncBlockSize = 128;
+        int numPrims = ug->numPrims;
+        vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
+        vec3i gridDims(boundsFuncBlockSize,1,1);
+
+        PRINT(*(vec3f*)userGeomData.data());
+        tempMem.upload(userGeomData);
+        
+        void  *d_geomData = tempMem.get();//nullptr;
+        PRINT(d_geomData);
+        vec3f *d_boundsArray = (vec3f*)ug->d_boundsMemory;
+        void  *args[] = {
+          &d_geomData,
+          &d_boundsArray,
+          (void *)&numPrims
+        };
+
+        DeviceMemory tempMem;
+        GeomType *gt = checkGetGeomType(ug->geomTypeID);
+        PING;
+        CUresult rc
+          = cuLaunchKernel(gt->boundsFuncKernel,
+                           blockDims.x,blockDims.y,blockDims.z,
+                           gridDims.x,gridDims.y,gridDims.z,
+                           0, 0, args, 0);
+        PING;
+        if (rc) {
+          const char *errName = 0;
+          cuGetErrorName(rc,&errName);
+          PRINT(errName);
+          exit(0);
+        }
+        cudaDeviceSynchronize();
+      }
+      tempMem.free();
+    }
+    
   } // ::owl::ll
 } //::owl
   

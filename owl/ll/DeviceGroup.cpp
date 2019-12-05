@@ -311,8 +311,20 @@ namespace owl {
                                   callBackData);
     }
 
-      /*! returns the given device's buffer address on the specified
-          device */
+    void DeviceGroup::groupBuildPrimitiveBounds(int groupID,
+                                                size_t maxGeomDataSize,
+                                                WriteUserGeomBoundsDataCB cb,
+                                                void *cbData)
+    {
+      for (auto device : devices) 
+        device->groupBuildPrimitiveBounds(groupID,
+                                          maxGeomDataSize,
+                                          cb,
+                                          cbData);
+    }
+
+    /*! returns the given device's buffer address on the specified
+        device */
     void *DeviceGroup::bufferGetPointer(int bufferID, int devID)
     {
       return checkGetDevice(devID)->bufferGetPointer(bufferID);

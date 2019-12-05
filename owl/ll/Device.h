@@ -70,7 +70,16 @@ namespace owl {
     };
     
     struct Module {
+      /*! for all *optix* programs we can directly buidl the PTX code
+          into a module using optixbuildmodule - this is the result of
+          that operation */
       OptixModule module = nullptr;
+      
+      /*! for the *bounds* function we have to build a *separate*
+          module because this one is built outside of optix, and thus
+          does not have the internal _optix_xyz() symbols in it */
+      CUmodule    boundsModule = 0;
+      
       const char *ptxCode;
       void create(Context *context);
     };
@@ -116,7 +125,8 @@ namespace owl {
     struct GeomType {
       std::vector<HitGroupPG> perRayType;
       Program boundsProg;
-      size_t  boundsProgDataSize = 0;
+      size_t  boundsProgDataSize = 0; // do we still need this!?
+      CUfunction boundsFuncKernel;
     };
 
     struct SBT {
@@ -194,8 +204,8 @@ namespace owl {
     };
       
     struct Geom {
-      Geom(int geomTypeID)
-        : geomTypeID(geomTypeID)
+      Geom(int geomID, int geomTypeID)
+        : geomID(geomID), geomTypeID(geomTypeID)
       {}
       virtual PrimType primType() = 0;
       
@@ -206,11 +216,12 @@ namespace owl {
         refcount reaches zero - this is ONLY for sanity checking
         during object deletion */
       int numTimesReferenced = 0;
+      const int geomID;
       const int geomTypeID;
     };
     struct UserGeom : public Geom {
-      UserGeom(int geomTypeID, int numPrims)
-        : Geom(geomTypeID),
+      UserGeom(int geomID, int geomTypeID, int numPrims)
+        : Geom(geomID,geomTypeID),
           numPrims(numPrims)
       {}
       virtual PrimType primType() { return USER; }
@@ -225,8 +236,8 @@ namespace owl {
       size_t       numPrims      = 0;
     };
     struct TrianglesGeom : public Geom {
-      TrianglesGeom(int geomTypeID)
-        : Geom(geomTypeID)
+      TrianglesGeom(int geomID, int geomTypeID)
+        : Geom(geomID, geomTypeID)
       {}
       virtual PrimType primType() { return TRIANGLES; }
 
@@ -498,6 +509,15 @@ namespace owl {
         return geom;
       }
 
+      GeomType *checkGetGeomType(int geomTypeID)
+      {
+        assert("check valid geomType ID" && geomTypeID >= 0);
+        assert("check valid geomType ID" && geomTypeID <  geomTypes.size());
+        GeomType *geomType = &geomTypes[geomTypeID];
+        assert("check valid geomType" && geomType != nullptr);
+        return geomType;
+      }
+
       // accessor helpers:
       Group *checkGetGroup(int groupID)
       {
@@ -508,6 +528,18 @@ namespace owl {
         return group;
       }
 
+      // accessor helpers:
+      UserGeomGroup *checkGetUserGeomGroup(int groupID)
+      {
+        assert("check valid group ID" && groupID >= 0);
+        assert("check valid group ID" && groupID <  groups.size());
+        Group *group = groups[groupID];
+        assert("check valid group" && group != nullptr);
+        UserGeomGroup *ugg = dynamic_cast<UserGeomGroup*>(group);
+        assert("check group is a user geom group" && ugg != nullptr);
+        return ugg;
+      }
+      
       Buffer *checkGetBuffer(int bufferID)
       {
         assert("check valid geom ID" && bufferID >= 0);
@@ -539,6 +571,14 @@ namespace owl {
         return asUser;
       }
 
+      /*! only valid for a user geometry group - (re-)builds the
+          primitive bounds array required for building the
+          acceleration structure by executing the device-side bounding
+          box program */
+      void groupBuildPrimitiveBounds(int groupID,
+                                     size_t maxGeomDataSize,
+                                     WriteUserGeomBoundsDataCB cb,
+                                     void *cbData);
       void sbtGeomTypesBuild(size_t maxHitProgDataSize,
                              WriteHitProgDataCB writeHitProgDataCB,
                              const void *callBackUserData);

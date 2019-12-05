@@ -19,6 +19,14 @@ Revision History
 v0.3.x - User Geometries
 ------------------------
 
+*v0.3.1*: First draft of *device-side* user prim bounds generation
+
+- added `groupBuildPrimitiveBounds` function that builds, for a
+  user geom group, all the the primbounds required for the respective
+  user geoms and prims in that group. The input for the user geoms' 
+  bounding bxo functions is generated using same callback mechanism
+  as sbt writing.
+
 *v0.3.0*: First example of user geometry working
 
 - can create user geometries through `createUserGeom`, and set

@@ -31,6 +31,13 @@ namespace owl {
       ~HostPinnedMemory();
       void *pointer;
     };
+
+    typedef void
+    WriteUserGeomBoundsDataCB(uint8_t *userGeomDataToWrite,
+                              int deviceID,
+                              int geomID,
+                              int childID,
+                              const void *cbUserData);
     
     /*! callback with which the app can specify what data is to be
       written into the SBT for a given geometry, ray type, and
@@ -202,7 +209,12 @@ namespace owl {
                                        int offset);
       void groupBuildAccel(int groupID);
       OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
-      
+
+
+      void groupBuildPrimitiveBounds(int groupID,
+                                     size_t maxGeomDataSize,
+                                     WriteUserGeomBoundsDataCB cb,
+                                     void *cbData);
       void sbtGeomTypesBuild(size_t maxHitGroupDataSize,
                              WriteHitProgDataCB writeHitProgDataCB,
                              void *callBackData);
@@ -212,6 +224,25 @@ namespace owl {
       void sbtMissProgsBuild(size_t maxMissProgDataSize,
                              WriteMissProgDataCB WriteMissProgDataCB,
                              void *callBackData);
+      
+      template<typename Lambda>
+      void groupBuildPrimitiveBounds(int groupID,
+                                     size_t maxGeomDataSize,
+                                     const Lambda &l)
+      {
+        groupBuildPrimitiveBounds
+          (groupID,maxGeomDataSize,
+           [](uint8_t *output,
+              int devID,
+              int geomID,
+              int childID,
+              const void *cbData) {
+            const Lambda *lambda = (const Lambda *)cbData;
+            (*lambda)(output,devID,geomID,childID);
+          },(void *)&l);
+      }
+      
+      
       template<typename Lambda>
       void sbtGeomTypesBuild(size_t maxHitGroupDataSize,
                              const Lambda &l)
@@ -220,10 +251,10 @@ namespace owl {
                               [](uint8_t *output,
                                  int devID,
                                  int geomID,
-                                 int rayType,
+                                 int childID,
                                  const void *cbData) {
                                 const Lambda *lambda = (const Lambda *)cbData;
-                                (*lambda)(output,devID,geomID,rayType,cbData);
+                                (*lambda)(output,devID,geomID,childID);
                               },(void *)&l);
       }
 
@@ -236,7 +267,7 @@ namespace owl {
                                  int devID, int rgID, 
                                  const void *cbData) {
                                 const Lambda *lambda = (const Lambda *)cbData;
-                                (*lambda)(output,devID,rgID,cbData);
+                                (*lambda)(output,devID,rgID);
                               },(void *)&l);
       }
 
@@ -249,7 +280,7 @@ namespace owl {
                                    int devID, int rayType, 
                                    const void *cbData) {
                                   const Lambda *lambda = (const Lambda *)cbData;
-                                  (*lambda)(output,devID,rayType,cbData);
+                                  (*lambda)(output,devID,rayType);
                                 },(void *)&l);
       }
 
