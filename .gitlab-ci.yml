@@ -11,9 +11,12 @@ build:
   script:
     - mkdir bla
     - cd bla
+    - vcvars64.bat
+    - devenv.exe /build Debug Optix-OWL.sln
     - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/VC/Auxiliary/Build/vcvars64.bat
-    - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/Common7/Tools/VsDevCmd.bat
     - c:/"Program Files"/CMake/bin/cmake.exe ..
+    - devenv.exe /build Debug Optix-OWL.sln
     - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/Common7/IDE/devenv.exe /clean
     - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/Common7/IDE/devenv.exe /build Debug Optix-OWL.sln
+    - devenv.exe /build Debug Optix-OWL.sln
 
