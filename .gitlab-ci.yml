@@ -9,13 +9,14 @@ build-win10-optix:
   tags:
     - win10-optix
   before_script:
-    - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/VC/Auxiliary/Build/vcvars64.bat
+    - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/VC/Auxiliary/Build/vcvarsall.bat x64
   script:
     - mkdir bla
     - cd bla
-    - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/VC/Auxiliary/Build/vcvars64.bat
+    - echo %PATH%
+    - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/VC/Auxiliary/Build/vcvarsall.bat x64
+    - echo %PATH%
     - c:/"Program Files"/CMake/bin/cmake.exe ..
-    - devenv.com /build Debug Optix-OWL.sln
     - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/Common7/IDE/devenv.com /clean
     - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/Common7/IDE/devenv.com /build Debug Optix-OWL.sln
     - devenv.exe /build Debug Optix-OWL.sln
