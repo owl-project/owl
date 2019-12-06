@@ -1,0 +1,14 @@
+
+stages:
+  - build
+
+build:
+  stage: build
+  tags:
+    - win10-optix
+  script:
+    - cd c:\Users\wald\Desktop\Projects\owl\bla
+    - c:\Program\ Files\CMake\bin\cmake.exe ..
+    - @call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
+    - devenv /build Debug Optix-OWL.sln
+

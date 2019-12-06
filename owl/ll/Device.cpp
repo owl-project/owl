@@ -1049,7 +1049,7 @@ namespace owl {
         userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
         auto &aa = userGeomInput.aabbArray;
         aa.aabbBuffers   = &d_bounds;
-        aa.numPrimitives = userGeom->numPrims;
+        aa.numPrimitives = (uint32_t)userGeom->numPrims;
         aa.strideInBytes = sizeof(box3f);
         aa.primitiveIndexOffset = 0;
       
@@ -1378,17 +1378,17 @@ namespace owl {
       sbt.sbt.missRecordBase
         = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
       sbt.sbt.missRecordStrideInBytes
-        = sbt.missProgRecordSize;
+        = (uint32_t)sbt.missProgRecordSize;
       sbt.sbt.missRecordCount
-        = sbt.missProgRecordCount;
+        = (uint32_t)sbt.missProgRecordCount;
       
       assert("check hit records built" && sbt.hitGroupRecordCount != 0);
       sbt.sbt.hitgroupRecordBase
         = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
       sbt.sbt.hitgroupRecordStrideInBytes
-        = sbt.hitGroupRecordSize;
+        = (uint32_t)sbt.hitGroupRecordSize;
       sbt.sbt.hitgroupRecordCount
-        = sbt.hitGroupRecordCount;
+        = (uint32_t)sbt.hitGroupRecordCount;
 
       if (!sbt.launchParamsBuffer.valid()) {
         LOG("creating dummy launch params buffer ...");
@@ -1558,8 +1558,8 @@ namespace owl {
            ug->geomID,childID,cbData); 
 
         // size of each thread block during bounds function call
-        int boundsFuncBlockSize = 128;
-        int numPrims = ug->numPrims;
+		uint32_t boundsFuncBlockSize = 128;
+		uint32_t numPrims = (uint32_t)ug->numPrims;
         vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
         vec3i gridDims(boundsFuncBlockSize,1,1);
 
