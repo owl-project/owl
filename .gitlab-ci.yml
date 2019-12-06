@@ -4,7 +4,7 @@ variables:
 stages:
   - build
 
-build:
+build-win10-optix:
   stage: build
   tags:
     - win10-optix
