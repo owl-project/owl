@@ -1,4 +1,6 @@
-
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  
 stages:
   - build
 
@@ -7,8 +9,6 @@ build:
   tags:
     - win10-optix
   script:
-    - git submodule init
-    - git submodule update
     - mkdir bla
     - cd bla
     - c:/"Program Files"/CMake/bin/cmake.exe ..
