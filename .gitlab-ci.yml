@@ -9,7 +9,7 @@ build:
   script:
     - mkdir bla
     - cd bla
-    - "c:\Program Files\CMake\bin\cmake.exe" ..
+    - c:/Program\ Files/CMake/bin/cmake.exe ..
     - "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
     - devenv /build Debug Optix-OWL.sln
 
