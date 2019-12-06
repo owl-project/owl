@@ -8,10 +8,11 @@ build:
   stage: build
   tags:
     - win10-optix
+  before_script:
+    - call C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/VC/Auxiliary/Build/vcvars64.bat
   script:
     - mkdir bla
     - cd bla
-    - vcvars64.bat
     - devenv.exe /build Debug Optix-OWL.sln
     - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/VC/Auxiliary/Build/vcvars64.bat
     - c:/"Program Files"/CMake/bin/cmake.exe ..
