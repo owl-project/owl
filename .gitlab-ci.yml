@@ -27,7 +27,7 @@ build-ubuntu18-release:
   script:
     - mkdir bin_release
     - cd bin_release
-    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake .. -DCMAKE_BUILD_TYPE=Release -DOptiX_INSTALL_DIR=/usr/local/NVIDIA-OptiX-SDK-7.0.0-linux64
     - make
 
 build-ubuntu18-debug:
@@ -37,6 +37,6 @@ build-ubuntu18-debug:
   script:
     - mkdir bin_debug
     - cd bin_debug
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DOptiX_INSTALL_DIR=/usr/local/NVIDIA-OptiX-SDK-7.0.0-linux64
     - make
 
