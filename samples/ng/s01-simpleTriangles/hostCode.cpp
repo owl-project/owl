@@ -22,11 +22,11 @@
 
 #define LOG(message)                                    \
   std::cout << GDT_TERMINAL_BLUE;                       \
-  std::cout << "#ll.sample(main): " << message << std::endl;  \
+  std::cout << "#owl.ng.sample(main): " << message << std::endl;  \
   std::cout << GDT_TERMINAL_DEFAULT;
 #define LOG_OK(message)                                    \
   std::cout << GDT_TERMINAL_LIGHT_BLUE;                       \
-  std::cout << "#ll.sample(main): " << message << std::endl;  \
+  std::cout << "#owl.ng.sample(main): " << message << std::endl;  \
   std::cout << GDT_TERMINAL_DEFAULT;
 
 extern "C" char ptxCode[];
@@ -64,7 +64,7 @@ const float cosFovy = 0.66f;
 
 int main(int ac, char **av)
 {
-  LOG("ll example '" << av[0] << "' starting up");
+  LOG("owl::ng example '" << av[0] << "' starting up");
 
   // owl::ll::DeviceGroup::SP ll
   //   = owl::ll::DeviceGroup::create();
@@ -101,19 +101,25 @@ int main(int ac, char **av)
   //                           "TriangleMesh");
   owlGeomTypeSetClosestHit(trianglesGeomType,0,
                            module,"TriangleMesh");
-#if 0
-  ll->allocRayGens(1);
-  ll->setRayGen(/*program ID*/0,
-                /*module:*/0,
-                "simpleRayGen");
+  // ll->allocRayGens(1);
+  // ll->setRayGen(/*program ID*/0,
+  //               /*module:*/0,
+  //               "simpleRayGen");
+  owlRayGenCreate(context,module,"simpleRayGen");
   
-  ll->allocMissProgs(1);
-  ll->setMissProg(/*program ID*/0,
-                  /*module:*/0,
-                  "miss");
-  ll->buildPrograms();
-  ll->createPipeline();
-
+  // ll->allocMissProgs(1);
+  // ll->setMissProg(/*program ID*/0,
+  //                 /*module:*/0,
+  //                 "miss");
+  owlMissProgCreate(context,module,"miss");
+  
+  
+  // ll->buildPrograms();
+  // ll->createPipeline();
+  owlBuildPrograms(context);
+  owlBuildPipeline(context);
+#if 0
+  
   LOG("building geometries ...");
 
   // ##################################################################

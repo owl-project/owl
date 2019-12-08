@@ -104,7 +104,7 @@ namespace owl {
 
   Module::SP Context::createModule(const std::string &ptxCode)
   {
-    return std::make_shared<Module>(ptxCode);
+    return std::make_shared<Module>(ptxCode,modules.allocID());
   }
 
   std::shared_ptr<Geom> UserGeomType::createGeom()

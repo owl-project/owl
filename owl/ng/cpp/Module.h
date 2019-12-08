@@ -25,8 +25,10 @@ namespace owl {
   struct Module : public Object {
     typedef std::shared_ptr<Module> SP;
 
-    Module(const std::string &ptxCode)
-      : ptxCode(ptxCode)
+    Module(const std::string &ptxCode,
+           ll::id_t llID)
+      : ptxCode(ptxCode),
+        llID(llID)
     {
       std::cout << "#owl: created module ..." << std::endl;
     }
@@ -34,6 +36,7 @@ namespace owl {
     virtual std::string toString() const { return "Module"; }
     
     const std::string ptxCode;
+    const ll::id_t    llID;
   };
   
 } // ::owl

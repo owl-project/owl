@@ -18,6 +18,7 @@
 
 #include "owl/owl.h"
 #include "ll/common.h"
+#include "ll/DeviceGroup.h"
 
 namespace owl {
 

@@ -44,8 +44,9 @@ namespace owl {
     ObjectRegistryT<Group>        groups;
     ObjectRegistryT<RayGenType>   rayGenTypes;
     ObjectRegistryT<RayGen>       rayGens;
-    ObjectRegistryT<GeomType> geometryTypes;
-    ObjectRegistryT<Geom>     geometries;
+    ObjectRegistryT<GeomType>     geomTypes;
+    ObjectRegistryT<Geom>         geoms;
+    ObjectRegistryT<Module>       modules;
     
     //! TODO: allow changing that via api ..
     size_t numRayTypes = 1;
@@ -53,9 +54,14 @@ namespace owl {
     /*! experimentation code for sbt construction */
     void expBuildSBT();
     
-    InstanceGroup::SP createInstanceGroup(size_t numChildren);
-    GeomGroup::SP createGeomGroup(size_t numChildren);
-    Buffer::SP        createBuffer();
+    InstanceGroup::SP
+    createInstanceGroup(size_t numChildren);
+    
+    GeomGroup::SP
+    createGeomGroup(size_t numChildren);
+    
+    Buffer::SP
+    createBuffer();
     
     RayGen::SP
     createRayGen(const std::shared_ptr<RayGenType> &type);

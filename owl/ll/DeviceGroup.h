@@ -24,6 +24,8 @@
 namespace owl {
   namespace ll {
 
+    typedef int32_t id_t;
+    
     struct HostPinnedMemory
     {
       typedef std::shared_ptr<HostPinnedMemory> SP;
@@ -303,7 +305,6 @@ namespace owl {
       
       const std::vector<Device *> devices;
     };
-    
 
   } // ::owl::ll
 } //::owl

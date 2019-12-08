@@ -20,15 +20,15 @@
 namespace owl {
   
   GeomType::GeomType(Context *const context,
-                             size_t varStructSize,
-                             const std::vector<OWLVarDecl> &varDecls)
-    : SBTObjectType(context,context->geometryTypes,
+                     size_t varStructSize,
+                     const std::vector<OWLVarDecl> &varDecls)
+    : SBTObjectType(context,context->geomTypes,
                     varStructSize,varDecls)
   {}
 
   Geom::Geom(Context *const context,
-                     GeomType::SP geometryType)
-    : SBTObject(context,context->geometries,geometryType)
+                     GeomType::SP geomType)
+    : SBTObject(context,context->geoms,geomType)
   {}
   
 } //::owl
