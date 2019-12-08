@@ -26,3 +26,9 @@ target_link_libraries(c-test
   owl-ng
   )
 
+
+file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
+foreach(sample ${samples})
+  add_subdirectory(${sample})
+endforeach()
+

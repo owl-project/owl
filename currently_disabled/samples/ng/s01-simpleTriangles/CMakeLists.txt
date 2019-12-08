@@ -15,38 +15,16 @@
 # ======================================================================== #
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
-include_directories(${PROJECT_SOURCE_DIR}/owl/ng)
-include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
-
-add_library(owl-ng
-
-  include/owl/owl.h
-  
-  api/impl.cpp
-  api/APIContext.h
-  api/APIContext.cpp
-  api/APIHandle.h
-  api/APIHandle.cpp
-  
-  cpp/Object.cpp
-  cpp/RegisteredObject.cpp
-  cpp/SBTObject.cpp
-  cpp/Buffer.cpp
-  cpp/Group.cpp
-  cpp/ObjectRegistry.cpp
-  cpp/Context.cpp
-  cpp/RayGen.cpp
-  cpp/Geometry.cpp
-  cpp/Variable.cpp
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
   )
-
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-
-target_link_libraries(owl-ng
+add_executable(ll01-simpleTriangles
+  hostCode.cpp
+  ${ptxCode}
+  )
+target_link_libraries(ll01-simpleTriangles
   owl-ll
   )
-
-
-
+add_test(ll01-simpleTriangles ${CMAKE_BINARY_DIR}/ll01-simpleTriangles)
 
 

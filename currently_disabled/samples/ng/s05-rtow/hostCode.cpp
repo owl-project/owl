@@ -99,7 +99,7 @@ int main(int ac, char **av)
   LOG_OK(" num dielectric spheres: " << dielectricSpheres.size());
   LOG_OK(" num metal spheres     : " << metalSpheres.size());
   
-  
+#if 0  
   owl::ll::DeviceGroup::SP ll
     = owl::ll::DeviceGroup::create();
 
@@ -357,4 +357,5 @@ int main(int ac, char **av)
   owl::ll::DeviceGroup::destroy(ll);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
+#endif
 }
