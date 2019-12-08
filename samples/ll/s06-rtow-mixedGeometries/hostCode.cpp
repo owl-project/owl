@@ -195,6 +195,9 @@ int main(int ac, char **av)
   enum { METAL_SPHERES_TYPE=0,
          DIELECTRIC_SPHERES_TYPE,
          LAMBERTIAN_SPHERES_TYPE,
+         METAL_BOXES_TYPE=0,
+         DIELECTRIC_BOXES_TYPE,
+         LAMBERTIAN_BOXES_TYPE,
          NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
   ll->setGeomTypeClosestHit(/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
@@ -209,7 +212,7 @@ int main(int ac, char **av)
                                   /*module:*/0,
                                   "LambertianSpheres",
                                   sizeof(LambertianSpheresGeom));
-
+  
   ll->setGeomTypeClosestHit(/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
@@ -236,6 +239,25 @@ int main(int ac, char **av)
                                   "MetalSpheres",
                                   sizeof(MetalSpheresGeom));
 
+  // now for the box types - thos use triangles, so already have
+  // bounds and isec, only need closesthit
+  ll->setGeomTypeClosestHit(/*geom type ID*/LAMBERTIAN_BOXES_TYPE,
+                            /*ray type  */0,
+                            /*module:*/0,
+                            "LambertianBoxes");
+  ll->setGeomTypeClosestHit(/*geom type ID*/DIELECTRIC_BOXES_TYPE,
+                            /*ray type  */0,
+                            /*module:*/0,
+                            "DielectricBoxes");
+  ll->setGeomTypeClosestHit(/*geom type ID*/METAL_BOXES_TYPE,
+                            /*ray type  */0,
+                            /*module:*/0,
+                            "MetalBoxes");
+
+
+
+
+
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
@@ -261,6 +283,19 @@ int main(int ac, char **av)
          LAMBERTIAN_SPHERES_BUFFER,
          DIELECTRIC_SPHERES_BUFFER,
          METAL_SPHERES_BUFFER,
+
+         LAMBERTIAN_BOXES_MATERIAL_BUFFER,
+         DIELECTRIC_BOXES_MATERIAL_BUFFER,
+         METAL_BOXES_MATERIAL_BUFFER,
+
+         LAMBERTIAN_BOXES_VERTEX_BUFFER,
+         DIELECTRIC_BOXES_VERTEX_BUFFER,
+         METAL_BOXES_VERTEX_BUFFER,
+
+         LAMBERTIAN_BOXES_INDEX_BUFFER,
+         DIELECTRIC_BOXES_INDEX_BUFFER,
+         METAL_BOXES_INDEX_BUFFER,
+
          NUM_BUFFERS };
   ll->reallocBuffers(NUM_BUFFERS);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
@@ -271,8 +306,13 @@ int main(int ac, char **av)
   enum { LAMBERTIAN_SPHERES_GEOM=0,
          DIELECTRIC_SPHERES_GEOM,
          METAL_SPHERES_GEOM,
+         LAMBERTIAN_BOXES_GEOM,
+         DIELECTRIC_BOXES_GEOM,
+         METAL_BOXES_GEOM,
          NUM_GEOMS };
   ll->reallocGeoms(NUM_GEOMS);
+
+  // ----------- the spheres -----------
   ll->createUserGeom(/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
                      /* type/PG ID */LAMBERTIAN_SPHERES_TYPE,
                      /* numprims   */lambertianSpheres.size());
@@ -294,26 +334,76 @@ int main(int ac, char **av)
                          metalSpheres.size(),
                          sizeof(metalSpheres[0]),
                          metalSpheres.data());
+
+  // ----------- the boxes -----------
+  ll->createTrianglesGeom(/* geom ID    */LAMBERTIAN_BOXES_GEOM,
+                          /* type/PG ID */LAMBERTIAN_BOXES_TYPE);
+  ll->createTrianglesGeom(/* geom ID    */DIELECTRIC_BOXES_GEOM,
+                          /* type/PG ID */DIELECTRIC_BOXES_TYPE);
+  ll->createTrianglesGeom(/* geom ID    */METAL_BOXES_GEOM,
+                          /* type/PG ID */METAL_BOXES_TYPE);
+  // indices
+  ll->createDeviceBuffer(LAMBERTIAN_BOXES_INDEX_BUFFER,
+                         lambertianBoxes.indices.size(),
+                         sizeof(lambertianBoxes.indices[0]),
+                         lambertianBoxes.indices.data());
+  ll->createDeviceBuffer(DIELECTRIC_BOXES_INDEX_BUFFER,
+                         dielectricBoxes.indices.size(),
+                         sizeof(dielectricBoxes.indices[0]),
+                         dielectricBoxes.indices.data());
+  ll->createDeviceBuffer(METAL_BOXES_INDEX_BUFFER,
+                         metalBoxes.indices.size(),
+                         sizeof(metalBoxes.indices[0]),
+                         metalBoxes.indices.data());
+  // vertices
+  ll->createDeviceBuffer(LAMBERTIAN_BOXES_VERTEX_BUFFER,
+                         lambertianBoxes.vertices.size(),
+                         sizeof(lambertianBoxes.vertices[0]),
+                         lambertianBoxes.vertices.data());
+  ll->createDeviceBuffer(DIELECTRIC_BOXES_VERTEX_BUFFER,
+                         dielectricBoxes.vertices.size(),
+                         sizeof(dielectricBoxes.vertices[0]),
+                         dielectricBoxes.vertices.data());
+  ll->createDeviceBuffer(METAL_BOXES_VERTEX_BUFFER,
+                         metalBoxes.vertices.size(),
+                         sizeof(metalBoxes.vertices[0]),
+                         metalBoxes.vertices.data());
+  // materials
+  ll->createDeviceBuffer(LAMBERTIAN_BOXES_MATERIAL_BUFFER,
+                         lambertianBoxes.materials.size(),
+                         sizeof(lambertianBoxes.materials[0]),
+                         lambertianBoxes.materials.data());
+  ll->createDeviceBuffer(DIELECTRIC_BOXES_MATERIAL_BUFFER,
+                         dielectricBoxes.materials.size(),
+                         sizeof(dielectricBoxes.materials[0]),
+                         dielectricBoxes.materials.data());
+  ll->createDeviceBuffer(METAL_BOXES_MATERIAL_BUFFER,
+                         metalBoxes.materials.size(),
+                         sizeof(metalBoxes.materials[0]),
+                         metalBoxes.materials.data());
   
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
   // ##################################################################
   
-  enum { WORLD_GROUP=0,
+  enum { SPHERES_GROUP=0,
+         BOXES_GROUP,
          NUM_GROUPS };
   ll->reallocGroups(NUM_GROUPS);
-  int geomsInGroup[] = {
-                        LAMBERTIAN_SPHERES_GEOM,
-                        DIELECTRIC_SPHERES_GEOM,
-                        METAL_SPHERES_GEOM
+
+  // ----------- first, the spheres group -----------
+  int geomsInSpheresGroup[] = {
+                               LAMBERTIAN_SPHERES_GEOM,
+                               DIELECTRIC_SPHERES_GEOM,
+                               METAL_SPHERES_GEOM
   };
-  ll->createUserGeomGroup(/* group ID */WORLD_GROUP,
-                          /* geoms in group, pointer */ geomsInGroup,
-                          /* geoms in group, count   */ NUM_GEOMS);
+  ll->createUserGeomGroup(/* group ID */SPHERES_GROUP,
+                          /* geoms in group, pointer */ geomsInSpheresGroup,
+                          /* geoms in group, count   */ 3);
   ll->groupBuildPrimitiveBounds
-    (WORLD_GROUP,max3(sizeof(MetalSpheresGeom),
-                      sizeof(DielectricSpheresGeom),
-                      sizeof(LambertianSpheresGeom)),
+    (SPHERES_GROUP,max3(sizeof(MetalSpheresGeom),
+                        sizeof(DielectricSpheresGeom),
+                        sizeof(LambertianSpheresGeom)),
      [&](uint8_t *output, int devID, int geomID, int childID) {
        switch(geomID) {
        case LAMBERTIAN_SPHERES_GEOM:
@@ -332,8 +422,57 @@ int main(int ac, char **av)
          assert(0);
        }
      });
-  ll->groupBuildAccel(WORLD_GROUP);
+  ll->groupBuildAccel(SPHERES_GROUP);
 
+  // ----------- now, the boxes group -----------
+  int geomsInBoxesGroup[] = {
+                             LAMBERTIAN_BOXES_GEOM,
+                             DIELECTRIC_BOXES_GEOM,
+                             METAL_BOXES_GEOM
+  };
+  ll->createTrianglesGeomGroup(/* group ID */BOXES_GROUP,
+                               /* geoms in group, pointer */ geomsInBoxesGroup,
+                               /* geoms in group, count   */ 3);
+  ll->groupBuildPrimitiveBounds
+    (BOXES_GROUP,max3(sizeof(MetalBoxesGeom),
+                      sizeof(DielectricBoxesGeom),
+                      sizeof(LambertianBoxesGeom)),
+     [&](uint8_t *output, int devID, int geomID, int childID) {
+       switch(geomID) {
+       case LAMBERTIAN_BOXES_GEOM: {
+         LambertianBoxesGeom &geom = *(LambertianBoxesGeom*)output;
+         geom.index
+           = (vec3i*)ll->bufferGetPointer(LAMBERTIAN_BOXES_INDEX_BUFFER,devID);
+         geom.vertex
+           = (vec3f*)ll->bufferGetPointer(LAMBERTIAN_BOXES_VERTEX_BUFFER,devID);
+         geom.perBoxMaterial
+           = (Lambertian*)ll->bufferGetPointer(LAMBERTIAN_BOXES_MATERIAL_BUFFER,devID);
+       } break;
+       case METAL_BOXES_GEOM: {
+         MetalBoxesGeom &geom = *(MetalBoxesGeom*)output;
+         geom.index
+           = (vec3i*)ll->bufferGetPointer(METAL_BOXES_INDEX_BUFFER,devID);
+         geom.vertex
+           = (vec3f*)ll->bufferGetPointer(METAL_BOXES_VERTEX_BUFFER,devID);
+         geom.perBoxMaterial
+           = (Metal*)ll->bufferGetPointer(METAL_BOXES_MATERIAL_BUFFER,devID);
+       } break;
+       case DIELECTRIC_BOXES_GEOM: {
+         DielectricBoxesGeom &geom = *(DielectricBoxesGeom*)output;
+         geom.index
+           = (vec3i*)ll->bufferGetPointer(DIELECTRIC_BOXES_INDEX_BUFFER,devID);
+         geom.vertex
+           = (vec3f*)ll->bufferGetPointer(DIELECTRIC_BOXES_VERTEX_BUFFER,devID);
+         geom.perBoxMaterial
+           = (Dielectric*)ll->bufferGetPointer(DIELECTRIC_BOXES_MATERIAL_BUFFER,devID);
+       } break;
+       default:
+         assert(0);
+       }
+     });
+  ll->groupBuildAccel(BOXES_GROUP);
+
+  
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################
@@ -387,7 +526,7 @@ int main(int ac, char **av)
        rg->deviceCount = ll->getDeviceCount();
        rg->fbSize = fbSize;
        rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-       rg->world  = ll->groupGetTraversable(WORLD_GROUP,devID);
+       rg->world  = ll->groupGetTraversable(BOXES_GROUP,devID);
 
        const float vfov = fovy;
        const vec3f vup = lookUp;
