@@ -23,83 +23,83 @@
 
 namespace owl {
 
-  struct Geometry;
+  struct Geom;
   
-  struct GeometryType : public SBTObjectType {
-    typedef std::shared_ptr<GeometryType> SP;
+  struct GeomType : public SBTObjectType {
+    typedef std::shared_ptr<GeomType> SP;
     
-    GeometryType(Context *const context,
+    GeomType(Context *const context,
                  size_t varStructSize,
                  const std::vector<OWLVarDecl> &varDecls);
 
-    virtual std::string toString() const { return "GeometryType"; }
+    virtual std::string toString() const { return "GeomType"; }
     virtual void setClosestHitProgram(int rayType,
                                       Module::SP module,
                                       const std::string &progName)
     { IGNORING_THIS(); }
 
-    virtual std::shared_ptr<Geometry> createGeometry() = 0;
+    virtual std::shared_ptr<Geom> createGeom() = 0;
   };
 
-  struct TrianglesGeometryType : public GeometryType {
-    typedef std::shared_ptr<TrianglesGeometryType> SP;
+  struct TrianglesGeomType : public GeomType {
+    typedef std::shared_ptr<TrianglesGeomType> SP;
     
-    TrianglesGeometryType(Context *const context,
+    TrianglesGeomType(Context *const context,
                           size_t varStructSize,
                           const std::vector<OWLVarDecl> &varDecls)
-      : GeometryType(context,varStructSize,varDecls)
+      : GeomType(context,varStructSize,varDecls)
     {}
 
-    virtual std::string toString() const { return "TriangleGeometryType"; }
-    virtual std::shared_ptr<Geometry> createGeometry() override;
+    virtual std::string toString() const { return "TriangleGeomType"; }
+    virtual std::shared_ptr<Geom> createGeom() override;
   };
 
-  struct UserGeometryType : public GeometryType {
-    typedef std::shared_ptr<UserGeometryType> SP;
+  struct UserGeomType : public GeomType {
+    typedef std::shared_ptr<UserGeomType> SP;
     
-    UserGeometryType(Context *const context,
+    UserGeomType(Context *const context,
                      size_t varStructSize,
                      const std::vector<OWLVarDecl> &varDecls)
-      : GeometryType(context,varStructSize,varDecls)
+      : GeomType(context,varStructSize,varDecls)
     {}
 
-    virtual std::string toString() const { return "UserGeometryType"; }
-    virtual std::shared_ptr<Geometry> createGeometry() override;
+    virtual std::string toString() const { return "UserGeomType"; }
+    virtual std::shared_ptr<Geom> createGeom() override;
   };
 
-  struct Geometry : public SBTObject<GeometryType> {
-    typedef std::shared_ptr<Geometry> SP;
+  struct Geom : public SBTObject<GeomType> {
+    typedef std::shared_ptr<Geom> SP;
 
-    Geometry(Context *const context,
-             GeometryType::SP geometryType);
-    virtual std::string toString() const { return "Geometry"; }
+    Geom(Context *const context,
+             GeomType::SP geometryType);
+    virtual std::string toString() const { return "Geom"; }
     
-    GeometryType::SP geometryType;
+    GeomType::SP geometryType;
   };
 
-  struct TrianglesGeometry : public Geometry {
-    typedef std::shared_ptr<TrianglesGeometry> SP;
+  struct TrianglesGeom : public Geom {
+    typedef std::shared_ptr<TrianglesGeom> SP;
 
-    TrianglesGeometry(Context *const context,
-                      GeometryType::SP geometryType)
-      : Geometry(context,geometryType)
+    TrianglesGeom(Context *const context,
+                      GeomType::SP geometryType)
+      : Geom(context,geometryType)
     {}
 
     void setVertices(Buffer::SP vertices)
     { IGNORING_THIS(); }
     void setIndices(Buffer::SP indices)
     { IGNORING_THIS(); }
-    virtual std::string toString() const { return "TrianglesGeometry"; }
+    virtual std::string toString() const { return "TrianglesGeom"; }
   };
 
-  struct UserGeometry : public Geometry {
-    typedef std::shared_ptr<UserGeometry> SP;
+  struct UserGeom : public Geom {
+    typedef std::shared_ptr<UserGeom> SP;
 
-    UserGeometry(Context *const context,
-                 GeometryType::SP geometryType)
-      : Geometry(context,geometryType)
+    UserGeom(Context *const context,
+                 GeomType::SP geometryType)
+      : Geom(context,geometryType)
     {}
-    virtual std::string toString() const { return "UserGeometry"; }
+    virtual std::string toString() const { return "UserGeom"; }
   };
   
 } // ::owl

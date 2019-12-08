@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/DeviceGroup.h"
+#include "owl/owl.h"
 #include "deviceCode.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -66,26 +66,42 @@ int main(int ac, char **av)
 {
   LOG("ll example '" << av[0] << "' starting up");
 
-  owl::ll::DeviceGroup::SP ll
-    = owl::ll::DeviceGroup::create();
-
+  // owl::ll::DeviceGroup::SP ll
+  //   = owl::ll::DeviceGroup::create();
+  OWLContext context = owlContextCreate();
+  
   LOG("building pipeline ...");
-  std::cout << GDT_TERMINAL_DEFAULT;
 
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
-  ll->allocModules(1);
-  ll->setModule(0,ptxCode);
-  ll->buildModules();
+  // ll->allocModules(1);
+  // ll->setModule(0,ptxCode);
+  // ll->buildModules();
+  OWLModule module = owlModuleCreate(context,ptxCode);
   
-  enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
-  ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
-                            /*ray type  */0,
-                            /*module:*/0,
-                            "TriangleMesh");
+  // enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
+  // ll->allocGeomTypes(NUM_GEOM_TYPES);
+
+  OWLVarDecl trianglesGeomVars[]
+    = {
+       { "index",  OWL_BUFFER_POINTER, OWL_OFFSETOF(TrianglesGeomData,index)},
+       { "vertex", OWL_BUFFER_POINTER, OWL_OFFSETOF(TrianglesGeomData,vertex)},
+       { "color",  OWL_FLOAT3,         OWL_OFFSETOF(TrianglesGeomData,color)}
+  };
+  OWLGeomType trianglesGeomType
+    = owlGeomTypeCreate(context,
+                        OWL_TRIANGLES,
+                        sizeof(TrianglesGeomData),
+                        trianglesGeomVars,3);
   
+  // ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
+  //                           /*ray type  */0,
+  //                           /*module:*/0,
+  //                           "TriangleMesh");
+  owlGeomTypeSetClosestHit(trianglesGeomType,0,
+                           module,"TriangleMesh");
+#if 0
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
@@ -219,4 +235,6 @@ int main(int ac, char **av)
   owl::ll::DeviceGroup::destroy(ll);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
+#endif
+  owlContextDestroy(context);
 }

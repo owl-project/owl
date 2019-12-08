@@ -20,6 +20,8 @@
 #include "Buffer.h"
 #include "Group.h"
 #include "RayGen.h"
+// ll
+#include "ll/llowl.h"
 
 namespace owl {
 
@@ -27,6 +29,10 @@ namespace owl {
   
   struct Context : public Object {
     typedef std::shared_ptr<Context> SP;
+
+    static Context::SP create();
+
+    Context();
     
     virtual ~Context()
     {
@@ -38,8 +44,8 @@ namespace owl {
     ObjectRegistryT<Group>        groups;
     ObjectRegistryT<RayGenType>   rayGenTypes;
     ObjectRegistryT<RayGen>       rayGens;
-    ObjectRegistryT<GeometryType> geometryTypes;
-    ObjectRegistryT<Geometry>     geometries;
+    ObjectRegistryT<GeomType> geometryTypes;
+    ObjectRegistryT<Geom>     geometries;
     
     //! TODO: allow changing that via api ..
     size_t numRayTypes = 1;
@@ -48,7 +54,7 @@ namespace owl {
     void expBuildSBT();
     
     InstanceGroup::SP createInstanceGroup(size_t numChildren);
-    GeometryGroup::SP createGeometryGroup(size_t numChildren);
+    GeomGroup::SP createGeomGroup(size_t numChildren);
     Buffer::SP        createBuffer();
     
     RayGen::SP
@@ -60,12 +66,14 @@ namespace owl {
                      size_t varStructSize,
                      const std::vector<OWLVarDecl> &varDecls);
     
-    GeometryType::SP
-    createGeometryType(OWLGeometryKind kind,
+    GeomType::SP
+    createGeomType(OWLGeomKind kind,
                        size_t varStructSize,
                        const std::vector<OWLVarDecl> &varDecls);
     
     Module::SP createModule(const std::string &ptxCode);
+
+    ll::DeviceGroup::SP ll;
   };
 
 } // ::owl

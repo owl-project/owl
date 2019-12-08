@@ -32,19 +32,19 @@ namespace owl {
   };
 
   
-  struct GeometryGroup : public Group {
-    typedef std::shared_ptr<GeometryGroup> SP;
+  struct GeomGroup : public Group {
+    typedef std::shared_ptr<GeomGroup> SP;
 
-    GeometryGroup(Context *const context,
+    GeomGroup(Context *const context,
                   size_t numChildren);
-    void setChild(int childID, Geometry::SP child)
+    void setChild(int childID, Geom::SP child)
     {
       assert(childID >= 0);
       assert(childID < geometries.size());
       geometries[childID] = child;
     }
-    virtual std::string toString() const { return "GeometryGroup"; }
-    std::vector<Geometry::SP> geometries;
+    virtual std::string toString() const { return "GeomGroup"; }
+    std::vector<Geom::SP> geometries;
   };
 
   struct InstanceGroup : public Group {

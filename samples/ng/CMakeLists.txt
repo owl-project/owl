@@ -14,17 +14,10 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl)
-cuda_compile_and_embed(ptxCode
-  deviceCode.cu
-  )
-add_executable(ll01-simpleTriangles
-  hostCode.cpp
-  ${ptxCode}
-  )
-target_link_libraries(ll01-simpleTriangles
-  owl-ll
-  )
-add_test(ll01-simpleTriangles ${CMAKE_BINARY_DIR}/ll01-simpleTriangles)
+include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
 
+file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
+foreach(sample ${samples})
+  add_subdirectory(${sample})
+endforeach()
 

@@ -18,15 +18,13 @@ include_directories(${PROJECT_SOURCE_DIR}/owl)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(ll05-rtow
+add_executable(ng01-simpleTriangles
   hostCode.cpp
   ${ptxCode}
   )
-target_link_libraries(ll05-rtow
-  owl-ll
+target_link_libraries(ng01-simpleTriangles
+  owl-ng
   )
-add_test(ll05-rtow
-  ${CMAKE_BINARY_DIR}/ll05-rtow)
-
+add_test(ng01-simpleTriangles ${CMAKE_BINARY_DIR}/ng01-simpleTriangles)
 
 

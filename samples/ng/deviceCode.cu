@@ -14,21 +14,39 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Geometry.h"
-#include "Context.h"
+// #include "optix/device.h"
 
-namespace owl {
-  
-  GeometryType::GeometryType(Context *const context,
-                             size_t varStructSize,
-                             const std::vector<OWLVarDecl> &varDecls)
-    : SBTObjectType(context,context->geometryTypes,
-                    varStructSize,varDecls)
-  {}
+#define OPTIX_RAYGEN_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __raygen__##programName
 
-  Geometry::Geometry(Context *const context,
-                     GeometryType::SP geometryType)
-    : SBTObject(context,context->geometries,geometryType)
-  {}
-  
-} //::owl
+#define OPTIX_CLOSEST_HIT_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __closesthit__##programName
+
+#define OPTIX_MISS_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __miss__##programName
+
+OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
+{
+  // if (optix::getLaunchIndex() == optix::vec2i(0))
+  printf("Hello OptiX From your First RayGen Program\n");
+}
+
+OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
+{
+  // if (optix::getLaunchIndex() == optix::vec2i(0))
+  //   printf("Hello OptiX From your First RayGen Program\n");
+}
+
+OPTIX_MISS_PROGRAM(defaultRayType)()
+{
+  // if (optix::getLaunchIndex() == optix::vec2i(0))
+  //   printf("Hello OptiX From your First RayGen Program\n");
+}
+
+
+__global__ void foo()
+{}
+

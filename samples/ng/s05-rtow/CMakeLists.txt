@@ -14,21 +14,19 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(c-test
-  c-test.c
+add_executable(ng05-rtow
+  hostCode.cpp
   ${ptxCode}
   )
-target_link_libraries(c-test
+target_link_libraries(ng05-rtow
   owl-ng
   )
+add_test(ng05-rtow
+  ${CMAKE_BINARY_DIR}/ng05-rtow)
 
 
-file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
-foreach(sample ${samples})
-  add_subdirectory(${sample})
-endforeach()
 

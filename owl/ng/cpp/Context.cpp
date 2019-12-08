@@ -19,8 +19,35 @@
 #include "Geometry.h"
 #include "ll/Device.h"
 
+#define LOG(message)                               \
+  std::cout                                        \
+  << GDT_TERMINAL_LIGHT_BLUE                       \
+  << "#owl.ng: "                                   \
+  << message                                       \
+  << GDT_TERMINAL_DEFAULT << std::endl
+
+#define LOG_OK(message)                         \
+  std::cout                                     \
+  << GDT_TERMINAL_BLUE                          \
+  << "#owl.ng: "                                \
+  << message                                    \
+  << GDT_TERMINAL_DEFAULT << std::endl
+
 namespace owl {
 
+  Context::SP Context::create()
+  {
+    LOG("creating node-graph context");
+    return std::make_shared<Context>();
+  }
+  
+  Context::Context()
+  {
+    LOG("context ramping up - creating low-level devicegroup");
+    ll = ll::DeviceGroup::create();
+    LOG_OK("device group created");
+  }
+  
   Buffer::SP Context::createBuffer()
   {
     PING;
@@ -36,9 +63,9 @@ namespace owl {
     return std::make_shared<RayGen>(this,type);
   }
 
-  GeometryGroup::SP Context::createGeometryGroup(size_t numChildren)
+  GeomGroup::SP Context::createGeomGroup(size_t numChildren)
   {
-    return std::make_shared<GeometryGroup>(this,numChildren);
+    return std::make_shared<GeomGroup>(this,numChildren);
   }
 
   InstanceGroup::SP Context::createInstanceGroup(size_t numChildren)
@@ -60,16 +87,16 @@ namespace owl {
   }
   
 
-  GeometryType::SP
-  Context::createGeometryType(OWLGeometryKind kind,
+  GeomType::SP
+  Context::createGeomType(OWLGeomKind kind,
                               size_t varStructSize,
                               const std::vector<OWLVarDecl> &varDecls)
   {
     switch(kind) {
     case OWL_GEOMETRY_TRIANGLES:
-      return std::make_shared<TrianglesGeometryType>(this,varStructSize,varDecls);
+      return std::make_shared<TrianglesGeomType>(this,varStructSize,varDecls);
     case OWL_GEOMETRY_USER:
-      return std::make_shared<UserGeometryType>(this,varStructSize,varDecls);
+      return std::make_shared<UserGeomType>(this,varStructSize,varDecls);
     default:
       OWL_NOTIMPLEMENTED;
     }
@@ -80,20 +107,20 @@ namespace owl {
     return std::make_shared<Module>(ptxCode);
   }
 
-  std::shared_ptr<Geometry> UserGeometryType::createGeometry()
+  std::shared_ptr<Geom> UserGeomType::createGeom()
   {
-    GeometryType::SP self
-      = std::dynamic_pointer_cast<GeometryType>(shared_from_this());
+    GeomType::SP self
+      = std::dynamic_pointer_cast<GeomType>(shared_from_this());
     assert(self);
-    return std::make_shared<UserGeometry>(context,self);
+    return std::make_shared<UserGeom>(context,self);
   }
 
-  std::shared_ptr<Geometry> TrianglesGeometryType::createGeometry()
+  std::shared_ptr<Geom> TrianglesGeomType::createGeom()
   {
-    GeometryType::SP self
-      = std::dynamic_pointer_cast<GeometryType>(shared_from_this());
+    GeomType::SP self
+      = std::dynamic_pointer_cast<GeomType>(shared_from_this());
     assert(self);
-    return std::make_shared<TrianglesGeometry>(context,self);
+    return std::make_shared<TrianglesGeom>(context,self);
   }
 
 
@@ -112,8 +139,8 @@ namespace owl {
       Group::SP group = groups.getSP(groupID);
       if (!group)
         continue;
-      GeometryGroup::SP gg
-        = group->as<GeometryGroup>();
+      GeomGroup::SP gg
+        = group->as<GeomGroup>();
       if (!gg)
         continue;
       numHitGroupRecords += numRayTypes * gg->geometries.size();

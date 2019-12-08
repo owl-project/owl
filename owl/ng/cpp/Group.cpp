@@ -19,7 +19,7 @@
 
 namespace owl {
 
-  GeometryGroup::GeometryGroup(Context *const context,
+  GeomGroup::GeomGroup(Context *const context,
                                size_t numChildren)
     : Group(context,context->groups),
       geometries(numChildren)
