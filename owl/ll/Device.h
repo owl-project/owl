@@ -26,6 +26,20 @@ namespace owl {
     struct ProgramGroups;
     struct Device;
     
+    /*! allocator that allows for allocating ranges of STB indices as
+      required for adding groups of geometries to the SBT */
+    struct RangeAllocator {
+      int alloc(int size);
+      void release(int begin, int size);
+      int maxAllocedID = 0;
+    private:
+      struct FreedRange {
+        int begin;
+        int size;
+      };
+      std::vector<FreedRange> freedRanges;
+    };
+
     struct Context {
       
       Context(int owlDeviceID, int cudaDeviceID);
@@ -128,7 +142,8 @@ namespace owl {
       size_t  boundsProgDataSize = 0; // do we still need this!?
       CUfunction boundsFuncKernel;
     };
-
+    
+    
     struct SBT {
       OptixShaderBindingTable sbt = {};
       
@@ -145,6 +160,8 @@ namespace owl {
       DeviceMemory missProgRecordsBuffer;
 
       DeviceMemory launchParamsBuffer;
+      
+      RangeAllocator rangeAllocator;
     };
 
     typedef enum { TRIANGLES, USER } PrimType;
@@ -579,9 +596,8 @@ namespace owl {
                                      size_t maxGeomDataSize,
                                      WriteUserGeomBoundsDataCB cb,
                                      void *cbData);
-      void sbtGeomTypesBuild(size_t maxHitProgDataSize,
-                             WriteHitProgDataCB writeHitProgDataCB,
-                             const void *callBackUserData);
+      void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                            const void *callBackUserData);
       void sbtRayGensBuild(size_t maxRayGenDataSize,
                            WriteRayGenDataCB writeRayGenDataCB,
                            const void *callBackUserData);

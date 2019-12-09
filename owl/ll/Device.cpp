@@ -47,7 +47,51 @@ namespace owl {
     {
       fprintf( stderr, "[%2d][%12s]: %s\n", level, tag, message );
     }
-  
+
+
+      int RangeAllocator::alloc(int size)
+      {
+        for (int i=0;i<freedRanges.size();i++) {
+          if (freedRanges[i].size >= size) {
+            int where = freedRanges[i].begin;
+            if (freedRanges[i].size == size)
+              freedRanges.erase(freedRanges.begin()+i);
+            else {
+              freedRanges[i].begin += size;
+              freedRanges[i].size  -= size;
+            }
+            return where;
+          }
+        }
+        int where = maxAllocedID;
+        maxAllocedID+=size;
+        return where;
+      }
+      void RangeAllocator::release(int begin, int size)
+      {
+        for (int i=0;i<freedRanges.size();i++) {
+          if (freedRanges[i].begin+freedRanges[i].size == begin) {
+            begin -= freedRanges[i].size;
+            size  += freedRanges[i].size;
+            freedRanges.erase(freedRanges.begin()+i);
+            release(begin,size);
+            return;
+          }
+          if (begin+size == freedRanges[i].begin) {
+            size  += freedRanges[i].size;
+            freedRanges.erase(freedRanges.begin()+i);
+            release(begin,size);
+            return;
+          }
+        }
+        if (begin+size == maxAllocedID) {
+          maxAllocedID -= size;
+          return;
+        }
+        // could not merge with any existing range: add new one
+        freedRanges.push_back({begin,size});
+      }
+
     /*! construct a new owl device on given cuda device. throws an
       exception if for any reason that cannot be done */
     Context::Context(int owlDeviceID,
