@@ -26,6 +26,20 @@ namespace owl {
     struct ProgramGroups;
     struct Device;
     
+    /*! allocator that allows for allocating ranges of STB indices as
+      required for adding groups of geometries to the SBT */
+    struct RangeAllocator {
+      int alloc(int size);
+      void release(int begin, int size);
+      int maxAllocedID = 0;
+    private:
+      struct FreedRange {
+        int begin;
+        int size;
+      };
+      std::vector<FreedRange> freedRanges;
+    };
+
     struct Context {
       
       Context(int owlDeviceID, int cudaDeviceID);
@@ -130,7 +144,8 @@ namespace owl {
       size_t  hitProgDataSize = 0;
       CUfunction boundsFuncKernel;
     };
-
+    
+    
     struct SBT {
       OptixShaderBindingTable sbt = {};
       
@@ -147,6 +162,8 @@ namespace owl {
       DeviceMemory missProgRecordsBuffer;
 
       DeviceMemory launchParamsBuffer;
+      
+      RangeAllocator rangeAllocator;
     };
 
     typedef enum { TRIANGLES, USER } PrimType;
@@ -277,18 +294,23 @@ namespace owl {
       { OWL_NOTIMPLEMENTED; }
     };
     struct GeomGroup : public Group {
-      GeomGroup(size_t numChildren)
-        : children(numChildren)
+      GeomGroup(size_t numChildren,
+                size_t sbtOffset)
+        : children(numChildren),
+          sbtOffset(sbtOffset)
       {}
       
       virtual bool containsGeom() { return true; }
       virtual PrimType primType() = 0;
 
       std::vector<Geom *> children;
+      const size_t sbtOffset;
     };
     struct TrianglesGeomGroup : public GeomGroup {
-      TrianglesGeomGroup(size_t numChildren)
-        : GeomGroup(numChildren)
+      TrianglesGeomGroup(size_t numChildren,
+                         size_t sbtOffset)
+        : GeomGroup(numChildren,
+                    sbtOffset)
       {}
       virtual PrimType primType() { return TRIANGLES; }
       
@@ -296,8 +318,10 @@ namespace owl {
       virtual void buildAccel(Context *context) override;
     };
     struct UserGeomGroup : public GeomGroup {
-      UserGeomGroup(size_t numChildren)
-        : GeomGroup(numChildren)
+      UserGeomGroup(size_t numChildren,
+                size_t sbtOffset)
+        : GeomGroup(numChildren,
+                    sbtOffset)
       {}
       virtual PrimType primType() { return USER; }
       

@@ -265,12 +265,10 @@ namespace owl {
       
       
       template<typename Lambda>
-      void sbtGeomTypesBuild(size_t maxHitGroupDataSize,
-                             const Lambda &l)
+      void sbtHitProgsBuild(const Lambda &l)
       {
-        this->sbtGeomTypesBuild(maxHitGroupDataSize,
-                              [](uint8_t *output,
-                                 int devID,
+        this->sbtHitProgsBuild([](uint8_t *output,
+                                  int devID,
                                  int geomID,
                                  int childID,
                                  const void *cbData) {

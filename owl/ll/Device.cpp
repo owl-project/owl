@@ -47,7 +47,51 @@ namespace owl {
     {
       fprintf( stderr, "[%2d][%12s]: %s\n", level, tag, message );
     }
-  
+
+
+      int RangeAllocator::alloc(int size)
+      {
+        for (int i=0;i<freedRanges.size();i++) {
+          if (freedRanges[i].size >= size) {
+            int where = freedRanges[i].begin;
+            if (freedRanges[i].size == size)
+              freedRanges.erase(freedRanges.begin()+i);
+            else {
+              freedRanges[i].begin += size;
+              freedRanges[i].size  -= size;
+            }
+            return where;
+          }
+        }
+        int where = maxAllocedID;
+        maxAllocedID+=size;
+        return where;
+      }
+      void RangeAllocator::release(int begin, int size)
+      {
+        for (int i=0;i<freedRanges.size();i++) {
+          if (freedRanges[i].begin+freedRanges[i].size == begin) {
+            begin -= freedRanges[i].size;
+            size  += freedRanges[i].size;
+            freedRanges.erase(freedRanges.begin()+i);
+            release(begin,size);
+            return;
+          }
+          if (begin+size == freedRanges[i].begin) {
+            size  += freedRanges[i].size;
+            freedRanges.erase(freedRanges.begin()+i);
+            release(begin,size);
+            return;
+          }
+        }
+        if (begin+size == maxAllocedID) {
+          maxAllocedID -= size;
+          return;
+        }
+        // could not merge with any existing range: add new one
+        freedRanges.push_back({begin,size});
+      }
+
     /*! construct a new owl device on given cuda device. throws an
       exception if for any reason that cannot be done */
     Context::Context(int owlDeviceID,
@@ -1066,7 +1110,7 @@ namespace owl {
         userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
         auto &aa = userGeomInput.aabbArray;
         aa.aabbBuffers   = &d_bounds;
-        aa.numPrimitives = userGeom->numPrims;
+        aa.numPrimitives = (uint32_t)userGeom->numPrims;
         aa.strideInBytes = sizeof(box3f);
         aa.primitiveIndexOffset = 0;
       
@@ -1201,12 +1245,8 @@ namespace owl {
         maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
       }
       PRINT(maxHitProgDataSize);
-      size_t numHitGroupEntries = 0;
-      for (auto group : groups) {
-        if (!group) continue;
-        if (!group->containsGeom()) continue;
-      }
-      size_t numHitGroupRecords = numHitGroupEntries*numRayTypes;
+      size_t numHitGroupEntries = sbt.rangeAllocator.maxAllocedID;
+      size_t numHitGroupRecords = numHitGroupEntries*context->numRayTypes;
       size_t hitGroupRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
@@ -1222,41 +1262,53 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
-      for (int geomID=0;geomID<(int)geoms.size();geomID++)
-        for (int rayTypeID=0;rayTypeID<context->numRayTypes;rayTypeID++) {
-          // ------------------------------------------------------------------
-          // compute pointer to entire record:
-          // ------------------------------------------------------------------
-          const int recordID = rayTypeID + geomID*context->numRayTypes;
-          uint8_t *const sbtRecord
-            = hitGroupRecords.data() + recordID*hitGroupRecordSize;
-
-          // ------------------------------------------------------------------
-          // pack record header with the corresponding hit group:
-          // ------------------------------------------------------------------
-          // first, compute pointer to record:
-          char    *const sbtRecordHeader = (char *)sbtRecord;
-          // then, get gemetry we want to write (to find its hit group ID)...
-          const Geom *const geom = checkGetGeom(geomID);
-          // ... find the PG that goes into the record header...
-          auto &geomType = geomTypes[geom->geomTypeID];
-          const HitGroupPG &hgPG
-            = geomType.perRayType[rayTypeID];
-          // ... and tell optix to write that into the record
-          OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
+      for (auto group : groups) {
+        if (!group) continue;
+        if (!group->containsGeom()) continue;
+        GeomGroup *gg = (GeomGroup *)group;
+        const int sbtOffset = gg->sbtOffset;
+        for (int childID=0;childID<gg->children.size();childID++) {
+          Geom *geom = gg->children[childID];
+          if (!geom) continue;
           
-          // ------------------------------------------------------------------
-          // finally, let the user fill in the record's payload using
-          // the callback
-          // ------------------------------------------------------------------
-          uint8_t *const sbtRecordData
-            = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
-          writeHitProgDataCB(sbtRecordData,
-                             context->owlDeviceID,
-                             geomID,
-                             rayTypeID,
-                             callBackUserData);
+          const int geomID    = geom->geomID;
+          for (int rayTypeID=0;rayTypeID<context->numRayTypes;rayTypeID++) {
+            // ------------------------------------------------------------------
+            // compute pointer to entire record:
+            // ------------------------------------------------------------------
+            const int recordID
+              = (sbtOffset+childID)*context->numRayTypes + rayTypeID;
+            uint8_t *const sbtRecord
+              = hitGroupRecords.data() + recordID*hitGroupRecordSize;
+
+            // ------------------------------------------------------------------
+            // pack record header with the corresponding hit group:
+            // ------------------------------------------------------------------
+            // first, compute pointer to record:
+            char    *const sbtRecordHeader = (char *)sbtRecord;
+            // then, get gemetry we want to write (to find its hit group ID)...
+            const Geom *const geom = checkGetGeom(geomID);
+            // ... find the PG that goes into the record header...
+            auto &geomType = geomTypes[geom->geomTypeID];
+            const HitGroupPG &hgPG
+              = geomType.perRayType[rayTypeID];
+            // ... and tell optix to write that into the record
+            OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
+          
+            // ------------------------------------------------------------------
+            // finally, let the user fill in the record's payload using
+            // the callback
+            // ------------------------------------------------------------------
+            uint8_t *const sbtRecordData
+              = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
+            writeHitProgDataCB(sbtRecordData,
+                               context->owlDeviceID,
+                               geomID,
+                               rayTypeID,
+                               callBackUserData);
+          }
         }
+      }
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       context->popActive();
@@ -1413,17 +1465,17 @@ namespace owl {
       sbt.sbt.missRecordBase
         = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
       sbt.sbt.missRecordStrideInBytes
-        = sbt.missProgRecordSize;
+        = (uint32_t)sbt.missProgRecordSize;
       sbt.sbt.missRecordCount
-        = sbt.missProgRecordCount;
+        = (uint32_t)sbt.missProgRecordCount;
       
       assert("check hit records built" && sbt.hitGroupRecordCount != 0);
       sbt.sbt.hitgroupRecordBase
         = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
       sbt.sbt.hitgroupRecordStrideInBytes
-        = sbt.hitGroupRecordSize;
+        = (uint32_t)sbt.hitGroupRecordSize;
       sbt.sbt.hitgroupRecordCount
-        = sbt.hitGroupRecordCount;
+        = (uint32_t)sbt.hitGroupRecordCount;
 
       if (!sbt.launchParamsBuffer.valid()) {
         LOG("creating dummy launch params buffer ...");
@@ -1521,7 +1573,9 @@ namespace owl {
              ((geomIDs == nullptr && geomCount == 0) ||
               (geomIDs != nullptr && geomCount >  0)));
         
-      TrianglesGeomGroup *group = new TrianglesGeomGroup(geomCount);
+      TrianglesGeomGroup *group
+        = new TrianglesGeomGroup(geomCount,
+                                 sbt.rangeAllocator.alloc(geomCount));
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
 
@@ -1550,7 +1604,9 @@ namespace owl {
              ((geomIDs == nullptr && geomCount == 0) ||
               (geomIDs != nullptr && geomCount >  0)));
         
-      UserGeomGroup *group = new UserGeomGroup(geomCount);
+      UserGeomGroup *group
+        = new UserGeomGroup(geomCount,
+                            sbt.rangeAllocator.alloc(geomCount));
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
 
@@ -1593,8 +1649,8 @@ namespace owl {
            ug->geomID,childID,cbData); 
 
         // size of each thread block during bounds function call
-        int boundsFuncBlockSize = 128;
-        int numPrims = ug->numPrims;
+		uint32_t boundsFuncBlockSize = 128;
+		uint32_t numPrims = (uint32_t)ug->numPrims;
         vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
         vec3i gridDims(boundsFuncBlockSize,1,1);
 

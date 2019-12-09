@@ -61,5 +61,3 @@ namespace owl {
   
 #define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
 
-
-

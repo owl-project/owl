@@ -311,14 +311,12 @@ namespace owl {
       return checkGetDevice(deviceID)->groupGetTraversable(groupID);
     }
 
-    void DeviceGroup::sbtGeomTypesBuild(size_t maxHitGroupDataSize,
-                                        WriteHitProgDataCB writeHitProgDataCB,
-                                        void *callBackData)
+    void DeviceGroup::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                                       void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtGeomTypesBuild(maxHitGroupDataSize,
-                                  writeHitProgDataCB,
-                                  callBackData);
+        device->sbtHitProgsBuild(writeHitProgDataCB,
+                                 callBackData);
     }
     
     void DeviceGroup::sbtRayGensBuild(WriteRayGenDataCB writeRayGenCB,
