@@ -17,7 +17,7 @@
 #define BOUNDS_ON_HOST 0
 
 #include "ll/DeviceGroup.h"
-#include "deviceCode.h"
+#include "GeomTypes.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"

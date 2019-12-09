@@ -14,6 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#pragma once
+
 /*! \file owl/ll/owl-ll.h Main "api" functoin that swtiches between
     host- and device-side apis based on whether we're compiling for
     device- or host-side */

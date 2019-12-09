@@ -14,6 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#pragma once
+
 #include "gdt/math/vec.h"
 #include "gdt/math/box.h"
 // the 'actual' optix
