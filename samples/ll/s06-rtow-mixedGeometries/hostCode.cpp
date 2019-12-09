@@ -342,7 +342,9 @@ int main(int ac, char **av)
                           /* type/PG ID */DIELECTRIC_BOXES_TYPE);
   ll->createTrianglesGeom(/* geom ID    */METAL_BOXES_GEOM,
                           /* type/PG ID */METAL_BOXES_TYPE);
+
   // indices
+  LOG("creating index buffers");
   ll->createDeviceBuffer(LAMBERTIAN_BOXES_INDEX_BUFFER,
                          lambertianBoxes.indices.size(),
                          sizeof(lambertianBoxes.indices[0]),
@@ -356,6 +358,7 @@ int main(int ac, char **av)
                          sizeof(metalBoxes.indices[0]),
                          metalBoxes.indices.data());
   // vertices
+  LOG("creating vertex buffers");
   ll->createDeviceBuffer(LAMBERTIAN_BOXES_VERTEX_BUFFER,
                          lambertianBoxes.vertices.size(),
                          sizeof(lambertianBoxes.vertices[0]),
@@ -369,6 +372,7 @@ int main(int ac, char **av)
                          sizeof(metalBoxes.vertices[0]),
                          metalBoxes.vertices.data());
   // materials
+  LOG("creating box material buffers");
   ll->createDeviceBuffer(LAMBERTIAN_BOXES_MATERIAL_BUFFER,
                          lambertianBoxes.materials.size(),
                          sizeof(lambertianBoxes.materials[0]),
@@ -381,6 +385,36 @@ int main(int ac, char **av)
                          metalBoxes.materials.size(),
                          sizeof(metalBoxes.materials[0]),
                          metalBoxes.materials.data());
+
+  // ##################################################################
+  // set triangle mesh vertex/index buffers
+  // ##################################################################
+  ll->trianglesGeomSetVertexBuffer
+    (/* geom ID   */LAMBERTIAN_BOXES_GEOM,
+     /* buffer ID */LAMBERTIAN_BOXES_VERTEX_BUFFER,
+     /* meta info */lambertianBoxes.vertices.size(),sizeof(vec3f),0);
+  ll->trianglesGeomSetIndexBuffer
+    (/* geom ID   */LAMBERTIAN_BOXES_GEOM,
+     /* buffer ID */LAMBERTIAN_BOXES_INDEX_BUFFER,
+     /* meta info */lambertianBoxes.indices.size(),sizeof(vec3i),0);
+
+  ll->trianglesGeomSetVertexBuffer
+    (/* geom ID   */METAL_BOXES_GEOM,
+     /* buffer ID */METAL_BOXES_VERTEX_BUFFER,
+     /* meta info */metalBoxes.vertices.size(),sizeof(vec3f),0);
+  ll->trianglesGeomSetIndexBuffer
+    (/* geom ID   */METAL_BOXES_GEOM,
+     /* buffer ID */METAL_BOXES_INDEX_BUFFER,
+     /* meta info */metalBoxes.indices.size(),sizeof(vec3i),0);
+
+  ll->trianglesGeomSetVertexBuffer
+    (/* geom ID   */DIELECTRIC_BOXES_GEOM,
+     /* buffer ID */DIELECTRIC_BOXES_VERTEX_BUFFER,
+     /* meta info */dielectricBoxes.vertices.size(),sizeof(vec3f),0);
+  ll->trianglesGeomSetIndexBuffer
+    (/* geom ID   */DIELECTRIC_BOXES_GEOM,
+     /* buffer ID */DIELECTRIC_BOXES_INDEX_BUFFER,
+     /* meta info */dielectricBoxes.indices.size(),sizeof(vec3i),0);
   
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
@@ -433,43 +467,6 @@ int main(int ac, char **av)
   ll->createTrianglesGeomGroup(/* group ID */BOXES_GROUP,
                                /* geoms in group, pointer */ geomsInBoxesGroup,
                                /* geoms in group, count   */ 3);
-  ll->groupBuildPrimitiveBounds
-    (BOXES_GROUP,max3(sizeof(MetalBoxesGeom),
-                      sizeof(DielectricBoxesGeom),
-                      sizeof(LambertianBoxesGeom)),
-     [&](uint8_t *output, int devID, int geomID, int childID) {
-       switch(geomID) {
-       case LAMBERTIAN_BOXES_GEOM: {
-         LambertianBoxesGeom &geom = *(LambertianBoxesGeom*)output;
-         geom.index
-           = (vec3i*)ll->bufferGetPointer(LAMBERTIAN_BOXES_INDEX_BUFFER,devID);
-         geom.vertex
-           = (vec3f*)ll->bufferGetPointer(LAMBERTIAN_BOXES_VERTEX_BUFFER,devID);
-         geom.perBoxMaterial
-           = (Lambertian*)ll->bufferGetPointer(LAMBERTIAN_BOXES_MATERIAL_BUFFER,devID);
-       } break;
-       case METAL_BOXES_GEOM: {
-         MetalBoxesGeom &geom = *(MetalBoxesGeom*)output;
-         geom.index
-           = (vec3i*)ll->bufferGetPointer(METAL_BOXES_INDEX_BUFFER,devID);
-         geom.vertex
-           = (vec3f*)ll->bufferGetPointer(METAL_BOXES_VERTEX_BUFFER,devID);
-         geom.perBoxMaterial
-           = (Metal*)ll->bufferGetPointer(METAL_BOXES_MATERIAL_BUFFER,devID);
-       } break;
-       case DIELECTRIC_BOXES_GEOM: {
-         DielectricBoxesGeom &geom = *(DielectricBoxesGeom*)output;
-         geom.index
-           = (vec3i*)ll->bufferGetPointer(DIELECTRIC_BOXES_INDEX_BUFFER,devID);
-         geom.vertex
-           = (vec3f*)ll->bufferGetPointer(DIELECTRIC_BOXES_VERTEX_BUFFER,devID);
-         geom.perBoxMaterial
-           = (Dielectric*)ll->bufferGetPointer(DIELECTRIC_BOXES_MATERIAL_BUFFER,devID);
-       } break;
-       default:
-         assert(0);
-       }
-     });
   ll->groupBuildAccel(BOXES_GROUP);
 
   
@@ -480,9 +477,13 @@ int main(int ac, char **av)
 
   // ----------- build hitgroups -----------
   const size_t maxHitGroupDataSize
-    = max3(sizeof(MetalSpheresGeom),
-           sizeof(DielectricSpheresGeom),
-           sizeof(LambertianSpheresGeom));
+    = max(max3(sizeof(MetalSpheresGeom),
+               sizeof(DielectricSpheresGeom),
+               sizeof(LambertianSpheresGeom)),
+          max3(sizeof(MetalBoxesGeom),
+               sizeof(DielectricBoxesGeom),
+               sizeof(LambertianBoxesGeom))
+          );
   ll->sbtGeomTypesBuild
     (maxHitGroupDataSize,
      [&](uint8_t *output,int devID,int geomID,int childID) {
@@ -499,6 +500,37 @@ int main(int ac, char **av)
          ((MetalSpheresGeom*)output)->prims
            = (MetalSphere*)ll->bufferGetPointer(METAL_SPHERES_BUFFER,devID);
          break;
+
+       case LAMBERTIAN_BOXES_GEOM: {
+         PING;
+         LambertianBoxesGeom &self = *(LambertianBoxesGeom*)output;
+         self.index
+           = (vec3i*)ll->bufferGetPointer(LAMBERTIAN_BOXES_INDEX_BUFFER,devID);
+         self.vertex
+           = (vec3f*)ll->bufferGetPointer(LAMBERTIAN_BOXES_VERTEX_BUFFER,devID);
+         self.perBoxMaterial
+           = (Lambertian *)ll->bufferGetPointer(LAMBERTIAN_BOXES_MATERIAL_BUFFER,devID);
+       } break;
+       case DIELECTRIC_BOXES_GEOM: {
+         PING;
+         DielectricBoxesGeom &self = *(DielectricBoxesGeom*)output;
+         self.index
+           = (vec3i*)ll->bufferGetPointer(DIELECTRIC_BOXES_INDEX_BUFFER,devID);
+         self.vertex
+           = (vec3f*)ll->bufferGetPointer(DIELECTRIC_BOXES_VERTEX_BUFFER,devID);
+         self.perBoxMaterial
+           = (Dielectric *)ll->bufferGetPointer(DIELECTRIC_BOXES_MATERIAL_BUFFER,devID);
+       } break;
+       case METAL_BOXES_GEOM: {
+         PING;
+         MetalBoxesGeom &self = *(MetalBoxesGeom*)output;
+         self.index
+           = (vec3i*)ll->bufferGetPointer(METAL_BOXES_INDEX_BUFFER,devID);
+         self.vertex
+           = (vec3f*)ll->bufferGetPointer(METAL_BOXES_VERTEX_BUFFER,devID);
+         self.perBoxMaterial
+           = (Metal *)ll->bufferGetPointer(METAL_BOXES_MATERIAL_BUFFER,devID);
+       } break;
        default:
          assert(0);
        }

@@ -272,8 +272,16 @@ namespace owl {
 
     void DeviceGroup::groupBuildAccel(int groupID)
     {
-      for (auto device : devices) 
-        device->groupBuildAccel(groupID);
+      try {
+        for (auto device : devices) 
+          device->groupBuildAccel(groupID);
+      } catch (std::exception &e) {
+        std::cerr << GDT_TERMINAL_RED
+                  << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
+                  << e.what()
+                  << GDT_TERMINAL_DEFAULT << std::endl;
+        exit(0);
+      }
     }
 
     OptixTraversableHandle DeviceGroup::groupGetTraversable(int groupID, int deviceID)
@@ -316,11 +324,19 @@ namespace owl {
                                                 WriteUserGeomBoundsDataCB cb,
                                                 void *cbData)
     {
-      for (auto device : devices) 
-        device->groupBuildPrimitiveBounds(groupID,
-                                          maxGeomDataSize,
-                                          cb,
-                                          cbData);
+      try {
+        for (auto device : devices) 
+          device->groupBuildPrimitiveBounds(groupID,
+                                            maxGeomDataSize,
+                                            cb,
+                                            cbData);
+      } catch (std::exception &e) {
+        std::cerr << GDT_TERMINAL_RED
+                  << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
+                  << e.what()
+                  << GDT_TERMINAL_DEFAULT << std::endl;
+        exit(0);
+      }
     }
 
     /*! returns the given device's buffer address on the specified

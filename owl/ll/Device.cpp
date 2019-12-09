@@ -857,6 +857,9 @@ namespace owl {
         
         // now fill in the values:
         d_vertices = (CUdeviceptr )tris->vertexPointer;
+        if (d_vertices == 0)
+          OWL_EXCEPT("in TrianglesGeomGroup::buildAccel(): "
+                     "triangles geom has null vertex array");
         assert("triangles geom has vertex array set" && d_vertices);
         
         d_indices  = (CUdeviceptr )tris->indexPointer;

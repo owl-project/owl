@@ -21,6 +21,13 @@
 #  error "this file should only ever get included on the device side"
 #endif
 
+#define OWL_THROWS_EXCEPTIONS 1
+#if OWL_THROWS_EXCEPTIONS
+#define OWL_EXCEPT(a) throw std::runtime_error(a)
+#else
+#define OWL_EXCEPT(a) /* ignore */
+#endif
+
 namespace owl {
   namespace ll {
 

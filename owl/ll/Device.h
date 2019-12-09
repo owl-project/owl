@@ -536,6 +536,8 @@ namespace owl {
         Group *group = groups[groupID];
         assert("check valid group" && group != nullptr);
         UserGeomGroup *ugg = dynamic_cast<UserGeomGroup*>(group);
+        if (!ugg)
+          OWL_EXCEPT("group is not a user geometry group");
         assert("check group is a user geom group" && ugg != nullptr);
         return ugg;
       }
