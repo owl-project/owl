@@ -239,9 +239,8 @@ namespace owl {
                                      size_t maxGeomDataSize,
                                      WriteUserGeomBoundsDataCB cb,
                                      void *cbData);
-      void sbtGeomTypesBuild(size_t maxHitGroupDataSize,
-                             WriteHitProgDataCB writeHitProgDataCB,
-                             void *callBackData);
+      void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                            void *callBackData);
       void sbtRayGensBuild(WriteRayGenDataCB WriteRayGenDataCB,
                            void *callBackData);
       void sbtMissProgsBuild(WriteMissProgDataCB WriteMissProgDataCB,

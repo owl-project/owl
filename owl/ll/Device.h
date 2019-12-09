@@ -127,6 +127,7 @@ namespace owl {
       std::vector<HitGroupPG> perRayType;
       Program boundsProg;
       size_t  boundsProgDataSize = 0; // do we still need this!?
+      size_t  hitProgDataSize = 0;
       CUfunction boundsFuncKernel;
     };
 
@@ -600,9 +601,8 @@ namespace owl {
                                      size_t maxGeomDataSize,
                                      WriteUserGeomBoundsDataCB cb,
                                      void *cbData);
-      void sbtGeomTypesBuild(size_t maxHitProgDataSize,
-                             WriteHitProgDataCB writeHitProgDataCB,
-                             const void *callBackUserData);
+      void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                            const void *callBackUserData);
       void sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
                            const void *callBackUserData);
       void sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,

@@ -1184,9 +1184,8 @@ namespace owl {
 
 
 
-    void Device::sbtGeomTypesBuild(size_t maxHitProgDataSize,
-                                   WriteHitProgDataCB writeHitProgDataCB,
-                                   const void *callBackUserData)
+    void Device::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                                  const void *callBackUserData)
     {
       LOG("building sbt hit group records");
       context->pushActive();
@@ -1194,8 +1193,20 @@ namespace owl {
       if (sbt.hitGroupRecordsBuffer.valid())
         sbt.hitGroupRecordsBuffer.free();
 
-      size_t numGeoms = geoms.size();
-      size_t numHitGroupRecords = numGeoms * context->numRayTypes;
+      size_t maxHitProgDataSize = 0;
+      for (int geomID=0;geomID<geoms.size();geomID++) {
+        Geom *geom = geoms[geomID];
+        if (!geom) continue;
+        GeomType &gt = geomTypes[geom->geomTypeID];
+        maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
+      }
+      PRINT(maxHitProgDataSize);
+      size_t numHitGroupEntries = 0;
+      for (auto group : groups) {
+        if (!group) continue;
+        if (!group->containsGeom()) continue;
+      }
+      size_t numHitGroupRecords = numHitGroupEntries*numRayTypes;
       size_t hitGroupRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
