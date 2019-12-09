@@ -141,8 +141,25 @@ namespace owl {
                                 int rayTypeID,
                                 int moduleID,
                                 const char *progName);
-      void setRayGen(int pgID, int moduleID, const char *progName);
-      void setMissProg(int pgID, int moduleID, const char *progName);
+      void setRayGen(int pgID,
+                     int moduleID,
+                     const char *progName,
+                     size_t programDataSize);
+
+      /*! specifies which miss program to run for a given miss prog
+          ID */
+      void setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                       int programID,
+                       /*! ID of the module the program will be bound
+                           in, in [0..numAllocedModules) */
+                       int moduleID,
+                       /*! name of the program. Note we do not NOT
+                           create a copy of this string, so the string
+                           has to remain valid for the duration of the
+                           program */
+                       const char *progName,
+                       /*! size of that miss program's SBT data */
+                       size_t missProgDataSize);
       
       /*! resize the array of geom IDs. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
@@ -225,11 +242,9 @@ namespace owl {
       void sbtGeomTypesBuild(size_t maxHitGroupDataSize,
                              WriteHitProgDataCB writeHitProgDataCB,
                              void *callBackData);
-      void sbtRayGensBuild(size_t maxRayGenDataSize,
-                           WriteRayGenDataCB WriteRayGenDataCB,
+      void sbtRayGensBuild(WriteRayGenDataCB WriteRayGenDataCB,
                            void *callBackData);
-      void sbtMissProgsBuild(size_t maxMissProgDataSize,
-                             WriteMissProgDataCB WriteMissProgDataCB,
+      void sbtMissProgsBuild(WriteMissProgDataCB WriteMissProgDataCB,
                              void *callBackData);
       
       template<typename Lambda>
@@ -266,11 +281,9 @@ namespace owl {
       }
 
       template<typename Lambda>
-      void sbtRayGensBuild(size_t maxRayGenDataSize,
-                           const Lambda &l)
+      void sbtRayGensBuild(const Lambda &l)
       {
-        this->sbtRayGensBuild(maxRayGenDataSize,
-                              [](uint8_t *output,
+        this->sbtRayGensBuild([](uint8_t *output,
                                  int devID, int rgID, 
                                  const void *cbData) {
                                 const Lambda *lambda = (const Lambda *)cbData;
@@ -279,11 +292,9 @@ namespace owl {
       }
 
       template<typename Lambda>
-      void sbtMissProgsBuild(size_t maxMissProgDataSize,
-                             const Lambda &l)
+      void sbtMissProgsBuild(const Lambda &l)
       {
-        this->sbtMissProgsBuild(maxMissProgDataSize,
-                                [](uint8_t *output,
+        this->sbtMissProgsBuild([](uint8_t *output,
                                    int devID, int rayType, 
                                    const void *cbData) {
                                   const Lambda *lambda = (const Lambda *)cbData;

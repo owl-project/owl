@@ -90,12 +90,14 @@ int main(int ac, char **av)
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
-                "simpleRayGen");
-  
+                "simpleRayGen",
+                sizeof(RayGenData));
+
   ll->allocMissProgs(1);
   ll->setMissProg(/*program ID*/0,
                   /*module:*/0,
-                  "miss");
+                  "miss",
+                  sizeof(MissProgData));
   ll->buildPrograms();
   ll->createPipeline();
 
@@ -182,10 +184,8 @@ int main(int ac, char **av)
     });
   
   // ----------- build miss prog(s) -----------
-  const size_t maxMissProgDataSize = sizeof(MissProgData);
   ll->sbtMissProgsBuild
-    (maxMissProgDataSize,
-     [&](uint8_t *output,
+    ([&](uint8_t *output,
          int devID,
          int rayType) {
       ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
@@ -193,10 +193,8 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  const size_t maxRayGenDataSize = sizeof(RayGenData);
   ll->sbtRayGensBuild
-    (maxRayGenDataSize,
-     [&](uint8_t *output,
+    ([&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;

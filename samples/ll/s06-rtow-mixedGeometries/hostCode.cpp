@@ -256,17 +256,17 @@ int main(int ac, char **av)
 
 
 
-
-
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
-                "rayGen");
+                "rayGen",
+                sizeof(RayGenData));
   
   ll->allocMissProgs(1);
   ll->setMissProg(/*program ID*/0,
                   /*module:*/0,
-                  "miss");
+                  "miss",
+                  sizeof(MissProgData));
   ll->buildPrograms();
   ll->createPipeline();
 
@@ -537,20 +537,16 @@ int main(int ac, char **av)
      });
   
   // ----------- build miss prog(s) -----------
-  const size_t maxMissProgDataSize = sizeof(MissProgData);
   ll->sbtMissProgsBuild
-    (maxMissProgDataSize,
-     [&](uint8_t *output,
+    ([&](uint8_t *output,
          int devID,
          int rayType) {
        /* we don't have any ... */
      });
   
   // ----------- build raygens -----------
-  const size_t maxRayGenDataSize = sizeof(RayGenData);
   ll->sbtRayGensBuild
-    (maxRayGenDataSize,
-     [&](uint8_t *output,
+    ([&](uint8_t *output,
          int devID,
          int rgID) {
        RayGenData *rg = (RayGenData*)output;

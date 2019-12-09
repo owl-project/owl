@@ -127,11 +127,33 @@ namespace owl {
         device->setGeomTypeIntersect(geomTypeID,rayTypeID,moduleID,progName);
     }
     
-    void DeviceGroup::setRayGen(int pgID, int moduleID, const char *progName)
-    { for (auto device : devices) device->setRayGen(pgID,moduleID,progName); }
+    void DeviceGroup::setRayGen(int pgID,
+                                int moduleID,
+                                const char *progName,
+                                size_t programDataSize)
+    {
+      for (auto device : devices)
+        device->setRayGen(pgID,moduleID,progName,programDataSize);
+    }
     
-    void DeviceGroup::setMissProg(int pgID, int moduleID, const char *progName)
-    { for (auto device : devices) device->setMissProg(pgID,moduleID,progName); }
+    /*! specifies which miss program to run for a given miss prog
+      ID */
+    void DeviceGroup::setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                                  int programID,
+                                  /*! ID of the module the program will be bound
+                                    in, in [0..numAllocedModules) */
+                                  int moduleID,
+                                  /*! name of the program. Note we do not NOT
+                                    create a copy of this string, so the string
+                                    has to remain valid for the duration of the
+                                    program */
+                                  const char *progName,
+                                  /*! size of that miss program's SBT data */
+                                  size_t missProgDataSize)
+    {
+      for (auto device : devices)
+        device->setMissProg(programID,moduleID,progName,missProgDataSize);
+    }
 
     /*! resize the array of geom IDs. this can be either a
       'grow' or a 'shrink', but 'shrink' is only allowed if all
@@ -299,23 +321,19 @@ namespace owl {
                                   callBackData);
     }
     
-    void DeviceGroup::sbtRayGensBuild(size_t maxRayGenDataSize,
-                                      WriteRayGenDataCB writeRayGenCB,
+    void DeviceGroup::sbtRayGensBuild(WriteRayGenDataCB writeRayGenCB,
                                       void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtRayGensBuild(maxRayGenDataSize,
-                                writeRayGenCB,
+        device->sbtRayGensBuild(writeRayGenCB,
                                 callBackData);
     }
     
-    void DeviceGroup::sbtMissProgsBuild(size_t maxMissProgDataSize,
-                                        WriteMissProgDataCB writeMissProgCB,
+    void DeviceGroup::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgCB,
                                         void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtMissProgsBuild(maxMissProgDataSize,
-                                  writeMissProgCB,
+        device->sbtMissProgsBuild(writeMissProgCB,
                                   callBackData);
     }
 

@@ -237,12 +237,13 @@ namespace owl {
       hitGroup.closestHit.progName = progName;
     }
     
-    void Device::setRayGen(int pgID,
+    void Device::setRayGen(int programID,
                            int moduleID,
-                           const char *progName)
+                           const char *progName,
+                           size_t dataSize)
     {
-      assert(pgID >= 0);
-      assert(pgID < rayGenPGs.size());
+      assert(programID >= 0);
+      assert(programID < rayGenPGs.size());
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -250,16 +251,28 @@ namespace owl {
              ||
              (moduleID >= 0  && progName != nullptr));
 
-      rayGenPGs[pgID].program.moduleID = moduleID;
-      rayGenPGs[pgID].program.progName = progName;
+      rayGenPGs[programID].program.moduleID = moduleID;
+      rayGenPGs[programID].program.progName = progName;
+      rayGenPGs[programID].program.dataSize = dataSize;
     }
     
-    void Device::setMissProg(int pgID,
+    /*! specifies which miss program to run for a given miss prog
+      ID */
+    void Device::setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                             int programID,
+                             /*! ID of the module the program will be bound
+                               in, in [0..numAllocedModules) */
                              int moduleID,
-                             const char *progName)
+                             /*! name of the program. Note we do not NOT
+                               create a copy of this string, so the string
+                               has to remain valid for the duration of the
+                               program */
+                             const char *progName,
+                             /*! size of that miss program's SBT data */
+                             size_t missProgDataSize)
     {
-      assert(pgID >= 0);
-      assert(pgID < missProgPGs.size());
+      assert(programID >= 0);
+      assert(programID < missProgPGs.size());
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -267,8 +280,9 @@ namespace owl {
              ||
              (moduleID >= 0  && progName != nullptr));
 
-      missProgPGs[pgID].program.moduleID = moduleID;
-      missProgPGs[pgID].program.progName = progName;
+      missProgPGs[programID].program.moduleID = moduleID;
+      missProgPGs[programID].program.progName = progName;
+      missProgPGs[programID].program.dataSize = missProgDataSize;
     }
     
     /*! will destroy the *optix handles*, but will *not* clear the
@@ -1238,8 +1252,7 @@ namespace owl {
       LOG_OK("done building (and uploading) sbt hit group records");
     }
       
-    void Device::sbtRayGensBuild(size_t maxRayGenDataSize,
-                                 WriteRayGenDataCB writeRayGenDataCB,
+    void Device::sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
                                  const void *callBackUserData)
     {
       LOG("building sbt ray gen records");
@@ -1248,6 +1261,10 @@ namespace owl {
       if (sbt.rayGenRecordsBuffer.valid())
         sbt.rayGenRecordsBuffer.free();
 
+      size_t maxRayGenDataSize = 0;
+      for (int rgID=0;rgID<(int)rayGenPGs.size();rgID++) 
+        maxRayGenDataSize = std::max(maxRayGenDataSize,
+                                     rayGenPGs[rgID].program.dataSize);
       size_t numRayGenRecords = rayGenPGs.size();
       size_t rayGenRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
@@ -1299,8 +1316,7 @@ namespace owl {
       LOG_OK("done building (and uploading) sbt ray gen records");
     }
       
-    void Device::sbtMissProgsBuild(size_t maxMissProgDataSize,
-                                   WriteMissProgDataCB writeMissProgDataCB,
+    void Device::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
                                    const void *callBackUserData)
     {
       LOG("building sbt miss prog records");
@@ -1312,6 +1328,11 @@ namespace owl {
       if (sbt.missProgRecordsBuffer.valid())
         sbt.missProgRecordsBuffer.free();
 
+      size_t maxMissProgDataSize = 0;
+      for (int mpID=0;mpID<(int)missProgPGs.size();mpID++) 
+        maxMissProgDataSize = std::max(maxMissProgDataSize,
+                                     rayGenPGs[mpID].program.dataSize);
+      
       size_t numMissProgRecords = missProgPGs.size();
       size_t missProgRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE

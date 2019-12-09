@@ -110,6 +110,7 @@ namespace owl {
     struct Program {
       const char *progName = nullptr;
       int         moduleID = -1;
+      size_t      dataSize = 0;
     };
     struct RayGenPG : public ProgramGroup {
       Program program;
@@ -367,8 +368,26 @@ namespace owl {
                                 int moduleID,
                                 const char *progName);
       
-      void setRayGen(int pgID, int moduleID, const char *progName);
-      void setMissProg(int pgID, int moduleID, const char *progName);
+      void setRayGen(int pgID,
+                     int moduleID,
+                     const char *progName,
+                     /*! size of that program's SBT data */
+                     size_t missProgDataSize);
+      
+      /*! specifies which miss program to run for a given miss prog
+          ID */
+      void setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                       int programID,
+                       /*! ID of the module the program will be bound
+                           in, in [0..numAllocedModules) */
+                       int moduleID,
+                       /*! name of the program. Note we do not NOT
+                           create a copy of this string, so the string
+                           has to remain valid for the duration of the
+                           program */
+                       const char *progName,
+                       /*! size of that program's SBT data */
+                       size_t missProgDataSize);
       
       void allocModules(size_t count)
       { modules.alloc(count); }
@@ -584,11 +603,9 @@ namespace owl {
       void sbtGeomTypesBuild(size_t maxHitProgDataSize,
                              WriteHitProgDataCB writeHitProgDataCB,
                              const void *callBackUserData);
-      void sbtRayGensBuild(size_t maxRayGenDataSize,
-                           WriteRayGenDataCB writeRayGenDataCB,
+      void sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
                            const void *callBackUserData);
-      void sbtMissProgsBuild(size_t maxMissProgDataSize,
-                             WriteMissProgDataCB writeMissProgDataCB,
+      void sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
                              const void *callBackUserData);
 
       void launch(int rgID, const vec2i &dims);
