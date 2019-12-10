@@ -43,6 +43,8 @@ Revision History
 v0.4.x - Instances
 ------------------
 
+*v0.4.2*: bugfix - all samples working in multi-device again
+
 *v0.4.1*: example `ll06-rtow-mixedGeometries.png` 
  working w/ manual sucessive traced into two different accels
 
