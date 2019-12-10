@@ -2,8 +2,14 @@ owl - "Optix Wrappers Library" on top of Optix 7
 ================================================
 
 
-Directory Structure
-===================
+Explanation of Directory Structure
+==================================
+
+When looking at the directory structure you'll likely stumble over the
+fact that instead of owl/xyz there's always owl/ll/xyz. This is
+because *eventually* there is supposed to be another "node graph"
+layer on top of the low-level layer, so the *final* directory
+structure is supposed to look like this:
 
 - `owl/`: The Optix Wrappers *library*
   - `owl/ll/`: the owl *low-level* API layer
@@ -12,6 +18,25 @@ Directory Structure
 - `samples/`: Samples/Tutorials/TestCases for OWL
   - `samples/ll/`: samples for the ll layer
   - `samples/ng/`: samples for the ng layer (currently disabled because not yet working)
+
+TODO
+====
+
+- CI for windows
+
+- api function naming cleanup. Currently have 'createUserGeomGroup'
+  but 'instanceGroupCreate'. Make all use the latter format, so all
+  functions start with the name of the type affected (similar to
+  InstnaceGroup::create)
+
+- more examples
+
+  - optix 6 samples
+  - optix 6 advanced samples
+  - pbrtParser(?)
+  - optix prime like + cuda interop
+  - vishal spatial queries
+
 
 Revision History
 ================

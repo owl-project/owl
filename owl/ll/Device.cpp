@@ -1619,8 +1619,21 @@ namespace owl {
         group->children[childID] = geom;
       }
     }
-    
-    void Device::createUserGeomGroup(int groupID,
+
+    void Device::instanceGroupCreate(/*! the group we are defining */
+                                     int groupID,
+                                     /* list of children. list can be
+                                        omitted by passing a nullptr, but if
+                                        not null this must be a list of
+                                        'childCount' valid group ID */
+                                     int *childGroupIDs,
+                                     /*! number of children in this group */
+                                     int childCount)
+    {
+      PING; exit(0);
+    }
+
+    void Device::userGeomGroupCreate(int groupID,
                                      int *geomIDs,
                                      int geomCount)
     {

@@ -482,6 +482,16 @@ namespace owl {
       void createUserGeomGroup(int groupID,
                                int *geomIDs,
                                int geomCount);
+      /*! create a new instance group with given list of children */
+      void instanceGroupCreate(/*! the group we are defining */
+                               int groupID,
+                               /* list of children. list can be
+                                  omitted by passing a nullptr, but if
+                                  not null this must be a list of
+                                  'childCount' valid group ID */
+                               int *childGroupIDs,
+                               /*! number of children in this group */
+                               int childCount);
 
       /*! returns the given buffers device pointer */
       void *bufferGetPointer(int bufferID);

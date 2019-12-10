@@ -39,8 +39,6 @@ const char *outFileName = "ll06-rtow-mixedGeometries.png";
 const vec2i fbSize(1600,800);
 const vec3f lookFrom(13, 2, 3);
 const vec3f lookAt(0, 0, 0);
-// const vec3f lookFrom(-4.f,-3.f,-2.f);
-// const vec3f lookAt(0.f,0.f,0.f);
 const vec3f lookUp(0.f,1.f,0.f);
 const float fovy = 20.f;
 
