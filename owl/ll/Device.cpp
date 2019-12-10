@@ -1523,7 +1523,7 @@ namespace owl {
       context->popActive();
     }
     
-    void Device::createUserGeom(int geomID,
+    void Device::userGeomCreate(int geomID,
                                 /*! the "logical" hit group ID:
                                   will always count 0,1,2... evne
                                   if we are using multiple ray
@@ -1545,7 +1545,7 @@ namespace owl {
       assert("check 'new' was successful" && geoms[geomID] != nullptr);
     }
     
-    void Device::createTrianglesGeom(int geomID,
+    void Device::trianglesGeomCreate(int geomID,
                                      /*! the "logical" hit group ID:
                                        will always count 0,1,2... evne
                                        if we are using multiple ray
@@ -1570,10 +1570,10 @@ namespace owl {
       'grow' or a 'shrink', but 'shrink' is only allowed if all
       geoms that would get 'lost' have alreay been
       destroyed */
-    void Device::reallocGroups(size_t newCount)
+    void Device::allocGroups(size_t newCount)
     {
       for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
-        assert("realloc would lose a geom that was not properly destroyed" &&
+        assert("alloc would lose a geom that was not properly destroyed" &&
                groups[idxWeWouldLose] == nullptr);
       groups.resize(newCount);
     }
@@ -1581,15 +1581,15 @@ namespace owl {
       'grow' or a 'shrink', but 'shrink' is only allowed if all
       buffer handles that would get 'lost' have alreay been
       destroyed */
-    void Device::reallocBuffers(size_t newCount)
+    void Device::allocBuffers(size_t newCount)
     {
       for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
-        assert("realloc would lose a geom that was not properly destroyed" &&
+        assert("alloc would lose a geom that was not properly destroyed" &&
                buffers[idxWeWouldLose] == nullptr);
       buffers.resize(newCount);
     }
 
-    void Device::createTrianglesGeomGroup(int groupID,
+    void Device::trianglesGeomGroupCreate(int groupID,
                                           int *geomIDs,
                                           int geomCount)
     {

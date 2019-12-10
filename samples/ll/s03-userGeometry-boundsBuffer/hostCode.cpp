@@ -112,15 +112,15 @@ int main(int ac, char **av)
          BOUNDS_BUFFER_110,
          BOUNDS_BUFFER_111,
          NUM_BUFFERS };
-  ll->reallocBuffers(NUM_BUFFERS);
+  ll->allocBuffers(NUM_BUFFERS);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  ll->reallocGeoms(8);
+  ll->allocGeoms(8);
   for (int i=0;i<8;i++) {
-    ll->createUserGeom(/* geom ID    */i,
+    ll->userGeomCreate(/* geom ID    */i,
                        /* type/PG ID */0,
                        /* numprims   */1);
     box3f sphereBounds = box3f()
@@ -136,9 +136,9 @@ int main(int ac, char **av)
   // ##################################################################
   
   enum { SPHERES_GROUP=0,NUM_GROUPS };
-  ll->reallocGroups(NUM_GROUPS);
+  ll->allocGroups(NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  ll->createUserGeomGroup(/* group ID */SPHERES_GROUP,
+  ll->userGeomGroupCreate(/* group ID */SPHERES_GROUP,
                           /* geoms in group, pointer */ geomsInGroup,
                           /* geoms in group, count   */ 8);
   // in this mode, we supply the boudns through a buffer, so don't

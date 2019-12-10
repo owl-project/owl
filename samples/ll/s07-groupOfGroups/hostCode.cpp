@@ -313,7 +313,7 @@ int main(int ac, char **av)
          METAL_BOXES_INDEX_BUFFER,
 
          NUM_BUFFERS };
-  ll->reallocBuffers(NUM_BUFFERS);
+  ll->allocBuffers(NUM_BUFFERS);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
@@ -326,24 +326,24 @@ int main(int ac, char **av)
          DIELECTRIC_BOXES_GEOM,
          METAL_BOXES_GEOM,
          NUM_GEOMS };
-  ll->reallocGeoms(NUM_GEOMS);
+  ll->allocGeoms(NUM_GEOMS);
 
   // ----------- the spheres -----------
-  ll->createUserGeom(/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
+  ll->userGeomCreate(/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
                      /* type/PG ID */LAMBERTIAN_SPHERES_TYPE,
                      /* numprims   */lambertianSpheres.size());
   ll->createDeviceBuffer(LAMBERTIAN_SPHERES_BUFFER,
                          lambertianSpheres.size(),
                          sizeof(lambertianSpheres[0]),
                          lambertianSpheres.data());
-  ll->createUserGeom(/* geom ID    */DIELECTRIC_SPHERES_GEOM,
+  ll->userGeomCreate(/* geom ID    */DIELECTRIC_SPHERES_GEOM,
                      /* type/PG ID */DIELECTRIC_SPHERES_TYPE,
                      /* numprims   */dielectricSpheres.size());
   ll->createDeviceBuffer(DIELECTRIC_SPHERES_BUFFER,
                          dielectricSpheres.size(),
                          sizeof(dielectricSpheres[0]),
                          dielectricSpheres.data());
-  ll->createUserGeom(/* geom ID    */METAL_SPHERES_GEOM,
+  ll->userGeomCreate(/* geom ID    */METAL_SPHERES_GEOM,
                      /* type/PG ID */METAL_SPHERES_TYPE,
                      /* numprims   */metalSpheres.size());
   ll->createDeviceBuffer(METAL_SPHERES_BUFFER,
@@ -352,11 +352,11 @@ int main(int ac, char **av)
                          metalSpheres.data());
 
   // ----------- the boxes -----------
-  ll->createTrianglesGeom(/* geom ID    */LAMBERTIAN_BOXES_GEOM,
+  ll->trianglesGeomCreate(/* geom ID    */LAMBERTIAN_BOXES_GEOM,
                           /* type/PG ID */LAMBERTIAN_BOXES_TYPE);
-  ll->createTrianglesGeom(/* geom ID    */DIELECTRIC_BOXES_GEOM,
+  ll->trianglesGeomCreate(/* geom ID    */DIELECTRIC_BOXES_GEOM,
                           /* type/PG ID */DIELECTRIC_BOXES_TYPE);
-  ll->createTrianglesGeom(/* geom ID    */METAL_BOXES_GEOM,
+  ll->trianglesGeomCreate(/* geom ID    */METAL_BOXES_GEOM,
                           /* type/PG ID */METAL_BOXES_TYPE);
 
   // indices
@@ -440,14 +440,14 @@ int main(int ac, char **av)
          BOXES_GROUP,
          WORLD_GROUP,
          NUM_GROUPS };
-  ll->reallocGroups(NUM_GROUPS);
+  ll->allocGroups(NUM_GROUPS);
 
   // ----------- first, the spheres group -----------
   int geomsInSpheresGroup[] =
     { LAMBERTIAN_SPHERES_GEOM,
       DIELECTRIC_SPHERES_GEOM,
       METAL_SPHERES_GEOM };
-  ll->createUserGeomGroup(/* group ID */SPHERES_GROUP,
+  ll->userGeomGroupCreate(/* group ID */SPHERES_GROUP,
                           /* geoms in group, pointer */ geomsInSpheresGroup,
                           /* geoms in group, count   */ 3);
   ll->groupBuildPrimitiveBounds
@@ -479,7 +479,7 @@ int main(int ac, char **av)
     = { LAMBERTIAN_BOXES_GEOM,
         DIELECTRIC_BOXES_GEOM,
         METAL_BOXES_GEOM };
-  ll->createTrianglesGeomGroup(/* group ID */BOXES_GROUP,
+  ll->trianglesGeomGroupCreate(/* group ID */BOXES_GROUP,
                                /* geoms in group, pointer */ geomsInBoxesGroup,
                                /* geoms in group, count   */ 3);
   ll->groupBuildAccel(BOXES_GROUP);

@@ -434,15 +434,15 @@ namespace owl {
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed */
-      void reallocGeoms(size_t newCount)
+      void allocGeoms(size_t newCount)
       {
         for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)geoms.size();idxWeWouldLose++)
-          assert("realloc would lose a geom that was not properly destroyed" &&
+          assert("alloc would lose a geom that was not properly destroyed" &&
                  geoms[idxWeWouldLose] == nullptr);
         geoms.resize(newCount);
       }
 
-      void createUserGeom(int geomID,
+      void userGeomCreate(int geomID,
                           /*! the "logical" hit group ID:
                             will always count 0,1,2... evne
                             if we are using multiple ray
@@ -453,7 +453,7 @@ namespace owl {
                           int geomTypeID,
                           int numPrims);
 
-      void createTrianglesGeom(int geomID,
+      void trianglesGeomCreate(int geomID,
                                /*! the "logical" hit group ID:
                                  will always count 0,1,2... evne
                                  if we are using multiple ray
@@ -467,19 +467,19 @@ namespace owl {
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed */
-      void reallocGroups(size_t newCount);
+      void allocGroups(size_t newCount);
 
       /*! resize the array of buffer handles. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         buffer handles that would get 'lost' have alreay been
         destroyed */
-      void reallocBuffers(size_t newCount);
+      void allocBuffers(size_t newCount);
       
-      void createTrianglesGeomGroup(int groupID,
+      void trianglesGeomGroupCreate(int groupID,
                                     int *geomIDs,
                                     int geomCount);
 
-      void createUserGeomGroup(int groupID,
+      void userGeomGroupCreate(int groupID,
                                int *geomIDs,
                                int geomCount);
       /*! create a new instance group with given list of children */
