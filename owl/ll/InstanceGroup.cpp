@@ -103,7 +103,7 @@ namespace owl {
       OptixAccelBuildOptions       accelOptions   {};
       //! the N build inputs that go into the builder
       std::vector<OptixBuildInput> buildInputs(children.size());
-      std::vector<OptixInstance>   optixInstances;
+      std::vector<OptixInstance>   optixInstances(children.size());
 
      // for now we use the same flags for all geoms
       uint32_t instanceGroupInputFlags[1] = { 0 };
