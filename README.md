@@ -43,6 +43,9 @@ Revision History
 v0.4.x - Instances
 ------------------
 
+*v0.4.1*: example `ll06-rtow-mixedGeometries.png` 
+ working w/ manual sucessive traced into two different accels
+
 *v0.4.0*: new way of building SBT now based on groups
 
 - api change: allocated geom groups now have their program size
@@ -54,7 +57,7 @@ v0.4.x - Instances
 - can handle more than one group; for non-0 group has to query
   geomGroupGetSbtOffset() and pass that value to trace
   
-- new sbt structur no longer uses 'one entry per geom' (that unfortunately
+- new sbt structure no longer uses 'one entry per geom' (that unfortunately
   doesnt' work), but now builds sbt by iterating over all groups, and
   putting each groups' geom children in one block before putting
   next group. groups store the allcoated SBT offset for later use
