@@ -80,7 +80,12 @@ namespace owl {
 
     void InstanceGroup::destroyAccel(Context *context) 
     {
-      OWL_NOTIMPLEMENTED;
+      context->pushActive();
+      if (traversable) {
+        bvhMemory.free();
+        traversable = 0;
+      }
+      context->popActive();
     }
     
     void InstanceGroup::buildAccel(Context *context) 
