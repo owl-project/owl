@@ -212,8 +212,8 @@ vec3f missColor(const Ray &ray)
 
 OPTIX_MISS_PROGRAM(miss)()
 {
-  PerRayData &prd = owl::getPRD<PerRayData>();
-  prd.out.scatterEvent = rayDidntHitAnything;
+  // PerRayData &prd = owl::getPRD<PerRayData>();
+  // prd.out.scatterEvent = rayDidntHitAnything;
 }
 
 
@@ -226,11 +226,23 @@ vec3f tracePath(const RayGenData &self,
   
   /* iterative version of recursion, up to depth 50 */
   for (int depth=0;depth<50;depth++) {
-    owl::trace(/*accel to trace against*/self.world,
+    prd.out.scatterEvent = rayDidntHitAnything;
+    owl::trace(/*accel to trace against*/self.boxesAccel,
                /*the ray to trace*/ ray,
                /*numRayTypes*/1,
                /*prd*/prd,
-               self.worldSBTOffset);
+               self.boxesSBTOffset);
+
+    if (prd.out.scatterEvent != rayDidntHitAnything) {
+      vec3f dist = prd.out.scattered_origin - ray.origin;
+      ray.tmax = gdt::length(dist);
+    }
+    owl::trace(/*accel to trace against*/self.spheresAccel,
+               /*the ray to trace*/ ray,
+               /*numRayTypes*/1,
+               /*prd*/prd,
+               self.spheresSBTOffset);
+    
     
     if (prd.out.scatterEvent == rayDidntHitAnything)
       /* ray got 'lost' to the environment - 'light' it with miss
@@ -283,9 +295,9 @@ OPTIX_RAYGEN_PROGRAM(rayGen)()
       + screen.u * self.camera.horizontal
       + screen.v * self.camera.vertical
       - self.camera.origin;
-  
+    
     ray.origin = origin;
-    ray.direction = direction;
+    ray.direction = normalize(direction);
 
     color += tracePath(self, ray, prd);
   }

@@ -105,8 +105,10 @@ struct RayGenData
   int deviceCount;
   uint32_t *fbPtr;
   vec2i  fbSize;
-  OptixTraversableHandle world;
-  int worldSBTOffset;
+  OptixTraversableHandle boxesAccel;
+  int boxesSBTOffset;
+  OptixTraversableHandle spheresAccel;
+  int spheresSBTOffset;
   
   struct {
     vec3f origin;

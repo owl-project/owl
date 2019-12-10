@@ -4,23 +4,6 @@ variables:
 stages:
   - build
 
-build-win10-optix:
-  stage: build
-  tags:
-    - win10-optix
-  before_script:
-    - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/VC/Auxiliary/Build/vcvarsall.bat x64
-  script:
-    - mkdir bla
-    - cd bla
-    - echo %PATH%
-    - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/VC/Auxiliary/Build/vcvarsall.bat x64
-    - echo %PATH%
-    - c:/"Program Files"/CMake/bin/cmake.exe ..
-    - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/Common7/IDE/devenv.com /clean
-    - C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/Community/Common7/IDE/devenv.com /build Debug Optix-OWL.sln
-    - devenv.exe /build Debug Optix-OWL.sln
-
 build-ubuntu18-release:
   stage: build
   tags:
@@ -31,6 +14,7 @@ build-ubuntu18-release:
     - export PATH=$PATH:/usr/local/cuda/bin
     - cmake .. -DCMAKE_BUILD_TYPE=Release -DOptiX_INSTALL_DIR=/usr/local/NVIDIA-OptiX-SDK-7.0.0-linux64
     - make
+    - make test
 
 build-ubuntu18-debug:
   stage: build
@@ -42,4 +26,5 @@ build-ubuntu18-debug:
     - export PATH=$PATH:/usr/local/cuda/bin
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DOptiX_INSTALL_DIR=/usr/local/NVIDIA-OptiX-SDK-7.0.0-linux64
     - make
+    - make test
 
