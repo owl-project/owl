@@ -874,10 +874,7 @@ namespace owl {
     uint32_t Device::groupGetSBTOffset(int groupID)
     {
       Group *group = checkGetGroup(groupID);
-      if (group->containsInstances())
-        return 0;
-      else
-        return ((GeomGroup*)group)->sbtOffset;
+      return group->getSBTOffset();
     }
     
     

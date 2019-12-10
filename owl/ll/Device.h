@@ -274,6 +274,7 @@ namespace owl {
 
       virtual void destroyAccel(Context *context) = 0;
       virtual void buildAccel(Context *context) = 0;
+      virtual int  getSBTOffset() const = 0;
       
       // std::vector<int>       elements;
       OptixTraversableHandle traversable = 0;
@@ -287,13 +288,13 @@ namespace owl {
     };
     struct InstanceGroup : public Group {
       InstanceGroup(size_t numChildren)
-        : children(numChildren),
-          transforms(numChildren)
+        : children(numChildren)
       {}
       virtual bool containsGeom() { return false; }
       
       virtual void destroyAccel(Context *context) override;
       virtual void buildAccel(Context *context) override;
+      virtual int  getSBTOffset() const override { return 0; }
 
       std::vector<Group *>  children;
       std::vector<affine3f> transforms;
@@ -311,6 +312,7 @@ namespace owl {
       
       virtual bool containsGeom() { return true; }
       virtual PrimType primType() = 0;
+      virtual int  getSBTOffset() const override { return sbtOffset; }
 
       std::vector<Geom *> children;
       const size_t sbtOffset;

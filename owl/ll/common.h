@@ -44,6 +44,9 @@ namespace owl {
   using gdt::linear3f;
   using gdt::affine3f;
 
+  using gdt::prettyNumber;
+  using gdt::prettyDouble;
+  
   template<size_t alignment>
   inline size_t smallestMultipleOf(size_t unalignedSize)
   {
