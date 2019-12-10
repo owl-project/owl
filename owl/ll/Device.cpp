@@ -492,6 +492,7 @@ namespace owl {
 
     void Device::buildOptixPrograms()
     {
+      context->pushActive();
       OptixProgramGroupOptions pgOptions = {};
       OptixProgramGroupDesc    pgDesc    = {};
 
@@ -654,6 +655,7 @@ namespace owl {
           }
         }
       }
+      context->popActive();
     }
     
     void Device::destroyOptixPrograms()

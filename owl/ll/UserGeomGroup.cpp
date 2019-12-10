@@ -44,6 +44,7 @@ namespace owl {
                                            WriteUserGeomBoundsDataCB cb,
                                            void *cbData)
     {
+      context->pushActive();
       UserGeomGroup *ugg
         = checkGetUserGeomGroup(groupID);
       
@@ -94,6 +95,7 @@ namespace owl {
         cudaDeviceSynchronize();
       }
       tempMem.free();
+      context->popActive();
     }
 
     void UserGeomGroup::destroyAccel(Context *context) 
