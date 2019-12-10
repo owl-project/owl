@@ -69,6 +69,7 @@ int main(int ac, char **av)
   
   enum { SPHERE_GEOM_TYPE=0,NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
+  ll->geomTypeCreate(SPHERE_GEOM_TYPE,sizeof(SphereGeomData));
   ll->setGeomTypeClosestHit(/*geom type ID*/SPHERE_GEOM_TYPE,
                             /*ray type  */0,
                             /*module:*/0,

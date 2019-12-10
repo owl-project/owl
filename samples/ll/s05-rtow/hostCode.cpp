@@ -118,6 +118,9 @@ int main(int ac, char **av)
          LAMBERTIAN_SPHERES_TYPE,
          NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
+  ll->geomTypeCreate(METAL_SPHERES_TYPE,sizeof(MetalSpheresGeom));
+  ll->geomTypeCreate(LAMBERTIAN_SPHERES_TYPE,sizeof(LambertianSpheresGeom));
+  ll->geomTypeCreate(DIELECTRIC_SPHERES_TYPE,sizeof(DielectricSpheresGeom));
   ll->setGeomTypeClosestHit(/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
