@@ -41,6 +41,8 @@ namespace owl {
   using gdt::vec2i;
   using gdt::vec3i;
   using gdt::box3f;
+  using gdt::linear3f;
+  using gdt::affine3f;
 
   template<size_t alignment>
   inline size_t smallestMultipleOf(size_t unalignedSize)

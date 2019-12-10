@@ -21,6 +21,10 @@ add_library(owl-ll
 
   Device.h
   Device.cpp
+
+  TrianglesGeomGroup.cpp
+  UserGeomGroup.cpp
+  InstanceGroup.cpp
   
   DeviceGroup.h
   DeviceGroup.cpp

@@ -275,7 +275,7 @@ namespace owl {
       virtual void destroyAccel(Context *context) = 0;
       virtual void buildAccel(Context *context) = 0;
       
-      std::vector<int>       elements;
+      // std::vector<int>       elements;
       OptixTraversableHandle traversable = 0;
       DeviceMemory           bvhMemory;
 
@@ -286,13 +286,22 @@ namespace owl {
       int numTimesReferenced = 0;
     };
     struct InstanceGroup : public Group {
+      InstanceGroup(size_t numChildren)
+        : children(numChildren),
+          transforms(numChildren)
+      {}
       virtual bool containsGeom() { return false; }
       
-      virtual void destroyAccel(Context *context) override
-      { OWL_NOTIMPLEMENTED; }
-      virtual void buildAccel(Context *context) override
-      { OWL_NOTIMPLEMENTED; }
+      virtual void destroyAccel(Context *context) override;
+      virtual void buildAccel(Context *context) override;
+
+      std::vector<Group *>  children;
+      std::vector<affine3f> transforms;
     };
+
+    /*! \warning currently using std::vector of *geoms*, but will have
+        to eventually use geom *IDs* if we want(?) to allow side
+        effects when changing geometries */
     struct GeomGroup : public Group {
       GeomGroup(size_t numChildren,
                 size_t sbtOffset)

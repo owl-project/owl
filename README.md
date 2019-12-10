@@ -37,7 +37,6 @@ TODO
   - optix prime like + cuda interop
   - vishal spatial queries
 
-
 Revision History
 ================
 
