@@ -124,7 +124,7 @@ void addRandomBox(BoxArray &boxes,
   const vec3f U = normalize(randomPointInUnitSphere());
   gdt::affine3f xfm = gdt::frame(U);
   xfm = gdt::affine3f(gdt::linear3f::rotate(U,rnd())) * xfm;
-  xfm = gdt::affine3f(gdt::linear3f::scale(.8f*size)) * xfm;
+  xfm = gdt::affine3f(gdt::linear3f::scale(.7f*size)) * xfm;
   xfm = gdt::affine3f(gdt::affine3f::translate(center)) * xfm;
   
   const int startIndex = boxes.vertices.size();
@@ -145,24 +145,28 @@ void createScene()
       float choose_mat = rnd();
       float choose_shape = rnd();
       vec3f center(a + rnd(), 0.2f, b + rnd());
-      if (choose_mat < 0.8f)
+      if (choose_mat < 0.8f) {
         if (choose_shape > .5f) {
-          addRandomBox(lambertianBoxes,center,.2f,Lambertian{rnd3f()*rnd3f()});
+          addRandomBox(lambertianBoxes,center,.2f,
+                       Lambertian{rnd3f()*rnd3f()});
         } else
           lambertianSpheres.push_back({Sphere{center, 0.2f},
-                                       Lambertian{rnd3f()*rnd3f()}});
-      else if (choose_mat < 0.95f) 
+                Lambertian{rnd3f()*rnd3f()}});
+      } else if (choose_mat < 0.95f) {
         if (choose_shape > .5f) {
-          addRandomBox(metalBoxes,center,.2f,Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()});
+          addRandomBox(metalBoxes,center,.2f,
+                       Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()});
         } else
           metalSpheres.push_back({Sphere{center, 0.2f},
-                                  Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()}});
-      else 
+                Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()}});
+      } else {
         if (choose_shape > .5f) {
-          addRandomBox(dielectricBoxes,center,.2f,Dielectric{1.5f});
+          addRandomBox(dielectricBoxes,center,.2f,
+                       Dielectric{1.5f});
         } else
           dielectricSpheres.push_back({Sphere{center, 0.2f},
-                                       Dielectric{1.5f}});
+                Dielectric{1.5f}});
+      }
     }
   }
   dielectricSpheres.push_back({Sphere{vec3f(0.f, 1.f, 0.f), 1.f},
@@ -559,8 +563,10 @@ int main(int ac, char **av)
        rg->deviceCount = ll->getDeviceCount();
        rg->fbSize = fbSize;
        rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-       rg->world  = ll->groupGetTraversable(BOXES_GROUP,devID);
-       rg->worldSBTOffset  = ll->groupGetSBTOffset(BOXES_GROUP);
+       rg->boxesAccel  = ll->groupGetTraversable(BOXES_GROUP,devID);
+       rg->boxesSBTOffset  = ll->groupGetSBTOffset(BOXES_GROUP);
+       rg->spheresAccel  = ll->groupGetTraversable(SPHERES_GROUP,devID);
+       rg->spheresSBTOffset  = ll->groupGetSBTOffset(SPHERES_GROUP);
 
        const float vfov = fovy;
        const vec3f vup = lookUp;
