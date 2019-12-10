@@ -141,7 +141,7 @@ namespace owl {
       std::vector<HitGroupPG> perRayType;
       Program boundsProg;
       size_t  boundsProgDataSize = 0; // do we still need this!?
-      size_t  hitProgDataSize = 0;
+      size_t  hitProgDataSize = (size_t)-1;
       CUfunction boundsFuncKernel;
     };
     
@@ -421,6 +421,9 @@ namespace owl {
         number of ray types to be used */
       void allocGeomTypes(size_t count);
 
+      void geomTypeCreate(int geomTypeID,
+                          size_t programDataSize);
+        
       void allocRayGens(size_t count);
       /*! each geom will always use "numRayTypes" successive hit
         groups (one per ray type), so this must be a multiple of the

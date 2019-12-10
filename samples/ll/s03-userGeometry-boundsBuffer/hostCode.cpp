@@ -150,10 +150,8 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  const size_t maxHitGroupDataSize = sizeof(SphereGeomData);
-  ll->sbtGeomTypesBuild
-    (maxHitGroupDataSize,
-     [&](uint8_t *output,int devID,int geomID,int childID) {
+  ll->sbtHitProgsBuild
+    ([&](uint8_t *output,int devID,int geomID,int childID) {
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;

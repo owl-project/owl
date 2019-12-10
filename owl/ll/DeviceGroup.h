@@ -122,6 +122,9 @@ namespace owl {
       void allocRayGens(size_t count);
       void allocMissProgs(size_t count);
 
+      void geomTypeCreate(int geomTypeID,
+                          size_t programDataSize);
+                          
       /*! set bounding box program for given geometry type, using a
           bounding box program to be called on the device. note that
           unlike other programs (intersect, closesthit, anyhit) these
@@ -132,7 +135,8 @@ namespace owl {
                                        int moduleID,
                                        const char *progName,
                                        size_t geomDataSize);
-      
+      void setGeomTypeProgramSize(int pgID,
+                                  size_t );
       void setGeomTypeClosestHit(int pgID,
                                  int rayTypeID,
                                  int moduleID,

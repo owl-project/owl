@@ -165,10 +165,8 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
-  ll->sbtGeomTypesBuild
-    (maxHitGroupDataSize,
-     [&](uint8_t *output,int devID,int geomID,int rayID) {
+  ll->sbtHitProgsBuild
+    ([&](uint8_t *output,int devID,int geomID,int rayID) {
       TriangleGroupData &self = *(TriangleGroupData*)output;
       self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
       self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER_000+geomID,devID);

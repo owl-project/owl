@@ -263,13 +263,8 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  const size_t maxHitGroupDataSize
-    = max3(sizeof(MetalSpheresGeom),
-           sizeof(DielectricSpheresGeom),
-           sizeof(LambertianSpheresGeom));
-  ll->sbtGeomTypesBuild
-    (maxHitGroupDataSize,
-     [&](uint8_t *output,int devID,int geomID,int childID) {
+  ll->sbtHitProgsBuild
+    ([&](uint8_t *output,int devID,int geomID,int childID) {
        switch(geomID) {
        case LAMBERTIAN_SPHERES_GEOM:
          ((LambertianSpheresGeom*)output)->prims

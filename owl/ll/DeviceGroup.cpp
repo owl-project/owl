@@ -318,7 +318,16 @@ namespace owl {
         device->sbtHitProgsBuild(writeHitProgDataCB,
                                  callBackData);
     }
-    
+
+    void DeviceGroup::geomTypeCreate(int geomTypeID,
+                                     size_t programDataSize)
+    {
+      for (auto device : devices) 
+        device->geomTypeCreate(geomTypeID,
+                               programDataSize);
+    }
+                          
+
     void DeviceGroup::sbtRayGensBuild(WriteRayGenDataCB writeRayGenCB,
                                       void *callBackData)
     {

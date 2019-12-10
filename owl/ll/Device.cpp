@@ -196,6 +196,17 @@ namespace owl {
       }
     }
 
+
+    void Device::geomTypeCreate(int geomTypeID,
+                                size_t programDataSize)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      assert(geomType.hitProgDataSize == (size_t)-1);
+      geomType.hitProgDataSize = programDataSize;
+    }
+
     /*! set bounding box program for given geometry type, using a
       bounding box program to be called on the device. note that
       unlike other programs (intersect, closesthit, anyhit) these
@@ -1245,6 +1256,8 @@ namespace owl {
         maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
       }
       PRINT(maxHitProgDataSize);
+      assert("make sure all geoms had their program size set"
+             && maxHitProgDataSize != (size_t)-1);
       size_t numHitGroupEntries = sbt.rangeAllocator.maxAllocedID;
       size_t numHitGroupRecords = numHitGroupEntries*context->numRayTypes;
       size_t hitGroupRecordSize
@@ -1262,11 +1275,15 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
+      PING;
+      PRINT(groups.size());
       for (auto group : groups) {
         if (!group) continue;
         if (!group->containsGeom()) continue;
         GeomGroup *gg = (GeomGroup *)group;
         const int sbtOffset = gg->sbtOffset;
+        PRINT(sbtOffset);
+        PRINT(gg->children.size());
         for (int childID=0;childID<gg->children.size();childID++) {
           Geom *geom = gg->children[childID];
           if (!geom) continue;
@@ -1309,9 +1326,11 @@ namespace owl {
           }
         }
       }
+      PRINT(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       context->popActive();
+      PING;
       LOG_OK("done building (and uploading) sbt hit group records");
     }
       
