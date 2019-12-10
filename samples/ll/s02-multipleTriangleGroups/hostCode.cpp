@@ -81,6 +81,7 @@ int main(int ac, char **av)
   
   enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
+  ll->geomTypeCreate(TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
   ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
@@ -167,7 +168,7 @@ int main(int ac, char **av)
   // ----------- build hitgroups -----------
   ll->sbtHitProgsBuild
     ([&](uint8_t *output,int devID,int geomID,int rayID) {
-      TriangleGroupData &self = *(TriangleGroupData*)output;
+      TrianglesGeomData &self = *(TrianglesGeomData*)output;
       self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
       self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER_000+geomID,devID);
       self.color  = gdt::randomColor(geomID);
