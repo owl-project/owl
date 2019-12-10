@@ -16,6 +16,26 @@ Directory Structure
 Revision History
 ================
 
+v0.4.x - Instances
+------------------
+
+*v0.4.0*: new way of building SBT now based on groups
+
+- api change: allocated geom groups now have their program size
+  set in geomTypeCreate(), miss and raygen programs have it set in 
+  type rather than in sbt{raygen/miss}build (ie, program size now
+  for all types set exactly once in type, then max size computed during
+  sbt built)
+  
+- can handle more than one group; for non-0 group has to query
+  geomGroupGetSbtOffset() and pass that value to trace
+  
+- new sbt structur no longer uses 'one entry per geom' (that unfortunately
+  doesnt' work), but now builds sbt by iterating over all groups, and
+  putting each groups' geom children in one block before putting
+  next group. groups store the allcoated SBT offset for later use
+  by instances
+
 v0.3.x - User Geometries
 ------------------------
 
