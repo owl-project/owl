@@ -159,16 +159,16 @@ namespace owl {
       'grow' or a 'shrink', but 'shrink' is only allowed if all
       geoms that would get 'lost' have alreay been
       destroyed */
-    void DeviceGroup::reallocGroups(size_t newCount)
-    { for (auto device : devices) device->reallocGroups(newCount); }
+    void DeviceGroup::allocGroups(size_t newCount)
+    { for (auto device : devices) device->allocGroups(newCount); }
       
-    void DeviceGroup::reallocBuffers(size_t newCount)
-    { for (auto device : devices) device->reallocBuffers(newCount); }
+    void DeviceGroup::allocBuffers(size_t newCount)
+    { for (auto device : devices) device->allocBuffers(newCount); }
       
-    void DeviceGroup::reallocGeoms(size_t newCount)
-    { for (auto device : devices) device->reallocGeoms(newCount); }
+    void DeviceGroup::allocGeoms(size_t newCount)
+    { for (auto device : devices) device->allocGeoms(newCount); }
 
-    void DeviceGroup::createUserGeom(int geomID,
+    void DeviceGroup::userGeomCreate(int geomID,
                                      /*! the "logical" hit group ID:
                                        will always count 0,1,2... evne
                                        if we are using multiple ray
@@ -180,10 +180,10 @@ namespace owl {
                                      int numPrims)
     {
       for (auto device : devices)
-        device->createUserGeom(geomID,logicalHitGroupID,numPrims);
+        device->userGeomCreate(geomID,logicalHitGroupID,numPrims);
     }
       
-    void DeviceGroup::createTrianglesGeom(int geomID,
+    void DeviceGroup::trianglesGeomCreate(int geomID,
                                           /*! the "logical" hit group ID:
                                             will always count 0,1,2... evne
                                             if we are using multiple ray
@@ -194,10 +194,10 @@ namespace owl {
                                           int logicalHitGroupID)
     {
       for (auto device : devices)
-        device->createTrianglesGeom(geomID,logicalHitGroupID);
+        device->trianglesGeomCreate(geomID,logicalHitGroupID);
     }
 
-    void DeviceGroup::createTrianglesGeomGroup(int groupID,
+    void DeviceGroup::trianglesGeomGroupCreate(int groupID,
                                                int *geomIDs,
                                                int geomCount)
     {
@@ -206,11 +206,11 @@ namespace owl {
               (geomIDs != nullptr && geomCount >  0)));
         
       for (auto device : devices) {
-        device->createTrianglesGeomGroup(groupID,geomIDs,geomCount);
+        device->trianglesGeomGroupCreate(groupID,geomIDs,geomCount);
       }
     }
 
-    void DeviceGroup::createUserGeomGroup(int groupID,
+    void DeviceGroup::userGeomGroupCreate(int groupID,
                                           int *geomIDs,
                                           int geomCount)
     {
@@ -219,7 +219,7 @@ namespace owl {
               (geomIDs != nullptr && geomCount >  0)));
         
       for (auto device : devices) {
-        device->createUserGeomGroup(groupID,geomIDs,geomCount);
+        device->userGeomGroupCreate(groupID,geomIDs,geomCount);
       }
     }
 
@@ -367,6 +367,23 @@ namespace owl {
                   << GDT_TERMINAL_DEFAULT << std::endl;
         exit(0);
       }
+    }
+
+    /*! create a new instance group with given list of children */
+    void DeviceGroup::instanceGroupCreate(/*! the group we are defining */
+                                          int groupID,
+                                          /* list of children. list can be
+                                             omitted by passing a nullptr, but if
+                                             not null this must be a list of
+                                             'childCount' valid group ID */
+                                          int *childGroupIDs,
+                                          /*! number of children in this group */
+                                          int childCount)
+    {
+      for (auto device : devices)
+        device->instanceGroupCreate(groupID,
+                                    childGroupIDs,
+                                    childCount);
     }
 
     /*! returns the given device's buffer address on the specified

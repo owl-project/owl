@@ -120,14 +120,14 @@ int main(int ac, char **av)
          VERTEX_BUFFER_110,
          VERTEX_BUFFER_111,
          FRAME_BUFFER,NUM_BUFFERS };
-  ll->reallocBuffers(NUM_BUFFERS);
+  ll->allocBuffers(NUM_BUFFERS);
   ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  ll->reallocGeoms(8);
+  ll->allocGeoms(8);
   for (int i=0;i<8;i++) {
     vec3f delta((i&1) ? -3:+3,
                 (i&2) ? -3:+3,
@@ -138,7 +138,7 @@ int main(int ac, char **av)
     ll->createDeviceBuffer(VERTEX_BUFFER_000+i,NUM_VERTICES,
                            sizeof(vec3f),vertices.data());
     
-    ll->createTrianglesGeom(/* geom ID    */i,
+    ll->trianglesGeomCreate(/* geom ID    */i,
                             /* type/PG ID */0);
     ll->trianglesGeomSetVertexBuffer(/* geom ID     */ i,
                                      /* buffer ID */VERTEX_BUFFER_000+i,
@@ -153,9 +153,9 @@ int main(int ac, char **av)
   // ##################################################################
   
   enum { TRIANGLES_GROUP=0,NUM_GROUPS };
-  ll->reallocGroups(NUM_GROUPS);
+  ll->allocGroups(NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  ll->createTrianglesGeomGroup(/* group ID */TRIANGLES_GROUP,
+  ll->trianglesGeomGroupCreate(/* group ID */TRIANGLES_GROUP,
                                /* geoms in group, pointer */ geomsInGroup,
                                /* geoms in group, count   */ 8);
   ll->groupBuildAccel(TRIANGLES_GROUP);

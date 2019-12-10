@@ -274,8 +274,9 @@ namespace owl {
 
       virtual void destroyAccel(Context *context) = 0;
       virtual void buildAccel(Context *context) = 0;
+      virtual int  getSBTOffset() const = 0;
       
-      std::vector<int>       elements;
+      // std::vector<int>       elements;
       OptixTraversableHandle traversable = 0;
       DeviceMemory           bvhMemory;
 
@@ -286,13 +287,22 @@ namespace owl {
       int numTimesReferenced = 0;
     };
     struct InstanceGroup : public Group {
+      InstanceGroup(size_t numChildren)
+        : children(numChildren)
+      {}
       virtual bool containsGeom() { return false; }
       
-      virtual void destroyAccel(Context *context) override
-      { OWL_NOTIMPLEMENTED; }
-      virtual void buildAccel(Context *context) override
-      { OWL_NOTIMPLEMENTED; }
+      virtual void destroyAccel(Context *context) override;
+      virtual void buildAccel(Context *context) override;
+      virtual int  getSBTOffset() const override { return 0; }
+
+      std::vector<Group *>  children;
+      std::vector<affine3f> transforms;
     };
+
+    /*! \warning currently using std::vector of *geoms*, but will have
+        to eventually use geom *IDs* if we want(?) to allow side
+        effects when changing geometries */
     struct GeomGroup : public Group {
       GeomGroup(size_t numChildren,
                 size_t sbtOffset)
@@ -302,6 +312,7 @@ namespace owl {
       
       virtual bool containsGeom() { return true; }
       virtual PrimType primType() = 0;
+      virtual int  getSBTOffset() const override { return sbtOffset; }
 
       std::vector<Geom *> children;
       const size_t sbtOffset;
@@ -434,15 +445,15 @@ namespace owl {
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed */
-      void reallocGeoms(size_t newCount)
+      void allocGeoms(size_t newCount)
       {
         for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)geoms.size();idxWeWouldLose++)
-          assert("realloc would lose a geom that was not properly destroyed" &&
+          assert("alloc would lose a geom that was not properly destroyed" &&
                  geoms[idxWeWouldLose] == nullptr);
         geoms.resize(newCount);
       }
 
-      void createUserGeom(int geomID,
+      void userGeomCreate(int geomID,
                           /*! the "logical" hit group ID:
                             will always count 0,1,2... evne
                             if we are using multiple ray
@@ -453,7 +464,7 @@ namespace owl {
                           int geomTypeID,
                           int numPrims);
 
-      void createTrianglesGeom(int geomID,
+      void trianglesGeomCreate(int geomID,
                                /*! the "logical" hit group ID:
                                  will always count 0,1,2... evne
                                  if we are using multiple ray
@@ -467,21 +478,31 @@ namespace owl {
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed */
-      void reallocGroups(size_t newCount);
+      void allocGroups(size_t newCount);
 
       /*! resize the array of buffer handles. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         buffer handles that would get 'lost' have alreay been
         destroyed */
-      void reallocBuffers(size_t newCount);
+      void allocBuffers(size_t newCount);
       
-      void createTrianglesGeomGroup(int groupID,
+      void trianglesGeomGroupCreate(int groupID,
                                     int *geomIDs,
                                     int geomCount);
 
-      void createUserGeomGroup(int groupID,
+      void userGeomGroupCreate(int groupID,
                                int *geomIDs,
                                int geomCount);
+      /*! create a new instance group with given list of children */
+      void instanceGroupCreate(/*! the group we are defining */
+                               int groupID,
+                               /* list of children. list can be
+                                  omitted by passing a nullptr, but if
+                                  not null this must be a list of
+                                  'childCount' valid group ID */
+                               int *childGroupIDs,
+                               /*! number of children in this group */
+                               int childCount);
 
       /*! returns the given buffers device pointer */
       void *bufferGetPointer(int bufferID);

@@ -15,28 +15,19 @@
 # ======================================================================== #
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
-   
-add_library(owl-ll
-  common.h
-
-  Device.h
-  Device.cpp
-
-  TrianglesGeomGroup.cpp
-  UserGeomGroup.cpp
-  InstanceGroup.cpp
-  
-  DeviceGroup.h
-  DeviceGroup.cpp
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
   )
-target_link_libraries(owl-ll
-  owl-common
-  ${CUDA_LIBRARIES}
-  ${CUDA_CUDA_LIBRARY}
+add_executable(ll07-groupOfGroups
+  hostCode.cpp
+  ${ptxCode}
   )
-
-
-
+target_link_libraries(ll07-groupOfGroups
+  owl-ll
+  )
+add_test(ll07-groupOfGroups
+  ${CMAKE_BINARY_DIR}/ll07-groupOfGroups
+  )
 
 
 

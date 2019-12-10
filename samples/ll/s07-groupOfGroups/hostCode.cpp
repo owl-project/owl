@@ -35,7 +35,7 @@
 
 extern "C" char ptxCode[];
 
-const char *outFileName = "ll06-rtow-mixedGeometries.png";
+const char *outFileName = "ll07-groupOfGroups.png";
 const vec2i fbSize(1600,800);
 const vec3f lookFrom(13, 2, 3);
 const vec3f lookAt(0, 0, 0);
@@ -92,14 +92,14 @@ void addRandomBox(BoxArray &boxes,
   const int NUM_VERTICES = 8;
   static const vec3f unitBoxVertices[NUM_VERTICES] =
     {
-      {-1.f, -1.f, -1.f},
-      {+1.f, -1.f, -1.f},
-      {+1.f, +1.f, -1.f},
-      {-1.f, +1.f, -1.f},
-      {-1.f, +1.f, +1.f},
-      {+1.f, +1.f, +1.f},
-      {+1.f, -1.f, +1.f},
-      {-1.f, -1.f, +1.f},
+     {-1.f, -1.f, -1.f},
+     {+1.f, -1.f, -1.f},
+     {+1.f, +1.f, -1.f},
+     {-1.f, +1.f, -1.f},
+     {-1.f, +1.f, +1.f},
+     {+1.f, +1.f, +1.f},
+     {+1.f, -1.f, +1.f},
+     {-1.f, -1.f, +1.f},
     };
 
   const int NUM_INDICES = 12;
@@ -149,21 +149,21 @@ void createScene()
                        Lambertian{rnd3f()*rnd3f()});
         } else
           lambertianSpheres.push_back({Sphere{center, 0.2f},
-                Lambertian{rnd3f()*rnd3f()}});
+                                       Lambertian{rnd3f()*rnd3f()}});
       } else if (choose_mat < 0.95f) {
         if (choose_shape > .5f) {
           addRandomBox(metalBoxes,center,.2f,
                        Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()});
         } else
           metalSpheres.push_back({Sphere{center, 0.2f},
-                Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()}});
+                                  Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()}});
       } else {
         if (choose_shape > .5f) {
           addRandomBox(dielectricBoxes,center,.2f,
                        Dielectric{1.5f});
         } else
           dielectricSpheres.push_back({Sphere{center, 0.2f},
-                Dielectric{1.5f}});
+                                       Dielectric{1.5f}});
       }
     }
   }
@@ -435,18 +435,18 @@ int main(int ac, char **av)
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
   // ##################################################################
-  
+
   enum { SPHERES_GROUP=0,
          BOXES_GROUP,
+         WORLD_GROUP,
          NUM_GROUPS };
   ll->allocGroups(NUM_GROUPS);
 
   // ----------- first, the spheres group -----------
-  int geomsInSpheresGroup[] = {
-                               LAMBERTIAN_SPHERES_GEOM,
-                               DIELECTRIC_SPHERES_GEOM,
-                               METAL_SPHERES_GEOM
-  };
+  int geomsInSpheresGroup[] =
+    { LAMBERTIAN_SPHERES_GEOM,
+      DIELECTRIC_SPHERES_GEOM,
+      METAL_SPHERES_GEOM };
   ll->userGeomGroupCreate(/* group ID */SPHERES_GROUP,
                           /* geoms in group, pointer */ geomsInSpheresGroup,
                           /* geoms in group, count   */ 3);
@@ -475,16 +475,25 @@ int main(int ac, char **av)
   ll->groupBuildAccel(SPHERES_GROUP);
 
   // ----------- now, the boxes group -----------
-  int geomsInBoxesGroup[] = {
-                             LAMBERTIAN_BOXES_GEOM,
-                             DIELECTRIC_BOXES_GEOM,
-                             METAL_BOXES_GEOM
-  };
+  int geomsInBoxesGroup[]
+    = { LAMBERTIAN_BOXES_GEOM,
+        DIELECTRIC_BOXES_GEOM,
+        METAL_BOXES_GEOM };
   ll->trianglesGeomGroupCreate(/* group ID */BOXES_GROUP,
                                /* geoms in group, pointer */ geomsInBoxesGroup,
                                /* geoms in group, count   */ 3);
   ll->groupBuildAccel(BOXES_GROUP);
 
+  
+  // ----------- finally, the world group that combines them -----------
+  int groupsInWorldGroup[]
+    = { SPHERES_GROUP,
+        BOXES_GROUP };
+  ll->instanceGroupCreate(/* group ID */WORLD_GROUP,
+                          /* geoms in group, pointer */ groupsInWorldGroup,
+                          /* geoms in group, count   */ 2);
+  ll->groupBuildAccel(WORLD_GROUP);
+  
   
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -561,10 +570,8 @@ int main(int ac, char **av)
        rg->deviceCount = ll->getDeviceCount();
        rg->fbSize = fbSize;
        rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-       rg->boxesAccel  = ll->groupGetTraversable(BOXES_GROUP,devID);
-       rg->boxesSBTOffset  = ll->groupGetSBTOffset(BOXES_GROUP);
-       rg->spheresAccel  = ll->groupGetTraversable(SPHERES_GROUP,devID);
-       rg->spheresSBTOffset  = ll->groupGetSBTOffset(SPHERES_GROUP);
+       rg->worldAccel  = ll->groupGetTraversable(WORLD_GROUP,devID);
+       rg->worldSBTOffset  = ll->groupGetSBTOffset(WORLD_GROUP);
 
        const float vfov = fovy;
        const vec3f vup = lookUp;

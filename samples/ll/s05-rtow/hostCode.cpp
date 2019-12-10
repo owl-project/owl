@@ -39,8 +39,6 @@ const char *outFileName = "ll05-rtow.png";
 const vec2i fbSize(1600,800);
 const vec3f lookFrom(13, 2, 3);
 const vec3f lookAt(0, 0, 0);
-// const vec3f lookFrom(-4.f,-3.f,-2.f);
-// const vec3f lookAt(0.f,0.f,0.f);
 const vec3f lookUp(0.f,1.f,0.f);
 const float fovy = 20.f;
 
@@ -188,7 +186,7 @@ int main(int ac, char **av)
          DIELECTRIC_SPHERES_BUFFER,
          METAL_SPHERES_BUFFER,
          NUM_BUFFERS };
-  ll->reallocBuffers(NUM_BUFFERS);
+  ll->allocBuffers(NUM_BUFFERS);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
@@ -198,22 +196,22 @@ int main(int ac, char **av)
          DIELECTRIC_SPHERES_GEOM,
          METAL_SPHERES_GEOM,
          NUM_GEOMS };
-  ll->reallocGeoms(NUM_GEOMS);
-  ll->createUserGeom(/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
+  ll->allocGeoms(NUM_GEOMS);
+  ll->userGeomCreate(/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
                      /* type/PG ID */LAMBERTIAN_SPHERES_TYPE,
                      /* numprims   */lambertianSpheres.size());
   ll->createDeviceBuffer(LAMBERTIAN_SPHERES_BUFFER,
                          lambertianSpheres.size(),
                          sizeof(lambertianSpheres[0]),
                          lambertianSpheres.data());
-  ll->createUserGeom(/* geom ID    */DIELECTRIC_SPHERES_GEOM,
+  ll->userGeomCreate(/* geom ID    */DIELECTRIC_SPHERES_GEOM,
                      /* type/PG ID */DIELECTRIC_SPHERES_TYPE,
                      /* numprims   */dielectricSpheres.size());
   ll->createDeviceBuffer(DIELECTRIC_SPHERES_BUFFER,
                          dielectricSpheres.size(),
                          sizeof(dielectricSpheres[0]),
                          dielectricSpheres.data());
-  ll->createUserGeom(/* geom ID    */METAL_SPHERES_GEOM,
+  ll->userGeomCreate(/* geom ID    */METAL_SPHERES_GEOM,
                      /* type/PG ID */METAL_SPHERES_TYPE,
                      /* numprims   */metalSpheres.size());
   ll->createDeviceBuffer(METAL_SPHERES_BUFFER,
@@ -227,13 +225,13 @@ int main(int ac, char **av)
   
   enum { WORLD_GROUP=0,
          NUM_GROUPS };
-  ll->reallocGroups(NUM_GROUPS);
+  ll->allocGroups(NUM_GROUPS);
   int geomsInGroup[] = {
                         LAMBERTIAN_SPHERES_GEOM,
                         DIELECTRIC_SPHERES_GEOM,
                         METAL_SPHERES_GEOM
   };
-  ll->createUserGeomGroup(/* group ID */WORLD_GROUP,
+  ll->userGeomGroupCreate(/* group ID */WORLD_GROUP,
                           /* geoms in group, pointer */ geomsInGroup,
                           /* geoms in group, count   */ NUM_GEOMS);
   ll->groupBuildPrimitiveBounds
