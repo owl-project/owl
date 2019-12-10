@@ -127,11 +127,33 @@ namespace owl {
         device->setGeomTypeIntersect(geomTypeID,rayTypeID,moduleID,progName);
     }
     
-    void DeviceGroup::setRayGen(int pgID, int moduleID, const char *progName)
-    { for (auto device : devices) device->setRayGen(pgID,moduleID,progName); }
+    void DeviceGroup::setRayGen(int pgID,
+                                int moduleID,
+                                const char *progName,
+                                size_t programDataSize)
+    {
+      for (auto device : devices)
+        device->setRayGen(pgID,moduleID,progName,programDataSize);
+    }
     
-    void DeviceGroup::setMissProg(int pgID, int moduleID, const char *progName)
-    { for (auto device : devices) device->setMissProg(pgID,moduleID,progName); }
+    /*! specifies which miss program to run for a given miss prog
+      ID */
+    void DeviceGroup::setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                                  int programID,
+                                  /*! ID of the module the program will be bound
+                                    in, in [0..numAllocedModules) */
+                                  int moduleID,
+                                  /*! name of the program. Note we do not NOT
+                                    create a copy of this string, so the string
+                                    has to remain valid for the duration of the
+                                    program */
+                                  const char *progName,
+                                  /*! size of that miss program's SBT data */
+                                  size_t missProgDataSize)
+    {
+      for (auto device : devices)
+        device->setMissProg(programID,moduleID,progName,missProgDataSize);
+    }
 
     /*! resize the array of geom IDs. this can be either a
       'grow' or a 'shrink', but 'shrink' is only allowed if all
@@ -272,8 +294,21 @@ namespace owl {
 
     void DeviceGroup::groupBuildAccel(int groupID)
     {
-      for (auto device : devices) 
-        device->groupBuildAccel(groupID);
+      try {
+        for (auto device : devices) 
+          device->groupBuildAccel(groupID);
+      } catch (std::exception &e) {
+        std::cerr << GDT_TERMINAL_RED
+                  << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
+                  << e.what()
+                  << GDT_TERMINAL_DEFAULT << std::endl;
+        exit(0);
+      }
+    }
+
+    uint32_t DeviceGroup::groupGetSBTOffset(int groupID)
+    {
+      return devices[0]->groupGetSBTOffset(groupID);
     }
 
     OptixTraversableHandle DeviceGroup::groupGetTraversable(int groupID, int deviceID)
@@ -281,33 +316,36 @@ namespace owl {
       return checkGetDevice(deviceID)->groupGetTraversable(groupID);
     }
 
-    void DeviceGroup::sbtGeomTypesBuild(size_t maxHitGroupDataSize,
-                                        WriteHitProgDataCB writeHitProgDataCB,
-                                        void *callBackData)
+    void DeviceGroup::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                                       void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtGeomTypesBuild(maxHitGroupDataSize,
-                                  writeHitProgDataCB,
-                                  callBackData);
+        device->sbtHitProgsBuild(writeHitProgDataCB,
+                                 callBackData);
     }
-    
-    void DeviceGroup::sbtRayGensBuild(size_t maxRayGenDataSize,
-                                      WriteRayGenDataCB writeRayGenCB,
+
+    void DeviceGroup::geomTypeCreate(int geomTypeID,
+                                     size_t programDataSize)
+    {
+      for (auto device : devices) 
+        device->geomTypeCreate(geomTypeID,
+                               programDataSize);
+    }
+                          
+
+    void DeviceGroup::sbtRayGensBuild(WriteRayGenDataCB writeRayGenCB,
                                       void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtRayGensBuild(maxRayGenDataSize,
-                                writeRayGenCB,
+        device->sbtRayGensBuild(writeRayGenCB,
                                 callBackData);
     }
     
-    void DeviceGroup::sbtMissProgsBuild(size_t maxMissProgDataSize,
-                                        WriteMissProgDataCB writeMissProgCB,
+    void DeviceGroup::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgCB,
                                         void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtMissProgsBuild(maxMissProgDataSize,
-                                  writeMissProgCB,
+        device->sbtMissProgsBuild(writeMissProgCB,
                                   callBackData);
     }
 
@@ -316,11 +354,19 @@ namespace owl {
                                                 WriteUserGeomBoundsDataCB cb,
                                                 void *cbData)
     {
-      for (auto device : devices) 
-        device->groupBuildPrimitiveBounds(groupID,
-                                          maxGeomDataSize,
-                                          cb,
-                                          cbData);
+      try {
+        for (auto device : devices) 
+          device->groupBuildPrimitiveBounds(groupID,
+                                            maxGeomDataSize,
+                                            cb,
+                                            cbData);
+      } catch (std::exception &e) {
+        std::cerr << GDT_TERMINAL_RED
+                  << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
+                  << e.what()
+                  << GDT_TERMINAL_DEFAULT << std::endl;
+        exit(0);
+      }
     }
 
     /*! returns the given device's buffer address on the specified

@@ -95,7 +95,6 @@ inline __device__ void intersectProg()
   }
 }
 
-
 OPTIX_INTERSECT_PROGRAM(MetalSpheres)()
 { intersectProg<MetalSpheresGeom>(); }
 
@@ -107,12 +106,14 @@ OPTIX_INTERSECT_PROGRAM(DielectricSpheres)()
 
 
 // ==================================================================
-// plumbing for closest hit
+// plumbing for closest hit, templated over geometry type so we can
+// re-use the same code for different materials
 // ==================================================================
 
+// ----------- sphere+material -----------
 template<typename SpheresGeomType>
 inline __device__
-void closestHit()
+void closestHitSpheres()
 {
   const int primID = optixGetPrimitiveIndex();
   const auto &self
@@ -128,22 +129,67 @@ void closestHit()
 
   prd.out.scatterEvent
     = scatter(self.material,
-              hit_P,N,//ray,
+              hit_P,N,
               prd)
     ? rayGotBounced
     : rayGotCancelled;
 }
 
+// ----------- "box+material" -----------
+template<typename BoxesGeomType>
+inline __device__
+void closestHitBoxes()
+{
+  const auto &self
+    = owl::getProgramData<BoxesGeomType>();
+  PerRayData &prd = owl::getPRD<PerRayData>();
+
+  // ID of the triangle we've hit:
+  const int primID = optixGetPrimitiveIndex();
+  
+  // there's 12 tris per box:
+  const int materialID = primID / 12;
+  const auto &material
+    = self.perBoxMaterial[materialID];
+
+  const vec3i index  = self.index[primID];
+  const vec3f &A     = self.vertex[index.x];
+  const vec3f &B     = self.vertex[index.y];
+  const vec3f &C     = self.vertex[index.z];
+  const vec3f N      = normalize(cross(B-A,C-A));
+
+  const vec3f org   = optixGetWorldRayOrigin();
+  const vec3f dir   = optixGetWorldRayDirection();
+  const float hit_t = optixGetRayTmax();
+  const vec3f hit_P = org + hit_t * dir;
+
+  prd.out.scatterEvent
+    = scatter(material,
+              hit_P,N,
+              prd)
+    ? rayGotBounced
+    : rayGotCancelled;
+}
+
+// ==================================================================
+// actual closest-hit program instantiations for geom+material types
+// ==================================================================
+
+// ---------------------- spheres ----------------------
 OPTIX_CLOSEST_HIT_PROGRAM(MetalSpheres)()
-{ closestHit<MetalSpheresGeom>(); }
+{ closestHitSpheres<MetalSpheresGeom>(); }
 OPTIX_CLOSEST_HIT_PROGRAM(LambertianSpheres)()
-{ closestHit<LambertianSpheresGeom>(); }
+{ closestHitSpheres<LambertianSpheresGeom>(); }
 OPTIX_CLOSEST_HIT_PROGRAM(DielectricSpheres)()
-{ closestHit<DielectricSpheresGeom>(); }
+{ closestHitSpheres<DielectricSpheresGeom>(); }
 
-
-
-
+// ---------------------- boxes ----------------------
+OPTIX_CLOSEST_HIT_PROGRAM(MetalBoxes)()
+{ closestHitBoxes<MetalBoxesGeom>(); }
+OPTIX_CLOSEST_HIT_PROGRAM(LambertianBoxes)()
+{ closestHitBoxes<LambertianBoxesGeom>(); }
+OPTIX_CLOSEST_HIT_PROGRAM(DielectricBoxes)()
+{ closestHitBoxes<DielectricBoxesGeom>(); }
 
 
 
@@ -168,15 +214,6 @@ OPTIX_MISS_PROGRAM(miss)()
 {
   PerRayData &prd = owl::getPRD<PerRayData>();
   prd.out.scatterEvent = rayDidntHitAnything;
-  // const vec2i pixelID = owl::getLaunchIndex();
-
-  // const MissProgData &self = owl::getProgramData<MissProgData>();
-
-  // const vec3f unit_direction = normalize((vec3f)optixGetWorldRayDirection());
-  // const float t = 0.5f*(unit_direction.y + 1.0f);
-  // const vec3f c = (1.0f - t)*vec3f(1.0f, 1.0f, 1.0f) + t * vec3f(0.5f, 0.7f, 1.0f);
-  // vec3f &prd = owl::getPRD<vec3f>();
-  // prd = c;
 }
 
 
@@ -193,7 +230,7 @@ vec3f tracePath(const RayGenData &self,
                /*the ray to trace*/ ray,
                /*numRayTypes*/1,
                /*prd*/prd,
-               self.sbtOffset);
+               self.worldSBTOffset);
     
     if (prd.out.scatterEvent == rayDidntHitAnything)
       /* ray got 'lost' to the environment - 'light' it with miss

@@ -196,6 +196,17 @@ namespace owl {
       }
     }
 
+
+    void Device::geomTypeCreate(int geomTypeID,
+                                size_t programDataSize)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      assert(geomType.hitProgDataSize == (size_t)-1);
+      geomType.hitProgDataSize = programDataSize;
+    }
+
     /*! set bounding box program for given geometry type, using a
       bounding box program to be called on the device. note that
       unlike other programs (intersect, closesthit, anyhit) these
@@ -281,12 +292,13 @@ namespace owl {
       hitGroup.closestHit.progName = progName;
     }
     
-    void Device::setRayGen(int pgID,
+    void Device::setRayGen(int programID,
                            int moduleID,
-                           const char *progName)
+                           const char *progName,
+                           size_t dataSize)
     {
-      assert(pgID >= 0);
-      assert(pgID < rayGenPGs.size());
+      assert(programID >= 0);
+      assert(programID < rayGenPGs.size());
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -294,16 +306,28 @@ namespace owl {
              ||
              (moduleID >= 0  && progName != nullptr));
 
-      rayGenPGs[pgID].program.moduleID = moduleID;
-      rayGenPGs[pgID].program.progName = progName;
+      rayGenPGs[programID].program.moduleID = moduleID;
+      rayGenPGs[programID].program.progName = progName;
+      rayGenPGs[programID].program.dataSize = dataSize;
     }
     
-    void Device::setMissProg(int pgID,
+    /*! specifies which miss program to run for a given miss prog
+      ID */
+    void Device::setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                             int programID,
+                             /*! ID of the module the program will be bound
+                               in, in [0..numAllocedModules) */
                              int moduleID,
-                             const char *progName)
+                             /*! name of the program. Note we do not NOT
+                               create a copy of this string, so the string
+                               has to remain valid for the duration of the
+                               program */
+                             const char *progName,
+                             /*! size of that miss program's SBT data */
+                             size_t missProgDataSize)
     {
-      assert(pgID >= 0);
-      assert(pgID < missProgPGs.size());
+      assert(programID >= 0);
+      assert(programID < missProgPGs.size());
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -311,8 +335,9 @@ namespace owl {
              ||
              (moduleID >= 0  && progName != nullptr));
 
-      missProgPGs[pgID].program.moduleID = moduleID;
-      missProgPGs[pgID].program.progName = progName;
+      missProgPGs[programID].program.moduleID = moduleID;
+      missProgPGs[programID].program.progName = progName;
+      missProgPGs[programID].program.dataSize = missProgDataSize;
     }
     
     /*! will destroy the *optix handles*, but will *not* clear the
@@ -845,7 +870,16 @@ namespace owl {
     {
       return checkGetGroup(groupID)->traversable;
     }
-      
+
+    uint32_t Device::groupGetSBTOffset(int groupID)
+    {
+      Group *group = checkGetGroup(groupID);
+      if (group->containsInstances())
+        return 0;
+      else
+        return ((GeomGroup*)group)->sbtOffset;
+    }
+    
     
 
     
@@ -901,6 +935,9 @@ namespace owl {
         
         // now fill in the values:
         d_vertices = (CUdeviceptr )tris->vertexPointer;
+        if (d_vertices == 0)
+          OWL_EXCEPT("in TrianglesGeomGroup::buildAccel(): "
+                     "triangles geom has null vertex array");
         assert("triangles geom has vertex array set" && d_vertices);
         
         d_indices  = (CUdeviceptr )tris->indexPointer;
@@ -1211,9 +1248,8 @@ namespace owl {
 
 
 
-    void Device::sbtGeomTypesBuild(size_t maxHitProgDataSize,
-                                   WriteHitProgDataCB writeHitProgDataCB,
-                                   const void *callBackUserData)
+    void Device::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                                  const void *callBackUserData)
     {
       LOG("building sbt hit group records");
       context->pushActive();
@@ -1221,8 +1257,18 @@ namespace owl {
       if (sbt.hitGroupRecordsBuffer.valid())
         sbt.hitGroupRecordsBuffer.free();
 
-      size_t numGeoms = geoms.size();
-      size_t numHitGroupRecords = numGeoms * context->numRayTypes;
+      size_t maxHitProgDataSize = 0;
+      for (int geomID=0;geomID<geoms.size();geomID++) {
+        Geom *geom = geoms[geomID];
+        if (!geom) continue;
+        GeomType &gt = geomTypes[geom->geomTypeID];
+        maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
+      }
+      PRINT(maxHitProgDataSize);
+      assert("make sure all geoms had their program size set"
+             && maxHitProgDataSize != (size_t)-1);
+      size_t numHitGroupEntries = sbt.rangeAllocator.maxAllocedID;
+      size_t numHitGroupRecords = numHitGroupEntries*context->numRayTypes;
       size_t hitGroupRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
@@ -1238,49 +1284,66 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
-      for (int geomID=0;geomID<(int)geoms.size();geomID++)
-        for (int rayTypeID=0;rayTypeID<context->numRayTypes;rayTypeID++) {
-          // ------------------------------------------------------------------
-          // compute pointer to entire record:
-          // ------------------------------------------------------------------
-          const int recordID = rayTypeID + geomID*context->numRayTypes;
-          uint8_t *const sbtRecord
-            = hitGroupRecords.data() + recordID*hitGroupRecordSize;
-
-          // ------------------------------------------------------------------
-          // pack record header with the corresponding hit group:
-          // ------------------------------------------------------------------
-          // first, compute pointer to record:
-          char    *const sbtRecordHeader = (char *)sbtRecord;
-          // then, get gemetry we want to write (to find its hit group ID)...
-          const Geom *const geom = checkGetGeom(geomID);
-          // ... find the PG that goes into the record header...
-          auto &geomType = geomTypes[geom->geomTypeID];
-          const HitGroupPG &hgPG
-            = geomType.perRayType[rayTypeID];
-          // ... and tell optix to write that into the record
-          OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
+      PING;
+      PRINT(groups.size());
+      for (auto group : groups) {
+        if (!group) continue;
+        if (!group->containsGeom()) continue;
+        GeomGroup *gg = (GeomGroup *)group;
+        const int sbtOffset = gg->sbtOffset;
+        PRINT(sbtOffset);
+        PRINT(gg->children.size());
+        for (int childID=0;childID<gg->children.size();childID++) {
+          Geom *geom = gg->children[childID];
+          if (!geom) continue;
           
-          // ------------------------------------------------------------------
-          // finally, let the user fill in the record's payload using
-          // the callback
-          // ------------------------------------------------------------------
-          uint8_t *const sbtRecordData
-            = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
-          writeHitProgDataCB(sbtRecordData,
-                             context->owlDeviceID,
-                             geomID,
-                             rayTypeID,
-                             callBackUserData);
+          const int geomID    = geom->geomID;
+          for (int rayTypeID=0;rayTypeID<context->numRayTypes;rayTypeID++) {
+            // ------------------------------------------------------------------
+            // compute pointer to entire record:
+            // ------------------------------------------------------------------
+            const int recordID
+              = (sbtOffset+childID)*context->numRayTypes + rayTypeID;
+            uint8_t *const sbtRecord
+              = hitGroupRecords.data() + recordID*hitGroupRecordSize;
+
+            // ------------------------------------------------------------------
+            // pack record header with the corresponding hit group:
+            // ------------------------------------------------------------------
+            // first, compute pointer to record:
+            char    *const sbtRecordHeader = (char *)sbtRecord;
+            // then, get gemetry we want to write (to find its hit group ID)...
+            const Geom *const geom = checkGetGeom(geomID);
+            // ... find the PG that goes into the record header...
+            auto &geomType = geomTypes[geom->geomTypeID];
+            const HitGroupPG &hgPG
+              = geomType.perRayType[rayTypeID];
+            // ... and tell optix to write that into the record
+            OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
+          
+            // ------------------------------------------------------------------
+            // finally, let the user fill in the record's payload using
+            // the callback
+            // ------------------------------------------------------------------
+            uint8_t *const sbtRecordData
+              = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
+            writeHitProgDataCB(sbtRecordData,
+                               context->owlDeviceID,
+                               geomID,
+                               rayTypeID,
+                               callBackUserData);
+          }
         }
+      }
+      PRINT(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       context->popActive();
+      PING;
       LOG_OK("done building (and uploading) sbt hit group records");
     }
       
-    void Device::sbtRayGensBuild(size_t maxRayGenDataSize,
-                                 WriteRayGenDataCB writeRayGenDataCB,
+    void Device::sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
                                  const void *callBackUserData)
     {
       LOG("building sbt ray gen records");
@@ -1289,6 +1352,10 @@ namespace owl {
       if (sbt.rayGenRecordsBuffer.valid())
         sbt.rayGenRecordsBuffer.free();
 
+      size_t maxRayGenDataSize = 0;
+      for (int rgID=0;rgID<(int)rayGenPGs.size();rgID++) 
+        maxRayGenDataSize = std::max(maxRayGenDataSize,
+                                     rayGenPGs[rgID].program.dataSize);
       size_t numRayGenRecords = rayGenPGs.size();
       size_t rayGenRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
@@ -1340,8 +1407,7 @@ namespace owl {
       LOG_OK("done building (and uploading) sbt ray gen records");
     }
       
-    void Device::sbtMissProgsBuild(size_t maxMissProgDataSize,
-                                   WriteMissProgDataCB writeMissProgDataCB,
+    void Device::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
                                    const void *callBackUserData)
     {
       LOG("building sbt miss prog records");
@@ -1353,6 +1419,11 @@ namespace owl {
       if (sbt.missProgRecordsBuffer.valid())
         sbt.missProgRecordsBuffer.free();
 
+      size_t maxMissProgDataSize = 0;
+      for (int mpID=0;mpID<(int)missProgPGs.size();mpID++) 
+        maxMissProgDataSize = std::max(maxMissProgDataSize,
+                                     rayGenPGs[mpID].program.dataSize);
+      
       size_t numMissProgRecords = missProgPGs.size();
       size_t missProgRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
@@ -1530,7 +1601,9 @@ namespace owl {
              ((geomIDs == nullptr && geomCount == 0) ||
               (geomIDs != nullptr && geomCount >  0)));
         
-      TrianglesGeomGroup *group = new TrianglesGeomGroup(geomCount);
+      TrianglesGeomGroup *group
+        = new TrianglesGeomGroup(geomCount,
+                                 sbt.rangeAllocator.alloc(geomCount));
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
 
@@ -1559,7 +1632,9 @@ namespace owl {
              ((geomIDs == nullptr && geomCount == 0) ||
               (geomIDs != nullptr && geomCount >  0)));
         
-      UserGeomGroup *group = new UserGeomGroup(geomCount);
+      UserGeomGroup *group
+        = new UserGeomGroup(geomCount,
+                            sbt.rangeAllocator.alloc(geomCount));
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
 

@@ -124,6 +124,7 @@ namespace owl {
     struct Program {
       const char *progName = nullptr;
       int         moduleID = -1;
+      size_t      dataSize = 0;
     };
     struct RayGenPG : public ProgramGroup {
       Program program;
@@ -140,6 +141,7 @@ namespace owl {
       std::vector<HitGroupPG> perRayType;
       Program boundsProg;
       size_t  boundsProgDataSize = 0; // do we still need this!?
+      size_t  hitProgDataSize = (size_t)-1;
       CUfunction boundsFuncKernel;
     };
     
@@ -292,18 +294,23 @@ namespace owl {
       { OWL_NOTIMPLEMENTED; }
     };
     struct GeomGroup : public Group {
-      GeomGroup(size_t numChildren)
-        : children(numChildren)
+      GeomGroup(size_t numChildren,
+                size_t sbtOffset)
+        : children(numChildren),
+          sbtOffset(sbtOffset)
       {}
       
       virtual bool containsGeom() { return true; }
       virtual PrimType primType() = 0;
 
       std::vector<Geom *> children;
+      const size_t sbtOffset;
     };
     struct TrianglesGeomGroup : public GeomGroup {
-      TrianglesGeomGroup(size_t numChildren)
-        : GeomGroup(numChildren)
+      TrianglesGeomGroup(size_t numChildren,
+                         size_t sbtOffset)
+        : GeomGroup(numChildren,
+                    sbtOffset)
       {}
       virtual PrimType primType() { return TRIANGLES; }
       
@@ -311,8 +318,10 @@ namespace owl {
       virtual void buildAccel(Context *context) override;
     };
     struct UserGeomGroup : public GeomGroup {
-      UserGeomGroup(size_t numChildren)
-        : GeomGroup(numChildren)
+      UserGeomGroup(size_t numChildren,
+                size_t sbtOffset)
+        : GeomGroup(numChildren,
+                    sbtOffset)
       {}
       virtual PrimType primType() { return USER; }
       
@@ -384,8 +393,26 @@ namespace owl {
                                 int moduleID,
                                 const char *progName);
       
-      void setRayGen(int pgID, int moduleID, const char *progName);
-      void setMissProg(int pgID, int moduleID, const char *progName);
+      void setRayGen(int pgID,
+                     int moduleID,
+                     const char *progName,
+                     /*! size of that program's SBT data */
+                     size_t missProgDataSize);
+      
+      /*! specifies which miss program to run for a given miss prog
+          ID */
+      void setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                       int programID,
+                       /*! ID of the module the program will be bound
+                           in, in [0..numAllocedModules) */
+                       int moduleID,
+                       /*! name of the program. Note we do not NOT
+                           create a copy of this string, so the string
+                           has to remain valid for the duration of the
+                           program */
+                       const char *progName,
+                       /*! size of that program's SBT data */
+                       size_t missProgDataSize);
       
       void allocModules(size_t count)
       { modules.alloc(count); }
@@ -394,6 +421,9 @@ namespace owl {
         number of ray types to be used */
       void allocGeomTypes(size_t count);
 
+      void geomTypeCreate(int geomTypeID,
+                          size_t programDataSize);
+        
       void allocRayGens(size_t count);
       /*! each geom will always use "numRayTypes" successive hit
         groups (one per ray type), so this must be a multiple of the
@@ -515,6 +545,7 @@ namespace owl {
         will *not* check if the group has alreadybeen built, if it
         has to be rebuilt, etc. */
       OptixTraversableHandle groupGetTraversable(int groupID);
+      uint32_t groupGetSBTOffset(int groupID);
       
       // accessor helpers:
       Geom *checkGetGeom(int geomID)
@@ -553,6 +584,8 @@ namespace owl {
         Group *group = groups[groupID];
         assert("check valid group" && group != nullptr);
         UserGeomGroup *ugg = dynamic_cast<UserGeomGroup*>(group);
+        if (!ugg)
+          OWL_EXCEPT("group is not a user geometry group");
         assert("check group is a user geom group" && ugg != nullptr);
         return ugg;
       }
@@ -598,11 +631,9 @@ namespace owl {
                                      void *cbData);
       void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
                             const void *callBackUserData);
-      void sbtRayGensBuild(size_t maxRayGenDataSize,
-                           WriteRayGenDataCB writeRayGenDataCB,
+      void sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
                            const void *callBackUserData);
-      void sbtMissProgsBuild(size_t maxMissProgDataSize,
-                             WriteMissProgDataCB writeMissProgDataCB,
+      void sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
                              const void *callBackUserData);
 
       void launch(int rgID, const vec2i &dims);

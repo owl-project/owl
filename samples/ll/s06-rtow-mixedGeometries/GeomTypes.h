@@ -15,6 +15,7 @@
 // ======================================================================== //
 
 #include "ll/llowl.h"
+#include "../s05-rtow/Materials.h"
 
 using namespace owl;
 
@@ -25,22 +26,6 @@ using namespace owl;
 struct Sphere {
   vec3f center;
   float radius;
-};
-
-// ==================================================================
-/* the three material types we support; this is what goes into the
-    hit shaders */
-// ==================================================================
-
-struct Lambertian {
-  vec3f albedo;
-};
-struct Metal {
-  vec3f albedo;
-  float fuzz;
-};
-struct Dielectric {
-  float ref_idx;
 };
 
 // ==================================================================
@@ -68,13 +53,47 @@ struct LambertianSphere {
 // ==================================================================
 
 struct MetalSpheresGeom {
+  /* for spheres geometry we store one full "sphere+material" record
+     per sphere */
   MetalSphere *prims;
 };
 struct DielectricSpheresGeom {
+  /* for spheres geometry we store one full "sphere+material" record
+     per sphere */
   DielectricSphere *prims;
 };
 struct LambertianSpheresGeom {
+  /* for spheres geometry we store one full "sphere+material" record
+     per sphere */
   LambertianSphere *prims;
+};
+
+struct MetalBoxesGeom {
+  /*! for our boxes geometry we use triangles for the geometry, so the
+      materials will actually be shared among every group of 12
+      triangles */
+  Metal *perBoxMaterial;
+  /* the vertex and index arrays for the triangle mesh */
+  vec3f *vertex;
+  vec3i *index;
+};
+struct DielectricBoxesGeom {
+  /*! for our boxes geometry we use triangles for the geometry, so the
+      materials will actually be shared among every group of 12
+      triangles */
+  Dielectric *perBoxMaterial;
+  /* the vertex and index arrays for the triangle mesh */
+  vec3f *vertex;
+  vec3i *index;
+};
+struct LambertianBoxesGeom {
+  /*! for our boxes geometry we use triangles for the geometry, so the
+      materials will actually be shared among every group of 12
+      triangles */
+  Lambertian *perBoxMaterial;
+  /* the vertex and index arrays for the triangle mesh */
+  vec3f *vertex;
+  vec3i *index;
 };
 
 // ==================================================================
@@ -87,7 +106,8 @@ struct RayGenData
   uint32_t *fbPtr;
   vec2i  fbSize;
   OptixTraversableHandle world;
-
+  int worldSBTOffset;
+  
   struct {
     vec3f origin;
     vec3f lower_left_corner;

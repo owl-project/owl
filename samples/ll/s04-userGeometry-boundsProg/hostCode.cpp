@@ -71,6 +71,7 @@ int main(int ac, char **av)
   
   enum { SPHERE_GEOM_TYPE=0,NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
+  ll->geomTypeCreate(SPHERE_GEOM_TYPE,sizeof(SphereGeomData));
   ll->setGeomTypeClosestHit(/*geom type ID*/SPHERE_GEOM_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
@@ -80,22 +81,21 @@ int main(int ac, char **av)
                            /*module:*/0,
                            "Sphere");
 
-#if BOUNDS_ON_HOST
-#else
   ll->setGeomTypeBoundsProgDevice(/*program ID*/0,
                                   /*module:*/0,
                                   "Sphere",
                                   sizeof(SphereGeomData));
-#endif
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
-                "simpleRayGen");
-  
+                "simpleRayGen",
+                sizeof(RayGenData));
+
   ll->allocMissProgs(1);
   ll->setMissProg(/*program ID*/0,
                   /*module:*/0,
-                  "miss");
+                  "miss",
+                  sizeof(MissProgData));
   ll->buildPrograms();
   ll->createPipeline();
 
@@ -109,16 +109,6 @@ int main(int ac, char **av)
   // alloc buffers
   // ------------------------------------------------------------------
   enum { FRAME_BUFFER=0,
-#if BOUNDS_ON_HOST
-         BOUNDS_BUFFER_000,
-         BOUNDS_BUFFER_001,
-         BOUNDS_BUFFER_010,
-         BOUNDS_BUFFER_011,
-         BOUNDS_BUFFER_100,
-         BOUNDS_BUFFER_101,
-         BOUNDS_BUFFER_110,
-         BOUNDS_BUFFER_111,
-#endif
          NUM_BUFFERS };
   ll->reallocBuffers(NUM_BUFFERS);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
@@ -131,14 +121,6 @@ int main(int ac, char **av)
     ll->createUserGeom(/* geom ID    */i,
                        /* type/PG ID */0,
                        /* numprims   */1);
-#if BOUNDS_ON_HOST
-    box3f sphereBounds = box3f()
-      .extend(sphereCenters[i]-sphereRadius)
-      .extend(sphereCenters[i]+sphereRadius);
-    ll->createDeviceBuffer(BOUNDS_BUFFER_000+i,1,sizeof(box3f),
-                     &sphereBounds);
-    ll->userGeomSetBoundsBuffer(i,BOUNDS_BUFFER_000+i);
-#endif
   }
 
   // ##################################################################
@@ -151,10 +133,6 @@ int main(int ac, char **av)
   ll->createUserGeomGroup(/* group ID */SPHERES_GROUP,
                           /* geoms in group, pointer */ geomsInGroup,
                           /* geoms in group, count   */ 8);
-#if BOUNDS_ON_HOST
-  // in this mode, we supply the boudns through a buffer, so don't
-  // build them on the device at all ...
-#else
   ll->groupBuildPrimitiveBounds
     (SPHERES_GROUP,sizeof(SphereGeomData),
      [&](uint8_t *output, int devID, int geomID, int childID) {
@@ -162,7 +140,6 @@ int main(int ac, char **av)
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
     });
-#endif
   ll->groupBuildAccel(SPHERES_GROUP);
 
   // ##################################################################
@@ -171,10 +148,8 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  const size_t maxHitGroupDataSize = sizeof(SphereGeomData);
-  ll->sbtGeomTypesBuild
-    (maxHitGroupDataSize,
-     [&](uint8_t *output,int devID,int geomID,int childID) {
+  ll->sbtHitProgsBuild
+    ([&](uint8_t *output,int devID,int geomID,int childID) {
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
@@ -182,10 +157,8 @@ int main(int ac, char **av)
     });
   
   // ----------- build miss prog(s) -----------
-  const size_t maxMissProgDataSize = sizeof(MissProgData);
   ll->sbtMissProgsBuild
-    (maxMissProgDataSize,
-     [&](uint8_t *output,
+    ([&](uint8_t *output,
          int devID,
          int rayType) {
       ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
@@ -193,10 +166,8 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  const size_t maxRayGenDataSize = sizeof(RayGenData);
   ll->sbtRayGensBuild
-    (maxRayGenDataSize,
-     [&](uint8_t *output,
+    ([&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;

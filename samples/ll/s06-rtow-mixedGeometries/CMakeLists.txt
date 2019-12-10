@@ -14,15 +14,19 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(c-test
-  c-test.c
+add_executable(ll06-rtow-mixedGeometries
+  hostCode.cpp
   ${ptxCode}
   )
-target_link_libraries(c-test
-  owl-ng
+target_link_libraries(ll06-rtow-mixedGeometries
+  owl-ll
   )
+add_test(ll06-rtow-mixedGeometries
+  ${CMAKE_BINARY_DIR}/ll06-rtow-mixedGeometries)
+
+
 

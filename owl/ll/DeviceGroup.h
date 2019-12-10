@@ -21,6 +21,13 @@
 #  error "this file should only ever get included on the device side"
 #endif
 
+#define OWL_THROWS_EXCEPTIONS 1
+#if OWL_THROWS_EXCEPTIONS
+#define OWL_EXCEPT(a) throw std::runtime_error(a)
+#else
+#define OWL_EXCEPT(a) /* ignore */
+#endif
+
 namespace owl {
   namespace ll {
 
@@ -115,6 +122,9 @@ namespace owl {
       void allocRayGens(size_t count);
       void allocMissProgs(size_t count);
 
+      void geomTypeCreate(int geomTypeID,
+                          size_t programDataSize);
+                          
       /*! set bounding box program for given geometry type, using a
           bounding box program to be called on the device. note that
           unlike other programs (intersect, closesthit, anyhit) these
@@ -125,7 +135,8 @@ namespace owl {
                                        int moduleID,
                                        const char *progName,
                                        size_t geomDataSize);
-      
+      void setGeomTypeProgramSize(int pgID,
+                                  size_t );
       void setGeomTypeClosestHit(int pgID,
                                  int rayTypeID,
                                  int moduleID,
@@ -134,8 +145,25 @@ namespace owl {
                                 int rayTypeID,
                                 int moduleID,
                                 const char *progName);
-      void setRayGen(int pgID, int moduleID, const char *progName);
-      void setMissProg(int pgID, int moduleID, const char *progName);
+      void setRayGen(int pgID,
+                     int moduleID,
+                     const char *progName,
+                     size_t programDataSize);
+
+      /*! specifies which miss program to run for a given miss prog
+          ID */
+      void setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                       int programID,
+                       /*! ID of the module the program will be bound
+                           in, in [0..numAllocedModules) */
+                       int moduleID,
+                       /*! name of the program. Note we do not NOT
+                           create a copy of this string, so the string
+                           has to remain valid for the duration of the
+                           program */
+                       const char *progName,
+                       /*! size of that miss program's SBT data */
+                       size_t missProgDataSize);
       
       /*! resize the array of geom IDs. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
@@ -209,20 +237,18 @@ namespace owl {
                                        int offset);
       void groupBuildAccel(int groupID);
       OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
+      uint32_t groupGetSBTOffset(int groupID);
 
 
       void groupBuildPrimitiveBounds(int groupID,
                                      size_t maxGeomDataSize,
                                      WriteUserGeomBoundsDataCB cb,
                                      void *cbData);
-      void sbtGeomTypesBuild(size_t maxHitGroupDataSize,
-                             WriteHitProgDataCB writeHitProgDataCB,
-                             void *callBackData);
-      void sbtRayGensBuild(size_t maxRayGenDataSize,
-                           WriteRayGenDataCB WriteRayGenDataCB,
+      void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                            void *callBackData);
+      void sbtRayGensBuild(WriteRayGenDataCB WriteRayGenDataCB,
                            void *callBackData);
-      void sbtMissProgsBuild(size_t maxMissProgDataSize,
-                             WriteMissProgDataCB WriteMissProgDataCB,
+      void sbtMissProgsBuild(WriteMissProgDataCB WriteMissProgDataCB,
                              void *callBackData);
       
       template<typename Lambda>
@@ -244,12 +270,10 @@ namespace owl {
       
       
       template<typename Lambda>
-      void sbtGeomTypesBuild(size_t maxHitGroupDataSize,
-                             const Lambda &l)
+      void sbtHitProgsBuild(const Lambda &l)
       {
-        this->sbtGeomTypesBuild(maxHitGroupDataSize,
-                              [](uint8_t *output,
-                                 int devID,
+        this->sbtHitProgsBuild([](uint8_t *output,
+                                  int devID,
                                  int geomID,
                                  int childID,
                                  const void *cbData) {
@@ -259,11 +283,9 @@ namespace owl {
       }
 
       template<typename Lambda>
-      void sbtRayGensBuild(size_t maxRayGenDataSize,
-                           const Lambda &l)
+      void sbtRayGensBuild(const Lambda &l)
       {
-        this->sbtRayGensBuild(maxRayGenDataSize,
-                              [](uint8_t *output,
+        this->sbtRayGensBuild([](uint8_t *output,
                                  int devID, int rgID, 
                                  const void *cbData) {
                                 const Lambda *lambda = (const Lambda *)cbData;
@@ -272,11 +294,9 @@ namespace owl {
       }
 
       template<typename Lambda>
-      void sbtMissProgsBuild(size_t maxMissProgDataSize,
-                             const Lambda &l)
+      void sbtMissProgsBuild(const Lambda &l)
       {
-        this->sbtMissProgsBuild(maxMissProgDataSize,
-                                [](uint8_t *output,
+        this->sbtMissProgsBuild([](uint8_t *output,
                                    int devID, int rayType, 
                                    const void *cbData) {
                                   const Lambda *lambda = (const Lambda *)cbData;

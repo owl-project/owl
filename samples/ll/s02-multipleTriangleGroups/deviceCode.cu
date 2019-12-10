@@ -56,7 +56,7 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
   vec3f &prd = owl::getPRD<vec3f>();
 
-  const TriangleGroupData &self = owl::getProgramData<TriangleGroupData>();
+  const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
   
   // compute normal:
   const int   primID = optixGetPrimitiveIndex();

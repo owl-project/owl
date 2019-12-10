@@ -18,7 +18,7 @@
 
 using namespace owl;
 
-struct TriangleGroupData
+struct TrianglesGeomData
 {
   vec3f color;
   vec3i *index;
