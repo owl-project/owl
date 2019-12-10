@@ -148,7 +148,8 @@ namespace owl {
   void trace(OptixTraversableHandle traversable,
              const Ray &ray,
              int numRayTypes,
-             PRD &prd)
+             PRD &prd,
+             int sbtOffset = 0)
   {
     unsigned int           p0 = 0;
     unsigned int           p1 = 0;
@@ -162,7 +163,7 @@ namespace owl {
                ray.time,
                (OptixVisibilityMask)-1,
                /*rayFlags     */0u,
-               /*SBToffset    */ray.rayType,
+               /*SBToffset    */ray.rayType + numRayTypes*sbtOffset,
                /*SBTstride    */numRayTypes,
                /*missSBTIndex */ray.rayType,
                p0,

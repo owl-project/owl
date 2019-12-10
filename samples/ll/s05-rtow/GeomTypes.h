@@ -71,6 +71,7 @@ namespace owl {
     uint32_t *fbPtr;
     vec2i  fbSize;
     OptixTraversableHandle world;
+    int sbtOffset;
 
     struct {
       vec3f origin;

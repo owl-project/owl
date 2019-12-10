@@ -94,31 +94,45 @@ void addRandomBox(BoxArray &boxes,
   const int NUM_VERTICES = 8;
   static const vec3f unitBoxVertices[NUM_VERTICES] =
     {
-     { -1.f,-1.f,-1.f },
-     { +1.f,-1.f,-1.f },
-     { -1.f,+1.f,-1.f },
-     { +1.f,+1.f,-1.f },
-     { -1.f,-1.f,+1.f },
-     { +1.f,-1.f,+1.f },
-     { -1.f,+1.f,+1.f },
-     { +1.f,+1.f,+1.f }
+      {-1.f, -1.f, -1.f},
+      {+1.f, -1.f, -1.f},
+      {+1.f, +1.f, -1.f},
+      {-1.f, +1.f, -1.f},
+      {-1.f, +1.f, +1.f},
+      {+1.f, +1.f, +1.f},
+      {+1.f, -1.f, +1.f},
+      {-1.f, -1.f, +1.f},
+      // { -1.f,-1.f,-1.f },
+      // { +1.f,-1.f,-1.f },
+      // { -1.f,+1.f,-1.f },
+      // { +1.f,+1.f,-1.f },
+      // { -1.f,-1.f,+1.f },
+      // { +1.f,-1.f,+1.f },
+      // { -1.f,+1.f,+1.f },
+      // { +1.f,+1.f,+1.f }
     };
 
   const int NUM_INDICES = 12;
   static const vec3i unitBoxIndices[NUM_INDICES] =
     {
-     { 0,1,3 }, { 2,3,0 },
-     { 5,7,6 }, { 5,6,4 },
-     { 0,4,5 }, { 0,5,1 },
-     { 2,3,7 }, { 2,7,6 },
-     { 1,5,7 }, { 1,7,3 },
-     { 4,0,2 }, { 4,2,6 }
+     {0, 2, 1}, //face front
+     {0, 3, 2},
+     {2, 3, 4}, //face top
+     {2, 4, 5},
+     {1, 2, 5}, //face right
+     {1, 5, 6},
+     {0, 7, 4}, //face left
+     {0, 4, 3},
+     {5, 4, 7}, //face back
+     {5, 7, 6},
+     {0, 6, 7}, //face bottom
+     {0, 1, 6}
     };
 
   const vec3f U = normalize(randomPointInUnitSphere());
   gdt::affine3f xfm = gdt::frame(U);
   xfm = gdt::affine3f(gdt::linear3f::rotate(U,rnd())) * xfm;
-  xfm = gdt::affine3f(gdt::linear3f::scale(size)) * xfm;
+  xfm = gdt::affine3f(gdt::linear3f::scale(.8f*size)) * xfm;
   xfm = gdt::affine3f(gdt::affine3f::translate(center)) * xfm;
   
   const int startIndex = boxes.vertices.size();
@@ -195,11 +209,19 @@ int main(int ac, char **av)
   enum { METAL_SPHERES_TYPE=0,
          DIELECTRIC_SPHERES_TYPE,
          LAMBERTIAN_SPHERES_TYPE,
-         METAL_BOXES_TYPE=0,
+         METAL_BOXES_TYPE,
          DIELECTRIC_BOXES_TYPE,
          LAMBERTIAN_BOXES_TYPE,
          NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
+  ll->geomTypeCreate(METAL_SPHERES_TYPE,sizeof(MetalSpheresGeom));
+  ll->geomTypeCreate(LAMBERTIAN_SPHERES_TYPE,sizeof(LambertianSpheresGeom));
+  ll->geomTypeCreate(DIELECTRIC_SPHERES_TYPE,sizeof(DielectricSpheresGeom));
+  
+  ll->geomTypeCreate(METAL_BOXES_TYPE,sizeof(MetalBoxesGeom));
+  ll->geomTypeCreate(LAMBERTIAN_BOXES_TYPE,sizeof(LambertianBoxesGeom));
+  ll->geomTypeCreate(DIELECTRIC_BOXES_TYPE,sizeof(DielectricBoxesGeom));
+  
   ll->setGeomTypeClosestHit(/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
@@ -546,6 +568,7 @@ int main(int ac, char **av)
        rg->fbSize = fbSize;
        rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
        rg->world  = ll->groupGetTraversable(BOXES_GROUP,devID);
+       rg->worldSBTOffset  = ll->groupGetSBTOffset(BOXES_GROUP);
 
        const float vfov = fovy;
        const vec3f vup = lookUp;

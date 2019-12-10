@@ -545,6 +545,7 @@ namespace owl {
         will *not* check if the group has alreadybeen built, if it
         has to be rebuilt, etc. */
       OptixTraversableHandle groupGetTraversable(int groupID);
+      uint32_t groupGetSBTOffset(int groupID);
       
       // accessor helpers:
       Geom *checkGetGeom(int geomID)

@@ -192,7 +192,8 @@ vec3f tracePath(const RayGenData &self,
     owl::trace(/*accel to trace against*/self.world,
                /*the ray to trace*/ ray,
                /*numRayTypes*/1,
-               /*prd*/prd);
+               /*prd*/prd,
+               self.sbtOffset);
     
     if (prd.out.scatterEvent == rayDidntHitAnything)
       /* ray got 'lost' to the environment - 'light' it with miss

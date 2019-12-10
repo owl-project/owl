@@ -237,6 +237,7 @@ namespace owl {
                                        int offset);
       void groupBuildAccel(int groupID);
       OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
+      uint32_t groupGetSBTOffset(int groupID);
 
 
       void groupBuildPrimitiveBounds(int groupID,

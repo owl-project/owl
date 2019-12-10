@@ -306,6 +306,11 @@ namespace owl {
       }
     }
 
+    uint32_t DeviceGroup::groupGetSBTOffset(int groupID)
+    {
+      return devices[0]->groupGetSBTOffset(groupID);
+    }
+
     OptixTraversableHandle DeviceGroup::groupGetTraversable(int groupID, int deviceID)
     {
       return checkGetDevice(deviceID)->groupGetTraversable(groupID);

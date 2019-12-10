@@ -106,7 +106,8 @@ struct RayGenData
   uint32_t *fbPtr;
   vec2i  fbSize;
   OptixTraversableHandle world;
-
+  int worldSBTOffset;
+  
   struct {
     vec3f origin;
     vec3f lower_left_corner;

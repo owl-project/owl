@@ -19,7 +19,7 @@
 
 using namespace owl;
 
-#define NUM_SAMPLES_PER_PIXEL 1
+#define NUM_SAMPLES_PER_PIXEL 128
 
 // ==================================================================
 // bounding box programs - since these don't actually use the material
@@ -146,16 +146,6 @@ void closestHitBoxes()
 
   // ID of the triangle we've hit:
   const int primID = optixGetPrimitiveIndex();
-
-  printf("self : %lx %lx %lx\n",
-         self.perBoxMaterial,
-         self.index,
-         self.vertex);
-  if (primID > 0) {
-    prd.out.scatterEvent = rayGotCancelled;
-    return;
-  }
-
   
   // there's 12 tris per box:
   const int materialID = primID / 12;
@@ -239,7 +229,8 @@ vec3f tracePath(const RayGenData &self,
     owl::trace(/*accel to trace against*/self.world,
                /*the ray to trace*/ ray,
                /*numRayTypes*/1,
-               /*prd*/prd);
+               /*prd*/prd,
+               self.worldSBTOffset);
     
     if (prd.out.scatterEvent == rayDidntHitAnything)
       /* ray got 'lost' to the environment - 'light' it with miss
