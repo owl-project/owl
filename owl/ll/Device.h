@@ -503,6 +503,17 @@ namespace owl {
                                int *childGroupIDs,
                                /*! number of children in this group */
                                int childCount);
+      /*! set given child's instance transform. groupID must be a
+          valid instance group, childID must be wihtin
+          [0..numChildren) */
+      void instanceGroupSetTransform(int groupID,
+                                     int childNo,
+                                     const affine3f &xfm);
+      /*! set given child to {childGroupID+xfm}  */
+      void instanceGroupSetChild(int groupID,
+                                 int childNo,
+                                 int childGroupID,
+                                 const affine3f &xfm=affine3f(gdt::one));
 
       /*! returns the given buffers device pointer */
       void *bufferGetPointer(int bufferID);
@@ -600,15 +611,23 @@ namespace owl {
       // accessor helpers:
       UserGeomGroup *checkGetUserGeomGroup(int groupID)
       {
-        assert("check valid group ID" && groupID >= 0);
-        assert("check valid group ID" && groupID <  groups.size());
-        Group *group = groups[groupID];
+        Group *group = checkGetGroup(groupID);
         assert("check valid group" && group != nullptr);
         UserGeomGroup *ugg = dynamic_cast<UserGeomGroup*>(group);
         if (!ugg)
           OWL_EXCEPT("group is not a user geometry group");
         assert("check group is a user geom group" && ugg != nullptr);
         return ugg;
+      }
+      // accessor helpers:
+      InstanceGroup *checkGetInstanceGroup(int groupID)
+      {
+        Group *group = checkGetGroup(groupID);
+        InstanceGroup *ig = dynamic_cast<InstanceGroup*>(group);
+        if (!ig)
+          OWL_EXCEPT("group is not a instance group");
+        assert("check group is a user geom group" && ig != nullptr);
+        return ig;
       }
       
       Buffer *checkGetBuffer(int bufferID)

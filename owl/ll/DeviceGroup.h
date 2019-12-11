@@ -213,7 +213,17 @@ namespace owl {
                                int *childGroupIDs,
                                /*! number of children in this group */
                                int childCount);
-
+      /*! set given child's instance transform. groupID must be a
+          valid instance group, childID must be wihtin
+          [0..numChildren) */
+      void instanceGroupSetTransform(int groupID,
+                                     int childNo,
+                                     const affine3f &xfm);
+      /*! set given child to {childGroupID+xfm}  */
+      void instanceGroupSetChild(int groupID,
+                                 int childNo,
+                                 int childGroupID,
+                                 const affine3f &xfm=affine3f(gdt::one));
       void createDeviceBuffer(int bufferID,
                               size_t elementCount,
                               size_t elementSize,
