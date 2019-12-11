@@ -52,11 +52,16 @@ namespace owl {
       DeviceMemory tempMem;
       tempMem.alloc(maxGeomDataSize);
       for (int childID=0;childID<ugg->children.size();childID++) {
+        PRINT(childID);
+        PRINT(ugg->children.size());
         Geom *child = ugg->children[childID];
         assert("double-check valid child geom" && child != nullptr);
         assert(child);
         UserGeom *ug = (UserGeom *)child;
-        ug->internalBufferForBoundsProgram.alloc(ug->numPrims);
+        PING;
+        PRINT(ug);
+        PRINT(ug->numPrims);
+        ug->internalBufferForBoundsProgram.alloc(ug->numPrims*sizeof(box3f));
         ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
 
         if (childID < 10)
@@ -66,13 +71,14 @@ namespace owl {
           
         cb(userGeomData.data(),context->owlDeviceID,
            ug->geomID,childID,cbData); 
-
+        
         // size of each thread block during bounds function call
-		uint32_t boundsFuncBlockSize = 128;
-		uint32_t numPrims = (uint32_t)ug->numPrims;
+        uint32_t boundsFuncBlockSize = 128;
+        uint32_t numPrims = (uint32_t)ug->numPrims;
         vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
         vec3i gridDims(boundsFuncBlockSize,1,1);
 
+        
         tempMem.upload(userGeomData);
         
         void  *d_geomData = tempMem.get();//nullptr;

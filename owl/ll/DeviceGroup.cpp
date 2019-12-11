@@ -360,19 +360,19 @@ namespace owl {
                                                 WriteUserGeomBoundsDataCB cb,
                                                 void *cbData)
     {
-      try {
+      // try {
         for (auto device : devices) 
           device->groupBuildPrimitiveBounds(groupID,
                                             maxGeomDataSize,
                                             cb,
                                             cbData);
-      } catch (std::exception &e) {
-        std::cerr << GDT_TERMINAL_RED
-                  << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
-                  << e.what()
-                  << GDT_TERMINAL_DEFAULT << std::endl;
-        throw e;
-      }
+      // } catch (std::exception &e) {
+      //   std::cerr << GDT_TERMINAL_RED
+      //             << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
+      //             << e.what()
+      //             << GDT_TERMINAL_DEFAULT << std::endl;
+      //   throw e;
+      // }
     }
 
 
