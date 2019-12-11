@@ -32,18 +32,18 @@ add_test(ll07-groupOfGroups
 
 
 foreach(test 1;2)
-  add_executable(ll07-groupOfGroups-test${test} EXCLUDE_FROM_ALL
+  add_executable(ll07-groupOfGroups-variant${test} 
     hostCode.cpp
     ${ptxCode}
     )
-  target_link_libraries(ll07-groupOfGroups-test${test}
+  target_link_libraries(ll07-groupOfGroups-variant${test}
     owl-ll
     )
-  target_compile_definitions(ll07-groupOfGroups-test${test}
+  target_compile_definitions(ll07-groupOfGroups-variant${test}
     PRIVATE
     -DTEST_CASE=${test})
-  add_test(ll07-groupOfGroups-test${test}
-    ${CMAKE_BINARY_DIR}/ll07-groupOfGroups-test${test}
+  add_test(ll07-groupOfGroups-variant${test}
+    ${CMAKE_BINARY_DIR}/ll07-groupOfGroups-variant${test}
     )
 endforeach()
 

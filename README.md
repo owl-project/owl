@@ -43,6 +43,11 @@ Revision History
 v0.4.x - Instances
 ------------------
 
+*v0.4.3*: new api fcts to set transforms and children for instance groups
+
+- added `instanceGroupSetChild` and `instanceGroupSetTransform`
+- extended `ll07-groupOfGroups` by two test cases that set transforms
+
 *v0.4.2*: bugfix - all samples working in multi-device again
 
 *v0.4.1*: example `ll06-rtow-mixedGeometries.png` 

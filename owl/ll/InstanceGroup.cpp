@@ -86,29 +86,21 @@ namespace owl {
       assert("check for valid ID" && groupID < groups.size());
       assert("check group ID is available" && groups[groupID] == nullptr);
         
-      assert("check for valid combinations of child list" &&
-             ((childGroupIDs == nullptr && childCount == 0) ||
-              (childGroupIDs != nullptr && childCount >  0)));
-        
       InstanceGroup *group
         = new InstanceGroup(childCount);
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
-      
-      // set children - todo: move to separate (api?) function(s)!?
-      assert("currently have to specify all children at creation time" &&
-             childCount > 0);
-      assert("currently have to specify all children at creation time" &&
-             childGroupIDs != nullptr);
-      for (int childID=0;childID<childCount;childID++) {
-        int childGroupID = childGroupIDs[childID];
-        assert("check geom child child group ID is valid" && childGroupID >= 0);
-        assert("check geom child child group ID is valid" && childGroupID <  groups.size());
-        Group *childGroup = groups[childGroupID];
-        assert("check referened child groups is valid" && childGroup != nullptr);
-        childGroup->numTimesReferenced++;
-        group->children[childID] = childGroup;
-      }
+
+      if (childGroupIDs) 
+        for (int childID=0;childID<childCount;childID++) {
+          int childGroupID = childGroupIDs[childID];
+          assert("check geom child child group ID is valid" && childGroupID >= 0);
+          assert("check geom child child group ID is valid" && childGroupID <  groups.size());
+          Group *childGroup = groups[childGroupID];
+          assert("check referened child groups is valid" && childGroup != nullptr);
+          childGroup->numTimesReferenced++;
+          group->children[childID] = childGroup;
+        }
     }
 
     void InstanceGroup::destroyAccel(Context *context) 
