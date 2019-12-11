@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ll/cuda.h"
+#include "owl/ll/cuda.h"
 
 #define OPTIX_COMPATIBILITY 7
 

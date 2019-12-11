@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include "ll/optix.h"
-#include "ll/DeviceMemory.h"
+#include "owl/ll/optix.h"
+#include "owl/ll/DeviceMemory.h"
 // for the hit group callback type, which is part of the API
-#include "ll/DeviceGroup.h"
+#include "owl/ll/DeviceGroup.h"
 
 namespace owl {
   namespace ll {

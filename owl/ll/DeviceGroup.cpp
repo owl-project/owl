@@ -14,8 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/Device.h"
-#include "ll/DeviceGroup.h"
+#include "owl/ll/Device.h"
+#include "owl/ll/DeviceGroup.h"
 
 #define LOG(message)                            \
   std::cout << "#owl.ll: "                      \
