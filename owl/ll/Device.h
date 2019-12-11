@@ -515,13 +515,17 @@ namespace owl {
                                  int childGroupID,
                                  const affine3f &xfm=affine3f(gdt::one));
 
+      /*! destroy the given buffer, and release all host and/or device
+          memory associated with it */
+      void bufferDestroy(int bufferID);
+      
       /*! returns the given buffers device pointer */
       void *bufferGetPointer(int bufferID);
-      void createDeviceBuffer(int bufferID,
+      void deviceBufferCreate(int bufferID,
                               size_t elementCount,
                               size_t elementSize,
                               const void *initData);
-      void createHostPinnedBuffer(int bufferID,
+      void hostPinnedBufferCreate(int bufferID,
                                   size_t elementCount,
                                   size_t elementSize,
                                   HostPinnedMemory::SP pinnedMem);

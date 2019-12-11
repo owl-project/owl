@@ -764,9 +764,19 @@ namespace owl {
     }
       
 
-
+    void Device::bufferDestroy(int bufferID)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID <  buffers.size());
+      assert("check buffer to be destroyed actually exists"
+             && buffers[bufferID] != nullptr);
+      context->pushActive();
+      delete buffers[bufferID];
+      buffers[bufferID] = nullptr;
+      context->popActive();
+    }
     
-    void Device::createDeviceBuffer(int bufferID,
+    void Device::deviceBufferCreate(int bufferID,
                                     size_t elementCount,
                                     size_t elementSize,
                                     const void *initData)
@@ -788,7 +798,7 @@ namespace owl {
       context->popActive();
     }
     
-    void Device::createHostPinnedBuffer(int bufferID,
+    void Device::hostPinnedBufferCreate(int bufferID,
                                         size_t elementCount,
                                         size_t elementSize,
                                         HostPinnedMemory::SP pinnedMem)

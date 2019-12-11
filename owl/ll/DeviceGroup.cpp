@@ -237,23 +237,29 @@ namespace owl {
       LOG_OK("optix pipeline created");
     }
 
-    void DeviceGroup::createDeviceBuffer(int bufferID,
+    void DeviceGroup::bufferDestroy(int bufferID)
+    {
+      for (auto device : devices) 
+        device->bufferDestroy(bufferID);
+    }
+
+    void DeviceGroup::deviceBufferCreate(int bufferID,
                                          size_t elementCount,
                                          size_t elementSize,
                                          const void *initData)
     {
       for (auto device : devices) 
-        device->createDeviceBuffer(bufferID,elementCount,elementSize,initData);
+        device->deviceBufferCreate(bufferID,elementCount,elementSize,initData);
     }
 
-    void DeviceGroup::createHostPinnedBuffer(int bufferID,
+    void DeviceGroup::hostPinnedBufferCreate(int bufferID,
                                              size_t elementCount,
                                              size_t elementSize)
     {
       HostPinnedMemory::SP pinned
         = std::make_shared<HostPinnedMemory>(elementCount*elementSize);
       for (auto device : devices) 
-        device->createHostPinnedBuffer(bufferID,elementCount,elementSize,pinned);
+        device->hostPinnedBufferCreate(bufferID,elementCount,elementSize,pinned);
     }
 
       
