@@ -39,7 +39,18 @@
 
 namespace owl {
   namespace ll {
-    
+
+    struct WarnOnce
+    {
+      WarnOnce(const char *message)
+      {
+        std::cout << GDT_TERMINAL_RED
+                  << "#owl.ll(warning): "
+                  << message
+                  << GDT_TERMINAL_DEFAULT << std::endl;
+      }
+    };
+      
     static void context_log_cb(unsigned int level,
                                const char *tag,
                                const char *message,
@@ -711,11 +722,13 @@ namespace owl {
       assert(!device->rayGenPGs.empty());
       for (auto &pg : device->rayGenPGs)
         allPGs.push_back(pg.pg);
-      assert(!device->geomTypes.empty());
+      if (device->geomTypes.empty())
+        CLOG("warning: no geometry types defined");
       for (auto &geomType : device->geomTypes)
         for (auto &pg : geomType.perRayType)
           allPGs.push_back(pg.pg);
-      assert(!device->missProgPGs.empty());
+      if (device->missProgPGs.empty())
+        CLOG("warning: no miss programs defined");
       for (auto &pg : device->missProgPGs)
         allPGs.push_back(pg.pg);
 
@@ -1131,22 +1144,47 @@ namespace owl {
       sbt.sbt.raygenRecord
         = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
                                         rgID * sbt.rayGenRecordSize);
-      
-      assert("check miss records built" && sbt.missProgRecordCount != 0);
-      sbt.sbt.missRecordBase
-        = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
-      sbt.sbt.missRecordStrideInBytes
-        = (uint32_t)sbt.missProgRecordSize;
-      sbt.sbt.missRecordCount
-        = (uint32_t)sbt.missProgRecordCount;
-      
-      assert("check hit records built" && sbt.hitGroupRecordCount != 0);
-      sbt.sbt.hitgroupRecordBase
-        = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
-      sbt.sbt.hitgroupRecordStrideInBytes
-        = (uint32_t)sbt.hitGroupRecordSize;
-      sbt.sbt.hitgroupRecordCount
-        = (uint32_t)sbt.hitGroupRecordCount;
+
+      if (!sbt.missProgRecordsBuffer.valid() &&
+          !sbt.hitGroupRecordsBuffer.valid()) {
+        // apparently this program does not have any hit records *or*
+        // miss records, which means either something's horribly wrong
+        // in the app, or this is more cuda-style "raygen-only" launch
+        // (ie, a lauch of a raygen programthat doesn't actualy trace
+        // any rays. If the latter, let's "fake" a valid SBT by
+        // writing in some (senseless) values to not trigger optix's
+        // own sanity checks
+        static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+        sbt.sbt.missRecordBase
+          = (CUdeviceptr)32;
+        sbt.sbt.missRecordStrideInBytes
+          = (uint32_t)32;
+        sbt.sbt.missRecordCount
+          = 1;
+
+        sbt.sbt.hitgroupRecordBase
+          = (CUdeviceptr)32;
+        sbt.sbt.hitgroupRecordStrideInBytes
+          = (uint32_t)32;
+        sbt.sbt.hitgroupRecordCount
+          = 1;
+      } else {
+        assert("check miss records built" && sbt.missProgRecordCount != 0);
+        sbt.sbt.missRecordBase
+          = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
+        sbt.sbt.missRecordStrideInBytes
+          = (uint32_t)sbt.missProgRecordSize;
+        sbt.sbt.missRecordCount
+          = (uint32_t)sbt.missProgRecordCount;
+
+        assert("check hit records built" && sbt.hitGroupRecordCount != 0);
+        sbt.sbt.hitgroupRecordBase
+          = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
+        sbt.sbt.hitgroupRecordStrideInBytes
+          = (uint32_t)sbt.hitGroupRecordSize;
+        sbt.sbt.hitgroupRecordCount
+          = (uint32_t)sbt.hitGroupRecordCount;
+      }
 
       if (!sbt.launchParamsBuffer.valid()) {
         LOG("creating dummy launch params buffer ...");

@@ -486,12 +486,29 @@ int main(int ac, char **av)
 
   
   // ----------- finally, the world group that combines them -----------
+#if TEST_CASE==1
   int groupsInWorldGroup[]
     = { SPHERES_GROUP,
         BOXES_GROUP };
   ll->instanceGroupCreate(/* group ID */WORLD_GROUP,
                           /* geoms in group, pointer */ groupsInWorldGroup,
                           /* geoms in group, count   */ 2);
+  ll->instanceGroupSetTransform(WORLD_GROUP,0,gdt::affine3f(gdt::one));
+  ll->instanceGroupSetTransform(WORLD_GROUP,1,gdt::affine3f(gdt::one));
+#elif TEST_CASE==2
+  ll->instanceGroupCreate(/* group ID */WORLD_GROUP,
+                          /* geoms in group, pointer */ nullptr,
+                          /* geoms in group, count   */ 2);
+  ll->instanceGroupSetChild(WORLD_GROUP,0,SPHERES_GROUP,gdt::affine3f(gdt::one));
+  ll->instanceGroupSetChild(WORLD_GROUP,1,BOXES_GROUP,gdt::affine3f(gdt::one));
+#else
+  int groupsInWorldGroup[]
+    = { SPHERES_GROUP,
+        BOXES_GROUP };
+  ll->instanceGroupCreate(/* group ID */WORLD_GROUP,
+                          /* geoms in group, pointer */ groupsInWorldGroup,
+                          /* geoms in group, count   */ 2);
+#endif
   ll->groupBuildAccel(WORLD_GROUP);
   
   

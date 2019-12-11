@@ -369,6 +369,33 @@ namespace owl {
       }
     }
 
+
+      /*! set given child's instance transform. groupID must be a
+          valid instance group, childID must be wihtin
+          [0..numChildren) */
+      void DeviceGroup::instanceGroupSetTransform(int groupID,
+                                     int childNo,
+                                     const affine3f &xfm)
+    {
+      for (auto device : devices)
+        device->instanceGroupSetTransform(groupID,
+                                          childNo,
+                                          xfm);
+    }
+
+    /*! set given child to {childGroupID+xfm}  */
+    void DeviceGroup::instanceGroupSetChild(int groupID,
+                                            int childNo,
+                                            int childGroupID,
+                                            const affine3f &xfm)
+    {
+      for (auto device : devices)
+        device->instanceGroupSetChild(groupID,
+                                      childNo,
+                                      childGroupID,
+                                      xfm);
+    }
+    
     /*! create a new instance group with given list of children */
     void DeviceGroup::instanceGroupCreate(/*! the group we are defining */
                                           int groupID,

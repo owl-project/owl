@@ -39,6 +39,39 @@
 namespace owl {
   namespace ll {
 
+    /*! set given child's instance transform. groupID must be a
+      valid instance group, childID must be wihtin
+      [0..numChildren) */
+    void Device::instanceGroupSetTransform(int groupID,
+                                           int childNo,
+                                           const affine3f &xfm)
+    {
+      InstanceGroup *ig = checkGetInstanceGroup(groupID);
+      assert("check valid child slot" && childNo >= 0);
+      assert("check valid child slot" && childNo <  ig->children.size());
+      
+      if (ig->transforms.empty())
+        ig->transforms.resize(ig->children.size());
+      ig->transforms[childNo] = xfm;
+    }
+    
+    /*! set given child to {childGroupID+xfm}  */
+    void Device::instanceGroupSetChild(int groupID,
+                                       int childNo,
+                                       int childGroupID,
+                                       const affine3f &xfm)
+    {
+      InstanceGroup *ig = checkGetInstanceGroup(groupID);
+      Group *newChild = checkGetGroup(childGroupID);
+      if (ig->transforms.empty())
+        ig->transforms.resize(ig->children.size());
+      Group *oldChild = ig->children[childNo];
+      if (oldChild)
+        oldChild->numTimesReferenced--;
+      ig->children[childNo] = newChild;
+      newChild->numTimesReferenced++;
+    }
+
     void Device::instanceGroupCreate(/*! the group we are defining */
                                      int groupID,
                                      /* list of children. list can be
@@ -53,29 +86,21 @@ namespace owl {
       assert("check for valid ID" && groupID < groups.size());
       assert("check group ID is available" && groups[groupID] == nullptr);
         
-      assert("check for valid combinations of child list" &&
-             ((childGroupIDs == nullptr && childCount == 0) ||
-              (childGroupIDs != nullptr && childCount >  0)));
-        
       InstanceGroup *group
         = new InstanceGroup(childCount);
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
-      
-      // set children - todo: move to separate (api?) function(s)!?
-      assert("currently have to specify all children at creation time" &&
-             childCount > 0);
-      assert("currently have to specify all children at creation time" &&
-             childGroupIDs != nullptr);
-      for (int childID=0;childID<childCount;childID++) {
-        int childGroupID = childGroupIDs[childID];
-        assert("check geom child child group ID is valid" && childGroupID >= 0);
-        assert("check geom child child group ID is valid" && childGroupID <  groups.size());
-        Group *childGroup = groups[childGroupID];
-        assert("check referened child groups is valid" && childGroup != nullptr);
-        childGroup->numTimesReferenced++;
-        group->children[childID] = childGroup;
-      }
+
+      if (childGroupIDs) 
+        for (int childID=0;childID<childCount;childID++) {
+          int childGroupID = childGroupIDs[childID];
+          assert("check geom child child group ID is valid" && childGroupID >= 0);
+          assert("check geom child child group ID is valid" && childGroupID <  groups.size());
+          Group *childGroup = groups[childGroupID];
+          assert("check referened child groups is valid" && childGroup != nullptr);
+          childGroup->numTimesReferenced++;
+          group->children[childID] = childGroup;
+        }
     }
 
     void InstanceGroup::destroyAccel(Context *context) 

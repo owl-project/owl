@@ -18,34 +18,13 @@ include_directories(${PROJECT_SOURCE_DIR}/owl)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(ll07-groupOfGroups
+add_executable(ll00-rayGenOnly
   hostCode.cpp
   ${ptxCode}
   )
-target_link_libraries(ll07-groupOfGroups
+target_link_libraries(ll00-rayGenOnly
   owl-ll
   )
-add_test(ll07-groupOfGroups
-  ${CMAKE_BINARY_DIR}/ll07-groupOfGroups
-  )
-
-
-
-foreach(test 1;2)
-  add_executable(ll07-groupOfGroups-variant${test} 
-    hostCode.cpp
-    ${ptxCode}
-    )
-  target_link_libraries(ll07-groupOfGroups-variant${test}
-    owl-ll
-    )
-  target_compile_definitions(ll07-groupOfGroups-variant${test}
-    PRIVATE
-    -DTEST_CASE=${test})
-  add_test(ll07-groupOfGroups-variant${test}
-    ${CMAKE_BINARY_DIR}/ll07-groupOfGroups-variant${test}
-    )
-endforeach()
-
+add_test(ll00-rayGenOnly ${CMAKE_BINARY_DIR}/ll00-rayGenOnly)
 
 
