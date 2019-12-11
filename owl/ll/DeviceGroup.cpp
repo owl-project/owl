@@ -39,7 +39,7 @@ namespace owl {
     HostPinnedMemory::~HostPinnedMemory()
     {
       assert(pointer != nullptr);
-      CUDA_CALL(FreeHost(pointer));
+      CUDA_CALL_NOTHROW(FreeHost(pointer));
       pointer = nullptr;
     }
     
