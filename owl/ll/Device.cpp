@@ -232,6 +232,8 @@ namespace owl {
       assert(geomTypeID >= 0);
       assert(geomTypeID < geomTypes.size());
       auto &geomType = geomTypes[geomTypeID];
+      assert("make sure geomTypeCreate() was called before geomTypeSetBoundsProg"
+             && geomType.hitProgDataSize != size_t(-1));
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -256,6 +258,9 @@ namespace owl {
       assert(geomTypeID >= 0);
       assert(geomTypeID < geomTypes.size());
       auto &geomType = geomTypes[geomTypeID];
+
+      assert("make sure geomTypeCreate() was properly called"
+             && geomType.hitProgDataSize != size_t(-1));
       
       assert(rayTypeID >= 0);
       assert(rayTypeID < context->numRayTypes);
@@ -930,7 +935,8 @@ namespace owl {
         GeomType &gt = geomTypes[geom->geomTypeID];
         maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
       }
-      PRINT(maxHitProgDataSize);
+      if (maxHitProgDataSize == size_t(-1))
+        throw std::runtime_error("in sbtHitProgsBuild: at least on geometry uses a type for which geomTypeCreate has not been called");
       assert("make sure all geoms had their program size set"
              && maxHitProgDataSize != (size_t)-1);
       size_t numHitGroupEntries = sbt.rangeAllocator.maxAllocedID;
