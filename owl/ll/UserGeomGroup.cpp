@@ -52,15 +52,10 @@ namespace owl {
       DeviceMemory tempMem;
       tempMem.alloc(maxGeomDataSize);
       for (int childID=0;childID<ugg->children.size();childID++) {
-        PRINT(childID);
-        PRINT(ugg->children.size());
         Geom *child = ugg->children[childID];
         assert("double-check valid child geom" && child != nullptr);
         assert(child);
         UserGeom *ug = (UserGeom *)child;
-        PING;
-        PRINT(ug);
-        PRINT(ug->numPrims);
         ug->internalBufferForBoundsProgram.alloc(ug->numPrims*sizeof(box3f));
         ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
 
