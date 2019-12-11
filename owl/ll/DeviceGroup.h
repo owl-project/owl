@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ll/optix.h"
+#include "owl/ll/optix.h"
 #ifdef __CUDA_ARCH__
 #  error "this file should only ever get included on the device side"
 #endif
@@ -113,6 +113,11 @@ namespace owl {
       ~DeviceGroup();
       
       void allocModules(size_t count);
+      /*! create a new module under given ID
+       * 
+       *  \todo rename to moduleCreate for consistency
+       *
+       *  \todo add module destroy */
       void setModule(size_t slot, const char *ptxCode);
       void buildModules();
       void createPipeline();
@@ -227,8 +232,33 @@ namespace owl {
       void createDeviceBuffer(int bufferID,
                               size_t elementCount,
                               size_t elementSize,
+                              const void *initData)
+      {
+        // TODO: ax this after renaming samples
+        std::cout << "warning: deprecated, use deviceBufferCreate() instead" << std::endl;
+        deviceBufferCreate(bufferID,elementCount,elementSize,initData);
+      }
+
+      /*! destroy the given buffer, and release all host and/or device
+          memory associated with it */
+      void bufferDestroy(int bufferID);
+      
+      /*! create a new device buffer - this buffer type will be
+          allocated on each device */
+      void deviceBufferCreate(int bufferID,
+                              size_t elementCount,
+                              size_t elementSize,
                               const void *initData);
+      
       void createHostPinnedBuffer(int bufferID,
+                                  size_t elementCount,
+                                  size_t elementSize)
+      {
+        // TODO: ax this after renaming samples
+        std::cout << "warning: deprecated, use hostPinnedBufferCreate() instead" << std::endl;
+        hostPinnedBufferCreate(bufferID,elementCount,elementSize);
+      }
+      void hostPinnedBufferCreate(int bufferID,
                                   size_t elementCount,
                                   size_t elementSize);
       

@@ -25,12 +25,13 @@
 // actual device-side "API" built-ins.
 // ==================================================================
 
-#ifndef __CUDA_ARCH__
+#ifndef __CUDACC__
 #  error "this file should only ever get included on the device side"
 #endif
 
 namespace owl {
-
+  using namespace gdt;
+  
   inline __device__ vec2i getLaunchIndex()
   {
     return (vec2i)optixGetLaunchIndex();
