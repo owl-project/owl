@@ -28,7 +28,7 @@ namespace owl {
   using namespace gdt;
 }
 
-#ifdef __CUDA_ARCH__
+#ifdef __CUDACC__
 #  include "deviceAPI.h"
 #else
 #  include "DeviceGroup.h"

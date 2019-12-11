@@ -1012,7 +1012,11 @@ namespace owl {
     void Device::sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
                                  const void *callBackUserData)
     {
-      LOG("building sbt ray gen records");
+      static size_t numTimesCalled = 0;
+      ++numTimesCalled;
+      
+      if (numTimesCalled < 10)
+        LOG("building sbt ray gen records (only showing first 10 instances)");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.rayGenRecordsBuffer.valid())
@@ -1070,7 +1074,8 @@ namespace owl {
       sbt.rayGenRecordsBuffer.alloc(rayGenRecords.size());
       sbt.rayGenRecordsBuffer.upload(rayGenRecords);
       context->popActive();
-      LOG_OK("done building (and uploading) sbt ray gen records");
+      if (numTimesCalled < 10)
+        LOG_OK("done building (and uploading) sbt ray gen records (only showing first 10 instances)");
     }
       
     void Device::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
@@ -1144,7 +1149,7 @@ namespace owl {
     void Device::launch(int rgID, const vec2i &dims)
     {
       context->pushActive();
-      LOG("launching ...");
+      // LOG("launching ...");
       assert("check valid launch dims" && dims.x > 0);
       assert("check valid launch dims" && dims.y > 0);
       assert("check valid ray gen program ID" && rgID >= 0);

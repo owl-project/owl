@@ -113,6 +113,11 @@ namespace owl {
       ~DeviceGroup();
       
       void allocModules(size_t count);
+      /*! create a new module under given ID
+       * 
+       *  \todo rename to moduleCreate for consistency
+       *
+       *  \todo add module destroy */
       void setModule(size_t slot, const char *ptxCode);
       void buildModules();
       void createPipeline();
