@@ -14,7 +14,7 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl)
+include_directories(${PROJECT_SOURCE_DIR}/)
    
 add_library(owl-ll
   common.h

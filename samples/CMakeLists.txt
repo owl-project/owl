@@ -14,6 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+include_directories(${PROJECT_SOURCE_DIR}/)
+
 # low-level interface
 add_subdirectory(ll)
 
