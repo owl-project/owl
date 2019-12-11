@@ -59,7 +59,11 @@ namespace owl {
         ug->internalBufferForBoundsProgram.alloc(ug->numPrims);
         ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
 
-        LOG("calling user geom callback to set up user geometry bounds call data");
+        if (childID < 10)
+          LOG("calling user geom callback to set up user geometry bounds call data");
+        else if (childID == 10)
+          LOG("(more instances may follow)");
+          
         cb(userGeomData.data(),context->owlDeviceID,
            ug->geomID,childID,cbData); 
 

@@ -308,7 +308,7 @@ namespace owl {
                   << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
                   << e.what()
                   << GDT_TERMINAL_DEFAULT << std::endl;
-        exit(0);
+        throw e;
       }
     }
 
@@ -371,7 +371,7 @@ namespace owl {
                   << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
                   << e.what()
                   << GDT_TERMINAL_DEFAULT << std::endl;
-        exit(0);
+        throw e;
       }
     }
 

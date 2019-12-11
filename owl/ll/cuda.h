@@ -20,6 +20,46 @@
 
 #include <cuda_runtime.h>
 
+#if 1
+#define CUDA_CHECK( call )                                              \
+  {                                                                     \
+    cudaError_t rc = call;                                              \
+    if (rc != cudaSuccess) {                                            \
+      fprintf(stderr,                                                   \
+              "CUDA call (%s) failed with code %d (line %d): %s\n",     \
+              #call, rc, __LINE__, cudaGetErrorString(rc));             \
+      throw std::runtime_error("fatal cuda error");                     \
+    }                                                                   \
+  }
+
+#define CUDA_CALL(call) CUDA_CHECK(cuda##call)
+
+#define CUDA_CHECK2( where, call )                                      \
+  {                                                                     \
+    cudaError_t rc = call;                                              \
+    if(rc != cudaSuccess) {                                             \
+      if (where)                                                        \
+        fprintf(stderr, "at %s: CUDA call (%s) "                        \
+                "failed with code %d (line %d): %s\n",                  \
+                where,#call, rc, __LINE__, cudaGetErrorString(rc));     \
+      fprintf(stderr,                                                   \
+              "CUDA call (%s) failed with code %d (line %d): %s\n",     \
+              #call, rc, __LINE__, cudaGetErrorString(rc));             \
+      throw std::runtime_error("fatal cuda error");                     \
+    }                                                                   \
+  }
+
+#define CUDA_SYNC_CHECK()                                               \
+  {                                                                     \
+    cudaDeviceSynchronize();                                            \
+    cudaError_t rc = cudaGetLastError();                                \
+    if (rc != cudaSuccess) {                                            \
+      fprintf(stderr, "error (%s: line %d): %s\n",                      \
+              __FILE__, __LINE__, cudaGetErrorString(rc));              \
+      throw std::runtime_error("fatal cuda error");                     \
+    }                                                                   \
+  }
+#else
 #define CUDA_CHECK( call )                                              \
   {                                                                     \
     cudaError_t rc = call;                                              \
@@ -59,4 +99,5 @@
     }                                                                   \
   }
 
+#endif
 
