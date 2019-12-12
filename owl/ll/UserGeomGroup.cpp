@@ -86,20 +86,21 @@ namespace owl {
 
         DeviceMemory tempMem;
         GeomType *gt = checkGetGeomType(ug->geomTypeID);
+        CUstream stream = context->stream;
         CUresult rc
           = cuLaunchKernel(gt->boundsFuncKernel,
                            blockDims.x,blockDims.y,blockDims.z,
                            gridDims.x,gridDims.y,gridDims.z,
-                           0, 0, args, 0);
+                           0, stream, args, 0);
         if (rc) {
           const char *errName = 0;
           cuGetErrorName(rc,&errName);
           PRINT(errName);
           exit(0);
         }
-        cudaDeviceSynchronize();
       }
       tempMem.free();
+      cudaDeviceSynchronize();
       context->popActive();
     }
 
