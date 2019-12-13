@@ -70,6 +70,29 @@ namespace owl {
       return device;
     }
 
+
+    
+    /*! set the maximum instancing depth that will be allowed; '0'
+      means 'no instancing, only bottom level accels', '1' means
+      'only one singel level of instances' (ie, instancegroups
+      never have children that are themselves instance groups),
+      etc. 
+
+      Note we currently do *not* yet check the node graph as
+      to whether it adheres to this value - if you use a node
+      graph that's deeper than the value passed through this
+      function you will most likely see optix crashing on you (and
+      correctly so). See issue #1.
+
+      Note this value will have to be set *before* the pipeline
+      gets created */
+    void DeviceGroup::setMaxInstancingDepth(int maxInstancingDepth)
+    {
+      for (auto device : devices)
+        device->setMaxInstancingDepth(maxInstancingDepth);
+    }
+    
+
     void DeviceGroup::allocModules(size_t count)
     { for (auto device : devices) device->allocModules(count); }
     
@@ -423,6 +446,7 @@ namespace owl {
     void DeviceGroup::launch(int rgID, const vec2i &dims)
     {
       for (auto device : devices) device->launch(rgID,dims);
+      CUDA_SYNC_CHECK();
     }
     
     /* create an instance of this object that has properly
