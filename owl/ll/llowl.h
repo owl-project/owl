@@ -30,6 +30,5 @@ namespace owl {
 
 #ifdef __CUDACC__
 #  include "deviceAPI.h"
-#else
-#  include "DeviceGroup.h"
 #endif
+#include "DeviceGroup.h"
