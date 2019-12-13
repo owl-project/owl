@@ -49,7 +49,7 @@ v0.4.x - Instances
   instance depth and stack depth on pipeline.
 
 - added `ll08-sierpinski` example that allows for testing user-supplied number
-  of instance levels with a sierpinski pyramid.
+  of instance levels with a sierpinski pyramid (Thx Nate!)
   
 *v0.4.3*: new api fcts to set transforms and children for instance groups
 
@@ -125,3 +125,9 @@ v0.1.x
 ------
 
 - first version that does "some" sort of launch with mostly functional SBT
+
+Contributors
+============
+
+- Ingo Wald
+- Nate Morrical
