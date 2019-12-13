@@ -70,16 +70,24 @@ namespace owl {
       
       void createPipeline(Device *device);
       void destroyPipeline();
+
       
       OptixDeviceContext optixContext = nullptr;
       CUcontext          cudaContext  = nullptr;
       CUstream           stream       = nullptr;
 
+      /*! sets the pipelineCompileOptions etc based on
+          maxConfiguredInstanceDepth */
+      void configurePipelineOptions();
+      
       OptixPipelineCompileOptions pipelineCompileOptions = {};
       OptixPipelineLinkOptions    pipelineLinkOptions    = {};
       OptixModuleCompileOptions   moduleCompileOptions   = {};
       OptixPipeline               pipeline               = nullptr;
 
+      /*! maximum depth instancing tree as specified by
+          `setMaxInstancingDepth` */
+      int maxInstancingDepth = 2;      
       int numRayTypes { 1 };
     };
     
@@ -706,10 +714,6 @@ namespace owl {
       std::vector<Group *>      groups;
       std::vector<Buffer *>     buffers;
       SBT                       sbt;
-
-      /*! maximum depth instancing tree as specified by
-          `setMaxInstancingDepth` */
-      int maxConfiguredInstancingDepth = 4;      
     };
     
   } // ::owl::ll

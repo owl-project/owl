@@ -124,9 +124,8 @@ namespace owl {
           function you will most likely see optix crashing on you (and
           correctly so). See issue #1.
 
-          Note this value will only take effect upon the next
-          buildPrograms() and createPipeline(), so should be called
-          *before* those functions get called */
+          Note this value will have to be set *before* the pipeline
+          gets created */
       void setMaxInstancingDepth(int maxInstancingDepth);
       
       void allocModules(size_t count);

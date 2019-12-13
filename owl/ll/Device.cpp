@@ -127,6 +127,23 @@ namespace owl {
       OPTIX_CHECK(optixDeviceContextSetLogCallback
                   (optixContext,context_log_cb,this,4));
 
+      configurePipelineOptions();
+    }
+
+    void Device::setMaxInstancingDepth(int maxInstancingDepth)
+    {
+      if (maxInstancingDepth == context->maxInstancingDepth)
+        return;
+      assert("check pipeline isn't already created"
+             && context->pipeline == nullptr);
+      context->maxInstancingDepth = maxInstancingDepth;
+      context->configurePipelineOptions();
+    }
+
+    /*! sets the pipelineCompileOptions etc based on
+      maxConfiguredInstanceDepth */
+    void Context::configurePipelineOptions()
+    {
       // ------------------------------------------------------------------
       // configure default module compile options
       // ------------------------------------------------------------------
@@ -138,13 +155,21 @@ namespace owl {
       // configure default pipeline compile options
       // ------------------------------------------------------------------
       pipelineCompileOptions = {};
-      pipelineCompileOptions.traversableGraphFlags
-#if 1
-        = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY
-#else
-        = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
-#endif
-          ;
+      assert(maxInstancingDepth >= 0);
+      switch (maxInstancingDepth) {
+      case 0:
+        pipelineCompileOptions.traversableGraphFlags
+          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS;
+        break;
+      case 1:
+        pipelineCompileOptions.traversableGraphFlags
+          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+        break;
+      default:
+        pipelineCompileOptions.traversableGraphFlags
+          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
+        break;
+      }
       pipelineCompileOptions.usesMotionBlur     = false;
       pipelineCompileOptions.numPayloadValues   = 2;
       pipelineCompileOptions.numAttributeValues = 2;
@@ -762,7 +787,7 @@ namespace owl {
                       direct callables invoked from RG, MS, or CH.  */
                    2*1024,
                    /* [in] The continuation stack requirement. */
-                   device->maxConfiguredInstancingDepth
+                   (maxInstancingDepth+1)
                    /* [in] The maximum depth of a traversable graph
                       passed to trace. */
                    ));
