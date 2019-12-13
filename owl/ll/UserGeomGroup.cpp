@@ -56,19 +56,24 @@ namespace owl {
         assert("double-check valid child geom" && child != nullptr);
         assert(child);
         UserGeom *ug = (UserGeom *)child;
-        ug->internalBufferForBoundsProgram.alloc(ug->numPrims);
+        ug->internalBufferForBoundsProgram.alloc(ug->numPrims*sizeof(box3f));
         ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
 
-        LOG("calling user geom callback to set up user geometry bounds call data");
+        if (childID < 10)
+          LOG("calling user geom callback to set up user geometry bounds call data");
+        else if (childID == 10)
+          LOG("(more instances may follow)");
+          
         cb(userGeomData.data(),context->owlDeviceID,
            ug->geomID,childID,cbData); 
-
+        
         // size of each thread block during bounds function call
-		uint32_t boundsFuncBlockSize = 128;
-		uint32_t numPrims = (uint32_t)ug->numPrims;
+        uint32_t boundsFuncBlockSize = 128;
+        uint32_t numPrims = (uint32_t)ug->numPrims;
         vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
         vec3i gridDims(boundsFuncBlockSize,1,1);
 
+        
         tempMem.upload(userGeomData);
         
         void  *d_geomData = tempMem.get();//nullptr;
@@ -81,20 +86,21 @@ namespace owl {
 
         DeviceMemory tempMem;
         GeomType *gt = checkGetGeomType(ug->geomTypeID);
+        CUstream stream = context->stream;
         CUresult rc
           = cuLaunchKernel(gt->boundsFuncKernel,
                            blockDims.x,blockDims.y,blockDims.z,
                            gridDims.x,gridDims.y,gridDims.z,
-                           0, 0, args, 0);
+                           0, stream, args, 0);
         if (rc) {
           const char *errName = 0;
           cuGetErrorName(rc,&errName);
           PRINT(errName);
           exit(0);
         }
-        cudaDeviceSynchronize();
       }
       tempMem.free();
+      cudaDeviceSynchronize();
       context->popActive();
     }
 

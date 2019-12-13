@@ -14,7 +14,7 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl)
+include_directories(${PROJECT_SOURCE_DIR}/)
    
 add_library(owl-ll
   common.h
@@ -30,7 +30,7 @@ add_library(owl-ll
   DeviceGroup.cpp
   )
 target_link_libraries(owl-ll
-  owl-common
+#  owl-common
   ${CUDA_LIBRARIES}
   ${CUDA_CUDA_LIBRARY}
   )

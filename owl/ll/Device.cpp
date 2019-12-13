@@ -262,6 +262,8 @@ namespace owl {
       assert(geomTypeID >= 0);
       assert(geomTypeID < geomTypes.size());
       auto &geomType = geomTypes[geomTypeID];
+      assert("make sure geomTypeCreate() was called before geomTypeSetBoundsProg"
+             && geomType.hitProgDataSize != size_t(-1));
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -286,6 +288,9 @@ namespace owl {
       assert(geomTypeID >= 0);
       assert(geomTypeID < geomTypes.size());
       auto &geomType = geomTypes[geomTypeID];
+
+      assert("make sure geomTypeCreate() was properly called"
+             && geomType.hitProgDataSize != size_t(-1));
       
       assert(rayTypeID >= 0);
       assert(rayTypeID < context->numRayTypes);
@@ -794,9 +799,19 @@ namespace owl {
     }
       
 
-
+    void Device::bufferDestroy(int bufferID)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID <  buffers.size());
+      assert("check buffer to be destroyed actually exists"
+             && buffers[bufferID] != nullptr);
+      context->pushActive();
+      delete buffers[bufferID];
+      buffers[bufferID] = nullptr;
+      context->popActive();
+    }
     
-    void Device::createDeviceBuffer(int bufferID,
+    void Device::deviceBufferCreate(int bufferID,
                                     size_t elementCount,
                                     size_t elementSize,
                                     const void *initData)
@@ -818,7 +833,7 @@ namespace owl {
       context->popActive();
     }
     
-    void Device::createHostPinnedBuffer(int bufferID,
+    void Device::hostPinnedBufferCreate(int bufferID,
                                         size_t elementCount,
                                         size_t elementSize,
                                         HostPinnedMemory::SP pinnedMem)
@@ -950,7 +965,8 @@ namespace owl {
         GeomType &gt = geomTypes[geom->geomTypeID];
         maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
       }
-      PRINT(maxHitProgDataSize);
+      if (maxHitProgDataSize == size_t(-1))
+        throw std::runtime_error("in sbtHitProgsBuild: at least on geometry uses a type for which geomTypeCreate has not been called");
       assert("make sure all geoms had their program size set"
              && maxHitProgDataSize != (size_t)-1);
       size_t numHitGroupEntries = sbt.rangeAllocator.maxAllocedID;
@@ -1032,7 +1048,11 @@ namespace owl {
     void Device::sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
                                  const void *callBackUserData)
     {
-      LOG("building sbt ray gen records");
+      static size_t numTimesCalled = 0;
+      ++numTimesCalled;
+      
+      if (numTimesCalled < 10)
+        LOG("building sbt ray gen records (only showing first 10 instances)");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.rayGenRecordsBuffer.valid())
@@ -1090,7 +1110,8 @@ namespace owl {
       sbt.rayGenRecordsBuffer.alloc(rayGenRecords.size());
       sbt.rayGenRecordsBuffer.upload(rayGenRecords);
       context->popActive();
-      LOG_OK("done building (and uploading) sbt ray gen records");
+      if (numTimesCalled < 10)
+        LOG_OK("done building (and uploading) sbt ray gen records (only showing first 10 instances)");
     }
       
     void Device::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
@@ -1164,7 +1185,7 @@ namespace owl {
     void Device::launch(int rgID, const vec2i &dims)
     {
       context->pushActive();
-      LOG("launching ...");
+      // LOG("launching ...");
       assert("check valid launch dims" && dims.x > 0);
       assert("check valid launch dims" && dims.y > 0);
       assert("check valid ray gen program ID" && rgID >= 0);
