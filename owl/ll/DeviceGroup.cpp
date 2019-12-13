@@ -423,6 +423,7 @@ namespace owl {
     void DeviceGroup::launch(int rgID, const vec2i &dims)
     {
       for (auto device : devices) device->launch(rgID,dims);
+      CUDA_SYNC_CHECK();
     }
     
     /* create an instance of this object that has properly

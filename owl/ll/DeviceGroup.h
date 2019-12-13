@@ -111,6 +111,23 @@ namespace owl {
 
       DeviceGroup(const std::vector<Device *> &devices);
       ~DeviceGroup();
+
+      /*! set the maximum instancing depth that will be allowed; '0'
+          means 'no instancing, only bottom level accels', '1' means
+          'only one singel level of instances' (ie, instancegroups
+          never have children that are themselves instance groups),
+          etc. 
+
+          Note we currently do *not* yet check the node graph as
+          to whether it adheres to this value - if you use a node
+          graph that's deeper than the value passed through this
+          function you will most likely see optix crashing on you (and
+          correctly so). See issue #1.
+
+          Note this value will only take effect upon the next
+          buildPrograms() and createPipeline(), so should be called
+          *before* those functions get called */
+      void setMaxInstancingDepth(int maxInstancingDepth);
       
       void allocModules(size_t count);
       void setModule(size_t slot, const char *ptxCode);

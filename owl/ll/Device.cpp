@@ -138,8 +138,13 @@ namespace owl {
       // configure default pipeline compile options
       // ------------------------------------------------------------------
       pipelineCompileOptions = {};
-      pipelineCompileOptions.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
-      // = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+      pipelineCompileOptions.traversableGraphFlags
+#if 1
+        = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY
+#else
+        = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
+#endif
+          ;
       pipelineCompileOptions.usesMotionBlur     = false;
       pipelineCompileOptions.numPayloadValues   = 2;
       pipelineCompileOptions.numAttributeValues = 2;
@@ -757,7 +762,7 @@ namespace owl {
                       direct callables invoked from RG, MS, or CH.  */
                    2*1024,
                    /* [in] The continuation stack requirement. */
-                   3
+                   device->maxConfiguredInstancingDepth
                    /* [in] The maximum depth of a traversable graph
                       passed to trace. */
                    ));
@@ -1200,7 +1205,7 @@ namespace owl {
                         dims.x,dims.y,1
                         ));
 
-      cudaDeviceSynchronize();
+      // cudaDeviceSynchronize();
       context->popActive();
     }
     

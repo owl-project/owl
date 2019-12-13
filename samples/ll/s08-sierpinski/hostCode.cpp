@@ -58,8 +58,17 @@ const float cosFovy = 0.66f;
 
 int main(int ac, char **av)
 {
+  uint32_t numLevels = 3;
   LOG("ll example '" << av[0] << "' starting up");
 
+  for (int i=1;i<ac;i++) {
+    const std::string arg = av[i];
+    if (arg == "--num-levels" || arg == "-nl")
+      numLevels = std::atoi(av[++i]);
+    else
+      throw std::runtime_error("unknown cmdline argument '"+arg+"'");
+  }
+  
   owl::ll::DeviceGroup::SP ll
     = owl::ll::DeviceGroup::create();
 
@@ -127,11 +136,10 @@ int main(int ac, char **av)
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
   // ##################################################################
-  uint32_t num_levels = 3;
-  int WORLD_GROUP = num_levels - 1;
+  int WORLD_GROUP = numLevels - 1;
   
   // enum { TRIANGLES_GROUP=0,PYRAMID_GROUP_LVL_1,WORLD_GROUP,NUM_GROUPS };
-  ll->allocGroups(num_levels);
+  ll->allocGroups(numLevels);
   int geomsInGroup[] = { 0 };
   ll->trianglesGeomGroupCreate(/* group ID */0,
                                /* geoms in group, pointer */ geomsInGroup,
@@ -161,7 +169,7 @@ int main(int ac, char **av)
       ll->groupBuildAccel(parent_level);
   };
 
-  for (uint32_t i = 1; i < num_levels; ++i) {
+  for (uint32_t i = 1; i < numLevels; ++i) {
     make_sierpinski(i,i-1);
   }  
 
