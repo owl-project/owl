@@ -70,16 +70,24 @@ namespace owl {
       
       void createPipeline(Device *device);
       void destroyPipeline();
+
       
       OptixDeviceContext optixContext = nullptr;
       CUcontext          cudaContext  = nullptr;
       CUstream           stream       = nullptr;
 
+      /*! sets the pipelineCompileOptions etc based on
+          maxConfiguredInstanceDepth */
+      void configurePipelineOptions();
+      
       OptixPipelineCompileOptions pipelineCompileOptions = {};
       OptixPipelineLinkOptions    pipelineLinkOptions    = {};
       OptixModuleCompileOptions   moduleCompileOptions   = {};
       OptixPipeline               pipeline               = nullptr;
 
+      /*! maximum depth instancing tree as specified by
+          `setMaxInstancingDepth` */
+      int maxInstancingDepth = 2;      
       int numRayTypes { 1 };
     };
     
@@ -347,6 +355,24 @@ namespace owl {
         exception if for any reason that cannot be done */
       Device(int owlDeviceID, int cudaDeviceID);
       ~Device();
+
+
+      /*! set the maximum instancing depth that will be allowed; '0'
+          means 'no instancing, only bottom level accels', '1' means
+          'only one singel level of instances' (ie, instancegroups
+          never have children that are themselves instance groups),
+          etc. Note we currently do *not* yet check the node graph as
+          to whether it adheres to this value - if you use a node
+          graph that's deeper than the value passed through this
+          function you will most likely see optix crashing on you (and
+          correctly so).
+
+          Note this value will only take effect upon the next
+          buildPrograms() and createPipeline(), so should be called
+          *before* those functions get called */
+      void setMaxInstancingDepth(int maxInstancingDepth);
+      
+
 
       void createPipeline()
       {
