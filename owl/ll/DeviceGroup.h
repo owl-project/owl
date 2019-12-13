@@ -117,8 +117,12 @@ namespace owl {
        * 
        *  \todo rename to moduleCreate for consistency
        *
-       *  \todo add module destroy */
+       *  \todo add module destroy
+       *
+       *  \warning deprecated naming */
       void setModule(size_t slot, const char *ptxCode);
+
+      void moduleCreate(int moduleID, const char *ptxCode);
       void buildModules();
       void createPipeline();
       void buildPrograms();
