@@ -17,9 +17,6 @@
 #pragma once
 
 #include "owl/ll/optix.h"
-#ifdef __CUDA_ARCH__
-#  error "this file should only ever get included on the device side"
-#endif
 
 #define OWL_THROWS_EXCEPTIONS 1
 #if OWL_THROWS_EXCEPTIONS
