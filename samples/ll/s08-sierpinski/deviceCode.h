@@ -15,14 +15,24 @@
 // ======================================================================== //
 
 #include "ll/llowl.h"
+#include "../s05-rtow/Materials.h"
 
 using namespace owl;
 
-struct TrianglesGeomData
-{
-  vec3f color;
-  vec3i *index;
+// struct TrianglesGeomData
+// {
+//   vec3f color;
+//   vec3i *index;
+//   vec3f *vertex;
+// };
+struct LambertianPyramidMesh {
+  /*! for our pyramids geometry we use triangles for the geometry, so the
+      materials will actually be shared among every group of 6
+      triangles */
+  Lambertian *perPyramidMaterial;
+  /* the vertex and index arrays for the triangle mesh */
   vec3f *vertex;
+  vec3i *index;
 };
 
 struct RayGenData
@@ -32,13 +42,14 @@ struct RayGenData
   uint32_t *fbPtr;
   vec2i  fbSize;
   OptixTraversableHandle world;
+  int sbtOffset;
 
   struct {
-    vec3f pos;
-    vec3f dir_00;
-    vec3f dir_du;
-    vec3f dir_dv;
-  } camera;
+      vec3f origin;
+      vec3f lower_left_corner;
+      vec3f horizontal;
+      vec3f vertical;
+    } camera;
 };
 
 struct MissProgData
