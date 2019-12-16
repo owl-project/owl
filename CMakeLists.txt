@@ -45,6 +45,7 @@ enable_testing()
 # import gdt submodules itself: gdt, and viewer
 # ------------------------------------------------------------------
 include_directories(${gdt_dir})
+include_directories(${PROJECT_SOURCE_DIR})
 add_subdirectory(${gdt_dir} EXCLUDE_FROM_ALL)
 add_library(owl-common
 
