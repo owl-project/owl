@@ -43,6 +43,8 @@ Revision History
 v0.4.x - Instances
 ------------------
 
+*v0.4.5*: `ll08-sierpinski` now uses path tracing
+
 *v0.4.4*: multi-level instancing
 
 - added new `DeviceGroup::setMaxInstancingDepth` that allows to set max

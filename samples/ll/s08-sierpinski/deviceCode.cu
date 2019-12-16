@@ -85,7 +85,7 @@ vec3f tracePath(const RayGenData &self,
   vec3f attenuation = 1.f;
   
   /* iterative version of recursion, up to depth 50 */
-  for (int depth=0;depth<3;depth++) {
+  for (int depth=0;depth<5;depth++) {
     owl::trace(/*accel to trace against*/self.world,
                /*the ray to trace*/ ray,
                /*numRayTypes*/1,

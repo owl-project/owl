@@ -58,7 +58,7 @@ const float fovy = 30.f;
 
 int main(int ac, char **av)
 {
-  uint32_t numLevels = 5;
+  uint32_t numLevels = 8;
   LOG("ll example '" << av[0] << "' starting up");
 
   for (int i=1;i<ac;i++) {
