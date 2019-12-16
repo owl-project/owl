@@ -209,9 +209,6 @@ int main(int ac, char **av)
   ll->sbtHitProgsBuild
     ([&](uint8_t *output,int devID,int geomID,int rayID) {
       LambertianPyramidMesh &self = *(LambertianPyramidMesh*)output;
-      PING; PRINT(devID);
-      PRINT(geomID);
-      PRINT(rayID);
       self.material
            = (Lambertian *)ll->bufferGetPointer(LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,devID);
       self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
