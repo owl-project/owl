@@ -135,13 +135,13 @@ int main(int ac, char **av)
   owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
                     missProgVars,-1);
   
-#if 0
-  
   // ll->buildPrograms();
   // ll->createPipeline();
   owlBuildPrograms(context);
   owlBuildPipeline(context);
-  
+
+#if 0
+
   LOG("building geometries ...");
 
   // ##################################################################

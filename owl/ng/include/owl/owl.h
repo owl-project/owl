@@ -126,6 +126,10 @@ typedef struct _OWLMissProg      *OWLMissProg;
 
 // typedef OWLGeom OWLTriangles;
 
+OWL_API void owlBuildPrograms(OWLContext context);
+OWL_API void owlBuildPipeline(OWLContext context);
+
+
 OWL_API OWLContext
 owlContextCreate();
 

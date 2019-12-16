@@ -29,6 +29,26 @@ namespace owl {
     return (OWLContext)context->createHandle(context);
   }
 
+
+  OWL_API void owlBuildPrograms(OWLContext _context)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+
+  }
+  
+  OWL_API void owlBuildPipeline(OWLContext _context)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+  }
+  
   OWL_API void owlContextLaunch2D(OWLContext _context,
                                   OWLRayGen _rayGen,
                                   int dims_x, int dims_y)
