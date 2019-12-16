@@ -36,10 +36,30 @@
 #include <sstream>
 
 namespace owl {
+  using gdt::vec2uc;
+  using gdt::vec3uc;
+  using gdt::vec4uc;
+  
   using gdt::vec2f;
   using gdt::vec3f;
+  using gdt::vec4f;
+  
   using gdt::vec2i;
   using gdt::vec3i;
+  using gdt::vec4i;
+  
+  using gdt::vec2ui;
+  using gdt::vec3ui;
+  using gdt::vec4ui;
+  
+  using gdt::vec2l;
+  using gdt::vec3l;
+  using gdt::vec4l;
+  
+  using gdt::vec2ul;
+  using gdt::vec3ul;
+  using gdt::vec4ul;
+  
   using gdt::box3f;
   using gdt::linear3f;
   using gdt::affine3f;

@@ -36,6 +36,7 @@
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << GDT_TERMINAL_DEFAULT << std::endl
 
+#define MANAGED_TEST 1
 namespace owl {
   namespace ll {
 
@@ -50,13 +51,23 @@ namespace owl {
       
       std::vector<uint8_t> userGeomData(maxGeomDataSize);
       DeviceMemory tempMem;
+#if MANAGED_TEST
+      PING;
+      tempMem.allocManaged(maxGeomDataSize);
+#else
       tempMem.alloc(maxGeomDataSize);
+#endif
       for (int childID=0;childID<ugg->children.size();childID++) {
         Geom *child = ugg->children[childID];
         assert("double-check valid child geom" && child != nullptr);
         assert(child);
         UserGeom *ug = (UserGeom *)child;
+#if MANAGED_TEST
+      PING;
+        ug->internalBufferForBoundsProgram.allocManaged(ug->numPrims*sizeof(box3f));
+#else
         ug->internalBufferForBoundsProgram.alloc(ug->numPrims*sizeof(box3f));
+#endif
         ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
 
         if (childID < 10)
@@ -84,7 +95,6 @@ namespace owl {
           (void *)&numPrims
         };
 
-        DeviceMemory tempMem;
         GeomType *gt = checkGetGeomType(ug->geomTypeID);
         CUstream stream = context->stream;
         CUresult rc
@@ -200,11 +210,19 @@ namespace owl {
 
       // temp memory:
       DeviceMemory tempBuffer;
+#if MANAGED_TEST
+      tempBuffer.allocManaged(blasBufferSizes.tempSizeInBytes);
+#else
       tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
+#endif
 
       // buffer for initial, uncompacted bvh
       DeviceMemory outputBuffer;
+#if MANAGED_TEST
+       outputBuffer.allocManaged(blasBufferSizes.outputSizeInBytes);
+#else
       outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
+#endif
 
       // single size-t buffer to store compacted size in
       DeviceMemory compactedSizeBuffer;
