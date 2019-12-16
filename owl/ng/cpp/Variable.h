@@ -33,6 +33,7 @@ namespace owl {
     virtual void set(const std::shared_ptr<Buffer> &value) { mismatchingType(); }
     virtual void set(const std::shared_ptr<Group>  &value) { mismatchingType(); }
     virtual void set(const float &value) { mismatchingType(); }
+    virtual void set(const int &value)   { mismatchingType(); }
     virtual void set(const vec3f &value) { mismatchingType(); }
 
     virtual std::string toString() const { return "Variable"; }

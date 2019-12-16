@@ -68,6 +68,8 @@ namespace owl {
     assert(decl);
     assert(decl->name);
     switch(decl->type) {
+    case OWL_INT:
+      return std::make_shared<VariableT<int>>(decl);
     case OWL_FLOAT:
       return std::make_shared<VariableT<float>>(decl);
     case OWL_FLOAT3:

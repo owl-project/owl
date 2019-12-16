@@ -105,8 +105,28 @@ int main(int ac, char **av)
   // ll->setRayGen(/*program ID*/0,
   //               /*module:*/0,
   //               "simpleRayGen");
-  owlRayGenCreate(context,module,"simpleRayGen");
+  OWLVarDecl rayGenVars[]
+    = {
+       { "deviceIndex", OWL_INT, OWL_OFFSETOF(RayGenData,deviceIndex)},
+       
+  // int deviceIndex;
+  // int deviceCount;
+  // uint32_t *fbPtr;
+  // vec2i  fbSize;
+  // OptixTraversableHandle world;
+
+  // struct {
+  //   vec3f pos;
+  //   vec3f dir_00;
+  //   vec3f dir_du;
+  //   vec3f dir_dv;
+  // } camera;
+  };
+  owlRayGenCreate(context,module,"simpleRayGen",
+                  sizeof(RayGenData),
+                  rayGenVars,1);
   
+#if 0
   // ll->allocMissProgs(1);
   // ll->setMissProg(/*program ID*/0,
   //                 /*module:*/0,
@@ -118,7 +138,6 @@ int main(int ac, char **av)
   // ll->createPipeline();
   owlBuildPrograms(context);
   owlBuildPipeline(context);
-#if 0
   
   LOG("building geometries ...");
 

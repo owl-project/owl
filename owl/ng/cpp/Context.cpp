@@ -73,7 +73,6 @@ namespace owl {
     return std::make_shared<InstanceGroup>(this,numChildren);
   }
 
-
   RayGenType::SP
   Context::createRayGenType(Module::SP module,
                             const std::string &progName,

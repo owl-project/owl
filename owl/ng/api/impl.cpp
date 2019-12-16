@@ -105,12 +105,12 @@ namespace owl {
   }
 
   OWL_API OWLRayGen
-  owlContextCreateRayGen(OWLContext _context,
-                         OWLModule _module,
-                         const char *programName,
-                         size_t sizeOfVarStruct,
-                         OWLVarDecl *vars,
-                         size_t      numVars)
+  owlRayGenCreate(OWLContext _context,
+                  OWLModule _module,
+                  const char *programName,
+                  size_t sizeOfVarStruct,
+                  OWLVarDecl *vars,
+                  size_t      numVars)
   {
     LOG_API_CALL();
 

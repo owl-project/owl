@@ -27,6 +27,8 @@ namespace owl {
   std::string typeToString(OWLDataType type)
   {
     switch(type) {
+    case OWL_INT:
+      return "int";
     case OWL_FLOAT:
       return "float";
     case OWL_FLOAT3:
