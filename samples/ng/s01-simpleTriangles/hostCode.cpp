@@ -140,8 +140,6 @@ int main(int ac, char **av)
   owlBuildPrograms(context);
   owlBuildPipeline(context);
 
-#if 0
-
   LOG("building geometries ...");
 
   // ##################################################################
@@ -151,12 +149,21 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // alloc buffers
   // ------------------------------------------------------------------
-  enum { VERTEX_BUFFER=0,INDEX_BUFFER,FRAME_BUFFER,NUM_BUFFERS };
-  ll->reallocBuffers(NUM_BUFFERS);
-  ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
-  ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
   
+  // enum { VERTEX_BUFFER=0,INDEX_BUFFER,FRAME_BUFFER,NUM_BUFFERS };
+  // ll->reallocBuffers(NUM_BUFFERS);
+  // ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
+  // ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
+  // ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+
+  OWLBuffer vertexBuffer
+    = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_VERTICES,vertices);
+  OWLBuffer indexBuffer
+    = owlDeviceBufferCreate(context,OWL_INT3,NUM_INDICES,indices);
+  OWLBuffer frameBuffer
+    = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
+#if 0
+
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------

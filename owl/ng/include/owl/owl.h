@@ -177,10 +177,14 @@ owlGeomTypeCreate(OWLContext context,
                   size_t      numVars);
 
 OWL_API OWLBuffer
-owlContextCreateBuffer(OWLContext context,
-                       OWLDataType type,
-                       int num,
-                       const void *init);
+owlDeviceBufferCreate(OWLContext context,
+                      OWLDataType type,
+                      int num,
+                      const void *init);
+OWL_API OWLBuffer
+owlHostPinnedBufferCreate(OWLContext context,
+                          OWLDataType type,
+                          int num);
 
 /*! executes an optix lauch of given size, with given launch
   program. Note this call is asynchronous, and may _not_ be
