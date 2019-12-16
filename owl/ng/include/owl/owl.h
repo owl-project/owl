@@ -53,10 +53,14 @@
 typedef enum
   {
    OWL_FLOAT=100,
+   OWL_FLOAT2,
    OWL_FLOAT3,
+   OWL_FLOAT4,
 
    OWL_INT=200,
+   OWL_INT2,
    OWL_INT3,
+   OWL_INT4,
    
    OWL_BUFFER=1000,
    OWL_BUFFER_SIZE,
@@ -86,6 +90,9 @@ typedef struct _OWL_float2 { float   x,y; } OWL_float2;
 
 typedef struct _OWL_int3   { int32_t x,y,z; } OWL_int3;
 typedef struct _OWL_float3 { float   x,y,z; } OWL_float3;
+
+typedef struct _OWL_int4   { int32_t x,y,z,w; } OWL_int4;
+typedef struct _OWL_float4 { float   x,y,z,w; } OWL_float4;
 
 typedef struct _OWLVarDecl {
   const char *name;

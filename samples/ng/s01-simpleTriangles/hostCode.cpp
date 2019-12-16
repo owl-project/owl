@@ -107,7 +107,10 @@ int main(int ac, char **av)
   //               "simpleRayGen");
   OWLVarDecl rayGenVars[]
     = {
-       { "deviceIndex", OWL_INT, OWL_OFFSETOF(RayGenData,deviceIndex)},
+       { "deviceIndex", OWL_INT,  OWL_OFFSETOF(RayGenData,deviceIndex)},
+       { "deviceCount", OWL_INT,  OWL_OFFSETOF(RayGenData,deviceCount)},
+       { "fbPtr",       OWL_BUFFER_POINTER, OWL_OFFSETOF(RayGenData,fbPtr)},
+       { "fbSize",      OWL_INT2, OWL_OFFSETOF(RayGenData,fbSize)},
        
   // int deviceIndex;
   // int deviceCount;
