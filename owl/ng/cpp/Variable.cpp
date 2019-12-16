@@ -70,10 +70,31 @@ namespace owl {
     switch(decl->type) {
     case OWL_INT:
       return std::make_shared<VariableT<int>>(decl);
+    case OWL_INT2:
+      return std::make_shared<VariableT<vec2i>>(decl);
+    case OWL_INT3:
+      return std::make_shared<VariableT<vec3i>>(decl);
+    case OWL_INT4:
+      return std::make_shared<VariableT<vec4i>>(decl);
+
+    case OWL_UINT:
+      return std::make_shared<VariableT<int>>(decl);
+    case OWL_UINT2:
+      return std::make_shared<VariableT<vec2ui>>(decl);
+    case OWL_UINT3:
+      return std::make_shared<VariableT<vec3ui>>(decl);
+    case OWL_UINT4:
+      return std::make_shared<VariableT<vec4ui>>(decl);
+
     case OWL_FLOAT:
       return std::make_shared<VariableT<float>>(decl);
+    case OWL_FLOAT2:
+      return std::make_shared<VariableT<vec2f>>(decl);
     case OWL_FLOAT3:
       return std::make_shared<VariableT<vec3f>>(decl);
+    case OWL_FLOAT4:
+      return std::make_shared<VariableT<vec4f>>(decl);
+
     case OWL_GROUP:
       return std::make_shared<GroupVariable>(decl);
     case OWL_BUFFER:

@@ -32,12 +32,21 @@ namespace owl {
     
     virtual void set(const std::shared_ptr<Buffer> &value) { mismatchingType(); }
     virtual void set(const std::shared_ptr<Group>  &value) { mismatchingType(); }
+    
     virtual void set(const int &value)   { mismatchingType(); }
     virtual void set(const vec2i &value) { mismatchingType(); }
     virtual void set(const vec3i &value) { mismatchingType(); }
     virtual void set(const vec4i &value) { mismatchingType(); }
+    
+    virtual void set(const uint32_t &value) { mismatchingType(); }
+    virtual void set(const vec2ui &value)   { mismatchingType(); }
+    virtual void set(const vec3ui &value)   { mismatchingType(); }
+    virtual void set(const vec4ui &value)   { mismatchingType(); }
+    
     virtual void set(const float &value) { mismatchingType(); }
+    virtual void set(const vec2f &value) { mismatchingType(); }
     virtual void set(const vec3f &value) { mismatchingType(); }
+    virtual void set(const vec4f &value) { mismatchingType(); }
 
     virtual std::string toString() const { return "Variable"; }
     

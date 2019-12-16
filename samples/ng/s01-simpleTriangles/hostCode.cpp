@@ -85,9 +85,9 @@ int main(int ac, char **av)
 
   OWLVarDecl trianglesGeomVars[]
     = {
-       { "index",  OWL_BUFFER_POINTER, OWL_OFFSETOF(TrianglesGeomData,index)},
-       { "vertex", OWL_BUFFER_POINTER, OWL_OFFSETOF(TrianglesGeomData,vertex)},
-       { "color",  OWL_FLOAT3,         OWL_OFFSETOF(TrianglesGeomData,color)}
+       { "index",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,index)},
+       { "vertex", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,vertex)},
+       { "color",  OWL_FLOAT3, OWL_OFFSETOF(TrianglesGeomData,color)}
   };
   OWLGeomType trianglesGeomType
     = owlGeomTypeCreate(context,
@@ -107,27 +107,20 @@ int main(int ac, char **av)
   //               "simpleRayGen");
   OWLVarDecl rayGenVars[]
     = {
-       { "deviceIndex", OWL_INT,  OWL_OFFSETOF(RayGenData,deviceIndex)},
-       { "deviceCount", OWL_INT,  OWL_OFFSETOF(RayGenData,deviceCount)},
-       { "fbPtr",       OWL_BUFFER_POINTER, OWL_OFFSETOF(RayGenData,fbPtr)},
-       { "fbSize",      OWL_INT2, OWL_OFFSETOF(RayGenData,fbSize)},
-       
-  // int deviceIndex;
-  // int deviceCount;
-  // uint32_t *fbPtr;
-  // vec2i  fbSize;
-  // OptixTraversableHandle world;
-
-  // struct {
-  //   vec3f pos;
-  //   vec3f dir_00;
-  //   vec3f dir_du;
-  //   vec3f dir_dv;
-  // } camera;
+       { "deviceIndex",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceIndex)},
+       { "deviceCount",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceCount)},
+       { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
+       { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
+       { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
+       { "camera.pos",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.pos)},
+       { "camera.dir_00", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_00)},
+       { "camera.dir_du", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_du)},
+       { "camera.dir_dv", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_dv)},
+       { /* sentinel to mark end of list */ }
   };
   owlRayGenCreate(context,module,"simpleRayGen",
                   sizeof(RayGenData),
-                  rayGenVars,1);
+                  rayGenVars,-1);
   
 #if 0
   // ll->allocMissProgs(1);
