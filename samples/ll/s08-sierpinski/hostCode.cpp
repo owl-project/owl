@@ -54,7 +54,7 @@ const vec2i fbSize(800,600);
 const vec3f lookFrom(2.f,1.3f,.8f);
 const vec3f lookAt(0.f,0.f,-.2f);
 const vec3f lookUp(0.f,0.f,1.f);
-const float fovy = 45.f;
+const float fovy = 30.f;
 
 int main(int ac, char **av)
 {
@@ -115,13 +115,17 @@ int main(int ac, char **av)
   auto lambertian = Lambertian();
   std::vector<Lambertian> lambertianPyramids;
   Lambertian green;
-  green.albedo = gdt::vec3f(0,1,0);
+  green.albedo = gdt::vec3f(0,.7f,0);
   lambertianPyramids.push_back(green);
 
   // ------------------------------------------------------------------
   // alloc buffers
   // ------------------------------------------------------------------
-  enum { LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER=0,VERTEX_BUFFER,INDEX_BUFFER,FRAME_BUFFER,NUM_BUFFERS };
+  enum { LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER=0,
+         VERTEX_BUFFER,
+         INDEX_BUFFER,
+         FRAME_BUFFER,
+         NUM_BUFFERS };
   ll->allocBuffers(NUM_BUFFERS);
   ll->createDeviceBuffer(LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,
                          lambertianPyramids.size(),
@@ -208,7 +212,7 @@ int main(int ac, char **av)
       PING; PRINT(devID);
       PRINT(geomID);
       PRINT(rayID);
-      self.perPyramidMaterial
+      self.material
            = (Lambertian *)ll->bufferGetPointer(LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,devID);
       self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
       self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);

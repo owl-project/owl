@@ -212,8 +212,7 @@ vec3f missColor(const Ray &ray)
 
 OPTIX_MISS_PROGRAM(miss)()
 {
-  // PerRayData &prd = owl::getPRD<PerRayData>();
-  // prd.out.scatterEvent = rayDidntHitAnything;
+  /*! nothing in this example */
 }
 
 

@@ -33,22 +33,17 @@ void closestHitPyramidMesh()
   // ID of the triangle we've hit:
   const int primID = optixGetPrimitiveIndex();
   
-  // there's 6 tris per pyramid:
-  const int materialID = primID / 6;
-  const auto &material
-    = self.perPyramidMaterial[materialID];
-
-  const vec3i index  = self.index[primID];
-  const vec3f &A     = self.vertex[index.x];
-  const vec3f &B     = self.vertex[index.y];
-  const vec3f &C     = self.vertex[index.z];
-  const vec3f N      = normalize(cross(B-A,C-A));
-
+  const vec3i index = self.index[primID];
+  const vec3f &A    = self.vertex[index.x];
+  const vec3f &B    = self.vertex[index.y];
+  const vec3f &C    = self.vertex[index.z];
+  const vec3f N     = normalize(cross(B-A,C-A));
   const vec3f org   = optixGetWorldRayOrigin();
   const vec3f dir   = optixGetWorldRayDirection();
   const float hit_t = optixGetRayTmax();
   const vec3f hit_P = org + hit_t * dir;
-
+  
+  const auto &material = *self.material;
   prd.out.scatterEvent
     = scatter(material,
               hit_P,N,
@@ -56,23 +51,6 @@ void closestHitPyramidMesh()
     ? rayGotBounced
     : rayGotCancelled;
 }
-
-// {
-//   vec3f &prd = owl::getPRD<vec3f>();
-
-//   const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
-  
-//   // compute normal:
-//   const int   primID = optixGetPrimitiveIndex();
-//   const vec3i index  = self.index[primID];
-//   const vec3f &A     = self.vertex[index.x];
-//   const vec3f &B     = self.vertex[index.y];
-//   const vec3f &C     = self.vertex[index.z];
-//   const vec3f Ng     = normalize(cross(B-A,C-A));
-
-//   const vec3f rayDir = optixGetWorldRayDirection();
-//   prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*self.color;
-// }
 
 // ==================================================================
 // actual closest-hit program instantiations for geom+material types
@@ -89,9 +67,7 @@ inline __device__
 vec3f missColor(const Ray &ray)
 {
   const vec2i pixelID = owl::getLaunchIndex();
-
-  const vec3f rayDir = normalize(ray.direction);
-  const float t = 0.5f*(rayDir.z + 1.0f);
+  const float t = pixelID.y / (float)optixGetLaunchDimensions().y;
   const vec3f c = (1.0f - t)*vec3f(1.0f, 1.0f, 1.0f) + t * vec3f(0.5f, 0.7f, 1.0f);
   return c;
 }
@@ -109,18 +85,16 @@ vec3f tracePath(const RayGenData &self,
   vec3f attenuation = 1.f;
   
   /* iterative version of recursion, up to depth 50 */
-  for (int depth=0;depth<50;depth++) {
+  for (int depth=0;depth<3;depth++) {
     owl::trace(/*accel to trace against*/self.world,
                /*the ray to trace*/ ray,
                /*numRayTypes*/1,
-               /*prd*/prd,
-               self.sbtOffset);
-    
-    if (prd.out.scatterEvent == rayDidntHitAnything)
+               /*prd*/prd);
+    if (prd.out.scatterEvent == rayDidntHitAnything) 
       /* ray got 'lost' to the environment - 'light' it with miss
          shader */
       return attenuation * missColor(ray);
-    else if (prd.out.scatterEvent == rayGotCancelled)
+    else if (prd.out.scatterEvent == rayGotCancelled) 
       return vec3f(0.f);
 
     else { // ray is still alive, and got properly bounced
@@ -128,7 +102,7 @@ vec3f tracePath(const RayGenData &self,
       ray = owl::Ray(/* origin   : */ prd.out.scattered_origin,
                      /* direction: */ prd.out.scattered_direction,
                      /* ray type : */ 0,
-                     /* tmin     : */ 1e-3f,
+                     /* tmin     : */ 1e-6f,
                      /* tmax     : */ 1e10f);
     }
   }
@@ -168,15 +142,9 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
       - self.camera.origin;
   
     ray.origin = origin;
-    ray.direction = direction;
+    ray.direction = normalize(direction);
   
     color += tracePath(self, ray, prd);
-
-    // vec3f color;
-    // owl::trace(/*accel to trace against*/self.world,
-    //            /*the ray to trace*/ ray,
-    //            /*numRayTypes*/1,
-    //            /*prd*/color);
   }    
   
   self.fbPtr[pixelIdx]

@@ -19,17 +19,10 @@
 
 using namespace owl;
 
-// struct TrianglesGeomData
-// {
-//   vec3f color;
-//   vec3i *index;
-//   vec3f *vertex;
-// };
 struct LambertianPyramidMesh {
-  /*! for our pyramids geometry we use triangles for the geometry, so the
-      materials will actually be shared among every group of 6
-      triangles */
-  Lambertian *perPyramidMaterial;
+  /*! for now, let's use a single material for all pyramid triangles
+      ... .*/
+  Lambertian *material;
   /* the vertex and index arrays for the triangle mesh */
   vec3f *vertex;
   vec3i *index;
@@ -37,19 +30,19 @@ struct LambertianPyramidMesh {
 
 struct RayGenData
 {
-  int deviceIndex;
-  int deviceCount;
+  int       deviceIndex;
+  int       deviceCount;
   uint32_t *fbPtr;
-  vec2i  fbSize;
+  vec2i     fbSize;
   OptixTraversableHandle world;
-  int sbtOffset;
-
+  int                    sbtOffset;
+  
   struct {
-      vec3f origin;
-      vec3f lower_left_corner;
-      vec3f horizontal;
-      vec3f vertical;
-    } camera;
+    vec3f origin;
+    vec3f lower_left_corner;
+    vec3f horizontal;
+    vec3f vertical;
+  } camera;
 };
 
 struct MissProgData
