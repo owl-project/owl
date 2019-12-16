@@ -20,6 +20,7 @@
 #include "Buffer.h"
 #include "Group.h"
 #include "RayGen.h"
+#include "MissProg.h"
 // ll
 #include "ll/llowl.h"
 
@@ -44,6 +45,8 @@ namespace owl {
     ObjectRegistryT<Group>        groups;
     ObjectRegistryT<RayGenType>   rayGenTypes;
     ObjectRegistryT<RayGen>       rayGens;
+    ObjectRegistryT<MissProgType> missProgTypes;
+    ObjectRegistryT<MissProg>     missProgs;
     ObjectRegistryT<GeomType>     geomTypes;
     ObjectRegistryT<Geom>         geoms;
     ObjectRegistryT<Module>       modules;

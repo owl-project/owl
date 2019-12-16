@@ -36,6 +36,7 @@ add_library(owl-ng
   cpp/ObjectRegistry.cpp
   cpp/Context.cpp
   cpp/RayGen.cpp
+  cpp/MissProg.cpp
   cpp/Geometry.cpp
   cpp/Variable.cpp
   )

@@ -112,9 +112,9 @@ namespace owl {
 
   OWL_API OWLRayGen
   owlRayGenCreate(OWLContext _context,
-                  OWLModule _module,
+                  OWLModule  _module,
                   const char *programName,
-                  size_t sizeOfVarStruct,
+                  size_t      sizeOfVarStruct,
                   OWLVarDecl *vars,
                   size_t      numVars)
   {
@@ -142,6 +142,42 @@ namespace owl {
 
     return (OWLRayGen)context->createHandle(rayGen);
   }
+
+
+
+  OWL_API OWLMissProg
+  owlMissProgCreate(OWLContext _context,
+                    OWLModule  _module,
+                    const char *programName,
+                    size_t      sizeOfVarStruct,
+                    OWLVarDecl *vars,
+                    size_t      numVars)
+  {
+    LOG_API_CALL();
+
+    assert(_context);
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    
+    assert(_module);
+    Module::SP module
+      = ((APIHandle *)_module)->get<Module>();
+    assert(module);
+    
+    MissProgType::SP  missProgType
+      = context->createMissProgType(module,programName,
+                                  sizeOfVarStruct,
+                                  checkAndPackVariables(vars,numVars));
+    assert(missProgType);
+    
+    MissProg::SP  missProg
+      = context->createMissProg(missProgType);
+    assert(missProg);
+
+    return (OWLMissProg)context->createHandle(missProg);
+  }
+
 
   OWL_API OWLGroup
   owlContextCreateGeomGroup(OWLContext _context,

@@ -122,13 +122,20 @@ int main(int ac, char **av)
                   sizeof(RayGenData),
                   rayGenVars,-1);
   
-#if 0
   // ll->allocMissProgs(1);
   // ll->setMissProg(/*program ID*/0,
   //                 /*module:*/0,
   //                 "miss");
-  owlMissProgCreate(context,module,"miss");
+  OWLVarDecl missProgVars[]
+    = {
+       { "color0", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color0)},
+       { "color1", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color1)},
+       { /* sentinel to mark end of list */ }
+  };
+  owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
+                    missProgVars,-1);
   
+#if 0
   
   // ll->buildPrograms();
   // ll->createPipeline();
