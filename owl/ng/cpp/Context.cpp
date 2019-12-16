@@ -63,6 +63,12 @@ namespace owl {
     return std::make_shared<RayGen>(this,type);
   }
 
+  MissProg::SP
+  Context::createMissProg(const std::shared_ptr<MissProgType> &type)
+  {
+    return std::make_shared<MissProg>(this,type);
+  }
+
   GeomGroup::SP Context::createGeomGroup(size_t numChildren)
   {
     return std::make_shared<GeomGroup>(this,numChildren);
@@ -80,6 +86,19 @@ namespace owl {
                             const std::vector<OWLVarDecl> &varDecls)
   {
     return std::make_shared<RayGenType>(this,
+                                        module,progName,
+                                        varStructSize,
+                                        varDecls);
+  }
+  
+
+  MissProgType::SP
+  Context::createMissProgType(Module::SP module,
+                            const std::string &progName,
+                            size_t varStructSize,
+                            const std::vector<OWLVarDecl> &varDecls)
+  {
+    return std::make_shared<MissProgType>(this,
                                         module,progName,
                                         varStructSize,
                                         varDecls);

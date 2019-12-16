@@ -75,6 +75,15 @@ namespace owl {
                      size_t varStructSize,
                      const std::vector<OWLVarDecl> &varDecls);
     
+    MissProg::SP
+    createMissProg(const std::shared_ptr<MissProgType> &type);
+    
+    MissProgType::SP
+    createMissProgType(Module::SP module,
+                       const std::string &progName,
+                       size_t varStructSize,
+                       const std::vector<OWLVarDecl> &varDecls);
+    
     GeomType::SP
     createGeomType(OWLGeomKind kind,
                        size_t varStructSize,
