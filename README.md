@@ -2,8 +2,14 @@ owl - "Optix Wrappers Library" on top of Optix 7
 ================================================
 
 
-Directory Structure
-===================
+Explanation of Directory Structure
+==================================
+
+When looking at the directory structure you'll likely stumble over the
+fact that instead of owl/xyz there's always owl/ll/xyz. This is
+because *eventually* there is supposed to be another "node graph"
+layer on top of the low-level layer, so the *final* directory
+structure is supposed to look like this:
 
 - `owl/`: The Optix Wrappers *library*
   - `owl/ll/`: the owl *low-level* API layer
@@ -13,8 +19,64 @@ Directory Structure
   - `samples/ll/`: samples for the ll layer
   - `samples/ng/`: samples for the ng layer (currently disabled because not yet working)
 
+TODO
+====
+
+- CI for windows
+
+- api function naming cleanup. Currently have 'createUserGeomGroup'
+  but 'instanceGroupCreate'. Make all use the latter format, so all
+  functions start with the name of the type affected (similar to
+  InstnaceGroup::create)
+
+- more examples
+
+  - optix 6 samples
+  - optix 6 advanced samples
+  - pbrtParser(?)
+  - optix prime like + cuda interop
+  - vishal spatial queries
+
 Revision History
 ================
+
+v0.4.x - Instances
+------------------
+
+*v0.4.4*: multi-level instancing
+
+- added new `DeviceGroup::setMaxInstancingDepth` that allows to set max
+  instance depth and stack depth on pipeline.
+
+- added `ll08-sierpinski` example that allows for testing user-supplied number
+  of instance levels with a sierpinski pyramid (Thx Nate!)
+  
+*v0.4.3*: new api fcts to set transforms and children for instance groups
+
+- added `instanceGroupSetChild` and `instanceGroupSetTransform`
+- extended `ll07-groupOfGroups` by two test cases that set transforms
+
+*v0.4.2*: bugfix - all samples working in multi-device again
+
+*v0.4.1*: example `ll06-rtow-mixedGeometries.png` 
+ working w/ manual sucessive traced into two different accels
+
+*v0.4.0*: new way of building SBT now based on groups
+
+- api change: allocated geom groups now have their program size
+  set in geomTypeCreate(), miss and raygen programs have it set in 
+  type rather than in sbt{raygen/miss}build (ie, program size now
+  for all types set exactly once in type, then max size computed during
+  sbt built)
+  
+- can handle more than one group; for non-0 group has to query
+  geomGroupGetSbtOffset() and pass that value to trace
+  
+- new sbt structure no longer uses 'one entry per geom' (that unfortunately
+  doesnt' work), but now builds sbt by iterating over all groups, and
+  putting each groups' geom children in one block before putting
+  next group. groups store the allcoated SBT offset for later use
+  by instances
 
 v0.3.x - User Geometries
 ------------------------
@@ -63,3 +125,9 @@ v0.1.x
 ------
 
 - first version that does "some" sort of launch with mostly functional SBT
+
+Contributors
+============
+
+- Ingo Wald
+- Nate Morrical

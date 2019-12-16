@@ -14,6 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#pragma once
+
 #include "gdt/math/vec.h"
 #include "gdt/math/box.h"
 // the 'actual' optix
@@ -23,12 +25,13 @@
 // actual device-side "API" built-ins.
 // ==================================================================
 
-#ifndef __CUDA_ARCH__
+#ifndef __CUDACC__
 #  error "this file should only ever get included on the device side"
 #endif
 
 namespace owl {
-
+  using namespace gdt;
+  
   inline __device__ vec2i getLaunchIndex()
   {
     return (vec2i)optixGetLaunchIndex();
@@ -146,7 +149,8 @@ namespace owl {
   void trace(OptixTraversableHandle traversable,
              const Ray &ray,
              int numRayTypes,
-             PRD &prd)
+             PRD &prd,
+             int sbtOffset = 0)
   {
     unsigned int           p0 = 0;
     unsigned int           p1 = 0;
@@ -160,7 +164,7 @@ namespace owl {
                ray.time,
                (OptixVisibilityMask)-1,
                /*rayFlags     */0u,
-               /*SBToffset    */ray.rayType,
+               /*SBToffset    */ray.rayType + numRayTypes*sbtOffset,
                /*SBTstride    */numRayTypes,
                /*missSBTIndex */ray.rayType,
                p0,

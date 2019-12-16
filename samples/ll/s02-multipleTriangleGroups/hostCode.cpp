@@ -81,6 +81,7 @@ int main(int ac, char **av)
   
   enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
+  ll->geomTypeCreate(TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
   ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
@@ -89,12 +90,14 @@ int main(int ac, char **av)
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
-                "simpleRayGen");
+                "simpleRayGen",
+                sizeof(RayGenData));
   
   ll->allocMissProgs(1);
   ll->setMissProg(/*program ID*/0,
                   /*module:*/0,
-                  "miss");
+                  "miss",
+                  sizeof(MissProgData));
   ll->buildPrograms();
   ll->createPipeline();
 
@@ -117,14 +120,14 @@ int main(int ac, char **av)
          VERTEX_BUFFER_110,
          VERTEX_BUFFER_111,
          FRAME_BUFFER,NUM_BUFFERS };
-  ll->reallocBuffers(NUM_BUFFERS);
+  ll->allocBuffers(NUM_BUFFERS);
   ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  ll->reallocGeoms(8);
+  ll->allocGeoms(8);
   for (int i=0;i<8;i++) {
     vec3f delta((i&1) ? -3:+3,
                 (i&2) ? -3:+3,
@@ -135,7 +138,7 @@ int main(int ac, char **av)
     ll->createDeviceBuffer(VERTEX_BUFFER_000+i,NUM_VERTICES,
                            sizeof(vec3f),vertices.data());
     
-    ll->createTrianglesGeom(/* geom ID    */i,
+    ll->trianglesGeomCreate(/* geom ID    */i,
                             /* type/PG ID */0);
     ll->trianglesGeomSetVertexBuffer(/* geom ID     */ i,
                                      /* buffer ID */VERTEX_BUFFER_000+i,
@@ -150,9 +153,9 @@ int main(int ac, char **av)
   // ##################################################################
   
   enum { TRIANGLES_GROUP=0,NUM_GROUPS };
-  ll->reallocGroups(NUM_GROUPS);
+  ll->allocGroups(NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  ll->createTrianglesGeomGroup(/* group ID */TRIANGLES_GROUP,
+  ll->trianglesGeomGroupCreate(/* group ID */TRIANGLES_GROUP,
                                /* geoms in group, pointer */ geomsInGroup,
                                /* geoms in group, count   */ 8);
   ll->groupBuildAccel(TRIANGLES_GROUP);
@@ -163,21 +166,17 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
-  ll->sbtGeomTypesBuild
-    (maxHitGroupDataSize,
-     [&](uint8_t *output,int devID,int geomID,int rayID) {
-      TriangleGroupData &self = *(TriangleGroupData*)output;
+  ll->sbtHitProgsBuild
+    ([&](uint8_t *output,int devID,int geomID,int rayID) {
+      TrianglesGeomData &self = *(TrianglesGeomData*)output;
       self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
       self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER_000+geomID,devID);
       self.color  = gdt::randomColor(geomID);
     });
   
   // ----------- build miss prog(s) -----------
-  const size_t maxMissProgDataSize = sizeof(MissProgData);
   ll->sbtMissProgsBuild
-    (maxMissProgDataSize,
-     [&](uint8_t *output,
+    ([&](uint8_t *output,
          int devID,
          int rayType) {
       /* we don't have any ... */
@@ -186,10 +185,8 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  const size_t maxRayGenDataSize = sizeof(RayGenData);
   ll->sbtRayGensBuild
-    (maxRayGenDataSize,
-     [&](uint8_t *output,
+    ([&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;

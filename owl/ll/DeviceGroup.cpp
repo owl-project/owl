@@ -14,8 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/Device.h"
-#include "ll/DeviceGroup.h"
+#include "owl/ll/Device.h"
+#include "owl/ll/DeviceGroup.h"
 
 #define LOG(message)                            \
   std::cout << "#owl.ll: "                      \
@@ -39,7 +39,7 @@ namespace owl {
     HostPinnedMemory::~HostPinnedMemory()
     {
       assert(pointer != nullptr);
-      CUDA_CALL(FreeHost(pointer));
+      CUDA_CALL_NOTHROW(FreeHost(pointer));
       pointer = nullptr;
     }
     
@@ -70,11 +70,40 @@ namespace owl {
       return device;
     }
 
+
+    
+    /*! set the maximum instancing depth that will be allowed; '0'
+      means 'no instancing, only bottom level accels', '1' means
+      'only one singel level of instances' (ie, instancegroups
+      never have children that are themselves instance groups),
+      etc. 
+
+      Note we currently do *not* yet check the node graph as
+      to whether it adheres to this value - if you use a node
+      graph that's deeper than the value passed through this
+      function you will most likely see optix crashing on you (and
+      correctly so). See issue #1.
+
+      Note this value will have to be set *before* the pipeline
+      gets created */
+    void DeviceGroup::setMaxInstancingDepth(int maxInstancingDepth)
+    {
+      for (auto device : devices)
+        device->setMaxInstancingDepth(maxInstancingDepth);
+    }
+    
+
     void DeviceGroup::allocModules(size_t count)
     { for (auto device : devices) device->allocModules(count); }
     
     void DeviceGroup::setModule(size_t slot, const char *ptxCode)
-    { for (auto device : devices) device->modules.set(slot,ptxCode); }
+    {
+      LOG("warning: 'setModule()' is deprecated, use 'moduleCreate'");
+      moduleCreate(slot,ptxCode);
+    }
+
+    void DeviceGroup::moduleCreate(int moduleID, const char *ptxCode)
+    { for (auto device : devices) device->modules.set(moduleID,ptxCode); }
     
     void DeviceGroup::buildModules()
     {
@@ -127,26 +156,48 @@ namespace owl {
         device->setGeomTypeIntersect(geomTypeID,rayTypeID,moduleID,progName);
     }
     
-    void DeviceGroup::setRayGen(int pgID, int moduleID, const char *progName)
-    { for (auto device : devices) device->setRayGen(pgID,moduleID,progName); }
+    void DeviceGroup::setRayGen(int pgID,
+                                int moduleID,
+                                const char *progName,
+                                size_t programDataSize)
+    {
+      for (auto device : devices)
+        device->setRayGen(pgID,moduleID,progName,programDataSize);
+    }
     
-    void DeviceGroup::setMissProg(int pgID, int moduleID, const char *progName)
-    { for (auto device : devices) device->setMissProg(pgID,moduleID,progName); }
+    /*! specifies which miss program to run for a given miss prog
+      ID */
+    void DeviceGroup::setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                                  int programID,
+                                  /*! ID of the module the program will be bound
+                                    in, in [0..numAllocedModules) */
+                                  int moduleID,
+                                  /*! name of the program. Note we do not NOT
+                                    create a copy of this string, so the string
+                                    has to remain valid for the duration of the
+                                    program */
+                                  const char *progName,
+                                  /*! size of that miss program's SBT data */
+                                  size_t missProgDataSize)
+    {
+      for (auto device : devices)
+        device->setMissProg(programID,moduleID,progName,missProgDataSize);
+    }
 
     /*! resize the array of geom IDs. this can be either a
       'grow' or a 'shrink', but 'shrink' is only allowed if all
       geoms that would get 'lost' have alreay been
       destroyed */
-    void DeviceGroup::reallocGroups(size_t newCount)
-    { for (auto device : devices) device->reallocGroups(newCount); }
+    void DeviceGroup::allocGroups(size_t newCount)
+    { for (auto device : devices) device->allocGroups(newCount); }
       
-    void DeviceGroup::reallocBuffers(size_t newCount)
-    { for (auto device : devices) device->reallocBuffers(newCount); }
+    void DeviceGroup::allocBuffers(size_t newCount)
+    { for (auto device : devices) device->allocBuffers(newCount); }
       
-    void DeviceGroup::reallocGeoms(size_t newCount)
-    { for (auto device : devices) device->reallocGeoms(newCount); }
+    void DeviceGroup::allocGeoms(size_t newCount)
+    { for (auto device : devices) device->allocGeoms(newCount); }
 
-    void DeviceGroup::createUserGeom(int geomID,
+    void DeviceGroup::userGeomCreate(int geomID,
                                      /*! the "logical" hit group ID:
                                        will always count 0,1,2... evne
                                        if we are using multiple ray
@@ -158,10 +209,10 @@ namespace owl {
                                      int numPrims)
     {
       for (auto device : devices)
-        device->createUserGeom(geomID,logicalHitGroupID,numPrims);
+        device->userGeomCreate(geomID,logicalHitGroupID,numPrims);
     }
       
-    void DeviceGroup::createTrianglesGeom(int geomID,
+    void DeviceGroup::trianglesGeomCreate(int geomID,
                                           /*! the "logical" hit group ID:
                                             will always count 0,1,2... evne
                                             if we are using multiple ray
@@ -172,10 +223,10 @@ namespace owl {
                                           int logicalHitGroupID)
     {
       for (auto device : devices)
-        device->createTrianglesGeom(geomID,logicalHitGroupID);
+        device->trianglesGeomCreate(geomID,logicalHitGroupID);
     }
 
-    void DeviceGroup::createTrianglesGeomGroup(int groupID,
+    void DeviceGroup::trianglesGeomGroupCreate(int groupID,
                                                int *geomIDs,
                                                int geomCount)
     {
@@ -184,11 +235,11 @@ namespace owl {
               (geomIDs != nullptr && geomCount >  0)));
         
       for (auto device : devices) {
-        device->createTrianglesGeomGroup(groupID,geomIDs,geomCount);
+        device->trianglesGeomGroupCreate(groupID,geomIDs,geomCount);
       }
     }
 
-    void DeviceGroup::createUserGeomGroup(int groupID,
+    void DeviceGroup::userGeomGroupCreate(int groupID,
                                           int *geomIDs,
                                           int geomCount)
     {
@@ -197,7 +248,7 @@ namespace owl {
               (geomIDs != nullptr && geomCount >  0)));
         
       for (auto device : devices) {
-        device->createUserGeomGroup(groupID,geomIDs,geomCount);
+        device->userGeomGroupCreate(groupID,geomIDs,geomCount);
       }
     }
 
@@ -215,23 +266,29 @@ namespace owl {
       LOG_OK("optix pipeline created");
     }
 
-    void DeviceGroup::createDeviceBuffer(int bufferID,
+    void DeviceGroup::bufferDestroy(int bufferID)
+    {
+      for (auto device : devices) 
+        device->bufferDestroy(bufferID);
+    }
+
+    void DeviceGroup::deviceBufferCreate(int bufferID,
                                          size_t elementCount,
                                          size_t elementSize,
                                          const void *initData)
     {
       for (auto device : devices) 
-        device->createDeviceBuffer(bufferID,elementCount,elementSize,initData);
+        device->deviceBufferCreate(bufferID,elementCount,elementSize,initData);
     }
 
-    void DeviceGroup::createHostPinnedBuffer(int bufferID,
+    void DeviceGroup::hostPinnedBufferCreate(int bufferID,
                                              size_t elementCount,
                                              size_t elementSize)
     {
       HostPinnedMemory::SP pinned
         = std::make_shared<HostPinnedMemory>(elementCount*elementSize);
       for (auto device : devices) 
-        device->createHostPinnedBuffer(bufferID,elementCount,elementSize,pinned);
+        device->hostPinnedBufferCreate(bufferID,elementCount,elementSize,pinned);
     }
 
       
@@ -272,8 +329,21 @@ namespace owl {
 
     void DeviceGroup::groupBuildAccel(int groupID)
     {
-      for (auto device : devices) 
-        device->groupBuildAccel(groupID);
+      try {
+        for (auto device : devices) 
+          device->groupBuildAccel(groupID);
+      } catch (std::exception &e) {
+        std::cerr << GDT_TERMINAL_RED
+                  << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
+                  << e.what()
+                  << GDT_TERMINAL_DEFAULT << std::endl;
+        throw e;
+      }
+    }
+
+    uint32_t DeviceGroup::groupGetSBTOffset(int groupID)
+    {
+      return devices[0]->groupGetSBTOffset(groupID);
     }
 
     OptixTraversableHandle DeviceGroup::groupGetTraversable(int groupID, int deviceID)
@@ -281,33 +351,36 @@ namespace owl {
       return checkGetDevice(deviceID)->groupGetTraversable(groupID);
     }
 
-    void DeviceGroup::sbtGeomTypesBuild(size_t maxHitGroupDataSize,
-                                        WriteHitProgDataCB writeHitProgDataCB,
-                                        void *callBackData)
+    void DeviceGroup::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                                       void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtGeomTypesBuild(maxHitGroupDataSize,
-                                  writeHitProgDataCB,
-                                  callBackData);
+        device->sbtHitProgsBuild(writeHitProgDataCB,
+                                 callBackData);
     }
-    
-    void DeviceGroup::sbtRayGensBuild(size_t maxRayGenDataSize,
-                                      WriteRayGenDataCB writeRayGenCB,
+
+    void DeviceGroup::geomTypeCreate(int geomTypeID,
+                                     size_t programDataSize)
+    {
+      for (auto device : devices) 
+        device->geomTypeCreate(geomTypeID,
+                               programDataSize);
+    }
+                          
+
+    void DeviceGroup::sbtRayGensBuild(WriteRayGenDataCB writeRayGenCB,
                                       void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtRayGensBuild(maxRayGenDataSize,
-                                writeRayGenCB,
+        device->sbtRayGensBuild(writeRayGenCB,
                                 callBackData);
     }
     
-    void DeviceGroup::sbtMissProgsBuild(size_t maxMissProgDataSize,
-                                        WriteMissProgDataCB writeMissProgCB,
+    void DeviceGroup::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgCB,
                                         void *callBackData)
     {
       for (auto device : devices) 
-        device->sbtMissProgsBuild(maxMissProgDataSize,
-                                  writeMissProgCB,
+        device->sbtMissProgsBuild(writeMissProgCB,
                                   callBackData);
     }
 
@@ -316,11 +389,63 @@ namespace owl {
                                                 WriteUserGeomBoundsDataCB cb,
                                                 void *cbData)
     {
-      for (auto device : devices) 
-        device->groupBuildPrimitiveBounds(groupID,
-                                          maxGeomDataSize,
-                                          cb,
-                                          cbData);
+      // try {
+        for (auto device : devices) 
+          device->groupBuildPrimitiveBounds(groupID,
+                                            maxGeomDataSize,
+                                            cb,
+                                            cbData);
+      // } catch (std::exception &e) {
+      //   std::cerr << GDT_TERMINAL_RED
+      //             << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
+      //             << e.what()
+      //             << GDT_TERMINAL_DEFAULT << std::endl;
+      //   throw e;
+      // }
+    }
+
+
+      /*! set given child's instance transform. groupID must be a
+          valid instance group, childID must be wihtin
+          [0..numChildren) */
+      void DeviceGroup::instanceGroupSetTransform(int groupID,
+                                     int childNo,
+                                     const affine3f &xfm)
+    {
+      for (auto device : devices)
+        device->instanceGroupSetTransform(groupID,
+                                          childNo,
+                                          xfm);
+    }
+
+    /*! set given child to {childGroupID+xfm}  */
+    void DeviceGroup::instanceGroupSetChild(int groupID,
+                                            int childNo,
+                                            int childGroupID,
+                                            const affine3f &xfm)
+    {
+      for (auto device : devices)
+        device->instanceGroupSetChild(groupID,
+                                      childNo,
+                                      childGroupID,
+                                      xfm);
+    }
+    
+    /*! create a new instance group with given list of children */
+    void DeviceGroup::instanceGroupCreate(/*! the group we are defining */
+                                          int groupID,
+                                          /* list of children. list can be
+                                             omitted by passing a nullptr, but if
+                                             not null this must be a list of
+                                             'childCount' valid group ID */
+                                          int *childGroupIDs,
+                                          /*! number of children in this group */
+                                          int childCount)
+    {
+      for (auto device : devices)
+        device->instanceGroupCreate(groupID,
+                                    childGroupIDs,
+                                    childCount);
     }
 
     /*! returns the given device's buffer address on the specified
@@ -333,6 +458,7 @@ namespace owl {
     void DeviceGroup::launch(int rgID, const vec2i &dims)
     {
       for (auto device : devices) device->launch(rgID,dims);
+      CUDA_SYNC_CHECK();
     }
     
     /* create an instance of this object that has properly

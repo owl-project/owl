@@ -14,10 +14,17 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(ll08-sierpinski
+  hostCode.cpp
+  ${ptxCode}
+  )
+target_link_libraries(ll08-sierpinski
+  owl-ll
+  )
+add_test(ll08-sierpinski ${CMAKE_BINARY_DIR}/ll08-sierpinski)
 
-# low-level interface
-add_subdirectory(ll)
 
-# node graph layer
-add_subdirectory(ng)

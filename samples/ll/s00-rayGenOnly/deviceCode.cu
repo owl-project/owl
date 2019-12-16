@@ -14,36 +14,28 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/llowl.h"
+#include "deviceCode.h"
+#include <optix_device.h>
 
-using namespace owl;
-
-struct TrianglesGeomData
+OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
-  vec3f color;
-  vec3i *index;
-  vec3f *vertex;
-};
+  const RayGenData &self = owl::getProgramData<RayGenData>();
+  const vec2i pixelID = owl::getLaunchIndex();
+  if (pixelID == owl::vec2i(0)) {
+    printf("%sHello OptiX From your First RayGen Program (on device %i/%i)%s\n",
+           GDT_TERMINAL_LIGHT_RED,
+           self.deviceIndex,
+           self.deviceCount,
+           GDT_TERMINAL_DEFAULT);
+  }
+  if (pixelID.x >= self.fbSize.x) return;
+  if (pixelID.y >= self.fbSize.y) return;
 
-struct RayGenData
-{
-  int deviceIndex;
-  int deviceCount;
-  uint32_t *fbPtr;
-  vec2i  fbSize;
-  OptixTraversableHandle world;
+  int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
+  const vec3f color = (pattern&1) ? self.color1 : self.color0;
 
-  struct {
-    vec3f pos;
-    vec3f dir_00;
-    vec3f dir_du;
-    vec3f dir_dv;
-  } camera;
-};
-
-struct MissProgData
-{
-  vec3f  color0;
-  vec3f  color1;
-};
+  const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
+  self.fbPtr[fbOfs]
+    = owl::make_rgba(color);
+}
 

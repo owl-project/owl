@@ -39,7 +39,18 @@
 
 namespace owl {
   namespace ll {
-    
+
+    struct WarnOnce
+    {
+      WarnOnce(const char *message)
+      {
+        std::cout << GDT_TERMINAL_RED
+                  << "#owl.ll(warning): "
+                  << message
+                  << GDT_TERMINAL_DEFAULT << std::endl;
+      }
+    };
+      
     static void context_log_cb(unsigned int level,
                                const char *tag,
                                const char *message,
@@ -47,7 +58,51 @@ namespace owl {
     {
       fprintf( stderr, "[%2d][%12s]: %s\n", level, tag, message );
     }
-  
+
+
+      int RangeAllocator::alloc(int size)
+      {
+        for (int i=0;i<freedRanges.size();i++) {
+          if (freedRanges[i].size >= size) {
+            int where = freedRanges[i].begin;
+            if (freedRanges[i].size == size)
+              freedRanges.erase(freedRanges.begin()+i);
+            else {
+              freedRanges[i].begin += size;
+              freedRanges[i].size  -= size;
+            }
+            return where;
+          }
+        }
+        int where = maxAllocedID;
+        maxAllocedID+=size;
+        return where;
+      }
+      void RangeAllocator::release(int begin, int size)
+      {
+        for (int i=0;i<freedRanges.size();i++) {
+          if (freedRanges[i].begin+freedRanges[i].size == begin) {
+            begin -= freedRanges[i].size;
+            size  += freedRanges[i].size;
+            freedRanges.erase(freedRanges.begin()+i);
+            release(begin,size);
+            return;
+          }
+          if (begin+size == freedRanges[i].begin) {
+            size  += freedRanges[i].size;
+            freedRanges.erase(freedRanges.begin()+i);
+            release(begin,size);
+            return;
+          }
+        }
+        if (begin+size == maxAllocedID) {
+          maxAllocedID -= size;
+          return;
+        }
+        // could not merge with any existing range: add new one
+        freedRanges.push_back({begin,size});
+      }
+
     /*! construct a new owl device on given cuda device. throws an
       exception if for any reason that cannot be done */
     Context::Context(int owlDeviceID,
@@ -72,6 +127,23 @@ namespace owl {
       OPTIX_CHECK(optixDeviceContextSetLogCallback
                   (optixContext,context_log_cb,this,4));
 
+      configurePipelineOptions();
+    }
+
+    void Device::setMaxInstancingDepth(int maxInstancingDepth)
+    {
+      if (maxInstancingDepth == context->maxInstancingDepth)
+        return;
+      assert("check pipeline isn't already created"
+             && context->pipeline == nullptr);
+      context->maxInstancingDepth = maxInstancingDepth;
+      context->configurePipelineOptions();
+    }
+
+    /*! sets the pipelineCompileOptions etc based on
+      maxConfiguredInstanceDepth */
+    void Context::configurePipelineOptions()
+    {
       // ------------------------------------------------------------------
       // configure default module compile options
       // ------------------------------------------------------------------
@@ -83,8 +155,21 @@ namespace owl {
       // configure default pipeline compile options
       // ------------------------------------------------------------------
       pipelineCompileOptions = {};
-      pipelineCompileOptions.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
-      // = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+      assert(maxInstancingDepth >= 0);
+      switch (maxInstancingDepth) {
+      case 0:
+        pipelineCompileOptions.traversableGraphFlags
+          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS;
+        break;
+      case 1:
+        pipelineCompileOptions.traversableGraphFlags
+          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+        break;
+      default:
+        pipelineCompileOptions.traversableGraphFlags
+          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
+        break;
+      }
       pipelineCompileOptions.usesMotionBlur     = false;
       pipelineCompileOptions.numPayloadValues   = 2;
       pipelineCompileOptions.numAttributeValues = 2;
@@ -152,6 +237,17 @@ namespace owl {
       }
     }
 
+
+    void Device::geomTypeCreate(int geomTypeID,
+                                size_t programDataSize)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      assert(geomType.hitProgDataSize == (size_t)-1);
+      geomType.hitProgDataSize = programDataSize;
+    }
+
     /*! set bounding box program for given geometry type, using a
       bounding box program to be called on the device. note that
       unlike other programs (intersect, closesthit, anyhit) these
@@ -166,6 +262,8 @@ namespace owl {
       assert(geomTypeID >= 0);
       assert(geomTypeID < geomTypes.size());
       auto &geomType = geomTypes[geomTypeID];
+      assert("make sure geomTypeCreate() was called before geomTypeSetBoundsProg"
+             && geomType.hitProgDataSize != size_t(-1));
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -190,6 +288,9 @@ namespace owl {
       assert(geomTypeID >= 0);
       assert(geomTypeID < geomTypes.size());
       auto &geomType = geomTypes[geomTypeID];
+
+      assert("make sure geomTypeCreate() was properly called"
+             && geomType.hitProgDataSize != size_t(-1));
       
       assert(rayTypeID >= 0);
       assert(rayTypeID < context->numRayTypes);
@@ -237,12 +338,13 @@ namespace owl {
       hitGroup.closestHit.progName = progName;
     }
     
-    void Device::setRayGen(int pgID,
+    void Device::setRayGen(int programID,
                            int moduleID,
-                           const char *progName)
+                           const char *progName,
+                           size_t dataSize)
     {
-      assert(pgID >= 0);
-      assert(pgID < rayGenPGs.size());
+      assert(programID >= 0);
+      assert(programID < rayGenPGs.size());
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -250,16 +352,28 @@ namespace owl {
              ||
              (moduleID >= 0  && progName != nullptr));
 
-      rayGenPGs[pgID].program.moduleID = moduleID;
-      rayGenPGs[pgID].program.progName = progName;
+      rayGenPGs[programID].program.moduleID = moduleID;
+      rayGenPGs[programID].program.progName = progName;
+      rayGenPGs[programID].program.dataSize = dataSize;
     }
     
-    void Device::setMissProg(int pgID,
+    /*! specifies which miss program to run for a given miss prog
+      ID */
+    void Device::setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                             int programID,
+                             /*! ID of the module the program will be bound
+                               in, in [0..numAllocedModules) */
                              int moduleID,
-                             const char *progName)
+                             /*! name of the program. Note we do not NOT
+                               create a copy of this string, so the string
+                               has to remain valid for the duration of the
+                               program */
+                             const char *progName,
+                             /*! size of that miss program's SBT data */
+                             size_t missProgDataSize)
     {
-      assert(pgID >= 0);
-      assert(pgID < missProgPGs.size());
+      assert(programID >= 0);
+      assert(programID < missProgPGs.size());
       
       assert(moduleID >= -1);
       assert(moduleID <  modules.size());
@@ -267,8 +381,9 @@ namespace owl {
              ||
              (moduleID >= 0  && progName != nullptr));
 
-      missProgPGs[pgID].program.moduleID = moduleID;
-      missProgPGs[pgID].program.progName = progName;
+      missProgPGs[programID].program.moduleID = moduleID;
+      missProgPGs[programID].program.progName = progName;
+      missProgPGs[programID].program.dataSize = missProgDataSize;
     }
     
     /*! will destroy the *optix handles*, but will *not* clear the
@@ -423,6 +538,7 @@ namespace owl {
 
     void Device::buildOptixPrograms()
     {
+      context->pushActive();
       OptixProgramGroupOptions pgOptions = {};
       OptixProgramGroupDesc    pgDesc    = {};
 
@@ -585,6 +701,7 @@ namespace owl {
           }
         }
       }
+      context->popActive();
     }
     
     void Device::destroyOptixPrograms()
@@ -640,11 +757,13 @@ namespace owl {
       assert(!device->rayGenPGs.empty());
       for (auto &pg : device->rayGenPGs)
         allPGs.push_back(pg.pg);
-      assert(!device->geomTypes.empty());
+      if (device->geomTypes.empty())
+        CLOG("warning: no geometry types defined");
       for (auto &geomType : device->geomTypes)
         for (auto &pg : geomType.perRayType)
           allPGs.push_back(pg.pg);
-      assert(!device->missProgPGs.empty());
+      if (device->missProgPGs.empty())
+        CLOG("warning: no miss programs defined");
       for (auto &pg : device->missProgPGs)
         allPGs.push_back(pg.pg);
 
@@ -673,16 +792,26 @@ namespace owl {
                       direct callables invoked from RG, MS, or CH.  */
                    2*1024,
                    /* [in] The continuation stack requirement. */
-                   3
+                   (maxInstancingDepth+1)
                    /* [in] The maximum depth of a traversable graph
                       passed to trace. */
                    ));
     }
       
 
-
+    void Device::bufferDestroy(int bufferID)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID <  buffers.size());
+      assert("check buffer to be destroyed actually exists"
+             && buffers[bufferID] != nullptr);
+      context->pushActive();
+      delete buffers[bufferID];
+      buffers[bufferID] = nullptr;
+      context->popActive();
+    }
     
-    void Device::createDeviceBuffer(int bufferID,
+    void Device::deviceBufferCreate(int bufferID,
                                     size_t elementCount,
                                     size_t elementSize,
                                     const void *initData)
@@ -704,7 +833,7 @@ namespace owl {
       context->popActive();
     }
     
-    void Device::createHostPinnedBuffer(int bufferID,
+    void Device::hostPinnedBufferCreate(int bufferID,
                                         size_t elementCount,
                                         size_t elementSize,
                                         HostPinnedMemory::SP pinnedMem)
@@ -801,184 +930,15 @@ namespace owl {
     {
       return checkGetGroup(groupID)->traversable;
     }
-      
-    
 
-    
-
-
-    void TrianglesGeomGroup::destroyAccel(Context *context) 
+    uint32_t Device::groupGetSBTOffset(int groupID)
     {
-      context->pushActive();
-      if (traversable) {
-        bvhMemory.free();
-        traversable = 0;
-      }
-      context->popActive();
+      Group *group = checkGetGroup(groupID);
+      return group->getSBTOffset();
     }
     
-    void TrianglesGeomGroup::buildAccel(Context *context) 
-    {
-      assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && !bvhMemory.valid());
-      
-      context->pushActive();
-      LOG("building triangles accel over "
-          << children.size() << " geometries");
-      
-      // ==================================================================
-      // create triangle inputs
-      // ==================================================================
-      //! the N build inputs that go into the builder
-      std::vector<OptixBuildInput> triangleInputs(children.size());
-      /*! *arrays* of the vertex pointers - the buildinputs cointina
-       *pointers* to the pointers, so need a temp copy here */
-      std::vector<CUdeviceptr> vertexPointers(children.size());
-      std::vector<CUdeviceptr> indexPointers(children.size());
+    
 
-      // for now we use the same flags for all geoms
-      uint32_t triangleInputFlags[1] = { 0 };
-      // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
-
-      // now go over all children to set up the buildinputs
-      for (int childID=0;childID<children.size();childID++) {
-        // the three fields we're setting:
-        CUdeviceptr     &d_vertices    = vertexPointers[childID];
-        CUdeviceptr     &d_indices     = indexPointers[childID];
-        OptixBuildInput &triangleInput = triangleInputs[childID];
-
-        // the child wer're setting them with (with sanity checks)
-        Geom *geom = children[childID];
-        assert("double-check geom isn't null" && geom != nullptr);
-        assert("sanity check refcount" && geom->numTimesReferenced >= 0);
-       
-        TrianglesGeom *tris = dynamic_cast<TrianglesGeom*>(geom);
-        assert("double-check it's really triangles" && tris != nullptr);
-        
-        // now fill in the values:
-        d_vertices = (CUdeviceptr )tris->vertexPointer;
-        assert("triangles geom has vertex array set" && d_vertices);
-        
-        d_indices  = (CUdeviceptr )tris->indexPointer;
-        assert("triangles geom has index array set" && d_indices);
-
-        triangleInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
-        auto &ta = triangleInput.triangleArray;
-        ta.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
-        ta.vertexStrideInBytes = (uint32_t)tris->vertexStride;
-        ta.numVertices         = (uint32_t)tris->vertexCount;
-        ta.vertexBuffers       = &d_vertices;
-      
-        ta.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-        ta.indexStrideInBytes  = (uint32_t)tris->indexStride;
-        ta.numIndexTriplets    = (uint32_t)tris->indexCount;
-        ta.indexBuffer         = d_indices;
-      
-        // we always have exactly one SBT entry per shape (ie, triangle
-        // mesh), and no per-primitive materials:
-        ta.flags                       = triangleInputFlags;
-        ta.numSbtRecords               = context->numRayTypes;
-        ta.sbtIndexOffsetBuffer        = 0; 
-        ta.sbtIndexOffsetSizeInBytes   = 0; 
-        ta.sbtIndexOffsetStrideInBytes = 0; 
-      }
-      
-      // ==================================================================
-      // BLAS setup: buildinputs set up, build the blas
-      // ==================================================================
-      
-      // ------------------------------------------------------------------
-      // first: compute temp memory for bvh
-      // ------------------------------------------------------------------
-      OptixAccelBuildOptions accelOptions = {};
-      accelOptions.buildFlags             = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
-      accelOptions.motionOptions.numKeys  = 1;
-      accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
-      
-      OptixAccelBufferSizes blasBufferSizes;
-      OPTIX_CHECK(optixAccelComputeMemoryUsage
-                  (context->optixContext,
-                   &accelOptions,
-                   triangleInputs.data(),
-                   (uint32_t)triangleInputs.size(),
-                   &blasBufferSizes
-                   ));
-      
-      // ------------------------------------------------------------------
-      // ... and allocate buffers: temp buffer, initial (uncompacted)
-      // BVH buffer, and a one-single-size_t buffer to store the
-      // compacted size in
-      // ------------------------------------------------------------------
-
-      // temp memory:
-      DeviceMemory tempBuffer;
-      tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
-
-      // buffer for initial, uncompacted bvh
-      DeviceMemory outputBuffer;
-      outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
-
-      // single size-t buffer to store compacted size in
-      DeviceMemory compactedSizeBuffer;
-      compactedSizeBuffer.alloc(sizeof(uint64_t));
-      
-      // ------------------------------------------------------------------
-      // now execute initial, uncompacted build
-      // ------------------------------------------------------------------
-      OptixAccelEmitDesc emitDesc;
-      emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
-      emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
-      
-      OPTIX_CHECK(optixAccelBuild(context->optixContext,
-                                  /* todo: stream */0,
-                                  &accelOptions,
-                                  // array of build inputs:
-                                  triangleInputs.data(),
-                                  (uint32_t)triangleInputs.size(),
-                                  // buffer of temp memory:
-                                  (CUdeviceptr)tempBuffer.get(),
-                                  (uint32_t)tempBuffer.size(),
-                                  // where we store initial, uncomp bvh:
-                                  (CUdeviceptr)outputBuffer.get(),
-                                  outputBuffer.size(),
-                                  /* the traversable we're building: */ 
-                                  &traversable,
-                                  /* we're also querying compacted size: */
-                                  &emitDesc,1u
-                                  ));
-      CUDA_SYNC_CHECK();
-      
-      // ==================================================================
-      // perform compaction
-      // ==================================================================
-
-      // download builder's compacted size from device
-      uint64_t compactedSize;
-      compactedSizeBuffer.download(&compactedSize);
-
-      // alloc the buffer...
-      bvhMemory.alloc(compactedSize);
-      // ... and perform compaction
-      OPTIX_CALL(AccelCompact(context->optixContext,
-                              /*TODO: stream:*/0,
-                              // OPTIX_COPY_MODE_COMPACT,
-                              traversable,
-                              (CUdeviceptr)bvhMemory.get(),
-                              bvhMemory.size(),
-                              &traversable));
-      CUDA_SYNC_CHECK();
-      
-      // ==================================================================
-      // aaaaaand .... clean up
-      // ==================================================================
-      outputBuffer.free(); // << the UNcompacted, temporary output buffer
-      tempBuffer.free();
-      compactedSizeBuffer.free();
-      
-      context->popActive();
-
-      LOG_OK("successfully build triangles geom group accel");
-    }
     
 
 
@@ -989,187 +949,8 @@ namespace owl {
 
 
 
-
-
-
-
-
-
-    void UserGeomGroup::destroyAccel(Context *context) 
-    {
-      context->pushActive();
-      if (traversable) {
-        bvhMemory.free();
-        traversable = 0;
-      }
-      context->popActive();
-    }
-    
-    void UserGeomGroup::buildAccel(Context *context) 
-    {
-      assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && !bvhMemory.valid());
-      
-      context->pushActive();
-      LOG("building user accel over "
-          << children.size() << " geometries");
-      // ==================================================================
-      // create triangle inputs
-      // ==================================================================
-      //! the N build inputs that go into the builder
-      std::vector<OptixBuildInput> userGeomInputs(children.size());
-      /*! *arrays* of the vertex pointers - the buildinputs cointina
-       *pointers* to the pointers, so need a temp copy here */
-      std::vector<CUdeviceptr> boundsPointers(children.size());
-
-     // for now we use the same flags for all geoms
-      uint32_t userGeomInputFlags[1] = { 0 };
-      // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
-
-      // now go over all children to set up the buildinputs
-      for (int childID=0;childID<children.size();childID++) {
-        // the three fields we're setting:
-
-        CUdeviceptr     &d_bounds = boundsPointers[childID];
-        OptixBuildInput &userGeomInput = userGeomInputs[childID];
-        
-        // the child wer're setting them with (with sanity checks)
-        Geom *geom = children[childID];
-        assert("double-check geom isn't null" && geom != nullptr);
-        assert("sanity check refcount" && geom->numTimesReferenced >= 0);
-       
-        UserGeom *userGeom = dynamic_cast<UserGeom*>(geom);
-        assert("double-check it's really user"
-               && userGeom != nullptr);
-        assert("user geom has valid bounds buffer *or* user-supplied bounds"
-               && (userGeom->internalBufferForBoundsProgram.valid()
-                   || userGeom->d_boundsMemory));
-        d_bounds = (CUdeviceptr)userGeom->d_boundsMemory;
-        
-        userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
-        auto &aa = userGeomInput.aabbArray;
-        aa.aabbBuffers   = &d_bounds;
-        aa.numPrimitives = userGeom->numPrims;
-        aa.strideInBytes = sizeof(box3f);
-        aa.primitiveIndexOffset = 0;
-      
-        // we always have exactly one SBT entry per shape (ie, triangle
-        // mesh), and no per-primitive materials:
-        aa.flags                       = userGeomInputFlags;
-        aa.numSbtRecords               = context->numRayTypes;
-        aa.sbtIndexOffsetBuffer        = 0; 
-        aa.sbtIndexOffsetSizeInBytes   = 0; 
-        aa.sbtIndexOffsetStrideInBytes = 0; 
-      }
-      
-      // ==================================================================
-      // BLAS setup: buildinputs set up, build the blas
-      // ==================================================================
-      
-      // ------------------------------------------------------------------
-      // first: compute temp memory for bvh
-      // ------------------------------------------------------------------
-      OptixAccelBuildOptions accelOptions = {};
-      accelOptions.buildFlags             = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
-      accelOptions.motionOptions.numKeys  = 1;
-      accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
-      
-      OptixAccelBufferSizes blasBufferSizes;
-      OPTIX_CHECK(optixAccelComputeMemoryUsage
-                  (context->optixContext,
-                   &accelOptions,
-                   userGeomInputs.data(),
-                   (uint32_t)userGeomInputs.size(),
-                   &blasBufferSizes
-                   ));
-      
-      // ------------------------------------------------------------------
-      // ... and allocate buffers: temp buffer, initial (uncompacted)
-      // BVH buffer, and a one-single-size_t buffer to store the
-      // compacted size in
-      // ------------------------------------------------------------------
-
-      // temp memory:
-      DeviceMemory tempBuffer;
-      tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
-
-      // buffer for initial, uncompacted bvh
-      DeviceMemory outputBuffer;
-      outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
-
-      // single size-t buffer to store compacted size in
-      DeviceMemory compactedSizeBuffer;
-      compactedSizeBuffer.alloc(sizeof(uint64_t));
-      
-      // ------------------------------------------------------------------
-      // now execute initial, uncompacted build
-      // ------------------------------------------------------------------
-      OptixAccelEmitDesc emitDesc;
-      emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
-      emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
-      
-      OPTIX_CHECK(optixAccelBuild(context->optixContext,
-                                  /* todo: stream */0,
-                                  &accelOptions,
-                                  // array of build inputs:
-                                  userGeomInputs.data(),
-                                  (uint32_t)userGeomInputs.size(),
-                                  // buffer of temp memory:
-                                  (CUdeviceptr)tempBuffer.get(),
-                                  (uint32_t)tempBuffer.size(),
-                                  // where we store initial, uncomp bvh:
-                                  (CUdeviceptr)outputBuffer.get(),
-                                  outputBuffer.size(),
-                                  /* the traversable we're building: */ 
-                                  &traversable,
-                                  /* we're also querying compacted size: */
-                                  &emitDesc,1u
-                                  ));
-      CUDA_SYNC_CHECK();
-      
-      // ==================================================================
-      // perform compaction
-      // ==================================================================
-
-      // download builder's compacted size from device
-      uint64_t compactedSize;
-      compactedSizeBuffer.download(&compactedSize);
-      
-      // alloc the buffer...
-      bvhMemory.alloc(compactedSize);
-      // ... and perform compaction
-      OPTIX_CALL(AccelCompact(context->optixContext,
-                              /*TODO: stream:*/0,
-                              // OPTIX_COPY_MODE_COMPACT,
-                              traversable,
-                              (CUdeviceptr)bvhMemory.get(),
-                              bvhMemory.size(),
-                              &traversable));
-      CUDA_SYNC_CHECK();
-      
-      // ==================================================================
-      // aaaaaand .... clean up
-      // ==================================================================
-      outputBuffer.free(); // << the UNcompacted, temporary output buffer
-      tempBuffer.free();
-      compactedSizeBuffer.free();
-      
-      context->popActive();
-
-      LOG_OK("successfully build user geom group accel");
-    }
-    
-
-
-
-
-
-
-
-
-    void Device::sbtGeomTypesBuild(size_t maxHitProgDataSize,
-                                   WriteHitProgDataCB writeHitProgDataCB,
-                                   const void *callBackUserData)
+    void Device::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                                  const void *callBackUserData)
     {
       LOG("building sbt hit group records");
       context->pushActive();
@@ -1177,8 +958,19 @@ namespace owl {
       if (sbt.hitGroupRecordsBuffer.valid())
         sbt.hitGroupRecordsBuffer.free();
 
-      size_t numGeoms = geoms.size();
-      size_t numHitGroupRecords = numGeoms * context->numRayTypes;
+      size_t maxHitProgDataSize = 0;
+      for (int geomID=0;geomID<geoms.size();geomID++) {
+        Geom *geom = geoms[geomID];
+        if (!geom) continue;
+        GeomType &gt = geomTypes[geom->geomTypeID];
+        maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
+      }
+      if (maxHitProgDataSize == size_t(-1))
+        throw std::runtime_error("in sbtHitProgsBuild: at least on geometry uses a type for which geomTypeCreate has not been called");
+      assert("make sure all geoms had their program size set"
+             && maxHitProgDataSize != (size_t)-1);
+      size_t numHitGroupEntries = sbt.rangeAllocator.maxAllocedID;
+      size_t numHitGroupRecords = numHitGroupEntries*context->numRayTypes;
       size_t hitGroupRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
@@ -1194,57 +986,82 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
-      for (int geomID=0;geomID<(int)geoms.size();geomID++)
-        for (int rayTypeID=0;rayTypeID<context->numRayTypes;rayTypeID++) {
-          // ------------------------------------------------------------------
-          // compute pointer to entire record:
-          // ------------------------------------------------------------------
-          const int recordID = rayTypeID + geomID*context->numRayTypes;
-          uint8_t *const sbtRecord
-            = hitGroupRecords.data() + recordID*hitGroupRecordSize;
-
-          // ------------------------------------------------------------------
-          // pack record header with the corresponding hit group:
-          // ------------------------------------------------------------------
-          // first, compute pointer to record:
-          char    *const sbtRecordHeader = (char *)sbtRecord;
-          // then, get gemetry we want to write (to find its hit group ID)...
-          const Geom *const geom = checkGetGeom(geomID);
-          // ... find the PG that goes into the record header...
-          auto &geomType = geomTypes[geom->geomTypeID];
-          const HitGroupPG &hgPG
-            = geomType.perRayType[rayTypeID];
-          // ... and tell optix to write that into the record
-          OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
+      PING;
+      PRINT(groups.size());
+      for (auto group : groups) {
+        if (!group) continue;
+        if (!group->containsGeom()) continue;
+        GeomGroup *gg = (GeomGroup *)group;
+        const int sbtOffset = gg->sbtOffset;
+        PRINT(sbtOffset);
+        PRINT(gg->children.size());
+        for (int childID=0;childID<gg->children.size();childID++) {
+          Geom *geom = gg->children[childID];
+          if (!geom) continue;
           
-          // ------------------------------------------------------------------
-          // finally, let the user fill in the record's payload using
-          // the callback
-          // ------------------------------------------------------------------
-          uint8_t *const sbtRecordData
-            = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
-          writeHitProgDataCB(sbtRecordData,
-                             context->owlDeviceID,
-                             geomID,
-                             rayTypeID,
-                             callBackUserData);
+          const int geomID    = geom->geomID;
+          for (int rayTypeID=0;rayTypeID<context->numRayTypes;rayTypeID++) {
+            // ------------------------------------------------------------------
+            // compute pointer to entire record:
+            // ------------------------------------------------------------------
+            const int recordID
+              = (sbtOffset+childID)*context->numRayTypes + rayTypeID;
+            uint8_t *const sbtRecord
+              = hitGroupRecords.data() + recordID*hitGroupRecordSize;
+
+            // ------------------------------------------------------------------
+            // pack record header with the corresponding hit group:
+            // ------------------------------------------------------------------
+            // first, compute pointer to record:
+            char    *const sbtRecordHeader = (char *)sbtRecord;
+            // then, get gemetry we want to write (to find its hit group ID)...
+            const Geom *const geom = checkGetGeom(geomID);
+            // ... find the PG that goes into the record header...
+            auto &geomType = geomTypes[geom->geomTypeID];
+            const HitGroupPG &hgPG
+              = geomType.perRayType[rayTypeID];
+            // ... and tell optix to write that into the record
+            OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
+          
+            // ------------------------------------------------------------------
+            // finally, let the user fill in the record's payload using
+            // the callback
+            // ------------------------------------------------------------------
+            uint8_t *const sbtRecordData
+              = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
+            writeHitProgDataCB(sbtRecordData,
+                               context->owlDeviceID,
+                               geomID,
+                               rayTypeID,
+                               callBackUserData);
+          }
         }
+      }
+      PRINT(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       context->popActive();
+      PING;
       LOG_OK("done building (and uploading) sbt hit group records");
     }
       
-    void Device::sbtRayGensBuild(size_t maxRayGenDataSize,
-                                 WriteRayGenDataCB writeRayGenDataCB,
+    void Device::sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
                                  const void *callBackUserData)
     {
-      LOG("building sbt ray gen records");
+      static size_t numTimesCalled = 0;
+      ++numTimesCalled;
+      
+      if (numTimesCalled < 10)
+        LOG("building sbt ray gen records (only showing first 10 instances)");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.rayGenRecordsBuffer.valid())
         sbt.rayGenRecordsBuffer.free();
 
+      size_t maxRayGenDataSize = 0;
+      for (int rgID=0;rgID<(int)rayGenPGs.size();rgID++) 
+        maxRayGenDataSize = std::max(maxRayGenDataSize,
+                                     rayGenPGs[rgID].program.dataSize);
       size_t numRayGenRecords = rayGenPGs.size();
       size_t rayGenRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
@@ -1293,11 +1110,11 @@ namespace owl {
       sbt.rayGenRecordsBuffer.alloc(rayGenRecords.size());
       sbt.rayGenRecordsBuffer.upload(rayGenRecords);
       context->popActive();
-      LOG_OK("done building (and uploading) sbt ray gen records");
+      if (numTimesCalled < 10)
+        LOG_OK("done building (and uploading) sbt ray gen records (only showing first 10 instances)");
     }
       
-    void Device::sbtMissProgsBuild(size_t maxMissProgDataSize,
-                                   WriteMissProgDataCB writeMissProgDataCB,
+    void Device::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
                                    const void *callBackUserData)
     {
       LOG("building sbt miss prog records");
@@ -1309,6 +1126,11 @@ namespace owl {
       if (sbt.missProgRecordsBuffer.valid())
         sbt.missProgRecordsBuffer.free();
 
+      size_t maxMissProgDataSize = 0;
+      for (int mpID=0;mpID<(int)missProgPGs.size();mpID++) 
+        maxMissProgDataSize = std::max(maxMissProgDataSize,
+                                     rayGenPGs[mpID].program.dataSize);
+      
       size_t numMissProgRecords = missProgPGs.size();
       size_t missProgRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
@@ -1363,7 +1185,7 @@ namespace owl {
     void Device::launch(int rgID, const vec2i &dims)
     {
       context->pushActive();
-      LOG("launching ...");
+      // LOG("launching ...");
       assert("check valid launch dims" && dims.x > 0);
       assert("check valid launch dims" && dims.y > 0);
       assert("check valid ray gen program ID" && rgID >= 0);
@@ -1373,22 +1195,47 @@ namespace owl {
       sbt.sbt.raygenRecord
         = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
                                         rgID * sbt.rayGenRecordSize);
-      
-      assert("check miss records built" && sbt.missProgRecordCount != 0);
-      sbt.sbt.missRecordBase
-        = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
-      sbt.sbt.missRecordStrideInBytes
-        = sbt.missProgRecordSize;
-      sbt.sbt.missRecordCount
-        = sbt.missProgRecordCount;
-      
-      assert("check hit records built" && sbt.hitGroupRecordCount != 0);
-      sbt.sbt.hitgroupRecordBase
-        = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
-      sbt.sbt.hitgroupRecordStrideInBytes
-        = sbt.hitGroupRecordSize;
-      sbt.sbt.hitgroupRecordCount
-        = sbt.hitGroupRecordCount;
+
+      if (!sbt.missProgRecordsBuffer.valid() &&
+          !sbt.hitGroupRecordsBuffer.valid()) {
+        // apparently this program does not have any hit records *or*
+        // miss records, which means either something's horribly wrong
+        // in the app, or this is more cuda-style "raygen-only" launch
+        // (ie, a lauch of a raygen programthat doesn't actualy trace
+        // any rays. If the latter, let's "fake" a valid SBT by
+        // writing in some (senseless) values to not trigger optix's
+        // own sanity checks
+        static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+        sbt.sbt.missRecordBase
+          = (CUdeviceptr)32;
+        sbt.sbt.missRecordStrideInBytes
+          = (uint32_t)32;
+        sbt.sbt.missRecordCount
+          = 1;
+
+        sbt.sbt.hitgroupRecordBase
+          = (CUdeviceptr)32;
+        sbt.sbt.hitgroupRecordStrideInBytes
+          = (uint32_t)32;
+        sbt.sbt.hitgroupRecordCount
+          = 1;
+      } else {
+        assert("check miss records built" && sbt.missProgRecordCount != 0);
+        sbt.sbt.missRecordBase
+          = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
+        sbt.sbt.missRecordStrideInBytes
+          = (uint32_t)sbt.missProgRecordSize;
+        sbt.sbt.missRecordCount
+          = (uint32_t)sbt.missProgRecordCount;
+
+        assert("check hit records built" && sbt.hitGroupRecordCount != 0);
+        sbt.sbt.hitgroupRecordBase
+          = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
+        sbt.sbt.hitgroupRecordStrideInBytes
+          = (uint32_t)sbt.hitGroupRecordSize;
+        sbt.sbt.hitgroupRecordCount
+          = (uint32_t)sbt.hitGroupRecordCount;
+      }
 
       if (!sbt.launchParamsBuffer.valid()) {
         LOG("creating dummy launch params buffer ...");
@@ -1404,11 +1251,11 @@ namespace owl {
                         dims.x,dims.y,1
                         ));
 
-      cudaDeviceSynchronize();
+      // cudaDeviceSynchronize();
       context->popActive();
     }
     
-    void Device::createUserGeom(int geomID,
+    void Device::userGeomCreate(int geomID,
                                 /*! the "logical" hit group ID:
                                   will always count 0,1,2... evne
                                   if we are using multiple ray
@@ -1430,7 +1277,7 @@ namespace owl {
       assert("check 'new' was successful" && geoms[geomID] != nullptr);
     }
     
-    void Device::createTrianglesGeom(int geomID,
+    void Device::trianglesGeomCreate(int geomID,
                                      /*! the "logical" hit group ID:
                                        will always count 0,1,2... evne
                                        if we are using multiple ray
@@ -1455,10 +1302,10 @@ namespace owl {
       'grow' or a 'shrink', but 'shrink' is only allowed if all
       geoms that would get 'lost' have alreay been
       destroyed */
-    void Device::reallocGroups(size_t newCount)
+    void Device::allocGroups(size_t newCount)
     {
       for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
-        assert("realloc would lose a geom that was not properly destroyed" &&
+        assert("alloc would lose a geom that was not properly destroyed" &&
                groups[idxWeWouldLose] == nullptr);
       groups.resize(newCount);
     }
@@ -1466,131 +1313,14 @@ namespace owl {
       'grow' or a 'shrink', but 'shrink' is only allowed if all
       buffer handles that would get 'lost' have alreay been
       destroyed */
-    void Device::reallocBuffers(size_t newCount)
+    void Device::allocBuffers(size_t newCount)
     {
       for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
-        assert("realloc would lose a geom that was not properly destroyed" &&
+        assert("alloc would lose a geom that was not properly destroyed" &&
                buffers[idxWeWouldLose] == nullptr);
       buffers.resize(newCount);
     }
 
-    void Device::createTrianglesGeomGroup(int groupID,
-                                          int *geomIDs,
-                                          int geomCount)
-    {
-      assert("check for valid ID" && groupID >= 0);
-      assert("check for valid ID" && groupID < groups.size());
-      assert("check group ID is available" && groups[groupID] ==nullptr);
-        
-      assert("check for valid combinations of child list" &&
-             ((geomIDs == nullptr && geomCount == 0) ||
-              (geomIDs != nullptr && geomCount >  0)));
-        
-      TrianglesGeomGroup *group = new TrianglesGeomGroup(geomCount);
-      assert("check 'new' was successful" && group != nullptr);
-      groups[groupID] = group;
-
-      // set children - todo: move to separate (api?) function(s)!?
-      for (int childID=0;childID<geomCount;childID++) {
-        int geomID = geomIDs[childID];
-        assert("check geom child geom ID is valid" && geomID >= 0);
-        assert("check geom child geom ID is valid" && geomID <  geoms.size());
-        Geom *geom = geoms[geomID];
-        assert("check geom indexed child geom valid" && geom != nullptr);
-        assert("check geom is valid type" && geom->primType() == TRIANGLES);
-        geom->numTimesReferenced++;
-        group->children[childID] = geom;
-      }
-    }
-    
-    void Device::createUserGeomGroup(int groupID,
-                                     int *geomIDs,
-                                     int geomCount)
-    {
-      assert("check for valid ID" && groupID >= 0);
-      assert("check for valid ID" && groupID < groups.size());
-      assert("check group ID is available" && groups[groupID] ==nullptr);
-        
-      assert("check for valid combinations of child list" &&
-             ((geomIDs == nullptr && geomCount == 0) ||
-              (geomIDs != nullptr && geomCount >  0)));
-        
-      UserGeomGroup *group = new UserGeomGroup(geomCount);
-      assert("check 'new' was successful" && group != nullptr);
-      groups[groupID] = group;
-
-      // set children - todo: move to separate (api?) function(s)!?
-      for (int childID=0;childID<geomCount;childID++) {
-        int geomID = geomIDs[childID];
-        assert("check geom child geom ID is valid" && geomID >= 0);
-        assert("check geom child geom ID is valid" && geomID <  geoms.size());
-        Geom *geom = geoms[geomID];
-        assert("check geom indexed child geom valid" && geom != nullptr);
-        assert("check geom is valid type" && geom->primType() == USER);
-        geom->numTimesReferenced++;
-        group->children[childID] = geom;
-      }
-    }
-
-
-
-    void Device::groupBuildPrimitiveBounds(int groupID,
-                                           size_t maxGeomDataSize,
-                                           WriteUserGeomBoundsDataCB cb,
-                                           void *cbData)
-    {
-      UserGeomGroup *ugg
-        = checkGetUserGeomGroup(groupID);
-      
-      std::vector<uint8_t> userGeomData(maxGeomDataSize);
-      DeviceMemory tempMem;
-      tempMem.alloc(maxGeomDataSize);
-      for (int childID=0;childID<ugg->children.size();childID++) {
-        Geom *child = ugg->children[childID];
-        assert("double-check valid child geom" && child != nullptr);
-        assert(child);
-        UserGeom *ug = (UserGeom *)child;
-        ug->internalBufferForBoundsProgram.alloc(ug->numPrims);
-        ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
-
-        LOG("calling user geom callback to set up user geometry bounds call data");
-        cb(userGeomData.data(),context->owlDeviceID,
-           ug->geomID,childID,cbData); 
-
-        // size of each thread block during bounds function call
-        int boundsFuncBlockSize = 128;
-        int numPrims = ug->numPrims;
-        vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
-        vec3i gridDims(boundsFuncBlockSize,1,1);
-
-        tempMem.upload(userGeomData);
-        
-        void  *d_geomData = tempMem.get();//nullptr;
-        vec3f *d_boundsArray = (vec3f*)ug->d_boundsMemory;
-        void  *args[] = {
-          &d_geomData,
-          &d_boundsArray,
-          (void *)&numPrims
-        };
-
-        DeviceMemory tempMem;
-        GeomType *gt = checkGetGeomType(ug->geomTypeID);
-        CUresult rc
-          = cuLaunchKernel(gt->boundsFuncKernel,
-                           blockDims.x,blockDims.y,blockDims.z,
-                           gridDims.x,gridDims.y,gridDims.z,
-                           0, 0, args, 0);
-        if (rc) {
-          const char *errName = 0;
-          cuGetErrorName(rc,&errName);
-          PRINT(errName);
-          exit(0);
-        }
-        cudaDeviceSynchronize();
-      }
-      tempMem.free();
-    }
-    
   } // ::owl::ll
 } //::owl
   

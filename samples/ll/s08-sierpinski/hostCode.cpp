@@ -20,57 +20,63 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
-#define LOG(message)                                    \
-  std::cout << GDT_TERMINAL_BLUE;                       \
-  std::cout << "#ll.sample(main): " << message << std::endl;  \
+#define LOG(message)                                            \
+  std::cout << GDT_TERMINAL_BLUE;                               \
+  std::cout << "#ll.sample(main): " << message << std::endl;    \
   std::cout << GDT_TERMINAL_DEFAULT;
-#define LOG_OK(message)                                    \
-  std::cout << GDT_TERMINAL_LIGHT_BLUE;                       \
-  std::cout << "#ll.sample(main): " << message << std::endl;  \
+#define LOG_OK(message)                                         \
+  std::cout << GDT_TERMINAL_LIGHT_BLUE;                         \
+  std::cout << "#ll.sample(main): " << message << std::endl;    \
   std::cout << GDT_TERMINAL_DEFAULT;
 
 extern "C" char ptxCode[];
 
-const int NUM_VERTICES = 8;
+const int NUM_VERTICES = 5;
 vec3f vertices[NUM_VERTICES] =
   {
-   { -1.f,-1.f,-1.f },
-   { +1.f,-1.f,-1.f },
-   { -1.f,+1.f,-1.f },
-   { +1.f,+1.f,-1.f },
-   { -1.f,-1.f,+1.f },
-   { +1.f,-1.f,+1.f },
-   { -1.f,+1.f,+1.f },
-   { +1.f,+1.f,+1.f }
+    { -0.5f,-0.5f,-0.5f },
+    { +0.5f,-0.5f,-0.5f },
+    { +0.5f,+0.5f,-0.5f },
+    { -0.5f,+0.5f,-0.5f },
+    { 0.0f,0.0f,+0.5f },
   };
 
-const int NUM_INDICES = 12;
+const int NUM_INDICES = 6;
 vec3i indices[NUM_INDICES] =
   {
-   { 0,1,3 }, { 2,3,0 },
-   { 5,7,6 }, { 5,6,4 },
-   { 0,4,5 }, { 0,5,1 },
-   { 2,3,7 }, { 2,7,6 },
-   { 1,5,7 }, { 1,7,3 },
-   { 4,0,2 }, { 4,2,6 }
+    { 0,1,3 }, { 1,2,3 },
+    { 0,4,1 }, { 0,3,4 },
+    { 3,2,4 }, { 1,4,2 },
   };
 
-const char *outFileName = "ll01-simpleTriangles.png";
+const char *outFileName = "ll08-sierpinski.png";
 const vec2i fbSize(800,600);
-const vec3f lookFrom(-4.f,-3.f,-2.f);
-const vec3f lookAt(0.f,0.f,0.f);
-const vec3f lookUp(0.f,1.f,0.f);
+const vec3f lookFrom(2.f,1.3f,.8f);
+const vec3f lookAt(0.f,0.f,-.2f);
+const vec3f lookUp(0.f,0.f,-1.f);
 const float cosFovy = 0.66f;
 
 int main(int ac, char **av)
 {
+  uint32_t numLevels = 3;
   LOG("ll example '" << av[0] << "' starting up");
 
+  for (int i=1;i<ac;i++) {
+    const std::string arg = av[i];
+    if (arg == "--num-levels" || arg == "-nl")
+      numLevels = std::atoi(av[++i]);
+    else
+      throw std::runtime_error("unknown cmdline argument '"+arg+"'");
+  }
+  
   owl::ll::DeviceGroup::SP ll
     = owl::ll::DeviceGroup::create();
 
+  if (numLevels < 1)
+    throw std::runtime_error("num levels must be 1 or greater");
+  ll->setMaxInstancingDepth(numLevels);
+  
   LOG("building pipeline ...");
-  std::cout << GDT_TERMINAL_DEFAULT;
 
   // ##################################################################
   // set up all the *CODE* we want to run
@@ -133,14 +139,53 @@ int main(int ac, char **av)
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
   // ##################################################################
-
-  enum { TRIANGLES_GROUP=0,NUM_GROUPS };
-  ll->allocGroups(NUM_GROUPS);
+  int WORLD_GROUP = numLevels - 1;
+  
+  // enum { TRIANGLES_GROUP=0,PYRAMID_GROUP_LVL_1,WORLD_GROUP,NUM_GROUPS };
+  ll->allocGroups(numLevels);
   int geomsInGroup[] = { 0 };
-  ll->trianglesGeomGroupCreate(/* group ID */TRIANGLES_GROUP,
+  ll->trianglesGeomGroupCreate(/* group ID */0,
                                /* geoms in group, pointer */ geomsInGroup,
-                               /* geoms in group, count   */ 1);
-  ll->groupBuildAccel(TRIANGLES_GROUP);
+                               /* geoms in group, count   */ 1); 
+  ll->groupBuildAccel(0);
+
+  auto make_sierpinski = [&](int parent_level, int child_level){
+    int groupsInWorldGroup[]
+    = { child_level,
+        child_level,
+        child_level,
+        child_level,
+        child_level, };
+    ll->instanceGroupCreate(/* group ID */parent_level,
+                            /* geoms in group, pointer */ groupsInWorldGroup,
+                            /* geoms in group, count   */ 5);
+    auto a
+    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
+    * gdt::affine3f::translate(gdt::vec3f(-.5f, -.5f, -.5f));
+    auto b
+    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
+    * gdt::affine3f::translate(gdt::vec3f(+.5f, -.5f, -.5f));
+    auto c
+    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
+    * gdt::affine3f::translate(gdt::vec3f(-.5f, +.5f, -.5f));
+    auto d
+    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
+    * gdt::affine3f::translate(gdt::vec3f(+.5f, +.5f, -.5f));
+    auto e
+    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))    
+    * gdt::affine3f::translate(gdt::vec3f(0.0f, 0.0, +.5f));
+    
+    ll->instanceGroupSetTransform(parent_level,0,a);
+    ll->instanceGroupSetTransform(parent_level,1,b);
+    ll->instanceGroupSetTransform(parent_level,2,c);
+    ll->instanceGroupSetTransform(parent_level,3,d);
+    ll->instanceGroupSetTransform(parent_level,4,e);
+    ll->groupBuildAccel(parent_level);
+  };
+
+  for (uint32_t i = 1; i < numLevels; ++i) {
+    make_sierpinski(i,i-1);
+  }  
 
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -165,7 +210,7 @@ int main(int ac, char **av)
          int devID,
          int rayType) {
       /* we don't have any ... */
-      ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
+      ((MissProgData*)output)->color0 = vec3f(.8f,.8f,.8f);
       ((MissProgData*)output)->color1 = vec3f(.8f,.8f,.8f);
     });
   
@@ -179,7 +224,7 @@ int main(int ac, char **av)
       rg->deviceCount = ll->getDeviceCount();
       rg->fbSize = fbSize;
       rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-      rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+      rg->world  = ll->groupGetTraversable(WORLD_GROUP,devID);
 
       // compute camera frame:
       vec3f &pos = rg->camera.pos;

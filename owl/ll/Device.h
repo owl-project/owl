@@ -16,16 +16,30 @@
 
 #pragma once
 
-#include "ll/optix.h"
-#include "ll/DeviceMemory.h"
+#include "owl/ll/optix.h"
+#include "owl/ll/DeviceMemory.h"
 // for the hit group callback type, which is part of the API
-#include "ll/DeviceGroup.h"
+#include "owl/ll/DeviceGroup.h"
 
 namespace owl {
   namespace ll {
     struct ProgramGroups;
     struct Device;
     
+    /*! allocator that allows for allocating ranges of STB indices as
+      required for adding groups of geometries to the SBT */
+    struct RangeAllocator {
+      int alloc(int size);
+      void release(int begin, int size);
+      int maxAllocedID = 0;
+    private:
+      struct FreedRange {
+        int begin;
+        int size;
+      };
+      std::vector<FreedRange> freedRanges;
+    };
+
     struct Context {
       
       Context(int owlDeviceID, int cudaDeviceID);
@@ -56,16 +70,24 @@ namespace owl {
       
       void createPipeline(Device *device);
       void destroyPipeline();
+
       
       OptixDeviceContext optixContext = nullptr;
       CUcontext          cudaContext  = nullptr;
       CUstream           stream       = nullptr;
 
+      /*! sets the pipelineCompileOptions etc based on
+          maxConfiguredInstanceDepth */
+      void configurePipelineOptions();
+      
       OptixPipelineCompileOptions pipelineCompileOptions = {};
       OptixPipelineLinkOptions    pipelineLinkOptions    = {};
       OptixModuleCompileOptions   moduleCompileOptions   = {};
       OptixPipeline               pipeline               = nullptr;
 
+      /*! maximum depth instancing tree as specified by
+          `setMaxInstancingDepth` */
+      int maxInstancingDepth = 2;      
       int numRayTypes { 1 };
     };
     
@@ -110,6 +132,7 @@ namespace owl {
     struct Program {
       const char *progName = nullptr;
       int         moduleID = -1;
+      size_t      dataSize = 0;
     };
     struct RayGenPG : public ProgramGroup {
       Program program;
@@ -126,9 +149,11 @@ namespace owl {
       std::vector<HitGroupPG> perRayType;
       Program boundsProg;
       size_t  boundsProgDataSize = 0; // do we still need this!?
+      size_t  hitProgDataSize = (size_t)-1;
       CUfunction boundsFuncKernel;
     };
-
+    
+    
     struct SBT {
       OptixShaderBindingTable sbt = {};
       
@@ -145,6 +170,8 @@ namespace owl {
       DeviceMemory missProgRecordsBuffer;
 
       DeviceMemory launchParamsBuffer;
+      
+      RangeAllocator rangeAllocator;
     };
 
     typedef enum { TRIANGLES, USER } PrimType;
@@ -255,8 +282,9 @@ namespace owl {
 
       virtual void destroyAccel(Context *context) = 0;
       virtual void buildAccel(Context *context) = 0;
+      virtual int  getSBTOffset() const = 0;
       
-      std::vector<int>       elements;
+      // std::vector<int>       elements;
       OptixTraversableHandle traversable = 0;
       DeviceMemory           bvhMemory;
 
@@ -267,26 +295,41 @@ namespace owl {
       int numTimesReferenced = 0;
     };
     struct InstanceGroup : public Group {
+      InstanceGroup(size_t numChildren)
+        : children(numChildren)
+      {}
       virtual bool containsGeom() { return false; }
       
-      virtual void destroyAccel(Context *context) override
-      { OWL_NOTIMPLEMENTED; }
-      virtual void buildAccel(Context *context) override
-      { OWL_NOTIMPLEMENTED; }
+      virtual void destroyAccel(Context *context) override;
+      virtual void buildAccel(Context *context) override;
+      virtual int  getSBTOffset() const override { return 0; }
+
+      std::vector<Group *>  children;
+      std::vector<affine3f> transforms;
     };
+
+    /*! \warning currently using std::vector of *geoms*, but will have
+        to eventually use geom *IDs* if we want(?) to allow side
+        effects when changing geometries */
     struct GeomGroup : public Group {
-      GeomGroup(size_t numChildren)
-        : children(numChildren)
+      GeomGroup(size_t numChildren,
+                size_t sbtOffset)
+        : children(numChildren),
+          sbtOffset(sbtOffset)
       {}
       
       virtual bool containsGeom() { return true; }
       virtual PrimType primType() = 0;
+      virtual int  getSBTOffset() const override { return sbtOffset; }
 
       std::vector<Geom *> children;
+      const size_t sbtOffset;
     };
     struct TrianglesGeomGroup : public GeomGroup {
-      TrianglesGeomGroup(size_t numChildren)
-        : GeomGroup(numChildren)
+      TrianglesGeomGroup(size_t numChildren,
+                         size_t sbtOffset)
+        : GeomGroup(numChildren,
+                    sbtOffset)
       {}
       virtual PrimType primType() { return TRIANGLES; }
       
@@ -294,8 +337,10 @@ namespace owl {
       virtual void buildAccel(Context *context) override;
     };
     struct UserGeomGroup : public GeomGroup {
-      UserGeomGroup(size_t numChildren)
-        : GeomGroup(numChildren)
+      UserGeomGroup(size_t numChildren,
+                size_t sbtOffset)
+        : GeomGroup(numChildren,
+                    sbtOffset)
       {}
       virtual PrimType primType() { return USER; }
       
@@ -310,6 +355,24 @@ namespace owl {
         exception if for any reason that cannot be done */
       Device(int owlDeviceID, int cudaDeviceID);
       ~Device();
+
+
+      /*! set the maximum instancing depth that will be allowed; '0'
+          means 'no instancing, only bottom level accels', '1' means
+          'only one singel level of instances' (ie, instancegroups
+          never have children that are themselves instance groups),
+          etc. Note we currently do *not* yet check the node graph as
+          to whether it adheres to this value - if you use a node
+          graph that's deeper than the value passed through this
+          function you will most likely see optix crashing on you (and
+          correctly so).
+
+          Note this value will only take effect upon the next
+          buildPrograms() and createPipeline(), so should be called
+          *before* those functions get called */
+      void setMaxInstancingDepth(int maxInstancingDepth);
+      
+
 
       void createPipeline()
       {
@@ -367,8 +430,26 @@ namespace owl {
                                 int moduleID,
                                 const char *progName);
       
-      void setRayGen(int pgID, int moduleID, const char *progName);
-      void setMissProg(int pgID, int moduleID, const char *progName);
+      void setRayGen(int pgID,
+                     int moduleID,
+                     const char *progName,
+                     /*! size of that program's SBT data */
+                     size_t missProgDataSize);
+      
+      /*! specifies which miss program to run for a given miss prog
+          ID */
+      void setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+                       int programID,
+                       /*! ID of the module the program will be bound
+                           in, in [0..numAllocedModules) */
+                       int moduleID,
+                       /*! name of the program. Note we do not NOT
+                           create a copy of this string, so the string
+                           has to remain valid for the duration of the
+                           program */
+                       const char *progName,
+                       /*! size of that program's SBT data */
+                       size_t missProgDataSize);
       
       void allocModules(size_t count)
       { modules.alloc(count); }
@@ -377,6 +458,9 @@ namespace owl {
         number of ray types to be used */
       void allocGeomTypes(size_t count);
 
+      void geomTypeCreate(int geomTypeID,
+                          size_t programDataSize);
+        
       void allocRayGens(size_t count);
       /*! each geom will always use "numRayTypes" successive hit
         groups (one per ray type), so this must be a multiple of the
@@ -387,15 +471,15 @@ namespace owl {
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed */
-      void reallocGeoms(size_t newCount)
+      void allocGeoms(size_t newCount)
       {
         for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)geoms.size();idxWeWouldLose++)
-          assert("realloc would lose a geom that was not properly destroyed" &&
+          assert("alloc would lose a geom that was not properly destroyed" &&
                  geoms[idxWeWouldLose] == nullptr);
         geoms.resize(newCount);
       }
 
-      void createUserGeom(int geomID,
+      void userGeomCreate(int geomID,
                           /*! the "logical" hit group ID:
                             will always count 0,1,2... evne
                             if we are using multiple ray
@@ -406,7 +490,7 @@ namespace owl {
                           int geomTypeID,
                           int numPrims);
 
-      void createTrianglesGeom(int geomID,
+      void trianglesGeomCreate(int geomID,
                                /*! the "logical" hit group ID:
                                  will always count 0,1,2... evne
                                  if we are using multiple ray
@@ -420,29 +504,54 @@ namespace owl {
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed */
-      void reallocGroups(size_t newCount);
+      void allocGroups(size_t newCount);
 
       /*! resize the array of buffer handles. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         buffer handles that would get 'lost' have alreay been
         destroyed */
-      void reallocBuffers(size_t newCount);
+      void allocBuffers(size_t newCount);
       
-      void createTrianglesGeomGroup(int groupID,
+      void trianglesGeomGroupCreate(int groupID,
                                     int *geomIDs,
                                     int geomCount);
 
-      void createUserGeomGroup(int groupID,
+      void userGeomGroupCreate(int groupID,
                                int *geomIDs,
                                int geomCount);
+      /*! create a new instance group with given list of children */
+      void instanceGroupCreate(/*! the group we are defining */
+                               int groupID,
+                               /* list of children. list can be
+                                  omitted by passing a nullptr, but if
+                                  not null this must be a list of
+                                  'childCount' valid group ID */
+                               int *childGroupIDs,
+                               /*! number of children in this group */
+                               int childCount);
+      /*! set given child's instance transform. groupID must be a
+          valid instance group, childID must be wihtin
+          [0..numChildren) */
+      void instanceGroupSetTransform(int groupID,
+                                     int childNo,
+                                     const affine3f &xfm);
+      /*! set given child to {childGroupID+xfm}  */
+      void instanceGroupSetChild(int groupID,
+                                 int childNo,
+                                 int childGroupID,
+                                 const affine3f &xfm=affine3f(gdt::one));
 
+      /*! destroy the given buffer, and release all host and/or device
+          memory associated with it */
+      void bufferDestroy(int bufferID);
+      
       /*! returns the given buffers device pointer */
       void *bufferGetPointer(int bufferID);
-      void createDeviceBuffer(int bufferID,
+      void deviceBufferCreate(int bufferID,
                               size_t elementCount,
                               size_t elementSize,
                               const void *initData);
-      void createHostPinnedBuffer(int bufferID,
+      void hostPinnedBufferCreate(int bufferID,
                                   size_t elementCount,
                                   size_t elementSize,
                                   HostPinnedMemory::SP pinnedMem);
@@ -498,6 +607,7 @@ namespace owl {
         will *not* check if the group has alreadybeen built, if it
         has to be rebuilt, etc. */
       OptixTraversableHandle groupGetTraversable(int groupID);
+      uint32_t groupGetSBTOffset(int groupID);
       
       // accessor helpers:
       Geom *checkGetGeom(int geomID)
@@ -531,13 +641,23 @@ namespace owl {
       // accessor helpers:
       UserGeomGroup *checkGetUserGeomGroup(int groupID)
       {
-        assert("check valid group ID" && groupID >= 0);
-        assert("check valid group ID" && groupID <  groups.size());
-        Group *group = groups[groupID];
+        Group *group = checkGetGroup(groupID);
         assert("check valid group" && group != nullptr);
         UserGeomGroup *ugg = dynamic_cast<UserGeomGroup*>(group);
+        if (!ugg)
+          OWL_EXCEPT("group is not a user geometry group");
         assert("check group is a user geom group" && ugg != nullptr);
         return ugg;
+      }
+      // accessor helpers:
+      InstanceGroup *checkGetInstanceGroup(int groupID)
+      {
+        Group *group = checkGetGroup(groupID);
+        InstanceGroup *ig = dynamic_cast<InstanceGroup*>(group);
+        if (!ig)
+          OWL_EXCEPT("group is not a instance group");
+        assert("check group is a user geom group" && ig != nullptr);
+        return ig;
       }
       
       Buffer *checkGetBuffer(int bufferID)
@@ -579,14 +699,11 @@ namespace owl {
                                      size_t maxGeomDataSize,
                                      WriteUserGeomBoundsDataCB cb,
                                      void *cbData);
-      void sbtGeomTypesBuild(size_t maxHitProgDataSize,
-                             WriteHitProgDataCB writeHitProgDataCB,
-                             const void *callBackUserData);
-      void sbtRayGensBuild(size_t maxRayGenDataSize,
-                           WriteRayGenDataCB writeRayGenDataCB,
+      void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+                            const void *callBackUserData);
+      void sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
                            const void *callBackUserData);
-      void sbtMissProgsBuild(size_t maxMissProgDataSize,
-                             WriteMissProgDataCB writeMissProgDataCB,
+      void sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
                              const void *callBackUserData);
 
       void launch(int rgID, const vec2i &dims);

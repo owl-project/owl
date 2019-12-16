@@ -69,6 +69,7 @@ int main(int ac, char **av)
   
   enum { SPHERE_GEOM_TYPE=0,NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
+  ll->geomTypeCreate(SPHERE_GEOM_TYPE,sizeof(SphereGeomData));
   ll->setGeomTypeClosestHit(/*geom type ID*/SPHERE_GEOM_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
@@ -81,12 +82,14 @@ int main(int ac, char **av)
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
-                "simpleRayGen");
+                "simpleRayGen",
+                sizeof(RayGenData));
   
   ll->allocMissProgs(1);
   ll->setMissProg(/*program ID*/0,
                   /*module:*/0,
-                  "miss");
+                  "miss",
+                  sizeof(MissProgData));
   ll->buildPrograms();
   ll->createPipeline();
 
@@ -109,15 +112,15 @@ int main(int ac, char **av)
          BOUNDS_BUFFER_110,
          BOUNDS_BUFFER_111,
          NUM_BUFFERS };
-  ll->reallocBuffers(NUM_BUFFERS);
+  ll->allocBuffers(NUM_BUFFERS);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  ll->reallocGeoms(8);
+  ll->allocGeoms(8);
   for (int i=0;i<8;i++) {
-    ll->createUserGeom(/* geom ID    */i,
+    ll->userGeomCreate(/* geom ID    */i,
                        /* type/PG ID */0,
                        /* numprims   */1);
     box3f sphereBounds = box3f()
@@ -133,9 +136,9 @@ int main(int ac, char **av)
   // ##################################################################
   
   enum { SPHERES_GROUP=0,NUM_GROUPS };
-  ll->reallocGroups(NUM_GROUPS);
+  ll->allocGroups(NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  ll->createUserGeomGroup(/* group ID */SPHERES_GROUP,
+  ll->userGeomGroupCreate(/* group ID */SPHERES_GROUP,
                           /* geoms in group, pointer */ geomsInGroup,
                           /* geoms in group, count   */ 8);
   // in this mode, we supply the boudns through a buffer, so don't
@@ -148,10 +151,8 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  const size_t maxHitGroupDataSize = sizeof(SphereGeomData);
-  ll->sbtGeomTypesBuild
-    (maxHitGroupDataSize,
-     [&](uint8_t *output,int devID,int geomID,int childID) {
+  ll->sbtHitProgsBuild
+    ([&](uint8_t *output,int devID,int geomID,int childID) {
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
@@ -159,10 +160,8 @@ int main(int ac, char **av)
     });
   
   // ----------- build miss prog(s) -----------
-  const size_t maxMissProgDataSize = sizeof(MissProgData);
   ll->sbtMissProgsBuild
-    (maxMissProgDataSize,
-     [&](uint8_t *output,
+    ([&](uint8_t *output,
          int devID,
          int rayType) {
       ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
@@ -170,10 +169,8 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  const size_t maxRayGenDataSize = sizeof(RayGenData);
   ll->sbtRayGensBuild
-    (maxRayGenDataSize,
-     [&](uint8_t *output,
+    ([&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;

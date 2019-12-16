@@ -14,10 +14,17 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(ll00-rayGenOnly
+  hostCode.cpp
+  ${ptxCode}
+  )
+target_link_libraries(ll00-rayGenOnly
+  owl-ll
+  )
+add_test(ll00-rayGenOnly ${CMAKE_BINARY_DIR}/ll00-rayGenOnly)
 
-# low-level interface
-add_subdirectory(ll)
 
-# node graph layer
-add_subdirectory(ng)
