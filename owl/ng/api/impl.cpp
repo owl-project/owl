@@ -59,17 +59,17 @@ namespace owl {
     context->buildPipeline();
   }
   
-  OWL_API void owlContextLaunch2D(OWLContext _context,
-                                  OWLRayGen _rayGen,
-                                  int dims_x, int dims_y)
+  OWL_API void owlRayGenLaunch2D(OWLRayGen _rayGen,
+                                 int dims_x, int dims_y)
   {
     LOG_API_CALL();
 
-    assert(_context);
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
+    assert(_rayGen);
+    RayGen::SP rayGen
+      = ((APIHandle *)_rayGen)->get<RayGen>();
+    assert(rayGen);
 
+    rayGen->launch(vec2i(dims_x,dims_y));
     
     std::cout << "actual launch not yet implemented - ignoring ...." << std::endl;
   }

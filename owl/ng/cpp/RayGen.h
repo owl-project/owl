@@ -42,6 +42,8 @@ namespace owl {
            RayGenType::SP type);
     
     virtual std::string toString() const { return "RayGen"; }
+
+    void launch(const vec2i &dims) { IGNORING_THIS(); }
   };
 
 } // ::owl

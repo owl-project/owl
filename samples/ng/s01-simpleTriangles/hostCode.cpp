@@ -118,9 +118,10 @@ int main(int ac, char **av)
        { "camera.dir_dv", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_dv)},
        { /* sentinel to mark end of list */ }
   };
-  owlRayGenCreate(context,module,"simpleRayGen",
-                  sizeof(RayGenData),
-                  rayGenVars,-1);
+  OWLRayGen rayGen
+    = owlRayGenCreate(context,module,"simpleRayGen",
+                      sizeof(RayGenData),
+                      rayGenVars,-1);
   
   // ll->allocMissProgs(1);
   // ll->setMissProg(/*program ID*/0,
@@ -259,16 +260,16 @@ int main(int ac, char **av)
 
 
   owlBuildSBT(context);
-#if 0
 
   // ##################################################################
   // now that everything is readly: launch it ....
   // ##################################################################
   
   LOG("trying to launch ...");
-  ll->launch(0,fbSize);
-  // todo: explicit sync?
+  // ll->launch(0,fbSize);
+  owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
   
+#if 0
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
   const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);

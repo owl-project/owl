@@ -198,9 +198,7 @@ owlHostPinnedBufferCreate(OWLContext context,
   program. Note this call is asynchronous, and may _not_ be
   completed by the time this function returns. */
 OWL_API void
-owlContextLaunch2D(OWLContext context,
-                   OWLRayGen rayGen,
-                   int dims_x, int dims_y);
+owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
 // OWL_API OWLTriangles owlTrianglesCreate(OWLContext context,
 //                                         size_t varsStructSize);
