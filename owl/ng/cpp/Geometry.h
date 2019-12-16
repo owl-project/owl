@@ -85,9 +85,15 @@ namespace owl {
       : Geom(context,geometryType)
     {}
 
-    void setVertices(Buffer::SP vertices)
+    void setVertices(Buffer::SP vertices,
+                         size_t count,
+                         size_t stride,
+                         size_t offset)
     { IGNORING_THIS(); }
-    void setIndices(Buffer::SP indices)
+    void setIndices(Buffer::SP indices,
+                         size_t count,
+                         size_t stride,
+                         size_t offset)
     { IGNORING_THIS(); }
     virtual std::string toString() const { return "TrianglesGeom"; }
   };

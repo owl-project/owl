@@ -141,8 +141,8 @@ owlModuleCreate(OWLContext context,
                 const char *ptxCode);
 
 OWL_API OWLGeom
-owlContextCreateGeom(OWLContext context,
-                     OWLGeomType type);
+owlGeomCreate(OWLContext context,
+              OWLGeomType type);
 
 OWL_API OWLRayGen
 owlRayGenCreate(OWLContext  context,
@@ -201,9 +201,15 @@ owlContextLaunch2D(OWLContext context,
 // "Triangles" functions
 // ==================================================================
 OWL_API void owlTrianglesSetVertices(OWLGeom triangles,
-                                     OWLBuffer vertices);
+                                     OWLBuffer vertices,
+                                     size_t count,
+                                     size_t stride,
+                                     size_t offset);
 OWL_API void owlTrianglesSetIndices(OWLGeom triangles,
-                                    OWLBuffer indices);
+                                    OWLBuffer indices,
+                                    size_t count,
+                                    size_t stride,
+                                    size_t offset);
 
 // -------------------------------------------------------
 // group/hierarchy creation and setting

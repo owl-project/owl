@@ -162,22 +162,31 @@ int main(int ac, char **av)
     = owlDeviceBufferCreate(context,OWL_INT3,NUM_INDICES,indices);
   OWLBuffer frameBuffer
     = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
-#if 0
 
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  enum { TRIANGLES_GEOM=0,NUM_GEOMS };
-  ll->reallocGeoms(NUM_GEOMS);
-  ll->createTrianglesGeom(/* geom ID    */TRIANGLES_GEOM,
-                          /* type/PG ID */TRIANGLES_GEOM_TYPE);
-  ll->trianglesGeomSetVertexBuffer(/* geom ID   */TRIANGLES_GEOM,
-                                   /* buffer ID */VERTEX_BUFFER,
-                                   /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer(/* geom ID   */TRIANGLES_GEOM,
-                                  /* buffer ID */INDEX_BUFFER,
-                                  /* meta info */NUM_INDICES,sizeof(vec3i),0);
+  // enum { TRIANGLES_GEOM=0,NUM_GEOMS };
+  // ll->reallocGeoms(NUM_GEOMS);
+  // ll->createTrianglesGeom(/* geom ID    */TRIANGLES_GEOM,
+  //                         /* type/PG ID */TRIANGLES_GEOM_TYPE);
+  // ll->trianglesGeomSetVertexBuffer(/* geom ID   */TRIANGLES_GEOM,
+  //                                  /* buffer ID */VERTEX_BUFFER,
+  //                                  /* meta info */NUM_VERTICES,sizeof(vec3f),0);
+  // ll->trianglesGeomSetIndexBuffer(/* geom ID   */TRIANGLES_GEOM,
+  //                                 /* buffer ID */INDEX_BUFFER,
+  //                                 /* meta info */NUM_INDICES,sizeof(vec3i),0);
 
+  OWLGeom trianglesGeom
+    = owlGeomCreate(context,trianglesGeomType);
+
+  owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
+                          NUM_VERTICES,sizeof(vec3f),0);
+  owlTrianglesSetIndices(trianglesGeom,indexBuffer,
+                         NUM_INDICES,sizeof(vec3i),0);
+  
+
+#if 0
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
   // ##################################################################

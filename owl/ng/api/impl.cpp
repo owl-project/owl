@@ -300,8 +300,8 @@ namespace owl {
   }
 
   OWL_API OWLGeom
-  owlContextCreateGeom(OWLContext      _context,
-                           OWLGeomType _geometryType)
+  owlGeomCreate(OWLContext      _context,
+                OWLGeomType _geometryType)
   {
     assert(_geometryType);
     assert(_context);
@@ -388,8 +388,11 @@ namespace owl {
   // "Triangles" functions
   // ==================================================================
   OWL_API void
-  owlTrianglesSetVertices(OWLGeom  _triangles,
-                          OWLBuffer    _buffer)
+  owlTrianglesSetVertices(OWLGeom   _triangles,
+                          OWLBuffer _buffer,
+                          size_t count,
+                          size_t stride,
+                          size_t offset)
   {
     LOG_API_CALL();
     
@@ -404,12 +407,15 @@ namespace owl {
       = ((APIHandle *)_buffer)->get<Buffer>();
     assert(buffer);
 
-    triangles->setVertices(buffer);
+    triangles->setVertices(buffer,count,stride,offset);
   }
 
   OWL_API void
-  owlTrianglesSetIndices(OWLGeom  _triangles,
-                         OWLBuffer    _buffer)
+  owlTrianglesSetIndices(OWLGeom   _triangles,
+                         OWLBuffer _buffer,
+                         size_t count,
+                         size_t stride,
+                         size_t offset)
   {
     LOG_API_CALL();
     
@@ -424,7 +430,7 @@ namespace owl {
       = ((APIHandle *)_buffer)->get<Buffer>();
     assert(buffer);
 
-    triangles->setIndices(buffer);
+    triangles->setIndices(buffer,count,stride,offset);
   }
 
   // ==================================================================
