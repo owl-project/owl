@@ -27,14 +27,38 @@ namespace owl {
   std::string typeToString(OWLDataType type)
   {
     switch(type) {
+      
     case OWL_INT:
       return "int";
+    case OWL_INT2:
+      return "int2";
+    case OWL_INT3:
+      return "int3";
+    case OWL_INT4:
+      return "int4";
+      
+    case OWL_UINT:
+      return "uint";
+    case OWL_UINT2:
+      return "uint2";
+    case OWL_UINT3:
+      return "uint3";
+    case OWL_UINT4:
+      return "uint4";
+      
     case OWL_FLOAT:
       return "float";
+    case OWL_FLOAT2:
+      return "float2";
     case OWL_FLOAT3:
       return "float3";
+    case OWL_FLOAT4:
+      return "float4";
+      
     case OWL_BUFFER:
       return "OWLBuffer";
+    case OWL_BUFFER_POINTER:
+      return "OWLBufferPointer";
     case OWL_GROUP:
       return "OWLGroup";
     default:

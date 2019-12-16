@@ -57,10 +57,15 @@ typedef enum
    OWL_FLOAT3,
    OWL_FLOAT4,
 
-   OWL_INT=200,
+   OWL_INT=110,
    OWL_INT2,
    OWL_INT3,
    OWL_INT4,
+   
+   OWL_UINT=120,
+   OWL_UINT2,
+   OWL_UINT3,
+   OWL_UINT4,
    
    OWL_BUFFER=1000,
    OWL_BUFFER_SIZE,
