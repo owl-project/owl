@@ -288,6 +288,14 @@ namespace owl {
     return (OWLBuffer)context->createHandle(buffer);
   }
 
+  OWL_API const void *
+  owlBufferGetPointer(OWLBuffer buffer, int deviceID)
+  {
+    IGNORING_THIS();
+    return nullptr;
+  }
+
+
   OWL_API OWLGeomType
   owlGeomTypeCreate(OWLContext _context,
                     OWLGeomKind kind,

@@ -194,6 +194,9 @@ owlHostPinnedBufferCreate(OWLContext context,
                           OWLDataType type,
                           int num);
 
+OWL_API const void *
+owlBufferGetPointer(OWLBuffer buffer, int deviceID);
+
 /*! executes an optix lauch of given size, with given launch
   program. Note this call is asynchronous, and may _not_ be
   completed by the time this function returns. */
