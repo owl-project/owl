@@ -161,13 +161,20 @@ owlMissProgCreate(OWLContext  context,
                   size_t      numVars);
 
 OWL_API OWLGroup
-owlGeomGroupCreate(OWLContext context,
-                   size_t     numGeometries,
-                   OWLGeom   *initValues);
+owlUserGeomGroupCreate(OWLContext context,
+                       size_t     numGeometries,
+                       OWLGeom   *initValues);
+
+OWL_API OWLGroup
+owlTrianglesGroupCreate(OWLContext context,
+                        size_t     numGeometries,
+                        OWLGeom   *initValues);
 
 OWL_API OWLGroup
 owlInstanceGroupCreate(OWLContext context,
                        size_t numInstances);
+
+OWL_API void owlGroupBuildAccel(OWLGroup group);
 
 OWL_API OWLGeomType
 owlGeomTypeCreate(OWLContext context,

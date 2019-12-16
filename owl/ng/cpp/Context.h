@@ -61,13 +61,13 @@ namespace owl {
     createInstanceGroup(size_t numChildren);
     
     GeomGroup::SP
-    createGeomGroup(size_t numChildren);
+    trianglesGroupCreate(size_t numChildren);
     
     Buffer::SP
     deviceBufferCreate();
     Buffer::SP
     hostPinnedBufferCreate();
-    
+
     RayGen::SP
     createRayGen(const std::shared_ptr<RayGenType> &type);
     

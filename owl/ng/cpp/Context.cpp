@@ -78,11 +78,6 @@ namespace owl {
     return std::make_shared<MissProg>(this,type);
   }
 
-  GeomGroup::SP Context::createGeomGroup(size_t numChildren)
-  {
-    return std::make_shared<GeomGroup>(this,numChildren);
-  }
-
   InstanceGroup::SP Context::createInstanceGroup(size_t numChildren)
   {
     return std::make_shared<InstanceGroup>(this,numChildren);
@@ -113,6 +108,12 @@ namespace owl {
                                         varDecls);
   }
   
+
+  GeomGroup::SP Context::trianglesGroupCreate(size_t numChildren)
+  {
+    return std::make_shared<TrianglesGroup>(this,numChildren);
+  }
+
 
   GeomType::SP
   Context::createGeomType(OWLGeomKind kind,

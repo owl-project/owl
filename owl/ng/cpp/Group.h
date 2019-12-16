@@ -29,6 +29,7 @@ namespace owl {
       : RegisteredObject(context,registry)
     {}
     virtual std::string toString() const { return "Group"; }
+    virtual void buildAccel() { IGNORING_THIS(); }
   };
 
   
@@ -36,7 +37,7 @@ namespace owl {
     typedef std::shared_ptr<GeomGroup> SP;
 
     GeomGroup(Context *const context,
-                  size_t numChildren);
+              size_t numChildren);
     void setChild(int childID, Geom::SP child)
     {
       assert(childID >= 0);
@@ -45,6 +46,14 @@ namespace owl {
     }
     virtual std::string toString() const { return "GeomGroup"; }
     std::vector<Geom::SP> geometries;
+  };
+
+  struct TrianglesGroup : public GeomGroup {
+    TrianglesGroup(Context *const context,
+                   size_t numChildren)
+      : GeomGroup(context,numChildren)
+    {}
+    virtual std::string toString() const { return "TrianglesGroup"; }
   };
 
   struct InstanceGroup : public Group {

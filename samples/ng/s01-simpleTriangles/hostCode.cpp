@@ -185,20 +185,22 @@ int main(int ac, char **av)
   owlTrianglesSetIndices(trianglesGeom,indexBuffer,
                          NUM_INDICES,sizeof(vec3i),0);
   
-
-#if 0
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
   // ##################################################################
 
-  enum { TRIANGLES_GROUP=0,NUM_GROUPS };
-  ll->reallocGroups(NUM_GROUPS);
-  int geomsInGroup[] = { 0 };
-  ll->createTrianglesGeomGroup(/* group ID */TRIANGLES_GROUP,
-                               /* geoms in group, pointer */ geomsInGroup,
-                               /* geoms in group, count   */ 1);
-  ll->groupBuildAccel(TRIANGLES_GROUP);
+  // enum { TRIANGLES_GROUP=0,NUM_GROUPS };
+  // ll->reallocGroups(NUM_GROUPS);
+  // int geomsInGroup[] = { 0 };
+  // ll->createTrianglesGeomGroup(/* group ID */TRIANGLES_GROUP,
+  //                              /* geoms in group, pointer */ geomsInGroup,
+  //                              /* geoms in group, count   */ 1);
+  // ll->groupBuildAccel(TRIANGLES_GROUP);
 
+  OWLGroup trianglesGroup
+    = owlTrianglesGroupCreate(context,1,&trianglesGeom);
+  owlGroupBuildAccel(trianglesGroup);
+#if 0
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################

@@ -198,17 +198,16 @@ namespace owl {
     return (OWLMissProg)context->createHandle(missProg);
   }
 
-
   OWL_API OWLGroup
-  owlContextCreateGeomGroup(OWLContext _context,
-                                size_t numGeometries,
-                                OWLGeom *initValues)
+  owlTrianglesGroupCreate(OWLContext _context,
+                          size_t numGeometries,
+                          OWLGeom *initValues)
   {
     LOG_API_CALL();
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
-    GeomGroup::SP  group = context->createGeomGroup(numGeometries);
+    GeomGroup::SP  group = context->trianglesGroupCreate(numGeometries);
     assert(group);
 
     OWLGroup _group = (OWLGroup)context->createHandle(group);
@@ -409,6 +408,19 @@ namespace owl {
 
     triangles->setVertices(buffer,count,stride,offset);
   }
+
+  OWL_API void owlGroupBuildAccel(OWLGroup _group)
+  {
+    LOG_API_CALL();
+    
+    assert(_group);
+
+    Group::SP group
+      = ((APIHandle *)_group)->get<Group>();
+    assert(group);
+
+    group->buildAccel();
+  }  
 
   OWL_API void
   owlTrianglesSetIndices(OWLGeom   _triangles,
