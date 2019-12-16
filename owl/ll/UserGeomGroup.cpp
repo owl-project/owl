@@ -36,7 +36,7 @@
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << GDT_TERMINAL_DEFAULT << std::endl
 
-#define MANAGED_TEST 1
+#define MANAGED_TEST 0
 namespace owl {
   namespace ll {
 
@@ -63,7 +63,6 @@ namespace owl {
         assert(child);
         UserGeom *ug = (UserGeom *)child;
 #if MANAGED_TEST
-      PING;
         ug->internalBufferForBoundsProgram.allocManaged(ug->numPrims*sizeof(box3f));
 #else
         ug->internalBufferForBoundsProgram.alloc(ug->numPrims*sizeof(box3f));
@@ -218,11 +217,13 @@ namespace owl {
 
       // buffer for initial, uncompacted bvh
       DeviceMemory outputBuffer;
-#if MANAGED_TEST
-       outputBuffer.allocManaged(blasBufferSizes.outputSizeInBytes);
-#else
+      // output buffer in current driver is NOT allowed be in managed memory:
+      
+      // #if MANAGED_TEST
+      //        outputBuffer.allocManaged(blasBufferSizes.outputSizeInBytes);
+      // #else
       outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
-#endif
+      // #endif
 
       // single size-t buffer to store compacted size in
       DeviceMemory compactedSizeBuffer;
