@@ -55,7 +55,9 @@ namespace owl {
     size_t numRayTypes = 1;
 
     /*! experimentation code for sbt construction */
-    void expBuildSBT();
+    void buildSBT();
+    void buildPipeline();
+    void buildPrograms();
     
     InstanceGroup::SP
     createInstanceGroup(size_t numChildren);

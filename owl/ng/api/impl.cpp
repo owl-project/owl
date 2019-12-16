@@ -29,6 +29,15 @@ namespace owl {
     return (OWLContext)context->createHandle(context);
   }
 
+  OWL_API void owlBuildSBT(OWLContext _context)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    context->buildSBT();
+  }
 
   OWL_API void owlBuildPrograms(OWLContext _context)
   {
@@ -37,7 +46,7 @@ namespace owl {
     APIContext::SP context
       = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
-
+    context->buildPrograms();
   }
   
   OWL_API void owlBuildPipeline(OWLContext _context)
@@ -47,6 +56,7 @@ namespace owl {
     APIContext::SP context
       = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
+    context->buildPipeline();
   }
   
   OWL_API void owlContextLaunch2D(OWLContext _context,
@@ -60,8 +70,6 @@ namespace owl {
       = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
 
-    std::cout << "SHOULD BUILD SBT HERE!!!!" << std::endl;
-    context->expBuildSBT();
     
     std::cout << "actual launch not yet implemented - ignoring ...." << std::endl;
   }

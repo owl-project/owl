@@ -128,6 +128,7 @@ typedef struct _OWLMissProg      *OWLMissProg;
 
 OWL_API void owlBuildPrograms(OWLContext context);
 OWL_API void owlBuildPipeline(OWLContext context);
+OWL_API void owlBuildSBT(OWLContext context);
 
 
 OWL_API OWLContext

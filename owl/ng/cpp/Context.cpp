@@ -152,43 +152,19 @@ namespace owl {
   }
 
 
-  void Context::expBuildSBT()
+  void Context::buildSBT()
   {
-    std::cout << "=======================================================" << std::endl;
-    PING;
-    PRINT(groups.size());
-    assert(!groups.empty());
+    IGNORING_THIS();
+  }
 
-    std::vector<size_t> sbtOffsetOfGroup(groups.size());
-    size_t numHitGroupRecords = 0;
-    size_t biggestVarStructSize = 0;
-    for (int groupID=0;groupID<groups.size();groupID++) {
-      sbtOffsetOfGroup[groupID] = numHitGroupRecords;
-      Group::SP group = groups.getSP(groupID);
-      if (!group)
-        continue;
-      GeomGroup::SP gg
-        = group->as<GeomGroup>();
-      if (!gg)
-        continue;
-      numHitGroupRecords += numRayTypes * gg->geometries.size();
+  void Context::buildPipeline()
+  {
+    IGNORING_THIS();
+  }
 
-      for (auto g : gg->geometries) {
-        assert(g);
-        biggestVarStructSize = std::max(biggestVarStructSize,g->type->varStructSize);
-      }
-    }
-    PRINT(numHitGroupRecords);
-    PRINT(biggestVarStructSize);
-
-    size_t alignedSBTRecordSize
-      = OPTIX_SBT_RECORD_HEADER_SIZE
-      + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(biggestVarStructSize);
-    PRINT(alignedSBTRecordSize);
-    size_t hitGroupRecordsSizeInBytes
-      = alignedSBTRecordSize * numHitGroupRecords;
-    
-    std::cout << "=======================================================" << std::endl;
+  void Context::buildPrograms()
+  {
+    IGNORING_THIS();
   }
 
 } // ::owl
