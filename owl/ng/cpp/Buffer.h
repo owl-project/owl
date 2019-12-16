@@ -29,4 +29,20 @@ namespace owl {
     virtual std::string toString() const { return "Buffer"; }
   };
 
+  struct HostPinnedBuffer : public Buffer {
+    typedef std::shared_ptr<HostPinnedBuffer> SP;
+    
+    HostPinnedBuffer(Context *const context) : Buffer(context) {}
+    
+    virtual std::string toString() const { return "HostPinnedBuffer"; }
+  };
+  
+  struct DeviceBuffer : public Buffer {
+    typedef std::shared_ptr<DeviceBuffer> SP;
+    
+    DeviceBuffer(Context *const context) : Buffer(context) {}
+    
+    virtual std::string toString() const { return "DeviceBuffer"; }
+  };
+  
 } // ::owl

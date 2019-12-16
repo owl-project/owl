@@ -249,22 +249,34 @@ namespace owl {
     APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
     
-    // Context *context = (Context *)_context;
     context->releaseAll();
-    // delete _context;
   }
 
   OWL_API OWLBuffer
-  owlContextCreateBuffer(OWLContext _context,
-                         OWLDataType type,
-                         int num,
-                         const void *init)
+  owlDeviceBufferCreate(OWLContext _context,
+                        OWLDataType type,
+                        int num,
+                        const void *init)
   {
     LOG_API_CALL();
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
-    Buffer::SP  buffer  = context->createBuffer();
+    Buffer::SP  buffer  = context->deviceBufferCreate();
+    assert(buffer);
+    return (OWLBuffer)context->createHandle(buffer);
+  }
+
+  OWL_API OWLBuffer
+  owlHostPinnedBufferCreate(OWLContext _context,
+                            OWLDataType type,
+                            int num)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    Buffer::SP  buffer  = context->hostPinnedBufferCreate();
     assert(buffer);
     return (OWLBuffer)context->createHandle(buffer);
   }

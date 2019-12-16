@@ -48,10 +48,19 @@ namespace owl {
     LOG_OK("device group created");
   }
   
-  Buffer::SP Context::createBuffer()
+  Buffer::SP Context::hostPinnedBufferCreate()
   {
     PING;
-    Buffer::SP buffer = std::make_shared<Buffer>(this);
+    Buffer::SP buffer = std::make_shared<HostPinnedBuffer>(this);
+    PING;
+    assert(buffer);
+    return buffer;
+  }
+
+  Buffer::SP Context::deviceBufferCreate()
+  {
+    PING;
+    Buffer::SP buffer = std::make_shared<DeviceBuffer>(this);
     PING;
     assert(buffer);
     return buffer;

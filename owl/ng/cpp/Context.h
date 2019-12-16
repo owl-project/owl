@@ -64,7 +64,9 @@ namespace owl {
     createGeomGroup(size_t numChildren);
     
     Buffer::SP
-    createBuffer();
+    deviceBufferCreate();
+    Buffer::SP
+    hostPinnedBufferCreate();
     
     RayGen::SP
     createRayGen(const std::shared_ptr<RayGenType> &type);
