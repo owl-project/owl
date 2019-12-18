@@ -314,6 +314,8 @@ namespace owl {
                                        int stride,
                                        int offset);
       void groupBuildAccel(int groupID);
+      // NEW naming:
+      void groupAccelBuild(int groupID) { groupBuildAccel(groupID); }
       OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
       uint32_t groupGetSBTOffset(int groupID);
 
