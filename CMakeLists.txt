@@ -23,10 +23,7 @@ cmake_minimum_required(VERSION 2.8)
 # first, include gdt project to do some general configuration stuff
 # (build modes, glut, optix, etc)
 # ------------------------------------------------------------------
-set(gdt_dir ${PROJECT_SOURCE_DIR}/submodules/gdt/)
-
-# -------------------------------------------------------
-set(gdt_dir ${CMAKE_SOURCE_DIR}/submodules/gdt)
+set(gdt_dir ${PROJECT_SOURCE_DIR}/common/gdt/)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${gdt_dir}/cmake/")
 
@@ -48,17 +45,14 @@ include_directories(${gdt_dir})
 add_subdirectory(${gdt_dir} EXCLUDE_FROM_ALL)
 add_library(owl-common
 
-  submodules/gdt/gdt/gdt.h
-  submodules/gdt/gdt/gdt.cpp
-  submodules/gdt/gdt/math/vec.h
+  common/gdt/gdt/gdt.h
+  common/gdt/gdt/gdt.cpp
+  common/gdt/gdt/math/vec.h
 
-  submodules/gdt/cmake/configure_optix.cmake
-  submodules/gdt/cmake/configure_cuda.cmake
-  submodules/gdt/cmake/configure_build_type.cmake
+  common/gdt/cmake/configure_optix.cmake
+  common/gdt/cmake/configure_cuda.cmake
+  common/gdt/cmake/configure_build_type.cmake
   )
-
-#include_directories(${CMAKE_BINARY_DIR})
-#configure_file(optix/config.h.in ${CMAKE_BINARY_DIR}/optix/optix_config.h)
 
 # -------------------------------------------------------
 # owl itself
