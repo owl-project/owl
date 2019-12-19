@@ -1,41 +1,73 @@
 owl - "Optix Wrappers Library" on top of Optix 7
 ================================================
 
+What is OWL?
+============
 
-Explanation of Directory Structure
-==================================
+OWL is a OptiX 7 based library that aims at providing some of the
+convenience of OptiX 6's Node Graph API on top of OptiX 7. This aims
+at making it easier to port existing OptiX 6-style applications over
+to OptiX 7, and, in particular, to make it easier to get started with
+OptiX 7 even without having a full grasp of things like Shader Binding
+Tables, Multi-GPU rendering, etc.
 
-When looking at the directory structure you'll likely stumble over the
-fact that instead of owl/xyz there's always owl/ll/xyz. This is
-because *eventually* there is supposed to be another "node graph"
-layer on top of the low-level layer, so the *final* directory
-structure is supposed to look like this:
+OWL is still in early stages, which means that it as yet lacks many of
+the features that OptiX 6 offered, and in particular, that many things
+are still changing rather rapidly; however, it already contains
+several working mini-samples, so at the very least should allow to
+serve as a "show-and-tell" example of how to set up a OptiX 7
+pipeline, how to build acceleration structures, how to do things like
+compaction, setting up an SBT, etc.
+
+Key links:
+
+- For latest code on github: https://github.com/owl-project/owl
+
+- For a brief (visual) overview over latest samples: http://owl-project.github.io/Samples.html
+
+
+
+API Abstraction Level and Directory Structure
+=============================================
+
+One of the key insights of early exprimentation with OWL was that a
+single node graph API on top of OptiX 7 is a major
+undertaking. Consequently, owl actually aims for two independent but
+stacked API layers: one as-minimalistic-as-possible low-level API
+layer (`ll-owl`) that does not yet deal with nodes, variables,
+lifetime-handling, etc; and the actual node graph (`owl-ng`) that then
+builds on this.
+
+As of the time of this writing the node graph layer is not yet
+functional, and thus not yet included; the ll-layer is still rather
+basic, but at least functional enough to reproduce previous OptiX
+samples such as the "Ray Tracing in One Weekend in OptiX" example.
+
+To eventually accomodate two separate API layers the project's
+directory structure is already organized into separate "ll/" and "ng/"
+directory layers (though as the latter isn't functional yet it is
+still missing in master an devel branches):
 
 - `owl/`: The Optix Wrappers *library*
   - `owl/ll/`: the owl *low-level* API layer
-  - `owl/ng/`: the owl *node graph* API layer (currently disabled because not yet working)
+  - `owl/ng/`: the owl *node graph* API layer (currently disabled because not yet functional)
 
 - `samples/`: Samples/Tutorials/TestCases for OWL
   - `samples/ll/`: samples for the ll layer
-  - `samples/ng/`: samples for the ng layer (currently disabled because not yet working)
+  - `samples/ng/`: samples for the ng layer (currently disabled because not yet functional)
 
-TODO
-====
+Biggest TODOs:
+==============
 
-- CI for windows
+- more samples/test cases
 
-- api function naming cleanup. Currently have 'createUserGeomGroup'
-  but 'instanceGroupCreate'. Make all use the latter format, so all
-  functions start with the name of the type affected (similar to
-  InstnaceGroup::create)
+- add "Launch Params" functionality
 
-- more examples
+- add c-style API on top of ll layer 
+  - wrap `DeviceGroup*` into `LLOContext` type
+  - wrap every `DeviceGroup::xyz(...)` function into a `lloXyz(context,...)` c-linkage API function
+  - build into dll/so
 
-  - optix 6 samples
-  - optix 6 advanced samples
-  - pbrtParser(?)
-  - optix prime like + cuda interop
-  - vishal spatial queries
 
 Revision History
 ================
