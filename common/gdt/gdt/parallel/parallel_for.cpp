@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018 Ingo Wald                                                 //
+// Copyright 2018-2019 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,8 +16,10 @@
 
 #include "gdt/parallel/parallel_for.h"
 
-namespace gdt {
+namespace owl {
+  namespace common {
 
-  tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::automatic);
-
-} // :: track
+    tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::automatic);
+  
+  } // ::owl::common
+} // ::owl
