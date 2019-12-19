@@ -1,6 +1,7 @@
 owl - "Optix Wrappers Library" on top of Optix 7
 ================================================
 
+<!--- ------------------------------------------------------- -->
 What is OWL?
 ============
 
@@ -26,7 +27,7 @@ Key links:
 - For a brief (visual) overview over latest samples: http://owl-project.github.io/Samples.html
 
 
-
+<!--- ------------------------------------------------------- -->
 API Abstraction Level and Directory Structure
 =============================================
 
@@ -56,8 +57,9 @@ still missing in master an devel branches):
   - `samples/ll/`: samples for the ll layer
   - `samples/ng/`: samples for the ng layer (currently disabled because not yet functional)
 
-Biggest TODOs:
-==============
+<!--- ------------------------------------------------------- -->
+(Main) TODOs:
+=============
 
 - more samples/test cases
 
@@ -69,8 +71,9 @@ Biggest TODOs:
   - build into dll/so
 
 
-Revision History
-================
+<!--- ------------------------------------------------------- -->
+Latest Progress/Revision History
+================================
 
 v0.4.x - Instances
 ------------------
