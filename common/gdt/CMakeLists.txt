@@ -21,11 +21,6 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 11)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-#add_subdirectory(unit_tests)
-
-#add_executable(bvh_test gdt/bvh/qbvh.cpp gdt/bvh/tiny_obj_loader.cc)
-#target_link_libraries(bvh_test tbb)
-
 
 add_library(gdt 
 	gdt/gdt.h
