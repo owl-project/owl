@@ -156,7 +156,7 @@ int main(int ac, char **av)
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
-      self.color  = gdt::randomColor(geomID);
+      self.color  = owl::randomColor(geomID);
     });
   
   // ----------- build miss prog(s) -----------

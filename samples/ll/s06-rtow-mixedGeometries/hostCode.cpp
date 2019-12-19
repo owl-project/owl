@@ -120,14 +120,14 @@ void addRandomBox(BoxArray &boxes,
     };
 
   const vec3f U = normalize(randomPointInUnitSphere());
-  gdt::affine3f xfm = gdt::frame(U);
-  xfm = gdt::affine3f(gdt::linear3f::rotate(U,rnd())) * xfm;
-  xfm = gdt::affine3f(gdt::linear3f::scale(.7f*size)) * xfm;
-  xfm = gdt::affine3f(gdt::affine3f::translate(center)) * xfm;
+  owl::affine3f xfm = owl::frame(U);
+  xfm = owl::affine3f(owl::linear3f::rotate(U,rnd())) * xfm;
+  xfm = owl::affine3f(owl::linear3f::scale(.7f*size)) * xfm;
+  xfm = owl::affine3f(owl::affine3f::translate(center)) * xfm;
   
   const int startIndex = boxes.vertices.size();
   for (int i=0;i<NUM_VERTICES;i++)
-    boxes.vertices.push_back(gdt::xfmPoint(xfm,unitBoxVertices[i]));
+    boxes.vertices.push_back(owl::xfmPoint(xfm,unitBoxVertices[i]));
   for (int i=0;i<NUM_INDICES;i++)
     boxes.indices.push_back(unitBoxIndices[i]+vec3i(startIndex));
   boxes.materials.push_back(material);

@@ -235,7 +235,7 @@ vec3f tracePath(const RayGenData &self,
 
     if (prd.out.scatterEvent != rayDidntHitAnything) {
       vec3f dist = prd.out.scattered_origin - ray.origin;
-      ray.tmax = gdt::length(dist);
+      ray.tmax = owl::length(dist);
     }
     owl::trace(/*accel to trace against*/self.spheresAccel,
                /*the ray to trace*/ ray,

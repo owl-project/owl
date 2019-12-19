@@ -171,7 +171,7 @@ int main(int ac, char **av)
       TrianglesGeomData &self = *(TrianglesGeomData*)output;
       self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
       self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER_000+geomID,devID);
-      self.color  = gdt::randomColor(geomID);
+      self.color  = owl::randomColor(geomID);
     });
   
   // ----------- build miss prog(s) -----------

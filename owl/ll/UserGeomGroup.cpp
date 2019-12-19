@@ -36,6 +36,7 @@
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << GDT_TERMINAL_DEFAULT << std::endl
 
+#define MANAGED_TEST 0
 namespace owl {
   namespace ll {
 
@@ -50,13 +51,22 @@ namespace owl {
       
       std::vector<uint8_t> userGeomData(maxGeomDataSize);
       DeviceMemory tempMem;
+#if MANAGED_TEST
+      PING;
+      tempMem.allocManaged(maxGeomDataSize);
+#else
       tempMem.alloc(maxGeomDataSize);
+#endif
       for (int childID=0;childID<ugg->children.size();childID++) {
         Geom *child = ugg->children[childID];
         assert("double-check valid child geom" && child != nullptr);
         assert(child);
         UserGeom *ug = (UserGeom *)child;
+#if MANAGED_TEST
+        ug->internalBufferForBoundsProgram.allocManaged(ug->numPrims*sizeof(box3f));
+#else
         ug->internalBufferForBoundsProgram.alloc(ug->numPrims*sizeof(box3f));
+#endif
         ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
 
         if (childID < 10)
@@ -70,7 +80,7 @@ namespace owl {
         // size of each thread block during bounds function call
         uint32_t boundsFuncBlockSize = 128;
         uint32_t numPrims = (uint32_t)ug->numPrims;
-        vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
+        vec3i blockDims(owl::common::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
         vec3i gridDims(boundsFuncBlockSize,1,1);
 
         
@@ -84,7 +94,6 @@ namespace owl {
           (void *)&numPrims
         };
 
-        DeviceMemory tempMem;
         GeomType *gt = checkGetGeomType(ug->geomTypeID);
         CUstream stream = context->stream;
         CUresult rc
@@ -200,11 +209,21 @@ namespace owl {
 
       // temp memory:
       DeviceMemory tempBuffer;
+#if MANAGED_TEST
+      tempBuffer.allocManaged(blasBufferSizes.tempSizeInBytes);
+#else
       tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
+#endif
 
       // buffer for initial, uncompacted bvh
       DeviceMemory outputBuffer;
+      // output buffer in current driver is NOT allowed be in managed memory:
+      
+      // #if MANAGED_TEST
+      //        outputBuffer.allocManaged(blasBufferSizes.outputSizeInBytes);
+      // #else
       outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
+      // #endif
 
       // single size-t buffer to store compacted size in
       DeviceMemory compactedSizeBuffer;
@@ -270,7 +289,7 @@ namespace owl {
     
 
     void Device::userGeomGroupCreate(int groupID,
-                                     int *geomIDs,
+                                     const int *geomIDs,
                                      int childCount)
     {
       assert("check for valid ID" && groupID >= 0);

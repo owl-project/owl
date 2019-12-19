@@ -27,6 +27,7 @@ namespace owl {
       inline size_t size()  const { return sizeInBytes; }
     
       inline void alloc(size_t size);
+      inline void allocManaged(size_t size);
       inline void *get();
       inline void upload(const void *h_pointer, const char *debugMessage = nullptr);
       inline void download(void *h_pointer);
@@ -43,6 +44,14 @@ namespace owl {
       assert(empty());
       this->sizeInBytes = size;
       CUDA_CHECK(cudaMalloc( (void**)&d_pointer, sizeInBytes));
+      assert(valid());
+    }
+    
+    inline void DeviceMemory::allocManaged(size_t size)
+    {
+      assert(empty());
+      this->sizeInBytes = size;
+      CUDA_CHECK(cudaMallocManaged( (void**)&d_pointer, sizeInBytes));
       assert(valid());
     }
     
