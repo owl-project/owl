@@ -245,7 +245,7 @@ namespace owl {
       void instanceGroupSetChild(int groupID,
                                  int childNo,
                                  int childGroupID,
-                                 const affine3f &xfm=affine3f(gdt::one));
+                                 const affine3f &xfm=affine3f(owl::common::one));
       void createDeviceBuffer(int bufferID,
                               size_t elementCount,
                               size_t elementSize,

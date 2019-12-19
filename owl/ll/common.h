@@ -36,36 +36,36 @@
 #include <sstream>
 
 namespace owl {
-  using gdt::vec2uc;
-  using gdt::vec3uc;
-  using gdt::vec4uc;
+  using owl::common::vec2uc;
+  using owl::common::vec3uc;
+  using owl::common::vec4uc;
   
-  using gdt::vec2f;
-  using gdt::vec3f;
-  using gdt::vec4f;
+  using owl::common::vec2f;
+  using owl::common::vec3f;
+  using owl::common::vec4f;
   
-  using gdt::vec2i;
-  using gdt::vec3i;
-  using gdt::vec4i;
+  using owl::common::vec2i;
+  using owl::common::vec3i;
+  using owl::common::vec4i;
   
-  using gdt::vec2ui;
-  using gdt::vec3ui;
-  using gdt::vec4ui;
+  using owl::common::vec2ui;
+  using owl::common::vec3ui;
+  using owl::common::vec4ui;
   
-  using gdt::vec2l;
-  using gdt::vec3l;
-  using gdt::vec4l;
+  using owl::common::vec2l;
+  using owl::common::vec3l;
+  using owl::common::vec4l;
   
-  using gdt::vec2ul;
-  using gdt::vec3ul;
-  using gdt::vec4ul;
+  using owl::common::vec2ul;
+  using owl::common::vec3ul;
+  using owl::common::vec4ul;
   
-  using gdt::box3f;
-  using gdt::linear3f;
-  using gdt::affine3f;
+  using owl::common::box3f;
+  using owl::common::linear3f;
+  using owl::common::affine3f;
 
-  using gdt::prettyNumber;
-  using gdt::prettyDouble;
+  using owl::common::prettyNumber;
+  using owl::common::prettyDouble;
   
   template<size_t alignment>
   inline size_t smallestMultipleOf(size_t unalignedSize)

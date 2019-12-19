@@ -115,7 +115,7 @@ int main(int ac, char **av)
   auto lambertian = Lambertian();
   std::vector<Lambertian> lambertianPyramids;
   Lambertian green;
-  green.albedo = gdt::vec3f(0,.7f,0);
+  green.albedo = owl::vec3f(0,.7f,0);
   lambertianPyramids.push_back(green);
 
   // ------------------------------------------------------------------
@@ -173,20 +173,20 @@ int main(int ac, char **av)
                             /* geoms in group, pointer */ groupsInWorldGroup,
                             /* geoms in group, count   */ 5);
     auto a
-    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
-    * gdt::affine3f::translate(gdt::vec3f(-.5f, -.5f, -.5f));
+    = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))
+    * owl::affine3f::translate(owl::vec3f(-.5f, -.5f, -.5f));
     auto b
-    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
-    * gdt::affine3f::translate(gdt::vec3f(+.5f, -.5f, -.5f));
+    = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))
+    * owl::affine3f::translate(owl::vec3f(+.5f, -.5f, -.5f));
     auto c
-    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
-    * gdt::affine3f::translate(gdt::vec3f(-.5f, +.5f, -.5f));
+    = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))
+    * owl::affine3f::translate(owl::vec3f(-.5f, +.5f, -.5f));
     auto d
-    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
-    * gdt::affine3f::translate(gdt::vec3f(+.5f, +.5f, -.5f));
+    = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))
+    * owl::affine3f::translate(owl::vec3f(+.5f, +.5f, -.5f));
     auto e
-    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))    
-    * gdt::affine3f::translate(gdt::vec3f(0.0f, 0.0, +.5f));
+    = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))    
+    * owl::affine3f::translate(owl::vec3f(0.0f, 0.0, +.5f));
     
     ll->instanceGroupSetTransform(parent_level,0,a);
     ll->instanceGroupSetTransform(parent_level,1,b);

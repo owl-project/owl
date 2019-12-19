@@ -25,7 +25,7 @@
 #include <gdt/math/box.h>
 
 namespace owl {
-  using namespace gdt;
+  using namespace owl::common;
 }
 
 #ifdef __CUDACC__

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018 Ingo Wald                                                 //
+// Copyright 2018-2019 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -26,20 +26,20 @@
 #include <cmath>
 #include <algorithm>
 #ifdef __GNUC__
-    #include <sys/time.h>
+#include <sys/time.h>
 #endif
 
 #ifdef _WIN32
-    #ifndef WIN32_LEAN_AND_MEAN
-        #define WIN32_LEAN_AND_MEAN
-    #endif
-    #include <Windows.h>
-    #ifdef min
-        #undef min
-    #endif
-    #ifdef max
-        #undef max
-    #endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <Windows.h>
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 #endif
 
 
@@ -91,9 +91,9 @@
 
 
 #ifdef __GNUC__
-  #define MAYBE_UNUSED __attribute__((unused))
+#define MAYBE_UNUSED __attribute__((unused))
 #else
-  #define MAYBE_UNUSED
+#define MAYBE_UNUSED
 #endif
 
 #if defined(_MSC_VER) && !defined(__PRETTY_FUNCTION__)
@@ -128,53 +128,53 @@
 
 
 
-/*! \namespace gdt GPU Developer Toolbox */
-namespace gdt {
+namespace owl {
+  namespace common {
 
 #ifdef __CUDACC__
-  using ::min;
-  using ::max;
-  // inline __both__ float abs(float f)      { return fabsf(f); }
-  // inline __both__ double abs(double f)    { return fabs(f); }
-  using std::abs;
-  // inline __both__ float sin(float f) { return ::sinf(f); }
-  // inline __both__ double sin(double f) { return ::sin(f); }
-  // inline __both__ float cos(float f) { return ::cosf(f); }
-  // inline __both__ double cos(double f) { return ::cos(f); }
+    using ::min;
+    using ::max;
+    // inline __both__ float abs(float f)      { return fabsf(f); }
+    // inline __both__ double abs(double f)    { return fabs(f); }
+    using std::abs;
+    // inline __both__ float sin(float f) { return ::sinf(f); }
+    // inline __both__ double sin(double f) { return ::sin(f); }
+    // inline __both__ float cos(float f) { return ::cosf(f); }
+    // inline __both__ double cos(double f) { return ::cos(f); }
 
-  using ::saturate;
+    using ::saturate;
 #else
-  using std::min;
-  using std::max;
-  using std::abs;
-  // inline __both__ double sin(double f) { return ::sin(f); }
-  inline __both__ float saturate(const float &f) { return min(1.f,max(0.f,f)); }
+    using std::min;
+    using std::max;
+    using std::abs;
+    // inline __both__ double sin(double f) { return ::sin(f); }
+    inline __both__ float saturate(const float &f) { return min(1.f,max(0.f,f)); }
 #endif
 
-  // inline __both__ float abs(float f)      { return fabsf(f); }
-  // inline __both__ double abs(double f)    { return fabs(f); }
-  inline __both__ float rcp(float f)      { return 1.f/f; }
-  inline __both__ double rcp(double d)    { return 1./d; }
+    // inline __both__ float abs(float f)      { return fabsf(f); }
+    // inline __both__ double abs(double f)    { return fabs(f); }
+    inline __both__ float rcp(float f)      { return 1.f/f; }
+    inline __both__ double rcp(double d)    { return 1./d; }
   
-  inline __both__ int32_t divRoundUp(int32_t a, int32_t b) { return (a+b-1)/b; }
-  inline __both__ uint32_t divRoundUp(uint32_t a, uint32_t b) { return (a+b-1)/b; }
-  inline __both__ int64_t divRoundUp(int64_t a, int64_t b) { return (a+b-1)/b; }
-  inline __both__ uint64_t divRoundUp(uint64_t a, uint64_t b) { return (a+b-1)/b; }
+    inline __both__ int32_t divRoundUp(int32_t a, int32_t b) { return (a+b-1)/b; }
+    inline __both__ uint32_t divRoundUp(uint32_t a, uint32_t b) { return (a+b-1)/b; }
+    inline __both__ int64_t divRoundUp(int64_t a, int64_t b) { return (a+b-1)/b; }
+    inline __both__ uint64_t divRoundUp(uint64_t a, uint64_t b) { return (a+b-1)/b; }
   
 #ifdef __CUDACC__
-  using ::sin; // this is the double version
-  // inline __both__ float sin(float f) { return ::sinf(f); }
-  using ::cos; // this is the double version
-  // inline __both__ float cos(float f) { return ::cosf(f); }
+    using ::sin; // this is the double version
+    // inline __both__ float sin(float f) { return ::sinf(f); }
+    using ::cos; // this is the double version
+    // inline __both__ float cos(float f) { return ::cosf(f); }
 #else
-  using ::sin; // this is the double version
-  using ::cos; // this is the double version
+    using ::sin; // this is the double version
+    using ::cos; // this is the double version
 #endif
   
-  inline __both__ float rsqrt(const float f)   { return 1.f/sqrtf(f); }
-  inline __both__ double rsqrt(const double d)   { return 1./sqrt(d); }
-  inline __both__ float sqrt(const float f)   { return sqrtf(f); }
-  inline __both__ double sqrt(const double d)   { return sqrt(d); }
+    inline __both__ float rsqrt(const float f)   { return 1.f/sqrtf(f); }
+    inline __both__ double rsqrt(const double d)   { return 1./sqrt(d); }
+    inline __both__ float sqrt(const float f)   { return sqrtf(f); }
+    inline __both__ double sqrt(const double d)   { return sqrt(d); }
 
 
 #ifdef __WIN32__
@@ -183,59 +183,61 @@ namespace gdt {
 #  define osp_snprintf snprintf
 #endif
   
-  /*! added pretty-print function for large numbers, printing 10000000 as "10M" instead */
-  inline std::string prettyDouble(const double val) {
-    const double absVal = abs(val);
-    char result[1000];
+    /*! added pretty-print function for large numbers, printing 10000000 as "10M" instead */
+    inline std::string prettyDouble(const double val) {
+      const double absVal = abs(val);
+      char result[1000];
 
-    if      (absVal >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e18f,'E');
-    else if (absVal >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e15f,'P');
-    else if (absVal >= 1e+12f) osp_snprintf(result,1000,"%.1f%c",val/1e12f,'T');
-    else if (absVal >= 1e+09f) osp_snprintf(result,1000,"%.1f%c",val/1e09f,'G');
-    else if (absVal >= 1e+06f) osp_snprintf(result,1000,"%.1f%c",val/1e06f,'M');
-    else if (absVal >= 1e+03f) osp_snprintf(result,1000,"%.1f%c",val/1e03f,'k');
-    else if (absVal <= 1e-12f) osp_snprintf(result,1000,"%.1f%c",val*1e15f,'f');
-    else if (absVal <= 1e-09f) osp_snprintf(result,1000,"%.1f%c",val*1e12f,'p');
-    else if (absVal <= 1e-06f) osp_snprintf(result,1000,"%.1f%c",val*1e09f,'n');
-    else if (absVal <= 1e-03f) osp_snprintf(result,1000,"%.1f%c",val*1e06f,'u');
-    else if (absVal <= 1e-00f) osp_snprintf(result,1000,"%.1f%c",val*1e03f,'m');
-    else osp_snprintf(result,1000,"%f",(float)val);
+      if      (absVal >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e18f,'E');
+      else if (absVal >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e15f,'P');
+      else if (absVal >= 1e+12f) osp_snprintf(result,1000,"%.1f%c",val/1e12f,'T');
+      else if (absVal >= 1e+09f) osp_snprintf(result,1000,"%.1f%c",val/1e09f,'G');
+      else if (absVal >= 1e+06f) osp_snprintf(result,1000,"%.1f%c",val/1e06f,'M');
+      else if (absVal >= 1e+03f) osp_snprintf(result,1000,"%.1f%c",val/1e03f,'k');
+      else if (absVal <= 1e-12f) osp_snprintf(result,1000,"%.1f%c",val*1e15f,'f');
+      else if (absVal <= 1e-09f) osp_snprintf(result,1000,"%.1f%c",val*1e12f,'p');
+      else if (absVal <= 1e-06f) osp_snprintf(result,1000,"%.1f%c",val*1e09f,'n');
+      else if (absVal <= 1e-03f) osp_snprintf(result,1000,"%.1f%c",val*1e06f,'u');
+      else if (absVal <= 1e-00f) osp_snprintf(result,1000,"%.1f%c",val*1e03f,'m');
+      else osp_snprintf(result,1000,"%f",(float)val);
 
-    return result;
-  }
-  
-
-
-  inline std::string prettyNumber(const size_t s)
-  {
-    char buf[1000];
-    if (s >= (1024LL*1024LL*1024LL*1024LL)) {
-		osp_snprintf(buf, 1000,"%.2fT",s/(1024.f*1024.f*1024.f*1024.f));
-    } else if (s >= (1024LL*1024LL*1024LL)) {
-		osp_snprintf(buf, 1000, "%.2fG",s/(1024.f*1024.f*1024.f));
-    } else if (s >= (1024LL*1024LL)) {
-		osp_snprintf(buf, 1000, "%.2fM",s/(1024.f*1024.f));
-    } else if (s >= (1024LL)) {
-		osp_snprintf(buf, 1000, "%.2fK",s/(1024.f));
-    } else {
-		osp_snprintf(buf,1000,"%zi",s);
+      return result;
     }
-    return buf;
-  }
   
-  inline double getCurrentTime()
-  {
-#ifdef _WIN32
-    SYSTEMTIME tp; GetSystemTime(&tp);
-    return double(tp.wSecond) + double(tp.wMilliseconds) / 1E3;
-#else
-    struct timeval tp; gettimeofday(&tp,nullptr);
-    return double(tp.tv_sec) + double(tp.tv_usec)/1E6;
-#endif
-  }
 
-  inline bool hasSuffix(const std::string &s, const std::string &suffix)
-  {
-    return s.substr(s.size()-suffix.size()) == suffix;
-  }
-}
+
+    inline std::string prettyNumber(const size_t s)
+    {
+      char buf[1000];
+      if (s >= (1024LL*1024LL*1024LL*1024LL)) {
+        osp_snprintf(buf, 1000,"%.2fT",s/(1024.f*1024.f*1024.f*1024.f));
+      } else if (s >= (1024LL*1024LL*1024LL)) {
+        osp_snprintf(buf, 1000, "%.2fG",s/(1024.f*1024.f*1024.f));
+      } else if (s >= (1024LL*1024LL)) {
+        osp_snprintf(buf, 1000, "%.2fM",s/(1024.f*1024.f));
+      } else if (s >= (1024LL)) {
+        osp_snprintf(buf, 1000, "%.2fK",s/(1024.f));
+      } else {
+        osp_snprintf(buf,1000,"%zi",s);
+      }
+      return buf;
+    }
+  
+    inline double getCurrentTime()
+    {
+#ifdef _WIN32
+      SYSTEMTIME tp; GetSystemTime(&tp);
+      return double(tp.wSecond) + double(tp.wMilliseconds) / 1E3;
+#else
+      struct timeval tp; gettimeofday(&tp,nullptr);
+      return double(tp.tv_sec) + double(tp.tv_usec)/1E6;
+#endif
+    }
+
+    inline bool hasSuffix(const std::string &s, const std::string &suffix)
+    {
+      return s.substr(s.size()-suffix.size()) == suffix;
+    }
+    
+  } // ::owl::common
+} // ::owl
