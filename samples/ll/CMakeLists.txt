@@ -16,6 +16,8 @@
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
 
+set(OWL_LL_LIBRARY owl-ll-static)
+
 file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
 foreach(sample ${samples})
   add_subdirectory(${sample})
