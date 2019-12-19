@@ -24,7 +24,8 @@ Key links:
 
 - For latest code on github: https://github.com/owl-project/owl
 
-- For a brief (visual) overview over latest samples: http://owl-project.github.io/Samples.html
+- For a brief (visual) overview over latest samples:
+  http://owl-project.github.io/Samples.html
 
 
 <!--- ------------------------------------------------------- -->
@@ -74,6 +75,18 @@ still missing in master an devel branches):
 <!--- ------------------------------------------------------- -->
 Latest Progress/Revision History
 ================================
+
+v0.5.x - First Public Release Cleanups
+--------------------------------------
+
+*v0.5.0*: First public release
+
+- first publicly accessible project on
+  http://github.com/owl-project/owl
+  
+- major cleanups: "inlined" al the gdt submodule sources into
+  owl/common to make owl external-dependency-fee. Feplaced gdt::
+  namespace with owl::common:: to match.
 
 v0.4.x - Instances
 ------------------

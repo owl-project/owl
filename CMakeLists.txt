@@ -15,7 +15,7 @@
 # ======================================================================== #
 
 cmake_policy(SET CMP0048 NEW)
-project(Optix-OWL VERSION 0.4.5)
+project(Optix-OWL VERSION 0.5.0)
 
 cmake_minimum_required(VERSION 2.8)
 
@@ -23,9 +23,9 @@ cmake_minimum_required(VERSION 2.8)
 # first, include gdt project to do some general configuration stuff
 # (build modes, glut, optix, etc)
 # ------------------------------------------------------------------
-set(gdt_dir ${PROJECT_SOURCE_DIR}/common/gdt/)
+set(gdt_dir ${PROJECT_SOURCE_DIR}/common/)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${gdt_dir}/cmake/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${gdt_dir}/gdt/cmake/")
 
 include(configure_cuda)
 include(configure_optix)
@@ -42,22 +42,16 @@ enable_testing()
 # import gdt submodules itself: gdt, and viewer
 # ------------------------------------------------------------------
 include_directories(${gdt_dir})
-add_subdirectory(${gdt_dir} EXCLUDE_FROM_ALL)
-add_library(owl-common
 
-  common/gdt/gdt/gdt.h
-  common/gdt/gdt/gdt.cpp
-  common/gdt/gdt/math/vec.h
-
-  common/gdt/cmake/configure_optix.cmake
-  common/gdt/cmake/configure_cuda.cmake
-  common/gdt/cmake/configure_build_type.cmake
-  )
+# -------------------------------------------------------
+# owl-common: vector math, parallel-for, etc
+# -------------------------------------------------------
+add_subdirectory(owl)
 
 # -------------------------------------------------------
 # owl itself
 # -------------------------------------------------------
-add_subdirectory(owl)
+add_subdirectory(common)
 
 # -------------------------------------------------------
 # tutorial/samples
