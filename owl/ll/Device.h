@@ -539,7 +539,7 @@ namespace owl {
       void instanceGroupSetChild(int groupID,
                                  int childNo,
                                  int childGroupID,
-                                 const affine3f &xfm=affine3f(gdt::one));
+                                 const affine3f &xfm=affine3f(owl::common::one));
 
       /*! destroy the given buffer, and release all host and/or device
           memory associated with it */

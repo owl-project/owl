@@ -80,7 +80,7 @@ namespace owl {
         // size of each thread block during bounds function call
         uint32_t boundsFuncBlockSize = 128;
         uint32_t numPrims = (uint32_t)ug->numPrims;
-        vec3i blockDims(gdt::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
+        vec3i blockDims(owl::common::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
         vec3i gridDims(boundsFuncBlockSize,1,1);
 
         

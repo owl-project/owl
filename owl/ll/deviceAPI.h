@@ -30,7 +30,7 @@
 #endif
 
 namespace owl {
-  using namespace gdt;
+  using namespace owl::common;
   
   inline __device__ vec2i getLaunchIndex()
   {

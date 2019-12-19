@@ -141,7 +141,7 @@ namespace owl {
         
         const affine3f xfm
           = transforms.empty()
-          ? affine3f(gdt::one)
+          ? affine3f(owl::common::one)
           : transforms[childID];
 
         OptixInstance &oi    = optixInstances[childID];
