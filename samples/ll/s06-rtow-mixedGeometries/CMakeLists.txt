@@ -23,7 +23,7 @@ add_executable(ll06-rtow-mixedGeometries
   ${ptxCode}
   )
 target_link_libraries(ll06-rtow-mixedGeometries
-  owl-ll
+  ${OWL_LL_LIBRARIES}
   )
 add_test(ll06-rtow-mixedGeometries
   ${CMAKE_BINARY_DIR}/ll06-rtow-mixedGeometries)

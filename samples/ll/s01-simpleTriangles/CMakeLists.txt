@@ -23,7 +23,7 @@ add_executable(ll01-simpleTriangles
   ${ptxCode}
   )
 target_link_libraries(ll01-simpleTriangles
-  owl-ll
+  ${OWL_LL_LIBRARIES}
   )
 add_test(ll01-simpleTriangles ${CMAKE_BINARY_DIR}/ll01-simpleTriangles)
 

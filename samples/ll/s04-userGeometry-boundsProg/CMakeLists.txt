@@ -23,7 +23,7 @@ add_executable(ll04-userGeometry-boundsProg
   ${ptxCode}
   )
 target_link_libraries(ll04-userGeometry-boundsProg
-  owl-ll
+  ${OWL_LL_LIBRARIES}
   )
 add_test(ll04-userGeometry-boundsProg
   ${CMAKE_BINARY_DIR}/ll04-userGeometry-boundsProg)

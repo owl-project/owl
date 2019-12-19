@@ -33,12 +33,15 @@ set(OWL_LL_SOURCES
 add_library(owl-ll-static STATIC
   ${OWL_LL_SOURCES}
   )
+target_link_libraries(owl-ll-static
+  ${CUDA_LIBRARIES}
+  ${CUDA_CUDA_LIBRARY}
+  )
 
 add_library(owl-ll SHARED
   ${OWL_LL_SOURCES}
   )
 target_link_libraries(owl-ll
-#  owl-common
   ${CUDA_LIBRARIES}
   ${CUDA_CUDA_LIBRARY}
   )
