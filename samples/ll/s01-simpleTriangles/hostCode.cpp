@@ -83,11 +83,11 @@ int main(int ac, char **av)
   lloBuildModules(llo);
 
   enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
-  // ll->allocGeomTypes(NUM_GEOM_TYPES);
+  // lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
   lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
-  // ll->geomTypeCreate(TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
+  // lloGeomTypeCreate(llo,TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
   lloGeomTypeCreate(llo,TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
-  // ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
+  // lloGeomTypeClosestHit(llo,/*program ID*/TRIANGLES_GEOM_TYPE,
   //                           /*ray type  */0,
   //                           /*module:*/0,
   //                           "TriangleMesh");

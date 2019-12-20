@@ -81,14 +81,14 @@ int main(int ac, char **av)
   // set up all the *CODE* we want to run
   // ##################################################################
   LOG("building pipeline ...");
-  ll->allocModules(1);
-  ll->moduleCreate(0,ptxCode);
-  ll->buildModules();
+  lloAllocModules(llo,1);
+  lloModuleCreate(llo,0,ptxCode);
+  lloBuildModules(llo);
   
   enum { PYRAMID_GEOM_TYPE=0,NUM_GEOM_TYPES };
-  ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->geomTypeCreate(PYRAMID_GEOM_TYPE,sizeof(LambertianPyramidMesh));
-  ll->setGeomTypeClosestHit(/*program ID*/PYRAMID_GEOM_TYPE,
+  lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
+  lloGeomTypeCreate(llo,PYRAMID_GEOM_TYPE,sizeof(LambertianPyramidMesh));
+  lloGeomTypeClosestHit(llo,/*program ID*/PYRAMID_GEOM_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
                             "PyramidMesh");

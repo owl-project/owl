@@ -62,18 +62,18 @@ int main(int ac, char **av)
   // set up all the *CODE* we want to run
   // ##################################################################
   LOG("building pipeline ...");
-  ll->allocModules(1);
-  ll->moduleCreate(0,ptxCode);
-  ll->buildModules();
+  lloAllocModules(llo,1);
+  lloModuleCreate(llo,0,ptxCode);
+  lloBuildModules(llo);
   
   enum { SPHERE_GEOM_TYPE=0,NUM_GEOM_TYPES };
-  ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->geomTypeCreate(SPHERE_GEOM_TYPE,sizeof(SphereGeomData));
-  ll->setGeomTypeClosestHit(/*geom type ID*/SPHERE_GEOM_TYPE,
+  lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
+  lloGeomTypeCreate(llo,SPHERE_GEOM_TYPE,sizeof(SphereGeomData));
+  lloGeomTypeClosestHit(llo,/*geom type ID*/SPHERE_GEOM_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
                             "Sphere");
-  ll->setGeomTypeIntersect(/*geom type ID*/SPHERE_GEOM_TYPE,
+  lloGeomTypeIntersect(llo,/*geom type ID*/SPHERE_GEOM_TYPE,
                            /*ray type  */0,
                            /*module:*/0,
                            "Sphere");

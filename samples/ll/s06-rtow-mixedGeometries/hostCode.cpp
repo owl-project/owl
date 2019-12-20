@@ -192,9 +192,9 @@ int main(int ac, char **av)
   // set up all the *CODE* we want to run
   // ##################################################################
   LOG("building pipeline ...");
-  ll->allocModules(1);
-  ll->moduleCreate(0,ptxCode);
-  ll->buildModules();
+  lloAllocModules(llo,1);
+  lloModuleCreate(llo,0,ptxCode);
+  lloBuildModules(llo);
   
   enum { METAL_SPHERES_TYPE=0,
          DIELECTRIC_SPHERES_TYPE,
@@ -203,20 +203,20 @@ int main(int ac, char **av)
          DIELECTRIC_BOXES_TYPE,
          LAMBERTIAN_BOXES_TYPE,
          NUM_GEOM_TYPES };
-  ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->geomTypeCreate(METAL_SPHERES_TYPE,sizeof(MetalSpheresGeom));
-  ll->geomTypeCreate(LAMBERTIAN_SPHERES_TYPE,sizeof(LambertianSpheresGeom));
-  ll->geomTypeCreate(DIELECTRIC_SPHERES_TYPE,sizeof(DielectricSpheresGeom));
+  lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
+  lloGeomTypeCreate(llo,METAL_SPHERES_TYPE,sizeof(MetalSpheresGeom));
+  lloGeomTypeCreate(llo,LAMBERTIAN_SPHERES_TYPE,sizeof(LambertianSpheresGeom));
+  lloGeomTypeCreate(llo,DIELECTRIC_SPHERES_TYPE,sizeof(DielectricSpheresGeom));
   
-  ll->geomTypeCreate(METAL_BOXES_TYPE,sizeof(MetalBoxesGeom));
-  ll->geomTypeCreate(LAMBERTIAN_BOXES_TYPE,sizeof(LambertianBoxesGeom));
-  ll->geomTypeCreate(DIELECTRIC_BOXES_TYPE,sizeof(DielectricBoxesGeom));
+  lloGeomTypeCreate(llo,METAL_BOXES_TYPE,sizeof(MetalBoxesGeom));
+  lloGeomTypeCreate(llo,LAMBERTIAN_BOXES_TYPE,sizeof(LambertianBoxesGeom));
+  lloGeomTypeCreate(llo,DIELECTRIC_BOXES_TYPE,sizeof(DielectricBoxesGeom));
   
-  ll->setGeomTypeClosestHit(/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
+  lloGeomTypeClosestHit(llo,/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
                             "LambertianSpheres");
-  ll->setGeomTypeIntersect(/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
+  lloGeomTypeIntersect(llo,/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
                            /*ray type  */0,
                            /*module:*/0,
                            "LambertianSpheres");
@@ -225,11 +225,11 @@ int main(int ac, char **av)
                                   "LambertianSpheres",
                                   sizeof(LambertianSpheresGeom));
   
-  ll->setGeomTypeClosestHit(/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
+  lloGeomTypeClosestHit(llo,/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
                             "DielectricSpheres");
-  ll->setGeomTypeIntersect(/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
+  lloGeomTypeIntersect(llo,/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
                            /*ray type  */0,
                            /*module:*/0,
                            "DielectricSpheres");
@@ -238,11 +238,11 @@ int main(int ac, char **av)
                                   "DielectricSpheres",
                                   sizeof(DielectricSpheresGeom));
   
-  ll->setGeomTypeClosestHit(/*geom type ID*/METAL_SPHERES_TYPE,
+  lloGeomTypeClosestHit(llo,/*geom type ID*/METAL_SPHERES_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
                             "MetalSpheres");
-  ll->setGeomTypeIntersect(/*geom type ID*/METAL_SPHERES_TYPE,
+  lloGeomTypeIntersect(llo,/*geom type ID*/METAL_SPHERES_TYPE,
                            /*ray type  */0,
                            /*module:*/0,
                            "MetalSpheres");
@@ -253,15 +253,15 @@ int main(int ac, char **av)
 
   // now for the box types - thos use triangles, so already have
   // bounds and isec, only need closesthit
-  ll->setGeomTypeClosestHit(/*geom type ID*/LAMBERTIAN_BOXES_TYPE,
+  lloGeomTypeClosestHit(llo,/*geom type ID*/LAMBERTIAN_BOXES_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
                             "LambertianBoxes");
-  ll->setGeomTypeClosestHit(/*geom type ID*/DIELECTRIC_BOXES_TYPE,
+  lloGeomTypeClosestHit(llo,/*geom type ID*/DIELECTRIC_BOXES_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
                             "DielectricBoxes");
-  ll->setGeomTypeClosestHit(/*geom type ID*/METAL_BOXES_TYPE,
+  lloGeomTypeClosestHit(llo,/*geom type ID*/METAL_BOXES_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
                             "MetalBoxes");

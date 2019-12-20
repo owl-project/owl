@@ -293,6 +293,12 @@ extern "C" {
                               size_t sizeOfSBTData);
   
   OWL_LL_INTERFACE
+  LLOResult lloGeomTypeIntersect(LLOContext llo,
+                                 int32_t geomTypeID,
+                                 int32_t rayTypeID,
+                                 int32_t moduleID,
+                                 const char *programName);
+  OWL_LL_INTERFACE
   LLOResult lloGeomTypeClosestHit(LLOContext llo,
                                   int32_t geomTypeID,
                                   int32_t rayTypeID,
