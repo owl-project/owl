@@ -371,6 +371,13 @@ extern "C" {
   OWL_LL_INTERFACE
   LLOResult lloGroupAccelBuild(LLOContext llo,
                                int32_t    groupID);
+
+  OWL_LL_INTERFACE
+  LLOResult lloGroupBuildPrimitiveBounds(LLOContext llo,
+                                         int32_t    groupID,
+                                         size_t     maxGeomDataSize,
+                                         LLOWriteUserGeomBoundsDataCB cb,
+                                         const void *cbData);
   
   OWL_LL_INTERFACE
   LLOResult lloTrianglesGeomSetVertexBuffer(LLOContext llo,
@@ -399,15 +406,16 @@ template<typename Lambda>
 void lloSbtRayGensBuild(LLOContext llo,
                         const Lambda &l)
 {
-  lloSbtRayGensBuild(llo,
-                     [](uint8_t *output,
-                        int devID, int rgID, 
-                        const void *cbData)
-                     {
-                       const Lambda *lambda = (const Lambda *)cbData;
-                       (*lambda)(output,devID,rgID);
-                     },
-                     (const void *)&l);
+  lloSbtRayGensBuild
+    (llo,
+     [](uint8_t *output,
+        int devID, int rgID, 
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID,rgID);
+     },
+     (const void *)&l);
 }
 
 /*! C++-only wrapper of callback method with lambda function */
@@ -415,17 +423,18 @@ template<typename Lambda>
 void lloSbtHitProgsBuild(LLOContext llo,
                          const Lambda &l)
 {
-  lloSbtHitProgsBuild(llo,
-                      [](uint8_t *output,
-                         int devID,
-                         int geomID,
-                         int rayTypeID,
-                         const void *cbData)
-                      {
-                        const Lambda *lambda = (const Lambda *)cbData;
-                        (*lambda)(output,devID,geomID,rayTypeID);
-                      },
-                      (const void *)&l);
+  lloSbtHitProgsBuild
+    (llo,
+     [](uint8_t *output,
+        int devID,
+        int geomID,
+        int rayTypeID,
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID,geomID,rayTypeID);
+     },
+     (const void *)&l);
 }
 
 /*! C++-only wrapper of callback method with lambda function */
@@ -433,15 +442,37 @@ template<typename Lambda>
 void lloSbtMissProgsBuild(LLOContext llo,
                           const Lambda &l)
 {
-  lloSbtMissProgsBuild(llo,
-                       [](uint8_t *output,
-                          int devID, int rgID, 
-                          const void *cbData)
-                       {
-                         const Lambda *lambda = (const Lambda *)cbData;
-                         (*lambda)(output,devID,rgID);
-                       },
-                       (const void *)&l);
+  lloSbtMissProgsBuild
+    (llo,
+     [](uint8_t *output,
+        int devID, int rgID, 
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID,rgID);
+     },
+     (const void *)&l);
+}
+
+/*! C++-only wrapper of callback method with lambda function */
+template<typename Lambda>
+void lloGroupBuildPrimitiveBounds(LLOContext llo,
+                                  uint32_t groupID,
+                                  size_t sizeOfData,
+                                  const Lambda &l)
+{
+  lloGroupBuildPrimitiveBounds
+    (llo,groupID,sizeOfData,
+     [](uint8_t *output,
+        int devID,
+        int geomID,
+        int childID, 
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID,geomID,childID);
+     },
+     (const void *)&l);
 }
 #endif
 

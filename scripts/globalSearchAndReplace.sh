@@ -2,7 +2,7 @@
 allFiles=`find samples/ll/ -name '*cu' -or -name '*.h' -or -name '*cpp'`
 for f in $allFiles; do
     echo $f
-    cat $f | sed "s/ll->setGeomTypeBoundsProgDevice(/lloGeomTypeBoundsProgDevice(llo,/g" > tmp.snr
+    cat $f | sed "s/ll->groupBuildPrimitiveBounds/lloGroupBuildPrimitiveBounds/g" > tmp.snr
     cp tmp.snr $f
     rm tmp.snr
 done

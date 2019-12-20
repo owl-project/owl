@@ -443,7 +443,7 @@ int main(int ac, char **av)
   lloUserGeomGroupCreate(llo,/* group ID */SPHERES_GROUP,
                          /* geoms in group, pointer */ geomsInSpheresGroup,
                          /* geoms in group, count   */ 3);
-  ll->groupBuildPrimitiveBounds
+  lloGroupBuildPrimitiveBounds
     (SPHERES_GROUP,max3(sizeof(MetalSpheresGeom),
                         sizeof(DielectricSpheresGeom),
                         sizeof(LambertianSpheresGeom)),

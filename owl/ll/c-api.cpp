@@ -509,6 +509,25 @@ namespace owl {
                                 callbackData);
         });
     }
+
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloGroupBuildPrimitiveBounds(LLOContext llo,
+                                           int32_t    groupID,
+                                           size_t     maxGeomDataSize,
+                                           LLOWriteUserGeomBoundsDataCB cb,
+                                           const void *cbData)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->groupBuildPrimitiveBounds
+            (groupID,maxGeomDataSize,
+             owl::ll::WriteUserGeomBoundsDataCB(cb),
+             cbData);
+        });
+    }
+
+
     
     extern "C" OWL_LL_INTERFACE
     size_t lloGetDeviceCount(LLOContext llo)

@@ -127,11 +127,13 @@ int main(int ac, char **av)
   enum { SPHERES_GROUP=0,NUM_GROUPS };
   lloAllocGroups(llo,NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  lloUserGeomGroupCreate(llo,/* group ID */SPHERES_GROUP,
+  lloUserGeomGroupCreate(llo,
+                         /* group ID */SPHERES_GROUP,
                          /* geoms in group, pointer */ geomsInGroup,
                          /* geoms in group, count   */ 8);
-  ll->groupBuildPrimitiveBounds
-    (SPHERES_GROUP,sizeof(SphereGeomData),
+  lloGroupBuildPrimitiveBounds
+    (llo,
+     SPHERES_GROUP,sizeof(SphereGeomData),
      [&](uint8_t *output, int devID, int geomID, int childID) {
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
@@ -146,7 +148,8 @@ int main(int ac, char **av)
 
   // ----------- build hitgroups -----------
   lloSbtHitProgsBuild
-    ([&](uint8_t *output,int devID,int geomID,int childID) {
+    (llo,
+     [&](uint8_t *output,int devID,int geomID,int childID) {
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
@@ -155,7 +158,8 @@ int main(int ac, char **av)
   
   // ----------- build miss prog(s) -----------
   lloSbtMissProgsBuild
-    ([&](uint8_t *output,
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rayType) {
       ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
@@ -164,7 +168,8 @@ int main(int ac, char **av)
   
   // ----------- build raygens -----------
   lloSbtRayGensBuild
-    ([&](uint8_t *output,
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;

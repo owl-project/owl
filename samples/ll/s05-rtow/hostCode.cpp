@@ -227,7 +227,7 @@ int main(int ac, char **av)
   lloUserGeomGroupCreate(llo,/* group ID */WORLD_GROUP,
                          /* geoms in group, pointer */ geomsInGroup,
                          /* geoms in group, count   */ NUM_GEOMS);
-  ll->groupBuildPrimitiveBounds
+  lloGroupBuildPrimitiveBounds
     (WORLD_GROUP,max3(sizeof(MetalSpheresGeom),
                       sizeof(DielectricSpheresGeom),
                       sizeof(LambertianSpheresGeom)),
