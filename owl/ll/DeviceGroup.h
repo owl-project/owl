@@ -64,7 +64,7 @@ namespace owl {
                        /*! the raw void pointer the app has passed
                          during sbtHitGroupsBuild() */
                        const void *callBackUserData);
-    
+
     /*! callback with which the app can specify what data is to be
       written into the SBT for a given geometry, ray type, and
       device */

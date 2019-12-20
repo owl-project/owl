@@ -74,57 +74,63 @@ int main(int ac, char **av)
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
-  // ll->allocModules(1);
   lloAllocModules(llo,1);
-  // ll->setModule(0,ptxCode);
   lloModuleCreate(llo,0,ptxCode);
-  // ll->buildModules();
   lloBuildModules(llo);
   
-  // ll->allocRayGens(1);
   lloAllocRayGens(llo,1);
-  // ll->setRayGen(/*program ID*/0,
-  //               /*module:*/0,
-  //               "simpleRayGen",
-  //               sizeof(RayGenData));
   lloRayGenCreate(llo,
                   /*program ID*/0,
                   /*module:*/0,
                   "simpleRayGen",
                   sizeof(RayGenData));
-  // ll->buildPrograms();
   lloBuildPrograms(llo);
-  // ll->createPipeline();
   lloCreatePipeline(llo);
 
-#if 0
   // ------------------------------------------------------------------
   // alloc buffers
   // ------------------------------------------------------------------
   LOG("allocating frame buffer")
   enum { FRAME_BUFFER=0,NUM_BUFFERS };
-  ll->allocBuffers(NUM_BUFFERS);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  // ll->allocBuffers(NUM_BUFFERS);
+  lloAllocBuffers(llo,NUM_BUFFERS);
+  // ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  lloHostPinnedBufferCreate(llo,
+                            /* buffer ID */FRAME_BUFFER,
+                            /* #bytes    */fbSize.x*fbSize.y*sizeof(uint32_t));
 
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################
   // ----------- build raygens -----------
-  LOG("building raygen program")
-  ll->sbtRayGensBuild
-    ([&](uint8_t *output,
-         int devID,
-         int rgID) {
-      RayGenData *rg = (RayGenData*)output;
-      rg->deviceIndex   = devID;
-      rg->deviceCount = ll->getDeviceCount();
-      rg->fbSize = fbSize;
-      rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-      rg->color0 = vec3f(.8f,0.f,0.f);
-      rg->color1 = vec3f(.8f,.8f,.8f);
-    });
+  LOG("building raygen program");
+  // ll->sbtRayGensBuild
+  //   ([&](uint8_t *output,
+  //        int devID,
+  //        int rgID) {
+  //     RayGenData *rg = (RayGenData*)output;
+  //     rg->deviceIndex   = devID;
+  //     rg->deviceCount = ll->getDeviceCount();
+  //     rg->fbSize = fbSize;
+  //     rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
+  //     rg->color0 = vec3f(.8f,0.f,0.f);
+  //     rg->color1 = vec3f(.8f,.8f,.8f);
+  //   });
+  lloSbtBuildRayGens
+    (llo,[&](uint8_t *output,
+             int devID,
+             int rgID) {
+           RayGenData *rg  = (RayGenData*)output;
+           rg->deviceIndex = devID;
+           rg->deviceCount = lloGetDeviceCount(llo);
+           rg->fbSize      = fbSize;
+           rg->fbPtr       = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+           rg->color0      = vec3f(.8f,0.f,0.f);
+           rg->color1      = vec3f(.8f,.8f,.8f);
+         });
   LOG_OK("everything set up ...");
 
+#if 0
   // ##################################################################
   // now that everything is readly: launch it ....
   // ##################################################################

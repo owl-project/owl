@@ -25,6 +25,10 @@
 // #undef OWL_LL_INTERFACE
 // #define OWL_LL_INTERFACE extern "C"
 
+#ifndef NDEBUG
+# define EXCEPTIONS_ARE_FATAL 1
+#endif
+
 namespace owl {
   namespace ll {
 
@@ -37,8 +41,13 @@ namespace owl {
         fun();
         return LLO_SUCCESS;
       } catch (const std::runtime_error &e) {
+#if EXCEPTIONS_ARE_FATAL
+        std::cerr << "Fatal error: " << e.what() << std::endl;
+        exit(1);
+#else
         lastErrorText = e.what();
         return LLO_UNKNOWN_ERROR;
+#endif
       }
     }
     
@@ -136,6 +145,78 @@ namespace owl {
            dg->createPipeline();
          });
     }
-    
+      
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloHostPinnedBufferCreate(LLOContext llo,
+                                        /*! ID of buffer to create */
+                                        int32_t bufferID,
+                                        /*! number of elements */
+                                        size_t sizeInBytes)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->createHostPinnedBuffer(bufferID,sizeInBytes,1);
+         });
+    }
+      
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloAllocBuffers(LLOContext llo,
+                              /*! number of buffers valid after this
+                               *  function call */
+                              int32_t numBuffers)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->allocBuffers(numBuffers);
+         });
+    }
+
+    /*! builds the SBT's ray gen program entries, using the given
+     *  callback to query the app as as to what values to write for a
+     *  given ray gen program */
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloSbtBuildRayGens(LLOContext llo,
+                                 LLOWriteRayGenDataCB writeRayGenDataCB,
+                                 const void *callbackData)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->sbtRayGensBuild((WriteRayGenDataCB)writeRayGenDataCB,
+                               callbackData);
+         });
+    }
+  
+    extern "C" OWL_LL_INTERFACE
+    size_t lloGetDeviceCount(LLOContext llo)
+    {
+      try {
+        DeviceGroup *dg = (DeviceGroup *)llo;
+        return dg->getDeviceCount();
+      } catch (const std::runtime_error &e) {
+        lastErrorText = e.what();
+        return size_t(-1);
+      }
+    }
+  
+    /*! returns the device-side pointer of the given buffer, on the
+     *  given device */
+    extern "C" OWL_LL_INTERFACE
+    const void *lloBufferGetPointer(LLOContext llo,
+                                    int32_t    bufferID,
+                                    int32_t    deviceID)
+    {
+      try {
+        DeviceGroup *dg = (DeviceGroup *)llo;
+        return dg->bufferGetPointer(bufferID,deviceID);
+      } catch (const std::runtime_error &e) {
+        lastErrorText = e.what();
+        return nullptr;
+      }
+    }
+  
+
   } // ::owl::ll
 } //::owl

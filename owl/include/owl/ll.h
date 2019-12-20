@@ -69,7 +69,75 @@ extern "C" {
      LLO_UNKNOWN_ERROR
     }
     LLOResult;
+  
+  
+  typedef void
+  LLOWriteUserGeomBoundsDataCB(uint8_t *userGeomDataToWrite,
+                               int deviceID,
+                               int geomID,
+                               int childID,
+                               const void *cbUserData);
+    
+  /*! callback with which the app can specify what data is to be
+    written into the SBT for a given geometry, ray type, and
+    device */
+  typedef void
+  LLOWriteHitProgDataCB(uint8_t *hitProgDataToWrite,
+                        /*! ID of the device we're
+                          writing for (differnet
+                          devices may need to write
+                          different pointers */
+                        int deviceID,
+                        /*! the geometry ID for which
+                          we're generating the SBT
+                          entry for */
+                        int geomID,
+                        /*! the ray type for which
+                          we're generating the SBT
+                          entry for */
+                        int rayType,
+                        /*! the raw void pointer the app has passed
+                          during sbtHitGroupsBuild() */
+                        const void *callBackUserData);
+    
+  /*! callback with which the app can specify what data is to be
+    written into the SBT for a given geometry, ray type, and
+    device */
+  typedef void
+  LLOWriteRayGenDataCB(uint8_t *rayGenDataToWrite,
+                       /*! ID of the device we're
+                         writing for (differnet
+                         devices may need to write
+                         different pointers */
+                       int deviceID,
+                       /*! the geometry ID for which
+                         we're generating the SBT
+                         entry for */
+                       int rayGenID,
+                       /*! the raw void pointer the app has passed
+                         during sbtGeomTypesBuild() */
+                       const void *callBackUserData);
+    
+  /*! callback with which the app can specify what data is to be
+    written into the SBT for a given geometry, ray type, and
+    device */
+  typedef void
+  LLOWriteMissProgDataCB(uint8_t *missProgDataToWrite,
+                         /*! ID of the device we're
+                           writing for (differnet
+                           devices may need to write
+                           different pointers */
+                         int deviceID,
+                         /*! the ray type for which
+                           we're generating the SBT
+                           entry for */
+                         int rayType,
+                         /*! the raw void pointer the app has passed
+                           during sbtMissProgsBuildd() */
+                         const void *callBackUserData);
+    
 
+  
   /*! creates a new ll-owl device(group) context using the given CUDA
    *  device IDs. An empty list of device IDs is synonymous with "use
    *  all available device". If no context could be crated, the return
@@ -115,8 +183,59 @@ extern "C" {
   
   OWL_LL_INTERFACE
   LLOResult lloCreatePipeline(LLOContext llo);
+
+  OWL_LL_INTERFACE
+  LLOResult lloAllocBuffers(LLOContext llo,
+                            /*! number of buffers valid after this
+                             *  function call */
+                            int32_t numBuffers);
+
+  OWL_LL_INTERFACE
+  LLOResult lloHostPinnedBufferCreate(LLOContext llo,
+                                      /*! ID of buffer to create */
+                                      int32_t    bufferID,
+                                      /*! number of elements */
+                                      size_t     sizeInBytes);
+
+  /*! builds the SBT's ray gen program entries, using the given
+   *  callback to query the app as as to what values to write for a
+   *  given ray gen program */
+  OWL_LL_INTERFACE
+  LLOResult lloSbtBuildRayGens(LLOContext           llo,
+                               LLOWriteRayGenDataCB writeRayGenDataCB,
+                               const void          *callBackData);
+  
+  OWL_LL_INTERFACE
+  size_t lloGetDeviceCount(LLOContext llo);
+  
+  /*! returns the device-side pointer of the given buffer, on the
+   *  given device */
+  OWL_LL_INTERFACE
+  const void *lloBufferGetPointer(LLOContext llo,
+                                  int32_t    bufferID,
+                                  int32_t    deviceID);
   
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+#ifdef __cplusplus
+/*! C++-only wrapper of callback method with lambda function */
+template<typename Lambda>
+void lloSbtBuildRayGens(LLOContext llo,
+                        const Lambda &l)
+{
+  lloSbtBuildRayGens(llo,
+                     [](uint8_t *output,
+                        int devID, int rgID, 
+                        const void *cbData)
+                     {
+                       const Lambda *lambda = (const Lambda *)cbData;
+                       (*lambda)(output,devID,rgID);
+                     },
+                     (const void *)&l);
+}
+#endif
+
+
 
