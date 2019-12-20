@@ -123,7 +123,7 @@ int main(int ac, char **av)
                        /*ray type  */0,
                        /*module:*/0,
                        "LambertianSpheres");
-  ll->setGeomTypeBoundsProgDevice(/*program ID*/LAMBERTIAN_SPHERES_TYPE,
+  lloGeomTypeBoundsProgDevice(llo,/*program ID*/LAMBERTIAN_SPHERES_TYPE,
                                   /*module:*/0,
                                   "LambertianSpheres",
                                   sizeof(LambertianSpheresGeom));
@@ -136,7 +136,7 @@ int main(int ac, char **av)
                        /*ray type  */0,
                        /*module:*/0,
                        "DielectricSpheres");
-  ll->setGeomTypeBoundsProgDevice(/*program ID*/DIELECTRIC_SPHERES_TYPE,
+  lloGeomTypeBoundsProgDevice(llo,/*program ID*/DIELECTRIC_SPHERES_TYPE,
                                   /*module:*/0,
                                   "DielectricSpheres",
                                   sizeof(DielectricSpheresGeom));
@@ -149,7 +149,7 @@ int main(int ac, char **av)
                        /*ray type  */0,
                        /*module:*/0,
                        "MetalSpheres");
-  ll->setGeomTypeBoundsProgDevice(/*program ID*/METAL_SPHERES_TYPE,
+  lloGeomTypeBoundsProgDevice(llo,/*program ID*/METAL_SPHERES_TYPE,
                                   /*module:*/0,
                                   "MetalSpheres",
                                   sizeof(MetalSpheresGeom));

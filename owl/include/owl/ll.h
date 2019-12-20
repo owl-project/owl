@@ -298,6 +298,19 @@ extern "C" {
                                  int32_t rayTypeID,
                                  int32_t moduleID,
                                  const char *programName);
+  
+  /*! set bounding box program for given geometry type, using a
+    bounding box program to be called on the device. note that
+    unlike other programs (intersect, closesthit, anyhit) these
+    programs are not 'per ray type', but exist only once per
+    geometry type. obviously only allowed for user geometry
+    typed. */
+  OWL_LL_INTERFACE
+  LLOResult lloGeomTypeBoundsProgDevice(LLOContext llo,
+                                        int32_t geomTypeID,
+                                        int32_t moduleID,
+                                        const char *programName,
+                                        size_t geomDataSize);
 
   OWL_LL_INTERFACE
   LLOResult lloGeomTypeClosestHit(LLOContext llo,

@@ -78,7 +78,7 @@ int main(int ac, char **av)
                        /*module:*/0,
                        "Sphere");
 
-  ll->setGeomTypeBoundsProgDevice(/*program ID*/0,
+  lloGeomTypeBoundsProgDevice(llo,/*program ID*/0,
                                   /*module:*/0,
                                   "Sphere",
                                   sizeof(SphereGeomData));

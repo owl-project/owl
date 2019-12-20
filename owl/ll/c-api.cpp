@@ -177,6 +177,30 @@ namespace owl {
                                    programName);
         });
     }
+
+    /*! set bounding box program for given geometry type, using a
+      bounding box program to be called on the device. note that
+      unlike other programs (intersect, closesthit, anyhit) these
+      programs are not 'per ray type', but exist only once per
+      geometry type. obviously only allowed for user geometry
+      typed. */
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloGeomTypeBoundsProgDevice(LLOContext llo,
+                                          int32_t geomTypeID,
+                                          int32_t moduleID,
+                                          const char *programName,
+                                          size_t geomDataSize)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->setGeomTypeBoundsProgDevice(geomTypeID,
+                                          moduleID,
+                                          programName,
+                                          geomDataSize);
+        });
+    }
+
     
     extern "C" OWL_LL_INTERFACE
     LLOResult lloTrianglesGeomCreate(LLOContext llo,
