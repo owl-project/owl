@@ -630,7 +630,7 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("destroying devicegroup ...");
-  owl::ll::DeviceGroup::destroy(ll);
+  lloContextDestroy(llo);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
 }

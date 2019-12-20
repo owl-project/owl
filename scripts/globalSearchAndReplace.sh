@@ -2,7 +2,7 @@
 allFiles=`find samples/ll/ -name '*cu' -or -name '*.h' -or -name '*cpp'`
 for f in $allFiles; do
     echo $f
-    cat $f | sed "s/DeviceGroup \* ll/DeviceGroup \*ll/g" > tmp.snr
+    cat $f | sed "s/ll->allocModules(/lloAllocModules(llo,/g" > tmp.snr
     cp tmp.snr $f
     rm tmp.snr
 done
