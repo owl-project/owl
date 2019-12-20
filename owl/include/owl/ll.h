@@ -213,7 +213,7 @@ extern "C" {
    *  callback to query the app as as to what values to write for a
    *  given ray gen program */
   OWL_LL_INTERFACE
-  LLOResult lloSbtBuildRayGens(LLOContext           llo,
+  LLOResult lloSbtRayGensBuild(LLOContext           llo,
                                LLOWriteRayGenDataCB writeRayGenDataCB,
                                const void          *callBackData);
   
@@ -234,10 +234,10 @@ extern "C" {
 #ifdef __cplusplus
 /*! C++-only wrapper of callback method with lambda function */
 template<typename Lambda>
-void lloSbtBuildRayGens(LLOContext llo,
+void lloSbtRayGensBuild(LLOContext llo,
                         const Lambda &l)
 {
-  lloSbtBuildRayGens(llo,
+  lloSbtRayGensBuild(llo,
                      [](uint8_t *output,
                         int devID, int rgID, 
                         const void *cbData)

@@ -14,9 +14,11 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/DeviceGroup.h"
+// public owl-ll API
+#include <owl/ll.h>
+// our device-side data structures
 #include "deviceCode.h"
-
+// external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
@@ -66,19 +68,20 @@ int main(int ac, char **av)
 {
   LOG("ll example '" << av[0] << "' starting up");
 
-  owl::ll::DeviceGroup::SP ll
-    = owl::ll::DeviceGroup::create();
-
-  LOG("building pipeline ...");
-  std::cout << GDT_TERMINAL_DEFAULT;
+  // owl::ll::DeviceGroup::SP ll
+  //   = owl::ll::DeviceGroup::create();
+  LLOContext llo = lloContextCreate(nullptr,0);
 
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
-  ll->allocModules(1);
-  ll->setModule(0,ptxCode);
-  ll->buildModules();
+
+  LOG("building module, programs, and pipeline");
   
+  lloAllocModules(llo,1);
+  lloModuleCreate(llo,0,ptxCode);
+  lloBuildModules(llo);
+
   enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
   ll->geomTypeCreate(TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
@@ -87,60 +90,93 @@ int main(int ac, char **av)
                             /*module:*/0,
                             "TriangleMesh");
   
-  ll->allocRayGens(1);
-  ll->setRayGen(/*program ID*/0,
-                /*module:*/0,
-                "simpleRayGen",
-                sizeof(RayGenData));
+  lloAllocRayGens(llo,1);
+  lloRayGenCreate(llo,
+                  /*program ID*/0,
+                  /*module:*/0,
+                  "simpleRayGen",
+                  sizeof(RayGenData));
   
   ll->allocMissProgs(1);
   ll->setMissProg(/*program ID*/0,
                   /*module:*/0,
                   "miss",
                   sizeof(MissProgData));
-  ll->buildPrograms();
-  ll->createPipeline();
+  
+  lloAllocMissProgs(llo,1);
+  lloMissProgCreate(llo,
+                    /*program ID*/0,
+                    /*module:*/0,
+                    "miss",
+                    sizeof(MissProgData));
 
-  LOG("building geometries ...");
+  // ll->buildPrograms();
+  // ll->createPipeline();
+  lloBuildPrograms(llo);
+  lloCreatePipeline(llo);
 
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
   // ##################################################################
 
+  LOG("building geometries ...");
+
   // ------------------------------------------------------------------
   // alloc buffers
   // ------------------------------------------------------------------
   enum { VERTEX_BUFFER=0,INDEX_BUFFER,FRAME_BUFFER,NUM_BUFFERS };
-  ll->allocBuffers(NUM_BUFFERS);
-  ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
-  ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  // ll->allocBuffers(NUM_BUFFERS);
+  lloAllocBuffers(llo,NUM_BUFFERS);
+  // ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
+  lloDeviceBufferCreate(llo,VERTEX_BUFFER,NUM_VERTICES*sizeof(vec3f),vertices);
+  // ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
+  lloDeviceBufferCreate(llo,INDEX_BUFFER,NUM_INDICES*sizeof(vec3i),indices);
+  // ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y*sizeof(uint32_t));
   
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
   enum { TRIANGLES_GEOM=0,NUM_GEOMS };
-  ll->allocGeoms(NUM_GEOMS);
-  ll->trianglesGeomCreate(/* geom ID    */TRIANGLES_GEOM,
-                          /* type/PG ID */TRIANGLES_GEOM_TYPE);
-  ll->trianglesGeomSetVertexBuffer(/* geom ID   */TRIANGLES_GEOM,
-                                   /* buffer ID */VERTEX_BUFFER,
-                                   /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer(/* geom ID   */TRIANGLES_GEOM,
-                                  /* buffer ID */INDEX_BUFFER,
-                                  /* meta info */NUM_INDICES,sizeof(vec3i),0);
+  // ll->allocGeoms(NUM_GEOMS);
+  lloAllocGeoms(llo,NUM_GEOMS);
+  // ll->trianglesGeomCreate(/* geom ID    */TRIANGLES_GEOM,
+  //                         /* type/PG ID */TRIANGLES_GEOM_TYPE);
+  lloTrianglesGeomCreate(llo,
+                         /* geom ID    */TRIANGLES_GEOM,
+                         /* type/PG ID */TRIANGLES_GEOM_TYPE);
+  // ll->trianglesGeomSetVertexBuffer(/* geom ID   */TRIANGLES_GEOM,
+  //                                  /* buffer ID */VERTEX_BUFFER,
+  //                                  /* meta info */NUM_VERTICES,sizeof(vec3f),0);
+  lloTrianglesGeomSetVertexBuffer(llo,
+                                  /* geom ID   */TRIANGLES_GEOM,
+                                  /* buffer ID */VERTEX_BUFFER,
+                                  /* meta info */NUM_VERTICES,sizeof(vec3f),0);
+  // ll->trianglesGeomSetIndexBuffer(/* geom ID   */TRIANGLES_GEOM,
+  //                                 /* buffer ID */INDEX_BUFFER,
+  //                                 /* meta info */NUM_INDICES,sizeof(vec3i),0);
+  lloTrianglesGeomSetIndexBuffer(llo,
+                                 /* geom ID   */TRIANGLES_GEOM,
+                                 /* buffer ID */INDEX_BUFFER,
+                                 /* meta info */NUM_INDICES,sizeof(vec3i),0);
 
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
   // ##################################################################
 
   enum { TRIANGLES_GROUP=0,NUM_GROUPS };
-  ll->allocGroups(NUM_GROUPS);
+  // ll->allocGroups(NUM_GROUPS);
+  lloAllocGroups(llo,NUM_GROUPS);
   int geomsInGroup[] = { 0 };
-  ll->trianglesGeomGroupCreate(/* group ID */TRIANGLES_GROUP,
-                               /* geoms in group, pointer */ geomsInGroup,
-                               /* geoms in group, count   */ 1);
-  ll->groupBuildAccel(TRIANGLES_GROUP);
+  // ll->trianglesGeomGroupCreate(/* group ID */TRIANGLES_GROUP,
+  //                              /* geoms in group, pointer */ geomsInGroup,
+  //                              /* geoms in group, count   */ 1);
+  lloTrianglesGeomGroupCreate(llo,
+                              /* group ID */TRIANGLES_GROUP,
+                              /* geoms in group, pointer */ geomsInGroup,
+                              /* geoms in group, count   */ 1);
+  // ll->groupBuildAccel(TRIANGLES_GROUP);
+  lloGroupBuildAccel(llo,TRIANGLES_GROUP);
 
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -148,17 +184,25 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  ll->sbtHitProgsBuild
-    ([&](uint8_t *output,int devID,int geomID,int rayID) {
+  // ll->sbtHitProgsBuild
+  //   (
+  lloSbtHitProgsBuild
+    (llo,
+     [&](uint8_t *output,int devID,int geomID,int rayID) {
       TrianglesGeomData &self = *(TrianglesGeomData*)output;
       self.color  = vec3f(0,1,0);
-      self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
-      self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);
+      // self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
+      self.index  = (vec3i*)lloBufferGetPointer(llo,INDEX_BUFFER,devID);
+      // self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);
+      self.vertex = (vec3f*)lloBufferGetPointer(llo,VERTEX_BUFFER,devID);
     });
   
   // ----------- build miss prog(s) -----------
-  ll->sbtMissProgsBuild
-    ([&](uint8_t *output,
+  // ll->sbtMissProgsBuild
+  //   (
+  lloSbtMissProgsBuild
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rayType) {
       /* we don't have any ... */
@@ -167,16 +211,22 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  ll->sbtRayGensBuild
-    ([&](uint8_t *output,
-         int devID,
-         int rgID) {
+  // ll->sbtRayGensBuild
+  //   ([&](uint8_t *output,
+  //        int devID,
+  //        int rgID) {
+  lloSbtRayGensBuild
+    (llo,[&](uint8_t *output,
+             int devID,
+             int rgID) {
       RayGenData *rg = (RayGenData*)output;
       rg->deviceIndex   = devID;
       rg->deviceCount = ll->getDeviceCount();
       rg->fbSize = fbSize;
-      rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-      rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+      // rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
+      rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+      // rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+      rg->world  = lloGroupGetTraversable(llo,TRIANGLES_GROUP,devID);
 
       // compute camera frame:
       vec3f &pos = rg->camera.pos;
@@ -197,13 +247,14 @@ int main(int ac, char **av)
   // now that everything is readly: launch it ....
   // ##################################################################
   
-  LOG("trying to launch ...");
-  ll->launch(0,fbSize);
-  // todo: explicit sync?
+  LOG("executing the launch ...");
+  // ll->launch(0,fbSize);
+  lloLaunch2D(llo,0,fbSize.x,fbSize.y);
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  // const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);
@@ -212,8 +263,9 @@ int main(int ac, char **av)
   // and finally, clean up
   // ##################################################################
   
-  LOG("destroying devicegroup ...");
-  owl::ll::DeviceGroup::destroy(ll);
-  
+  LOG("destroying llo context ...");
+  // owl::ll::DeviceGroup::destroy(ll);
+  lloContextDestroy(llo);
+
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
 }

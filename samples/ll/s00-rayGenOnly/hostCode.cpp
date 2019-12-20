@@ -14,9 +14,11 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "owl/ll.h"
+// public owl-ll API
+#include <owl/ll.h>
+// our device-side data structures
 #include "deviceCode.h"
-
+// external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
@@ -30,30 +32,6 @@
   std::cout << GDT_TERMINAL_DEFAULT;
 
 extern "C" char ptxCode[];
-
-const int NUM_VERTICES = 8;
-vec3f vertices[NUM_VERTICES] =
-  {
-   { -1.f,-1.f,-1.f },
-   { +1.f,-1.f,-1.f },
-   { -1.f,+1.f,-1.f },
-   { +1.f,+1.f,-1.f },
-   { -1.f,-1.f,+1.f },
-   { +1.f,-1.f,+1.f },
-   { -1.f,+1.f,+1.f },
-   { +1.f,+1.f,+1.f }
-  };
-
-const int NUM_INDICES = 12;
-vec3i indices[NUM_INDICES] =
-  {
-   { 0,1,3 }, { 2,3,0 },
-   { 5,7,6 }, { 5,6,4 },
-   { 0,4,5 }, { 0,5,1 },
-   { 2,3,7 }, { 2,7,6 },
-   { 1,5,7 }, { 1,7,3 },
-   { 4,0,2 }, { 4,2,6 }
-  };
 
 const char *outFileName = "ll00-rayGenOnly.png";
 const vec2i fbSize(800,600);
@@ -70,10 +48,12 @@ int main(int ac, char **av)
   //   = owl::ll::DeviceGroup::create();
   LLOContext llo = lloContextCreate(nullptr,0);
   
-  LOG("building module, programs, and pipeline");
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
+
+  LOG("building module, programs, and pipeline");
+  
   lloAllocModules(llo,1);
   lloModuleCreate(llo,0,ptxCode);
   lloBuildModules(llo);
@@ -116,7 +96,7 @@ int main(int ac, char **av)
   //     rg->color0 = vec3f(.8f,0.f,0.f);
   //     rg->color1 = vec3f(.8f,.8f,.8f);
   //   });
-  lloSbtBuildRayGens
+  lloSbtRayGensBuild
     (llo,[&](uint8_t *output,
              int devID,
              int rgID) {

@@ -22,9 +22,6 @@
 // internal C++ classes that implement this API
 #include "owl/ll/DeviceGroup.h"
 
-//#undef OWL_LL_INTERFACE 
-//#define OWL_LL_INTERFACE /* extern "C" */
-
 #ifndef NDEBUG
 # define EXCEPTIONS_ARE_FATAL 1
 #endif
@@ -201,7 +198,7 @@ namespace owl {
      *  callback to query the app as as to what values to write for a
      *  given ray gen program */
     extern "C" OWL_LL_INTERFACE
-    LLOResult lloSbtBuildRayGens(LLOContext llo,
+    LLOResult lloSbtRayGensBuild(LLOContext llo,
                                  LLOWriteRayGenDataCB writeRayGenDataCB,
                                  const void *callbackData)
     {
