@@ -14,11 +14,11 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#define BOUNDS_ON_HOST 0
-
-#include "ll/DeviceGroup.h"
+// public owl-ll API
+#include <owl/ll.h>
+// our device-side data structures
 #include "deviceCode.h"
-
+// external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
