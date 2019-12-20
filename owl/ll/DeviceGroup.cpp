@@ -227,7 +227,7 @@ namespace owl {
     }
 
     void DeviceGroup::trianglesGeomGroupCreate(int groupID,
-                                               int *geomIDs,
+                                               const int *geomIDs,
                                                int geomCount)
     {
       assert("check for valid combinations of child list" &&
@@ -240,7 +240,7 @@ namespace owl {
     }
 
     void DeviceGroup::userGeomGroupCreate(int groupID,
-                                          int *geomIDs,
+                                          const int *geomIDs,
                                           int geomCount)
     {
       assert("check for valid combinations of child list" &&

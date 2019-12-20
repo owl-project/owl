@@ -513,11 +513,11 @@ namespace owl {
       void allocBuffers(size_t newCount);
       
       void trianglesGeomGroupCreate(int groupID,
-                                    int *geomIDs,
+                                    const int *geomIDs,
                                     int geomCount);
 
       void userGeomGroupCreate(int groupID,
-                               int *geomIDs,
+                               const int *geomIDs,
                                int geomCount);
       /*! create a new instance group with given list of children */
       void instanceGroupCreate(/*! the group we are defining */

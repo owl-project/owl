@@ -220,11 +220,22 @@ namespace owl {
                             rayTypeCount) */
                           int geomTypeID,
                           int numPrims);
-      
+
+      /*! create a new group object (with an associated BVH) over
+          triangle geometries. All geomIDs in this group must be
+          valid, and must refer to geometries of type TrianglesGeom.
+          
+          BVH does not get built until groupBuildAccel()
+
+          \todo geomIDs may be null, in which case child geomeries may
+          be set using geomGroupSetChild()
+      */
       void trianglesGeomGroupCreate(int groupID,
-                                    int *geomIDs, int geomCount);
+                                    const int *geomIDs,
+                                    int geomCount);
       void userGeomGroupCreate(int groupID,
-                               int *geomIDs, int geomCount);
+                               const int *geomIDs,
+                               int geomCount);
       /*! create a new instance group with given list of children */
       void instanceGroupCreate(/*! the group we are defining */
                                int groupID,
@@ -303,6 +314,8 @@ namespace owl {
                                        int stride,
                                        int offset);
       void groupBuildAccel(int groupID);
+      // NEW naming:
+      void groupAccelBuild(int groupID) { groupBuildAccel(groupID); }
       OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
       uint32_t groupGetSBTOffset(int groupID);
 
