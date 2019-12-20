@@ -75,20 +75,46 @@ extern "C" {
    *  all available device". If no context could be crated, the return
    *  value is null, and lloGetLastErrorText should contain an error
    *  message. */
-  OWL_LL_INTERFACE LLOContext lloCreate(const int32_t *deviceIDs = nullptr,
-                                        int32_t numDeviceIDs     = 0);
-
+  OWL_LL_INTERFACE
+  LLOContext lloCreate(const int32_t *deviceIDs = nullptr,
+                       int32_t        numDeviceIDs     = 0);
   
-  OWL_LL_INTERFACE LLOResult lloAllocModules(LLOContext llo,
-                                             int numModules);
   
-  OWL_LL_INTERFACE LLOResult lloModuleCreate(LLOContext llo,
-                                             int32_t moduleID,
-                                             const char *ptxCode);
+  OWL_LL_INTERFACE
+  LLOResult lloAllocModules(LLOContext llo,
+                            int        numModules);
+  
+  OWL_LL_INTERFACE
+  LLOResult lloModuleCreate(LLOContext  llo,
+                            int32_t     moduleID,
+                            const char *ptxCode);
 
   /*! (re-)builds the modules that have been set via
    *  lloModuleCreate */
-  OWL_LL_INTERFACE LLOResult lloBuildModules(LLOContext llo);
+  OWL_LL_INTERFACE
+  LLOResult lloBuildModules(LLOContext llo);
+  
+
+  OWL_LL_INTERFACE
+  LLOResult lloAllocRayGens(LLOContext llo,
+                            int32_t    rayGenProgCount);
+  
+  OWL_LL_INTERFACE
+  LLOResult lloRayGenCreate(LLOContext  llo,
+                            /*! ID of ray gen prog to create */
+                            int32_t     programID,
+                            /*! ID of module in which to look for that program */
+                            int32_t     moduleID,
+                            /*! name of the program */
+                            const char *programName,
+                            /*! size of that program's SBT data */
+                            size_t      dataSizeOfRayGen);
+  
+  OWL_LL_INTERFACE
+  LLOResult lloBuildPrograms(LLOContext llo);
+  
+  OWL_LL_INTERFACE
+  LLOResult lloCreatePipeline(LLOContext llo);
   
 #ifdef __cplusplus
 } // extern "C"

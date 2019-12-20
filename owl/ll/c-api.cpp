@@ -44,16 +44,17 @@ namespace owl {
     
 
 
-    extern "C" {
-      OWL_LL_INTERFACE LLOContext lloCreate(const int32_t *deviceIDs,
-                                            int32_t numDeviceIDs)
+    extern "C" OWL_LL_INTERFACE
+    LLOContext lloCreate(const int32_t *deviceIDs,
+                         int32_t numDeviceIDs)
     {
       DeviceGroup *dg = DeviceGroup::create(deviceIDs,numDeviceIDs);
       return (LLOContext)dg;
     }
 
-    OWL_LL_INTERFACE LLOResult lloAllocModules(LLOContext llo,
-                                               int numModules)
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloAllocModules(LLOContext llo,
+                              int numModules)
     {
       return squashExceptions
         ([&](){
@@ -61,10 +62,23 @@ namespace owl {
            dg->allocModules(numModules);
          });
     }
-  
-    OWL_LL_INTERFACE LLOResult lloModuleCreate(LLOContext llo,
-                                               int32_t moduleID,
-                                               const char *ptxCode)
+
+
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloAllocRayGens(LLOContext llo,
+                              int32_t    rayGenProgCount)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->allocRayGens(rayGenProgCount);
+         });
+    }
+    
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloModuleCreate(LLOContext llo,
+                              int32_t moduleID,
+                              const char *ptxCode)
     {
       return squashExceptions
         ([&](){
@@ -75,7 +89,8 @@ namespace owl {
 
     /*! (re-)builds the modules that have been set via
      *  lloModuleCreate */
-    OWL_LL_INTERFACE LLOResult lloBuildModules(LLOContext llo)
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloBuildModules(LLOContext llo)
     {
       return squashExceptions
         ([&](){
@@ -83,8 +98,44 @@ namespace owl {
            dg->buildModules();
          });
     }
+
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloRayGenCreate(LLOContext  llo,
+                              /*! ID of ray gen prog to create */
+                              int32_t     programID,
+                              /*! ID of module in which to look for that program */
+                              int32_t     moduleID,
+                              /*! name of the program */
+                              const char *programName,
+                              /*! size of that program's SBT data */
+                              size_t      dataSizeOfRayGen)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->setRayGen(programID,moduleID,programName,dataSizeOfRayGen);
+         });
+    }
   
-    } // extern C
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloBuildPrograms(LLOContext llo)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->buildPrograms();
+         });
+    }
+  
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloCreatePipeline(LLOContext llo)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->createPipeline();
+         });
+    }
     
   } // ::owl::ll
 } //::owl

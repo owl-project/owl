@@ -81,15 +81,23 @@ int main(int ac, char **av)
   // ll->buildModules();
   lloBuildModules(llo);
   
-#if 0
-  ll->allocRayGens(1);
-  ll->setRayGen(/*program ID*/0,
-                /*module:*/0,
-                "simpleRayGen",
-                sizeof(RayGenData));
-  ll->buildPrograms();
-  ll->createPipeline();
+  // ll->allocRayGens(1);
+  lloAllocRayGens(llo,1);
+  // ll->setRayGen(/*program ID*/0,
+  //               /*module:*/0,
+  //               "simpleRayGen",
+  //               sizeof(RayGenData));
+  lloRayGenCreate(llo,
+                  /*program ID*/0,
+                  /*module:*/0,
+                  "simpleRayGen",
+                  sizeof(RayGenData));
+  // ll->buildPrograms();
+  lloBuildPrograms(llo);
+  // ll->createPipeline();
+  lloCreatePipeline(llo);
 
+#if 0
   // ------------------------------------------------------------------
   // alloc buffers
   // ------------------------------------------------------------------
