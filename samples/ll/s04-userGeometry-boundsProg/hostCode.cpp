@@ -56,7 +56,7 @@ int main(int ac, char **av)
 {
   LOG("ll example '" << av[0] << "' starting up");
 
-  owl::ll::DeviceGroup::SP ll
+  owl::ll::DeviceGroup * ll
     = owl::ll::DeviceGroup::create();
 
   LOG("building pipeline ...");
@@ -66,7 +66,7 @@ int main(int ac, char **av)
   // set up all the *CODE* we want to run
   // ##################################################################
   ll->allocModules(1);
-  ll->setModule(0,ptxCode);
+  ll->moduleCreate(0,ptxCode);
   ll->buildModules();
   
   enum { SPHERE_GEOM_TYPE=0,NUM_GEOM_TYPES };
@@ -111,7 +111,7 @@ int main(int ac, char **av)
   enum { FRAME_BUFFER=0,
          NUM_BUFFERS };
   ll->allocBuffers(NUM_BUFFERS);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom

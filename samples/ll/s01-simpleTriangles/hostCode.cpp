@@ -68,7 +68,7 @@ int main(int ac, char **av)
 {
   LOG("ll example '" << av[0] << "' starting up");
 
-  // owl::ll::DeviceGroup::SP ll
+  // owl::ll::DeviceGroup * ll
   //   = owl::ll::DeviceGroup::create();
   LLOContext llo = lloContextCreate(nullptr,0);
 
@@ -133,11 +133,11 @@ int main(int ac, char **av)
   enum { VERTEX_BUFFER=0,INDEX_BUFFER,FRAME_BUFFER,NUM_BUFFERS };
   // ll->allocBuffers(NUM_BUFFERS);
   lloAllocBuffers(llo,NUM_BUFFERS);
-  // ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
+  // ll->deviceBufferCreate(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
   lloDeviceBufferCreate(llo,VERTEX_BUFFER,NUM_VERTICES*sizeof(vec3f),vertices);
-  // ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
+  // ll->deviceBufferCreate(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
   lloDeviceBufferCreate(llo,INDEX_BUFFER,NUM_INDICES*sizeof(vec3i),indices);
-  // ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  // ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
   lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y*sizeof(uint32_t));
   
   // ------------------------------------------------------------------

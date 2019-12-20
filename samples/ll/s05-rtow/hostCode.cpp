@@ -98,7 +98,7 @@ int main(int ac, char **av)
   LOG_OK(" num metal spheres     : " << metalSpheres.size());
   
   
-  owl::ll::DeviceGroup::SP ll
+  owl::ll::DeviceGroup * ll
     = owl::ll::DeviceGroup::create();
 
   LOG("building pipeline ...");
@@ -108,7 +108,7 @@ int main(int ac, char **av)
   // set up all the *CODE* we want to run
   // ##################################################################
   ll->allocModules(1);
-  ll->setModule(0,ptxCode);
+  ll->moduleCreate(0,ptxCode);
   ll->buildModules();
   
   enum { METAL_SPHERES_TYPE=0,
@@ -187,7 +187,7 @@ int main(int ac, char **av)
          METAL_SPHERES_BUFFER,
          NUM_BUFFERS };
   ll->allocBuffers(NUM_BUFFERS);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
@@ -200,21 +200,21 @@ int main(int ac, char **av)
   ll->userGeomCreate(/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
                      /* type/PG ID */LAMBERTIAN_SPHERES_TYPE,
                      /* numprims   */lambertianSpheres.size());
-  ll->createDeviceBuffer(LAMBERTIAN_SPHERES_BUFFER,
+  ll->deviceBufferCreate(LAMBERTIAN_SPHERES_BUFFER,
                          lambertianSpheres.size(),
                          sizeof(lambertianSpheres[0]),
                          lambertianSpheres.data());
   ll->userGeomCreate(/* geom ID    */DIELECTRIC_SPHERES_GEOM,
                      /* type/PG ID */DIELECTRIC_SPHERES_TYPE,
                      /* numprims   */dielectricSpheres.size());
-  ll->createDeviceBuffer(DIELECTRIC_SPHERES_BUFFER,
+  ll->deviceBufferCreate(DIELECTRIC_SPHERES_BUFFER,
                          dielectricSpheres.size(),
                          sizeof(dielectricSpheres[0]),
                          dielectricSpheres.data());
   ll->userGeomCreate(/* geom ID    */METAL_SPHERES_GEOM,
                      /* type/PG ID */METAL_SPHERES_TYPE,
                      /* numprims   */metalSpheres.size());
-  ll->createDeviceBuffer(METAL_SPHERES_BUFFER,
+  ll->deviceBufferCreate(METAL_SPHERES_BUFFER,
                          metalSpheres.size(),
                          sizeof(metalSpheres[0]),
                          metalSpheres.data());

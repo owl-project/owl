@@ -113,7 +113,7 @@ int main(int ac, char **av)
          BOUNDS_BUFFER_111,
          NUM_BUFFERS };
   ll->allocBuffers(NUM_BUFFERS);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
@@ -126,7 +126,7 @@ int main(int ac, char **av)
     box3f sphereBounds = box3f()
       .extend(sphereCenters[i]-sphereRadius)
       .extend(sphereCenters[i]+sphereRadius);
-    ll->createDeviceBuffer(BOUNDS_BUFFER_000+i,1,sizeof(box3f),
+    ll->deviceBufferCreate(BOUNDS_BUFFER_000+i,1,sizeof(box3f),
                      &sphereBounds);
     ll->userGeomSetBoundsBuffer(i,BOUNDS_BUFFER_000+i);
   }

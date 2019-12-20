@@ -161,7 +161,7 @@ int main(int ac, char **av)
     std::vector<vec3f> vertices;
     for (auto v : unitVertices)
       vertices.push_back(1.5f*v+delta);
-    // ll->createDeviceBuffer(VERTEX_BUFFER_000+i,NUM_VERTICES,
+    // ll->deviceBufferCreate(VERTEX_BUFFER_000+i,NUM_VERTICES,
     //                        sizeof(vec3f),vertices.data());
     lloDeviceBufferCreate(llo,VERTEX_BUFFER_000+i,
                           NUM_VERTICES*sizeof(vec3f),vertices.data());

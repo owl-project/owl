@@ -44,7 +44,7 @@ int main(int ac, char **av)
 {
   LOG("ll example '" << av[0] << "' starting up");
 
-  // owl::ll::DeviceGroup::SP ll
+  // owl::ll::DeviceGroup * ll
   //   = owl::ll::DeviceGroup::create();
   LLOContext llo = lloContextCreate(nullptr,0);
   
@@ -74,7 +74,7 @@ int main(int ac, char **av)
   enum { FRAME_BUFFER=0,NUM_BUFFERS };
   // ll->allocBuffers(NUM_BUFFERS);
   lloAllocBuffers(llo,NUM_BUFFERS);
-  // ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  // ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
   lloHostPinnedBufferCreate(llo,
                             /* buffer ID */FRAME_BUFFER,
                             /* #bytes    */fbSize.x*fbSize.y*sizeof(uint32_t));

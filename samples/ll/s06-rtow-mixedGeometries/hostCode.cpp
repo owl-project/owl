@@ -187,7 +187,7 @@ int main(int ac, char **av)
   LOG_OK(" num metal spheres     : " << metalSpheres.size());
   
   
-  owl::ll::DeviceGroup::SP ll
+  owl::ll::DeviceGroup * ll
     = owl::ll::DeviceGroup::create();
 
   LOG("building pipeline ...");
@@ -197,7 +197,7 @@ int main(int ac, char **av)
   // set up all the *CODE* we want to run
   // ##################################################################
   ll->allocModules(1);
-  ll->setModule(0,ptxCode);
+  ll->moduleCreate(0,ptxCode);
   ll->buildModules();
   
   enum { METAL_SPHERES_TYPE=0,
@@ -314,7 +314,7 @@ int main(int ac, char **av)
 
          NUM_BUFFERS };
   ll->allocBuffers(NUM_BUFFERS);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
@@ -332,21 +332,21 @@ int main(int ac, char **av)
   ll->userGeomCreate(/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
                      /* type/PG ID */LAMBERTIAN_SPHERES_TYPE,
                      /* numprims   */lambertianSpheres.size());
-  ll->createDeviceBuffer(LAMBERTIAN_SPHERES_BUFFER,
+  ll->deviceBufferCreate(LAMBERTIAN_SPHERES_BUFFER,
                          lambertianSpheres.size(),
                          sizeof(lambertianSpheres[0]),
                          lambertianSpheres.data());
   ll->userGeomCreate(/* geom ID    */DIELECTRIC_SPHERES_GEOM,
                      /* type/PG ID */DIELECTRIC_SPHERES_TYPE,
                      /* numprims   */dielectricSpheres.size());
-  ll->createDeviceBuffer(DIELECTRIC_SPHERES_BUFFER,
+  ll->deviceBufferCreate(DIELECTRIC_SPHERES_BUFFER,
                          dielectricSpheres.size(),
                          sizeof(dielectricSpheres[0]),
                          dielectricSpheres.data());
   ll->userGeomCreate(/* geom ID    */METAL_SPHERES_GEOM,
                      /* type/PG ID */METAL_SPHERES_TYPE,
                      /* numprims   */metalSpheres.size());
-  ll->createDeviceBuffer(METAL_SPHERES_BUFFER,
+  ll->deviceBufferCreate(METAL_SPHERES_BUFFER,
                          metalSpheres.size(),
                          sizeof(metalSpheres[0]),
                          metalSpheres.data());
@@ -361,43 +361,43 @@ int main(int ac, char **av)
 
   // indices
   LOG("creating index buffers");
-  ll->createDeviceBuffer(LAMBERTIAN_BOXES_INDEX_BUFFER,
+  ll->deviceBufferCreate(LAMBERTIAN_BOXES_INDEX_BUFFER,
                          lambertianBoxes.indices.size(),
                          sizeof(lambertianBoxes.indices[0]),
                          lambertianBoxes.indices.data());
-  ll->createDeviceBuffer(DIELECTRIC_BOXES_INDEX_BUFFER,
+  ll->deviceBufferCreate(DIELECTRIC_BOXES_INDEX_BUFFER,
                          dielectricBoxes.indices.size(),
                          sizeof(dielectricBoxes.indices[0]),
                          dielectricBoxes.indices.data());
-  ll->createDeviceBuffer(METAL_BOXES_INDEX_BUFFER,
+  ll->deviceBufferCreate(METAL_BOXES_INDEX_BUFFER,
                          metalBoxes.indices.size(),
                          sizeof(metalBoxes.indices[0]),
                          metalBoxes.indices.data());
   // vertices
   LOG("creating vertex buffers");
-  ll->createDeviceBuffer(LAMBERTIAN_BOXES_VERTEX_BUFFER,
+  ll->deviceBufferCreate(LAMBERTIAN_BOXES_VERTEX_BUFFER,
                          lambertianBoxes.vertices.size(),
                          sizeof(lambertianBoxes.vertices[0]),
                          lambertianBoxes.vertices.data());
-  ll->createDeviceBuffer(DIELECTRIC_BOXES_VERTEX_BUFFER,
+  ll->deviceBufferCreate(DIELECTRIC_BOXES_VERTEX_BUFFER,
                          dielectricBoxes.vertices.size(),
                          sizeof(dielectricBoxes.vertices[0]),
                          dielectricBoxes.vertices.data());
-  ll->createDeviceBuffer(METAL_BOXES_VERTEX_BUFFER,
+  ll->deviceBufferCreate(METAL_BOXES_VERTEX_BUFFER,
                          metalBoxes.vertices.size(),
                          sizeof(metalBoxes.vertices[0]),
                          metalBoxes.vertices.data());
   // materials
   LOG("creating box material buffers");
-  ll->createDeviceBuffer(LAMBERTIAN_BOXES_MATERIAL_BUFFER,
+  ll->deviceBufferCreate(LAMBERTIAN_BOXES_MATERIAL_BUFFER,
                          lambertianBoxes.materials.size(),
                          sizeof(lambertianBoxes.materials[0]),
                          lambertianBoxes.materials.data());
-  ll->createDeviceBuffer(DIELECTRIC_BOXES_MATERIAL_BUFFER,
+  ll->deviceBufferCreate(DIELECTRIC_BOXES_MATERIAL_BUFFER,
                          dielectricBoxes.materials.size(),
                          sizeof(dielectricBoxes.materials[0]),
                          dielectricBoxes.materials.data());
-  ll->createDeviceBuffer(METAL_BOXES_MATERIAL_BUFFER,
+  ll->deviceBufferCreate(METAL_BOXES_MATERIAL_BUFFER,
                          metalBoxes.materials.size(),
                          sizeof(metalBoxes.materials[0]),
                          metalBoxes.materials.data());

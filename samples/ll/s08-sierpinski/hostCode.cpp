@@ -69,7 +69,7 @@ int main(int ac, char **av)
       throw std::runtime_error("unknown cmdline argument '"+arg+"'");
   }
   
-  owl::ll::DeviceGroup::SP ll
+  owl::ll::DeviceGroup * ll
     = owl::ll::DeviceGroup::create();
 
   if (numLevels < 1)
@@ -82,7 +82,7 @@ int main(int ac, char **av)
   // set up all the *CODE* we want to run
   // ##################################################################
   ll->allocModules(1);
-  ll->setModule(0,ptxCode);
+  ll->moduleCreate(0,ptxCode);
   ll->buildModules();
   
   enum { PYRAMID_GEOM_TYPE=0,NUM_GEOM_TYPES };
@@ -127,13 +127,13 @@ int main(int ac, char **av)
          FRAME_BUFFER,
          NUM_BUFFERS };
   ll->allocBuffers(NUM_BUFFERS);
-  ll->createDeviceBuffer(LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,
+  ll->deviceBufferCreate(LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,
                          lambertianPyramids.size(),
                          sizeof(lambertianPyramids[0]),
                          lambertianPyramids.data());
-  ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
-  ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  ll->deviceBufferCreate(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
+  ll->deviceBufferCreate(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
+  ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
   
   // ------------------------------------------------------------------
   // alloc geom
