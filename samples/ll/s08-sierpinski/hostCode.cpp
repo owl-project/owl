@@ -74,7 +74,7 @@ int main(int ac, char **av)
     throw std::runtime_error("num levels must be 1 or greater");
   
   LLOContext llo = lloContextCreate(nullptr,0);
-  ll->setMaxInstancingDepth(numLevels);
+  lloSetMaxInstancingDepth(llo,numLevels);
   
 
   // ##################################################################
@@ -128,12 +128,12 @@ int main(int ac, char **av)
          NUM_BUFFERS };
   lloAllocBuffers(llo,NUM_BUFFERS);
   lloDeviceBufferCreate(llo,LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,
-                         lambertianPyramids.size(),
-                         sizeof(lambertianPyramids[0]),
-                         lambertianPyramids.data());
-  lloDeviceBufferCreate(llo,VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
-  lloDeviceBufferCreate(llo,INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
-  lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+                        lambertianPyramids.size()
+                        *sizeof(lambertianPyramids[0]),
+                        lambertianPyramids.data());
+  lloDeviceBufferCreate(llo,VERTEX_BUFFER,NUM_VERTICES*sizeof(vec3f),vertices);
+  lloDeviceBufferCreate(llo,INDEX_BUFFER,NUM_INDICES*sizeof(vec3i),indices);
+  lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y*sizeof(uint32_t));
   
   // ------------------------------------------------------------------
   // alloc geom
@@ -189,11 +189,11 @@ int main(int ac, char **av)
     = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))    
     * owl::affine3f::translate(owl::vec3f(0.0f, 0.0, +.5f));
     
-    lloInstanceGroupSetTransform(llo,parent_level,0,a);
-    lloInstanceGroupSetTransform(llo,parent_level,1,b);
-    lloInstanceGroupSetTransform(llo,parent_level,2,c);
-    lloInstanceGroupSetTransform(llo,parent_level,3,d);
-    lloInstanceGroupSetTransform(llo,parent_level,4,e);
+    lloInstanceGroupSetTransform(llo,parent_level,0,(const float *)&a);
+    lloInstanceGroupSetTransform(llo,parent_level,1,(const float *)&b);
+    lloInstanceGroupSetTransform(llo,parent_level,2,(const float *)&c);
+    lloInstanceGroupSetTransform(llo,parent_level,3,(const float *)&d);
+    lloInstanceGroupSetTransform(llo,parent_level,4,(const float *)&e);
     lloGroupAccelBuild(llo,parent_level);
   };
 

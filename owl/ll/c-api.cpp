@@ -641,6 +641,17 @@ namespace owl {
         });
     }
     
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloSetMaxInstancingDepth(LLOContext llo,
+                                       int32_t maxInstanceDepth)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->setMaxInstancingDepth(maxInstanceDepth);
+        });
+    }
+  
 
   } // ::owl::ll
 } //::owl

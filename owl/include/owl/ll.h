@@ -163,6 +163,10 @@ extern "C" {
                         int32_t launchDimY);
   
   OWL_LL_INTERFACE
+  LLOResult lloSetMaxInstancingDepth(LLOContext llo,
+                                     int32_t maxInstanceDepth);
+  
+  OWL_LL_INTERFACE
   LLOResult lloAllocBuffers(LLOContext llo,
                             /*! number of buffers valid after this
                              *  function call */
