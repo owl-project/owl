@@ -162,6 +162,23 @@ namespace owl {
     }
 
     extern "C" OWL_LL_INTERFACE
+    LLOResult lloGeomTypeIntersect(LLOContext llo,
+                                   int32_t geomTypeID,
+                                   int32_t rayTypeID,
+                                   int32_t moduleID,
+                                   const char *programName)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->setGeomTypeIntersect(geomTypeID,
+                                   rayTypeID,
+                                   moduleID,
+                                   programName);
+        });
+    }
+    
+    extern "C" OWL_LL_INTERFACE
     LLOResult lloTrianglesGeomCreate(LLOContext llo,
                                      /*! ID of the geometry to create */
                                      int32_t    geomID,
@@ -175,6 +192,26 @@ namespace owl {
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
           dg->trianglesGeomCreate(geomID,geomTypeID);
+        });
+    }
+    
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloUserGeomCreate(LLOContext llo,
+                                /*! ID of the geometry to create */
+                                int32_t    geomID,
+                                /*! ID of the geometry *type* to
+                                  use for this geometry (this is
+                                  what defines the SBT data size,
+                                  closest hit program, etc */
+                                int32_t    geomTypeID,
+                                int32_t    numPrims)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->userGeomCreate(geomID,
+                             geomTypeID,
+                             numPrims);
         });
     }
     
@@ -253,7 +290,38 @@ namespace owl {
         });
     }
 
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloUserGeomGroupCreate(LLOContext llo,
+                                          int32_t        groupID,
+                                          const int32_t *geomIDs,
+                                          int32_t        numGeomIDs)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->userGeomGroupCreate(groupID,geomIDs,numGeomIDs);
+        });
+    }
 
+    /*! set a buffer of bounding boxes that this user geometry will
+      use when building the accel structure. this is one of multiple
+      ways of specifying the bounding boxes for a user gometry (the
+      other two being a) setting the geometry type's boundsFunc, or b)
+      setting a host-callback fr computing the bounds). Only one of
+      the three methods can be set at any given time */
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloUserGeomSetBoundsBuffer(LLOContext llo,
+                                         int32_t geomID,
+                                         int32_t bufferID)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->userGeomSetBoundsBuffer(geomID,
+                                      bufferID);
+        });
+    }
+    
     extern "C" OWL_LL_INTERFACE
     LLOResult lloModuleCreate(LLOContext llo,
                               int32_t moduleID,
