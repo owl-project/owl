@@ -37,33 +37,33 @@ namespace owl {
     };
 
     typedef void
-    WriteUserGeomBoundsDataCB(uint8_t *userGeomDataToWrite,
-                              int deviceID,
-                              int geomID,
-                              int childID,
-                              const void *cbUserData);
+    (*WriteUserGeomBoundsDataCB)(uint8_t *userGeomDataToWrite,
+                                 int deviceID,
+                                 int geomID,
+                                 int childID,
+                                 const void *cbUserData);
     
     /*! callback with which the app can specify what data is to be
       written into the SBT for a given geometry, ray type, and
       device */
     typedef void
-    WriteHitProgDataCB(uint8_t *hitProgDataToWrite,
-                       /*! ID of the device we're
-                         writing for (differnet
-                         devices may need to write
-                         different pointers */
-                       int deviceID,
-                       /*! the geometry ID for which
-                         we're generating the SBT
-                         entry for */
-                       int geomID,
-                       /*! the ray type for which
-                         we're generating the SBT
-                         entry for */
-                       int rayType,
-                       /*! the raw void pointer the app has passed
-                         during sbtHitGroupsBuild() */
-                       const void *callBackUserData);
+    (*WriteHitProgDataCB)(uint8_t *hitProgDataToWrite,
+                          /*! ID of the device we're
+                            writing for (differnet
+                            devices may need to write
+                            different pointers */
+                          int deviceID,
+                          /*! the geometry ID for which
+                            we're generating the SBT
+                            entry for */
+                          int geomID,
+                          /*! the ray type for which
+                            we're generating the SBT
+                            entry for */
+                          int rayType,
+                          /*! the raw void pointer the app has passed
+                            during sbtHitGroupsBuild() */
+                          const void *callBackUserData);
 
     /*! callback with which the app can specify what data is to be
       written into the SBT for a given geometry, ray type, and
@@ -87,19 +87,19 @@ namespace owl {
       written into the SBT for a given geometry, ray type, and
       device */
     typedef void
-    WriteMissProgDataCB(uint8_t *missProgDataToWrite,
-                        /*! ID of the device we're
-                          writing for (differnet
-                          devices may need to write
-                          different pointers */
-                        int deviceID,
-                        /*! the ray type for which
-                          we're generating the SBT
-                          entry for */
-                        int rayType,
-                        /*! the raw void pointer the app has passed
-                          during sbtMissProgsBuildd() */
-                        const void *callBackUserData);
+    (*WriteMissProgDataCB)(uint8_t *missProgDataToWrite,
+                           /*! ID of the device we're
+                             writing for (differnet
+                             devices may need to write
+                             different pointers */
+                           int deviceID,
+                           /*! the ray type for which
+                             we're generating the SBT
+                             entry for */
+                           int rayType,
+                           /*! the raw void pointer the app has passed
+                             during sbtMissProgsBuildd() */
+                           const void *callBackUserData);
     
     struct Device;
     
@@ -108,19 +108,19 @@ namespace owl {
       ~DeviceGroup();
 
       /*! set the maximum instancing depth that will be allowed; '0'
-          means 'no instancing, only bottom level accels', '1' means
-          'only one singel level of instances' (ie, instancegroups
-          never have children that are themselves instance groups),
-          etc. 
+        means 'no instancing, only bottom level accels', '1' means
+        'only one singel level of instances' (ie, instancegroups
+        never have children that are themselves instance groups),
+        etc. 
 
-          Note we currently do *not* yet check the node graph as
-          to whether it adheres to this value - if you use a node
-          graph that's deeper than the value passed through this
-          function you will most likely see optix crashing on you (and
-          correctly so). See issue #1.
+        Note we currently do *not* yet check the node graph as
+        to whether it adheres to this value - if you use a node
+        graph that's deeper than the value passed through this
+        function you will most likely see optix crashing on you (and
+        correctly so). See issue #1.
 
-          Note this value will have to be set *before* the pipeline
-          gets created */
+        Note this value will have to be set *before* the pipeline
+        gets created */
       void setMaxInstancingDepth(int maxInstancingDepth);
       
       void allocModules(size_t count);
@@ -138,11 +138,11 @@ namespace owl {
                           size_t programDataSize);
                           
       /*! set bounding box program for given geometry type, using a
-          bounding box program to be called on the device. note that
-          unlike other programs (intersect, closesthit, anyhit) these
-          programs are not 'per ray type', but exist only once per
-          geometry type. obviously only allowed for user geometry
-          typed. */
+        bounding box program to be called on the device. note that
+        unlike other programs (intersect, closesthit, anyhit) these
+        programs are not 'per ray type', but exist only once per
+        geometry type. obviously only allowed for user geometry
+        typed. */
       void setGeomTypeBoundsProgDevice(int geomTypeID,
                                        int moduleID,
                                        const char *progName,
@@ -163,16 +163,16 @@ namespace owl {
                      size_t programDataSize);
 
       /*! specifies which miss program to run for a given miss prog
-          ID */
+        ID */
       void setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
                        int programID,
                        /*! ID of the module the program will be bound
-                           in, in [0..numAllocedModules) */
+                         in, in [0..numAllocedModules) */
                        int moduleID,
                        /*! name of the program. Note we do not NOT
-                           create a copy of this string, so the string
-                           has to remain valid for the duration of the
-                           program */
+                         create a copy of this string, so the string
+                         has to remain valid for the duration of the
+                         program */
                        const char *progName,
                        /*! size of that miss program's SBT data */
                        size_t missProgDataSize);
@@ -212,13 +212,13 @@ namespace owl {
                           int numPrims);
 
       /*! create a new group object (with an associated BVH) over
-          triangle geometries. All geomIDs in this group must be
-          valid, and must refer to geometries of type TrianglesGeom.
+        triangle geometries. All geomIDs in this group must be
+        valid, and must refer to geometries of type TrianglesGeom.
           
-          BVH does not get built until groupBuildAccel()
+        BVH does not get built until groupBuildAccel()
 
-          \todo geomIDs may be null, in which case child geomeries may
-          be set using geomGroupSetChild()
+        \todo geomIDs may be null, in which case child geomeries may
+        be set using geomGroupSetChild()
       */
       void trianglesGeomGroupCreate(int groupID,
                                     const int *geomIDs,
@@ -237,8 +237,8 @@ namespace owl {
                                /*! number of children in this group */
                                int childCount);
       /*! set given child's instance transform. groupID must be a
-          valid instance group, childID must be wihtin
-          [0..numChildren) */
+        valid instance group, childID must be wihtin
+        [0..numChildren) */
       void instanceGroupSetTransform(int groupID,
                                      int childNo,
                                      const affine3f &xfm);
@@ -258,11 +258,11 @@ namespace owl {
       }
 
       /*! destroy the given buffer, and release all host and/or device
-          memory associated with it */
+        memory associated with it */
       void bufferDestroy(int bufferID);
       
       /*! create a new device buffer - this buffer type will be
-          allocated on each device */
+        allocated on each device */
       void deviceBufferCreate(int bufferID,
                               size_t elementCount,
                               size_t elementSize,
@@ -281,16 +281,16 @@ namespace owl {
                                   size_t elementSize);
       
       /*! returns the given device's buffer address on the specified
-          device */
+        device */
       void *bufferGetPointer(int bufferID, int devID);
       
       /*! set a buffer of bounding boxes that this user geometry will
-          use when building the accel structure. this is one of
-          multiple ways of specifying the bounding boxes for a user
-          gometry (the other two being a) setting the geometry type's
-          boundsFunc, or b) setting a host-callback fr computing the
-          bounds). Only one of the three methods can be set at any
-          given time */
+        use when building the accel structure. this is one of
+        multiple ways of specifying the bounding boxes for a user
+        gometry (the other two being a) setting the geometry type's
+        boundsFunc, or b) setting a host-callback fr computing the
+        bounds). Only one of the three methods can be set at any
+        given time */
       void userGeomSetBoundsBuffer(int geomID, int bufferID);
 
       void trianglesGeomSetVertexBuffer(int geomID,
@@ -344,12 +344,12 @@ namespace owl {
       {
         this->sbtHitProgsBuild([](uint8_t *output,
                                   int devID,
-                                 int geomID,
-                                 int childID,
-                                 const void *cbData) {
-                                const Lambda *lambda = (const Lambda *)cbData;
-                                (*lambda)(output,devID,geomID,childID);
-                              },(const void *)&l);
+                                  int geomID,
+                                  int childID,
+                                  const void *cbData) {
+                                 const Lambda *lambda = (const Lambda *)cbData;
+                                 (*lambda)(output,devID,geomID,childID);
+                               },(const void *)&l);
       }
 
       template<typename Lambda>

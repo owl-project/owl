@@ -115,13 +115,6 @@ int main(int ac, char **av)
                     /*module:*/0,
                     "miss",
                     sizeof(MissProgData));
-  
-  lloAllocMissProgs(llo,1);
-  lloMissProgCreate(llo,
-                    /*program ID*/0,
-                    /*module:*/0,
-                    "miss",
-                    sizeof(MissProgData));
 
   // ll->buildPrograms();
   // ll->createPipeline();
@@ -189,7 +182,7 @@ int main(int ac, char **av)
                               /* geoms in group, pointer */ geomsInGroup,
                               /* geoms in group, count   */ 1);
   // ll->groupBuildAccel(TRIANGLES_GROUP);
-  lloGroupBuildAccel(llo,TRIANGLES_GROUP);
+  lloGroupAccelBuild(llo,TRIANGLES_GROUP);
 
   // ##################################################################
   // build *SBT* required to trace the groups

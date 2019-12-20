@@ -307,15 +307,13 @@ extern "C" {
   
   OWL_LL_INTERFACE
   LLOResult lloTrianglesGeomCreate(LLOContext llo,
-                                   int32_t    groupID,
-                                   /*! the "logical" hit group ID:
-                                     will always count 0,1,2... evne
-                                     if we are using multiple ray
-                                     types; the actual hit group
-                                     used when building the SBT will
-                                     then be 'geomTypeID *
-                                     rayTypeCount) */
-                                   int geomTypeID);
+                                   /*! ID of the geometry to create */
+                                   int32_t    geomID,
+                                   /*! ID of the geometry *type* to
+                                       use for this geometry (this is
+                                       what defines the SBT data size,
+                                       closest hit program, etc */
+                                   int32_t    geomTypeID);
   
   OWL_LL_INTERFACE
   LLOResult lloTrianglesGeomGroupCreate(LLOContext     llo,
@@ -324,7 +322,7 @@ extern "C" {
                                         int32_t        numGeomIDs);
   
   OWL_LL_INTERFACE
-  LLOResult lloGroupBuildAccel(LLOContext llo,
+  LLOResult lloGroupAccelBuild(LLOContext llo,
                                int32_t    groupID);
   
   OWL_LL_INTERFACE
