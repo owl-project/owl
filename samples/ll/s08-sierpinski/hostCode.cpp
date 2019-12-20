@@ -70,19 +70,17 @@ int main(int ac, char **av)
     else
       throw std::runtime_error("unknown cmdline argument '"+arg+"'");
   }
-  
-  owl::ll::DeviceGroup * ll
-    = owl::ll::DeviceGroup::create();
-
   if (numLevels < 1)
     throw std::runtime_error("num levels must be 1 or greater");
+  
+  LLOContext llo = lloContextCreate(nullptr,0);
   ll->setMaxInstancingDepth(numLevels);
   
-  LOG("building pipeline ...");
 
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
+  LOG("building pipeline ...");
   ll->allocModules(1);
   ll->moduleCreate(0,ptxCode);
   ll->buildModules();

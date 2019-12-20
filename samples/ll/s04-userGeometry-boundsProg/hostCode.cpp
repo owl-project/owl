@@ -56,15 +56,12 @@ int main(int ac, char **av)
 {
   LOG("ll example '" << av[0] << "' starting up");
 
-  owl::ll::DeviceGroup * ll
-    = owl::ll::DeviceGroup::create();
-
-  LOG("building pipeline ...");
-  std::cout << GDT_TERMINAL_DEFAULT;
+  LLOContext llo = lloContextCreate(nullptr,0);
 
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
+  LOG("building pipeline ...");
   ll->allocModules(1);
   ll->moduleCreate(0,ptxCode);
   ll->buildModules();

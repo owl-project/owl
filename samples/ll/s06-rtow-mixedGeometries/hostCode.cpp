@@ -186,16 +186,12 @@ int main(int ac, char **av)
   LOG_OK(" num dielectric spheres: " << dielectricSpheres.size());
   LOG_OK(" num metal spheres     : " << metalSpheres.size());
   
-  
-  owl::ll::DeviceGroup * ll
-    = owl::ll::DeviceGroup::create();
-
-  LOG("building pipeline ...");
-  std::cout << GDT_TERMINAL_DEFAULT;
+  LLOContext llo = lloContextCreate(nullptr,0);
 
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
+  LOG("building pipeline ...");
   ll->allocModules(1);
   ll->moduleCreate(0,ptxCode);
   ll->buildModules();
