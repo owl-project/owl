@@ -68,7 +68,7 @@ int main(int ac, char **av)
 
   // owl::ll::DeviceGroup::SP ll
   //   = owl::ll::DeviceGroup::create();
-  LLOContext llo = lloCreate(nullptr,0);
+  LLOContext llo = lloContextCreate(nullptr,0);
   
   LOG("building module, programs, and pipeline");
   // ##################################################################
@@ -130,17 +130,18 @@ int main(int ac, char **av)
          });
   LOG_OK("everything set up ...");
 
-#if 0
   // ##################################################################
   // now that everything is readly: launch it ....
   // ##################################################################
   
   LOG("executing the launch ...");
-  ll->launch(0,fbSize);
+  // ll->launch(0,fbSize);
+  lloLaunch2D(llo,0,fbSize.x,fbSize.y);
   
   LOG("done with launch, writing frame buffer to " << outFileName);
   // for host pinned mem it doesn't matter which device we query...
-  const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  // const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);
@@ -150,8 +151,8 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("destroying devicegroup ...");
-  owl::ll::DeviceGroup::destroy(ll);
+  // owl::ll::DeviceGroup::destroy(ll);
+  lloContextDestroy(llo);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
-#endif
 }

@@ -54,11 +54,35 @@ namespace owl {
 
 
     extern "C" OWL_LL_INTERFACE
-    LLOContext lloCreate(const int32_t *deviceIDs,
-                         int32_t numDeviceIDs)
+    LLOContext lloContextCreate(const int32_t *deviceIDs,
+                                int32_t        numDeviceIDs)
     {
       DeviceGroup *dg = DeviceGroup::create(deviceIDs,numDeviceIDs);
       return (LLOContext)dg;
+    }
+
+      
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloContextDestroy(LLOContext llo)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           DeviceGroup::destroy(dg);
+         });
+    }
+
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloLaunch2D(LLOContext llo,
+                          int32_t rayGenID,
+                          int32_t launchDimX,
+                          int32_t launchDimY)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->launch(rayGenID,vec2i(launchDimX,launchDimY));
+         });
     }
 
     extern "C" OWL_LL_INTERFACE

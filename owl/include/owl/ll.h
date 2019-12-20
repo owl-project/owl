@@ -144,9 +144,17 @@ extern "C" {
    *  value is null, and lloGetLastErrorText should contain an error
    *  message. */
   OWL_LL_INTERFACE
-  LLOContext lloCreate(const int32_t *deviceIDs = nullptr,
-                       int32_t        numDeviceIDs     = 0);
+  LLOContext lloContextCreate(const int32_t *deviceIDs = nullptr,
+                              int32_t        numDeviceIDs     = 0);
   
+  OWL_LL_INTERFACE
+  LLOResult lloContextDestroy(LLOContext llo);
+  
+  OWL_LL_INTERFACE
+  LLOResult lloLaunch2D(LLOContext llo,
+                        int32_t rayGenID,
+                        int32_t launchDimX,
+                        int32_t launchDimY);
   
   OWL_LL_INTERFACE
   LLOResult lloAllocModules(LLOContext llo,
