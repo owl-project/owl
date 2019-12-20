@@ -19,6 +19,8 @@ include_directories(${PROJECT_SOURCE_DIR}/)
 set(OWL_LL_SOURCES
   common.h
 
+  c-api.cpp
+  
   Device.h
   Device.cpp
 
@@ -30,24 +32,24 @@ set(OWL_LL_SOURCES
   DeviceGroup.cpp
   )
 
-add_library(owl-ll-static STATIC
+add_library(llowl-static STATIC
   ${OWL_LL_SOURCES}
   )
-target_link_libraries(owl-ll-static
+target_link_libraries(llowl-static
   ${CUDA_LIBRARIES}
   ${CUDA_CUDA_LIBRARY}
   )
 
-add_library(owl-ll SHARED
+add_library(llowl SHARED
   ${OWL_LL_SOURCES}
   )
-target_link_libraries(owl-ll
+target_link_libraries(llowl
   ${CUDA_LIBRARIES}
   ${CUDA_CUDA_LIBRARY}
   )
-set_target_properties(owl-ll PROPERTIES VERSION ${PROJECT_VERSION})
-set_target_properties(owl-ll PROPERTIES CXX_VISIBILITY_PRESET hidden)
-target_compile_definitions(owl-ll PUBLIC PBRT_PARSER_DLL_INTERFACE)
+set_target_properties(llowl PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(llowl PROPERTIES CXX_VISIBILITY_PRESET hidden)
+target_compile_definitions(llowl PUBLIC LLOWL_INTERFACE)
 
 
 

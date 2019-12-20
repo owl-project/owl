@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/DeviceGroup.h"
+#include "owl/ll.h"
 #include "deviceCode.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -66,17 +66,22 @@ int main(int ac, char **av)
 {
   LOG("ll example '" << av[0] << "' starting up");
 
-  owl::ll::DeviceGroup::SP ll
-    = owl::ll::DeviceGroup::create();
-
-  LOG("building module, programs, and pipeline")
+  // owl::ll::DeviceGroup::SP ll
+  //   = owl::ll::DeviceGroup::create();
+  LLOContext llo = lloCreate(nullptr,0);
+  
+  LOG("building module, programs, and pipeline");
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
-  ll->allocModules(1);
-  ll->setModule(0,ptxCode);
-  ll->buildModules();
+  // ll->allocModules(1);
+  lloAllocModules(llo,1);
+  // ll->setModule(0,ptxCode);
+  lloModuleCreate(llo,0,ptxCode);
+  // ll->buildModules();
+  lloBuildModules(llo);
   
+#if 0
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
                 /*module:*/0,
@@ -134,4 +139,5 @@ int main(int ac, char **av)
   owl::ll::DeviceGroup::destroy(ll);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
+#endif
 }

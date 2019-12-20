@@ -463,13 +463,13 @@ namespace owl {
     
     /* create an instance of this object that has properly
        initialized devices */
-    DeviceGroup::SP DeviceGroup::create(const int *deviceIDs,
-                                        size_t     numDevices)
+    DeviceGroup *DeviceGroup::create(const int *deviceIDs,
+                                     size_t     numDevices)
     {
       assert((deviceIDs == nullptr && numDevices == 0)
              ||
              (deviceIDs != nullptr && numDevices > 0));
-
+      
       // ------------------------------------------------------------------
       // init cuda, and error-out if no cuda devices exist
       // ------------------------------------------------------------------
@@ -526,7 +526,7 @@ namespace owl {
         throw std::runtime_error("fatal error - could not find/create any optix devices");
 
       LOG_OK("successfully created device group with " << devices.size() << " devices");
-      return std::make_shared<DeviceGroup>(devices);
+      return new DeviceGroup(devices);
     }
 
   } // ::owl::ll

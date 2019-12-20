@@ -17,6 +17,8 @@
 include_directories(${PROJECT_SOURCE_DIR}/)
 # for STB image read/write
 include_directories(${PROJECT_SOURCE_DIR}/common/3rdParty)
+# public API:
+include_directories(${PROJECT_SOURCE_DIR}/owl/include/)
 
 # low-level interface
 add_subdirectory(ll)

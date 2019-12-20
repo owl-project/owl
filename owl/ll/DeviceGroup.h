@@ -104,8 +104,6 @@ namespace owl {
     struct Device;
     
     struct DeviceGroup {
-      typedef std::shared_ptr<DeviceGroup> SP;
-
       DeviceGroup(const std::vector<Device *> &devices);
       ~DeviceGroup();
 
@@ -389,13 +387,10 @@ namespace owl {
 
       
       /* create an instance of this object that has properly
-         initialized devices for given cuda device IDs. Note this is
-         the only shared_ptr we use on that abstractoin level, but
-         here we use one to force a proper destruction of the
-         device */
-      static DeviceGroup::SP create(const int *deviceIDs  = nullptr,
-                                    size_t     numDevices = 0);
-      static void destroy(DeviceGroup::SP &ll) { ll = nullptr; }
+         initialized devices for given cuda device IDs. */
+      static DeviceGroup *create(const int *deviceIDs  = nullptr,
+                                 size_t     numDevices = 0);
+      static void destroy(DeviceGroup *&ll) { delete ll; ll = nullptr; }
 
       /*! accessor helpers that first checks the validity of the given
         device ID, then returns the given device */
@@ -403,7 +398,6 @@ namespace owl {
       
       const std::vector<Device *> devices;
     };
-    
 
   } // ::owl::ll
 } //::owl

@@ -39,14 +39,58 @@
 #endif
 
 #if defined(OWL_LL_DLL_INTERFACE)
-#  ifdef pbrtParser_EXPORTS
+#  ifdef llowl_EXPORTS
 #    define OWL_LL_INTERFACE OWL_LL_DLL_EXPORT
 #  else
 #    define OWL_LL_INTERFACE OWL_LL_DLL_IMPORT
 #  endif
 #else
-#  define OWL_LL_INTERFACE /*static lib*/
+#  define OWL_LL_INTERFACE __attribute__ ((visibility ("default")))
 #endif
 
 #include <iostream>
 #include <math.h> // using cmath causes issues under Windows
+#include <unistd.h>
+#include <stdint.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  typedef struct _LLOContext *LLOContext;
+
+  typedef enum
+    {
+     /*! no error - api did what it was asked to do */
+     LLO_SUCCESS = 0,
+     /*! some un-specified error happened. use lloGetLastErrorString
+      *  to get a textual description */
+     LLO_UNKNOWN_ERROR
+    }
+    LLOResult;
+
+  /*! creates a new ll-owl device(group) context using the given CUDA
+   *  device IDs. An empty list of device IDs is synonymous with "use
+   *  all available device". If no context could be crated, the return
+   *  value is null, and lloGetLastErrorText should contain an error
+   *  message. */
+  OWL_LL_INTERFACE LLOContext lloCreate(const int32_t *deviceIDs = nullptr,
+                                        int32_t numDeviceIDs     = 0);
+
+  
+  OWL_LL_INTERFACE LLOResult lloAllocModules(LLOContext llo,
+                                             int numModules);
+  
+  OWL_LL_INTERFACE LLOResult lloModuleCreate(LLOContext llo,
+                                             int32_t moduleID,
+                                             const char *ptxCode);
+
+  /*! (re-)builds the modules that have been set via
+   *  lloModuleCreate */
+  OWL_LL_INTERFACE LLOResult lloBuildModules(LLOContext llo);
+  
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
