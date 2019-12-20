@@ -184,7 +184,7 @@ namespace owl {
       return squashExceptions
         ([&](){
            DeviceGroup *dg = (DeviceGroup *)llo;
-           dg->sbtRayGensBuild((WriteRayGenDataCB)writeRayGenDataCB,
+           dg->sbtRayGensBuild(owl::ll::WriteRayGenDataCB(writeRayGenDataCB),
                                callbackData);
          });
     }

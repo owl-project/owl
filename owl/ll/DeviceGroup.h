@@ -69,19 +69,19 @@ namespace owl {
       written into the SBT for a given geometry, ray type, and
       device */
     typedef void
-    WriteRayGenDataCB(uint8_t *rayGenDataToWrite,
-                      /*! ID of the device we're
-                        writing for (differnet
-                        devices may need to write
-                        different pointers */
-                      int deviceID,
-                      /*! the geometry ID for which
-                        we're generating the SBT
-                        entry for */
-                      int rayGenID,
-                      /*! the raw void pointer the app has passed
-                        during sbtGeomTypesBuild() */
-                      const void *callBackUserData);
+    (*WriteRayGenDataCB)(uint8_t *rayGenDataToWrite,
+                         /*! ID of the device we're
+                           writing for (differnet
+                           devices may need to write
+                           different pointers */
+                         int deviceID,
+                         /*! the geometry ID for which
+                           we're generating the SBT
+                           entry for */
+                         int rayGenID,
+                         /*! the raw void pointer the app has passed
+                           during sbtGeomTypesBuild() */
+                         const void *callBackUserData);
     
     /*! callback with which the app can specify what data is to be
       written into the SBT for a given geometry, ray type, and
@@ -321,13 +321,13 @@ namespace owl {
       void groupBuildPrimitiveBounds(int groupID,
                                      size_t maxGeomDataSize,
                                      WriteUserGeomBoundsDataCB cb,
-                                     void *cbData);
+                                     const void *cbData);
       void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
-                            void *callBackData);
+                            const void *callBackData);
       void sbtRayGensBuild(WriteRayGenDataCB WriteRayGenDataCB,
-                           void *callBackData);
+                           const void *callBackData);
       void sbtMissProgsBuild(WriteMissProgDataCB WriteMissProgDataCB,
-                             void *callBackData);
+                             const void *callBackData);
       
       template<typename Lambda>
       void groupBuildPrimitiveBounds(int groupID,
@@ -343,7 +343,7 @@ namespace owl {
               const void *cbData) {
             const Lambda *lambda = (const Lambda *)cbData;
             (*lambda)(output,devID,geomID,childID);
-          },(void *)&l);
+          },(const void *)&l);
       }
       
       
@@ -357,7 +357,7 @@ namespace owl {
                                  const void *cbData) {
                                 const Lambda *lambda = (const Lambda *)cbData;
                                 (*lambda)(output,devID,geomID,childID);
-                              },(void *)&l);
+                              },(const void *)&l);
       }
 
       template<typename Lambda>
@@ -368,7 +368,7 @@ namespace owl {
                                  const void *cbData) {
                                 const Lambda *lambda = (const Lambda *)cbData;
                                 (*lambda)(output,devID,rgID);
-                              },(void *)&l);
+                              },(const void *)&l);
       }
 
       template<typename Lambda>
@@ -379,7 +379,7 @@ namespace owl {
                                    const void *cbData) {
                                   const Lambda *lambda = (const Lambda *)cbData;
                                   (*lambda)(output,devID,rayType);
-                                },(void *)&l);
+                                },(const void *)&l);
       }
 
       size_t getDeviceCount() const { return devices.size(); }

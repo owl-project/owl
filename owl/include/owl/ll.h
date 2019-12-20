@@ -104,19 +104,19 @@ extern "C" {
     written into the SBT for a given geometry, ray type, and
     device */
   typedef void
-  LLOWriteRayGenDataCB(uint8_t *rayGenDataToWrite,
-                       /*! ID of the device we're
-                         writing for (differnet
-                         devices may need to write
-                         different pointers */
-                       int deviceID,
-                       /*! the geometry ID for which
-                         we're generating the SBT
-                         entry for */
-                       int rayGenID,
-                       /*! the raw void pointer the app has passed
-                         during sbtGeomTypesBuild() */
-                       const void *callBackUserData);
+  (*LLOWriteRayGenDataCB)(uint8_t *rayGenDataToWrite,
+                          /*! ID of the device we're
+                            writing for (differnet
+                            devices may need to write
+                            different pointers */
+                          int deviceID,
+                          /*! the geometry ID for which
+                            we're generating the SBT
+                            entry for */
+                          int rayGenID,
+                          /*! the raw void pointer the app has passed
+                            during sbtGeomTypesBuild() */
+                          const void *callBackUserData);
     
   /*! callback with which the app can specify what data is to be
     written into the SBT for a given geometry, ray type, and

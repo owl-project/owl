@@ -698,7 +698,7 @@ namespace owl {
       void groupBuildPrimitiveBounds(int groupID,
                                      size_t maxGeomDataSize,
                                      WriteUserGeomBoundsDataCB cb,
-                                     void *cbData);
+                                     const void *cbData);
       void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
                             const void *callBackUserData);
       void sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,

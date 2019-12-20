@@ -352,7 +352,7 @@ namespace owl {
     }
 
     void DeviceGroup::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
-                                       void *callBackData)
+                                       const void *callBackData)
     {
       for (auto device : devices) 
         device->sbtHitProgsBuild(writeHitProgDataCB,
@@ -369,7 +369,7 @@ namespace owl {
                           
 
     void DeviceGroup::sbtRayGensBuild(WriteRayGenDataCB writeRayGenCB,
-                                      void *callBackData)
+                                      const void *callBackData)
     {
       for (auto device : devices) 
         device->sbtRayGensBuild(writeRayGenCB,
@@ -377,7 +377,7 @@ namespace owl {
     }
     
     void DeviceGroup::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgCB,
-                                        void *callBackData)
+                                        const void *callBackData)
     {
       for (auto device : devices) 
         device->sbtMissProgsBuild(writeMissProgCB,
@@ -387,7 +387,7 @@ namespace owl {
     void DeviceGroup::groupBuildPrimitiveBounds(int groupID,
                                                 size_t maxGeomDataSize,
                                                 WriteUserGeomBoundsDataCB cb,
-                                                void *cbData)
+                                                const void *cbData)
     {
       // try {
         for (auto device : devices) 
