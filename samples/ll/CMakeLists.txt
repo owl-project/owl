@@ -24,7 +24,7 @@ set(OWL_LL_LIBRARIES ${OWL_LL_LIBRARY})
 #file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
 set(samples
   s00-rayGenOnly
-  #s01-simpleTriangles
+  s01-simpleTriangles
   )
 foreach(sample ${samples})
   add_subdirectory(${sample})

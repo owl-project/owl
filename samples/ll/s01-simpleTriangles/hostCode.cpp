@@ -83,12 +83,19 @@ int main(int ac, char **av)
   lloBuildModules(llo);
 
   enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
-  ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->geomTypeCreate(TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
-  ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
-                            /*ray type  */0,
-                            /*module:*/0,
-                            "TriangleMesh");
+  // ll->allocGeomTypes(NUM_GEOM_TYPES);
+  lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
+  // ll->geomTypeCreate(TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
+  lloGeomTypeCreate(llo,TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
+  // ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
+  //                           /*ray type  */0,
+  //                           /*module:*/0,
+  //                           "TriangleMesh");
+  lloGeomTypeClosestHit(llo,
+                        /*program ID*/TRIANGLES_GEOM_TYPE,
+                        /*ray type  */0,
+                        /*module:*/0,
+                        "TriangleMesh");
   
   lloAllocRayGens(llo,1);
   lloRayGenCreate(llo,
@@ -97,11 +104,17 @@ int main(int ac, char **av)
                   "simpleRayGen",
                   sizeof(RayGenData));
   
-  ll->allocMissProgs(1);
-  ll->setMissProg(/*program ID*/0,
-                  /*module:*/0,
-                  "miss",
-                  sizeof(MissProgData));
+  // ll->allocMissProgs(1);
+  lloAllocMissProgs(llo,1);
+  // ll->setMissProg(/*program ID*/0,
+  //                 /*module:*/0,
+  //                 "miss",
+  //                 sizeof(MissProgData));
+  lloMissProgCreate(llo,
+                    /*program ID*/0,
+                    /*module:*/0,
+                    "miss",
+                    sizeof(MissProgData));
   
   lloAllocMissProgs(llo,1);
   lloMissProgCreate(llo,
@@ -221,7 +234,8 @@ int main(int ac, char **av)
              int rgID) {
       RayGenData *rg = (RayGenData*)output;
       rg->deviceIndex   = devID;
-      rg->deviceCount = ll->getDeviceCount();
+      // rg->deviceCount = ll->getDeviceCount();
+      rg->deviceCount = lloGetDeviceCount(llo);
       rg->fbSize = fbSize;
       // rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
       rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
