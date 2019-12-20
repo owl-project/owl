@@ -320,7 +320,7 @@ namespace owl {
       
       virtual bool containsGeom() { return true; }
       virtual PrimType primType() = 0;
-      virtual int  getSBTOffset() const override { return sbtOffset; }
+      virtual int  getSBTOffset() const override { return (int)sbtOffset; }
 
       std::vector<Geom *> children;
       const size_t sbtOffset;

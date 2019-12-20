@@ -96,12 +96,6 @@ namespace owl {
     void DeviceGroup::allocModules(size_t count)
     { for (auto device : devices) device->allocModules(count); }
     
-    void DeviceGroup::setModule(size_t slot, const char *ptxCode)
-    {
-      LOG("warning: 'setModule()' is deprecated, use 'moduleCreate'");
-      moduleCreate(slot,ptxCode);
-    }
-
     void DeviceGroup::moduleCreate(int moduleID, const char *ptxCode)
     { for (auto device : devices) device->modules.set(moduleID,ptxCode); }
     

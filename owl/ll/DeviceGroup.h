@@ -124,14 +124,6 @@ namespace owl {
       void setMaxInstancingDepth(int maxInstancingDepth);
       
       void allocModules(size_t count);
-      /*! create a new module under given ID
-       * 
-       *  \todo rename to moduleCreate for consistency
-       *
-       *  \todo add module destroy
-       *
-       *  \warning deprecated naming */
-      void setModule(size_t slot, const char *ptxCode);
 
       void moduleCreate(int moduleID, const char *ptxCode);
       void buildModules();

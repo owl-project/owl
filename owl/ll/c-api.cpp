@@ -22,8 +22,8 @@
 // internal C++ classes that implement this API
 #include "owl/ll/DeviceGroup.h"
 
-// #undef OWL_LL_INTERFACE
-// #define OWL_LL_INTERFACE extern "C"
+//#undef OWL_LL_INTERFACE 
+//#define OWL_LL_INTERFACE /* extern "C" */
 
 #ifndef NDEBUG
 # define EXCEPTIONS_ARE_FATAL 1
@@ -116,7 +116,7 @@ namespace owl {
       return squashExceptions
         ([&](){
            DeviceGroup *dg = (DeviceGroup *)llo;
-           dg->setModule(moduleID,ptxCode);
+           dg->moduleCreate(moduleID,ptxCode);
          });
     }
 

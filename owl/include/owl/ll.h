@@ -38,19 +38,23 @@
 #  define OWL_LL_DLL_IMPORT
 #endif
 
-#if defined(OWL_LL_DLL_INTERFACE)
+//#if defined(OWL_LL_DLL_INTERFACE)
+//#if _WIN32
 #  ifdef llowl_EXPORTS
 #    define OWL_LL_INTERFACE OWL_LL_DLL_EXPORT
 #  else
 #    define OWL_LL_INTERFACE OWL_LL_DLL_IMPORT
 #  endif
-#else
-#  define OWL_LL_INTERFACE __attribute__ ((visibility ("default")))
-#endif
+//#else
+//#  define OWL_LL_INTERFACE __attribute__((visibility("default")))
+//#endif
 
 #include <iostream>
 #include <math.h> // using cmath causes issues under Windows
-#include <unistd.h>
+#ifdef _WIN32
+#else
+#  include <unistd.h>
+#endif
 #include <stdint.h>
 
 
