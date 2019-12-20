@@ -23,7 +23,7 @@ add_executable(ll08-sierpinski
   ${ptxCode}
   )
 target_link_libraries(ll08-sierpinski
-  owl-ll
+  ${OWL_LL_LIBRARIES}
   )
 add_test(ll08-sierpinski ${CMAKE_BINARY_DIR}/ll08-sierpinski)
 

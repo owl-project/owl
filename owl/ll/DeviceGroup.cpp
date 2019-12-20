@@ -96,12 +96,6 @@ namespace owl {
     void DeviceGroup::allocModules(size_t count)
     { for (auto device : devices) device->allocModules(count); }
     
-    void DeviceGroup::setModule(size_t slot, const char *ptxCode)
-    {
-      LOG("warning: 'setModule()' is deprecated, use 'moduleCreate'");
-      moduleCreate(slot,ptxCode);
-    }
-
     void DeviceGroup::moduleCreate(int moduleID, const char *ptxCode)
     { for (auto device : devices) device->modules.set(moduleID,ptxCode); }
     
@@ -352,7 +346,7 @@ namespace owl {
     }
 
     void DeviceGroup::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
-                                       void *callBackData)
+                                       const void *callBackData)
     {
       for (auto device : devices) 
         device->sbtHitProgsBuild(writeHitProgDataCB,
@@ -369,7 +363,7 @@ namespace owl {
                           
 
     void DeviceGroup::sbtRayGensBuild(WriteRayGenDataCB writeRayGenCB,
-                                      void *callBackData)
+                                      const void *callBackData)
     {
       for (auto device : devices) 
         device->sbtRayGensBuild(writeRayGenCB,
@@ -377,7 +371,7 @@ namespace owl {
     }
     
     void DeviceGroup::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgCB,
-                                        void *callBackData)
+                                        const void *callBackData)
     {
       for (auto device : devices) 
         device->sbtMissProgsBuild(writeMissProgCB,
@@ -387,7 +381,7 @@ namespace owl {
     void DeviceGroup::groupBuildPrimitiveBounds(int groupID,
                                                 size_t maxGeomDataSize,
                                                 WriteUserGeomBoundsDataCB cb,
-                                                void *cbData)
+                                                const void *cbData)
     {
       // try {
         for (auto device : devices) 
@@ -438,7 +432,7 @@ namespace owl {
                                              omitted by passing a nullptr, but if
                                              not null this must be a list of
                                              'childCount' valid group ID */
-                                          int *childGroupIDs,
+                                          const int *childGroupIDs,
                                           /*! number of children in this group */
                                           int childCount)
     {
@@ -463,13 +457,13 @@ namespace owl {
     
     /* create an instance of this object that has properly
        initialized devices */
-    DeviceGroup::SP DeviceGroup::create(const int *deviceIDs,
-                                        size_t     numDevices)
+    DeviceGroup *DeviceGroup::create(const int *deviceIDs,
+                                     size_t     numDevices)
     {
       assert((deviceIDs == nullptr && numDevices == 0)
              ||
              (deviceIDs != nullptr && numDevices > 0));
-
+      
       // ------------------------------------------------------------------
       // init cuda, and error-out if no cuda devices exist
       // ------------------------------------------------------------------
@@ -526,7 +520,7 @@ namespace owl {
         throw std::runtime_error("fatal error - could not find/create any optix devices");
 
       LOG_OK("successfully created device group with " << devices.size() << " devices");
-      return std::make_shared<DeviceGroup>(devices);
+      return new DeviceGroup(devices);
     }
 
   } // ::owl::ll

@@ -23,7 +23,7 @@ add_executable(ll00-rayGenOnly
   ${ptxCode}
   )
 target_link_libraries(ll00-rayGenOnly
-  owl-ll
+  ${OWL_LL_LIBRARIES}
   )
 add_test(ll00-rayGenOnly ${CMAKE_BINARY_DIR}/ll00-rayGenOnly)
 

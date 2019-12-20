@@ -14,9 +14,11 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/DeviceGroup.h"
+// public owl-ll API
+#include <owl/ll.h>
+// our device-side data structures
 #include "deviceCode.h"
-
+// external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
@@ -66,46 +68,69 @@ int main(int ac, char **av)
 {
   LOG("ll example '" << av[0] << "' starting up");
 
-  owl::ll::DeviceGroup::SP ll
-    = owl::ll::DeviceGroup::create();
-
-  LOG("building pipeline ...");
-  std::cout << GDT_TERMINAL_DEFAULT;
+  LLOContext llo = lloContextCreate(nullptr,0);
 
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
-  ll->allocModules(1);
-  ll->setModule(0,ptxCode);
-  ll->buildModules();
   
-  enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
-  ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->geomTypeCreate(TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
-  ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
-                            /*ray type  */0,
-                            /*module:*/0,
-                            "TriangleMesh");
+  LOG("building module, programs, and pipeline");
   
-  ll->allocRayGens(1);
-  ll->setRayGen(/*program ID*/0,
-                /*module:*/0,
-                "simpleRayGen",
-                sizeof(RayGenData));
-  
-  ll->allocMissProgs(1);
-  ll->setMissProg(/*program ID*/0,
-                  /*module:*/0,
-                  "miss",
-                  sizeof(MissProgData));
-  ll->buildPrograms();
-  ll->createPipeline();
+  lloAllocModules(llo,1);
+  lloModuleCreate(llo,0,ptxCode);
+  lloBuildModules(llo);
 
-  LOG("building geometries ...");
+  enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
+  lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
+  lloGeomTypeCreate(llo,TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
+  lloGeomTypeClosestHit(llo,
+                        /*program ID*/TRIANGLES_GEOM_TYPE,
+                        /*ray type  */0,
+                        /*module:*/0,
+                        "TriangleMesh");
+  
+  lloAllocRayGens(llo,1);
+  lloRayGenCreate(llo,
+                  /*program ID*/0,
+                  /*module:*/0,
+                  "simpleRayGen",
+                  sizeof(RayGenData));
+  
+  // lloAllocMissProgs(llo,1);
+  lloAllocMissProgs(llo,1);
+  // lloMissProgCreate(llo,/*program ID*/0,
+  //                 /*module:*/0,
+  //                 "miss",
+  //                 sizeof(MissProgData));
+  lloMissProgCreate(llo,
+                    /*program ID*/0,
+                    /*module:*/0,
+                    "miss",
+                    sizeof(MissProgData));
+
+  // lloBuildPrograms(llo);
+  // lloCreatePipeline(llo);
+  lloBuildPrograms(llo);
+  lloCreatePipeline(llo);
+  // lloAllocRayGens(llo,1);
+  // lloRayGenCreate(llo,/*program ID*/0,
+  //               /*module:*/0,
+  //               "simpleRayGen",
+  //               sizeof(RayGenData));
+  
+  // lloAllocMissProgs(llo,1);
+  // lloMissProgCreate(llo,/*program ID*/0,
+  //                 /*module:*/0,
+  //                 "miss",
+  //                 sizeof(MissProgData));
+  // lloBuildPrograms(llo);
+  // lloCreatePipeline(llo);
 
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
   // ##################################################################
+
+  LOG("building geometries ...");
 
   // ------------------------------------------------------------------
   // alloc buffers
@@ -120,14 +145,15 @@ int main(int ac, char **av)
          VERTEX_BUFFER_110,
          VERTEX_BUFFER_111,
          FRAME_BUFFER,NUM_BUFFERS };
-  ll->allocBuffers(NUM_BUFFERS);
-  ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  lloAllocBuffers(llo,NUM_BUFFERS);
+  lloDeviceBufferCreate(llo,INDEX_BUFFER,NUM_INDICES*sizeof(vec3i),indices);
+  lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y*sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  ll->allocGeoms(8);
+  // lloAllocGeoms(llo,8);
+  lloAllocGeoms(llo,8);
   for (int i=0;i<8;i++) {
     vec3f delta((i&1) ? -3:+3,
                 (i&2) ? -3:+3,
@@ -135,17 +161,30 @@ int main(int ac, char **av)
     std::vector<vec3f> vertices;
     for (auto v : unitVertices)
       vertices.push_back(1.5f*v+delta);
-    ll->createDeviceBuffer(VERTEX_BUFFER_000+i,NUM_VERTICES,
-                           sizeof(vec3f),vertices.data());
+    // lloDeviceBufferCreate(llo,VERTEX_BUFFER_000+i,NUM_VERTICES,
+    //                        sizeof(vec3f),vertices.data());
+    lloDeviceBufferCreate(llo,VERTEX_BUFFER_000+i,
+                          NUM_VERTICES*sizeof(vec3f),vertices.data());
     
-    ll->trianglesGeomCreate(/* geom ID    */i,
-                            /* type/PG ID */0);
-    ll->trianglesGeomSetVertexBuffer(/* geom ID     */ i,
-                                     /* buffer ID */VERTEX_BUFFER_000+i,
-                                     /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-    ll->trianglesGeomSetIndexBuffer(/* geom ID     */ i,
-                                    /* buffer ID */INDEX_BUFFER,
-                                    /* meta info */NUM_INDICES,sizeof(vec3i),0);
+    // lloTrianglesGeomCreate(llo,/* geom ID    */i,
+    //                         /* type/PG ID */0);
+    lloTrianglesGeomCreate(llo,
+                           /* geom ID    */i,
+                           /* type/PG ID */0);
+    // lloTrianglesGeomSetVertexBuffer(llo,/* geom ID     */ i,
+    //                                  /* buffer ID */VERTEX_BUFFER_000+i,
+    //                                  /* meta info */NUM_VERTICES,sizeof(vec3f),0);
+    lloTrianglesGeomSetVertexBuffer(llo,
+                                    /* geom ID     */ i,
+                                    /* buffer ID */VERTEX_BUFFER_000+i,
+                                    /* meta info */NUM_VERTICES,sizeof(vec3f),0);
+    // lloTrianglesGeomSetIndexBuffer(llo,/* geom ID     */ i,
+    //                                 /* buffer ID */INDEX_BUFFER,
+    //                                 /* meta info */NUM_INDICES,sizeof(vec3i),0);
+    lloTrianglesGeomSetIndexBuffer(llo,
+                                   /* geom ID     */ i,
+                                   /* buffer ID */INDEX_BUFFER,
+                                   /* meta info */NUM_INDICES,sizeof(vec3i),0);
   }
 
   // ##################################################################
@@ -153,12 +192,18 @@ int main(int ac, char **av)
   // ##################################################################
   
   enum { TRIANGLES_GROUP=0,NUM_GROUPS };
-  ll->allocGroups(NUM_GROUPS);
+  lloAllocGroups(llo,NUM_GROUPS);
+  // lloAllocGroups(llo,NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  ll->trianglesGeomGroupCreate(/* group ID */TRIANGLES_GROUP,
+  // lloTrianglesGeomGroupCreate(llo,/* group ID */TRIANGLES_GROUP,
+  //                              /* geoms in group, pointer */ geomsInGroup,
+  //                              /* geoms in group, count   */ 8);
+  lloTrianglesGeomGroupCreate(llo,
+                              /* group ID */TRIANGLES_GROUP,
                                /* geoms in group, pointer */ geomsInGroup,
                                /* geoms in group, count   */ 8);
-  ll->groupBuildAccel(TRIANGLES_GROUP);
+  // lloGroupAccelBuild(llo,TRIANGLES_GROUP);
+  lloGroupAccelBuild(llo,TRIANGLES_GROUP);
 
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -166,17 +211,25 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  ll->sbtHitProgsBuild
-    ([&](uint8_t *output,int devID,int geomID,int rayID) {
+  lloSbtHitProgsBuild
+    (llo,
+  // lloSbtHitProgsBuild
+  //   (
+     [&](uint8_t *output,int devID,int geomID,int rayID) {
       TrianglesGeomData &self = *(TrianglesGeomData*)output;
-      self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
-      self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER_000+geomID,devID);
+      // self.index  = (vec3i*)lloBufferGetPointer(llo,INDEX_BUFFER,devID);
+      self.index  = (vec3i*)lloBufferGetPointer(llo,INDEX_BUFFER,devID);
+      // self.vertex = (vec3f*)lloBufferGetPointer(llo,VERTEX_BUFFER_000+geomID,devID);
+      self.vertex = (vec3f*)lloBufferGetPointer(llo,VERTEX_BUFFER_000+geomID,devID);
       self.color  = owl::randomColor(geomID);
     });
   
   // ----------- build miss prog(s) -----------
-  ll->sbtMissProgsBuild
-    ([&](uint8_t *output,
+  lloSbtMissProgsBuild
+    (llo,
+  // lloSbtMissProgsBuild
+  //   (
+     [&](uint8_t *output,
          int devID,
          int rayType) {
       /* we don't have any ... */
@@ -185,16 +238,22 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  ll->sbtRayGensBuild
-    ([&](uint8_t *output,
+  // lloSbtRayGensBuild
+  //   (
+  lloSbtRayGensBuild
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;
       rg->deviceIndex   = devID;
-      rg->deviceCount = ll->getDeviceCount();
+      // rg->deviceCount = lloGetDeviceCount(llo);
+      rg->deviceCount = lloGetDeviceCount(llo);
       rg->fbSize = fbSize;
-      rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-      rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+      // rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+      // rg->world  = lloGroupGetTraversable(llo,TRIANGLES_GROUP,devID);
+      rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+      rg->world  = lloGroupGetTraversable(llo,TRIANGLES_GROUP,devID);
 
       // compute camera frame:
       vec3f &pos = rg->camera.pos;
@@ -215,13 +274,14 @@ int main(int ac, char **av)
   // now that everything is readly: launch it ....
   // ##################################################################
   
-  LOG("trying to launch ...");
-  ll->launch(0,fbSize);
-  // todo: explicit sync?
+  LOG("executing the launch ...");
+  // lloLaunch2D(llo,0,fbSize.x,fbSize.y);
+  lloLaunch2D(llo,0,fbSize.x,fbSize.y);
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  // const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
+  const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);
@@ -231,7 +291,8 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("destroying devicegroup ...");
-  owl::ll::DeviceGroup::destroy(ll);
+  // lloContextDestroy(llo);
+  lloContextDestroy(llo);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
 }

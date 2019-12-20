@@ -14,9 +14,11 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/DeviceGroup.h"
+// public owl-ll API
+#include <owl/ll.h>
+// our device-side data structures
 #include "deviceCode.h"
-
+// external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
@@ -68,44 +70,42 @@ int main(int ac, char **av)
     else
       throw std::runtime_error("unknown cmdline argument '"+arg+"'");
   }
-  
-  owl::ll::DeviceGroup::SP ll
-    = owl::ll::DeviceGroup::create();
-
   if (numLevels < 1)
     throw std::runtime_error("num levels must be 1 or greater");
-  ll->setMaxInstancingDepth(numLevels);
   
-  LOG("building pipeline ...");
+  LLOContext llo = lloContextCreate(nullptr,0);
+  lloSetMaxInstancingDepth(llo,numLevels);
+  
 
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
-  ll->allocModules(1);
-  ll->setModule(0,ptxCode);
-  ll->buildModules();
+  LOG("building pipeline ...");
+  lloAllocModules(llo,1);
+  lloModuleCreate(llo,0,ptxCode);
+  lloBuildModules(llo);
   
   enum { PYRAMID_GEOM_TYPE=0,NUM_GEOM_TYPES };
-  ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->geomTypeCreate(PYRAMID_GEOM_TYPE,sizeof(LambertianPyramidMesh));
-  ll->setGeomTypeClosestHit(/*program ID*/PYRAMID_GEOM_TYPE,
+  lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
+  lloGeomTypeCreate(llo,PYRAMID_GEOM_TYPE,sizeof(LambertianPyramidMesh));
+  lloGeomTypeClosestHit(llo,/*program ID*/PYRAMID_GEOM_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
                             "PyramidMesh");
   
-  ll->allocRayGens(1);
-  ll->setRayGen(/*program ID*/0,
+  lloAllocRayGens(llo,1);
+  lloRayGenCreate(llo,/*program ID*/0,
                 /*module:*/0,
                 "simpleRayGen",
                 sizeof(RayGenData));
   
-  ll->allocMissProgs(1);
-  ll->setMissProg(/*program ID*/0,
+  lloAllocMissProgs(llo,1);
+  lloMissProgCreate(llo,/*program ID*/0,
                   /*module:*/0,
                   "miss",
                   sizeof(MissProgData));
-  ll->buildPrograms();
-  ll->createPipeline();
+  lloBuildPrograms(llo);
+  lloCreatePipeline(llo);
 
   LOG("building geometries ...");
 
@@ -126,26 +126,26 @@ int main(int ac, char **av)
          INDEX_BUFFER,
          FRAME_BUFFER,
          NUM_BUFFERS };
-  ll->allocBuffers(NUM_BUFFERS);
-  ll->createDeviceBuffer(LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,
-                         lambertianPyramids.size(),
-                         sizeof(lambertianPyramids[0]),
-                         lambertianPyramids.data());
-  ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
-  ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  lloAllocBuffers(llo,NUM_BUFFERS);
+  lloDeviceBufferCreate(llo,LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,
+                        lambertianPyramids.size()
+                        *sizeof(lambertianPyramids[0]),
+                        lambertianPyramids.data());
+  lloDeviceBufferCreate(llo,VERTEX_BUFFER,NUM_VERTICES*sizeof(vec3f),vertices);
+  lloDeviceBufferCreate(llo,INDEX_BUFFER,NUM_INDICES*sizeof(vec3i),indices);
+  lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y*sizeof(uint32_t));
   
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
   enum { PYRAMID_GEOM=0,NUM_GEOMS };
-  ll->allocGeoms(NUM_GEOMS);
-  ll->trianglesGeomCreate(/* geom ID    */PYRAMID_GEOM,
+  lloAllocGeoms(llo,NUM_GEOMS);
+  lloTrianglesGeomCreate(llo,/* geom ID    */PYRAMID_GEOM,
                           /* type/PG ID */PYRAMID_GEOM_TYPE);
-  ll->trianglesGeomSetVertexBuffer(/* geom ID   */PYRAMID_GEOM,
+  lloTrianglesGeomSetVertexBuffer(llo,/* geom ID   */PYRAMID_GEOM,
                                    /* buffer ID */VERTEX_BUFFER,
                                    /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer(/* geom ID   */PYRAMID_GEOM,
+  lloTrianglesGeomSetIndexBuffer(llo,/* geom ID   */PYRAMID_GEOM,
                                   /* buffer ID */INDEX_BUFFER,
                                   /* meta info */NUM_INDICES,sizeof(vec3i),0);
 
@@ -155,12 +155,12 @@ int main(int ac, char **av)
   int WORLD_GROUP = numLevels - 1;
   
   // enum { TRIANGLES_GROUP=0,PYRAMID_GROUP_LVL_1,WORLD_GROUP,NUM_GROUPS };
-  ll->allocGroups(numLevels);
+  lloAllocGroups(llo,numLevels);
   int geomsInGroup[] = { 0 };
-  ll->trianglesGeomGroupCreate(/* group ID */0,
+  lloTrianglesGeomGroupCreate(llo,/* group ID */0,
                                /* geoms in group, pointer */ geomsInGroup,
                                /* geoms in group, count   */ 1); 
-  ll->groupBuildAccel(0);
+  lloGroupAccelBuild(llo,0);
 
   auto make_sierpinski = [&](int parent_level, int child_level){
     int groupsInWorldGroup[]
@@ -169,9 +169,10 @@ int main(int ac, char **av)
         child_level,
         child_level,
         child_level, };
-    ll->instanceGroupCreate(/* group ID */parent_level,
-                            /* geoms in group, pointer */ groupsInWorldGroup,
-                            /* geoms in group, count   */ 5);
+    lloInstanceGroupCreate(llo,
+                           /* group ID */parent_level,
+                           /* geoms in group, pointer */ groupsInWorldGroup,
+                           /* geoms in group, count   */ 5);
     auto a
     = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))
     * owl::affine3f::translate(owl::vec3f(-.5f, -.5f, -.5f));
@@ -188,12 +189,12 @@ int main(int ac, char **av)
     = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))    
     * owl::affine3f::translate(owl::vec3f(0.0f, 0.0, +.5f));
     
-    ll->instanceGroupSetTransform(parent_level,0,a);
-    ll->instanceGroupSetTransform(parent_level,1,b);
-    ll->instanceGroupSetTransform(parent_level,2,c);
-    ll->instanceGroupSetTransform(parent_level,3,d);
-    ll->instanceGroupSetTransform(parent_level,4,e);
-    ll->groupBuildAccel(parent_level);
+    lloInstanceGroupSetTransform(llo,parent_level,0,(const float *)&a);
+    lloInstanceGroupSetTransform(llo,parent_level,1,(const float *)&b);
+    lloInstanceGroupSetTransform(llo,parent_level,2,(const float *)&c);
+    lloInstanceGroupSetTransform(llo,parent_level,3,(const float *)&d);
+    lloInstanceGroupSetTransform(llo,parent_level,4,(const float *)&e);
+    lloGroupAccelBuild(llo,parent_level);
   };
 
   for (uint32_t i = 1; i < numLevels; ++i) {
@@ -206,18 +207,20 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  ll->sbtHitProgsBuild
-    ([&](uint8_t *output,int devID,int geomID,int rayID) {
+  lloSbtHitProgsBuild
+    (llo,
+     [&](uint8_t *output,int devID,int geomID,int rayID) {
       LambertianPyramidMesh &self = *(LambertianPyramidMesh*)output;
       self.material
-           = (Lambertian *)ll->bufferGetPointer(LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,devID);
-      self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
-      self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);
+           = (Lambertian *)lloBufferGetPointer(llo,LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,devID);
+      self.index  = (vec3i*)lloBufferGetPointer(llo,INDEX_BUFFER,devID);
+      self.vertex = (vec3f*)lloBufferGetPointer(llo,VERTEX_BUFFER,devID);
     });
   
   // ----------- build miss prog(s) -----------
-  ll->sbtMissProgsBuild
-    ([&](uint8_t *output,
+  lloSbtMissProgsBuild
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rayType) {
       /* we don't have any ... */
@@ -226,16 +229,17 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  ll->sbtRayGensBuild
-    ([&](uint8_t *output,
+  lloSbtRayGensBuild
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;
       rg->deviceIndex   = devID;
-      rg->deviceCount = ll->getDeviceCount();
+      rg->deviceCount = lloGetDeviceCount(llo);
       rg->fbSize = fbSize;
-      rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-      rg->world  = ll->groupGetTraversable(WORLD_GROUP,devID);
+      rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+      rg->world  = lloGroupGetTraversable(llo,WORLD_GROUP,devID);
 
       // compute camera frame:
       const float vfov = fovy;
@@ -267,12 +271,12 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("trying to launch ...");
-  ll->launch(0,fbSize);
+  lloLaunch2D(llo,0,fbSize.x,fbSize.y);
   // todo: explicit sync?
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);
@@ -282,7 +286,7 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("destroying devicegroup ...");
-  owl::ll::DeviceGroup::destroy(ll);
+  lloContextDestroy(llo);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
 }

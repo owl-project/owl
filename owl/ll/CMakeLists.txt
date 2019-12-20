@@ -15,10 +15,13 @@
 # ======================================================================== #
 
 include_directories(${PROJECT_SOURCE_DIR}/)
-   
-add_library(owl-ll
+
+set(OWL_LL_SOURCES
   common.h
 
+  ../include/owl/ll.h
+  c-api.cpp
+  
   Device.h
   Device.cpp
 
@@ -29,11 +32,27 @@ add_library(owl-ll
   DeviceGroup.h
   DeviceGroup.cpp
   )
-target_link_libraries(owl-ll
-#  owl-common
+
+add_library(llowl-static STATIC
+  ${OWL_LL_SOURCES}
+  )
+target_link_libraries(llowl-static
   ${CUDA_LIBRARIES}
   ${CUDA_CUDA_LIBRARY}
   )
+target_compile_definitions(llowl-static PUBLIC -Dllowl_EXPORTS=1)
+
+add_library(llowl SHARED
+  ${OWL_LL_SOURCES}
+  )
+target_link_libraries(llowl
+  ${CUDA_LIBRARIES}
+  ${CUDA_CUDA_LIBRARY}
+  )
+set_target_properties(llowl PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(llowl PROPERTIES CXX_VISIBILITY_PRESET hidden)
+#target_compile_definitions(llowl PUBLIC LLOWL_INTERFACE)
+target_compile_definitions(llowl PUBLIC -Dllowl_EXPORTS=1)
 
 
 
