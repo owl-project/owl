@@ -140,12 +140,12 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   enum { PYRAMID_GEOM=0,NUM_GEOMS };
   lloAllocGeoms(llo,NUM_GEOMS);
-  ll->trianglesGeomCreate(/* geom ID    */PYRAMID_GEOM,
+  lloTrianglesGeomCreate(llo,/* geom ID    */PYRAMID_GEOM,
                           /* type/PG ID */PYRAMID_GEOM_TYPE);
-  ll->trianglesGeomSetVertexBuffer(/* geom ID   */PYRAMID_GEOM,
+  lloTrianglesGeomSetVertexBuffer(llo,/* geom ID   */PYRAMID_GEOM,
                                    /* buffer ID */VERTEX_BUFFER,
                                    /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer(/* geom ID   */PYRAMID_GEOM,
+  lloTrianglesGeomSetIndexBuffer(llo,/* geom ID   */PYRAMID_GEOM,
                                   /* buffer ID */INDEX_BUFFER,
                                   /* meta info */NUM_INDICES,sizeof(vec3i),0);
 
@@ -169,9 +169,10 @@ int main(int ac, char **av)
         child_level,
         child_level,
         child_level, };
-    ll->instanceGroupCreate(/* group ID */parent_level,
-                            /* geoms in group, pointer */ groupsInWorldGroup,
-                            /* geoms in group, count   */ 5);
+    lloInstanceGroupCreate(llo,
+                           /* group ID */parent_level,
+                           /* geoms in group, pointer */ groupsInWorldGroup,
+                           /* geoms in group, count   */ 5);
     auto a
     = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))
     * owl::affine3f::translate(owl::vec3f(-.5f, -.5f, -.5f));
@@ -188,11 +189,11 @@ int main(int ac, char **av)
     = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))    
     * owl::affine3f::translate(owl::vec3f(0.0f, 0.0, +.5f));
     
-    ll->instanceGroupSetTransform(parent_level,0,a);
-    ll->instanceGroupSetTransform(parent_level,1,b);
-    ll->instanceGroupSetTransform(parent_level,2,c);
-    ll->instanceGroupSetTransform(parent_level,3,d);
-    ll->instanceGroupSetTransform(parent_level,4,e);
+    lloInstanceGroupSetTransform(llo,parent_level,0,a);
+    lloInstanceGroupSetTransform(llo,parent_level,1,b);
+    lloInstanceGroupSetTransform(llo,parent_level,2,c);
+    lloInstanceGroupSetTransform(llo,parent_level,3,d);
+    lloInstanceGroupSetTransform(llo,parent_level,4,e);
     lloGroupAccelBuild(llo,parent_level);
   };
 
@@ -207,7 +208,8 @@ int main(int ac, char **av)
 
   // ----------- build hitgroups -----------
   lloSbtHitProgsBuild
-    ([&](uint8_t *output,int devID,int geomID,int rayID) {
+    (llo,
+     [&](uint8_t *output,int devID,int geomID,int rayID) {
       LambertianPyramidMesh &self = *(LambertianPyramidMesh*)output;
       self.material
            = (Lambertian *)lloBufferGetPointer(llo,LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,devID);
@@ -217,7 +219,8 @@ int main(int ac, char **av)
   
   // ----------- build miss prog(s) -----------
   lloSbtMissProgsBuild
-    ([&](uint8_t *output,
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rayType) {
       /* we don't have any ... */
@@ -227,7 +230,8 @@ int main(int ac, char **av)
   
   // ----------- build raygens -----------
   lloSbtRayGensBuild
-    ([&](uint8_t *output,
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;

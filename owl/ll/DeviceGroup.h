@@ -233,7 +233,7 @@ namespace owl {
                                   omitted by passing a nullptr, but if
                                   not null this must be a list of
                                   'childCount' valid group ID */
-                               int *childGroupIDs,
+                               const int *childGroupIDs,
                                /*! number of children in this group */
                                int childCount);
       /*! set given child's instance transform. groupID must be a

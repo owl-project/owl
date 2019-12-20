@@ -286,6 +286,9 @@ extern "C" {
   OptixTraversableHandle lloGroupGetTraversable(LLOContext llo,
                                                 int32_t    groupID,
                                                 int32_t    deviceID);
+  OWL_LL_INTERFACE
+  uint32_t lloGroupGetSbtOffset(LLOContext llo,
+                                int32_t    groupID);
 
   OWL_LL_INTERFACE
   LLOResult lloGeomTypeCreate(LLOContext llo,
@@ -358,6 +361,11 @@ extern "C" {
                                        int32_t bufferID);
   
   OWL_LL_INTERFACE
+  LLOResult lloInstanceGroupCreate(LLOContext     llo,
+                                   int32_t        groupID,
+                                   const int32_t *childGroupIDs,
+                                   int32_t        numChildGroupIDs);
+  OWL_LL_INTERFACE
   LLOResult lloTrianglesGeomGroupCreate(LLOContext     llo,
                                         int32_t        groupID,
                                         const int32_t *geomIDs,
@@ -372,6 +380,19 @@ extern "C" {
   LLOResult lloGroupAccelBuild(LLOContext llo,
                                int32_t    groupID);
 
+  OWL_LL_INTERFACE
+  LLOResult lloInstanceGroupSetTransform(LLOContext llo,
+                                         int32_t    groupID,
+                                         int32_t    childID,
+                                         const float *xfm);
+  
+  OWL_LL_INTERFACE
+  LLOResult lloInstanceGroupSetChild(LLOContext llo,
+                                     int32_t    groupID,
+                                     int32_t    childID,
+                                     int32_t    childGroupID,
+                                     const float *xfm);
+  
   OWL_LL_INTERFACE
   LLOResult lloGroupBuildPrimitiveBounds(LLOContext llo,
                                          int32_t    groupID,

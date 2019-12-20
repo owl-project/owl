@@ -166,19 +166,19 @@ int main(int ac, char **av)
     lloDeviceBufferCreate(llo,VERTEX_BUFFER_000+i,
                           NUM_VERTICES*sizeof(vec3f),vertices.data());
     
-    // ll->trianglesGeomCreate(/* geom ID    */i,
+    // lloTrianglesGeomCreate(llo,/* geom ID    */i,
     //                         /* type/PG ID */0);
     lloTrianglesGeomCreate(llo,
                            /* geom ID    */i,
                            /* type/PG ID */0);
-    // ll->trianglesGeomSetVertexBuffer(/* geom ID     */ i,
+    // lloTrianglesGeomSetVertexBuffer(llo,/* geom ID     */ i,
     //                                  /* buffer ID */VERTEX_BUFFER_000+i,
     //                                  /* meta info */NUM_VERTICES,sizeof(vec3f),0);
     lloTrianglesGeomSetVertexBuffer(llo,
                                     /* geom ID     */ i,
                                     /* buffer ID */VERTEX_BUFFER_000+i,
                                     /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-    // ll->trianglesGeomSetIndexBuffer(/* geom ID     */ i,
+    // lloTrianglesGeomSetIndexBuffer(llo,/* geom ID     */ i,
     //                                 /* buffer ID */INDEX_BUFFER,
     //                                 /* meta info */NUM_INDICES,sizeof(vec3i),0);
     lloTrianglesGeomSetIndexBuffer(llo,

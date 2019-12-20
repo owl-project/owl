@@ -345,11 +345,11 @@ int main(int ac, char **av)
                         metalSpheres.data());
 
   // ----------- the boxes -----------
-  ll->trianglesGeomCreate(/* geom ID    */LAMBERTIAN_BOXES_GEOM,
+  lloTrianglesGeomCreate(llo,/* geom ID    */LAMBERTIAN_BOXES_GEOM,
                           /* type/PG ID */LAMBERTIAN_BOXES_TYPE);
-  ll->trianglesGeomCreate(/* geom ID    */DIELECTRIC_BOXES_GEOM,
+  lloTrianglesGeomCreate(llo,/* geom ID    */DIELECTRIC_BOXES_GEOM,
                           /* type/PG ID */DIELECTRIC_BOXES_TYPE);
-  ll->trianglesGeomCreate(/* geom ID    */METAL_BOXES_GEOM,
+  lloTrianglesGeomCreate(llo,/* geom ID    */METAL_BOXES_GEOM,
                           /* type/PG ID */METAL_BOXES_TYPE);
 
   // indices
@@ -398,30 +398,36 @@ int main(int ac, char **av)
   // ##################################################################
   // set triangle mesh vertex/index buffers
   // ##################################################################
-  ll->trianglesGeomSetVertexBuffer
-    (/* geom ID   */LAMBERTIAN_BOXES_GEOM,
+  lloTrianglesGeomSetVertexBuffer
+    (llo,
+     /* geom ID   */LAMBERTIAN_BOXES_GEOM,
      /* buffer ID */LAMBERTIAN_BOXES_VERTEX_BUFFER,
      /* meta info */lambertianBoxes.vertices.size(),sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer
-    (/* geom ID   */LAMBERTIAN_BOXES_GEOM,
+  lloTrianglesGeomSetIndexBuffer
+    (llo,
+     /* geom ID   */LAMBERTIAN_BOXES_GEOM,
      /* buffer ID */LAMBERTIAN_BOXES_INDEX_BUFFER,
      /* meta info */lambertianBoxes.indices.size(),sizeof(vec3i),0);
 
-  ll->trianglesGeomSetVertexBuffer
-    (/* geom ID   */METAL_BOXES_GEOM,
+  lloTrianglesGeomSetVertexBuffer
+    (llo,
+     /* geom ID   */METAL_BOXES_GEOM,
      /* buffer ID */METAL_BOXES_VERTEX_BUFFER,
      /* meta info */metalBoxes.vertices.size(),sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer
-    (/* geom ID   */METAL_BOXES_GEOM,
+  lloTrianglesGeomSetIndexBuffer
+    (llo,
+     /* geom ID   */METAL_BOXES_GEOM,
      /* buffer ID */METAL_BOXES_INDEX_BUFFER,
      /* meta info */metalBoxes.indices.size(),sizeof(vec3i),0);
 
-  ll->trianglesGeomSetVertexBuffer
-    (/* geom ID   */DIELECTRIC_BOXES_GEOM,
+  lloTrianglesGeomSetVertexBuffer
+    (llo,
+     /* geom ID   */DIELECTRIC_BOXES_GEOM,
      /* buffer ID */DIELECTRIC_BOXES_VERTEX_BUFFER,
      /* meta info */dielectricBoxes.vertices.size(),sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer
-    (/* geom ID   */DIELECTRIC_BOXES_GEOM,
+  lloTrianglesGeomSetIndexBuffer
+    (llo,
+     /* geom ID   */DIELECTRIC_BOXES_GEOM,
      /* buffer ID */DIELECTRIC_BOXES_INDEX_BUFFER,
      /* meta info */dielectricBoxes.indices.size(),sizeof(vec3i),0);
   
@@ -555,13 +561,13 @@ int main(int ac, char **av)
          int rgID) {
       RayGenData *rg = (RayGenData*)output;
       rg->deviceIndex   = devID;
-      rg->deviceCount = lloGetDeviceCount(llo);
-      rg->fbSize = fbSize;
-      rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
-      rg->boxesAccel  = lloGroupGetTraversable(llo,BOXES_GROUP,devID);
-      rg->boxesSBTOffset  = ll->groupGetSBTOffset(BOXES_GROUP);
-      rg->spheresAccel  = lloGroupGetTraversable(llo,SPHERES_GROUP,devID);
-      rg->spheresSBTOffset  = ll->groupGetSBTOffset(SPHERES_GROUP);
+      rg->deviceCount   = lloGetDeviceCount(llo);
+      rg->fbSize        = fbSize;
+      rg->fbPtr         = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+      rg->boxesAccel        = lloGroupGetTraversable(llo,BOXES_GROUP,devID);
+      rg->boxesSBTOffset    = lloGroupGetSbtOffset(llo,BOXES_GROUP);
+      rg->spheresAccel      = lloGroupGetTraversable(llo,SPHERES_GROUP,devID);
+      rg->spheresSBTOffset  = lloGroupGetSbtOffset(llo,SPHERES_GROUP);
 
       const float vfov = fovy;
       const vec3f vup = lookUp;

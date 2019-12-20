@@ -146,19 +146,19 @@ int main(int ac, char **av)
   enum { TRIANGLES_GEOM=0,NUM_GEOMS };
   // lloAllocGeoms(llo,NUM_GEOMS);
   lloAllocGeoms(llo,NUM_GEOMS);
-  // ll->trianglesGeomCreate(/* geom ID    */TRIANGLES_GEOM,
+  // lloTrianglesGeomCreate(llo,/* geom ID    */TRIANGLES_GEOM,
   //                         /* type/PG ID */TRIANGLES_GEOM_TYPE);
   lloTrianglesGeomCreate(llo,
                          /* geom ID    */TRIANGLES_GEOM,
                          /* type/PG ID */TRIANGLES_GEOM_TYPE);
-  // ll->trianglesGeomSetVertexBuffer(/* geom ID   */TRIANGLES_GEOM,
+  // lloTrianglesGeomSetVertexBuffer(llo,/* geom ID   */TRIANGLES_GEOM,
   //                                  /* buffer ID */VERTEX_BUFFER,
   //                                  /* meta info */NUM_VERTICES,sizeof(vec3f),0);
   lloTrianglesGeomSetVertexBuffer(llo,
                                   /* geom ID   */TRIANGLES_GEOM,
                                   /* buffer ID */VERTEX_BUFFER,
                                   /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-  // ll->trianglesGeomSetIndexBuffer(/* geom ID   */TRIANGLES_GEOM,
+  // lloTrianglesGeomSetIndexBuffer(llo,/* geom ID   */TRIANGLES_GEOM,
   //                                 /* buffer ID */INDEX_BUFFER,
   //                                 /* meta info */NUM_INDICES,sizeof(vec3i),0);
   lloTrianglesGeomSetIndexBuffer(llo,

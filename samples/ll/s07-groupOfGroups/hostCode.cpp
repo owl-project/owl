@@ -17,7 +17,7 @@
 // public owl-ll API
 #include <owl/ll.h>
 // our device-side data structures
-#include "deviceCode.h"
+#include "GeomTypes.h"
 // external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
@@ -348,11 +348,11 @@ int main(int ac, char **av)
                         metalSpheres.data());
 
   // ----------- the boxes -----------
-  ll->trianglesGeomCreate(/* geom ID    */LAMBERTIAN_BOXES_GEOM,
+  lloTrianglesGeomCreate(llo,/* geom ID    */LAMBERTIAN_BOXES_GEOM,
                           /* type/PG ID */LAMBERTIAN_BOXES_TYPE);
-  ll->trianglesGeomCreate(/* geom ID    */DIELECTRIC_BOXES_GEOM,
+  lloTrianglesGeomCreate(llo,/* geom ID    */DIELECTRIC_BOXES_GEOM,
                           /* type/PG ID */DIELECTRIC_BOXES_TYPE);
-  ll->trianglesGeomCreate(/* geom ID    */METAL_BOXES_GEOM,
+  lloTrianglesGeomCreate(llo,/* geom ID    */METAL_BOXES_GEOM,
                           /* type/PG ID */METAL_BOXES_TYPE);
 
   // indices
@@ -401,30 +401,36 @@ int main(int ac, char **av)
   // ##################################################################
   // set triangle mesh vertex/index buffers
   // ##################################################################
-  ll->trianglesGeomSetVertexBuffer
-    (/* geom ID   */LAMBERTIAN_BOXES_GEOM,
+  lloTrianglesGeomSetVertexBuffer
+    (llo,
+     /* geom ID   */LAMBERTIAN_BOXES_GEOM,
      /* buffer ID */LAMBERTIAN_BOXES_VERTEX_BUFFER,
      /* meta info */lambertianBoxes.vertices.size(),sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer
-    (/* geom ID   */LAMBERTIAN_BOXES_GEOM,
+  lloTrianglesGeomSetIndexBuffer
+    (llo,
+     /* geom ID   */LAMBERTIAN_BOXES_GEOM,
      /* buffer ID */LAMBERTIAN_BOXES_INDEX_BUFFER,
      /* meta info */lambertianBoxes.indices.size(),sizeof(vec3i),0);
 
-  ll->trianglesGeomSetVertexBuffer
-    (/* geom ID   */METAL_BOXES_GEOM,
+  lloTrianglesGeomSetVertexBuffer
+    (llo,
+     /* geom ID   */METAL_BOXES_GEOM,
      /* buffer ID */METAL_BOXES_VERTEX_BUFFER,
      /* meta info */metalBoxes.vertices.size(),sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer
-    (/* geom ID   */METAL_BOXES_GEOM,
+  lloTrianglesGeomSetIndexBuffer
+    (llo,
+     /* geom ID   */METAL_BOXES_GEOM,
      /* buffer ID */METAL_BOXES_INDEX_BUFFER,
      /* meta info */metalBoxes.indices.size(),sizeof(vec3i),0);
 
-  ll->trianglesGeomSetVertexBuffer
-    (/* geom ID   */DIELECTRIC_BOXES_GEOM,
+  lloTrianglesGeomSetVertexBuffer
+    (llo,
+     /* geom ID   */DIELECTRIC_BOXES_GEOM,
      /* buffer ID */DIELECTRIC_BOXES_VERTEX_BUFFER,
      /* meta info */dielectricBoxes.vertices.size(),sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer
-    (/* geom ID   */DIELECTRIC_BOXES_GEOM,
+  lloTrianglesGeomSetIndexBuffer
+    (llo,
+     /* geom ID   */DIELECTRIC_BOXES_GEOM,
      /* buffer ID */DIELECTRIC_BOXES_INDEX_BUFFER,
      /* meta info */dielectricBoxes.indices.size(),sizeof(vec3i),0);
   
@@ -447,7 +453,7 @@ int main(int ac, char **av)
                          /* geoms in group, pointer */ geomsInSpheresGroup,
                          /* geoms in group, count   */ 3);
   lloGroupBuildPrimitiveBounds
-    (SPHERES_GROUP,max3(sizeof(MetalSpheresGeom),
+    (llo,SPHERES_GROUP,max3(sizeof(MetalSpheresGeom),
                         sizeof(DielectricSpheresGeom),
                         sizeof(LambertianSpheresGeom)),
      [&](uint8_t *output, int devID, int geomID, int childID) {
@@ -482,28 +488,36 @@ int main(int ac, char **av)
 
   
   // ----------- finally, the world group that combines them -----------
+  const owl::affine3f unitXfm = owl::one;
 #if TEST_CASE==1
   int groupsInWorldGroup[]
     = { SPHERES_GROUP,
         BOXES_GROUP };
-  ll->instanceGroupCreate(/* group ID */WORLD_GROUP,
-                          /* geoms in group, pointer */ groupsInWorldGroup,
-                          /* geoms in group, count   */ 2);
-  ll->instanceGroupSetTransform(WORLD_GROUP,0,owl::affine3f(owl::one));
-  ll->instanceGroupSetTransform(WORLD_GROUP,1,owl::affine3f(owl::one));
+  lloInstanceGroupCreate(llo,
+                         /* group ID */WORLD_GROUP,
+                         /* geoms in group, pointer */ groupsInWorldGroup,
+                         /* geoms in group, count   */ 2);
+  lloInstanceGroupSetTransform(llo,WORLD_GROUP,0,
+                               (const float*)&unitXfm);
+  lloInstanceGroupSetTransform(llo,WORLD_GROUP,1,
+                               (const float*)&unitXfm);
 #elif TEST_CASE==2
-  ll->instanceGroupCreate(/* group ID */WORLD_GROUP,
-                          /* geoms in group, pointer */ nullptr,
-                          /* geoms in group, count   */ 2);
-  ll->instanceGroupSetChild(WORLD_GROUP,0,SPHERES_GROUP,owl::affine3f(owl::one));
-  ll->instanceGroupSetChild(WORLD_GROUP,1,BOXES_GROUP,owl::affine3f(owl::one));
+  lloInstanceGroupCreate(llo,
+                         /* group ID */WORLD_GROUP,
+                         /* geoms in group, pointer */ nullptr,
+                         /* geoms in group, count   */ 2);
+  lloInstanceGroupSetChild(llo,WORLD_GROUP,0,
+                           SPHERES_GROUP,(const float*)&unitXfm);
+  lloInstanceGroupSetChild(llo,WORLD_GROUP,1,
+                           BOXES_GROUP,(const float*)&unitXfm);
 #else
   int groupsInWorldGroup[]
     = { SPHERES_GROUP,
         BOXES_GROUP };
-  ll->instanceGroupCreate(/* group ID */WORLD_GROUP,
-                          /* geoms in group, pointer */ groupsInWorldGroup,
-                          /* geoms in group, count   */ 2);
+  lloInstanceGroupCreate(llo,
+                         /* group ID */WORLD_GROUP,
+                         /* geoms in group, pointer */ groupsInWorldGroup,
+                         /* geoms in group, count   */ 2);
 #endif
   lloGroupAccelBuild(llo,WORLD_GROUP);
   
@@ -515,7 +529,8 @@ int main(int ac, char **av)
 
   // ----------- build hitgroups -----------
   lloSbtHitProgsBuild
-    ([&](uint8_t *output,int devID,int geomID,int childID) {
+    (llo,
+     [&](uint8_t *output,int devID,int geomID,int childID) {
       switch(geomID) {
       case LAMBERTIAN_SPHERES_GEOM:
         ((LambertianSpheresGeom*)output)->prims
@@ -567,7 +582,8 @@ int main(int ac, char **av)
   
   // ----------- build miss prog(s) -----------
   lloSbtMissProgsBuild
-    ([&](uint8_t *output,
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rayType) {
       /* we don't have any ... */
@@ -575,7 +591,8 @@ int main(int ac, char **av)
   
   // ----------- build raygens -----------
   lloSbtRayGensBuild
-    ([&](uint8_t *output,
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;
@@ -583,8 +600,8 @@ int main(int ac, char **av)
       rg->deviceCount = lloGetDeviceCount(llo);
       rg->fbSize = fbSize;
       rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
-      rg->worldAccel  = lloGroupGetTraversable(llo,WORLD_GROUP,devID);
-      rg->worldSBTOffset  = ll->groupGetSBTOffset(WORLD_GROUP);
+      rg->worldAccel     = lloGroupGetTraversable(llo,WORLD_GROUP,devID);
+      rg->worldSBTOffset = lloGroupGetSbtOffset(llo,WORLD_GROUP);
 
       const float vfov = fovy;
       const vec3f vup = lookUp;

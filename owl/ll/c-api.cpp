@@ -327,6 +327,19 @@ namespace owl {
         });
     }
 
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloInstanceGroupCreate(LLOContext llo,
+                                          int32_t        groupID,
+                                          const int32_t *childGroupIDs,
+                                          int32_t        numChildGroupIDs)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->instanceGroupCreate(groupID,childGroupIDs,numChildGroupIDs);
+        });
+    }
+
     /*! set a buffer of bounding boxes that this user geometry will
       use when building the accel structure. this is one of multiple
       ways of specifying the bounding boxes for a user gometry (the
@@ -573,6 +586,19 @@ namespace owl {
       }
     }
 
+    extern "C" OWL_LL_INTERFACE
+    uint32_t lloGroupGetSbtOffset(LLOContext llo,
+                                  int32_t    groupID)
+    {
+      try {
+        DeviceGroup *dg = (DeviceGroup *)llo;
+        return dg->groupGetSBTOffset(groupID);
+      } catch (const std::runtime_error &e) {
+        lastErrorText = e.what();
+        return (OptixTraversableHandle)0;
+      }
+    }
+    
 
   
     extern "C" OWL_LL_INTERFACE
@@ -585,6 +611,36 @@ namespace owl {
           dg->groupBuildAccel(groupID);
         });
     }
+
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloInstanceGroupSetTransform(LLOContext llo,
+                                           int32_t    groupID,
+                                           int32_t    childID,
+                                           const float *xfm)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->instanceGroupSetTransform(groupID,childID,
+                                        *(const affine3f*)xfm);
+        });
+    }
+        
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloInstanceGroupSetChild(LLOContext llo,
+                                       int32_t    groupID,
+                                       int32_t    childID,
+                                       int32_t    childGroupID,
+                                       const float *xfm)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->instanceGroupSetChild(groupID,childID,childGroupID,
+                                    *(const affine3f*)xfm);
+        });
+    }
+    
 
   } // ::owl::ll
 } //::owl
