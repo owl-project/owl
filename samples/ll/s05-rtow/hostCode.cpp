@@ -17,7 +17,7 @@
 // public owl-ll API
 #include <owl/ll.h>
 // our device-side data structures
-#include "deviceCode.h"
+#include "GeomTypes.h"
 // external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
@@ -228,7 +228,7 @@ int main(int ac, char **av)
                          /* geoms in group, pointer */ geomsInGroup,
                          /* geoms in group, count   */ NUM_GEOMS);
   lloGroupBuildPrimitiveBounds
-    (WORLD_GROUP,max3(sizeof(MetalSpheresGeom),
+    (llo,WORLD_GROUP,max3(sizeof(MetalSpheresGeom),
                       sizeof(DielectricSpheresGeom),
                       sizeof(LambertianSpheresGeom)),
      [&](uint8_t *output, int devID, int geomID, int childID) {
@@ -258,7 +258,8 @@ int main(int ac, char **av)
 
   // ----------- build hitgroups -----------
   lloSbtHitProgsBuild
-    ([&](uint8_t *output,int devID,int geomID,int childID) {
+    (llo,
+     [&](uint8_t *output,int devID,int geomID,int childID) {
       switch(geomID) {
       case LAMBERTIAN_SPHERES_GEOM:
         ((LambertianSpheresGeom*)output)->prims
@@ -279,7 +280,8 @@ int main(int ac, char **av)
   
   // ----------- build miss prog(s) -----------
   lloSbtMissProgsBuild
-    ([&](uint8_t *output,
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rayType) {
       /* we don't have any ... */
@@ -287,7 +289,8 @@ int main(int ac, char **av)
   
   // ----------- build raygens -----------
   lloSbtRayGensBuild
-    ([&](uint8_t *output,
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;
