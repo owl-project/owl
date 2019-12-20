@@ -93,19 +93,19 @@ int main(int ac, char **av)
                             /*module:*/0,
                             "PyramidMesh");
   
-  ll->allocRayGens(1);
-  ll->setRayGen(/*program ID*/0,
+  lloAllocRayGens(llo,1);
+  lloRayGenCreate(llo,/*program ID*/0,
                 /*module:*/0,
                 "simpleRayGen",
                 sizeof(RayGenData));
   
-  ll->allocMissProgs(1);
-  ll->setMissProg(/*program ID*/0,
+  lloAllocMissProgs(llo,1);
+  lloMissProgCreate(llo,/*program ID*/0,
                   /*module:*/0,
                   "miss",
                   sizeof(MissProgData));
-  ll->buildPrograms();
-  ll->createPipeline();
+  lloBuildPrograms(llo);
+  lloCreatePipeline(llo);
 
   LOG("building geometries ...");
 
@@ -126,20 +126,20 @@ int main(int ac, char **av)
          INDEX_BUFFER,
          FRAME_BUFFER,
          NUM_BUFFERS };
-  ll->allocBuffers(NUM_BUFFERS);
-  ll->deviceBufferCreate(LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,
+  lloAllocBuffers(llo,NUM_BUFFERS);
+  lloDeviceBufferCreate(llo,LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,
                          lambertianPyramids.size(),
                          sizeof(lambertianPyramids[0]),
                          lambertianPyramids.data());
-  ll->deviceBufferCreate(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
-  ll->deviceBufferCreate(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
-  ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  lloDeviceBufferCreate(llo,VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
+  lloDeviceBufferCreate(llo,INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
+  lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
   
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
   enum { PYRAMID_GEOM=0,NUM_GEOMS };
-  ll->allocGeoms(NUM_GEOMS);
+  lloAllocGeoms(llo,NUM_GEOMS);
   ll->trianglesGeomCreate(/* geom ID    */PYRAMID_GEOM,
                           /* type/PG ID */PYRAMID_GEOM_TYPE);
   ll->trianglesGeomSetVertexBuffer(/* geom ID   */PYRAMID_GEOM,
@@ -155,12 +155,12 @@ int main(int ac, char **av)
   int WORLD_GROUP = numLevels - 1;
   
   // enum { TRIANGLES_GROUP=0,PYRAMID_GROUP_LVL_1,WORLD_GROUP,NUM_GROUPS };
-  ll->allocGroups(numLevels);
+  lloAllocGroups(llo,numLevels);
   int geomsInGroup[] = { 0 };
-  ll->trianglesGeomGroupCreate(/* group ID */0,
+  lloTrianglesGeomGroupCreate(llo,/* group ID */0,
                                /* geoms in group, pointer */ geomsInGroup,
                                /* geoms in group, count   */ 1); 
-  ll->groupBuildAccel(0);
+  lloGroupAccelBuild(llo,0);
 
   auto make_sierpinski = [&](int parent_level, int child_level){
     int groupsInWorldGroup[]
@@ -193,7 +193,7 @@ int main(int ac, char **av)
     ll->instanceGroupSetTransform(parent_level,2,c);
     ll->instanceGroupSetTransform(parent_level,3,d);
     ll->instanceGroupSetTransform(parent_level,4,e);
-    ll->groupBuildAccel(parent_level);
+    lloGroupAccelBuild(llo,parent_level);
   };
 
   for (uint32_t i = 1; i < numLevels; ++i) {

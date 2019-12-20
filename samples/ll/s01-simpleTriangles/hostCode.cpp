@@ -104,9 +104,9 @@ int main(int ac, char **av)
                   "simpleRayGen",
                   sizeof(RayGenData));
   
-  // ll->allocMissProgs(1);
+  // lloAllocMissProgs(llo,1);
   lloAllocMissProgs(llo,1);
-  // ll->setMissProg(/*program ID*/0,
+  // lloMissProgCreate(llo,/*program ID*/0,
   //                 /*module:*/0,
   //                 "miss",
   //                 sizeof(MissProgData));
@@ -116,8 +116,8 @@ int main(int ac, char **av)
                     "miss",
                     sizeof(MissProgData));
 
-  // ll->buildPrograms();
-  // ll->createPipeline();
+  // lloBuildPrograms(llo);
+  // lloCreatePipeline(llo);
   lloBuildPrograms(llo);
   lloCreatePipeline(llo);
 
@@ -131,20 +131,20 @@ int main(int ac, char **av)
   // alloc buffers
   // ------------------------------------------------------------------
   enum { VERTEX_BUFFER=0,INDEX_BUFFER,FRAME_BUFFER,NUM_BUFFERS };
-  // ll->allocBuffers(NUM_BUFFERS);
+  // lloAllocBuffers(llo,NUM_BUFFERS);
   lloAllocBuffers(llo,NUM_BUFFERS);
-  // ll->deviceBufferCreate(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
+  // lloDeviceBufferCreate(llo,VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
   lloDeviceBufferCreate(llo,VERTEX_BUFFER,NUM_VERTICES*sizeof(vec3f),vertices);
-  // ll->deviceBufferCreate(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
+  // lloDeviceBufferCreate(llo,INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
   lloDeviceBufferCreate(llo,INDEX_BUFFER,NUM_INDICES*sizeof(vec3i),indices);
-  // ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  // lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
   lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y*sizeof(uint32_t));
   
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
   enum { TRIANGLES_GEOM=0,NUM_GEOMS };
-  // ll->allocGeoms(NUM_GEOMS);
+  // lloAllocGeoms(llo,NUM_GEOMS);
   lloAllocGeoms(llo,NUM_GEOMS);
   // ll->trianglesGeomCreate(/* geom ID    */TRIANGLES_GEOM,
   //                         /* type/PG ID */TRIANGLES_GEOM_TYPE);
@@ -171,17 +171,17 @@ int main(int ac, char **av)
   // ##################################################################
 
   enum { TRIANGLES_GROUP=0,NUM_GROUPS };
-  // ll->allocGroups(NUM_GROUPS);
+  // lloAllocGroups(llo,NUM_GROUPS);
   lloAllocGroups(llo,NUM_GROUPS);
   int geomsInGroup[] = { 0 };
-  // ll->trianglesGeomGroupCreate(/* group ID */TRIANGLES_GROUP,
+  // lloTrianglesGeomGroupCreate(llo,/* group ID */TRIANGLES_GROUP,
   //                              /* geoms in group, pointer */ geomsInGroup,
   //                              /* geoms in group, count   */ 1);
   lloTrianglesGeomGroupCreate(llo,
                               /* group ID */TRIANGLES_GROUP,
                               /* geoms in group, pointer */ geomsInGroup,
                               /* geoms in group, count   */ 1);
-  // ll->groupBuildAccel(TRIANGLES_GROUP);
+  // lloGroupAccelBuild(llo,TRIANGLES_GROUP);
   lloGroupAccelBuild(llo,TRIANGLES_GROUP);
 
   // ##################################################################

@@ -72,9 +72,9 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   LOG("allocating frame buffer")
   enum { FRAME_BUFFER=0,NUM_BUFFERS };
-  // ll->allocBuffers(NUM_BUFFERS);
+  // lloAllocBuffers(llo,NUM_BUFFERS);
   lloAllocBuffers(llo,NUM_BUFFERS);
-  // ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  // lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
   lloHostPinnedBufferCreate(llo,
                             /* buffer ID */FRAME_BUFFER,
                             /* #bytes    */fbSize.x*fbSize.y*sizeof(uint32_t));

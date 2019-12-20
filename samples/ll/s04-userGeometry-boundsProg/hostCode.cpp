@@ -22,13 +22,13 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
-#define LOG(message)                                    \
-  std::cout << GDT_TERMINAL_BLUE;                       \
-  std::cout << "#ll.sample(main): " << message << std::endl;  \
+#define LOG(message)                                            \
+  std::cout << GDT_TERMINAL_BLUE;                               \
+  std::cout << "#ll.sample(main): " << message << std::endl;    \
   std::cout << GDT_TERMINAL_DEFAULT;
-#define LOG_OK(message)                                    \
-  std::cout << GDT_TERMINAL_LIGHT_BLUE;                       \
-  std::cout << "#ll.sample(main): " << message << std::endl;  \
+#define LOG_OK(message)                                         \
+  std::cout << GDT_TERMINAL_LIGHT_BLUE;                         \
+  std::cout << "#ll.sample(main): " << message << std::endl;    \
   std::cout << GDT_TERMINAL_DEFAULT;
 
 extern "C" char ptxCode[];
@@ -70,31 +70,31 @@ int main(int ac, char **av)
   lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
   lloGeomTypeCreate(llo,SPHERE_GEOM_TYPE,sizeof(SphereGeomData));
   lloGeomTypeClosestHit(llo,/*geom type ID*/SPHERE_GEOM_TYPE,
-                            /*ray type  */0,
-                            /*module:*/0,
-                            "Sphere");
+                        /*ray type  */0,
+                        /*module:*/0,
+                        "Sphere");
   lloGeomTypeIntersect(llo,/*geom type ID*/SPHERE_GEOM_TYPE,
-                           /*ray type  */0,
-                           /*module:*/0,
-                           "Sphere");
+                       /*ray type  */0,
+                       /*module:*/0,
+                       "Sphere");
 
   ll->setGeomTypeBoundsProgDevice(/*program ID*/0,
                                   /*module:*/0,
                                   "Sphere",
                                   sizeof(SphereGeomData));
-  ll->allocRayGens(1);
-  ll->setRayGen(/*program ID*/0,
-                /*module:*/0,
-                "simpleRayGen",
-                sizeof(RayGenData));
-
-  ll->allocMissProgs(1);
-  ll->setMissProg(/*program ID*/0,
+  lloAllocRayGens(llo,1);
+  lloRayGenCreate(llo,/*program ID*/0,
                   /*module:*/0,
-                  "miss",
-                  sizeof(MissProgData));
-  ll->buildPrograms();
-  ll->createPipeline();
+                  "simpleRayGen",
+                  sizeof(RayGenData));
+
+  lloAllocMissProgs(llo,1);
+  lloMissProgCreate(llo,/*program ID*/0,
+                    /*module:*/0,
+                    "miss",
+                    sizeof(MissProgData));
+  lloBuildPrograms(llo);
+  lloCreatePipeline(llo);
 
   LOG("building geometries ...");
 
@@ -107,15 +107,15 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   enum { FRAME_BUFFER=0,
          NUM_BUFFERS };
-  ll->allocBuffers(NUM_BUFFERS);
-  ll->hostPinnedBufferCreate(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  lloAllocBuffers(llo,NUM_BUFFERS);
+  lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y*sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  ll->allocGeoms(8);
+  lloAllocGeoms(llo,8);
   for (int i=0;i<8;i++) {
-    ll->userGeomCreate(/* geom ID    */i,
+    lloUserGeomCreate(llo,/* geom ID    */i,
                        /* type/PG ID */0,
                        /* numprims   */1);
   }
@@ -125,11 +125,11 @@ int main(int ac, char **av)
   // ##################################################################
   
   enum { SPHERES_GROUP=0,NUM_GROUPS };
-  ll->allocGroups(NUM_GROUPS);
+  lloAllocGroups(llo,NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  ll->userGeomGroupCreate(/* group ID */SPHERES_GROUP,
-                          /* geoms in group, pointer */ geomsInGroup,
-                          /* geoms in group, count   */ 8);
+  lloUserGeomGroupCreate(llo,/* group ID */SPHERES_GROUP,
+                         /* geoms in group, pointer */ geomsInGroup,
+                         /* geoms in group, count   */ 8);
   ll->groupBuildPrimitiveBounds
     (SPHERES_GROUP,sizeof(SphereGeomData),
      [&](uint8_t *output, int devID, int geomID, int childID) {
@@ -137,7 +137,7 @@ int main(int ac, char **av)
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
     });
-  ll->groupBuildAccel(SPHERES_GROUP);
+  lloGroupAccelBuild(llo,SPHERES_GROUP);
 
   // ##################################################################
   // build *SBT* required to trace the groups

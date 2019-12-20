@@ -96,9 +96,9 @@ int main(int ac, char **av)
                   "simpleRayGen",
                   sizeof(RayGenData));
   
-  // ll->allocMissProgs(1);
+  // lloAllocMissProgs(llo,1);
   lloAllocMissProgs(llo,1);
-  // ll->setMissProg(/*program ID*/0,
+  // lloMissProgCreate(llo,/*program ID*/0,
   //                 /*module:*/0,
   //                 "miss",
   //                 sizeof(MissProgData));
@@ -108,23 +108,23 @@ int main(int ac, char **av)
                     "miss",
                     sizeof(MissProgData));
 
-  // ll->buildPrograms();
-  // ll->createPipeline();
+  // lloBuildPrograms(llo);
+  // lloCreatePipeline(llo);
   lloBuildPrograms(llo);
   lloCreatePipeline(llo);
-  // ll->allocRayGens(1);
-  // ll->setRayGen(/*program ID*/0,
+  // lloAllocRayGens(llo,1);
+  // lloRayGenCreate(llo,/*program ID*/0,
   //               /*module:*/0,
   //               "simpleRayGen",
   //               sizeof(RayGenData));
   
-  // ll->allocMissProgs(1);
-  // ll->setMissProg(/*program ID*/0,
+  // lloAllocMissProgs(llo,1);
+  // lloMissProgCreate(llo,/*program ID*/0,
   //                 /*module:*/0,
   //                 "miss",
   //                 sizeof(MissProgData));
-  // ll->buildPrograms();
-  // ll->createPipeline();
+  // lloBuildPrograms(llo);
+  // lloCreatePipeline(llo);
 
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
@@ -161,7 +161,7 @@ int main(int ac, char **av)
     std::vector<vec3f> vertices;
     for (auto v : unitVertices)
       vertices.push_back(1.5f*v+delta);
-    // ll->deviceBufferCreate(VERTEX_BUFFER_000+i,NUM_VERTICES,
+    // lloDeviceBufferCreate(llo,VERTEX_BUFFER_000+i,NUM_VERTICES,
     //                        sizeof(vec3f),vertices.data());
     lloDeviceBufferCreate(llo,VERTEX_BUFFER_000+i,
                           NUM_VERTICES*sizeof(vec3f),vertices.data());
@@ -193,16 +193,16 @@ int main(int ac, char **av)
   
   enum { TRIANGLES_GROUP=0,NUM_GROUPS };
   lloAllocGroups(llo,NUM_GROUPS);
-  // ll->allocGroups(NUM_GROUPS);
+  // lloAllocGroups(llo,NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  // ll->trianglesGeomGroupCreate(/* group ID */TRIANGLES_GROUP,
+  // lloTrianglesGeomGroupCreate(llo,/* group ID */TRIANGLES_GROUP,
   //                              /* geoms in group, pointer */ geomsInGroup,
   //                              /* geoms in group, count   */ 8);
   lloTrianglesGeomGroupCreate(llo,
                               /* group ID */TRIANGLES_GROUP,
                                /* geoms in group, pointer */ geomsInGroup,
                                /* geoms in group, count   */ 8);
-  // ll->groupBuildAccel(TRIANGLES_GROUP);
+  // lloGroupAccelBuild(llo,TRIANGLES_GROUP);
   lloGroupAccelBuild(llo,TRIANGLES_GROUP);
 
   // ##################################################################

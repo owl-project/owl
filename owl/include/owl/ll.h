@@ -320,12 +320,39 @@ extern "C" {
                                        what defines the SBT data size,
                                        closest hit program, etc */
                                    int32_t    geomTypeID);
+  OWL_LL_INTERFACE
+  LLOResult lloUserGeomCreate(LLOContext llo,
+                              /*! ID of the geometry to create */
+                              int32_t    geomID,
+                              /*! ID of the geometry *type* to
+                                use for this geometry (this is
+                                what defines the SBT data size,
+                                closest hit program, etc */
+                              int32_t    geomTypeID,
+                              int32_t    numPrims);
+
+      
+  /*! set a buffer of bounding boxes that this user geometry will use
+    when building the accel structure. this is one of multiple ways of
+    specifying the bounding boxes for a user gometry (the other two
+    being a) setting the geometry type's boundsFunc, or b) setting a
+    host-callback fr computing the bounds). Only one of the three
+    methods can be set at any given time */
+  OWL_LL_INTERFACE
+  LLOResult lloUserGeomSetBoundsBuffer(LLOContext llo,
+                                       int32_t geomID,
+                                       int32_t bufferID);
   
   OWL_LL_INTERFACE
   LLOResult lloTrianglesGeomGroupCreate(LLOContext     llo,
                                         int32_t        groupID,
                                         const int32_t *geomIDs,
                                         int32_t        numGeomIDs);
+  OWL_LL_INTERFACE
+  LLOResult lloUserGeomGroupCreate(LLOContext     llo,
+                                   int32_t        groupID,
+                                   const int32_t *geomIDs,
+                                   int32_t        numGeomIDs);
   
   OWL_LL_INTERFACE
   LLOResult lloGroupAccelBuild(LLOContext llo,
