@@ -150,8 +150,9 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  ll->sbtHitProgsBuild
-    ([&](uint8_t *output,int devID,int geomID,int childID) {
+  lloSbtHitProgsBuild
+    (llo,
+     [&](uint8_t *output,int devID,int geomID,int childID) {
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
@@ -159,8 +160,9 @@ int main(int ac, char **av)
     });
   
   // ----------- build miss prog(s) -----------
-  ll->sbtMissProgsBuild
-    ([&](uint8_t *output,
+  lloSbtMissProgsBuild
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rayType) {
       ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
@@ -168,16 +170,17 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  ll->sbtRayGensBuild
-    ([&](uint8_t *output,
+  lloSbtRayGensBuild
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;
       rg->deviceIndex   = devID;
-      rg->deviceCount = ll->getDeviceCount();
+      rg->deviceCount = lloGetDeviceCount(llo);
       rg->fbSize = fbSize;
-      rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-      rg->world  = ll->groupGetTraversable(SPHERES_GROUP,devID);
+      rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+      rg->world  = lloGroupGetTraversable(llo,SPHERES_GROUP,devID);
 
       // compute camera frame:
       vec3f &pos = rg->camera.pos;
@@ -204,7 +207,7 @@ int main(int ac, char **av)
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);

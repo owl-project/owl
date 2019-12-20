@@ -454,15 +454,15 @@ int main(int ac, char **av)
       switch(geomID) {
       case LAMBERTIAN_SPHERES_GEOM:
         ((LambertianSpheresGeom*)output)->prims
-          = (LambertianSphere*)ll->bufferGetPointer(LAMBERTIAN_SPHERES_BUFFER,devID);
+          = (LambertianSphere*)lloBufferGetPointer(llo,LAMBERTIAN_SPHERES_BUFFER,devID);
         break;
       case DIELECTRIC_SPHERES_GEOM:
         ((DielectricSpheresGeom*)output)->prims
-          = (DielectricSphere*)ll->bufferGetPointer(DIELECTRIC_SPHERES_BUFFER,devID);
+          = (DielectricSphere*)lloBufferGetPointer(llo,DIELECTRIC_SPHERES_BUFFER,devID);
         break;
       case METAL_SPHERES_GEOM:
         ((MetalSpheresGeom*)output)->prims
-          = (MetalSphere*)ll->bufferGetPointer(METAL_SPHERES_BUFFER,devID);
+          = (MetalSphere*)lloBufferGetPointer(llo,METAL_SPHERES_BUFFER,devID);
         break;
       default:
         assert(0);
@@ -514,51 +514,51 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  ll->sbtHitProgsBuild
+  lloSbtHitProgsBuild
     ([&](uint8_t *output,int devID,int geomID,int childID) {
       switch(geomID) {
       case LAMBERTIAN_SPHERES_GEOM:
         ((LambertianSpheresGeom*)output)->prims
-          = (LambertianSphere*)ll->bufferGetPointer(LAMBERTIAN_SPHERES_BUFFER,devID);
+          = (LambertianSphere*)lloBufferGetPointer(llo,LAMBERTIAN_SPHERES_BUFFER,devID);
         break;
       case DIELECTRIC_SPHERES_GEOM:
         ((DielectricSpheresGeom*)output)->prims
-          = (DielectricSphere*)ll->bufferGetPointer(DIELECTRIC_SPHERES_BUFFER,devID);
+          = (DielectricSphere*)lloBufferGetPointer(llo,DIELECTRIC_SPHERES_BUFFER,devID);
         break;
       case METAL_SPHERES_GEOM:
         ((MetalSpheresGeom*)output)->prims
-          = (MetalSphere*)ll->bufferGetPointer(METAL_SPHERES_BUFFER,devID);
+          = (MetalSphere*)lloBufferGetPointer(llo,METAL_SPHERES_BUFFER,devID);
         break;
 
       case LAMBERTIAN_BOXES_GEOM: {
         PING;
         LambertianBoxesGeom &self = *(LambertianBoxesGeom*)output;
         self.index
-          = (vec3i*)ll->bufferGetPointer(LAMBERTIAN_BOXES_INDEX_BUFFER,devID);
+          = (vec3i*)lloBufferGetPointer(llo,LAMBERTIAN_BOXES_INDEX_BUFFER,devID);
         self.vertex
-          = (vec3f*)ll->bufferGetPointer(LAMBERTIAN_BOXES_VERTEX_BUFFER,devID);
+          = (vec3f*)lloBufferGetPointer(llo,LAMBERTIAN_BOXES_VERTEX_BUFFER,devID);
         self.perBoxMaterial
-          = (Lambertian *)ll->bufferGetPointer(LAMBERTIAN_BOXES_MATERIAL_BUFFER,devID);
+          = (Lambertian *)lloBufferGetPointer(llo,LAMBERTIAN_BOXES_MATERIAL_BUFFER,devID);
       } break;
       case DIELECTRIC_BOXES_GEOM: {
         PING;
         DielectricBoxesGeom &self = *(DielectricBoxesGeom*)output;
         self.index
-          = (vec3i*)ll->bufferGetPointer(DIELECTRIC_BOXES_INDEX_BUFFER,devID);
+          = (vec3i*)lloBufferGetPointer(llo,DIELECTRIC_BOXES_INDEX_BUFFER,devID);
         self.vertex
-          = (vec3f*)ll->bufferGetPointer(DIELECTRIC_BOXES_VERTEX_BUFFER,devID);
+          = (vec3f*)lloBufferGetPointer(llo,DIELECTRIC_BOXES_VERTEX_BUFFER,devID);
         self.perBoxMaterial
-          = (Dielectric *)ll->bufferGetPointer(DIELECTRIC_BOXES_MATERIAL_BUFFER,devID);
+          = (Dielectric *)lloBufferGetPointer(llo,DIELECTRIC_BOXES_MATERIAL_BUFFER,devID);
       } break;
       case METAL_BOXES_GEOM: {
         PING;
         MetalBoxesGeom &self = *(MetalBoxesGeom*)output;
         self.index
-          = (vec3i*)ll->bufferGetPointer(METAL_BOXES_INDEX_BUFFER,devID);
+          = (vec3i*)lloBufferGetPointer(llo,METAL_BOXES_INDEX_BUFFER,devID);
         self.vertex
-          = (vec3f*)ll->bufferGetPointer(METAL_BOXES_VERTEX_BUFFER,devID);
+          = (vec3f*)lloBufferGetPointer(llo,METAL_BOXES_VERTEX_BUFFER,devID);
         self.perBoxMaterial
-          = (Metal *)ll->bufferGetPointer(METAL_BOXES_MATERIAL_BUFFER,devID);
+          = (Metal *)lloBufferGetPointer(llo,METAL_BOXES_MATERIAL_BUFFER,devID);
       } break;
       default:
         assert(0);
@@ -566,7 +566,7 @@ int main(int ac, char **av)
     });
   
   // ----------- build miss prog(s) -----------
-  ll->sbtMissProgsBuild
+  lloSbtMissProgsBuild
     ([&](uint8_t *output,
          int devID,
          int rayType) {
@@ -574,16 +574,16 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  ll->sbtRayGensBuild
+  lloSbtRayGensBuild
     ([&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;
       rg->deviceIndex   = devID;
-      rg->deviceCount = ll->getDeviceCount();
+      rg->deviceCount = lloGetDeviceCount(llo);
       rg->fbSize = fbSize;
-      rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-      rg->worldAccel  = ll->groupGetTraversable(WORLD_GROUP,devID);
+      rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+      rg->worldAccel  = lloGroupGetTraversable(llo,WORLD_GROUP,devID);
       rg->worldSBTOffset  = ll->groupGetSBTOffset(WORLD_GROUP);
 
       const float vfov = fovy;
@@ -620,7 +620,7 @@ int main(int ac, char **av)
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);

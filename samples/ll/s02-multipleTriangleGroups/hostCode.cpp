@@ -213,13 +213,13 @@ int main(int ac, char **av)
   // ----------- build hitgroups -----------
   lloSbtHitProgsBuild
     (llo,
-  // ll->sbtHitProgsBuild
+  // lloSbtHitProgsBuild
   //   (
      [&](uint8_t *output,int devID,int geomID,int rayID) {
       TrianglesGeomData &self = *(TrianglesGeomData*)output;
-      // self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
+      // self.index  = (vec3i*)lloBufferGetPointer(llo,INDEX_BUFFER,devID);
       self.index  = (vec3i*)lloBufferGetPointer(llo,INDEX_BUFFER,devID);
-      // self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER_000+geomID,devID);
+      // self.vertex = (vec3f*)lloBufferGetPointer(llo,VERTEX_BUFFER_000+geomID,devID);
       self.vertex = (vec3f*)lloBufferGetPointer(llo,VERTEX_BUFFER_000+geomID,devID);
       self.color  = owl::randomColor(geomID);
     });
@@ -227,7 +227,7 @@ int main(int ac, char **av)
   // ----------- build miss prog(s) -----------
   lloSbtMissProgsBuild
     (llo,
-  // ll->sbtMissProgsBuild
+  // lloSbtMissProgsBuild
   //   (
      [&](uint8_t *output,
          int devID,
@@ -238,7 +238,7 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  // ll->sbtRayGensBuild
+  // lloSbtRayGensBuild
   //   (
   lloSbtRayGensBuild
     (llo,
@@ -247,11 +247,11 @@ int main(int ac, char **av)
          int rgID) {
       RayGenData *rg = (RayGenData*)output;
       rg->deviceIndex   = devID;
-      // rg->deviceCount = ll->getDeviceCount();
+      // rg->deviceCount = lloGetDeviceCount(llo);
       rg->deviceCount = lloGetDeviceCount(llo);
       rg->fbSize = fbSize;
-      // rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-      // rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+      // rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+      // rg->world  = lloGroupGetTraversable(llo,TRIANGLES_GROUP,devID);
       rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
       rg->world  = lloGroupGetTraversable(llo,TRIANGLES_GROUP,devID);
 
@@ -280,7 +280,7 @@ int main(int ac, char **av)
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  // const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  // const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));

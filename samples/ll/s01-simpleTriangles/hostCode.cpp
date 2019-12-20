@@ -190,21 +190,21 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  // ll->sbtHitProgsBuild
+  // lloSbtHitProgsBuild
   //   (
   lloSbtHitProgsBuild
     (llo,
      [&](uint8_t *output,int devID,int geomID,int rayID) {
       TrianglesGeomData &self = *(TrianglesGeomData*)output;
       self.color  = vec3f(0,1,0);
-      // self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
+      // self.index  = (vec3i*)lloBufferGetPointer(llo,INDEX_BUFFER,devID);
       self.index  = (vec3i*)lloBufferGetPointer(llo,INDEX_BUFFER,devID);
-      // self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);
+      // self.vertex = (vec3f*)lloBufferGetPointer(llo,VERTEX_BUFFER,devID);
       self.vertex = (vec3f*)lloBufferGetPointer(llo,VERTEX_BUFFER,devID);
     });
   
   // ----------- build miss prog(s) -----------
-  // ll->sbtMissProgsBuild
+  // lloSbtMissProgsBuild
   //   (
   lloSbtMissProgsBuild
     (llo,
@@ -217,7 +217,7 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  // ll->sbtRayGensBuild
+  // lloSbtRayGensBuild
   //   ([&](uint8_t *output,
   //        int devID,
   //        int rgID) {
@@ -227,12 +227,12 @@ int main(int ac, char **av)
              int rgID) {
       RayGenData *rg = (RayGenData*)output;
       rg->deviceIndex   = devID;
-      // rg->deviceCount = ll->getDeviceCount();
+      // rg->deviceCount = lloGetDeviceCount(llo);
       rg->deviceCount = lloGetDeviceCount(llo);
       rg->fbSize = fbSize;
-      // rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
+      // rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
       rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
-      // rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
+      // rg->world  = lloGroupGetTraversable(llo,TRIANGLES_GROUP,devID);
       rg->world  = lloGroupGetTraversable(llo,TRIANGLES_GROUP,devID);
 
       // compute camera frame:
@@ -260,7 +260,7 @@ int main(int ac, char **av)
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  // const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  // const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));

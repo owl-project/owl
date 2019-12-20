@@ -84,15 +84,15 @@ int main(int ac, char **av)
   // ##################################################################
   // ----------- build raygens -----------
   LOG("building raygen program");
-  // ll->sbtRayGensBuild
+  // lloSbtRayGensBuild
   //   ([&](uint8_t *output,
   //        int devID,
   //        int rgID) {
   //     RayGenData *rg = (RayGenData*)output;
   //     rg->deviceIndex   = devID;
-  //     rg->deviceCount = ll->getDeviceCount();
+  //     rg->deviceCount = lloGetDeviceCount(llo);
   //     rg->fbSize = fbSize;
-  //     rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
+  //     rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
   //     rg->color0 = vec3f(.8f,0.f,0.f);
   //     rg->color1 = vec3f(.8f,.8f,.8f);
   //   });
@@ -120,7 +120,7 @@ int main(int ac, char **av)
   
   LOG("done with launch, writing frame buffer to " << outFileName);
   // for host pinned mem it doesn't matter which device we query...
-  // const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  // const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
