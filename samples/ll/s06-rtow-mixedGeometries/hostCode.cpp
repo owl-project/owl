@@ -588,7 +588,7 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("trying to launch ...");
-  ll->launch(0,fbSize);
+  lloLaunch2D(llo,0,fbSize.x,fbSize.y);
   // todo: explicit sync?
   
   LOG("done with launch, writing picture ...");

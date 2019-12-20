@@ -275,7 +275,7 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("executing the launch ...");
-  // ll->launch(0,fbSize);
+  // lloLaunch2D(llo,0,fbSize.x,fbSize.y);
   lloLaunch2D(llo,0,fbSize.x,fbSize.y);
   
   LOG("done with launch, writing picture ...");
