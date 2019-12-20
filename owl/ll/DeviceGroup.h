@@ -247,15 +247,6 @@ namespace owl {
                                  int childNo,
                                  int childGroupID,
                                  const affine3f &xfm=affine3f(owl::common::one));
-      void createDeviceBuffer(int bufferID,
-                              size_t elementCount,
-                              size_t elementSize,
-                              const void *initData)
-      {
-        // TODO: ax this after renaming samples
-        std::cout << "warning: deprecated, use deviceBufferCreate() instead" << std::endl;
-        deviceBufferCreate(bufferID,elementCount,elementSize,initData);
-      }
 
       /*! destroy the given buffer, and release all host and/or device
         memory associated with it */
@@ -268,14 +259,6 @@ namespace owl {
                               size_t elementSize,
                               const void *initData);
       
-      void createHostPinnedBuffer(int bufferID,
-                                  size_t elementCount,
-                                  size_t elementSize)
-      {
-        // TODO: ax this after renaming samples
-        std::cout << "warning: deprecated, use hostPinnedBufferCreate() instead" << std::endl;
-        hostPinnedBufferCreate(bufferID,elementCount,elementSize);
-      }
       void hostPinnedBufferCreate(int bufferID,
                                   size_t elementCount,
                                   size_t elementSize);

@@ -174,7 +174,7 @@ namespace owl {
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
-          dg->geomTypeCreate(geomID,geomTypeID);
+          dg->trianglesGeomCreate(geomID,geomTypeID);
         });
     }
     
@@ -344,7 +344,7 @@ namespace owl {
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
-          dg->createHostPinnedBuffer(bufferID,sizeInBytes,1);
+          dg->hostPinnedBufferCreate(bufferID,sizeInBytes,1);
         });
     }
       
@@ -359,7 +359,7 @@ namespace owl {
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
-          dg->createDeviceBuffer(bufferID,sizeInBytes,1,initData);
+          dg->deviceBufferCreate(bufferID,sizeInBytes,1,initData);
         });
     }
       
