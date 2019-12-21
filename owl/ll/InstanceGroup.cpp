@@ -182,7 +182,7 @@ namespace owl {
       instanceInput.instanceArray.instances
         = (CUdeviceptr)optixInstanceBuffer.get();
       instanceInput.instanceArray.numInstances
-        = optixInstances.size();
+        = (int)optixInstances.size();
       
       // ==================================================================
       // set up accel uptions

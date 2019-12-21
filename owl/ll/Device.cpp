@@ -992,7 +992,7 @@ namespace owl {
         if (!group) continue;
         if (!group->containsGeom()) continue;
         GeomGroup *gg = (GeomGroup *)group;
-        const int sbtOffset = gg->sbtOffset;
+        const int sbtOffset = (int)gg->sbtOffset;
         PRINT(sbtOffset);
         PRINT(gg->children.size());
         for (int childID=0;childID<gg->children.size();childID++) {

@@ -228,14 +228,14 @@ namespace owl {
                                   what defines the SBT data size,
                                   closest hit program, etc */
                                 int32_t    geomTypeID,
-                                int32_t    numPrims)
+                                size_t     numPrims)
     {
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
           dg->userGeomCreate(geomID,
                              geomTypeID,
-                             numPrims);
+                             (int32_t)numPrims);
         });
     }
     
@@ -543,14 +543,14 @@ namespace owl {
 
     
     extern "C" OWL_LL_INTERFACE
-    size_t lloGetDeviceCount(LLOContext llo)
+    int32_t lloGetDeviceCount(LLOContext llo)
     {
       try {
         DeviceGroup *dg = (DeviceGroup *)llo;
-        return dg->getDeviceCount();
+        return (int32_t)dg->getDeviceCount();
       } catch (const std::runtime_error &e) {
         lastErrorText = e.what();
-        return size_t(-1);
+        return -1;
       }
     }
   

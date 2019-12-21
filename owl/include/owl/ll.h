@@ -30,7 +30,16 @@
 #  include <unistd.h>
 #endif
 #include <stdint.h>
+
+#ifdef _WIN32
+#pragma warning( push )
+#pragma warning( disable : 4996 )
+#endif
+
 #include <optix.h>
+#ifdef _WIN32
+#pragma warning( push )
+#endif
 
 #ifdef _WIN32
 #define _CRT_SECURE_NO_WARNINGS
@@ -275,7 +284,7 @@ extern "C" {
                                 const void          *callBackData);
   
   OWL_LL_INTERFACE
-  size_t lloGetDeviceCount(LLOContext llo);
+  int32_t lloGetDeviceCount(LLOContext llo);
   
   /*! returns the device-side pointer of the given buffer, on the
    *  given device */
@@ -350,7 +359,7 @@ extern "C" {
                                 what defines the SBT data size,
                                 closest hit program, etc */
                               int32_t    geomTypeID,
-                              int32_t    numPrims);
+                              size_t     numPrims);
 
       
   /*! set a buffer of bounding boxes that this user geometry will use
