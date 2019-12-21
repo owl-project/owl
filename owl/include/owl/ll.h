@@ -417,17 +417,17 @@ extern "C" {
   LLOResult lloTrianglesGeomSetVertexBuffer(LLOContext llo,
                                             int32_t    geomID,
                                             int32_t    bufferID,
-                                            int32_t    count,
-                                            int32_t    stride,
-                                            int32_t    offset);
+      size_t    count,
+                                            size_t     stride,
+      size_t    offset);
   
   OWL_LL_INTERFACE
   LLOResult lloTrianglesGeomSetIndexBuffer(LLOContext llo,
                                            int32_t    geomID,
                                            int32_t    bufferID,
-                                           int32_t    count,
-                                           int32_t    stride,
-                                           int32_t    offset);
+      size_t    count,
+      size_t    stride,
+      size_t    offset);
   
 #ifdef __cplusplus
 } // extern "C"

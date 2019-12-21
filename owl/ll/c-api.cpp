@@ -262,9 +262,9 @@ namespace owl {
     LLOResult lloTrianglesGeomSetVertexBuffer(LLOContext llo,
                                               int32_t    geomID,
                                               int32_t    bufferID,
-                                              int32_t    count,
-                                              int32_t    stride,
-                                              int32_t    offset)
+        size_t    count,
+        size_t    stride,
+        size_t    offset)
       
     {
       return squashExceptions
@@ -272,9 +272,9 @@ namespace owl {
           DeviceGroup *dg = (DeviceGroup *)llo;
           dg->trianglesGeomSetVertexBuffer(geomID,
                                            bufferID,
-                                           count,
-                                           stride,
-                                           offset);
+                                           (int)count,
+              (int)stride,
+              (int)offset);
         });
     }
 
@@ -282,9 +282,9 @@ namespace owl {
     LLOResult lloTrianglesGeomSetIndexBuffer(LLOContext llo,
                                              int32_t    geomID,
                                              int32_t    bufferID,
-                                             int32_t    count,
-                                             int32_t    stride,
-                                             int32_t    offset)
+        size_t    count,
+        size_t    stride,
+        size_t    offset)
       
     {
       return squashExceptions
@@ -292,9 +292,9 @@ namespace owl {
           DeviceGroup *dg = (DeviceGroup *)llo;
           dg->trianglesGeomSetIndexBuffer(geomID,
                                           bufferID,
-                                          count,
-                                          stride,
-                                          offset);
+              (int)count,
+              (int)stride,
+              (int)offset);
         });
     }
 

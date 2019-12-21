@@ -46,7 +46,7 @@ std::vector<DielectricSphere> dielectricSpheres;
 std::vector<LambertianSphere> lambertianSpheres;
 std::vector<MetalSphere>      metalSpheres;
 
-inline float max3(float a, float b, float c)
+inline size_t max3(size_t a, size_t b, size_t c)
 { return std::max(std::max(a,b),c); }
 
 inline float rnd()

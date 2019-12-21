@@ -119,7 +119,6 @@
 //#define GDT_TERMINAL_LIGHT_RED "\e[91m"
 #define GDT_TERMINAL_LIGHT_RED "\033[1;31m"
 
-
 #ifdef _MSC_VER
 # define GDT_ALIGN(alignment) __declspec(align(alignment)) 
 #else
