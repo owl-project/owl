@@ -27,6 +27,8 @@ namespace owl {
     Buffer(Context *const context);
     
     virtual std::string toString() const { return "Buffer"; }
+
+    const void *getPointer(int deviceID);
   };
 
   struct HostPinnedBuffer : public Buffer {

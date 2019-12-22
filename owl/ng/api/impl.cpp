@@ -289,10 +289,13 @@ namespace owl {
   }
 
   OWL_API const void *
-  owlBufferGetPointer(OWLBuffer buffer, int deviceID)
+  owlBufferGetPointer(OWLBuffer _buffer, int deviceID)
   {
-    IGNORING_THIS();
-    return nullptr;
+    LOG_API_CALL();
+    assert(_buffer);
+    Buffer::SP buffer = ((APIHandle *)_buffer)->get<Buffer>();
+    assert(buffer);
+    return buffer->getPointer(deviceID);
   }
 
 

@@ -23,4 +23,9 @@ namespace owl {
     : RegisteredObject(context,context->buffers)
   {}
 
+  const void *Buffer::getPointer(int deviceID)
+  {
+    return context->ll->bufferGetPointer(this->ID,deviceID);
+  }
+      
 } // ::owl
