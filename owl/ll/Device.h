@@ -662,8 +662,8 @@ namespace owl {
       
       Buffer *checkGetBuffer(int bufferID)
       {
-        assert("check valid geom ID" && bufferID >= 0);
-        assert("check valid geom ID" && bufferID <  buffers.size());
+        assert("check valid buffer ID" && bufferID >= 0);
+        assert("check valid buffer ID" && bufferID <  buffers.size());
         Buffer *buffer = buffers[bufferID];
         assert("check valid buffer" && buffer != nullptr);
         return buffer;
