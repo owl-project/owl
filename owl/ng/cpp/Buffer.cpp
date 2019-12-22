@@ -34,7 +34,6 @@ namespace owl {
                              size_t count)
     : Buffer(context)
   {
-    PING;
     lloHostPinnedBufferCreate(context->llo,
                               this->ID,
                               count*sizeOf(type));
@@ -46,7 +45,6 @@ namespace owl {
                              const void *init)
     : Buffer(context)
   {
-    PING;
     lloDeviceBufferCreate(context->llo,
                           this->ID,
                           count*sizeOf(type),

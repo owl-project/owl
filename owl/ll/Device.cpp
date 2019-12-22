@@ -823,10 +823,10 @@ namespace owl {
       DeviceBuffer *buffer = new DeviceBuffer(elementCount,elementSize);
       if (initData) {
         buffer->devMem.upload(initData,"createDeviceBuffer: uploading initData");
-        LOG("uploading " << elementCount
-            << " items of size " << elementSize
-            << " from host ptr " << initData
-            << " to device ptr " << buffer->devMem.get());
+        // LOG("uploading " << elementCount
+        //     << " items of size " << elementSize
+        //     << " from host ptr " << initData
+        //     << " to device ptr " << buffer->devMem.get());
       }
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;

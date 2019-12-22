@@ -82,7 +82,7 @@ namespace owl {
     
 }
 
-#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
+#define IGNORING_THIS() std::cout << GDT_TERMINAL_YELLOW << "## ignoring " << __PRETTY_FUNCTION__ << GDT_TERMINAL_DEFAULT << std::endl;
   
 #define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
 

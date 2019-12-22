@@ -57,7 +57,6 @@ namespace owl {
       if (newID >= numIDsAllocedInContext) {
         while (newID >= numIDsAllocedInContext)
           numIDsAllocedInContext = std::max(1,numIDsAllocedInContext*2);
-        std::cout << "re-allocing context IDs : " << numIDsAllocedInContext << std::endl;
         reallocContextIDs(numIDsAllocedInContext);
       }
       return newID;
@@ -81,7 +80,6 @@ namespace owl {
   template<>
   void ObjectRegistryT<Buffer>::reallocContextIDs(int newMaxIDs)
   {
-    std::cout << "#ng: re-allocing buffer IDs to " << newMaxIDs << std::endl;
     lloAllocBuffers(context->llo,newMaxIDs);
   }
 
@@ -94,7 +92,6 @@ namespace owl {
   template<>
   void ObjectRegistryT<Geom>::reallocContextIDs(int newMaxIDs)
   {
-    std::cout << "#ng: re-allocing geoms to " << newMaxIDs << std::endl;
     lloAllocGeoms(context->llo,newMaxIDs);
   }
 
@@ -107,7 +104,6 @@ namespace owl {
   template<>
   void ObjectRegistryT<RayGen>::reallocContextIDs(int newMaxIDs)
   {
-    std::cout << "#ng: re-allocing rayGens to " << newMaxIDs << std::endl;
     lloAllocRayGens(context->llo,newMaxIDs);
   }
 
@@ -120,7 +116,6 @@ namespace owl {
   template<>
   void ObjectRegistryT<MissProg>::reallocContextIDs(int newMaxIDs)
   {
-    std::cout << "#ng: re-allocing missProgs to " << newMaxIDs << std::endl;
     lloAllocMissProgs(context->llo,newMaxIDs);
   }
 
@@ -133,7 +128,6 @@ namespace owl {
   template<>
   void ObjectRegistryT<Group>::reallocContextIDs(int newMaxIDs)
   {
-    std::cout << "#ng: re-allocing groups to " << newMaxIDs << std::endl;
     lloAllocGroups(context->llo,newMaxIDs);
   }
 

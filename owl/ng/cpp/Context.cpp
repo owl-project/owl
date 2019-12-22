@@ -63,9 +63,7 @@ namespace owl {
   Buffer::SP Context::hostPinnedBufferCreate(OWLDataType type,
                                              size_t count)
   {
-    PING;
     Buffer::SP buffer = std::make_shared<HostPinnedBuffer>(this,type,count);
-    PING;
     assert(buffer);
     return buffer;
   }
@@ -74,9 +72,7 @@ namespace owl {
                                          size_t count,
                                          const void *init)
   {
-    PING;
     Buffer::SP buffer = std::make_shared<DeviceBuffer>(this,type,count,init);
-    PING;
     assert(buffer);
     return buffer;
   }
@@ -147,7 +143,7 @@ namespace owl {
 
   Module::SP Context::createModule(const std::string &ptxCode)
   {
-    return std::make_shared<Module>(ptxCode,modules.allocID());
+    return std::make_shared<Module>(this,ptxCode);//,modules.allocID());
   }
 
   std::shared_ptr<Geom> UserGeomType::createGeom()

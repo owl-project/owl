@@ -14,31 +14,17 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#pragma once
-
-#include "RegisteredObject.h"
+#include "Module.h"
+#include "Context.h"
 
 namespace owl {
-  struct Context;
-  
-  /*! captures the concept of a module that contains one or more
-    programs. */
-  struct Module : public RegisteredObject {
-    typedef std::shared_ptr<Module> SP;
 
-    Module(Context *context, const std::string &ptxCode);
-    // Module(const std::string &ptxCode,
-    //        ll::id_t llID)
-    //   : ptxCode(ptxCode),
-    //     llID(llID)
-    // {
-    //   std::cout << "#owl: created module ..." << std::endl;
-    // }
-    
-    virtual std::string toString() const { return "Module"; }
-    
-    const std::string ptxCode;
-    // const ll::id_t    llID;
-  };
-  
+  Module::Module(Context *const context,
+                 const std::string &ptxCode)
+    : RegisteredObject(context,context->modules),
+      ptxCode(ptxCode)
+  {
+    lloModuleCreate(context->llo,this->ID,ptxCode.c_str());
+  }
+
 } // ::owl

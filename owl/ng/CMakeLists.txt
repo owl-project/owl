@@ -30,6 +30,7 @@ add_library(owl-ng
   api/APIHandle.cpp
   
   cpp/Object.cpp
+  cpp/Module.cpp
   cpp/RegisteredObject.cpp
   cpp/SBTObject.cpp
   cpp/Buffer.cpp
