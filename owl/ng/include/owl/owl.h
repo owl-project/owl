@@ -185,14 +185,14 @@ owlGeomTypeCreate(OWLContext context,
                   size_t      numVars);
 
 OWL_API OWLBuffer
-owlDeviceBufferCreate(OWLContext context,
+owlDeviceBufferCreate(OWLContext  context,
                       OWLDataType type,
-                      int num,
+                      size_t      count,
                       const void *init);
 OWL_API OWLBuffer
 owlHostPinnedBufferCreate(OWLContext context,
                           OWLDataType type,
-                          int num);
+                          size_t      count);
 
 OWL_API const void *
 owlBufferGetPointer(OWLBuffer buffer, int deviceID);

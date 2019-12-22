@@ -35,6 +35,8 @@
 
 namespace owl {
 
+  
+  
   Context::SP Context::create()
   {
     LOG("creating node-graph context");
@@ -67,10 +69,12 @@ namespace owl {
     return buffer;
   }
 
-  Buffer::SP Context::deviceBufferCreate()
+  Buffer::SP Context::deviceBufferCreate(OWLDataType type,
+                                         size_t count,
+                                         const void *init)
   {
     PING;
-    Buffer::SP buffer = std::make_shared<DeviceBuffer>(this);
+    Buffer::SP buffer = std::make_shared<DeviceBuffer>(this,type,count,init);
     PING;
     assert(buffer);
     return buffer;

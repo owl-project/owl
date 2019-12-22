@@ -66,7 +66,9 @@ namespace owl {
     trianglesGroupCreate(size_t numChildren);
     
     Buffer::SP
-    deviceBufferCreate();
+    deviceBufferCreate(OWLDataType type,
+                       size_t count,
+                       const void *init);
     Buffer::SP
     hostPinnedBufferCreate();
 

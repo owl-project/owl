@@ -264,14 +264,14 @@ namespace owl {
   OWL_API OWLBuffer
   owlDeviceBufferCreate(OWLContext _context,
                         OWLDataType type,
-                        int num,
+                        size_t count,
                         const void *init)
   {
     LOG_API_CALL();
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
-    Buffer::SP  buffer  = context->deviceBufferCreate();
+    Buffer::SP  buffer  = context->deviceBufferCreate(type,count,init);
     assert(buffer);
     return (OWLBuffer)context->createHandle(buffer);
   }
@@ -279,7 +279,7 @@ namespace owl {
   OWL_API OWLBuffer
   owlHostPinnedBufferCreate(OWLContext _context,
                             OWLDataType type,
-                            int num)
+                            size_t      count)
   {
     LOG_API_CALL();
     assert(_context);

@@ -23,7 +23,52 @@ namespace owl {
   Object::Object()
     : uniqueID(nextAvailableID++)
   {}
-    
+
+  size_t sizeOf(OWLDataType type)
+  {
+    switch(type) {
+      
+    case OWL_INT:
+      return sizeof(int);
+    case OWL_INT2:
+      return 2*sizeof(int);
+    case OWL_INT3:
+      return 3*sizeof(int);
+    case OWL_INT4:
+      return 4*sizeof(int);
+      
+    case OWL_UINT:
+      return sizeof(uint32_t);
+    case OWL_UINT2:
+      return 2*sizeof(uint32_t);
+    case OWL_UINT3:
+      return 3*sizeof(uint32_t);
+    case OWL_UINT4:
+      return 4*sizeof(uint32_t);
+      
+    case OWL_FLOAT:
+      return sizeof(float);
+    case OWL_FLOAT2:
+      return 2*sizeof(float);
+    case OWL_FLOAT3:
+      return 3*sizeof(float);
+    case OWL_FLOAT4:
+      return 4*sizeof(float);
+      
+    case OWL_BUFFER:
+      //      return sizeof();
+      throw "device code for OWL_BUFFER type not yet implemented";
+    case OWL_BUFFER_POINTER:
+      return sizeof(void *);
+    case OWL_GROUP:
+      return sizeof(OptixTraversableHandle);
+    default:
+      throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
+                               +": not yet implemented for type #"
+                               +std::to_string((int)type));
+    }
+  }
+
   std::string typeToString(OWLDataType type)
   {
     switch(type) {

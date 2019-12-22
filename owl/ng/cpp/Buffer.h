@@ -34,7 +34,7 @@ namespace owl {
   struct HostPinnedBuffer : public Buffer {
     typedef std::shared_ptr<HostPinnedBuffer> SP;
     
-    HostPinnedBuffer(Context *const context) : Buffer(context) {}
+    HostPinnedBuffer(Context *const context);
     
     virtual std::string toString() const { return "HostPinnedBuffer"; }
   };
@@ -42,7 +42,10 @@ namespace owl {
   struct DeviceBuffer : public Buffer {
     typedef std::shared_ptr<DeviceBuffer> SP;
     
-    DeviceBuffer(Context *const context) : Buffer(context) {}
+    DeviceBuffer(Context *const context,
+                 OWLDataType type,
+                 size_t count,
+                 const void *init);
     
     virtual std::string toString() const { return "DeviceBuffer"; }
   };

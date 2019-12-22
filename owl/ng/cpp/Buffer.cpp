@@ -27,5 +27,26 @@ namespace owl {
   {
     return lloBufferGetPointer(context->llo,this->ID,deviceID);
   }
+
+
+  HostPinnedBuffer::HostPinnedBuffer(Context *const context)
+    : Buffer(context)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+  
+  DeviceBuffer::DeviceBuffer(Context *const context,
+                             OWLDataType type,
+                             size_t count,
+                             const void *init)
+    : Buffer(context)
+  {
+    PING;
+    lloDeviceBufferCreate(context->llo,
+                          this->ID,
+                          count*sizeOf(type),
+                          init);
+  }
+
       
 } // ::owl

@@ -23,6 +23,7 @@
 namespace owl {
 
   std::string typeToString(OWLDataType type);
+  size_t      sizeOf(OWLDataType type);
 
   struct Context;
 
