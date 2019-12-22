@@ -22,7 +22,7 @@
 #include "RayGen.h"
 #include "MissProg.h"
 // ll
-#include "ll/llowl.h"
+#include "owl/ll/llowl.h"
 
 namespace owl {
 

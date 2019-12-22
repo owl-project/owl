@@ -40,7 +40,7 @@ namespace owl {
   namespace ll {
 
     void Device::trianglesGeomGroupCreate(int groupID,
-                                          int *geomIDs,
+                                          const int *geomIDs,
                                           int geomCount)
     {
       assert("check for valid ID" && groupID >= 0);

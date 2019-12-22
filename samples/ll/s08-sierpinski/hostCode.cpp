@@ -53,12 +53,12 @@ const char *outFileName = "ll08-sierpinski.png";
 const vec2i fbSize(800,600);
 const vec3f lookFrom(2.f,1.3f,.8f);
 const vec3f lookAt(0.f,0.f,-.2f);
-const vec3f lookUp(0.f,0.f,-1.f);
-const float cosFovy = 0.66f;
+const vec3f lookUp(0.f,0.f,1.f);
+const float fovy = 30.f;
 
 int main(int ac, char **av)
 {
-  uint32_t numLevels = 3;
+  uint32_t numLevels = 8;
   LOG("ll example '" << av[0] << "' starting up");
 
   for (int i=1;i<ac;i++) {
@@ -85,13 +85,13 @@ int main(int ac, char **av)
   ll->setModule(0,ptxCode);
   ll->buildModules();
   
-  enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
+  enum { PYRAMID_GEOM_TYPE=0,NUM_GEOM_TYPES };
   ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->geomTypeCreate(TRIANGLES_GEOM_TYPE,sizeof(TrianglesGeomData));
-  ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
+  ll->geomTypeCreate(PYRAMID_GEOM_TYPE,sizeof(LambertianPyramidMesh));
+  ll->setGeomTypeClosestHit(/*program ID*/PYRAMID_GEOM_TYPE,
                             /*ray type  */0,
                             /*module:*/0,
-                            "TriangleMesh");
+                            "PyramidMesh");
   
   ll->allocRayGens(1);
   ll->setRayGen(/*program ID*/0,
@@ -112,12 +112,25 @@ int main(int ac, char **av)
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
   // ##################################################################
+  auto lambertian = Lambertian();
+  std::vector<Lambertian> lambertianPyramids;
+  Lambertian green;
+  green.albedo = owl::vec3f(0,.7f,0);
+  lambertianPyramids.push_back(green);
 
   // ------------------------------------------------------------------
   // alloc buffers
   // ------------------------------------------------------------------
-  enum { VERTEX_BUFFER=0,INDEX_BUFFER,FRAME_BUFFER,NUM_BUFFERS };
+  enum { LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER=0,
+         VERTEX_BUFFER,
+         INDEX_BUFFER,
+         FRAME_BUFFER,
+         NUM_BUFFERS };
   ll->allocBuffers(NUM_BUFFERS);
+  ll->createDeviceBuffer(LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,
+                         lambertianPyramids.size(),
+                         sizeof(lambertianPyramids[0]),
+                         lambertianPyramids.data());
   ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
   ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
   ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
@@ -125,14 +138,14 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  enum { TRIANGLES_GEOM=0,NUM_GEOMS };
+  enum { PYRAMID_GEOM=0,NUM_GEOMS };
   ll->allocGeoms(NUM_GEOMS);
-  ll->trianglesGeomCreate(/* geom ID    */TRIANGLES_GEOM,
-                          /* type/PG ID */TRIANGLES_GEOM_TYPE);
-  ll->trianglesGeomSetVertexBuffer(/* geom ID   */TRIANGLES_GEOM,
+  ll->trianglesGeomCreate(/* geom ID    */PYRAMID_GEOM,
+                          /* type/PG ID */PYRAMID_GEOM_TYPE);
+  ll->trianglesGeomSetVertexBuffer(/* geom ID   */PYRAMID_GEOM,
                                    /* buffer ID */VERTEX_BUFFER,
                                    /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-  ll->trianglesGeomSetIndexBuffer(/* geom ID   */TRIANGLES_GEOM,
+  ll->trianglesGeomSetIndexBuffer(/* geom ID   */PYRAMID_GEOM,
                                   /* buffer ID */INDEX_BUFFER,
                                   /* meta info */NUM_INDICES,sizeof(vec3i),0);
 
@@ -160,20 +173,20 @@ int main(int ac, char **av)
                             /* geoms in group, pointer */ groupsInWorldGroup,
                             /* geoms in group, count   */ 5);
     auto a
-    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
-    * gdt::affine3f::translate(gdt::vec3f(-.5f, -.5f, -.5f));
+    = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))
+    * owl::affine3f::translate(owl::vec3f(-.5f, -.5f, -.5f));
     auto b
-    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
-    * gdt::affine3f::translate(gdt::vec3f(+.5f, -.5f, -.5f));
+    = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))
+    * owl::affine3f::translate(owl::vec3f(+.5f, -.5f, -.5f));
     auto c
-    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
-    * gdt::affine3f::translate(gdt::vec3f(-.5f, +.5f, -.5f));
+    = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))
+    * owl::affine3f::translate(owl::vec3f(-.5f, +.5f, -.5f));
     auto d
-    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))
-    * gdt::affine3f::translate(gdt::vec3f(+.5f, +.5f, -.5f));
+    = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))
+    * owl::affine3f::translate(owl::vec3f(+.5f, +.5f, -.5f));
     auto e
-    = gdt::affine3f::scale(gdt::vec3f(.5f,.5f,.5f))    
-    * gdt::affine3f::translate(gdt::vec3f(0.0f, 0.0, +.5f));
+    = owl::affine3f::scale(owl::vec3f(.5f,.5f,.5f))    
+    * owl::affine3f::translate(owl::vec3f(0.0f, 0.0, +.5f));
     
     ll->instanceGroupSetTransform(parent_level,0,a);
     ll->instanceGroupSetTransform(parent_level,1,b);
@@ -195,11 +208,9 @@ int main(int ac, char **av)
   // ----------- build hitgroups -----------
   ll->sbtHitProgsBuild
     ([&](uint8_t *output,int devID,int geomID,int rayID) {
-      TrianglesGeomData &self = *(TrianglesGeomData*)output;
-      PING; PRINT(devID);
-      PRINT(geomID);
-      PRINT(rayID);
-      self.color  = vec3f(0,1,0);
+      LambertianPyramidMesh &self = *(LambertianPyramidMesh*)output;
+      self.material
+           = (Lambertian *)ll->bufferGetPointer(LAMBERTIAN_PYRAMIDS_MATERIAL_BUFFER,devID);
       self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
       self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);
     });
@@ -227,17 +238,27 @@ int main(int ac, char **av)
       rg->world  = ll->groupGetTraversable(WORLD_GROUP,devID);
 
       // compute camera frame:
-      vec3f &pos = rg->camera.pos;
-      vec3f &d00 = rg->camera.dir_00;
-      vec3f &ddu = rg->camera.dir_du;
-      vec3f &ddv = rg->camera.dir_dv;
-      float aspect = fbSize.x / float(fbSize.y);
-      pos = lookFrom;
-      d00 = normalize(lookAt-lookFrom);
-      ddu = cosFovy * aspect * normalize(cross(d00,lookUp));
-      ddv = cosFovy * normalize(cross(ddu,d00));
-      d00 -= 0.5f * ddu;
-      d00 -= 0.5f * ddv;
+      const float vfov = fovy;
+      const vec3f vup = lookUp;
+      const float aspect = fbSize.x / float(fbSize.y);
+      const float theta = vfov * ((float)M_PI) / 180.0f;
+      const float half_height = tanf(theta / 2.0f);
+      const float half_width = aspect * half_height;
+      const float aperture = 0.f;
+      const float focusDist = 10.f;
+      const vec3f origin = lookFrom;
+      const vec3f w = normalize(lookFrom - lookAt);
+      const vec3f u = normalize(cross(vup, w));
+      const vec3f v = cross(w, u);
+      const vec3f lower_left_corner
+        = origin - half_width * focusDist*u - half_height * focusDist*v - focusDist * w;
+      const vec3f horizontal = 2.0f*half_width*focusDist*u;
+      const vec3f vertical = 2.0f*half_height*focusDist*v;
+
+      rg->camera.origin = origin;
+      rg->camera.lower_left_corner = lower_left_corner;
+      rg->camera.horizontal = horizontal;
+      rg->camera.vertical = vertical;
     });
   LOG_OK("everything set up ...");
 

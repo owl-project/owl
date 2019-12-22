@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "cpp/Context.h"
+#include "owl/ng/cpp/Context.h"
 
 namespace owl {
   

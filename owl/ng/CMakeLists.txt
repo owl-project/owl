@@ -14,8 +14,9 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl)
-include_directories(${PROJECT_SOURCE_DIR}/owl/ng)
+include_directories(${PROJECT_SOURCE_DIR}/)
+#include_directories(${PROJECT_SOURCE_DIR}/owl)
+#include_directories(${PROJECT_SOURCE_DIR}/owl/ng)
 include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
 
 add_library(owl-ng

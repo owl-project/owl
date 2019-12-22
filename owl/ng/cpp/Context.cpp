@@ -17,7 +17,7 @@
 #include "Context.h"
 #include "Module.h"
 #include "Geometry.h"
-#include "ll/Device.h"
+#include "owl/ll/Device.h"
 
 #define LOG(message)                               \
   std::cout                                        \

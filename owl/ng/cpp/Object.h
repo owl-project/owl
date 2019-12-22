@@ -17,8 +17,8 @@
 #pragma once
 
 #include "owl/owl.h"
-#include "ll/common.h"
-#include "ll/DeviceGroup.h"
+#include "owl/ll/common.h"
+#include "owl/ll/DeviceGroup.h"
 
 namespace owl {
 

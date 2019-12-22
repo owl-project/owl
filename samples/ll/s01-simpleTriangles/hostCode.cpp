@@ -151,9 +151,6 @@ int main(int ac, char **av)
   ll->sbtHitProgsBuild
     ([&](uint8_t *output,int devID,int geomID,int rayID) {
       TrianglesGeomData &self = *(TrianglesGeomData*)output;
-      PING; PRINT(devID);
-      PRINT(geomID);
-      PRINT(rayID);
       self.color  = vec3f(0,1,0);
       self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
       self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);

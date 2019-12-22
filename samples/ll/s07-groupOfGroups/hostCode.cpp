@@ -120,14 +120,14 @@ void addRandomBox(BoxArray &boxes,
     };
 
   const vec3f U = normalize(randomPointInUnitSphere());
-  gdt::affine3f xfm = gdt::frame(U);
-  xfm = gdt::affine3f(gdt::linear3f::rotate(U,rnd())) * xfm;
-  xfm = gdt::affine3f(gdt::linear3f::scale(.7f*size)) * xfm;
-  xfm = gdt::affine3f(gdt::affine3f::translate(center)) * xfm;
+  owl::affine3f xfm = owl::frame(U);
+  xfm = owl::affine3f(owl::linear3f::rotate(U,rnd())) * xfm;
+  xfm = owl::affine3f(owl::linear3f::scale(.7f*size)) * xfm;
+  xfm = owl::affine3f(owl::affine3f::translate(center)) * xfm;
   
   const int startIndex = boxes.vertices.size();
   for (int i=0;i<NUM_VERTICES;i++)
-    boxes.vertices.push_back(gdt::xfmPoint(xfm,unitBoxVertices[i]));
+    boxes.vertices.push_back(owl::xfmPoint(xfm,unitBoxVertices[i]));
   for (int i=0;i<NUM_INDICES;i++)
     boxes.indices.push_back(unitBoxIndices[i]+vec3i(startIndex));
   boxes.materials.push_back(material);
@@ -493,14 +493,14 @@ int main(int ac, char **av)
   ll->instanceGroupCreate(/* group ID */WORLD_GROUP,
                           /* geoms in group, pointer */ groupsInWorldGroup,
                           /* geoms in group, count   */ 2);
-  ll->instanceGroupSetTransform(WORLD_GROUP,0,gdt::affine3f(gdt::one));
-  ll->instanceGroupSetTransform(WORLD_GROUP,1,gdt::affine3f(gdt::one));
+  ll->instanceGroupSetTransform(WORLD_GROUP,0,owl::affine3f(owl::one));
+  ll->instanceGroupSetTransform(WORLD_GROUP,1,owl::affine3f(owl::one));
 #elif TEST_CASE==2
   ll->instanceGroupCreate(/* group ID */WORLD_GROUP,
                           /* geoms in group, pointer */ nullptr,
                           /* geoms in group, count   */ 2);
-  ll->instanceGroupSetChild(WORLD_GROUP,0,SPHERES_GROUP,gdt::affine3f(gdt::one));
-  ll->instanceGroupSetChild(WORLD_GROUP,1,BOXES_GROUP,gdt::affine3f(gdt::one));
+  ll->instanceGroupSetChild(WORLD_GROUP,0,SPHERES_GROUP,owl::affine3f(owl::one));
+  ll->instanceGroupSetChild(WORLD_GROUP,1,BOXES_GROUP,owl::affine3f(owl::one));
 #else
   int groupsInWorldGroup[]
     = { SPHERES_GROUP,
