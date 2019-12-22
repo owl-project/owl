@@ -737,13 +737,13 @@ namespace owl {
     
     void Device::allocRayGens(size_t count)
     {
-      assert(rayGenPGs.empty());
+      // assert(rayGenPGs.empty());
       rayGenPGs.resize(count);
     }
     
     void Device::allocMissProgs(size_t count)
     {
-      assert(missProgPGs.empty());
+      // assert(missProgPGs.empty());
       missProgPGs.resize(count);
     }
       

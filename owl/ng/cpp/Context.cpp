@@ -42,6 +42,15 @@ namespace owl {
   }
   
   Context::Context()
+    : buffers(this),
+      groups(this),
+      rayGenTypes(this),
+      rayGens(this),
+      missProgTypes(this),
+      missProgs(this),
+      geomTypes(this),
+      geoms(this),
+      modules(this)
   {
     LOG("context ramping up - creating low-level devicegroup");
     // ll = ll::DeviceGroup::create();
