@@ -29,10 +29,15 @@ namespace owl {
   }
 
 
-  HostPinnedBuffer::HostPinnedBuffer(Context *const context)
+  HostPinnedBuffer::HostPinnedBuffer(Context *const context,
+                             OWLDataType type,
+                             size_t count)
     : Buffer(context)
   {
-    OWL_NOTIMPLEMENTED;
+    PING;
+    lloHostPinnedBufferCreate(context->llo,
+                              this->ID,
+                              count*sizeOf(type));
   }
   
   DeviceBuffer::DeviceBuffer(Context *const context,

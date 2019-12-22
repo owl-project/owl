@@ -70,7 +70,8 @@ namespace owl {
                        size_t count,
                        const void *init);
     Buffer::SP
-    hostPinnedBufferCreate();
+    hostPinnedBufferCreate(OWLDataType type,
+                       size_t count);
 
     RayGen::SP
     createRayGen(const std::shared_ptr<RayGenType> &type);

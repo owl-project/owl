@@ -34,7 +34,9 @@ namespace owl {
   struct HostPinnedBuffer : public Buffer {
     typedef std::shared_ptr<HostPinnedBuffer> SP;
     
-    HostPinnedBuffer(Context *const context);
+    HostPinnedBuffer(Context *const context,
+                             OWLDataType type,
+                             size_t count);
     
     virtual std::string toString() const { return "HostPinnedBuffer"; }
   };

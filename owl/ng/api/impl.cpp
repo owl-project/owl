@@ -285,7 +285,7 @@ namespace owl {
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
-    Buffer::SP  buffer  = context->hostPinnedBufferCreate();
+    Buffer::SP  buffer  = context->hostPinnedBufferCreate(type,count);
     assert(buffer);
     return (OWLBuffer)context->createHandle(buffer);
   }
