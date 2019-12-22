@@ -45,10 +45,8 @@ namespace owl {
     typedef std::shared_ptr<TrianglesGeomType> SP;
     
     TrianglesGeomType(Context *const context,
-                          size_t varStructSize,
-                          const std::vector<OWLVarDecl> &varDecls)
-      : GeomType(context,varStructSize,varDecls)
-    {}
+                      size_t varStructSize,
+                      const std::vector<OWLVarDecl> &varDecls);
 
     virtual std::string toString() const { return "TriangleGeomType"; }
     virtual std::shared_ptr<Geom> createGeom() override;
@@ -59,9 +57,7 @@ namespace owl {
     
     UserGeomType(Context *const context,
                      size_t varStructSize,
-                     const std::vector<OWLVarDecl> &varDecls)
-      : GeomType(context,varStructSize,varDecls)
-    {}
+                 const std::vector<OWLVarDecl> &varDecls);
 
     virtual std::string toString() const { return "UserGeomType"; }
     virtual std::shared_ptr<Geom> createGeom() override;
@@ -81,30 +77,25 @@ namespace owl {
     typedef std::shared_ptr<TrianglesGeom> SP;
 
     TrianglesGeom(Context *const context,
-                      GeomType::SP geometryType)
-      : Geom(context,geometryType)
-    {}
-
+                  GeomType::SP geometryType);
+    
     void setVertices(Buffer::SP vertices,
-                         size_t count,
-                         size_t stride,
-                         size_t offset)
-    { IGNORING_THIS(); }
+                     size_t count,
+                     size_t stride,
+                     size_t offset);
     void setIndices(Buffer::SP indices,
-                         size_t count,
-                         size_t stride,
-                         size_t offset)
-    { IGNORING_THIS(); }
-    virtual std::string toString() const { return "TrianglesGeom"; }
+                    size_t count,
+                    size_t stride,
+                    size_t offset);
+virtual std::string toString() const { return "TrianglesGeom"; }
   };
 
   struct UserGeom : public Geom {
     typedef std::shared_ptr<UserGeom> SP;
 
     UserGeom(Context *const context,
-                 GeomType::SP geometryType)
-      : Geom(context,geometryType)
-    {}
+             GeomType::SP geometryType);
+
     virtual std::string toString() const { return "UserGeom"; }
   };
   

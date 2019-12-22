@@ -24,11 +24,73 @@ namespace owl {
                      const std::vector<OWLVarDecl> &varDecls)
     : SBTObjectType(context,context->geomTypes,
                     varStructSize,varDecls)
-  {}
-
-  Geom::Geom(Context *const context,
-                     GeomType::SP geomType)
-    : SBTObject(context,context->geoms,geomType)
-  {}
+  {
+    lloGeomTypeCreate(context->llo,this->ID,
+                      varStructSize);
+  }
   
+  Geom::Geom(Context *const context,
+             GeomType::SP geomType)
+    : SBTObject(context,context->geoms,geomType)
+  {
+    assert(geomType);
+  }
+
+
+
+
+
+  TrianglesGeomType::TrianglesGeomType(Context *const context,
+                                       size_t varStructSize,
+                                       const std::vector<OWLVarDecl> &varDecls)
+    : GeomType(context,varStructSize,varDecls)
+  {
+    /*! nothing special - all inherited */
+  }
+
+  UserGeomType::UserGeomType(Context *const context,
+                             size_t varStructSize,
+                             const std::vector<OWLVarDecl> &varDecls)
+    : GeomType(context,varStructSize,varDecls)
+  {
+    /*! nothing special - all inherited */
+  }
+
+  TrianglesGeom::TrianglesGeom(Context *const context,
+                               GeomType::SP geometryType)
+    : Geom(context,geometryType)
+  {
+    lloTrianglesGeomCreate(context->llo,this->ID,geometryType->ID);
+  }
+
+  UserGeom::UserGeom(Context *const context,
+                     GeomType::SP geometryType)
+    : Geom(context,geometryType)
+  {
+    int numPrims = 0;
+    lloUserGeomCreate(context->llo,this->ID,geometryType->ID,numPrims);
+  }
+
+
+
+
+  void TrianglesGeom::setVertices(Buffer::SP vertices,
+                                  size_t count,
+                                  size_t stride,
+                                  size_t offset)
+  {
+    lloTrianglesGeomSetVertexBuffer(context->llo,this->ID,
+                                    vertices->ID,count,stride,offset);
+  }
+  
+  void TrianglesGeom::setIndices(Buffer::SP indices,
+                                 size_t count,
+                                 size_t stride,
+                                 size_t offset)
+  {
+    lloTrianglesGeomSetIndexBuffer(context->llo,this->ID,
+                                    indices->ID,count,stride,offset);
+  }
+
+
 } //::owl

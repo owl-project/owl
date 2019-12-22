@@ -148,8 +148,6 @@ namespace owl {
   {
     LOG_API_CALL();
 
-    PING;
-    
     assert(_context);
     APIContext::SP context
       = ((APIHandle *)_context)->get<APIContext>();
