@@ -44,7 +44,8 @@ namespace owl {
   Context::Context()
   {
     LOG("context ramping up - creating low-level devicegroup");
-    ll = ll::DeviceGroup::create();
+    // ll = ll::DeviceGroup::create();
+    llo = lloContextCreate(nullptr,0);
     LOG_OK("device group created");
   }
   

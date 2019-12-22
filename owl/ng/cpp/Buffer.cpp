@@ -25,7 +25,7 @@ namespace owl {
 
   const void *Buffer::getPointer(int deviceID)
   {
-    return context->ll->bufferGetPointer(this->ID,deviceID);
+    return lloBufferGetPointer(context->llo,this->ID,deviceID);
   }
       
 } // ::owl

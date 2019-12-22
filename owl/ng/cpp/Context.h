@@ -22,7 +22,7 @@
 #include "RayGen.h"
 #include "MissProg.h"
 // ll
-#include "owl/ll/llowl.h"
+#include "owl/ll.h"
 
 namespace owl {
 
@@ -95,7 +95,8 @@ namespace owl {
     
     Module::SP createModule(const std::string &ptxCode);
 
-    ll::DeviceGroup::SP ll;
+    LLOContext llo;
+    //    ll::DeviceGroup::SP ll;
   };
 
 } // ::owl

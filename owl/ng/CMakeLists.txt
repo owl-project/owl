@@ -45,7 +45,7 @@ add_library(owl-ng
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
 target_link_libraries(owl-ng
-  owl-ll
+  llowl-static
   )
 
 
