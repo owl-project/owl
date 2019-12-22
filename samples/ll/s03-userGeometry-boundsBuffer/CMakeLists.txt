@@ -23,7 +23,7 @@ add_executable(ll03-userGeometry-boundsBuffer
   ${ptxCode}
   )
 target_link_libraries(ll03-userGeometry-boundsBuffer
-  owl-ll
+  ${OWL_LL_LIBRARIES}
   )
 add_test(ll03-userGeometry-boundsBuffer ${CMAKE_BINARY_DIR}/ll03-userGeometry-boundsBuffer)
 

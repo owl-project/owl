@@ -23,7 +23,7 @@ add_executable(ll05-rtow
   ${ptxCode}
   )
 target_link_libraries(ll05-rtow
-  owl-ll
+  ${OWL_LL_LIBRARIES}
   )
 add_test(ll05-rtow
   ${CMAKE_BINARY_DIR}/ll05-rtow)

@@ -1,8 +1,8 @@
 #!/bin/bash
-allFiles=`find samples/ owl/ -name '*cu' -or -name '*.h' -or -name '*cpp'`
+allFiles=`find samples/ll/ -name '*cu' -or -name '*.h' -or -name '*cpp'`
 for f in $allFiles; do
     echo $f
-    cat $f | sed "s/realloc/alloc/g" > tmp.snr
+    cat $f | sed "s/ll->groupGetSBTOffset/lloGroupGetSbtOffset(llo,/g" > tmp.snr
     cp tmp.snr $f
     rm tmp.snr
 done

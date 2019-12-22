@@ -14,19 +14,21 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/DeviceGroup.h"
+// public owl-ll API
+#include <owl/ll.h>
+// our device-side data structures
 #include "deviceCode.h"
-
+// external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
-#define LOG(message)                                    \
-  std::cout << GDT_TERMINAL_BLUE;                       \
-  std::cout << "#ll.sample(main): " << message << std::endl;  \
+#define LOG(message)                                            \
+  std::cout << GDT_TERMINAL_BLUE;                               \
+  std::cout << "#ll.sample(main): " << message << std::endl;    \
   std::cout << GDT_TERMINAL_DEFAULT;
-#define LOG_OK(message)                                    \
-  std::cout << GDT_TERMINAL_LIGHT_BLUE;                       \
-  std::cout << "#ll.sample(main): " << message << std::endl;  \
+#define LOG_OK(message)                                         \
+  std::cout << GDT_TERMINAL_LIGHT_BLUE;                         \
+  std::cout << "#ll.sample(main): " << message << std::endl;    \
   std::cout << GDT_TERMINAL_DEFAULT;
 
 extern "C" char ptxCode[];
@@ -54,44 +56,41 @@ int main(int ac, char **av)
 {
   LOG("ll example '" << av[0] << "' starting up");
 
-  owl::ll::DeviceGroup::SP ll
-    = owl::ll::DeviceGroup::create();
-
-  LOG("building pipeline ...");
-  std::cout << GDT_TERMINAL_DEFAULT;
+  LLOContext llo = lloContextCreate(nullptr,0);
 
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
-  ll->allocModules(1);
-  ll->setModule(0,ptxCode);
-  ll->buildModules();
+  LOG("building pipeline ...");
+  lloAllocModules(llo,1);
+  lloModuleCreate(llo,0,ptxCode);
+  lloBuildModules(llo);
   
   enum { SPHERE_GEOM_TYPE=0,NUM_GEOM_TYPES };
-  ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->geomTypeCreate(SPHERE_GEOM_TYPE,sizeof(SphereGeomData));
-  ll->setGeomTypeClosestHit(/*geom type ID*/SPHERE_GEOM_TYPE,
-                            /*ray type  */0,
-                            /*module:*/0,
-                            "Sphere");
-  ll->setGeomTypeIntersect(/*geom type ID*/SPHERE_GEOM_TYPE,
-                           /*ray type  */0,
-                           /*module:*/0,
-                           "Sphere");
+  lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
+  lloGeomTypeCreate(llo,SPHERE_GEOM_TYPE,sizeof(SphereGeomData));
+  lloGeomTypeClosestHit(llo,/*geom type ID*/SPHERE_GEOM_TYPE,
+                        /*ray type  */0,
+                        /*module:*/0,
+                        "Sphere");
+  lloGeomTypeIntersect(llo,/*geom type ID*/SPHERE_GEOM_TYPE,
+                       /*ray type  */0,
+                       /*module:*/0,
+                       "Sphere");
 
-  ll->allocRayGens(1);
-  ll->setRayGen(/*program ID*/0,
-                /*module:*/0,
-                "simpleRayGen",
-                sizeof(RayGenData));
-  
-  ll->allocMissProgs(1);
-  ll->setMissProg(/*program ID*/0,
+  lloAllocRayGens(llo,1);
+  lloRayGenCreate(llo,/*program ID*/0,
                   /*module:*/0,
-                  "miss",
-                  sizeof(MissProgData));
-  ll->buildPrograms();
-  ll->createPipeline();
+                  "simpleRayGen",
+                  sizeof(RayGenData));
+  
+  lloAllocMissProgs(llo,1);
+  lloMissProgCreate(llo,/*program ID*/0,
+                    /*module:*/0,
+                    "miss",
+                    sizeof(MissProgData));
+  lloBuildPrograms(llo);
+  lloCreatePipeline(llo);
 
   LOG("building geometries ...");
 
@@ -112,23 +111,23 @@ int main(int ac, char **av)
          BOUNDS_BUFFER_110,
          BOUNDS_BUFFER_111,
          NUM_BUFFERS };
-  ll->allocBuffers(NUM_BUFFERS);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  lloAllocBuffers(llo,NUM_BUFFERS);
+  lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y*sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
-  ll->allocGeoms(8);
+  lloAllocGeoms(llo,8);
   for (int i=0;i<8;i++) {
-    ll->userGeomCreate(/* geom ID    */i,
+    lloUserGeomCreate(llo,/* geom ID    */i,
                        /* type/PG ID */0,
                        /* numprims   */1);
     box3f sphereBounds = box3f()
       .extend(sphereCenters[i]-sphereRadius)
       .extend(sphereCenters[i]+sphereRadius);
-    ll->createDeviceBuffer(BOUNDS_BUFFER_000+i,1,sizeof(box3f),
-                     &sphereBounds);
-    ll->userGeomSetBoundsBuffer(i,BOUNDS_BUFFER_000+i);
+    lloDeviceBufferCreate(llo,BOUNDS_BUFFER_000+i,1*sizeof(box3f),
+                          &sphereBounds);
+    lloUserGeomSetBoundsBuffer(llo,i,BOUNDS_BUFFER_000+i);
   }
 
   // ##################################################################
@@ -136,14 +135,14 @@ int main(int ac, char **av)
   // ##################################################################
   
   enum { SPHERES_GROUP=0,NUM_GROUPS };
-  ll->allocGroups(NUM_GROUPS);
+  lloAllocGroups(llo,NUM_GROUPS);
   int geomsInGroup[] = { 0,1,2,3,4,5,6,7 };
-  ll->userGeomGroupCreate(/* group ID */SPHERES_GROUP,
-                          /* geoms in group, pointer */ geomsInGroup,
-                          /* geoms in group, count   */ 8);
+  lloUserGeomGroupCreate(llo,/* group ID */SPHERES_GROUP,
+                         /* geoms in group, pointer */ geomsInGroup,
+                         /* geoms in group, count   */ 8);
   // in this mode, we supply the boudns through a buffer, so don't
   // build them on the device at all ...
-  ll->groupBuildAccel(SPHERES_GROUP);
+  lloGroupAccelBuild(llo,SPHERES_GROUP);
 
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -151,8 +150,9 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  ll->sbtHitProgsBuild
-    ([&](uint8_t *output,int devID,int geomID,int childID) {
+  lloSbtHitProgsBuild
+    (llo,
+     [&](uint8_t *output,int devID,int geomID,int childID) {
       SphereGeomData &self = *(SphereGeomData*)output;
       self.center = sphereCenters[geomID];
       self.radius = sphereRadius;
@@ -160,8 +160,9 @@ int main(int ac, char **av)
     });
   
   // ----------- build miss prog(s) -----------
-  ll->sbtMissProgsBuild
-    ([&](uint8_t *output,
+  lloSbtMissProgsBuild
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rayType) {
       ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
@@ -169,16 +170,17 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
-  ll->sbtRayGensBuild
-    ([&](uint8_t *output,
+  lloSbtRayGensBuild
+    (llo,
+     [&](uint8_t *output,
          int devID,
          int rgID) {
       RayGenData *rg = (RayGenData*)output;
       rg->deviceIndex   = devID;
-      rg->deviceCount = ll->getDeviceCount();
+      rg->deviceCount = lloGetDeviceCount(llo);
       rg->fbSize = fbSize;
-      rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-      rg->world  = ll->groupGetTraversable(SPHERES_GROUP,devID);
+      rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+      rg->world  = lloGroupGetTraversable(llo,SPHERES_GROUP,devID);
 
       // compute camera frame:
       vec3f &pos = rg->camera.pos;
@@ -200,12 +202,12 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("trying to launch ...");
-  ll->launch(0,fbSize);
+  lloLaunch2D(llo,0,fbSize.x,fbSize.y);
   // todo: explicit sync?
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);
@@ -215,7 +217,7 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("destroying devicegroup ...");
-  owl::ll::DeviceGroup::destroy(ll);
+  lloContextDestroy(llo);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
 }

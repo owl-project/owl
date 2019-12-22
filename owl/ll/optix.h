@@ -18,7 +18,7 @@
 
 #include "owl/ll/cuda.h"
 
-#define OPTIX_COMPATIBILITY 7
+// #define OPTIX_COMPATIBILITY 7
 
 #include <optix.h>
 #include <optix_function_table.h>

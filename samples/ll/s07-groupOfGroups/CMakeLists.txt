@@ -23,7 +23,7 @@ add_executable(ll07-groupOfGroups
   ${ptxCode}
   )
 target_link_libraries(ll07-groupOfGroups
-  owl-ll
+  ${OWL_LL_LIBRARIES}
   )
 add_test(ll07-groupOfGroups
   ${CMAKE_BINARY_DIR}/ll07-groupOfGroups
@@ -37,7 +37,7 @@ foreach(test 1;2)
     ${ptxCode}
     )
   target_link_libraries(ll07-groupOfGroups-variant${test}
-    owl-ll
+    ${OWL_LL_LIBRARIES}
     )
   target_compile_definitions(ll07-groupOfGroups-variant${test}
     PRIVATE
