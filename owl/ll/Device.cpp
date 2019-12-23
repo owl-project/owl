@@ -986,15 +986,11 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
-      PING;
-      PRINT(groups.size());
       for (auto group : groups) {
         if (!group) continue;
         if (!group->containsGeom()) continue;
         GeomGroup *gg = (GeomGroup *)group;
         const int sbtOffset = gg->sbtOffset;
-        PRINT(sbtOffset);
-        PRINT(gg->children.size());
         for (int childID=0;childID<gg->children.size();childID++) {
           Geom *geom = gg->children[childID];
           if (!geom) continue;
@@ -1037,11 +1033,9 @@ namespace owl {
           }
         }
       }
-      PRINT(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       context->popActive();
-      PING;
       LOG_OK("done building (and uploading) sbt hit group records");
     }
       

@@ -58,11 +58,14 @@ namespace owl {
 
     SBTObject(Context *const context,
               ObjectRegistry &registry,
-              typename ObjectType::SP const type)
+              std::shared_ptr<ObjectType> type)
       : RegisteredObject(context,registry),
         type(type),
         variables(type->instantiateVariables())
-    {}
+    {
+      assert(this->type);
+      assert(this->type.get());
+    }
     
     virtual std::string toString() const { return "SBTObject<"+type->toString()+">"; }
     
@@ -83,7 +86,7 @@ namespace owl {
 
     /*! our own type description, that tells us which variables (of
       which type, etc) we have */
-    typename ObjectType::SP const type;
+    std::shared_ptr<ObjectType> const type;
 
     /*! the actual variable *values* */
     const std::vector<Variable::SP> variables;

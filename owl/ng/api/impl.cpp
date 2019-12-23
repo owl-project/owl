@@ -163,11 +163,13 @@ namespace owl {
                                   sizeOfVarStruct,
                                   checkAndPackVariables(vars,numVars));
     assert(rayGenType);
+    PING; PRINT(rayGenType.get());
     
     RayGen::SP  rayGen
       = context->createRayGen(rayGenType);
     assert(rayGen);
-
+    PING;
+    PRINT(rayGen);
     return (OWLRayGen)context->createHandle(rayGen);
   }
 

@@ -29,15 +29,19 @@ namespace owl {
     typedef std::shared_ptr<GeomType> SP;
     
     GeomType(Context *const context,
-                 size_t varStructSize,
-                 const std::vector<OWLVarDecl> &varDecls);
-
+             size_t varStructSize,
+             const std::vector<OWLVarDecl> &varDecls);
+    
     virtual std::string toString() const { return "GeomType"; }
     virtual void setClosestHitProgram(int rayType,
                                       Module::SP module,
-                                      const std::string &progName)
-    { IGNORING_THIS(); }
+                                      const std::string &progName);
 
+    struct {
+      Module::SP  module;
+      std::string progName;
+    } closestHit;
+    
     virtual std::shared_ptr<Geom> createGeom() = 0;
   };
 
@@ -62,7 +66,7 @@ namespace owl {
     virtual std::string toString() const { return "UserGeomType"; }
     virtual std::shared_ptr<Geom> createGeom() override;
   };
-
+  
   struct Geom : public SBTObject<GeomType> {
     typedef std::shared_ptr<Geom> SP;
 

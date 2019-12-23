@@ -25,14 +25,14 @@ namespace owl {
     typedef std::shared_ptr<MissProgType> SP;
     MissProgType(Context *const context,
                Module::SP module,
-               const std::string &programName,
+               const std::string &progName,
                size_t varStructSize,
                const std::vector<OWLVarDecl> &varDecls);
 
     virtual std::string toString() const { return "MissProgType"; }
     
     Module::SP module;
-    const std::string &progName;
+    const std::string progName;
   };
   
   struct MissProg : public SBTObject<MissProgType> {

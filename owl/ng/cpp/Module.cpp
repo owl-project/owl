@@ -24,7 +24,13 @@ namespace owl {
     : RegisteredObject(context,context->modules),
       ptxCode(ptxCode)
   {
-    lloModuleCreate(context->llo,this->ID,ptxCode.c_str());
+    PING; PRINT(this->ID);
+    lloModuleCreate(context->llo,this->ID,
+                    // warning: this 'this' here is importat, since
+                    // *we* manage the lifetime of this string, and
+                    // the one on the constructor list will go out of
+                    // scope after this function
+                    this->ptxCode.c_str());
   }
 
 } // ::owl

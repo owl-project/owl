@@ -25,14 +25,14 @@ namespace owl {
     typedef std::shared_ptr<RayGenType> SP;
     RayGenType(Context *const context,
                Module::SP module,
-               const std::string &programName,
+               const std::string &progName,
                size_t varStructSize,
                const std::vector<OWLVarDecl> &varDecls);
 
     virtual std::string toString() const { return "RayGenType"; }
     
-    Module::SP module;
-    const std::string &progName;
+    Module::SP        module;
+    const std::string progName;
   };
   
   struct RayGen : public SBTObject<RayGenType> {

@@ -21,7 +21,7 @@ namespace owl {
 
   MissProgType::MissProgType(Context *const context,
                              Module::SP module,
-                             const std::string &programName,
+                             const std::string &progName,
                              size_t varStructSize,
                              const std::vector<OWLVarDecl> &varDecls)
     : SBTObjectType(context,context->rayGenTypes,varStructSize,varDecls),

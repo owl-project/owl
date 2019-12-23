@@ -92,5 +92,19 @@ namespace owl {
                                     indices->ID,count,stride,offset);
   }
 
+  void GeomType::setClosestHitProgram(int rayType,
+                                      Module::SP module,
+                                      const std::string &progName)
+  {
+    this->closestHit.progName = progName;
+    this->closestHit.module   = module;
+    lloGeomTypeClosestHit(context->llo,this->ID,
+                          rayType,module->ID,
+                          // warning: this 'this' here is importat, since
+                          // *we* manage the lifetime of this string, and
+                          // the one on the constructor list will go out of
+                          // scope after this function
+                          this->closestHit.progName.c_str());
+  }
 
 } //::owl

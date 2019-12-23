@@ -80,6 +80,7 @@ namespace owl {
   RayGen::SP
   Context::createRayGen(const std::shared_ptr<RayGenType> &type)
   {
+    PING;
     return std::make_shared<RayGen>(this,type);
   }
 
@@ -170,12 +171,13 @@ namespace owl {
 
   void Context::buildPipeline()
   {
-    IGNORING_THIS();
+    lloCreatePipeline(llo);
   }
 
   void Context::buildPrograms()
   {
-    IGNORING_THIS();
+    lloBuildModules(llo);
+    lloBuildPrograms(llo);
   }
 
 } // ::owl
