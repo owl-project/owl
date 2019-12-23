@@ -642,6 +642,19 @@ namespace owl {
     }
     
     extern "C" OWL_LL_INTERFACE
+    LLOResult lloGeomGroupSetChild(LLOContext llo,
+                                   int32_t    groupID,
+                                   int32_t    childNo,
+                                   int32_t    childID)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->geomGroupSetChild(groupID,childNo,childID);
+        });
+    }
+    
+    extern "C" OWL_LL_INTERFACE
     LLOResult lloSetMaxInstancingDepth(LLOContext llo,
                                        int32_t maxInstanceDepth)
     {

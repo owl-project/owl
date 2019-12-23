@@ -58,3 +58,10 @@ add_subdirectory(common)
 # -------------------------------------------------------
 add_subdirectory(samples)
 
+#option(EXPERIMENTAL_NG "Experimental NG Layer" OFF)
+#if (EXPERIMENTAL_NG)
+#  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/currently_disabled/owl/ng/include)
+#  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/currently_disabled/owl/ng)
+#  add_subdirectory(currently_disabled/owl/ng)
+#  add_subdirectory(currently_disabled/samples/ng)
+#endif()

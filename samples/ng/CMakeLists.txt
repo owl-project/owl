@@ -14,8 +14,13 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# low-level interface
-add_subdirectory(ll)
+include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
 
-# node graph layer
-add_subdirectory(ng)
+#file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
+# for now:
+set(samples s01-simpleTriangles)
+
+foreach(sample ${samples})
+  add_subdirectory(${sample})
+endforeach()
+

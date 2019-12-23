@@ -14,8 +14,42 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# low-level interface
-add_subdirectory(ll)
+include_directories(${PROJECT_SOURCE_DIR}/)
+#include_directories(${PROJECT_SOURCE_DIR}/owl)
+#include_directories(${PROJECT_SOURCE_DIR}/owl/ng)
+include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
 
-# node graph layer
-add_subdirectory(ng)
+add_library(owl-ng
+
+  include/owl/owl.h
+  
+  api/impl.cpp
+  api/APIContext.h
+  api/APIContext.cpp
+  api/APIHandle.h
+  api/APIHandle.cpp
+  
+  cpp/Object.cpp
+  cpp/Module.cpp
+  cpp/RegisteredObject.cpp
+  cpp/SBTObject.cpp
+  cpp/Buffer.cpp
+  cpp/Group.cpp
+  cpp/ObjectRegistry.cpp
+  cpp/Context.cpp
+  cpp/RayGen.cpp
+  cpp/MissProg.cpp
+  cpp/Geometry.cpp
+  cpp/Variable.cpp
+  )
+
+include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+
+target_link_libraries(owl-ng
+  llowl-static
+  )
+
+
+
+
+

@@ -14,8 +14,19 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# low-level interface
-add_subdirectory(ll)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(ng05-rtow
+  hostCode.cpp
+  ${ptxCode}
+  )
+target_link_libraries(ng05-rtow
+  owl-ng
+  )
+add_test(ng05-rtow
+  ${CMAKE_BINARY_DIR}/ng05-rtow)
 
-# node graph layer
-add_subdirectory(ng)
+
+

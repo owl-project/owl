@@ -737,13 +737,13 @@ namespace owl {
     
     void Device::allocRayGens(size_t count)
     {
-      assert(rayGenPGs.empty());
+      // assert(rayGenPGs.empty());
       rayGenPGs.resize(count);
     }
     
     void Device::allocMissProgs(size_t count)
     {
-      assert(missProgPGs.empty());
+      // assert(missProgPGs.empty());
       missProgPGs.resize(count);
     }
       
@@ -823,10 +823,10 @@ namespace owl {
       DeviceBuffer *buffer = new DeviceBuffer(elementCount,elementSize);
       if (initData) {
         buffer->devMem.upload(initData,"createDeviceBuffer: uploading initData");
-        LOG("uploading " << elementCount
-            << " items of size " << elementSize
-            << " from host ptr " << initData
-            << " to device ptr " << buffer->devMem.get());
+        // LOG("uploading " << elementCount
+        //     << " items of size " << elementSize
+        //     << " from host ptr " << initData
+        //     << " to device ptr " << buffer->devMem.get());
       }
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
@@ -946,6 +946,20 @@ namespace owl {
 
 
 
+    /*! set given child to {childGroupID+xfm}  */
+    void Device::geomGroupSetChild(int groupID,
+                                   int childNo,
+                                   int childID)
+    {
+      GeomGroup *gg       = checkGetGeomGroup(groupID);
+      Geom      *newChild = checkGetGeom(childID);
+      Geom      *oldChild = gg->children[childNo];
+      if (oldChild)
+        oldChild->numTimesReferenced--;
+      gg->children[childNo] = newChild;
+      newChild->numTimesReferenced++;
+    }
+
 
 
 
@@ -986,15 +1000,11 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
-      PING;
-      PRINT(groups.size());
       for (auto group : groups) {
         if (!group) continue;
         if (!group->containsGeom()) continue;
         GeomGroup *gg = (GeomGroup *)group;
         const int sbtOffset = gg->sbtOffset;
-        PRINT(sbtOffset);
-        PRINT(gg->children.size());
         for (int childID=0;childID<gg->children.size();childID++) {
           Geom *geom = gg->children[childID];
           if (!geom) continue;
@@ -1037,11 +1047,9 @@ namespace owl {
           }
         }
       }
-      PRINT(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       context->popActive();
-      PING;
       LOG_OK("done building (and uploading) sbt hit group records");
     }
       
@@ -1146,11 +1154,11 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
-      for (int rgID=0;rgID<(int)missProgPGs.size();rgID++) {
+      for (int mpID=0;mpID<(int)missProgPGs.size();mpID++) {
         // ------------------------------------------------------------------
         // compute pointer to entire record:
         // ------------------------------------------------------------------
-        const int recordID = rgID;
+        const int recordID = mpID;
         uint8_t *const sbtRecord
           = missProgRecords.data() + recordID*missProgRecordSize;
         
@@ -1161,7 +1169,7 @@ namespace owl {
         char    *const sbtRecordHeader = (char *)sbtRecord;
         // ... find the PG that goes into the record header...
         const MissProgPG &rgPG
-          = missProgPGs[rgID];
+          = missProgPGs[mpID];
         // ... and tell optix to write that into the record
         OPTIX_CALL(SbtRecordPackHeader(rgPG.pg,sbtRecordHeader));
           
@@ -1173,7 +1181,7 @@ namespace owl {
           = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
         writeMissProgDataCB(sbtRecordData,
                             context->owlDeviceID,
-                            rgID,
+                            mpID,
                             callBackUserData);
       }
       sbt.missProgRecordsBuffer.alloc(missProgRecords.size());

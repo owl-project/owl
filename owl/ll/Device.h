@@ -540,6 +540,9 @@ namespace owl {
                                  int childNo,
                                  int childGroupID,
                                  const affine3f &xfm=affine3f(owl::common::one));
+      void geomGroupSetChild(int groupID,
+                             int childNo,
+                             int childID);
 
       /*! destroy the given buffer, and release all host and/or device
           memory associated with it */
@@ -638,6 +641,15 @@ namespace owl {
         return group;
       }
 
+      // accessor helpers:
+      GeomGroup *checkGetGeomGroup(int groupID)
+      {
+        Group *group = checkGetGroup(groupID);
+        assert("check valid group" && group != nullptr);
+        GeomGroup *gg = dynamic_cast<GeomGroup*>(group);
+        assert("check group is a geom group" && gg != nullptr);
+        return gg;
+      }
       // accessor helpers:
       UserGeomGroup *checkGetUserGeomGroup(int groupID)
       {
