@@ -104,7 +104,7 @@ int main(int ac, char **av)
   // ll->allocRayGens(1);
   // ll->setRayGen(/*program ID*/0,
   //               /*module:*/0,
-  //               "simpleRayGen");
+  //               "simpleRayGen");  
   OWLVarDecl rayGenVars[]
     = {
        { "deviceIndex",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceIndex)},
@@ -122,6 +122,28 @@ int main(int ac, char **av)
     = owlRayGenCreate(context,module,"simpleRayGen",
                       sizeof(RayGenData),
                       rayGenVars,-1);
+
+  vec3f camera_pos = lookFrom;
+  vec3f camera_d00
+    = normalize(lookAt-lookFrom);
+  vec3f camera_ddu
+    = cosFovy * aspect * normalize(cross(camera_d00,lookUp));
+  vec3f camera_ddv
+    = cosFovy * normalize(cross(camera_ddu,camera_d00));
+  camera_d00 -= 0.5f * camera_ddu;
+  camera_d00 -= 0.5f * camera_ddv;
+
+  // TODO: FIX THIS
+  std::cout << GDT_TERIMNAL_RED << "WARNING: NOT CORRECTLY SETTING DEVICE INDEX AND COUNT YET" << GDT_TERMINAL_DEFAULT << std::endl:
+  owlSet1i    (rayGen,"deviceIndex",  0);
+  owlSet1i    (rayGen,"deviceCount",  1);
+  owlSetBuffer(rayGen,"fbPtr",        frameBuffer);
+  owlSetBuffer(rayGen,"fbSize",       frameBuffer);
+  owLSetGroup (rayGen,"world",        world);
+  owlSet3f    (rayGen,"camera.pos",   camera_pos);
+  owlSet3f    (rayGen,"camera.dir_00",camera_d00);
+  owlSet3f    (rayGen,"camera.dir_du",camera_ddu);
+  owlSet3f    (rayGen,"camera.dir_dv",camera_ddv);
   
   // ll->allocMissProgs(1);
   // ll->setMissProg(/*program ID*/0,
@@ -133,8 +155,11 @@ int main(int ac, char **av)
        { "color1", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color1)},
        { /* sentinel to mark end of list */ }
   };
-  owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
-                    missProgVars,-1);
+  OWLMissProg missProg
+    = owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
+                        missProgVars,-1);
+  owlSet3f(missProg,"color0",vec3f(.8f,0.f,0.f));
+  owlSet3f(missProg,"color1",vec3f(.8f,.8f,.8f));
   
   // ll->buildPrograms();
   // ll->createPipeline();
@@ -164,6 +189,7 @@ int main(int ac, char **av)
   OWLBuffer frameBuffer
     = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
 
+  
   // ------------------------------------------------------------------
   // alloc geom
   // ------------------------------------------------------------------
@@ -185,6 +211,10 @@ int main(int ac, char **av)
                           NUM_VERTICES,sizeof(vec3f),0);
   owlTrianglesSetIndices(trianglesGeom,indexBuffer,
                          NUM_INDICES,sizeof(vec3i),0);
+
+  owlSetBuffer(trianglesGeom,"vertex",vertexBuffer);
+  owlSetBuffer(trianglesGeom,"index",indexBuffer);
+  owlSet3f(trianglesGeom,"color",vec3f(0,1,0));
   
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups

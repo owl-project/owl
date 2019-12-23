@@ -116,6 +116,7 @@ typedef struct _OWLDeviceBuffer2D { void *d_pointer; OWL_int2 dims; } OWLDeviceB
 
 typedef struct _OWLContext       *OWLContext;
 typedef struct _OWLBuffer        *OWLBuffer;
+typedef struct _OWLObject        *OWLObject;
 typedef struct _OWLGeom          *OWLGeom;
 typedef struct _OWLGeomType      *OWLGeomType;
 typedef struct _OWLVariable      *OWLVariable;
@@ -263,3 +264,13 @@ OWL_API void owlVariableSet3fv(OWLVariable variable, const float *value);
 OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
 OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
 
+
+#ifdef __cplusplus
+struct owl3f { float x,y,z; };
+
+void owlSet3fv(OWLObject object, const owl3f &v);
+
+// helper/wrapper functions for variable set/get
+inline void owlSet3f(OWLRayGen rayGen, const owl3f &v) { owlSet3f((OWLObject)rayGen,v); }
+inline void owlSet3f(OWLGeom   geom,   const owl3f &v) { owlSet3f((OWLObject)geom,v); }
+#endif
