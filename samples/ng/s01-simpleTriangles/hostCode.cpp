@@ -17,6 +17,66 @@
 #include "owl/owl.h"
 #include "deviceCode.h"
 
+
+
+
+// -------------------------------------------------------
+// VariableSet for different *object* types
+// -------------------------------------------------------
+struct owl3f { float x,y,z; };
+
+inline void owlRayGenSetGroup(OWLRayGen rayGen, const char *varName, OWLGroup v)
+{
+  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+  owlVariableSetGroup(var,v);
+  owlVariableRelease(var);
+}
+inline void owlRayGenSetBuffer(OWLRayGen rayGen, const char *varName, OWLBuffer v)
+{
+  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+  owlVariableSetBuffer(var,v);
+  owlVariableRelease(var);
+}
+inline void owlGeomSetBuffer(OWLGeom rayGen, const char *varName, OWLBuffer v)
+{
+  OWLVariable var = owlGeomGetVariable(rayGen,varName);
+  owlVariableSetBuffer(var,v);
+  owlVariableRelease(var);
+}
+
+
+inline void owlRayGenSet1i(OWLRayGen rayGen, const char *varName, int v)
+{
+  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+  owlVariableSet1i(var,v);
+  owlVariableRelease(var);
+}
+
+
+inline void owlRayGenSet3f(OWLRayGen rayGen, const char *varName, const owl3f &v)
+{
+  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+  owlVariableSet3fv(var,&v.x);
+  owlVariableRelease(var);
+}
+inline void owlMissProgSet3f(OWLMissProg rayGen, const char *varName, const owl3f &v)
+{
+  OWLVariable var = owlMissProgGetVariable(rayGen,varName);
+  owlVariableSet3fv(var,&v.x);
+  owlVariableRelease(var);
+}
+inline void owlGeomSet3f(OWLGeom rayGen, const char *varName, const owl3f &v)
+{
+  OWLVariable var = owlGeomGetVariable(rayGen,varName);
+  owlVariableSet3fv(var,&v.x);
+  owlVariableRelease(var);
+}
+
+
+
+
+
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
@@ -118,33 +178,6 @@ int main(int ac, char **av)
        { "camera.dir_dv", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_dv)},
        { /* sentinel to mark end of list */ }
   };
-  OWLRayGen rayGen
-    = owlRayGenCreate(context,module,"simpleRayGen",
-                      sizeof(RayGenData),
-                      rayGenVars,-1);
-
-  vec3f camera_pos = lookFrom;
-  vec3f camera_d00
-    = normalize(lookAt-lookFrom);
-  vec3f camera_ddu
-    = cosFovy * aspect * normalize(cross(camera_d00,lookUp));
-  vec3f camera_ddv
-    = cosFovy * normalize(cross(camera_ddu,camera_d00));
-  camera_d00 -= 0.5f * camera_ddu;
-  camera_d00 -= 0.5f * camera_ddv;
-
-  // TODO: FIX THIS
-  std::cout << GDT_TERIMNAL_RED << "WARNING: NOT CORRECTLY SETTING DEVICE INDEX AND COUNT YET" << GDT_TERMINAL_DEFAULT << std::endl:
-  owlSet1i    (rayGen,"deviceIndex",  0);
-  owlSet1i    (rayGen,"deviceCount",  1);
-  owlSetBuffer(rayGen,"fbPtr",        frameBuffer);
-  owlSetBuffer(rayGen,"fbSize",       frameBuffer);
-  owLSetGroup (rayGen,"world",        world);
-  owlSet3f    (rayGen,"camera.pos",   camera_pos);
-  owlSet3f    (rayGen,"camera.dir_00",camera_d00);
-  owlSet3f    (rayGen,"camera.dir_du",camera_ddu);
-  owlSet3f    (rayGen,"camera.dir_dv",camera_ddv);
-  
   // ll->allocMissProgs(1);
   // ll->setMissProg(/*program ID*/0,
   //                 /*module:*/0,
@@ -158,8 +191,8 @@ int main(int ac, char **av)
   OWLMissProg missProg
     = owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
                         missProgVars,-1);
-  owlSet3f(missProg,"color0",vec3f(.8f,0.f,0.f));
-  owlSet3f(missProg,"color1",vec3f(.8f,.8f,.8f));
+  owlMissProgSet3f(missProg,"color0",owl3f{.8f,0.f,0.f});
+  owlMissProgSet3f(missProg,"color1",owl3f{.8f,.8f,.8f});
   
   // ll->buildPrograms();
   // ll->createPipeline();
@@ -212,9 +245,9 @@ int main(int ac, char **av)
   owlTrianglesSetIndices(trianglesGeom,indexBuffer,
                          NUM_INDICES,sizeof(vec3i),0);
 
-  owlSetBuffer(trianglesGeom,"vertex",vertexBuffer);
-  owlSetBuffer(trianglesGeom,"index",indexBuffer);
-  owlSet3f(trianglesGeom,"color",vec3f(0,1,0));
+  owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
+  owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
+  owlGeomSet3f(trianglesGeom,"color",owl3f{0,1,0});
   
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
@@ -231,6 +264,43 @@ int main(int ac, char **av)
   OWLGroup trianglesGroup
     = owlTrianglesGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
+
+
+
+
+
+
+
+  OWLRayGen rayGen
+    = owlRayGenCreate(context,module,"simpleRayGen",
+                      sizeof(RayGenData),
+                      rayGenVars,-1);
+
+  vec3f camera_pos = lookFrom;
+  vec3f camera_d00
+    = normalize(lookAt-lookFrom);
+  float aspect = fbSize.x / float(fbSize.y);
+  vec3f camera_ddu
+    = cosFovy * aspect * normalize(cross(camera_d00,lookUp));
+  vec3f camera_ddv
+    = cosFovy * normalize(cross(camera_ddu,camera_d00));
+  camera_d00 -= 0.5f * camera_ddu;
+  camera_d00 -= 0.5f * camera_ddv;
+
+  // TODO: FIX THIS
+  std::cout << GDT_TERMINAL_RED << "WARNING: NOT CORRECTLY SETTING DEVICE INDEX AND COUNT YET" << GDT_TERMINAL_DEFAULT << std::endl;
+  owlRayGenSet1i    (rayGen,"deviceIndex",  0);
+  owlRayGenSet1i    (rayGen,"deviceCount",  1);
+  owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
+  owlRayGenSetBuffer(rayGen,"fbSize",       frameBuffer);
+  owlRayGenSetGroup (rayGen,"world",        trianglesGroup);
+  owlRayGenSet3f    (rayGen,"camera.pos",   (const owl3f&)camera_pos);
+  owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
+  owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
+  owlRayGenSet3f    (rayGen,"camera.dir_dv",(const owl3f&)camera_ddv);
+  
+
+  
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################

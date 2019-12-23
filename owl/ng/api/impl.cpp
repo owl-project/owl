@@ -117,6 +117,14 @@ namespace owl {
     LOG_API_CALL();
     return getVariableHelper<RayGen>((APIHandle*)_prog,varName);
   }
+
+  OWL_API OWLVariable
+  owlMissProgGetVariable(OWLMissProg _prog,
+                       const char *varName)
+  {
+    LOG_API_CALL();
+    return getVariableHelper<MissProg>((APIHandle*)_prog,varName);
+  }
   
 
   std::vector<OWLVarDecl> checkAndPackVariables(const OWLVarDecl *vars,
@@ -509,10 +517,16 @@ namespace owl {
   }
 
   
-  OWL_API void owlVariableSet1f(OWLVariable _variable, const float value)
+  OWL_API void owlVariableSet1f(OWLVariable _variable, float value)
   {
     LOG_API_CALL();
-    setVariable((APIHandle *)_variable,(float)value);
+    setVariable((APIHandle *)_variable,value);
+  }
+
+  OWL_API void owlVariableSet1i(OWLVariable _variable, int value)
+  {
+    LOG_API_CALL();
+    setVariable((APIHandle *)_variable,value);
   }
 
   OWL_API void owlVariableSet3fv(OWLVariable _variable, const float *value)
