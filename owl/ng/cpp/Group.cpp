@@ -31,4 +31,12 @@ namespace owl {
       children(numChildren)
   {}
   
+  TrianglesGroup::TrianglesGroup(Context *const context,
+                                 size_t numChildren)
+    : GeomGroup(context,numChildren)
+  {
+    lloTrianglesGeomGroupCreate(context->llo,this->ID,
+                                nullptr,numChildren);
+  }
+  
 } // ::owl

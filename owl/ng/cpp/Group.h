@@ -50,9 +50,7 @@ namespace owl {
 
   struct TrianglesGroup : public GeomGroup {
     TrianglesGroup(Context *const context,
-                   size_t numChildren)
-      : GeomGroup(context,numChildren)
-    {}
+                   size_t numChildren);
     virtual std::string toString() const { return "TrianglesGroup"; }
   };
 
