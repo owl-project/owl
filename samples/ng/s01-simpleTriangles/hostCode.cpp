@@ -123,7 +123,7 @@ vec3i indices[NUM_INDICES] =
    { 4,0,2 }, { 4,2,6 }
   };
 
-const char *outFileName = "ll01-simpleTriangles.png";
+const char *outFileName = "ng01-simpleTriangles.png";
 const vec2i fbSize(800,600);
 const vec3f lookFrom(-4.f,-3.f,-2.f);
 const vec3f lookAt(0.f,0.f,0.f);
@@ -134,8 +134,6 @@ int main(int ac, char **av)
 {
   LOG("owl::ng example '" << av[0] << "' starting up");
 
-  // owl::ll::DeviceGroup::SP ll
-  //   = owl::ll::DeviceGroup::create();
   OWLContext context = owlContextCreate();
   
   LOG("building pipeline ...");
@@ -143,19 +141,15 @@ int main(int ac, char **av)
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
-  // ll->allocModules(1);
-  // ll->setModule(0,ptxCode);
-  // ll->buildModules();
   OWLModule module = owlModuleCreate(context,ptxCode);
-  
-  // enum { TRIANGLES_GEOM_TYPE=0,NUM_GEOM_TYPES };
-  // ll->allocGeomTypes(NUM_GEOM_TYPES);
 
-  OWLVarDecl trianglesGeomVars[]
-    = {
-       { "index",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,index)},
-       { "vertex", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,vertex)},
-       { "color",  OWL_FLOAT3, OWL_OFFSETOF(TrianglesGeomData,color)}
+  // -------------------------------------------------------
+  // declare geometry type
+  // -------------------------------------------------------
+  OWLVarDecl trianglesGeomVars[] = {
+    { "index",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,index)},
+    { "vertex", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,vertex)},
+    { "color",  OWL_FLOAT3, OWL_OFFSETOF(TrianglesGeomData,color)}
   };
   OWLGeomType trianglesGeomType
     = owlGeomTypeCreate(context,
@@ -163,33 +157,12 @@ int main(int ac, char **av)
                         sizeof(TrianglesGeomData),
                         trianglesGeomVars,3);
   
-  // ll->setGeomTypeClosestHit(/*program ID*/TRIANGLES_GEOM_TYPE,
-  //                           /*ray type  */0,
-  //                           /*module:*/0,
-  //                           "TriangleMesh");
   owlGeomTypeSetClosestHit(trianglesGeomType,0,
                            module,"TriangleMesh");
-  // ll->allocRayGens(1);
-  // ll->setRayGen(/*program ID*/0,
-  //               /*module:*/0,
-  //               "simpleRayGen");  
-  OWLVarDecl rayGenVars[]
-    = {
-       { "deviceIndex",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceIndex)},
-       { "deviceCount",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceCount)},
-       { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
-       { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
-       { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
-       { "camera.pos",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.pos)},
-       { "camera.dir_00", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_00)},
-       { "camera.dir_du", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_du)},
-       { "camera.dir_dv", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_dv)},
-       { /* sentinel to mark end of list */ }
-  };
-  // ll->allocMissProgs(1);
-  // ll->setMissProg(/*program ID*/0,
-  //                 /*module:*/0,
-  //                 "miss");
+
+  // -------------------------------------------------------
+  // declare miss prog 
+  // -------------------------------------------------------
   OWLVarDecl missProgVars[]
     = {
        { "color0", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color0)},
@@ -202,22 +175,37 @@ int main(int ac, char **av)
   owlMissProgSet3f(missProg,"color0",owl3f{.8f,0.f,0.f});
   owlMissProgSet3f(missProg,"color1",owl3f{.8f,.8f,.8f});
 
-  LOG("building geometries ...");
+  // -------------------------------------------------------
+  // declare ray gen program
+  // -------------------------------------------------------
+  OWLVarDecl rayGenVars[] = {
+    { "deviceIndex",   OWL_DEVICE, OWL_OFFSETOF(RayGenData,deviceIndex)},
+    { "deviceCount",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceCount)},
+    { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
+    { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
+    { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
+    { "camera.pos",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.pos)},
+    { "camera.dir_00", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_00)},
+    { "camera.dir_du", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_du)},
+    { "camera.dir_dv", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_dv)},
+    { /* sentinel to mark end of list */ }
+  };
+
+  OWLRayGen rayGen
+    = owlRayGenCreate(context,module,"simpleRayGen",
+                      sizeof(RayGenData),
+                      rayGenVars,-1);
+
 
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
   // ##################################################################
 
-  // ------------------------------------------------------------------
-  // alloc buffers
-  // ------------------------------------------------------------------
-  
-  // enum { VERTEX_BUFFER=0,INDEX_BUFFER,FRAME_BUFFER,NUM_BUFFERS };
-  // ll->reallocBuffers(NUM_BUFFERS);
-  // ll->createDeviceBuffer(VERTEX_BUFFER,NUM_VERTICES,sizeof(vec3f),vertices);
-  // ll->createDeviceBuffer(INDEX_BUFFER,NUM_INDICES,sizeof(vec3i),indices);
-  // ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  LOG("building geometries ...");
 
+  // ------------------------------------------------------------------
+  // triangle mesh
+  // ------------------------------------------------------------------
   OWLBuffer vertexBuffer
     = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_VERTICES,vertices);
   OWLBuffer indexBuffer
@@ -225,59 +213,40 @@ int main(int ac, char **av)
   OWLBuffer frameBuffer
     = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
 
-  
-  // ------------------------------------------------------------------
-  // alloc geom
-  // ------------------------------------------------------------------
-  // enum { TRIANGLES_GEOM=0,NUM_GEOMS };
-  // ll->reallocGeoms(NUM_GEOMS);
-  // ll->createTrianglesGeom(/* geom ID    */TRIANGLES_GEOM,
-  //                         /* type/PG ID */TRIANGLES_GEOM_TYPE);
-  // ll->trianglesGeomSetVertexBuffer(/* geom ID   */TRIANGLES_GEOM,
-  //                                  /* buffer ID */VERTEX_BUFFER,
-  //                                  /* meta info */NUM_VERTICES,sizeof(vec3f),0);
-  // ll->trianglesGeomSetIndexBuffer(/* geom ID   */TRIANGLES_GEOM,
-  //                                 /* buffer ID */INDEX_BUFFER,
-  //                                 /* meta info */NUM_INDICES,sizeof(vec3i),0);
-
   OWLGeom trianglesGeom
     = owlGeomCreate(context,trianglesGeomType);
-
+  
   owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
                           NUM_VERTICES,sizeof(vec3f),0);
   owlTrianglesSetIndices(trianglesGeom,indexBuffer,
                          NUM_INDICES,sizeof(vec3i),0);
-
+  
   owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
   owlGeomSet3f(trianglesGeom,"color",owl3f{0,1,0});
   
-  // ##################################################################
-  // set up all *ACCELS* we need to trace into those groups
-  // ##################################################################
-
-  // enum { TRIANGLES_GROUP=0,NUM_GROUPS };
-  // ll->reallocGroups(NUM_GROUPS);
-  // int geomsInGroup[] = { 0 };
-  // ll->createTrianglesGeomGroup(/* group ID */TRIANGLES_GROUP,
-  //                              /* geoms in group, pointer */ geomsInGroup,
-  //                              /* geoms in group, count   */ 1);
-  // ll->groupBuildAccel(TRIANGLES_GROUP);
-
+  // ------------------------------------------------------------------
+  // the group/accel for that mesh
+  // ------------------------------------------------------------------
   OWLGroup trianglesGroup
     = owlTrianglesGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
 
+    
+  // ##################################################################
+  // build *SBT* required to trace the groups
+  // ##################################################################
 
+  // ##################################################################
+  // build *SBT* required to trace the groups
+  // ##################################################################
+  owlBuildPrograms(context);
+  owlBuildPipeline(context);
 
-
-
-
-
-  OWLRayGen rayGen
-    = owlRayGenCreate(context,module,"simpleRayGen",
-                      sizeof(RayGenData),
-                      rayGenVars,-1);
+  // ------------------------------------------------------------------
+  // set miss program's data
+  // ------------------------------------------------------------------
+  
 
   vec3f camera_pos = lookFrom;
   vec3f camera_d00
@@ -290,17 +259,10 @@ int main(int ac, char **av)
   camera_d00 -= 0.5f * camera_ddu;
   camera_d00 -= 0.5f * camera_ddv;
 
-  // TODO: FIX THIS
-  std::cout << GDT_TERMINAL_RED << "WARNING: NOT CORRECTLY SETTING DEVICE INDEX AND COUNT YET" << GDT_TERMINAL_DEFAULT << std::endl;
-  owlRayGenSet1i    (rayGen,"deviceIndex",  0);
-  owlRayGenSet1i    (rayGen,"deviceCount",  1);
-  PING;
+  owlRayGenSet1i    (rayGen,"deviceCount",  owlGetDeviceCount(context));
   owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
-  PING;
   owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
-  PING;
   owlRayGenSetGroup (rayGen,"world",        trianglesGroup);
-  PING;
   owlRayGenSet3f    (rayGen,"camera.pos",   (const owl3f&)camera_pos);
   owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
@@ -308,16 +270,6 @@ int main(int ac, char **av)
   
 
   
-    
-// ##################################################################
-  // build *SBT* required to trace the groups
-  // ##################################################################
-  // ll->buildPrograms();
-  // ll->createPipeline();
-  owlBuildPrograms(context);
-  owlBuildPipeline(context);
-
-  LOG("building SBT ...");
 
   // // ----------- build hitgroups -----------
   // const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);

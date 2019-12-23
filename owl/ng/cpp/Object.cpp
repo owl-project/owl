@@ -62,6 +62,8 @@ namespace owl {
       return sizeof(void *);
     case OWL_GROUP:
       return sizeof(OptixTraversableHandle);
+    case OWL_DEVICE:
+      return sizeof(int32_t);
     default:
       throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
                                +": not yet implemented for type #"
@@ -106,6 +108,8 @@ namespace owl {
       return "OWLBufferPointer";
     case OWL_GROUP:
       return "OWLGroup";
+    case OWL_DEVICE:
+      return "OWLDevice";
     default:
       throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
                                +": not yet implemented for type #"

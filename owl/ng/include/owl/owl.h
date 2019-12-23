@@ -74,6 +74,8 @@ typedef enum
    OWL_BUFPTR=OWL_BUFFER_POINTER,
 
    OWL_GROUP=3000,
+   
+   OWL_DEVICE=4000
   }
   OWLDataType;
 
@@ -130,6 +132,8 @@ OWL_API void owlBuildPrograms(OWLContext context);
 OWL_API void owlBuildPipeline(OWLContext context);
 OWL_API void owlBuildSBT(OWLContext context);
 
+OWL_API int32_t
+owlGetDeviceCount(OWLContext context);
 
 OWL_API OWLContext
 owlContextCreate();

@@ -62,6 +62,25 @@ namespace owl {
     Buffer::SP buffer;
   };
   
+  struct DeviceIndexVariable : public Variable {
+    typedef std::shared_ptr<BufferPointerVariable> SP;
+
+    DeviceIndexVariable(const OWLVarDecl *const varDecl)
+      : Variable(varDecl)
+    {}
+    void set(const Buffer::SP &value) override
+    {
+      throw std::runtime_error("cannot _set_ a device index variable; it is purely implicit");
+    }
+
+    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    {
+      *(int*)sbtEntry = deviceID;
+    }
+    
+    Buffer::SP buffer;
+  };
+  
   struct BufferVariable : public Variable {
     typedef std::shared_ptr<BufferVariable> SP;
 
@@ -130,6 +149,8 @@ namespace owl {
       return std::make_shared<BufferVariable>(decl);
     case OWL_BUFFER_POINTER:
       return std::make_shared<BufferPointerVariable>(decl);
+    case OWL_DEVICE:
+      return std::make_shared<DeviceIndexVariable>(decl);
     }
     throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
                              +": not yet implemented for type "

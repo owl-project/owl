@@ -73,6 +73,18 @@ namespace owl {
   }
 
 
+  OWL_API int32_t owlGetDeviceCount(OWLContext _context)
+  {
+    LOG_API_CALL();
+
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->getContext();
+    assert(context);
+    return (int32_t)lloGetDeviceCount(context->llo);
+  }
+    
+
+  
   // ==================================================================
   // <object>::getVariable
   // ==================================================================
