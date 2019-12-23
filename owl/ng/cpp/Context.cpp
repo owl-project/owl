@@ -170,6 +170,7 @@ namespace owl {
     lloSbtHitProgsBuild
       (llo,
        [&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
+        PING; 
          const Geom *geom = geoms.getPtr(geomID);
          assert(geom);
          geom->writeVariables(output,devID);
@@ -181,6 +182,7 @@ namespace owl {
        [&](uint8_t *output,
            int devID,
            int rayType) {
+        PING; 
 
          // TODO: need the ID of the miss prog we're writing!
          int missProgID = 0;
@@ -198,6 +200,7 @@ namespace owl {
            int devID,
            int rgID) {
 
+        PING; 
          // TODO: need the ID of the miss prog we're writing!
          int rayGenID = 0;
          assert(rayGens.size() == 1);
@@ -258,7 +261,7 @@ namespace owl {
   //   });
   // LOG_OK("everything set up ...");
 
-      
+    PING;
   }
 
   void Context::buildPipeline()

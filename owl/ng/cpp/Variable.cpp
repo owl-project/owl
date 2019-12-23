@@ -34,7 +34,14 @@ namespace owl {
       : Variable(varDecl)
     {}
     
-    void set(const T &value) override { PING; }
+    void set(const T &value) override { this->value = value; }
+
+    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    {
+      *(T*)sbtEntry = value;
+    }
+
+    T value;
   };
 
   struct BufferPointerVariable : public Variable {
@@ -74,6 +81,14 @@ namespace owl {
     {}
     void set(const Group::SP &value) override { this->group = value; }
 
+    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    {
+      const OptixTraversableHandle value
+        = lloGroupGetTraversable(group->context->llo,group->ID,deviceID);
+      *(OptixTraversableHandle*)sbtEntry = value;
+    }
+    
+    
     Group::SP group;
   };
   

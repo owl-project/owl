@@ -32,7 +32,12 @@ namespace owl {
   MissProg::MissProg(Context *const context,
                      MissProgType::SP type) 
     : SBTObject(context,context->missProgs,type)
-  {}
+  {
+    lloMissProgCreate(context->llo,this->ID,
+                      type->module->ID,
+                      type->progName.c_str(),
+                      type->varStructSize);
+  }
   
 } // ::owl
 

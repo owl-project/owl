@@ -43,7 +43,7 @@ namespace owl {
     
     virtual std::string toString() const { return "RayGen"; }
 
-    void launch(const vec2i &dims) { IGNORING_THIS(); }
+    void launch(const vec2i &dims);
   };
 
 } // ::owl

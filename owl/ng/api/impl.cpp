@@ -70,8 +70,6 @@ namespace owl {
     assert(rayGen);
 
     rayGen->launch(vec2i(dims_x,dims_y));
-    
-    std::cout << "actual launch not yet implemented - ignoring ...." << std::endl;
   }
 
 

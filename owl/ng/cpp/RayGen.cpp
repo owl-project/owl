@@ -44,6 +44,11 @@ namespace owl {
                     type->progName.c_str(),
                     type->varStructSize);
   }
+
+  void RayGen::launch(const vec2i &dims)
+  {
+    lloLaunch2D(context->llo,this->ID,dims.x,dims.y);
+  }
   
 } // ::owl
 
