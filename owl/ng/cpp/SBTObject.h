@@ -50,25 +50,19 @@ namespace owl {
 
 
 
-  
-  template<typename ObjectType>
-  struct SBTObject : public RegisteredObject
-  {
-    typedef std::shared_ptr<SBTObject> SP;
 
-    SBTObject(Context *const context,
-              ObjectRegistry &registry,
-              std::shared_ptr<ObjectType> type)
+
+  struct SBTObjectBase : public RegisteredObject
+  {
+    SBTObjectBase(Context *const context,
+                  ObjectRegistry &registry,
+                  std::shared_ptr<SBTObjectType> type)
       : RegisteredObject(context,registry),
         type(type),
         variables(type->instantiateVariables())
     {
-      assert(this->type);
-      assert(this->type.get());
     }
-    
-    virtual std::string toString() const { return "SBTObject<"+type->toString()+">"; }
-    
+
     bool hasVariable(const std::string &name)
     {
       return type->hasVariable(name);
@@ -84,12 +78,43 @@ namespace owl {
       return var;
     }
 
+    /*! this function is arguably the heart of the NG layer: given an
+      SBT Object's set of variables, create the SBT entry that writes
+      the given variables' values into the specified format, prorperly
+      translating per-device data (buffers, traversable) while doing
+      so */
+    void writeVariables(uint8_t *sbtEntry,
+                        int deviceID) const;
+    
+    /*! the actual variable *values* */
+    const std::vector<Variable::SP> variables;
+    
+    /*! our own type description, that tells us which variables (of
+      which type, etc) we have */
+    std::shared_ptr<SBTObjectType> const type;
+  };
+  
+  template<typename ObjectType>
+  struct SBTObject : public SBTObjectBase//RegisteredObject
+  {
+    typedef std::shared_ptr<SBTObject> SP;
+
+    SBTObject(Context *const context,
+              ObjectRegistry &registry,
+              std::shared_ptr<ObjectType> type)
+      : SBTObjectBase(context,registry,type),
+      // : RegisteredObject(context,registry),
+        type(type)
+      // ,
+      //   variables(type->instantiateVariables())
+    {
+    }
+    
+    virtual std::string toString() const { return "SBTObject<"+type->toString()+">"; }
+    
     /*! our own type description, that tells us which variables (of
       which type, etc) we have */
     std::shared_ptr<ObjectType> const type;
-
-    /*! the actual variable *values* */
-    const std::vector<Variable::SP> variables;
   };
 
 } // ::owl

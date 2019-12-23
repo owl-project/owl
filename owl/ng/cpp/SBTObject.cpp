@@ -17,6 +17,7 @@
 #include "SBTObject.h"
 
 namespace owl {
+
   SBTObjectType::SBTObjectType(Context *const context,
                                ObjectRegistry &registry,
                                size_t varStructSize,
@@ -56,6 +57,20 @@ namespace owl {
     }
     return variables;
   }
-  
+
+  /*! this function is arguably the heart of the NG layer: given an
+    SBT Object's set of variables, create the SBT entry that writes
+    the given variables' values into the specified format, prorperly
+    translating per-device data (buffers, traversable) while doing
+    so */
+  void SBTObjectBase::writeVariables(uint8_t *sbtEntry,
+                                     int deviceID) const
+  {
+    PING; PRINT(variables.size());
+    for (auto var : variables) {
+      auto decl = var->varDecl;
+      PRINT(decl->name);
+    }
+  }
   
 } // ::owl
