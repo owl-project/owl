@@ -966,7 +966,6 @@ namespace owl {
     void Device::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
                                   const void *callBackUserData)
     {
-      PING;
       LOG("building sbt hit group records");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
@@ -986,7 +985,6 @@ namespace owl {
              && maxHitProgDataSize != (size_t)-1);
       size_t numHitGroupEntries = sbt.rangeAllocator.maxAllocedID;
       size_t numHitGroupRecords = numHitGroupEntries*context->numRayTypes;
-      PRINT(numHitGroupEntries);
       size_t hitGroupRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
@@ -1073,7 +1071,6 @@ namespace owl {
         maxRayGenDataSize = std::max(maxRayGenDataSize,
                                      rayGenPGs[rgID].program.dataSize);
       size_t numRayGenRecords = rayGenPGs.size();
-      PRINT(numRayGenRecords);
       size_t rayGenRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxRayGenDataSize);
@@ -1143,7 +1140,6 @@ namespace owl {
                                      rayGenPGs[mpID].program.dataSize);
       
       size_t numMissProgRecords = missProgPGs.size();
-      PRINT(numMissProgRecords);
       size_t missProgRecordSize
         = OPTIX_SBT_RECORD_HEADER_SIZE
         + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxMissProgDataSize);
@@ -1158,8 +1154,6 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
-      std::cout << "=======================================================" << std::endl;
-      PING; PRINT(missProgPGs.size());
       for (int mpID=0;mpID<(int)missProgPGs.size();mpID++) {
         // ------------------------------------------------------------------
         // compute pointer to entire record:
@@ -1174,13 +1168,10 @@ namespace owl {
         // first, compute pointer to record:
         char    *const sbtRecordHeader = (char *)sbtRecord;
         // ... find the PG that goes into the record header...
-        PING; PRINT((int*)sbtRecordHeader);
         const MissProgPG &rgPG
           = missProgPGs[mpID];
         // ... and tell optix to write that into the record
-        PING;
         OPTIX_CALL(SbtRecordPackHeader(rgPG.pg,sbtRecordHeader));
-        PING;
           
         // ------------------------------------------------------------------
         // finally, let the user fill in the record's payload using
@@ -1188,28 +1179,19 @@ namespace owl {
         // ------------------------------------------------------------------
         uint8_t *const sbtRecordData
           = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
-        PING;
-        PRINT((int*)sbtRecordData);
         writeMissProgDataCB(sbtRecordData,
                             context->owlDeviceID,
                             mpID,
                             callBackUserData);
-        PING;
       }
-      std::cout << "=======================================================" << std::endl;
-      PING; PRINT(missProgRecords.size());
       sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
       sbt.missProgRecordsBuffer.upload(missProgRecords);
-      PING;
-      PRINT(missProgRecords.size());
-      PRINT(sbt.missProgRecordsBuffer.valid());
       context->popActive();
       LOG_OK("done building (and uploading) sbt miss prog records");
     }
 
     void Device::launch(int rgID, const vec2i &dims)
     {
-      PING;
       context->pushActive();
       // LOG("launching ...");
       assert("check valid launch dims" && dims.x > 0);
@@ -1222,10 +1204,6 @@ namespace owl {
         = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
                                         rgID * sbt.rayGenRecordSize);
 
-      PING;
-      PRINT(dims);
-      PRINT(sbt.missProgRecordsBuffer.valid());
-      
       if (!sbt.missProgRecordsBuffer.valid() &&
           !sbt.hitGroupRecordsBuffer.valid()) {
         // apparently this program does not have any hit records *or*

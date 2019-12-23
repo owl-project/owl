@@ -165,12 +165,10 @@ namespace owl {
 
   void Context::buildSBT()
   {
-    PING;
     // ----------- build hitgroups -----------
     lloSbtHitProgsBuild
       (llo,
        [&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
-        PING; 
          const Geom *geom = geoms.getPtr(geomID);
          assert(geom);
          geom->writeVariables(output,devID);
@@ -182,8 +180,6 @@ namespace owl {
        [&](uint8_t *output,
            int devID,
            int rayType) {
-        PING; 
-
          // TODO: need the ID of the miss prog we're writing!
          int missProgID = 0;
          assert(missProgs.size() == 1);
@@ -200,7 +196,6 @@ namespace owl {
            int devID,
            int rgID) {
 
-        PING; 
          // TODO: need the ID of the miss prog we're writing!
          int rayGenID = 0;
          assert(rayGens.size() == 1);
@@ -210,58 +205,6 @@ namespace owl {
          rayGen->writeVariables(output,devID);
        });
   
-  // const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
-  // ll->sbtGeomTypesBuild
-  //   (maxHitGroupDataSize,
-  //    [&](uint8_t *output,int devID,int geomID,int rayID) {
-  //     TriangleGroupData &self = *(TriangleGroupData*)output;
-  //     self.color  = vec3f(0,1,0);
-  //     self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
-  //     self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);
-  //   });
-  
-  // // ----------- build miss prog(s) -----------
-  // const size_t maxMissProgDataSize = sizeof(MissProgData);
-  // ll->sbtMissProgsBuild
-  //   (maxMissProgDataSize,
-  //    [&](uint8_t *output,
-  //        int devID,
-  //        int rayType) {
-  //     /* we don't have any ... */
-  //     ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
-  //     ((MissProgData*)output)->color1 = vec3f(.8f,.8f,.8f);
-  //   });
-  
-  // // ----------- build raygens -----------
-  // const size_t maxRayGenDataSize = sizeof(RayGenData);
-  // ll->sbtRayGensBuild
-  //   (maxRayGenDataSize,
-  //    [&](uint8_t *output,
-  //        int devID,
-  //        int rgID) {
-  //     RayGenData *rg = (RayGenData*)output;
-  //     rg->deviceIndex   = devID;
-  //     rg->deviceCount = ll->getDeviceCount();
-  //     rg->fbSize = fbSize;
-  //     rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-  //     rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
-
-  //     // compute camera frame:
-  //     vec3f &pos = rg->camera.pos;
-  //     vec3f &d00 = rg->camera.dir_00;
-  //     vec3f &ddu = rg->camera.dir_du;
-  //     vec3f &ddv = rg->camera.dir_dv;
-  //     float aspect = fbSize.x / float(fbSize.y);
-  //     pos = lookFrom;
-  //     d00 = normalize(lookAt-lookFrom);
-  //     ddu = cosFovy * aspect * normalize(cross(d00,lookUp));
-  //     ddv = cosFovy * normalize(cross(ddu,d00));
-  //     d00 -= 0.5f * ddu;
-  //     d00 -= 0.5f * ddv;
-  //   });
-  // LOG_OK("everything set up ...");
-
-    PING;
   }
 
   void Context::buildPipeline()

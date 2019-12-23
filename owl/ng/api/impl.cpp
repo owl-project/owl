@@ -18,8 +18,12 @@
 #include "APIHandle.h"
 
 namespace owl {
-  
-#define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
+
+#if 1
+# define LOG_API_CALL() /* ignore */
+#else 
+# define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
+#endif
   
   OWL_API OWLContext owlContextCreate()
   {

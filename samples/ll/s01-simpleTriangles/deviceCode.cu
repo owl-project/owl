@@ -19,12 +19,11 @@
 
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
-  // RayGenData &rgData = *(RayGenData*)owl::getProgramDataPointer();
   const RayGenData &self = owl::getProgramData<RayGenData>();
   const vec2i pixelID = owl::getLaunchIndex();
   if (pixelID == owl::vec2i(0)) {
     printf("%sHello OptiX From your First RayGen Program (on device %i/%i)%s\n",
-           GDT_TERMINAL_LIGHT_RED,
+           GDT_TERMINAL_CYAN,
            self.deviceIndex,
            self.deviceCount,
            GDT_TERMINAL_DEFAULT);

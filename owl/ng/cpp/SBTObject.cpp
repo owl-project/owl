@@ -66,11 +66,8 @@ namespace owl {
   void SBTObjectBase::writeVariables(uint8_t *sbtEntryBase,
                                      int deviceID) const
   {
-    PING; PRINT(variables.size());
     for (auto var : variables) {
       auto decl = var->varDecl;
-      
-      PRINT(decl->name);
       var->writeToSBT(sbtEntryBase + decl->offset,deviceID);
     }
   }

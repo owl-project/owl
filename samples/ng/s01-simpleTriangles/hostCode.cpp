@@ -135,13 +135,11 @@ int main(int ac, char **av)
   LOG("owl::ng example '" << av[0] << "' starting up");
 
   OWLContext context = owlContextCreate();
-  
-  LOG("building pipeline ...");
-
-  // ##################################################################
-  // set up all the *CODE* we want to run
-  // ##################################################################
   OWLModule module = owlModuleCreate(context,ptxCode);
+  
+  // ##################################################################
+  // set up all the *GEOMETRY* graph we want to render
+  // ##################################################################
 
   // -------------------------------------------------------
   // declare geometry type
@@ -156,46 +154,8 @@ int main(int ac, char **av)
                         OWL_TRIANGLES,
                         sizeof(TrianglesGeomData),
                         trianglesGeomVars,3);
-  
   owlGeomTypeSetClosestHit(trianglesGeomType,0,
                            module,"TriangleMesh");
-
-  // -------------------------------------------------------
-  // declare miss prog 
-  // -------------------------------------------------------
-  OWLVarDecl missProgVars[]
-    = {
-       { "color0", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color0)},
-       { "color1", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color1)},
-       { /* sentinel to mark end of list */ }
-  };
-  OWLMissProg missProg
-    = owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
-                        missProgVars,-1);
-  owlMissProgSet3f(missProg,"color0",owl3f{.8f,0.f,0.f});
-  owlMissProgSet3f(missProg,"color1",owl3f{.8f,.8f,.8f});
-
-  // -------------------------------------------------------
-  // declare ray gen program
-  // -------------------------------------------------------
-  OWLVarDecl rayGenVars[] = {
-    { "deviceIndex",   OWL_DEVICE, OWL_OFFSETOF(RayGenData,deviceIndex)},
-    { "deviceCount",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceCount)},
-    { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
-    { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
-    { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
-    { "camera.pos",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.pos)},
-    { "camera.dir_00", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_00)},
-    { "camera.dir_du", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_du)},
-    { "camera.dir_dv", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_dv)},
-    { /* sentinel to mark end of list */ }
-  };
-
-  OWLRayGen rayGen
-    = owlRayGenCreate(context,module,"simpleRayGen",
-                      sizeof(RayGenData),
-                      rayGenVars,-1);
-
 
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
@@ -232,22 +192,53 @@ int main(int ac, char **av)
     = owlTrianglesGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
 
-    
   // ##################################################################
-  // build *SBT* required to trace the groups
+  // set miss and raygen program required for SBT
   // ##################################################################
 
-  // ##################################################################
-  // build *SBT* required to trace the groups
-  // ##################################################################
-  owlBuildPrograms(context);
-  owlBuildPipeline(context);
+  // -------------------------------------------------------
+  // set up miss prog 
+  // -------------------------------------------------------
 
-  // ------------------------------------------------------------------
-  // set miss program's data
-  // ------------------------------------------------------------------
+  OWLVarDecl missProgVars[]
+    = {
+       { "color0", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color0)},
+       { "color1", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color1)},
+       { /* sentinel to mark end of list */ }
+  };
+  // ----------- create object  ----------------------------
+  OWLMissProg missProg
+    = owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
+                        missProgVars,-1);
   
+  // ----------- set variables  ----------------------------
+  owlMissProgSet3f(missProg,"color0",owl3f{.8f,0.f,0.f});
+  owlMissProgSet3f(missProg,"color1",owl3f{.8f,.8f,.8f});
 
+  // -------------------------------------------------------
+  // set up ray gen program
+  // -------------------------------------------------------
+
+  OWLVarDecl rayGenVars[] = {
+    { "deviceIndex",   OWL_DEVICE, OWL_OFFSETOF(RayGenData,deviceIndex)},
+    { "deviceCount",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceCount)},
+    { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
+    { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
+    { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
+    { "camera.pos",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.pos)},
+    { "camera.dir_00", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_00)},
+    { "camera.dir_du", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_du)},
+    { "camera.dir_dv", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_dv)},
+    { /* sentinel to mark end of list */ }
+  };
+
+  // ----------- create object  ----------------------------
+  OWLRayGen rayGen
+    = owlRayGenCreate(context,module,"simpleRayGen",
+                      sizeof(RayGenData),
+                      rayGenVars,-1);
+
+  // ----------- compute variable values  ------------------
   vec3f camera_pos = lookFrom;
   vec3f camera_d00
     = normalize(lookAt-lookFrom);
@@ -259,6 +250,7 @@ int main(int ac, char **av)
   camera_d00 -= 0.5f * camera_ddu;
   camera_d00 -= 0.5f * camera_ddv;
 
+  // ----------- set variables  ----------------------------
   owlRayGenSet1i    (rayGen,"deviceCount",  owlGetDeviceCount(context));
   owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
   owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
@@ -268,75 +260,23 @@ int main(int ac, char **av)
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
   owlRayGenSet3f    (rayGen,"camera.dir_dv",(const owl3f&)camera_ddv);
   
-
+  // ##################################################################
+  // build *SBT* required to trace the groups
+  // ##################################################################
   
-
-  // // ----------- build hitgroups -----------
-  // const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
-  // ll->sbtGeomTypesBuild
-  //   (maxHitGroupDataSize,
-  //    [&](uint8_t *output,int devID,int geomID,int rayID) {
-  //     TriangleGroupData &self = *(TriangleGroupData*)output;
-  //     self.color  = vec3f(0,1,0);
-  //     self.index  = (vec3i*)ll->bufferGetPointer(INDEX_BUFFER,devID);
-  //     self.vertex = (vec3f*)ll->bufferGetPointer(VERTEX_BUFFER,devID);
-  //   });
-  
-  // // ----------- build miss prog(s) -----------
-  // const size_t maxMissProgDataSize = sizeof(MissProgData);
-  // ll->sbtMissProgsBuild
-  //   (maxMissProgDataSize,
-  //    [&](uint8_t *output,
-  //        int devID,
-  //        int rayType) {
-  //     /* we don't have any ... */
-  //     ((MissProgData*)output)->color0 = vec3f(.8f,0.f,0.f);
-  //     ((MissProgData*)output)->color1 = vec3f(.8f,.8f,.8f);
-  //   });
-  
-  // // ----------- build raygens -----------
-  // const size_t maxRayGenDataSize = sizeof(RayGenData);
-  // ll->sbtRayGensBuild
-  //   (maxRayGenDataSize,
-  //    [&](uint8_t *output,
-  //        int devID,
-  //        int rgID) {
-  //     RayGenData *rg = (RayGenData*)output;
-  //     rg->deviceIndex   = devID;
-  //     rg->deviceCount = ll->getDeviceCount();
-  //     rg->fbSize = fbSize;
-  //     rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-  //     rg->world  = ll->groupGetTraversable(TRIANGLES_GROUP,devID);
-
-  //     // compute camera frame:
-  //     vec3f &pos = rg->camera.pos;
-  //     vec3f &d00 = rg->camera.dir_00;
-  //     vec3f &ddu = rg->camera.dir_du;
-  //     vec3f &ddv = rg->camera.dir_dv;
-  //     float aspect = fbSize.x / float(fbSize.y);
-  //     pos = lookFrom;
-  //     d00 = normalize(lookAt-lookFrom);
-  //     ddu = cosFovy * aspect * normalize(cross(d00,lookUp));
-  //     ddv = cosFovy * normalize(cross(ddu,d00));
-  //     d00 -= 0.5f * ddu;
-  //     d00 -= 0.5f * ddv;
-  //   });
-  // LOG_OK("everything set up ...");
-
-
+  owlBuildPrograms(context);
+  owlBuildPipeline(context);
   owlBuildSBT(context);
 
   // ##################################################################
   // now that everything is readly: launch it ....
   // ##################################################################
   
-  LOG("trying to launch ...");
-  // ll->launch(0,fbSize);
+  LOG("launching ...");
   owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  // const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
   const uint32_t *fb
     = (const uint32_t*)owlBufferGetPointer(frameBuffer,0);
   assert(fb);
@@ -349,7 +289,6 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("destroying devicegroup ...");
-  // owl::ll::DeviceGroup::destroy(ll);
   owlContextDestroy(context);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");

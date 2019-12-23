@@ -14,36 +14,6 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/llowl.h"
+// we use exactly the same device code in both ll and ng layer
 
-using namespace owl;
-
-struct TrianglesGeomData
-{
-  vec3f color;
-  vec3i *index;
-  vec3f *vertex;
-};
-
-struct RayGenData
-{
-  int deviceIndex;
-  int deviceCount;
-  uint32_t *fbPtr;
-  vec2i  fbSize;
-  OptixTraversableHandle world;
-
-  struct {
-    vec3f pos;
-    vec3f dir_00;
-    vec3f dir_du;
-    vec3f dir_dv;
-  } camera;
-};
-
-struct MissProgData
-{
-  vec3f  color0;
-  vec3f  color1;
-};
-
+#include "../../ll/s01-simpleTriangles/deviceCode.h"
