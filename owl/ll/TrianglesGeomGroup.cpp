@@ -47,10 +47,6 @@ namespace owl {
       assert("check for valid ID" && groupID < groups.size());
       assert("check group ID is available" && groups[groupID] ==nullptr);
         
-      assert("check for valid combinations of child list" &&
-             ((geomIDs == nullptr && geomCount == 0) ||
-              (geomIDs != nullptr && geomCount >  0)));
-        
       TrianglesGeomGroup *group
         = new TrianglesGeomGroup(geomCount,
                                  sbt.rangeAllocator.alloc(geomCount));
@@ -58,6 +54,7 @@ namespace owl {
       groups[groupID] = group;
 
       // set children - todo: move to separate (api?) function(s)!?
+      if (geomIDs) {
       for (int childID=0;childID<geomCount;childID++) {
         int geomID = geomIDs[childID];
         assert("check geom child geom ID is valid" && geomID >= 0);
@@ -67,6 +64,7 @@ namespace owl {
         assert("check geom is valid type" && geom->primType() == TRIANGLES);
         geom->numTimesReferenced++;
         group->children[childID] = geom;
+      }
       }
     }
 

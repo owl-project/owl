@@ -224,10 +224,6 @@ namespace owl {
                                                const int *geomIDs,
                                                int geomCount)
     {
-      assert("check for valid combinations of child list" &&
-             ((geomIDs == nullptr && geomCount == 0) ||
-              (geomIDs != nullptr && geomCount >  0)));
-        
       for (auto device : devices) {
         device->trianglesGeomGroupCreate(groupID,geomIDs,geomCount);
       }
@@ -237,10 +233,6 @@ namespace owl {
                                           const int *geomIDs,
                                           int geomCount)
     {
-      assert("check for valid combinations of child list" &&
-             ((geomIDs == nullptr && geomCount == 0) ||
-              (geomIDs != nullptr && geomCount >  0)));
-        
       for (auto device : devices) {
         device->userGeomGroupCreate(groupID,geomIDs,geomCount);
       }
