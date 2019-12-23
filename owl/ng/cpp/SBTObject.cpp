@@ -63,13 +63,15 @@ namespace owl {
     the given variables' values into the specified format, prorperly
     translating per-device data (buffers, traversable) while doing
     so */
-  void SBTObjectBase::writeVariables(uint8_t *sbtEntry,
+  void SBTObjectBase::writeVariables(uint8_t *sbtEntryBase,
                                      int deviceID) const
   {
     PING; PRINT(variables.size());
     for (auto var : variables) {
       auto decl = var->varDecl;
+      
       PRINT(decl->name);
+      var->writeToSBT(sbtEntryBase + decl->offset,deviceID);
     }
   }
   

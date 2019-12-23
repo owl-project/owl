@@ -19,6 +19,13 @@
 
 namespace owl {
   
+  void Variable::writeToSBT(uint8_t *sbtEntry, int deviceID) const
+  {
+    throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
+                             +": not yet implemented for type "
+                             +typeToString(varDecl->type));
+  }
+
   template<typename T>
   struct VariableT : public Variable {
     typedef std::shared_ptr<VariableT<T>> SP;
@@ -38,6 +45,13 @@ namespace owl {
     {}
     void set(const Buffer::SP &value) override { this->buffer = value; }
 
+    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    {
+      assert(buffer);
+      const void *value = buffer->getPointer(deviceID);
+      *(const void**)sbtEntry = value;
+    }
+    
     Buffer::SP buffer;
   };
   

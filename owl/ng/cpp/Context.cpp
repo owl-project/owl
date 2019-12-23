@@ -168,13 +168,45 @@ namespace owl {
     PING;
     // ----------- build hitgroups -----------
     lloSbtHitProgsBuild
-      (this->llo,
+      (llo,
        [&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
-        const Geom *geom = geoms.getPtr(geomID);
-        assert(geom);
-        geom->writeVariables(output,devID);
+         const Geom *geom = geoms.getPtr(geomID);
+         assert(geom);
+         geom->writeVariables(output,devID);
        });
-    
+
+    // ----------- build miss prog(s) -----------
+    lloSbtMissProgsBuild
+      (llo,
+       [&](uint8_t *output,
+           int devID,
+           int rayType) {
+
+         // TODO: need the ID of the miss prog we're writing!
+         int missProgID = 0;
+         assert(missProgs.size() == 1);
+         
+         const MissProg *missProg = missProgs.getPtr(missProgID);
+         assert(missProg);
+         missProg->writeVariables(output,devID);
+       });
+
+    // ----------- build raygens -----------
+    lloSbtRayGensBuild
+      (llo,
+       [&](uint8_t *output,
+           int devID,
+           int rgID) {
+
+         // TODO: need the ID of the miss prog we're writing!
+         int rayGenID = 0;
+         assert(rayGens.size() == 1);
+         
+         const RayGen *rayGen = rayGens.getPtr(rayGenID);
+         assert(rayGen);
+         rayGen->writeVariables(output,devID);
+       });
+  
   // const size_t maxHitGroupDataSize = sizeof(TriangleGroupData);
   // ll->sbtGeomTypesBuild
   //   (maxHitGroupDataSize,
