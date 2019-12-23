@@ -416,7 +416,18 @@ namespace owl {
                                       childGroupID,
                                       xfm);
     }
-    
+
+
+    void DeviceGroup::geomGroupSetChild(int groupID,
+                                        int childNo,
+                                        int childID)
+    {
+      for (auto device : devices)
+        device->geomGroupSetChild(groupID,
+                                  childNo,
+                                  childID);
+    }
+
     /*! create a new instance group with given list of children */
     void DeviceGroup::instanceGroupCreate(/*! the group we are defining */
                                           int groupID,

@@ -163,13 +163,10 @@ namespace owl {
                                   sizeOfVarStruct,
                                   checkAndPackVariables(vars,numVars));
     assert(rayGenType);
-    PING; PRINT(rayGenType.get());
     
     RayGen::SP  rayGen
       = context->createRayGen(rayGenType);
     assert(rayGen);
-    PING;
-    PRINT(rayGen);
     return (OWLRayGen)context->createHandle(rayGen);
   }
 
@@ -222,9 +219,11 @@ namespace owl {
 
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     if (initValues) {
-      for (int i = 0; i < numGeometries; i++)
+      for (int i = 0; i < numGeometries; i++) {
         //owlGeomGroupSetChild(_group, i, initValues[i]);
-        group->setChild(i, ((APIHandle *)initValues[i])->get<Geom>());
+        Geom::SP child = ((APIHandle *)initValues[i])->get<Geom>();
+        group->setChild(i, child);
+      }
     }
     assert(_group);
     return _group;

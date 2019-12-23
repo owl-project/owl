@@ -28,16 +28,12 @@ namespace owl {
       module(module),
       progName(progName)
   {
-    PING; PRINT(this);
   }
   
   RayGen::RayGen(Context *const context,
                  RayGenType::SP type) 
     : SBTObject(context,context->rayGens,type)
   {
-    PING;
-    PRINT(type.get());
-    PRINT(type->progName);
     assert(context);
     assert(type);
     assert(type.get());

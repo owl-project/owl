@@ -80,7 +80,6 @@ namespace owl {
   RayGen::SP
   Context::createRayGen(const std::shared_ptr<RayGenType> &type)
   {
-    PING;
     return std::make_shared<RayGen>(this,type);
   }
 

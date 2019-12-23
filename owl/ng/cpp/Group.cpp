@@ -19,8 +19,21 @@
 
 namespace owl {
 
+  void Group::buildAccel()
+  {
+    lloGroupAccelBuild(context->llo,this->ID);
+  }
+
+  void GeomGroup::setChild(int childID, Geom::SP child)
+  {
+    assert(childID >= 0);
+    assert(childID < geometries.size());
+    geometries[childID] = child;
+    lloGeomGroupSetChild(context->llo,this->ID,childID,child->ID);
+  }
+
   GeomGroup::GeomGroup(Context *const context,
-                               size_t numChildren)
+                       size_t numChildren)
     : Group(context,context->groups),
       geometries(numChildren)
   {}

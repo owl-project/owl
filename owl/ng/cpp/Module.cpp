@@ -24,7 +24,6 @@ namespace owl {
     : RegisteredObject(context,context->modules),
       ptxCode(ptxCode)
   {
-    PING; PRINT(this->ID);
     lloModuleCreate(context->llo,this->ID,
                     // warning: this 'this' here is importat, since
                     // *we* manage the lifetime of this string, and

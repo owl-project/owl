@@ -946,6 +946,20 @@ namespace owl {
 
 
 
+    /*! set given child to {childGroupID+xfm}  */
+    void Device::geomGroupSetChild(int groupID,
+                                   int childNo,
+                                   int childID)
+    {
+      GeomGroup *gg       = checkGetGeomGroup(groupID);
+      Geom      *newChild = checkGetGeom(childID);
+      Geom      *oldChild = gg->children[childNo];
+      if (oldChild)
+        oldChild->numTimesReferenced--;
+      gg->children[childNo] = newChild;
+      newChild->numTimesReferenced++;
+    }
+
 
 
 
