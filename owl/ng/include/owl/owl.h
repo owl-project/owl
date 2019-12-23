@@ -264,6 +264,7 @@ owlMissProgGetVariable(OWLMissProg geom,
 // -------------------------------------------------------
 OWL_API void owlVariableSet1i(OWLVariable variable, int value);
 OWL_API void owlVariableSet1f(OWLVariable variable, float value);
+OWL_API void owlVariableSet2iv(OWLVariable variable, const int *value);
 OWL_API void owlVariableSet3fv(OWLVariable variable, const float *value);
 OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
 OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);

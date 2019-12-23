@@ -23,6 +23,7 @@
 // -------------------------------------------------------
 // VariableSet for different *object* types
 // -------------------------------------------------------
+struct owl2i { int x,y; };
 struct owl3f { float x,y,z; };
 
 inline void owlRayGenSetGroup(OWLRayGen rayGen, const char *varName, OWLGroup v)
@@ -49,6 +50,13 @@ inline void owlRayGenSet1i(OWLRayGen rayGen, const char *varName, int v)
 {
   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
   owlVariableSet1i(var,v);
+  owlVariableRelease(var);
+}
+
+inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName, const owl2i &v)
+{
+  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+  owlVariableSet2iv(var,&v.x);
   owlVariableRelease(var);
 }
 
@@ -193,11 +201,6 @@ int main(int ac, char **av)
                         missProgVars,-1);
   owlMissProgSet3f(missProg,"color0",owl3f{.8f,0.f,0.f});
   owlMissProgSet3f(missProg,"color1",owl3f{.8f,.8f,.8f});
-  
-  // ll->buildPrograms();
-  // ll->createPipeline();
-  owlBuildPrograms(context);
-  owlBuildPipeline(context);
 
   LOG("building geometries ...");
 
@@ -291,9 +294,13 @@ int main(int ac, char **av)
   std::cout << GDT_TERMINAL_RED << "WARNING: NOT CORRECTLY SETTING DEVICE INDEX AND COUNT YET" << GDT_TERMINAL_DEFAULT << std::endl;
   owlRayGenSet1i    (rayGen,"deviceIndex",  0);
   owlRayGenSet1i    (rayGen,"deviceCount",  1);
+  PING;
   owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
-  owlRayGenSetBuffer(rayGen,"fbSize",       frameBuffer);
+  PING;
+  owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
+  PING;
   owlRayGenSetGroup (rayGen,"world",        trianglesGroup);
+  PING;
   owlRayGenSet3f    (rayGen,"camera.pos",   (const owl3f&)camera_pos);
   owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
@@ -301,9 +308,15 @@ int main(int ac, char **av)
   
 
   
-  // ##################################################################
+    
+// ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################
+  // ll->buildPrograms();
+  // ll->createPipeline();
+  owlBuildPrograms(context);
+  owlBuildPipeline(context);
+
   LOG("building SBT ...");
 
   // // ----------- build hitgroups -----------
