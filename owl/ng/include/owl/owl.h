@@ -75,9 +75,17 @@ typedef enum
 
    OWL_GROUP=3000,
    
-   OWL_DEVICE=4000
+   OWL_DEVICE=4000,
+
+   /*! at least for now, use that for buffers with user-defined types:
+       type then is "OWL_USER_TYPE_BEGIN+sizeof(elementtype). Note
+       that since we always _add_ the user type's size to this value
+       this MUST be the last entry in the enum */
+   OWL_USER_TYPE_BEGIN=10000
   }
   OWLDataType;
+
+#define OWL_USER_TYPE(userType) ((OWLDataType)(OWL_USER_TYPE_BEGIN+sizeof(userType)))
 
 typedef enum
   {
@@ -148,6 +156,11 @@ owlModuleCreate(OWLContext context,
 OWL_API OWLGeom
 owlGeomCreate(OWLContext context,
               OWLGeomType type);
+
+OWL_API OWLGeom
+owlUserGeomCreate(OWLContext context,
+                  OWLGeomType type,
+                  size_t      primCount);
 
 OWL_API OWLRayGen
 owlRayGenCreate(OWLContext  context,

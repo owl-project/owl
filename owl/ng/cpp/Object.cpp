@@ -26,6 +26,9 @@ namespace owl {
 
   size_t sizeOf(OWLDataType type)
   {
+    if ((size_t)type >= (size_t)OWL_USER_TYPE_BEGIN)
+      return (size_t)type - (size_t)OWL_USER_TYPE_BEGIN;
+        
     switch(type) {
       
     case OWL_INT:

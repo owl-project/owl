@@ -177,93 +177,16 @@ int main(int ac, char **av)
 
   LOG("building geometries ...");
 
+  OWLBuffer frameBuffer
+    = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
+
+  OWLBuffer metalSpheresBuffer
+    = owlDeviceBufferCreate(context,OWL_USER_TYPE(metalSpheres[0]),
+                            metalSpheres.size(),metalSpheres.data());
+  OWLGeom metalSpheresGeom
+    = owlUserGeomCreate(context,metalSpheresGeomType,metalSpheres.size());
   
 #if 0
-  // ##################################################################
-  // set up all the *CODE* we want to run
-  // ##################################################################
-  LOG("building pipeline ...");
-  lloAllocModules(llo,1);
-  lloModuleCreate(llo,0,ptxCode);
-  lloBuildModules(llo);
-  
-  enum { METAL_SPHERES_TYPE=0,
-         DIELECTRIC_SPHERES_TYPE,
-         LAMBERTIAN_SPHERES_TYPE,
-         NUM_GEOM_TYPES };
-  lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
-  lloGeomTypeCreate(llo,METAL_SPHERES_TYPE,sizeof(MetalSpheresGeom));
-  lloGeomTypeCreate(llo,LAMBERTIAN_SPHERES_TYPE,sizeof(LambertianSpheresGeom));
-  lloGeomTypeCreate(llo,DIELECTRIC_SPHERES_TYPE,sizeof(DielectricSpheresGeom));
-  lloGeomTypeClosestHit(llo,/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
-                        /*ray type  */0,
-                        /*module:*/0,
-                        "LambertianSpheres");
-  lloGeomTypeIntersect(llo,/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
-                       /*ray type  */0,
-                       /*module:*/0,
-                       "LambertianSpheres");
-  lloGeomTypeBoundsProgDevice(llo,/*program ID*/LAMBERTIAN_SPHERES_TYPE,
-                                  /*module:*/0,
-                                  "LambertianSpheres",
-                                  sizeof(LambertianSpheresGeom));
-
-  lloGeomTypeClosestHit(llo,/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
-                        /*ray type  */0,
-                        /*module:*/0,
-                        "DielectricSpheres");
-  lloGeomTypeIntersect(llo,/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
-                       /*ray type  */0,
-                       /*module:*/0,
-                       "DielectricSpheres");
-  lloGeomTypeBoundsProgDevice(llo,/*program ID*/DIELECTRIC_SPHERES_TYPE,
-                                  /*module:*/0,
-                                  "DielectricSpheres",
-                                  sizeof(DielectricSpheresGeom));
-  
-  lloGeomTypeClosestHit(llo,/*geom type ID*/METAL_SPHERES_TYPE,
-                        /*ray type  */0,
-                        /*module:*/0,
-                        "MetalSpheres");
-  lloGeomTypeIntersect(llo,/*geom type ID*/METAL_SPHERES_TYPE,
-                       /*ray type  */0,
-                       /*module:*/0,
-                       "MetalSpheres");
-  lloGeomTypeBoundsProgDevice(llo,/*program ID*/METAL_SPHERES_TYPE,
-                                  /*module:*/0,
-                                  "MetalSpheres",
-                                  sizeof(MetalSpheresGeom));
-
-  lloAllocRayGens(llo,1);
-  lloRayGenCreate(llo,/*program ID*/0,
-                  /*module:*/0,
-                  "rayGen",
-                  sizeof(RayGenData));
-  
-  lloAllocMissProgs(llo,1);
-  lloMissProgCreate(llo,/*program ID*/0,
-                    /*module:*/0,
-                    "miss",
-                    sizeof(MissProgData));
-  lloBuildPrograms(llo);
-  lloCreatePipeline(llo);
-
-  LOG("building geometries ...");
-
-  // ##################################################################
-  // set up all the *GEOMS* we want to run that code on
-  // ##################################################################
-
-  // ------------------------------------------------------------------
-  // alloc buffers
-  // ------------------------------------------------------------------
-  enum { FRAME_BUFFER=0,
-         LAMBERTIAN_SPHERES_BUFFER,
-         DIELECTRIC_SPHERES_BUFFER,
-         METAL_SPHERES_BUFFER,
-         NUM_BUFFERS };
-  lloAllocBuffers(llo,NUM_BUFFERS);
-  lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y*sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
@@ -368,6 +291,22 @@ int main(int ac, char **av)
     });
   
   // ----------- build raygens -----------
+
+  lloAllocRayGens(llo,1);
+  lloRayGenCreate(llo,/*program ID*/0,
+                  /*module:*/0,
+                  "rayGen",
+                  sizeof(RayGenData));
+  
+  lloAllocMissProgs(llo,1);
+  lloMissProgCreate(llo,/*program ID*/0,
+                    /*module:*/0,
+                    "miss",
+                    sizeof(MissProgData));
+  lloBuildPrograms(llo);
+  lloCreatePipeline(llo);
+
+  
   lloSbtRayGensBuild
     (llo,
      [&](uint8_t *output,

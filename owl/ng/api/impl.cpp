@@ -341,6 +341,14 @@ namespace owl {
   }
 
   OWL_API OWLGeom
+  owlUserGeomCreate(OWLContext      _context,
+                    OWLGeomType _geometryType,
+                    size_t primCount)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+  
+  OWL_API OWLGeom
   owlGeomCreate(OWLContext      _context,
                 OWLGeomType _geometryType)
   {

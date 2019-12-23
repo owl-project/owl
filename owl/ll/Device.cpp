@@ -726,7 +726,6 @@ namespace owl {
 
     void Device::allocGeomTypes(size_t count)
     {
-      assert(geomTypes.empty());
       geomTypes.resize(count);
       for (auto &gt : geomTypes) {
         if (gt.perRayType.empty())
