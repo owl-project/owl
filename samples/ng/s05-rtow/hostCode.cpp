@@ -14,11 +14,11 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#define BOUNDS_ON_HOST 0
-
-#include "ll/DeviceGroup.h"
-#include "deviceCode.h"
-
+// public owl node-graph api
+#include "owl/owl.h"
+// our device-side data structures
+#include "../../ll/s05-rtow/GeomTypes.h"
+// external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
@@ -39,8 +39,6 @@ const char *outFileName = "ll05-rtow.png";
 const vec2i fbSize(1600,800);
 const vec3f lookFrom(13, 2, 3);
 const vec3f lookAt(0, 0, 0);
-// const vec3f lookFrom(-4.f,-3.f,-2.f);
-// const vec3f lookAt(0.f,0.f,0.f);
 const vec3f lookUp(0.f,1.f,0.f);
 const float fovy = 20.f;
 
@@ -48,7 +46,7 @@ std::vector<DielectricSphere> dielectricSpheres;
 std::vector<LambertianSphere> lambertianSpheres;
 std::vector<MetalSphere>      metalSpheres;
 
-inline float max3(float a, float b, float c)
+inline size_t max3(size_t a, size_t b, size_t c)
 { return std::max(std::max(a,b),c); }
 
 inline float rnd()
@@ -63,7 +61,7 @@ inline vec3f rnd3f() { return vec3f(rnd(),rnd(),rnd()); }
 void createScene()
 {
   lambertianSpheres.push_back({Sphere{vec3f(0.f, -1000.0f, -1.f), 1000.f},
-                               Lambertian{vec3f(0.5f, 0.5f, 0.5f)}});
+        Lambertian{vec3f(0.5f, 0.5f, 0.5f)}});
   
   for (int a = -11; a < 11; a++) {
     for (int b = -11; b < 11; b++) {
@@ -71,25 +69,29 @@ void createScene()
       vec3f center(a + rnd(), 0.2f, b + rnd());
       if (choose_mat < 0.8f) 
         lambertianSpheres.push_back({Sphere{center, 0.2f},
-                                     Lambertian{rnd3f()*rnd3f()}});
+              Lambertian{rnd3f()*rnd3f()}});
       else if (choose_mat < 0.95f) 
         metalSpheres.push_back({Sphere{center, 0.2f},
-                                Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()}});
+              Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()}});
       else 
         dielectricSpheres.push_back({Sphere{center, 0.2f},
-                                     Dielectric{1.5f}});
+              Dielectric{1.5f}});
     }
   }
   dielectricSpheres.push_back({Sphere{vec3f(0.f, 1.f, 0.f), 1.f},
-                               Dielectric{1.5f}});
+        Dielectric{1.5f}});
   lambertianSpheres.push_back({Sphere{vec3f(-4.f,1.f, 0.f), 1.f},
-                               Lambertian{vec3f(0.4f, 0.2f, 0.1f)}});
+        Lambertian{vec3f(0.4f, 0.2f, 0.1f)}});
   metalSpheres.push_back({Sphere{vec3f(4.f, 1.f, 0.f), 1.f},
-                          Metal{vec3f(0.7f, 0.6f, 0.5f), 0.0f}});
+        Metal{vec3f(0.7f, 0.6f, 0.5f), 0.0f}});
 }
   
 int main(int ac, char **av)
 {
+  // ##################################################################
+  // pre-owl host-side set-up
+  // ##################################################################
+
   LOG("ll example '" << av[0] << "' starting up");
 
   LOG("creating the scene ...");
@@ -99,75 +101,152 @@ int main(int ac, char **av)
   LOG_OK(" num dielectric spheres: " << dielectricSpheres.size());
   LOG_OK(" num metal spheres     : " << metalSpheres.size());
   
-#if 0  
-  owl::ll::DeviceGroup::SP ll
-    = owl::ll::DeviceGroup::create();
+  // ##################################################################
+  // init owl
+  // ##################################################################
 
-  LOG("building pipeline ...");
-  std::cout << GDT_TERMINAL_DEFAULT;
+  OWLContext context = owlContextCreate();
+  OWLModule  module  = owlModuleCreate(context,ptxCode);
+  
+  // ##################################################################
+  // set up all the *GEOMETRY* graph we want to render
+  // ##################################################################
 
+  // -------------------------------------------------------
+  // declare geometry type(s)
+  // -------------------------------------------------------
+
+  // ----------- metal -----------
+  OWLVarDecl metalSpheresGeomVars[] = {
+    { "prims",  OWL_BUFPTR, OWL_OFFSETOF(MetalSpheresGeom,prims)},
+    { /* sentinal to mark end of list */ }
+  };
+  OWLGeomType metalSpheresGeomType
+    = owlGeomTypeCreate(context,
+                        OWL_GEOMETRY_USER,
+                        sizeof(MetalSpheresGeom),
+                        metalSpheresGeomVars,-1);
+  owlGeomTypeSetClosestHit(metalSpheresGeomType,0,
+                           module,"MetalSpheres");
+  owlGeomTypeSetIntersectProg(metalSpheresGeomType,0,
+                              module,"MetalSpheres");
+  owlGeomTypeSetBoundsProg(metalSpheresGeomType,
+                           module,"MetalSpheres");
+
+  // ----------- dielectric -----------
+  OWLVarDecl dielectricSpheresGeomVars[] = {
+    { "prims",  OWL_BUFPTR, OWL_OFFSETOF(DielectricSpheresGeom,prims)},
+    { /* sentinal to mark end of list */ }
+  };
+  OWLGeomType dielectricSpheresGeomType
+    = owlGeomTypeCreate(context,
+                        OWL_GEOMETRY_USER,
+                        sizeof(DielectricSpheresGeom),
+                        dielectricSpheresGeomVars,-1);
+  owlGeomTypeSetClosestHit(dielectricSpheresGeomType,0,
+                           module,"DielectricSpheres");
+  owlGeomTypeSetClosestHit(dielectricSpheresGeomType,0,
+                           module,"DielectricSpheres");
+  owlGeomTypeSetIntersectProg(dielectricSpheresGeomType,0,
+                              module,"DielectricSpheres");
+  owlGeomTypeSetBoundsProg(dielectricSpheresGeomType,
+                           module,"DielectricSpheres");
+
+  // ----------- lambertian -----------
+  OWLVarDecl lambertianSpheresGeomVars[] = {
+    { "prims",  OWL_BUFPTR, OWL_OFFSETOF(LambertianSpheresGeom,prims)},
+    { /* sentinal to mark end of list */ }
+  };
+  OWLGeomType lambertianSpheresGeomType
+    = owlGeomTypeCreate(context,
+                        OWL_GEOMETRY_USER,
+                        sizeof(LambertianSpheresGeom),
+                        lambertianSpheresGeomVars,-1);
+  owlGeomTypeSetClosestHit(lambertianSpheresGeomType,0,
+                           module,"LambertianSpheres");
+  owlGeomTypeSetClosestHit(lambertianSpheresGeomType,0,
+                           module,"LambertianSpheres");
+  owlGeomTypeSetIntersectProg(lambertianSpheresGeomType,0,
+                              module,"LambertianSpheres");
+  owlGeomTypeSetBoundsProg(lambertianSpheresGeomType,
+                           module,"LambertianSpheres");
+
+  // ##################################################################
+  // set up all the *GEOMS* we want to run that code on
+  // ##################################################################
+
+  LOG("building geometries ...");
+
+  
+#if 0
   // ##################################################################
   // set up all the *CODE* we want to run
   // ##################################################################
-  ll->allocModules(1);
-  ll->setModule(0,ptxCode);
-  ll->buildModules();
+  LOG("building pipeline ...");
+  lloAllocModules(llo,1);
+  lloModuleCreate(llo,0,ptxCode);
+  lloBuildModules(llo);
   
   enum { METAL_SPHERES_TYPE=0,
          DIELECTRIC_SPHERES_TYPE,
          LAMBERTIAN_SPHERES_TYPE,
          NUM_GEOM_TYPES };
-  ll->allocGeomTypes(NUM_GEOM_TYPES);
-  ll->setGeomTypeClosestHit(/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
-                            /*ray type  */0,
-                            /*module:*/0,
-                            "LambertianSpheres");
-  ll->setGeomTypeIntersect(/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
-                           /*ray type  */0,
-                           /*module:*/0,
-                           "LambertianSpheres");
-  ll->setGeomTypeBoundsProgDevice(/*program ID*/LAMBERTIAN_SPHERES_TYPE,
+  lloAllocGeomTypes(llo,NUM_GEOM_TYPES);
+  lloGeomTypeCreate(llo,METAL_SPHERES_TYPE,sizeof(MetalSpheresGeom));
+  lloGeomTypeCreate(llo,LAMBERTIAN_SPHERES_TYPE,sizeof(LambertianSpheresGeom));
+  lloGeomTypeCreate(llo,DIELECTRIC_SPHERES_TYPE,sizeof(DielectricSpheresGeom));
+  lloGeomTypeClosestHit(llo,/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
+                        /*ray type  */0,
+                        /*module:*/0,
+                        "LambertianSpheres");
+  lloGeomTypeIntersect(llo,/*geom type ID*/LAMBERTIAN_SPHERES_TYPE,
+                       /*ray type  */0,
+                       /*module:*/0,
+                       "LambertianSpheres");
+  lloGeomTypeBoundsProgDevice(llo,/*program ID*/LAMBERTIAN_SPHERES_TYPE,
                                   /*module:*/0,
                                   "LambertianSpheres",
                                   sizeof(LambertianSpheresGeom));
 
-  ll->setGeomTypeClosestHit(/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
-                            /*ray type  */0,
-                            /*module:*/0,
-                            "DielectricSpheres");
-  ll->setGeomTypeIntersect(/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
-                           /*ray type  */0,
-                           /*module:*/0,
-                           "DielectricSpheres");
-  ll->setGeomTypeBoundsProgDevice(/*program ID*/DIELECTRIC_SPHERES_TYPE,
+  lloGeomTypeClosestHit(llo,/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
+                        /*ray type  */0,
+                        /*module:*/0,
+                        "DielectricSpheres");
+  lloGeomTypeIntersect(llo,/*geom type ID*/DIELECTRIC_SPHERES_TYPE,
+                       /*ray type  */0,
+                       /*module:*/0,
+                       "DielectricSpheres");
+  lloGeomTypeBoundsProgDevice(llo,/*program ID*/DIELECTRIC_SPHERES_TYPE,
                                   /*module:*/0,
                                   "DielectricSpheres",
                                   sizeof(DielectricSpheresGeom));
   
-  ll->setGeomTypeClosestHit(/*geom type ID*/METAL_SPHERES_TYPE,
-                            /*ray type  */0,
-                            /*module:*/0,
-                            "MetalSpheres");
-  ll->setGeomTypeIntersect(/*geom type ID*/METAL_SPHERES_TYPE,
-                           /*ray type  */0,
-                           /*module:*/0,
-                           "MetalSpheres");
-  ll->setGeomTypeBoundsProgDevice(/*program ID*/METAL_SPHERES_TYPE,
+  lloGeomTypeClosestHit(llo,/*geom type ID*/METAL_SPHERES_TYPE,
+                        /*ray type  */0,
+                        /*module:*/0,
+                        "MetalSpheres");
+  lloGeomTypeIntersect(llo,/*geom type ID*/METAL_SPHERES_TYPE,
+                       /*ray type  */0,
+                       /*module:*/0,
+                       "MetalSpheres");
+  lloGeomTypeBoundsProgDevice(llo,/*program ID*/METAL_SPHERES_TYPE,
                                   /*module:*/0,
                                   "MetalSpheres",
                                   sizeof(MetalSpheresGeom));
 
-  ll->allocRayGens(1);
-  ll->setRayGen(/*program ID*/0,
-                /*module:*/0,
-                "rayGen");
-  
-  ll->allocMissProgs(1);
-  ll->setMissProg(/*program ID*/0,
+  lloAllocRayGens(llo,1);
+  lloRayGenCreate(llo,/*program ID*/0,
                   /*module:*/0,
-                  "miss");
-  ll->buildPrograms();
-  ll->createPipeline();
+                  "rayGen",
+                  sizeof(RayGenData));
+  
+  lloAllocMissProgs(llo,1);
+  lloMissProgCreate(llo,/*program ID*/0,
+                    /*module:*/0,
+                    "miss",
+                    sizeof(MissProgData));
+  lloBuildPrograms(llo);
+  lloCreatePipeline(llo);
 
   LOG("building geometries ...");
 
@@ -183,8 +262,8 @@ int main(int ac, char **av)
          DIELECTRIC_SPHERES_BUFFER,
          METAL_SPHERES_BUFFER,
          NUM_BUFFERS };
-  ll->reallocBuffers(NUM_BUFFERS);
-  ll->createHostPinnedBuffer(FRAME_BUFFER,fbSize.x*fbSize.y,sizeof(uint32_t));
+  lloAllocBuffers(llo,NUM_BUFFERS);
+  lloHostPinnedBufferCreate(llo,FRAME_BUFFER,fbSize.x*fbSize.y*sizeof(uint32_t));
 
   // ------------------------------------------------------------------
   // alloc geom
@@ -193,28 +272,25 @@ int main(int ac, char **av)
          DIELECTRIC_SPHERES_GEOM,
          METAL_SPHERES_GEOM,
          NUM_GEOMS };
-  ll->reallocGeoms(NUM_GEOMS);
-  ll->createUserGeom(/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
+  lloAllocGeoms(llo,NUM_GEOMS);
+  lloUserGeomCreate(llo,/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
                      /* type/PG ID */LAMBERTIAN_SPHERES_TYPE,
                      /* numprims   */lambertianSpheres.size());
-  ll->createDeviceBuffer(LAMBERTIAN_SPHERES_BUFFER,
-                         lambertianSpheres.size(),
-                         sizeof(lambertianSpheres[0]),
-                         lambertianSpheres.data());
-  ll->createUserGeom(/* geom ID    */DIELECTRIC_SPHERES_GEOM,
+  lloDeviceBufferCreate(llo,LAMBERTIAN_SPHERES_BUFFER,
+                        lambertianSpheres.size()*sizeof(lambertianSpheres[0]),
+                        lambertianSpheres.data());
+  lloUserGeomCreate(llo,/* geom ID    */DIELECTRIC_SPHERES_GEOM,
                      /* type/PG ID */DIELECTRIC_SPHERES_TYPE,
                      /* numprims   */dielectricSpheres.size());
-  ll->createDeviceBuffer(DIELECTRIC_SPHERES_BUFFER,
-                         dielectricSpheres.size(),
-                         sizeof(dielectricSpheres[0]),
-                         dielectricSpheres.data());
-  ll->createUserGeom(/* geom ID    */METAL_SPHERES_GEOM,
+  lloDeviceBufferCreate(llo,DIELECTRIC_SPHERES_BUFFER,
+                        dielectricSpheres.size()*sizeof(dielectricSpheres[0]),
+                        dielectricSpheres.data());
+  lloUserGeomCreate(llo,/* geom ID    */METAL_SPHERES_GEOM,
                      /* type/PG ID */METAL_SPHERES_TYPE,
                      /* numprims   */metalSpheres.size());
-  ll->createDeviceBuffer(METAL_SPHERES_BUFFER,
-                         metalSpheres.size(),
-                         sizeof(metalSpheres[0]),
-                         metalSpheres.data());
+  lloDeviceBufferCreate(llo,METAL_SPHERES_BUFFER,
+                        metalSpheres.size()*sizeof(metalSpheres[0]),
+                        metalSpheres.data());
   
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
@@ -222,38 +298,38 @@ int main(int ac, char **av)
   
   enum { WORLD_GROUP=0,
          NUM_GROUPS };
-  ll->reallocGroups(NUM_GROUPS);
+  lloAllocGroups(llo,NUM_GROUPS);
   int geomsInGroup[] = {
-                        LAMBERTIAN_SPHERES_GEOM,
-                        DIELECTRIC_SPHERES_GEOM,
-                        METAL_SPHERES_GEOM
+    LAMBERTIAN_SPHERES_GEOM,
+    DIELECTRIC_SPHERES_GEOM,
+    METAL_SPHERES_GEOM
   };
-  ll->createUserGeomGroup(/* group ID */WORLD_GROUP,
-                          /* geoms in group, pointer */ geomsInGroup,
-                          /* geoms in group, count   */ NUM_GEOMS);
-  ll->groupBuildPrimitiveBounds
-    (WORLD_GROUP,max3(sizeof(MetalSpheresGeom),
+  lloUserGeomGroupCreate(llo,/* group ID */WORLD_GROUP,
+                         /* geoms in group, pointer */ geomsInGroup,
+                         /* geoms in group, count   */ NUM_GEOMS);
+  lloGroupBuildPrimitiveBounds
+    (llo,WORLD_GROUP,max3(sizeof(MetalSpheresGeom),
                       sizeof(DielectricSpheresGeom),
                       sizeof(LambertianSpheresGeom)),
      [&](uint8_t *output, int devID, int geomID, int childID) {
-       switch(geomID) {
-       case LAMBERTIAN_SPHERES_GEOM:
-         ((LambertianSpheresGeom*)output)->prims
-           = (LambertianSphere*)ll->bufferGetPointer(LAMBERTIAN_SPHERES_BUFFER,devID);
-         break;
-       case DIELECTRIC_SPHERES_GEOM:
-         ((DielectricSpheresGeom*)output)->prims
-           = (DielectricSphere*)ll->bufferGetPointer(DIELECTRIC_SPHERES_BUFFER,devID);
-         break;
-       case METAL_SPHERES_GEOM:
-         ((MetalSpheresGeom*)output)->prims
-           = (MetalSphere*)ll->bufferGetPointer(METAL_SPHERES_BUFFER,devID);
-         break;
-       default:
-         assert(0);
-       }
-     });
-  ll->groupBuildAccel(WORLD_GROUP);
+      switch(geomID) {
+      case LAMBERTIAN_SPHERES_GEOM:
+        ((LambertianSpheresGeom*)output)->prims
+          = (LambertianSphere*)lloBufferGetPointer(llo,LAMBERTIAN_SPHERES_BUFFER,devID);
+        break;
+      case DIELECTRIC_SPHERES_GEOM:
+        ((DielectricSpheresGeom*)output)->prims
+          = (DielectricSphere*)lloBufferGetPointer(llo,DIELECTRIC_SPHERES_BUFFER,devID);
+        break;
+      case METAL_SPHERES_GEOM:
+        ((MetalSpheresGeom*)output)->prims
+          = (MetalSphere*)lloBufferGetPointer(llo,METAL_SPHERES_BUFFER,devID);
+        break;
+      default:
+        assert(0);
+      }
+    });
+  lloGroupAccelBuild(llo,WORLD_GROUP);
 
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -261,77 +337,71 @@ int main(int ac, char **av)
   LOG("building SBT ...");
 
   // ----------- build hitgroups -----------
-  const size_t maxHitGroupDataSize
-    = max3(sizeof(MetalSpheresGeom),
-           sizeof(DielectricSpheresGeom),
-           sizeof(LambertianSpheresGeom));
-  ll->sbtGeomTypesBuild
-    (maxHitGroupDataSize,
+  lloSbtHitProgsBuild
+    (llo,
      [&](uint8_t *output,int devID,int geomID,int childID) {
-       switch(geomID) {
-       case LAMBERTIAN_SPHERES_GEOM:
-         ((LambertianSpheresGeom*)output)->prims
-           = (LambertianSphere*)ll->bufferGetPointer(LAMBERTIAN_SPHERES_BUFFER,devID);
-         break;
-       case DIELECTRIC_SPHERES_GEOM:
-         ((DielectricSpheresGeom*)output)->prims
-           = (DielectricSphere*)ll->bufferGetPointer(DIELECTRIC_SPHERES_BUFFER,devID);
-         break;
-       case METAL_SPHERES_GEOM:
-         ((MetalSpheresGeom*)output)->prims
-           = (MetalSphere*)ll->bufferGetPointer(METAL_SPHERES_BUFFER,devID);
-         break;
-       default:
-         assert(0);
-       }
-     });
+      switch(geomID) {
+      case LAMBERTIAN_SPHERES_GEOM:
+        ((LambertianSpheresGeom*)output)->prims
+          = (LambertianSphere*)lloBufferGetPointer(llo,LAMBERTIAN_SPHERES_BUFFER,devID);
+        break;
+      case DIELECTRIC_SPHERES_GEOM:
+        ((DielectricSpheresGeom*)output)->prims
+          = (DielectricSphere*)lloBufferGetPointer(llo,DIELECTRIC_SPHERES_BUFFER,devID);
+        break;
+      case METAL_SPHERES_GEOM:
+        ((MetalSpheresGeom*)output)->prims
+          = (MetalSphere*)lloBufferGetPointer(llo,METAL_SPHERES_BUFFER,devID);
+        break;
+      default:
+        assert(0);
+      }
+    });
   
   // ----------- build miss prog(s) -----------
-  const size_t maxMissProgDataSize = sizeof(MissProgData);
-  ll->sbtMissProgsBuild
-    (maxMissProgDataSize,
+  lloSbtMissProgsBuild
+    (llo,
      [&](uint8_t *output,
          int devID,
          int rayType) {
-       /* we don't have any ... */
-     });
+      /* we don't have any ... */
+    });
   
   // ----------- build raygens -----------
-  const size_t maxRayGenDataSize = sizeof(RayGenData);
-  ll->sbtRayGensBuild
-    (maxRayGenDataSize,
+  lloSbtRayGensBuild
+    (llo,
      [&](uint8_t *output,
          int devID,
          int rgID) {
-       RayGenData *rg = (RayGenData*)output;
-       rg->deviceIndex   = devID;
-       rg->deviceCount = ll->getDeviceCount();
-       rg->fbSize = fbSize;
-       rg->fbPtr  = (uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,devID);
-       rg->world  = ll->groupGetTraversable(WORLD_GROUP,devID);
+      RayGenData *rg = (RayGenData*)output;
+      rg->deviceIndex   = devID;
+      rg->deviceCount = lloGetDeviceCount(llo);
+      rg->fbSize = fbSize;
+      rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
+      rg->world  = lloGroupGetTraversable(llo,WORLD_GROUP,devID);
 
-       const float vfov = fovy;
-       const vec3f vup = lookUp;
-       const float aspect = fbSize.x / float(fbSize.y);
-       const float theta = vfov * ((float)M_PI) / 180.0f;
-       const float half_height = tanf(theta / 2.0f);
-       const float half_width = aspect * half_height;
-       const float aperture = 0.f;
-       const float focusDist = 10.f;
-       const vec3f origin = lookFrom;
-       const vec3f w = normalize(lookFrom - lookAt);
-       const vec3f u = normalize(cross(vup, w));
-       const vec3f v = cross(w, u);
-       const vec3f lower_left_corner
-         = origin - half_width * focusDist*u - half_height * focusDist*v - focusDist * w;
-       const vec3f horizontal = 2.0f*half_width*focusDist*u;
-       const vec3f vertical = 2.0f*half_height*focusDist*v;
+      const float vfov = fovy;
+      const vec3f vup = lookUp;
+      const float aspect = fbSize.x / float(fbSize.y);
+      const float theta = vfov * ((float)M_PI) / 180.0f;
+      const float half_height = tanf(theta / 2.0f);
+      const float half_width = aspect * half_height;
+      const float aperture = 0.f;
+      const float focusDist = 10.f;
+      const vec3f origin = lookFrom;
+      const vec3f w = normalize(lookFrom - lookAt);
+      const vec3f u = normalize(cross(vup, w));
+      const vec3f v = cross(w, u);
+      const vec3f lower_left_corner
+        = origin - half_width * focusDist*u - half_height * focusDist*v - focusDist * w;
+      const vec3f horizontal = 2.0f*half_width*focusDist*u;
+      const vec3f vertical = 2.0f*half_height*focusDist*v;
 
-       rg->camera.origin = origin;
-       rg->camera.lower_left_corner = lower_left_corner;
-       rg->camera.horizontal = horizontal;
-       rg->camera.vertical = vertical;
-     });
+      rg->camera.origin = origin;
+      rg->camera.lower_left_corner = lower_left_corner;
+      rg->camera.horizontal = horizontal;
+      rg->camera.vertical = vertical;
+    });
   LOG_OK("everything set up ...");
 
   // ##################################################################
@@ -339,12 +409,12 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("trying to launch ...");
-  ll->launch(0,fbSize);
+  lloLaunch2D(llo,0,fbSize.x,fbSize.y);
   // todo: explicit sync?
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  const uint32_t *fb = (const uint32_t*)ll->bufferGetPointer(FRAME_BUFFER,0);
+  const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);
@@ -354,7 +424,7 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("destroying devicegroup ...");
-  owl::ll::DeviceGroup::destroy(ll);
+  lloContextDestroy(llo);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
 #endif

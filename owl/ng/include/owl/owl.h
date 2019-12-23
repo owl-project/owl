@@ -238,6 +238,17 @@ owlGeomTypeSetClosestHit(OWLGeomType type,
                          OWLModule module,
                          const char *progName);
 
+OWL_API void
+owlGeomTypeSetIntersectProg(OWLGeomType type,
+                            int rayType,
+                            OWLModule module,
+                            const char *progName);
+
+OWL_API void
+owlGeomTypeSetBoundsProg(OWLGeomType type,
+                         OWLModule module,
+                         const char *progName);
+
 
 // -------------------------------------------------------
 // Release for the various types

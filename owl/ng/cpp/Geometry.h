@@ -24,6 +24,11 @@
 namespace owl {
 
   struct Geom;
+
+  struct ProgramDesc {
+    Module::SP  module;
+    std::string progName;
+  };
   
   struct GeomType : public SBTObjectType {
     typedef std::shared_ptr<GeomType> SP;
@@ -37,10 +42,7 @@ namespace owl {
                                       Module::SP module,
                                       const std::string &progName);
 
-    struct {
-      Module::SP  module;
-      std::string progName;
-    } closestHit;
+    std::vector<ProgramDesc> closestHit;
     
     virtual std::shared_ptr<Geom> createGeom() = 0;
   };
@@ -63,8 +65,17 @@ namespace owl {
                      size_t varStructSize,
                  const std::vector<OWLVarDecl> &varDecls);
 
+    virtual void setIntersectProg(int rayType,
+                                  Module::SP module,
+                                  const std::string &progName);
+    virtual void setBoundsProg(Module::SP module,
+                               const std::string &progName);
+    
     virtual std::string toString() const { return "UserGeomType"; }
     virtual std::shared_ptr<Geom> createGeom() override;
+
+    ProgramDesc boundsProg;
+    std::vector<ProgramDesc> intersectProg;
   };
   
   struct Geom : public SBTObject<GeomType> {
@@ -91,7 +102,7 @@ namespace owl {
                     size_t count,
                     size_t stride,
                     size_t offset);
-virtual std::string toString() const { return "TrianglesGeom"; }
+    virtual std::string toString() const { return "TrianglesGeom"; }
   };
 
   struct UserGeom : public Geom {

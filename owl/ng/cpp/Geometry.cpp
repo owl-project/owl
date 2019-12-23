@@ -23,7 +23,8 @@ namespace owl {
                      size_t varStructSize,
                      const std::vector<OWLVarDecl> &varDecls)
     : SBTObjectType(context,context->geomTypes,
-                    varStructSize,varDecls)
+                    varStructSize,varDecls),
+      closestHit(context->numRayTypes)
   {
     lloGeomTypeCreate(context->llo,this->ID,
                       varStructSize);
@@ -51,7 +52,8 @@ namespace owl {
   UserGeomType::UserGeomType(Context *const context,
                              size_t varStructSize,
                              const std::vector<OWLVarDecl> &varDecls)
-    : GeomType(context,varStructSize,varDecls)
+    : GeomType(context,varStructSize,varDecls),
+      intersectProg(context->numRayTypes)
   {
     /*! nothing special - all inherited */
   }
@@ -96,15 +98,50 @@ namespace owl {
                                       Module::SP module,
                                       const std::string &progName)
   {
-    this->closestHit.progName = progName;
-    this->closestHit.module   = module;
+    assert(rayType < closestHit.size());
+      
+    closestHit[rayType].progName = progName;
+    closestHit[rayType].module   = module;
     lloGeomTypeClosestHit(context->llo,this->ID,
                           rayType,module->ID,
                           // warning: this 'this' here is importat, since
                           // *we* manage the lifetime of this string, and
                           // the one on the constructor list will go out of
                           // scope after this function
-                          this->closestHit.progName.c_str());
+                          closestHit[rayType].progName.c_str());
+  }
+
+
+  void UserGeomType::setIntersectProg(int rayType,
+                                      Module::SP module,
+                                      const std::string &progName)
+  {
+    assert(rayType < intersectProg.size());
+    intersectProg[rayType].progName = progName;
+    intersectProg[rayType].module   = module;
+    lloGeomTypeIntersect(context->llo,this->ID,
+                         rayType,module->ID,
+                         // warning: this 'this' here is importat, since
+                         // *we* manage the lifetime of this string, and
+                         // the one on the constructor list will go out of
+                          // scope after this function
+                         intersectProg[rayType].progName.c_str());
+  }
+
+  void UserGeomType::setBoundsProg(Module::SP module,
+                                   const std::string &progName)
+  {
+    this->boundsProg.progName = progName;
+    this->boundsProg.module   = module;
+    lloGeomTypeBoundsProgDevice(context->llo,this->ID,
+                                module->ID,
+                                // warning: this 'this' here is importat, since
+                                // *we* manage the lifetime of this string, and
+                                // the one on the constructor list will go out of
+                                // scope after this function
+                                this->boundsProg.progName.c_str(),
+                                varStructSize
+                                );
   }
 
 } //::owl

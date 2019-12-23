@@ -16,9 +16,7 @@
 
 include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
 
-#file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
-# for now:
-set(samples s01-simpleTriangles)
+file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
 
 foreach(sample ${samples})
   add_subdirectory(${sample})

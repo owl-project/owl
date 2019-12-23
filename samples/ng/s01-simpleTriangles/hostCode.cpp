@@ -14,9 +14,11 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+// public owl node-graph api
 #include "owl/owl.h"
+// our device-side data structures
 #include "deviceCode.h"
-
+// external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 

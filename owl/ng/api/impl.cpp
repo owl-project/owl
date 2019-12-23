@@ -513,6 +513,51 @@ namespace owl {
     geometryType->setClosestHitProgram(rayType,module,progName);
   }
 
+  OWL_API void
+  owlGeomTypeSetIntersectProg(OWLGeomType _geometryType,
+                           int             rayType,
+                           OWLModule       _module,
+                           const char     *progName)
+  {
+    LOG_API_CALL();
+    
+    assert(_geometryType);
+    assert(_module);
+    assert(progName);
+
+    UserGeomType::SP geometryType
+      = ((APIHandle *)_geometryType)->get<UserGeomType>();
+    assert(geometryType);
+
+    Module::SP module
+      = ((APIHandle *)_module)->get<Module>();
+    assert(module);
+
+    geometryType->setIntersectProg(rayType,module,progName);
+  }
+  
+  OWL_API void
+  owlGeomTypeSetBoundsProg(OWLGeomType _geometryType,
+                           OWLModule       _module,
+                           const char     *progName)
+  {
+    LOG_API_CALL();
+    
+    assert(_geometryType);
+    assert(_module);
+    assert(progName);
+
+    UserGeomType::SP geometryType
+      = ((APIHandle *)_geometryType)->get<UserGeomType>();
+    assert(geometryType);
+
+    Module::SP module
+      = ((APIHandle *)_module)->get<Module>();
+    assert(module);
+
+    geometryType->setBoundsProg(module,progName);
+  }
+
 
   // ==================================================================
   // "VariableSet" functions, for each element type
