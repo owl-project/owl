@@ -79,6 +79,16 @@ Latest Progress/Revision History
 v0.5.x - First Public Release Cleanups
 --------------------------------------
 
+*v0.5.1*: First "c-api" version
+
+- added public c-linkage api (in `include/owl/ll.h`)
+
+- changed to build both static and dynamic/shared lib (tested working
+  both linux and windows)
+
+- ported all samples to this new api
+
+
 *v0.5.0*: First public release
 
 - first publicly accessible project on

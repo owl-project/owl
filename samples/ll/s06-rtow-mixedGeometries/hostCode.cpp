@@ -62,7 +62,7 @@ struct {
   std::vector<Lambertian> materials;
 } lambertianBoxes;
 
-inline float max3(float a, float b, float c)
+inline size_t max3(size_t a, size_t b, size_t c)
 { return std::max(std::max(a,b),c); }
 
 inline float rnd()
@@ -125,7 +125,7 @@ void addRandomBox(BoxArray &boxes,
   xfm = owl::affine3f(owl::linear3f::scale(.7f*size)) * xfm;
   xfm = owl::affine3f(owl::affine3f::translate(center)) * xfm;
   
-  const int startIndex = boxes.vertices.size();
+  const int startIndex = (int)boxes.vertices.size();
   for (int i=0;i<NUM_VERTICES;i++)
     boxes.vertices.push_back(owl::xfmPoint(xfm,unitBoxVertices[i]));
   for (int i=0;i<NUM_INDICES;i++)
