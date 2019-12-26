@@ -24,10 +24,10 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   const vec2i pixelID = owl::getLaunchIndex();
   if (pixelID == owl::vec2i(0)) {
     printf("%sHello OptiX From your First RayGen Program (on device %i/%i)%s\n",
-           GDT_TERMINAL_LIGHT_RED,
+           OWL_TERMINAL_LIGHT_RED,
            self.deviceIndex,
            self.deviceCount,
-           GDT_TERMINAL_DEFAULT);
+           OWL_TERMINAL_DEFAULT);
   }
   if (pixelID.x >= self.fbSize.x) return;
   if (pixelID.y >= self.fbSize.y) return;

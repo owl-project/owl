@@ -25,13 +25,13 @@
 #include <random>
 
 #define LOG(message)                                            \
-  std::cout << GDT_TERMINAL_BLUE;                               \
+  std::cout << OWL_TERMINAL_BLUE;                               \
   std::cout << "#ll.sample(main): " << message << std::endl;    \
-  std::cout << GDT_TERMINAL_DEFAULT;
+  std::cout << OWL_TERMINAL_DEFAULT;
 #define LOG_OK(message)                                         \
-  std::cout << GDT_TERMINAL_LIGHT_BLUE;                         \
+  std::cout << OWL_TERMINAL_LIGHT_BLUE;                         \
   std::cout << "#ll.sample(main): " << message << std::endl;    \
-  std::cout << GDT_TERMINAL_DEFAULT;
+  std::cout << OWL_TERMINAL_DEFAULT;
 
 extern "C" char ptxCode[];
 
