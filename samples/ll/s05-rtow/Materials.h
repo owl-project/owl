@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ll/llowl.h"
+#include "owl/common/math/random.h"
 
 using namespace owl;
 
@@ -30,6 +31,8 @@ struct Metal {
 struct Dielectric {
   float ref_idx;
 };
+
+typedef owl::common::LCG<4> Random;
 
 #ifdef __CUDA_ARCH__
 inline __device__
@@ -65,30 +68,6 @@ vec3f reflect(const vec3f &v,
   return v - 2.0f*dot(v, n)*n;
 }
 
-struct DRand48
-{
-  /*! initialize the random number generator with a new seed (usually
-    per pixel) */
-  inline __device__ void init(int seed = 0)
-  {
-    state = seed;
-    for (int warmUp=0;warmUp<10;warmUp++)
-      (*this)();
-  }
-
-  /*! get the next 'random' number in the sequence */
-  inline __device__ float operator() ()
-  {
-    const uint64_t a = 0x5DEECE66DULL;
-    const uint64_t c = 0xBULL;
-    const uint64_t mask = 0xFFFFFFFFFFFFULL;
-    state = a*state + c;
-    return float((state & mask) / float(mask+1ULL));
-  }
-
-  uint64_t state;
-};
-
 typedef enum {
               /*! ray could get properly bounced, and is still alive */
               rayGotBounced,
@@ -102,8 +81,9 @@ typedef enum {
   one ray type, and it only ever returns one thing, which is a color (everything else
   is handled through the recursion). In addition to that return type, rays have to
   carry recursion state, which in this case are recursion depth and random number state */
-struct PerRayData {
-  DRand48 random;
+struct PerRayData
+{
+  Random random;
   struct {
     ScatterEvent scatterEvent;
     vec3f        scattered_origin;
@@ -115,7 +95,7 @@ struct PerRayData {
 
 
 
-inline __device__ vec3f randomPointOnUnitDisc(DRand48 &random) {
+inline __device__ vec3f randomPointOnUnitDisc(Random &random) {
   vec3f p;
   do {
     p = 2.0f*vec3f(random(), random(), 0.f) - vec3f(1.f, 1.f, 0.f);
@@ -126,7 +106,7 @@ inline __device__ vec3f randomPointOnUnitDisc(DRand48 &random) {
 
 #define RANDVEC3F vec3f(rnd(),rnd(),rnd())
 
-inline __device__ vec3f randomPointInUnitSphere(DRand48 &rnd) {
+inline __device__ vec3f randomPointInUnitSphere(Random &rnd) {
   vec3f p;
   do {
     p = 2.0f*RANDVEC3F - vec3f(1, 1, 1);

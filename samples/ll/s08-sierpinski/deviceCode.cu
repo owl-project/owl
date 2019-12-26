@@ -124,7 +124,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     return;
 
   PerRayData prd;
-  prd.random.init(pixelIdx);
+  prd.random.init(pixelID.x,pixelID.y);
 
   vec3f color = 0.f;
   for (int sampleID=0;sampleID<NUM_SAMPLES_PER_PIXEL;sampleID++) {

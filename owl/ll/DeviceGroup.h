@@ -28,6 +28,8 @@
 namespace owl {
   namespace ll {
 
+    typedef int32_t id_t;
+    
     struct HostPinnedMemory
     {
       typedef std::shared_ptr<HostPinnedMemory> SP;
@@ -247,6 +249,9 @@ namespace owl {
                                  int childNo,
                                  int childGroupID,
                                  const affine3f &xfm=affine3f(owl::common::one));
+      void geomGroupSetChild(int groupID,
+                             int childNo,
+                             int childID);
 
       /*! destroy the given buffer, and release all host and/or device
         memory associated with it */

@@ -14,16 +14,22 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl)
+# moved "shared" device code to a library, else cmake scripts get
+# confused about using the same file in multiple binaries.
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
+add_library(ll07-deviceCode STATIC
+  ${ptxCode}
+  )
+
+include_directories(${PROJECT_SOURCE_DIR}/owl)
 add_executable(ll07-groupOfGroups
   hostCode.cpp
-  ${ptxCode}
   )
 target_link_libraries(ll07-groupOfGroups
   ${OWL_LL_LIBRARIES}
+  ll07-deviceCode
   )
 add_test(ll07-groupOfGroups
   ${CMAKE_BINARY_DIR}/ll07-groupOfGroups
@@ -34,10 +40,10 @@ add_test(ll07-groupOfGroups
 foreach(test 1;2)
   add_executable(ll07-groupOfGroups-variant${test} 
     hostCode.cpp
-    ${ptxCode}
     )
   target_link_libraries(ll07-groupOfGroups-variant${test}
     ${OWL_LL_LIBRARIES}
+    ll07-deviceCode
     )
   target_compile_definitions(ll07-groupOfGroups-variant${test}
     PRIVATE

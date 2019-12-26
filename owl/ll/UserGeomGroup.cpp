@@ -22,9 +22,9 @@
   << std::endl
 
 #define LOG_OK(message)                                 \
-  std::cout << GDT_TERMINAL_GREEN                       \
+  std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
+  << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
@@ -32,9 +32,9 @@
   << std::endl
 
 #define CLOG_OK(message)                                \
-  std::cout << GDT_TERMINAL_GREEN                       \
+  std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
+  << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define MANAGED_TEST 0
 namespace owl {

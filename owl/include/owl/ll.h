@@ -402,9 +402,15 @@ extern "C" {
   OWL_LL_INTERFACE
   LLOResult lloInstanceGroupSetChild(LLOContext llo,
                                      int32_t    groupID,
-                                     int32_t    childID,
+                                     int32_t    childNo,
                                      int32_t    childGroupID,
                                      const float *xfm);
+  
+  OWL_LL_INTERFACE
+  LLOResult lloGeomGroupSetChild(LLOContext llo,
+                                 int32_t    groupID,
+                                 int32_t    childNo,
+                                 int32_t    childGeomID);
   
   OWL_LL_INTERFACE
   LLOResult lloGroupBuildPrimitiveBounds(LLOContext llo,
