@@ -19,7 +19,7 @@
 
 using namespace owl;
 
-#define NUM_SAMPLES_PER_PIXEL 128
+#define NUM_SAMPLES_PER_PIXEL 16
 
 // ==================================================================
 // bounding box programs - since these don't actually use the material
@@ -229,7 +229,7 @@ OPTIX_RAYGEN_PROGRAM(rayGen)()
     return;
   
   PerRayData prd;
-  prd.random.init(pixelIdx);
+  prd.random.init(pixelID.x,pixelID.y);
   
   vec3f color = 0.f;
   for (int sampleID=0;sampleID<NUM_SAMPLES_PER_PIXEL;sampleID++) {

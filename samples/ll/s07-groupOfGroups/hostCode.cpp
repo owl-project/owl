@@ -546,7 +546,6 @@ int main(int ac, char **av)
         break;
 
       case LAMBERTIAN_BOXES_GEOM: {
-        PING;
         LambertianBoxesGeom &self = *(LambertianBoxesGeom*)output;
         self.index
           = (vec3i*)lloBufferGetPointer(llo,LAMBERTIAN_BOXES_INDEX_BUFFER,devID);
@@ -556,7 +555,6 @@ int main(int ac, char **av)
           = (Lambertian *)lloBufferGetPointer(llo,LAMBERTIAN_BOXES_MATERIAL_BUFFER,devID);
       } break;
       case DIELECTRIC_BOXES_GEOM: {
-        PING;
         DielectricBoxesGeom &self = *(DielectricBoxesGeom*)output;
         self.index
           = (vec3i*)lloBufferGetPointer(llo,DIELECTRIC_BOXES_INDEX_BUFFER,devID);
@@ -566,7 +564,6 @@ int main(int ac, char **av)
           = (Dielectric *)lloBufferGetPointer(llo,DIELECTRIC_BOXES_MATERIAL_BUFFER,devID);
       } break;
       case METAL_BOXES_GEOM: {
-        PING;
         MetalBoxesGeom &self = *(MetalBoxesGeom*)output;
         self.index
           = (vec3i*)lloBufferGetPointer(llo,METAL_BOXES_INDEX_BUFFER,devID);

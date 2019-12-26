@@ -19,7 +19,7 @@
 
 using namespace owl;
 
-#define NUM_SAMPLES_PER_PIXEL 128
+#define NUM_SAMPLES_PER_PIXEL 8
 
 // ==================================================================
 // bounding box programs - since these don't actually use the material
@@ -222,7 +222,7 @@ vec3f tracePath(const RayGenData &self,
                 owl::Ray &ray, PerRayData &prd)
 {
   vec3f attenuation = 1.f;
-  
+
   /* iterative version of recursion, up to depth 50 */
   for (int depth=0;depth<50;depth++) {
     prd.out.scatterEvent = rayDidntHitAnything;
@@ -265,7 +265,7 @@ OPTIX_RAYGEN_PROGRAM(rayGen)()
     return;
   
   PerRayData prd;
-  prd.random.init(pixelIdx);
+  prd.random.init(pixelID.x,pixelID.y);
   
   vec3f color = 0.f;
   for (int sampleID=0;sampleID<NUM_SAMPLES_PER_PIXEL;sampleID++) {
