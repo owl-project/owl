@@ -16,21 +16,45 @@
 
 #pragma once
 
-#include "gdt_viewer_common.h"
+#pragma once
+
+#if defined(_MSC_VER)
+#  define OWL_VIEWER_DLL_EXPORT __declspec(dllexport)
+#  define OWL_VIEWER_DLL_IMPORT __declspec(dllimport)
+#elif defined(__clang__) || defined(__GNUC__)
+#  define OWL_VIEWER_DLL_EXPORT __attribute__((visibility("default")))
+#  define OWL_VIEWER_DLL_IMPORT __attribute__((visibility("default")))
+#else
+#  define OWL_VIEWER_DLL_EXPORT
+#  define OWL_VIEWER_DLL_IMPORT
+#endif
+
+#if defined(owl_viewer_DLL_INTERFACE)
+#  ifdef owl_viewer_EXPORTS
+#    define OWL_VIEWER_INTERFACE OWL_VIEWER_DLL_EXPORT
+#  else
+#    define OWL_VIEWER_INTERFACE OWL_VIEWER_DLL_IMPORT
+#  endif
+#else
+#  define OWL_VIEWER_INTERFACE /*static lib*/
+#endif
+#include "owl/common/math/box.h"
+#include "owl/common/math/LinearSpace.h"
+
 #include <vector>
 #include <memory>
 #ifdef _GNUC_
     #include <unistd.h>
 #endif
 
-namespace gdt {
+namespace owl {
   namespace viewer {
 
     struct ViewerWidget;
     
     /*! abstraction for the glut window controlled by this library;
       the actual implementation will remain hidden */
-    struct GDT_VIEWER_INTERFACE GlutWindow {
+    struct OWL_VIEWER_INTERFACE GlutWindow {
       /*! short-hand Class::SP instead of std::shared_ptr<Class>, for
         readability */
       typedef std::shared_ptr<GlutWindow> SP;
@@ -87,6 +111,6 @@ namespace gdt {
       const PixelFormat pixelFormat;
     };
     
-  } // ::gdt::viewer
-} // ::gdt
+  } // ::owl::viewer
+} // ::owl
 

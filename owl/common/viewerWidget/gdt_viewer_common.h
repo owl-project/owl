@@ -17,25 +17,25 @@
 #pragma once
 
 #if defined(_MSC_VER)
-#  define GDT_VIEWER_DLL_EXPORT __declspec(dllexport)
-#  define GDT_VIEWER_DLL_IMPORT __declspec(dllimport)
+#  define OWL_VIEWER_DLL_EXPORT __declspec(dllexport)
+#  define OWL_VIEWER_DLL_IMPORT __declspec(dllimport)
 #elif defined(__clang__) || defined(__GNUC__)
-#  define GDT_VIEWER_DLL_EXPORT __attribute__((visibility("default")))
-#  define GDT_VIEWER_DLL_IMPORT __attribute__((visibility("default")))
+#  define OWL_VIEWER_DLL_EXPORT __attribute__((visibility("default")))
+#  define OWL_VIEWER_DLL_IMPORT __attribute__((visibility("default")))
 #else
-#  define GDT_VIEWER_DLL_EXPORT
-#  define GDT_VIEWER_DLL_IMPORT
+#  define OWL_VIEWER_DLL_EXPORT
+#  define OWL_VIEWER_DLL_IMPORT
 #endif
 
-#if defined(gdt_viewer_DLL_INTERFACE)
-#  ifdef gdt_viewer_EXPORTS
-#    define GDT_VIEWER_INTERFACE GDT_VIEWER_DLL_EXPORT
+#if defined(owl_viewer_DLL_INTERFACE)
+#  ifdef owl_viewer_EXPORTS
+#    define OWL_VIEWER_INTERFACE OWL_VIEWER_DLL_EXPORT
 #  else
-#    define GDT_VIEWER_INTERFACE GDT_VIEWER_DLL_IMPORT
+#    define OWL_VIEWER_INTERFACE OWL_VIEWER_DLL_IMPORT
 #  endif
 #else
-#  define GDT_VIEWER_INTERFACE /*static lib*/
+#  define OWL_VIEWER_INTERFACE /*static lib*/
 #endif
-#include "gdt/math/box.h"
-#include "gdt/math/LinearSpace.h"
+#include "owl/common/math/box.h"
+#include "owl/common/math/LinearSpace.h"
 

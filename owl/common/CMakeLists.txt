@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018 Ingo Wald                                                 #
+# Copyright 2019 Ingo Wald                                                 #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,18 +14,19 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-cmake_policy(SET CMP0048 NEW)
-project(GPU_Developer_Toolbox VERSION 0.1.0)
-cmake_minimum_required(VERSION 3.5)
+# this library is mostly header-only, but let's list it anyway -
+# including all the header fiels - to make visual studio happy
+add_library(owl-common STATIC
 
-set(CMAKE_CXX_STANDARD 11)
+  owl-common.cpp
+  
+  owl-common.h
+  math/vec.h
+  math/box.h
+  math/LinearSpace.h
+  math/AffineSpace.h
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-add_library(gdt 
-	gdt/gdt.h
-	gdt/gdt.cpp
-	gdt/math/LinearSpace.h
-	gdt/math/AffineSpace.h
-	)
-
+  cmake/configure_optix.cmake
+  cmake/configure_cuda.cmake
+  cmake/configure_build_type.cmake
+  )

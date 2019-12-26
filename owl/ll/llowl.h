@@ -21,8 +21,8 @@
     device- or host-side */
 
 #include <optix.h>
-#include <gdt/math/vec.h>
-#include <gdt/math/box.h>
+#include <owl/common/math/vec.h>
+#include <owl/common/math/box.h>
 
 namespace owl {
   using namespace owl::common;

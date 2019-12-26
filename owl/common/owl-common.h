@@ -44,29 +44,29 @@
 
 
 #if defined(_MSC_VER)
-#  define GDT_DLL_EXPORT __declspec(dllexport)
-#  define GDT_DLL_IMPORT __declspec(dllimport)
+#  define OWL_DLL_EXPORT __declspec(dllexport)
+#  define OWL_DLL_IMPORT __declspec(dllimport)
 #elif defined(__clang__) || defined(__GNUC__)
-#  define GDT_DLL_EXPORT __attribute__((visibility("default")))
-#  define GDT_DLL_IMPORT __attribute__((visibility("default")))
+#  define OWL_DLL_EXPORT __attribute__((visibility("default")))
+#  define OWL_DLL_IMPORT __attribute__((visibility("default")))
 #else
-#  define GDT_DLL_EXPORT
-#  define GDT_DLL_IMPORT
+#  define OWL_DLL_EXPORT
+#  define OWL_DLL_IMPORT
 #endif
 
-#if 1
-# define GDT_INTERFACE /* nothing */
-#else
-//#if defined(GDT_DLL_INTERFACE)
-#  ifdef gdt_EXPORTS
-#    define GDT_INTERFACE GDT_DLL_EXPORT
-#  else
-#    define GDT_INTERFACE GDT_DLL_IMPORT
-#  endif
-//#else
-//#  define GDT_INTERFACE /*static lib*/
-//#endif
-#endif
+// #if 1
+# define OWL_INTERFACE /* nothing - currently not building any special 'owl.dll' */
+// #else
+// //#if defined(OWL_DLL_INTERFACE)
+// #  ifdef owl_EXPORTS
+// #    define OWL_INTERFACE OWL_DLL_EXPORT
+// #  else
+// #    define OWL_INTERFACE OWL_DLL_IMPORT
+// #  endif
+// //#else
+// //#  define OWL_INTERFACE /*static lib*/
+// //#endif
+// #endif
 
 #ifndef PRINT
 # define PRINT(var) std::cout << #var << "=" << var << std::endl;
@@ -80,14 +80,14 @@
 #endif
 
 #if defined(__CUDACC__)
-# define __gdt_device   __device__
-# define __gdt_host     __host__
+# define __owl_device   __device__
+# define __owl_host     __host__
 #else
-# define __gdt_device   /* ignore */
-# define __gdt_host     /* ignore */
+# define __owl_device   /* ignore */
+# define __owl_host     /* ignore */
 #endif
 
-# define __both__   __gdt_host __gdt_device
+# define __both__   __owl_host __owl_device
 
 
 #ifdef __GNUC__
@@ -101,29 +101,29 @@
 #endif
 
 
-#define GDT_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" not implemented")
+#define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" not implemented")
 
-#define GDT_TERMINAL_RED "\033[0;31m"
-#define GDT_TERMINAL_GREEN "\033[0;32m"
-#define GDT_TERMINAL_LIGHT_GREEN "\033[1;32m"
-#define GDT_TERMINAL_YELLOW "\033[1;33m"
-#define GDT_TERMINAL_BLUE "\033[0;34m"
-#define GDT_TERMINAL_LIGHT_BLUE "\033[1;34m"
-#define GDT_TERMINAL_RESET "\033[0m"
-#define GDT_TERMINAL_DEFAULT GDT_TERMINAL_RESET
-#define GDT_TERMINAL_BOLD "\033[1;1m"
+#define OWL_TERMINAL_RED "\033[0;31m"
+#define OWL_TERMINAL_GREEN "\033[0;32m"
+#define OWL_TERMINAL_LIGHT_GREEN "\033[1;32m"
+#define OWL_TERMINAL_YELLOW "\033[1;33m"
+#define OWL_TERMINAL_BLUE "\033[0;34m"
+#define OWL_TERMINAL_LIGHT_BLUE "\033[1;34m"
+#define OWL_TERMINAL_RESET "\033[0m"
+#define OWL_TERMINAL_DEFAULT OWL_TERMINAL_RESET
+#define OWL_TERMINAL_BOLD "\033[1;1m"
 
-#define GDT_TERMINAL_MAGENTA "\e[35m"
-#define GDT_TERMINAL_LIGHT_MAGENTA "\e[95m"
-#define GDT_TERMINAL_CYAN "\e[36m"
-//#define GDT_TERMINAL_LIGHT_RED "\e[91m"
-#define GDT_TERMINAL_LIGHT_RED "\033[1;31m"
+#define OWL_TERMINAL_MAGENTA "\e[35m"
+#define OWL_TERMINAL_LIGHT_MAGENTA "\e[95m"
+#define OWL_TERMINAL_CYAN "\e[36m"
+//#define OWL_TERMINAL_LIGHT_RED "\e[91m"
+#define OWL_TERMINAL_LIGHT_RED "\033[1;31m"
 
 
 #ifdef _MSC_VER
-# define GDT_ALIGN(alignment) __declspec(align(alignment)) 
+# define OWL_ALIGN(alignment) __declspec(align(alignment)) 
 #else
-# define GDT_ALIGN(alignment) __attribute__((aligned(alignment)))
+# define OWL_ALIGN(alignment) __attribute__((aligned(alignment)))
 #endif
 
 

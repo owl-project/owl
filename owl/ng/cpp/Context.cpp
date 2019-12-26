@@ -21,17 +21,17 @@
 
 #define LOG(message)                               \
   std::cout                                        \
-  << GDT_TERMINAL_LIGHT_BLUE                       \
+  << OWL_TERMINAL_LIGHT_BLUE                       \
   << "#owl.ng: "                                   \
   << message                                       \
-  << GDT_TERMINAL_DEFAULT << std::endl
+  << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
   std::cout                                     \
-  << GDT_TERMINAL_BLUE                          \
+  << OWL_TERMINAL_BLUE                          \
   << "#owl.ng: "                                \
   << message                                    \
-  << GDT_TERMINAL_DEFAULT << std::endl
+  << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
 

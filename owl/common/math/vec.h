@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "gdt/gdt.h"
-#include "gdt/math/constants.h"
+#include "owl/common/owl-common.h"
+#include "owl/common/math/constants.h"
 #include <iostream>
 #include <math.h>
 #include <algorithm>
@@ -30,7 +30,7 @@ namespace owl {
     template<> struct long_type_of<uint32_t> { typedef uint64_t type; };
   
     template<typename T, int N>
-    struct GDT_INTERFACE vec_t { T t[N]; };
+    struct OWL_INTERFACE vec_t { T t[N]; };
 
 
     template<typename ScalarTypeA, typename ScalarTypeB> struct BinaryOpResultType;
@@ -54,7 +54,7 @@ namespace owl {
     // vector, so we can use it in, say, box1f
     // ------------------------------------------------------------------
     template<typename T>
-    struct GDT_INTERFACE vec_t<T,1> {
+    struct OWL_INTERFACE vec_t<T,1> {
       enum { dims = 1 };
       typedef T scalar_t;
     
@@ -84,7 +84,7 @@ namespace owl {
     // vec2
     // ------------------------------------------------------------------
     template<typename T>
-    struct GDT_INTERFACE vec_t<T,2> {
+    struct OWL_INTERFACE vec_t<T,2> {
       enum { dims = 2 };
       typedef T scalar_t;
     
@@ -131,7 +131,7 @@ namespace owl {
     // vec3
     // ------------------------------------------------------------------
     template<typename T>
-    struct GDT_INTERFACE vec_t<T,3> {
+    struct OWL_INTERFACE vec_t<T,3> {
       enum { dims = 3 };
       typedef T scalar_t;
     
@@ -180,7 +180,7 @@ namespace owl {
     // vec3a
     // ------------------------------------------------------------------
     template<typename T>
-    struct GDT_INTERFACE vec3a_t : public vec_t<T,3> {
+    struct OWL_INTERFACE vec3a_t : public vec_t<T,3> {
       inline vec3a_t() {}
       inline vec3a_t(const T &t) : vec_t<T,3>(t) {}
       inline vec3a_t(const T &x, const T &y, const T &z) : vec_t<T,3>(x,y,z) {}
@@ -195,7 +195,7 @@ namespace owl {
     // vec4
     // ------------------------------------------------------------------
     template<typename T>
-    struct GDT_INTERFACE vec_t<T,4> {
+    struct OWL_INTERFACE vec_t<T,4> {
       enum { dims = 4 };
       typedef T scalar_t;
     
@@ -320,28 +320,28 @@ namespace owl {
     }
 
     template<typename T>
-    inline __gdt_host std::ostream &operator<<(std::ostream &o, const vec_t<T,1> &v)
+    inline __owl_host std::ostream &operator<<(std::ostream &o, const vec_t<T,1> &v)
     {
       o << "(" << v.x << ")";
       return o;
     }
   
     template<typename T>
-    inline __gdt_host std::ostream &operator<<(std::ostream &o, const vec_t<T,2> &v)
+    inline __owl_host std::ostream &operator<<(std::ostream &o, const vec_t<T,2> &v)
     {
       o << "(" << v.x << "," << v.y << ")";
       return o;
     }
   
     template<typename T>
-    inline __gdt_host std::ostream &operator<<(std::ostream &o, const vec_t<T,3> &v)
+    inline __owl_host std::ostream &operator<<(std::ostream &o, const vec_t<T,3> &v)
     {
       o << "(" << v.x << "," << v.y << "," << v.z << ")";
       return o;
     }
 
     template<typename T>
-    inline __gdt_host std::ostream &operator<<(std::ostream &o, const vec_t<T,4> &v)
+    inline __owl_host std::ostream &operator<<(std::ostream &o, const vec_t<T,4> &v)
     {
       o << "(" << v.x << "," << v.y << "," << v.z <<  "," << v.w << ")";
       return o;

@@ -23,13 +23,13 @@ cmake_minimum_required(VERSION 2.8)
 # first, include gdt project to do some general configuration stuff
 # (build modes, glut, optix, etc)
 # ------------------------------------------------------------------
-set(gdt_dir ${PROJECT_SOURCE_DIR}/common/)
+set(owl_dir ${PROJECT_SOURCE_DIR})
+set(owl_common_dir ${owl_dir}/owl/common/)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${gdt_dir}/gdt/cmake/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_common_dir}/cmake/")
 
 include(configure_cuda)
 include(configure_optix)
-#include(configure_embree)
 include(configure_tbb)
 include(configure_build_type)
 
@@ -39,29 +39,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
 # ------------------------------------------------------------------
-# import gdt submodules itself: gdt, and viewer
+# owl library itself, noth ll and node graph layer, and including
+# owl-common
 # ------------------------------------------------------------------
-include_directories(${gdt_dir})
-
-# -------------------------------------------------------
-# owl-common: vector math, parallel-for, etc
-# -------------------------------------------------------
 add_subdirectory(owl)
 
-# -------------------------------------------------------
-# owl itself
-# -------------------------------------------------------
-add_subdirectory(common)
-
-# -------------------------------------------------------
+# ------------------------------------------------------------------
 # tutorial/samples
-# -------------------------------------------------------
+# ------------------------------------------------------------------
 add_subdirectory(samples)
 
-#option(EXPERIMENTAL_NG "Experimental NG Layer" OFF)
-#if (EXPERIMENTAL_NG)
-#  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/currently_disabled/owl/ng/include)
-#  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/currently_disabled/owl/ng)
-#  add_subdirectory(currently_disabled/owl/ng)
-#  add_subdirectory(currently_disabled/samples/ng)
-#endif()

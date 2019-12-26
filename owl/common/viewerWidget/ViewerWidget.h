@@ -19,13 +19,13 @@
 #include "GlutWindow.h"
 #include "Camera.h"
 
-namespace gdt {
+namespace owl {
   namespace viewer {
 
     // ------------------------------------------------------------------
     /*! a helper widget that opens and manages a viewer window,
       including some virtual mouse and frame buffer */
-    struct GDT_VIEWER_INTERFACE ViewerWidget {
+    struct OWL_VIEWER_INTERFACE ViewerWidget {
       GlutWindow::SP window;
 
       ViewerWidget(GlutWindow::SP window);
@@ -51,7 +51,7 @@ namespace gdt {
         updateCamera();
       }
 
-      struct GDT_VIEWER_INTERFACE ButtonState {
+      struct OWL_VIEWER_INTERFACE ButtonState {
         bool  isPressed        { false };
         vec2i posFirstPressed  { -1 };
         vec2i posLastSeen      { -1 };
@@ -190,5 +190,5 @@ namespace gdt {
       bool isActive { false };
     };
 
-  } // ::gdt::viewer
-} // ::gdt
+  } // ::owl::viewer
+} // ::owl

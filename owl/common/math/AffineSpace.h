@@ -48,7 +48,7 @@ namespace owl {
     ////////////////////////////////////////////////////////////////////////////////
 
     template<typename L>
-    struct GDT_INTERFACE AffineSpaceT
+    struct OWL_INTERFACE AffineSpaceT
     {
       L l;           /*< linear part of affine space */
       VectorT p;     /*< affine part of affine space */

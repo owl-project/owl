@@ -23,9 +23,9 @@
   << std::endl
 
 #define LOG_OK(message)                                 \
-  std::cout << GDT_TERMINAL_LIGHT_GREEN                 \
+  std::cout << OWL_TERMINAL_LIGHT_GREEN                 \
   << "#owl.ll: "                                        \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
+  << message << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
   namespace ll {
@@ -319,10 +319,10 @@ namespace owl {
         for (auto device : devices) 
           device->groupBuildAccel(groupID);
       } catch (std::exception &e) {
-        std::cerr << GDT_TERMINAL_RED
+        std::cerr << OWL_TERMINAL_RED
                   << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
                   << e.what()
-                  << GDT_TERMINAL_DEFAULT << std::endl;
+                  << OWL_TERMINAL_DEFAULT << std::endl;
         throw e;
       }
     }
@@ -382,10 +382,10 @@ namespace owl {
                                             cb,
                                             cbData);
       // } catch (std::exception &e) {
-      //   std::cerr << GDT_TERMINAL_RED
+      //   std::cerr << OWL_TERMINAL_RED
       //             << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
       //             << e.what()
-      //             << GDT_TERMINAL_DEFAULT << std::endl;
+      //             << OWL_TERMINAL_DEFAULT << std::endl;
       //   throw e;
       // }
     }
@@ -508,10 +508,10 @@ namespace owl {
           assert(dev);
           devices.push_back(dev);
         } catch (std::exception &e) {
-          std::cout << GDT_TERMINAL_RED
+          std::cout << OWL_TERMINAL_RED
                     << "#owl.ll: Error creating optix device on CUDA device #"
                     << deviceIDs[i] << ": " << e.what() << " ... dropping this device"
-                    << GDT_TERMINAL_DEFAULT << std::endl;
+                    << OWL_TERMINAL_DEFAULT << std::endl;
         }
       }
 

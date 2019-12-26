@@ -44,7 +44,7 @@ namespace owl {
     /// 2D Linear Transform (2x2 Matrix)
     ////////////////////////////////////////////////////////////////////////////////
 
-    template<typename T> struct GDT_INTERFACE LinearSpace2
+    template<typename T> struct OWL_INTERFACE LinearSpace2
     {
       using vector_t = T;
       // using Scalar = typename T::scalar_t;
@@ -181,7 +181,7 @@ namespace owl {
     ////////////////////////////////////////////////////////////////////////////////
 
     template<typename T> 
-    struct GDT_INTERFACE LinearSpace3
+    struct OWL_INTERFACE LinearSpace3
     {
       // using vector_t = T;
       using scalar_t = typename T::scalar_t;

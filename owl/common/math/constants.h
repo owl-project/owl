@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "gdt/math/vec.h"
 #include <limits>
 #ifdef __CUDACC__
 #include <math_constants.h>

@@ -23,9 +23,9 @@
   << std::endl
 
 #define LOG_OK(message)                                 \
-  std::cout << GDT_TERMINAL_GREEN                       \
+  std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
+  << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
@@ -33,9 +33,9 @@
   << std::endl
 
 #define CLOG_OK(message)                                \
-  std::cout << GDT_TERMINAL_GREEN                       \
+  std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
+  << message << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
   namespace ll {
@@ -44,10 +44,10 @@ namespace owl {
     {
       WarnOnce(const char *message)
       {
-        std::cout << GDT_TERMINAL_RED
+        std::cout << OWL_TERMINAL_RED
                   << "#owl.ll(warning): "
                   << message
-                  << GDT_TERMINAL_DEFAULT << std::endl;
+                  << OWL_TERMINAL_DEFAULT << std::endl;
       }
     };
       

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018 Ingo Wald                                                 //
+// Copyright 2018-2019 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,7 +14,12 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "gdt.h"
-#include "math/LinearSpace.h"
-#include "math/AffineSpace.h"
+#include "owl-common.h"
 
+namespace owl {
+  namespace common {
+
+    /* nothing yet - currently a header-only library */
+    
+  } // ::owl::common
+} // ::owl

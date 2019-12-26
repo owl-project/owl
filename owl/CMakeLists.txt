@@ -14,6 +14,9 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+# owl-common library (math stuff, utils, etc; mostly header-only)
+add_subdirectory(common)
+
 # low-level interface
 add_subdirectory(ll)
 

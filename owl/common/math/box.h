@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "gdt/math/vec.h"
+#include "owl/common/math/vec.h"
 
 namespace owl {
   namespace common {
