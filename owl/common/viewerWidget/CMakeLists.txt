@@ -20,9 +20,8 @@ if(GLUT_FOUND)
   include_directories(${GLUT_INCLUDE_DIR})
 endif()
 
-set(gdt_viewer_sources
+set(owl_viewerWidget_sources
   # add header files, so visual studio will properly show them as part of the solution
-  gdt_viewer_common.h
   ViewerWidget.h
   Camera.h
   InspectMode.h
@@ -37,18 +36,18 @@ set(gdt_viewer_sources
   GlutWindow.cpp
 )
 # this is doing the same using OptiX
-add_library(gdt_viewer SHARED ${gdt_viewer_sources})
-add_library(gdt_viewer_static STATIC ${gdt_viewer_sources})
+add_library(owl_viewerWidget SHARED ${owl_viewerWidget_sources})
+add_library(owl_viewerWidget_static STATIC ${owl_viewerWidget_sources})
   
-target_link_libraries(gdt_viewer
+target_link_libraries(owl_viewerWidget
   ${OPENGL_LIBRARIES}
   ${GLUT_LIBRARIES}
-  gdt
+  llowl
   )
-target_compile_definitions(gdt_viewer PUBLIC gdt_viewer_DLL_INTERFACE)
+target_compile_definitions(owl_viewerWidget PUBLIC owl_viewerWidget_DLL_INTERFACE)
 
-target_link_libraries(gdt_viewer_static
+target_link_libraries(owl_viewerWidget_static
   ${OPENGL_LIBRARIES}
   ${GLUT_LIBRARIES}
-  gdt
+  llowl
   )

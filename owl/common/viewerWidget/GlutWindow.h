@@ -49,7 +49,8 @@
 
 namespace owl {
   namespace viewer {
-
+    using namespace owl::common;
+    
     struct ViewerWidget;
     
     /*! abstraction for the glut window controlled by this library;

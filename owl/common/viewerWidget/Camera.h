@@ -16,12 +16,11 @@
 
 #pragma once
 
-#include "gdt_viewer_common.h"
-#include "gdt/math/box.h"
-#include "gdt/math/LinearSpace.h"
+#include "GlutWindow.h"
 
-namespace gdt {
+namespace owl {
   namespace viewer {
+    
     struct ViewerWidget;
 
     /*! base abstraction for a camera that can generate rays. For this
@@ -30,7 +29,7 @@ namespace gdt {
       possible single-point) lens for depth of field. At some later
       point this should also capture time.{t0,t1} for motion blur, but
       let's leave this out for now. */
-    struct GDT_VIEWER_INTERFACE SimpleCamera
+    struct OWL_VIEWER_INTERFACE SimpleCamera
     {
       struct {
         vec3f lower_left;
@@ -58,7 +57,7 @@ namespace gdt {
         - right is x axis
         - depth is _NEGATIVE_ z axis
     */
-    struct GDT_VIEWER_INTERFACE FullCamera {
+    struct OWL_VIEWER_INTERFACE FullCamera {
       FullCamera()
       {}
 
@@ -119,7 +118,7 @@ namespace gdt {
     // ------------------------------------------------------------------
     /*! abstract base class that allows to manipulate a renderable
       camera */
-    struct GDT_VIEWER_INTERFACE FullCameraManip {
+    struct OWL_VIEWER_INTERFACE FullCameraManip {
       FullCameraManip(ViewerWidget *widget) : widget(widget) {}
 
       /*! this gets called when the user presses a key on the keyboard ... */
@@ -184,6 +183,6 @@ namespace gdt {
     // private:
     // };
 
-  } // ::gdt::viewer
-} // ::gdt
+  } // ::owl::viewer
+} // ::owl
 
