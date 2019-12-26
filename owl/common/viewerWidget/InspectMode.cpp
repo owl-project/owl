@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018 Ingo Wald                                                 //
+// Copyright 2018-2019 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -22,7 +22,7 @@
 #endif
 #include "ViewerWidget.h"
 
-namespace gdt {
+namespace owl {
   namespace viewer {
 
     const float kbd_rotate_degrees = 10.f;
@@ -293,5 +293,5 @@ namespace gdt {
       }
     }
 
-  } // ::gdt::viewer
-} // ::gdt
+  } // ::owl::viewer
+} // ::owl

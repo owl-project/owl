@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018 Ingo Wald                                                 //
+// Copyright 2018-2019 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -39,7 +39,7 @@
 //#include <cuda_runtime_api.h>
 //#include <cuda_gl_interop.h>
 
-namespace gdt {
+namespace owl {
   namespace viewer {
 
     /*! gets set to true when glutInit() gets called - allows to make
@@ -439,5 +439,5 @@ namespace gdt {
     }
     
 
-  } // ::gdt::viewer
-} // ::gdt
+  } // ::owl::viewer
+} // ::owl

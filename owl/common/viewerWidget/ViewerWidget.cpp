@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018 Ingo Wald                                                 //
+// Copyright 2018-2019 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -24,7 +24,7 @@
 #include "InspectMode.h"
 #include "FlyMode.h"
 
-namespace gdt {
+namespace owl {
   namespace viewer {
 
     // ==================================================================
@@ -144,5 +144,5 @@ namespace gdt {
       if (cameraManip) cameraManip->special(key,where);
     }
 
-  } // ::gdt::viewer
-} // ::gdt
+  } // ::owl::viewer
+} // ::owl
