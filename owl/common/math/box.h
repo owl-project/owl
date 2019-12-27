@@ -127,7 +127,7 @@ namespace owl {
       { return box_t(min(lower,other),max(upper,other)); }
       /*! returns new box including both ourselves _and_ the given point */
       inline __both__ box_t including(const box_t &other) const
-      { return box_t(min(lower,other.min),max(upper,other.max)); }
+      { return box_t(min(lower,other.lower),max(upper,other.upper)); }
 
     
       /*! returns new box including both ourselves _and_ the given point */
