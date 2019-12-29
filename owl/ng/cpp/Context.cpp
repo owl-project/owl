@@ -120,9 +120,14 @@ namespace owl {
   }
   
 
-  GeomGroup::SP Context::trianglesGroupCreate(size_t numChildren)
+  GeomGroup::SP Context::trianglesGeomGroupCreate(size_t numChildren)
   {
-    return std::make_shared<TrianglesGroup>(this,numChildren);
+    return std::make_shared<TrianglesGeomGroup>(this,numChildren);
+  }
+
+  GeomGroup::SP Context::userGeomGroupCreate(size_t numChildren)
+  {
+    return std::make_shared<UserGeomGroup>(this,numChildren);
   }
 
 

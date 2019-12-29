@@ -363,6 +363,11 @@ extern "C" {
   LLOResult lloUserGeomSetBoundsBuffer(LLOContext llo,
                                        int32_t geomID,
                                        int32_t bufferID);
+
+  OWL_LL_INTERFACE
+  LLOResult lloUserGeomSetPrimCount(LLOContext llo,
+                                    int32_t geomID,
+                                    int32_t numPrims);
   
   OWL_LL_INTERFACE
   LLOResult lloInstanceGroupCreate(LLOContext     llo,

@@ -295,29 +295,25 @@ namespace owl {
       assert("check for valid ID" && groupID >= 0);
       assert("check for valid ID" && groupID < groups.size());
       assert("check group ID is available" && groups[groupID] == nullptr);
-        
-      assert("check for valid combinations of child list" &&
-             ((geomIDs == nullptr && childCount == 0) ||
-              (geomIDs != nullptr && childCount >  0)));
-        
+
       UserGeomGroup *group
         = new UserGeomGroup(childCount,
                             sbt.rangeAllocator.alloc(childCount));
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
 
-      assert("currently have to specify all children at creation time" &&
-             geomIDs != nullptr);
       // set children - todo: move to separate (api?) function(s)!?
-      for (int childID=0;childID<childCount;childID++) {
-        int geomID = geomIDs[childID];
-        assert("check geom child geom ID is valid" && geomID >= 0);
-        assert("check geom child geom ID is valid" && geomID <  geoms.size());
-        Geom *geom = geoms[geomID];
-        assert("check geom indexed child geom valid" && geom != nullptr);
-        assert("check geom is valid type" && geom->primType() == USER);
-        geom->numTimesReferenced++;
-        group->children[childID] = geom;
+      if (geomIDs) {
+        for (int childID=0;childID<childCount;childID++) {
+          int geomID = geomIDs[childID];
+          assert("check geom child geom ID is valid" && geomID >= 0);
+          assert("check geom child geom ID is valid" && geomID <  geoms.size());
+          Geom *geom = geoms[geomID];
+          assert("check geom indexed child geom valid" && geom != nullptr);
+          assert("check geom is valid type" && geom->primType() == USER);
+          geom->numTimesReferenced++;
+          group->children[childID] = geom;
+        }
       }
     }
 

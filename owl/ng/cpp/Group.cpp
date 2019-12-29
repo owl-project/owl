@@ -24,6 +24,13 @@ namespace owl {
     lloGroupAccelBuild(context->llo,this->ID);
   }
 
+  void UserGeomGroup::buildAccel()
+  {
+    PING;
+    throw std::runtime_error("todo: call bounds prog");
+    lloGroupAccelBuild(context->llo,this->ID);
+  }
+
   void GeomGroup::setChild(int childID, Geom::SP child)
   {
     assert(childID >= 0);
@@ -44,12 +51,20 @@ namespace owl {
       children(numChildren)
   {}
   
-  TrianglesGroup::TrianglesGroup(Context *const context,
+  TrianglesGeomGroup::TrianglesGeomGroup(Context *const context,
                                  size_t numChildren)
     : GeomGroup(context,numChildren)
   {
     lloTrianglesGeomGroupCreate(context->llo,this->ID,
                                 nullptr,numChildren);
+  }
+  
+  UserGeomGroup::UserGeomGroup(Context *const context,
+                                 size_t numChildren)
+    : GeomGroup(context,numChildren)
+  {
+    lloUserGeomGroupCreate(context->llo,this->ID,
+                           nullptr,numChildren);
   }
   
 } // ::owl

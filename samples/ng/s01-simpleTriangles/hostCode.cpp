@@ -123,7 +123,7 @@ int main(int ac, char **av)
   // the group/accel for that mesh
   // ------------------------------------------------------------------
   OWLGroup trianglesGroup
-    = owlTrianglesGroupCreate(context,1,&trianglesGeom);
+    = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
 
   // ##################################################################

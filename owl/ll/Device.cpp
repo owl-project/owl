@@ -868,6 +868,15 @@ namespace owl {
       user->d_boundsMemory = addPointerOffset(buffer->get(),offset);
     }
     
+    void Device::userGeomSetPrimCount(int geomID,
+                                           int count)
+    {
+      UserGeom *user
+        = checkGetUserGeom(geomID);
+      assert("double-check valid geom" && user);
+      user->setPrimCount(count);
+    }
+    
 
     void Device::trianglesGeomSetVertexBuffer(int geomID,
                                               int bufferID,

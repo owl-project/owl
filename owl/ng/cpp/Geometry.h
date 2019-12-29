@@ -62,7 +62,7 @@ namespace owl {
     typedef std::shared_ptr<UserGeomType> SP;
     
     UserGeomType(Context *const context,
-                     size_t varStructSize,
+                 size_t varStructSize,
                  const std::vector<OWLVarDecl> &varDecls);
 
     virtual void setIntersectProg(int rayType,
@@ -112,6 +112,7 @@ namespace owl {
              GeomType::SP geometryType);
 
     virtual std::string toString() const { return "UserGeom"; }
+    void setPrimCount(size_t count);
   };
   
 } // ::owl

@@ -180,80 +180,117 @@ int main(int ac, char **av)
   OWLBuffer frameBuffer
     = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
 
+  // ----------- metal -----------
   OWLBuffer metalSpheresBuffer
     = owlDeviceBufferCreate(context,OWL_USER_TYPE(metalSpheres[0]),
                             metalSpheres.size(),metalSpheres.data());
   OWLGeom metalSpheresGeom
-    = owlUserGeomCreate(context,metalSpheresGeomType,metalSpheres.size());
-  
-#if 0
+    = owlGeomCreate(context,metalSpheresGeomType);
+  owlGeomSetPrimCount(metalSpheresGeom,metalSpheres.size());
+  owlGeomSetBuffer(metalSpheresGeom,"prims",metalSpheresBuffer);
 
-  // ------------------------------------------------------------------
-  // alloc geom
-  // ------------------------------------------------------------------
-  enum { LAMBERTIAN_SPHERES_GEOM=0,
-         DIELECTRIC_SPHERES_GEOM,
-         METAL_SPHERES_GEOM,
-         NUM_GEOMS };
-  lloAllocGeoms(llo,NUM_GEOMS);
-  lloUserGeomCreate(llo,/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
-                     /* type/PG ID */LAMBERTIAN_SPHERES_TYPE,
-                     /* numprims   */lambertianSpheres.size());
-  lloDeviceBufferCreate(llo,LAMBERTIAN_SPHERES_BUFFER,
-                        lambertianSpheres.size()*sizeof(lambertianSpheres[0]),
-                        lambertianSpheres.data());
-  lloUserGeomCreate(llo,/* geom ID    */DIELECTRIC_SPHERES_GEOM,
-                     /* type/PG ID */DIELECTRIC_SPHERES_TYPE,
-                     /* numprims   */dielectricSpheres.size());
-  lloDeviceBufferCreate(llo,DIELECTRIC_SPHERES_BUFFER,
-                        dielectricSpheres.size()*sizeof(dielectricSpheres[0]),
-                        dielectricSpheres.data());
-  lloUserGeomCreate(llo,/* geom ID    */METAL_SPHERES_GEOM,
-                     /* type/PG ID */METAL_SPHERES_TYPE,
-                     /* numprims   */metalSpheres.size());
-  lloDeviceBufferCreate(llo,METAL_SPHERES_BUFFER,
-                        metalSpheres.size()*sizeof(metalSpheres[0]),
-                        metalSpheres.data());
+  // ----------- lambertian -----------
+  OWLBuffer lambertianSpheresBuffer
+    = owlDeviceBufferCreate(context,OWL_USER_TYPE(lambertianSpheres[0]),
+                            lambertianSpheres.size(),lambertianSpheres.data());
+  OWLGeom lambertianSpheresGeom
+    = owlGeomCreate(context,lambertianSpheresGeomType);
+  owlGeomSetPrimCount(lambertianSpheresGeom,lambertianSpheres.size());
+  owlGeomSetBuffer(lambertianSpheresGeom,"prims",lambertianSpheresBuffer);
+
+  // ----------- dielectric -----------
+  OWLBuffer dielectricSpheresBuffer
+    = owlDeviceBufferCreate(context,OWL_USER_TYPE(dielectricSpheres[0]),
+                            dielectricSpheres.size(),dielectricSpheres.data());
+  OWLGeom dielectricSpheresGeom
+    = owlGeomCreate(context,dielectricSpheresGeomType);
+  owlGeomSetPrimCount(dielectricSpheresGeom,dielectricSpheres.size());
+  owlGeomSetBuffer(dielectricSpheresGeom,"prims",dielectricSpheresBuffer);
+
+  // // ------------------------------------------------------------------
+  // // alloc geom
+  // // ------------------------------------------------------------------
+  // enum { LAMBERTIAN_SPHERES_GEOM=0,
+  //        DIELECTRIC_SPHERES_GEOM,
+  //        METAL_SPHERES_GEOM,
+  //        NUM_GEOMS };
+  // lloAllocGeoms(llo,NUM_GEOMS);
+  // lloUserGeomCreate(llo,/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
+  //                    /* type/PG ID */LAMBERTIAN_SPHERES_TYPE,
+  //                    /* numprims   */lambertianSpheres.size());
+  // lloDeviceBufferCreate(llo,LAMBERTIAN_SPHERES_BUFFER,
+  //                       lambertianSpheres.size()*sizeof(lambertianSpheres[0]),
+  //                       lambertianSpheres.data());
+  // lloUserGeomCreate(llo,/* geom ID    */DIELECTRIC_SPHERES_GEOM,
+  //                    /* type/PG ID */DIELECTRIC_SPHERES_TYPE,
+  //                    /* numprims   */dielectricSpheres.size());
+  // lloDeviceBufferCreate(llo,DIELECTRIC_SPHERES_BUFFER,
+  //                       dielectricSpheres.size()*sizeof(dielectricSpheres[0]),
+  //                       dielectricSpheres.data());
+  // lloUserGeomCreate(llo,/* geom ID    */METAL_SPHERES_GEOM,
+  //                    /* type/PG ID */METAL_SPHERES_TYPE,
+  //                    /* numprims   */metalSpheres.size());
+  // lloDeviceBufferCreate(llo,METAL_SPHERES_BUFFER,
+  //                       metalSpheres.size()*sizeof(metalSpheres[0]),
+  //                       metalSpheres.data());
   
-  // ##################################################################
-  // set up all *ACCELS* we need to trace into those groups
-  // ##################################################################
+  // // ##################################################################
+  // // set up all *ACCELS* we need to trace into those groups
+  // // ##################################################################
   
-  enum { WORLD_GROUP=0,
-         NUM_GROUPS };
-  lloAllocGroups(llo,NUM_GROUPS);
-  int geomsInGroup[] = {
-    LAMBERTIAN_SPHERES_GEOM,
-    DIELECTRIC_SPHERES_GEOM,
-    METAL_SPHERES_GEOM
+  // enum { WORLD_GROUP=0,
+  //        NUM_GROUPS };
+  // lloAllocGroups(llo,NUM_GROUPS);
+  // int geomsInGroup[] = {
+  //   LAMBERTIAN_SPHERES_GEOM,
+  //   DIELECTRIC_SPHERES_GEOM,
+  //   METAL_SPHERES_GEOM
+  // };
+  // lloUserGeomGroupCreate(llo,/* group ID */WORLD_GROUP,
+  //                        /* geoms in group, pointer */ geomsInGroup,
+  //                        /* geoms in group, count   */ NUM_GEOMS);
+  OWLGeom  userGeoms[] = {
+                          lambertianSpheresGeom,
+                          metalSpheresGeom,
+                          dielectricSpheresGeom
   };
-  lloUserGeomGroupCreate(llo,/* group ID */WORLD_GROUP,
-                         /* geoms in group, pointer */ geomsInGroup,
-                         /* geoms in group, count   */ NUM_GEOMS);
-  lloGroupBuildPrimitiveBounds
-    (llo,WORLD_GROUP,max3(sizeof(MetalSpheresGeom),
-                      sizeof(DielectricSpheresGeom),
-                      sizeof(LambertianSpheresGeom)),
-     [&](uint8_t *output, int devID, int geomID, int childID) {
-      switch(geomID) {
-      case LAMBERTIAN_SPHERES_GEOM:
-        ((LambertianSpheresGeom*)output)->prims
-          = (LambertianSphere*)lloBufferGetPointer(llo,LAMBERTIAN_SPHERES_BUFFER,devID);
-        break;
-      case DIELECTRIC_SPHERES_GEOM:
-        ((DielectricSpheresGeom*)output)->prims
-          = (DielectricSphere*)lloBufferGetPointer(llo,DIELECTRIC_SPHERES_BUFFER,devID);
-        break;
-      case METAL_SPHERES_GEOM:
-        ((MetalSpheresGeom*)output)->prims
-          = (MetalSphere*)lloBufferGetPointer(llo,METAL_SPHERES_BUFFER,devID);
-        break;
-      default:
-        assert(0);
-      }
-    });
-  lloGroupAccelBuild(llo,WORLD_GROUP);
+  OWLGroup userGeomGroup
+    = owlUserGeomGroupCreate(context,3,userGeoms);
+  // lloGroupBuildPrimitiveBounds
+  //   (llo,WORLD_GROUP,max3(sizeof(MetalSpheresGeom),
+  //                     sizeof(DielectricSpheresGeom),
+  //                     sizeof(LambertianSpheresGeom)),
+  //    [&](uint8_t *output, int devID, int geomID, int childID) {
+  //     switch(geomID) {
+  //     case LAMBERTIAN_SPHERES_GEOM:
+  //       ((LambertianSpheresGeom*)output)->prims
+  //         = (LambertianSphere*)lloBufferGetPointer(llo,LAMBERTIAN_SPHERES_BUFFER,devID);
+  //       break;
+  //     case DIELECTRIC_SPHERES_GEOM:
+  //       ((DielectricSpheresGeom*)output)->prims
+  //         = (DielectricSphere*)lloBufferGetPointer(llo,DIELECTRIC_SPHERES_BUFFER,devID);
+  //       break;
+  //     case METAL_SPHERES_GEOM:
+  //       ((MetalSpheresGeom*)output)->prims
+  //         = (MetalSphere*)lloBufferGetPointer(llo,METAL_SPHERES_BUFFER,devID);
+  //       break;
+  //     default:
+  //       assert(0);
+  //     }
+  //   });
+  // lloGroupAccelBuild(llo,WORLD_GROUP);
+  owlGroupBuildAccel(userGeomGroup);
 
+
+
+  
+  // ##################################################################
+  // set miss and raygen program required for SBT
+  // ##################################################################
+
+
+
+#if 0
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################

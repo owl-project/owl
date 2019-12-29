@@ -252,7 +252,13 @@ namespace owl {
           numPrims(numPrims)
       {}
       virtual PrimType primType() { return USER; }
-
+      void setPrimCount(size_t numPrims)
+      {
+        assert("check size hasn't previously been set (changing not yet implemented...)"
+               && this->numPrims == 0);
+        this->numPrims = numPrims;
+      }
+      
       /*! the pointer to the device-side bounds array. Note this
           pointer _can_ be the same as 'boundsBuffer' (if *we* manage
           that memory), but in the case of user-supplied bounds buffer
@@ -489,6 +495,9 @@ namespace owl {
                             numRayTypes) */
                           int geomTypeID,
                           int numPrims);
+
+      void userGeomSetPrimCount(int geomID,
+                                int numPrims);
 
       void trianglesGeomCreate(int geomID,
                                /*! the "logical" hit group ID:
