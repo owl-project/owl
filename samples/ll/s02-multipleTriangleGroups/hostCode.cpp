@@ -155,9 +155,9 @@ int main(int ac, char **av)
   // lloAllocGeoms(llo,8);
   lloAllocGeoms(llo,8);
   for (int i=0;i<8;i++) {
-    vec3f delta((i&1) ? -3:+3,
-                (i&2) ? -3:+3,
-                (i&4) ? -3:+3);
+    vec3f delta((i&1) ? -3.f:+3.f,
+                (i&2) ? -3.f:+3.f,
+                (i&4) ? -3.f:+3.f);
     std::vector<vec3f> vertices;
     for (auto v : unitVertices)
       vertices.push_back(1.5f*v+delta);

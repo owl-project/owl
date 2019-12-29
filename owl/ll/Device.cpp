@@ -1008,11 +1008,11 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
-      for (auto group : groups) {
+       for (auto group : groups) {
         if (!group) continue;
         if (!group->containsGeom()) continue;
         GeomGroup *gg = (GeomGroup *)group;
-        const int sbtOffset = gg->sbtOffset;
+        const int sbtOffset = (int)gg->sbtOffset;
         for (int childID=0;childID<gg->children.size();childID++) {
           Geom *geom = gg->children[childID];
           if (!geom) continue;
