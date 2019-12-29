@@ -36,7 +36,8 @@
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << OWL_TERMINAL_DEFAULT << std::endl
 
-#define MANAGED_TEST 0
+// #define MANAGED_TEST 1
+
 namespace owl {
   namespace ll {
 
@@ -45,6 +46,8 @@ namespace owl {
                                            WriteUserGeomBoundsDataCB cb,
                                            const void *cbData)
     {
+      PING;
+      
       context->pushActive();
       UserGeomGroup *ugg
         = checkGetUserGeomGroup(groupID);
@@ -52,7 +55,6 @@ namespace owl {
       std::vector<uint8_t> userGeomData(maxGeomDataSize);
       DeviceMemory tempMem;
 #if MANAGED_TEST
-      PING;
       tempMem.allocManaged(maxGeomDataSize);
 #else
       tempMem.alloc(maxGeomDataSize);
@@ -68,7 +70,7 @@ namespace owl {
         ug->internalBufferForBoundsProgram.alloc(ug->numPrims*sizeof(box3f));
 #endif
         ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
-
+        
         if (childID < 10)
           LOG("calling user geom callback to set up user geometry bounds call data");
         else if (childID == 10)
@@ -82,7 +84,6 @@ namespace owl {
         uint32_t numPrims = (uint32_t)ug->numPrims;
         vec3i blockDims(owl::common::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
         vec3i gridDims(boundsFuncBlockSize,1,1);
-
         
         tempMem.upload(userGeomData);
         
@@ -93,9 +94,12 @@ namespace owl {
           &d_boundsArray,
           (void *)&numPrims
         };
-
+        
         GeomType *gt = checkGetGeomType(ug->geomTypeID);
         CUstream stream = context->stream;
+        if (!gt->boundsFuncKernel)
+          throw std::runtime_error("bounds kernel set, but not yet compiled - did you forget to call BuildPrograms() before (User)GroupAccelBuild()!?");
+        
         CUresult rc
           = cuLaunchKernel(gt->boundsFuncKernel,
                            blockDims.x,blockDims.y,blockDims.z,

@@ -26,8 +26,22 @@ namespace owl {
 
   void UserGeomGroup::buildAccel()
   {
-    PING;
-    throw std::runtime_error("todo: call bounds prog");
+    size_t maxVarSize = 0;
+    for (auto child : geometries) {
+      assert(child);
+      assert(child->type);
+      maxVarSize = std::max(maxVarSize,child->type->varStructSize);
+    }
+
+    // TODO: do this only if there's no explicit bounds buffer set
+    lloGroupBuildPrimitiveBounds
+      (context->llo,this->ID,maxVarSize,
+       [&](uint8_t *output, int devID, int geomID, int childID) {
+        assert(childID >= 0 && childID < geometries.size());
+        Geom::SP child = geometries[childID];
+        assert(child);
+        child->writeVariables(output,devID);
+      });
     lloGroupAccelBuild(context->llo,this->ID);
   }
 
