@@ -157,11 +157,6 @@ OWL_API OWLGeom
 owlGeomCreate(OWLContext context,
               OWLGeomType type);
 
-OWL_API OWLGeom
-owlUserGeomCreate(OWLContext context,
-                  OWLGeomType type,
-                  size_t      primCount);
-
 OWL_API OWLRayGen
 owlRayGenCreate(OWLContext  context,
                 OWLModule   module,
@@ -184,9 +179,9 @@ owlUserGeomGroupCreate(OWLContext context,
                        OWLGeom   *initValues);
 
 OWL_API OWLGroup
-owlTrianglesGroupCreate(OWLContext context,
-                        size_t     numGeometries,
-                        OWLGeom   *initValues);
+owlTrianglesGeomGroupCreate(OWLContext context,
+                            size_t     numGeometries,
+                            OWLGeom   *initValues);
 
 OWL_API OWLGroup
 owlInstanceGroupCreate(OWLContext context,
@@ -262,6 +257,10 @@ owlGeomTypeSetBoundsProg(OWLGeomType type,
                          OWLModule module,
                          const char *progName);
 
+OWL_API void
+owlGeomSetPrimCount(OWLGeom geom,
+                         size_t  primCount);
+
 
 // -------------------------------------------------------
 // Release for the various types
@@ -296,7 +295,6 @@ OWL_API void owlVariableSet2iv(OWLVariable variable, const int *value);
 OWL_API void owlVariableSet3fv(OWLVariable variable, const float *value);
 OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
 OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
-
 
 
 

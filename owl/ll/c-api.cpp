@@ -238,6 +238,19 @@ namespace owl {
                              (int32_t)numPrims);
         });
     }
+
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloUserGeomSetPrimCount(LLOContext llo,
+                                      int32_t geomID,
+                                      int32_t numPrims)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->userGeomSetPrimCount(geomID,
+                                   numPrims);
+         });
+    }
     
     extern "C" OWL_LL_INTERFACE
     LLOResult lloGeomTypeClosestHit(LLOContext llo,

@@ -24,6 +24,27 @@ namespace owl {
     lloGroupAccelBuild(context->llo,this->ID);
   }
 
+  void UserGeomGroup::buildAccel()
+  {
+    size_t maxVarSize = 0;
+    for (auto child : geometries) {
+      assert(child);
+      assert(child->type);
+      maxVarSize = std::max(maxVarSize,child->type->varStructSize);
+    }
+
+    // TODO: do this only if there's no explicit bounds buffer set
+    lloGroupBuildPrimitiveBounds
+      (context->llo,this->ID,maxVarSize,
+       [&](uint8_t *output, int devID, int geomID, int childID) {
+        assert(childID >= 0 && childID < geometries.size());
+        Geom::SP child = geometries[childID];
+        assert(child);
+        child->writeVariables(output,devID);
+      });
+    lloGroupAccelBuild(context->llo,this->ID);
+  }
+
   void GeomGroup::setChild(int childID, Geom::SP child)
   {
     assert(childID >= 0);
@@ -44,12 +65,20 @@ namespace owl {
       children(numChildren)
   {}
   
-  TrianglesGroup::TrianglesGroup(Context *const context,
+  TrianglesGeomGroup::TrianglesGeomGroup(Context *const context,
                                  size_t numChildren)
     : GeomGroup(context,numChildren)
   {
     lloTrianglesGeomGroupCreate(context->llo,this->ID,
                                 nullptr,numChildren);
+  }
+  
+  UserGeomGroup::UserGeomGroup(Context *const context,
+                                 size_t numChildren)
+    : GeomGroup(context,numChildren)
+  {
+    lloUserGeomGroupCreate(context->llo,this->ID,
+                           nullptr,numChildren);
   }
   
 } // ::owl

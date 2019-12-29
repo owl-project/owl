@@ -292,6 +292,13 @@ namespace owl {
         device->userGeomSetBoundsBuffer(geomID,bufferID);
     }
     
+    void DeviceGroup::userGeomSetPrimCount(int geomID,
+                                           int count)
+    {
+      for (auto device : devices) 
+        device->userGeomSetPrimCount(geomID,count);
+    }
+    
     void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
                                                    int bufferID,
                                                    int count,

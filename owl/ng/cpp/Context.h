@@ -63,7 +63,10 @@ namespace owl {
     createInstanceGroup(size_t numChildren);
     
     GeomGroup::SP
-    trianglesGroupCreate(size_t numChildren);
+    trianglesGeomGroupCreate(size_t numChildren);
+    
+    GeomGroup::SP
+    userGeomGroupCreate(size_t numChildren);
     
     Buffer::SP
     deviceBufferCreate(OWLDataType type,

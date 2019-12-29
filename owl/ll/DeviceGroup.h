@@ -280,6 +280,8 @@ namespace owl {
         bounds). Only one of the three methods can be set at any
         given time */
       void userGeomSetBoundsBuffer(int geomID, int bufferID);
+      void userGeomSetPrimCount(int geomID,
+                                int numPrims);
 
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int bufferID,

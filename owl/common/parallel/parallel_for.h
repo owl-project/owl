@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "gdt/gdt.h"
+#include "../owl-common.h"
 // std
 #include <mutex>
 // tbb
@@ -26,7 +26,7 @@
 
 // define a macro that tells other includes (eg, in array2D and
 // array3D that we do have parallel for)
-#define HAVE_GDT_PARALLEL_FOR 1
+#define HAVE_OWL_PARALLEL_FOR 1
 
 namespace owl {
   namespace common {

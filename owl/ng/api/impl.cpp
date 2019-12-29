@@ -228,22 +228,48 @@ namespace owl {
   }
 
   OWL_API OWLGroup
-  owlTrianglesGroupCreate(OWLContext _context,
-                          size_t numGeometries,
-                          OWLGeom *initValues)
+  owlTrianglesGeomGroupCreate(OWLContext _context,
+                              size_t numGeometries,
+                              OWLGeom *initValues)
   {
     LOG_API_CALL();
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
-    GeomGroup::SP  group = context->trianglesGroupCreate(numGeometries);
+    GeomGroup::SP  group = context->trianglesGeomGroupCreate(numGeometries);
     assert(group);
 
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     if (initValues) {
       for (int i = 0; i < numGeometries; i++) {
         //owlGeomGroupSetChild(_group, i, initValues[i]);
-        Geom::SP child = ((APIHandle *)initValues[i])->get<Geom>();
+        Geom::SP child = ((APIHandle *)initValues[i])->get<TrianglesGeom>();
+        assert(child);
+        group->setChild(i, child);
+      }
+    }
+    assert(_group);
+    return _group;
+  }
+
+  OWL_API OWLGroup
+  owlUserGeomGroupCreate(OWLContext _context,
+                         size_t numGeometries,
+                         OWLGeom *initValues)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    GeomGroup::SP  group = context->userGeomGroupCreate(numGeometries);
+    assert(group);
+    
+    OWLGroup _group = (OWLGroup)context->createHandle(group);
+    if (initValues) {
+      for (int i = 0; i < numGeometries; i++) {
+        //owlGeomGroupSetChild(_group, i, initValues[i]);
+        Geom::SP child = ((APIHandle *)initValues[i])->get<UserGeom>();
+        assert(child);
         group->setChild(i, child);
       }
     }
@@ -339,14 +365,6 @@ namespace owl {
     assert(geometryType);
     return (OWLGeomType)context->createHandle(geometryType);
   }
-
-  OWL_API OWLGeom
-  owlUserGeomCreate(OWLContext      _context,
-                    OWLGeomType _geometryType,
-                    size_t primCount)
-  {
-    OWL_NOTIMPLEMENTED;
-  }
   
   OWL_API OWLGeom
   owlGeomCreate(OWLContext      _context,
@@ -368,6 +386,15 @@ namespace owl {
     assert(geometry);
 
     return (OWLGeom)context->createHandle(geometry);
+  }
+
+  OWL_API void
+  owlGeomSetPrimCount(OWLGeom _geom,
+                           size_t  primCount)
+  {
+    assert(_geom);
+    UserGeom::SP geom = ((APIHandle *)_geom)->get<UserGeom>();
+    geom->setPrimCount(primCount);
   }
 
   
@@ -468,7 +495,7 @@ namespace owl {
     Group::SP group
       = ((APIHandle *)_group)->get<Group>();
     assert(group);
-
+    
     group->buildAccel();
   }  
 

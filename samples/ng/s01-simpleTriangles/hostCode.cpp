@@ -123,7 +123,7 @@ int main(int ac, char **av)
   // the group/accel for that mesh
   // ------------------------------------------------------------------
   OWLGroup trianglesGroup
-    = owlTrianglesGroupCreate(context,1,&trianglesGeom);
+    = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
 
   // ##################################################################
@@ -133,7 +133,6 @@ int main(int ac, char **av)
   // -------------------------------------------------------
   // set up miss prog 
   // -------------------------------------------------------
-
   OWLVarDecl missProgVars[]
     = {
        { "color0", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color0)},
@@ -152,7 +151,6 @@ int main(int ac, char **av)
   // -------------------------------------------------------
   // set up ray gen program
   // -------------------------------------------------------
-
   OWLVarDecl rayGenVars[] = {
     { "deviceIndex",   OWL_DEVICE, OWL_OFFSETOF(RayGenData,deviceIndex)},
     { "deviceCount",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceCount)},

@@ -35,7 +35,7 @@
 
 extern "C" char ptxCode[];
 
-const char *outFileName = "ll05-rtow.png";
+const char *outFileName = "ng05-rtow.png";
 const vec2i fbSize(1600,800);
 const vec3f lookFrom(13, 2, 3);
 const vec3f lookAt(0, 0, 0);
@@ -45,9 +45,6 @@ const float fovy = 20.f;
 std::vector<DielectricSphere> dielectricSpheres;
 std::vector<LambertianSphere> lambertianSpheres;
 std::vector<MetalSphere>      metalSpheres;
-
-inline size_t max3(size_t a, size_t b, size_t c)
-{ return std::max(std::max(a,b),c); }
 
 inline float rnd()
 {
@@ -145,8 +142,6 @@ int main(int ac, char **av)
                         dielectricSpheresGeomVars,-1);
   owlGeomTypeSetClosestHit(dielectricSpheresGeomType,0,
                            module,"DielectricSpheres");
-  owlGeomTypeSetClosestHit(dielectricSpheresGeomType,0,
-                           module,"DielectricSpheres");
   owlGeomTypeSetIntersectProg(dielectricSpheresGeomType,0,
                               module,"DielectricSpheres");
   owlGeomTypeSetBoundsProg(dielectricSpheresGeomType,
@@ -164,12 +159,14 @@ int main(int ac, char **av)
                         lambertianSpheresGeomVars,-1);
   owlGeomTypeSetClosestHit(lambertianSpheresGeomType,0,
                            module,"LambertianSpheres");
-  owlGeomTypeSetClosestHit(lambertianSpheresGeomType,0,
-                           module,"LambertianSpheres");
   owlGeomTypeSetIntersectProg(lambertianSpheresGeomType,0,
                               module,"LambertianSpheres");
   owlGeomTypeSetBoundsProg(lambertianSpheresGeomType,
                            module,"LambertianSpheres");
+  // make sure to do that *before* setting up the geometry, since the
+  // user geometry group will need the compiled bounds programs upon
+  // accelBuild()
+  owlBuildPrograms(context);
 
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
@@ -180,180 +177,200 @@ int main(int ac, char **av)
   OWLBuffer frameBuffer
     = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
 
+  // ----------- metal -----------
   OWLBuffer metalSpheresBuffer
     = owlDeviceBufferCreate(context,OWL_USER_TYPE(metalSpheres[0]),
                             metalSpheres.size(),metalSpheres.data());
   OWLGeom metalSpheresGeom
-    = owlUserGeomCreate(context,metalSpheresGeomType,metalSpheres.size());
-  
-#if 0
+    = owlGeomCreate(context,metalSpheresGeomType);
+  owlGeomSetPrimCount(metalSpheresGeom,metalSpheres.size());
+  owlGeomSetBuffer(metalSpheresGeom,"prims",metalSpheresBuffer);
 
-  // ------------------------------------------------------------------
-  // alloc geom
-  // ------------------------------------------------------------------
-  enum { LAMBERTIAN_SPHERES_GEOM=0,
-         DIELECTRIC_SPHERES_GEOM,
-         METAL_SPHERES_GEOM,
-         NUM_GEOMS };
-  lloAllocGeoms(llo,NUM_GEOMS);
-  lloUserGeomCreate(llo,/* geom ID    */LAMBERTIAN_SPHERES_GEOM,
-                     /* type/PG ID */LAMBERTIAN_SPHERES_TYPE,
-                     /* numprims   */lambertianSpheres.size());
-  lloDeviceBufferCreate(llo,LAMBERTIAN_SPHERES_BUFFER,
-                        lambertianSpheres.size()*sizeof(lambertianSpheres[0]),
-                        lambertianSpheres.data());
-  lloUserGeomCreate(llo,/* geom ID    */DIELECTRIC_SPHERES_GEOM,
-                     /* type/PG ID */DIELECTRIC_SPHERES_TYPE,
-                     /* numprims   */dielectricSpheres.size());
-  lloDeviceBufferCreate(llo,DIELECTRIC_SPHERES_BUFFER,
-                        dielectricSpheres.size()*sizeof(dielectricSpheres[0]),
-                        dielectricSpheres.data());
-  lloUserGeomCreate(llo,/* geom ID    */METAL_SPHERES_GEOM,
-                     /* type/PG ID */METAL_SPHERES_TYPE,
-                     /* numprims   */metalSpheres.size());
-  lloDeviceBufferCreate(llo,METAL_SPHERES_BUFFER,
-                        metalSpheres.size()*sizeof(metalSpheres[0]),
-                        metalSpheres.data());
+  // ----------- lambertian -----------
+  OWLBuffer lambertianSpheresBuffer
+    = owlDeviceBufferCreate(context,OWL_USER_TYPE(lambertianSpheres[0]),
+                            lambertianSpheres.size(),lambertianSpheres.data());
+  OWLGeom lambertianSpheresGeom
+    = owlGeomCreate(context,lambertianSpheresGeomType);
+  owlGeomSetPrimCount(lambertianSpheresGeom,lambertianSpheres.size());
+  owlGeomSetBuffer(lambertianSpheresGeom,"prims",lambertianSpheresBuffer);
+
+  // ----------- dielectric -----------
+  OWLBuffer dielectricSpheresBuffer
+    = owlDeviceBufferCreate(context,OWL_USER_TYPE(dielectricSpheres[0]),
+                            dielectricSpheres.size(),dielectricSpheres.data());
+  OWLGeom dielectricSpheresGeom
+    = owlGeomCreate(context,dielectricSpheresGeomType);
+  owlGeomSetPrimCount(dielectricSpheresGeom,dielectricSpheres.size());
+  owlGeomSetBuffer(dielectricSpheresGeom,"prims",dielectricSpheresBuffer);
+
+  // // ##################################################################
+  // // set up all *ACCELS* we need to trace into those groups
+  // // ##################################################################
   
-  // ##################################################################
-  // set up all *ACCELS* we need to trace into those groups
-  // ##################################################################
-  
-  enum { WORLD_GROUP=0,
-         NUM_GROUPS };
-  lloAllocGroups(llo,NUM_GROUPS);
-  int geomsInGroup[] = {
-    LAMBERTIAN_SPHERES_GEOM,
-    DIELECTRIC_SPHERES_GEOM,
-    METAL_SPHERES_GEOM
+  OWLGeom  userGeoms[] = {
+    lambertianSpheresGeom,
+    metalSpheresGeom,
+    dielectricSpheresGeom
   };
-  lloUserGeomGroupCreate(llo,/* group ID */WORLD_GROUP,
-                         /* geoms in group, pointer */ geomsInGroup,
-                         /* geoms in group, count   */ NUM_GEOMS);
-  lloGroupBuildPrimitiveBounds
-    (llo,WORLD_GROUP,max3(sizeof(MetalSpheresGeom),
-                      sizeof(DielectricSpheresGeom),
-                      sizeof(LambertianSpheresGeom)),
-     [&](uint8_t *output, int devID, int geomID, int childID) {
-      switch(geomID) {
-      case LAMBERTIAN_SPHERES_GEOM:
-        ((LambertianSpheresGeom*)output)->prims
-          = (LambertianSphere*)lloBufferGetPointer(llo,LAMBERTIAN_SPHERES_BUFFER,devID);
-        break;
-      case DIELECTRIC_SPHERES_GEOM:
-        ((DielectricSpheresGeom*)output)->prims
-          = (DielectricSphere*)lloBufferGetPointer(llo,DIELECTRIC_SPHERES_BUFFER,devID);
-        break;
-      case METAL_SPHERES_GEOM:
-        ((MetalSpheresGeom*)output)->prims
-          = (MetalSphere*)lloBufferGetPointer(llo,METAL_SPHERES_BUFFER,devID);
-        break;
-      default:
-        assert(0);
-      }
-    });
-  lloGroupAccelBuild(llo,WORLD_GROUP);
+  OWLGroup world
+    = owlUserGeomGroupCreate(context,3,userGeoms);
+  owlGroupBuildAccel(world);
 
+  // ##################################################################
+  // set miss and raygen programs
+  // ##################################################################
+  
+  // -------------------------------------------------------
+  // set up miss prog 
+  // -------------------------------------------------------
+  OWLVarDecl missProgVars[] = {
+    { /* sentinel to mark end of list */ }
+  };
+  // ........... create object  ............................
+  OWLMissProg missProg
+    = owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
+                        missProgVars,-1);
+  
+  // ........... set variables  ............................
+  /* nothing to set */
+
+  // -------------------------------------------------------
+  // set up ray gen program
+  // -------------------------------------------------------
+  OWLVarDecl rayGenVars[] = {
+    { "deviceIndex",   OWL_DEVICE, OWL_OFFSETOF(RayGenData,deviceIndex)},
+    { "deviceCount",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceCount)},
+    { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
+    { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
+    { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
+    { "camera.org",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.origin)},
+    { "camera.llc",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.lower_left_corner)},
+    { "camera.horiz",  OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.horizontal)},
+    { "camera.vert",   OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.vertical)},
+    { /* sentinel to mark end of list */ }
+  };
+
+  // ........... create object  ............................
+  OWLRayGen rayGen
+    = owlRayGenCreate(context,module,"rayGen",
+                      sizeof(RayGenData),
+                      rayGenVars,-1);
+
+  // ........... compute variable values  ..................
+  const float vfov = fovy;
+  const vec3f vup = lookUp;
+  const float aspect = fbSize.x / float(fbSize.y);
+  const float theta = vfov * ((float)M_PI) / 180.0f;
+  const float half_height = tanf(theta / 2.0f);
+  const float half_width = aspect * half_height;
+  const float aperture = 0.f;
+  const float focusDist = 10.f;
+  const vec3f origin = lookFrom;
+  const vec3f w = normalize(lookFrom - lookAt);
+  const vec3f u = normalize(cross(vup, w));
+  const vec3f v = cross(w, u);
+  const vec3f lower_left_corner
+    = origin - half_width * focusDist*u - half_height * focusDist*v - focusDist * w;
+  const vec3f horizontal = 2.0f*half_width*focusDist*u;
+  const vec3f vertical = 2.0f*half_height*focusDist*v;
+
+  // ----------- set variables  ----------------------------
+  owlRayGenSet1i    (rayGen,"deviceCount",  owlGetDeviceCount(context));
+  owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
+  owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
+  owlRayGenSetGroup (rayGen,"world",        world);
+  owlRayGenSet3f    (rayGen,"camera.org",   (const owl3f&)origin);
+  owlRayGenSet3f    (rayGen,"camera.llc",   (const owl3f&)lower_left_corner);
+  owlRayGenSet3f    (rayGen,"camera.horiz", (const owl3f&)horizontal);
+  owlRayGenSet3f    (rayGen,"camera.vert",  (const owl3f&)vertical);
+  
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################
-  LOG("building SBT ...");
 
-  // ----------- build hitgroups -----------
-  lloSbtHitProgsBuild
-    (llo,
-     [&](uint8_t *output,int devID,int geomID,int childID) {
-      switch(geomID) {
-      case LAMBERTIAN_SPHERES_GEOM:
-        ((LambertianSpheresGeom*)output)->prims
-          = (LambertianSphere*)lloBufferGetPointer(llo,LAMBERTIAN_SPHERES_BUFFER,devID);
-        break;
-      case DIELECTRIC_SPHERES_GEOM:
-        ((DielectricSpheresGeom*)output)->prims
-          = (DielectricSphere*)lloBufferGetPointer(llo,DIELECTRIC_SPHERES_BUFFER,devID);
-        break;
-      case METAL_SPHERES_GEOM:
-        ((MetalSpheresGeom*)output)->prims
-          = (MetalSphere*)lloBufferGetPointer(llo,METAL_SPHERES_BUFFER,devID);
-        break;
-      default:
-        assert(0);
-      }
-    });
-  
-  // ----------- build miss prog(s) -----------
-  lloSbtMissProgsBuild
-    (llo,
-     [&](uint8_t *output,
-         int devID,
-         int rayType) {
-      /* we don't have any ... */
-    });
-  
-  // ----------- build raygens -----------
-
-  lloAllocRayGens(llo,1);
-  lloRayGenCreate(llo,/*program ID*/0,
-                  /*module:*/0,
-                  "rayGen",
-                  sizeof(RayGenData));
-  
-  lloAllocMissProgs(llo,1);
-  lloMissProgCreate(llo,/*program ID*/0,
-                    /*module:*/0,
-                    "miss",
-                    sizeof(MissProgData));
-  lloBuildPrograms(llo);
-  lloCreatePipeline(llo);
-
-  
-  lloSbtRayGensBuild
-    (llo,
-     [&](uint8_t *output,
-         int devID,
-         int rgID) {
-      RayGenData *rg = (RayGenData*)output;
-      rg->deviceIndex   = devID;
-      rg->deviceCount = lloGetDeviceCount(llo);
-      rg->fbSize = fbSize;
-      rg->fbPtr  = (uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,devID);
-      rg->world  = lloGroupGetTraversable(llo,WORLD_GROUP,devID);
-
-      const float vfov = fovy;
-      const vec3f vup = lookUp;
-      const float aspect = fbSize.x / float(fbSize.y);
-      const float theta = vfov * ((float)M_PI) / 180.0f;
-      const float half_height = tanf(theta / 2.0f);
-      const float half_width = aspect * half_height;
-      const float aperture = 0.f;
-      const float focusDist = 10.f;
-      const vec3f origin = lookFrom;
-      const vec3f w = normalize(lookFrom - lookAt);
-      const vec3f u = normalize(cross(vup, w));
-      const vec3f v = cross(w, u);
-      const vec3f lower_left_corner
-        = origin - half_width * focusDist*u - half_height * focusDist*v - focusDist * w;
-      const vec3f horizontal = 2.0f*half_width*focusDist*u;
-      const vec3f vertical = 2.0f*half_height*focusDist*v;
-
-      rg->camera.origin = origin;
-      rg->camera.lower_left_corner = lower_left_corner;
-      rg->camera.horizontal = horizontal;
-      rg->camera.vertical = vertical;
-    });
-  LOG_OK("everything set up ...");
+  // programs have been built before, but have to rebuild raygen and
+  // miss progs
+  owlBuildPrograms(context);
+  owlBuildPipeline(context);
+  owlBuildSBT(context);
 
   // ##################################################################
   // now that everything is readly: launch it ....
   // ##################################################################
   
-  LOG("trying to launch ...");
-  lloLaunch2D(llo,0,fbSize.x,fbSize.y);
-  // todo: explicit sync?
+  LOG("launching ...");
+  owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
+  
+
+
+// #if 0
+//   // ##################################################################
+//   // build *SBT* required to trace the groups
+//   // ##################################################################
+//   LOG("building SBT ...");
+
+//   // ----------- build hitgroups -----------
+//   lloSbtHitProgsBuild
+//     (llo,
+//      [&](uint8_t *output,int devID,int geomID,int childID) {
+//       switch(geomID) {
+//       case LAMBERTIAN_SPHERES_GEOM:
+//         ((LambertianSpheresGeom*)output)->prims
+//           = (LambertianSphere*)lloBufferGetPointer(llo,LAMBERTIAN_SPHERES_BUFFER,devID);
+//         break;
+//       case DIELECTRIC_SPHERES_GEOM:
+//         ((DielectricSpheresGeom*)output)->prims
+//           = (DielectricSphere*)lloBufferGetPointer(llo,DIELECTRIC_SPHERES_BUFFER,devID);
+//         break;
+//       case METAL_SPHERES_GEOM:
+//         ((MetalSpheresGeom*)output)->prims
+//           = (MetalSphere*)lloBufferGetPointer(llo,METAL_SPHERES_BUFFER,devID);
+//         break;
+//       default:
+//         assert(0);
+//       }
+//     });
+  
+//   // ----------- build miss prog(s) -----------
+//   lloSbtMissProgsBuild
+//     (llo,
+//      [&](uint8_t *output,
+//          int devID,
+//          int rayType) {
+//       /* we don't have any ... */
+//     });
+  
+//   // ----------- build raygens -----------
+
+//   lloAllocRayGens(llo,1);
+//   lloRayGenCreate(llo,/*program ID*/0,
+//                   /*module:*/0,
+//                   "rayGen",
+//                   sizeof(RayGenData));
+  
+//   lloAllocMissProgs(llo,1);
+//   lloMissProgCreate(llo,/*program ID*/0,
+//                     /*module:*/0,
+//                     "miss",
+//                     sizeof(MissProgData));
+//   lloBuildPrograms(llo);
+//   lloCreatePipeline(llo);
+
+  
+//   lloSbtRayGensBuild
+//     (llo,
+//      [&](uint8_t *output,
+//          int devID,
+//          int rgID) {
+
+  // lloLaunch2D(llo,0,fbSize.x,fbSize.y);
+  // // todo: explicit sync?
   
   LOG("done with launch, writing picture ...");
   // for host pinned mem it doesn't matter which device we query...
-  const uint32_t *fb = (const uint32_t*)lloBufferGetPointer(llo,FRAME_BUFFER,0);
+  const uint32_t *fb
+    = (const uint32_t*)owlBufferGetPointer(frameBuffer,0);
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);
@@ -363,8 +380,7 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("destroying devicegroup ...");
-  lloContextDestroy(llo);
+  owlContextDestroy(context);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
-#endif
 }

@@ -43,10 +43,17 @@ namespace owl {
     std::vector<Geom::SP> geometries;
   };
 
-  struct TrianglesGroup : public GeomGroup {
-    TrianglesGroup(Context *const context,
+  struct TrianglesGeomGroup : public GeomGroup {
+    TrianglesGeomGroup(Context *const context,
                    size_t numChildren);
-    virtual std::string toString() const { return "TrianglesGroup"; }
+    virtual std::string toString() const { return "TrianglesGeomGroup"; }
+  };
+
+  struct UserGeomGroup : public GeomGroup {
+    UserGeomGroup(Context *const context,
+                   size_t numChildren);
+    virtual std::string toString() const { return "UserGeomGroup"; }
+    virtual void buildAccel() override;
   };
 
   struct InstanceGroup : public Group {

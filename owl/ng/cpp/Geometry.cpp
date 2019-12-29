@@ -73,6 +73,11 @@ namespace owl {
     lloUserGeomCreate(context->llo,this->ID,geometryType->ID,numPrims);
   }
 
+  void UserGeom::setPrimCount(size_t count)
+  {
+    lloUserGeomSetPrimCount(context->llo,this->ID,count);
+  }
+
 
 
 
