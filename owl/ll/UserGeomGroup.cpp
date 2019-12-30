@@ -294,7 +294,7 @@ namespace owl {
 
     void Device::userGeomGroupCreate(int groupID,
                                      const int *geomIDs,
-                                     int childCount)
+                                     size_t childCount)
     {
       assert("check for valid ID" && groupID >= 0);
       assert("check for valid ID" && groupID < groups.size());

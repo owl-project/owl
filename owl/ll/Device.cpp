@@ -60,27 +60,28 @@ namespace owl {
     }
 
 
-      int RangeAllocator::alloc(int size)
+      int RangeAllocator::alloc(size_t size)
       {
-        for (int i=0;i<freedRanges.size();i++) {
+        for (size_t i=0;i<freedRanges.size();i++) {
           if (freedRanges[i].size >= size) {
-            int where = freedRanges[i].begin;
+            size_t where = freedRanges[i].begin;
             if (freedRanges[i].size == size)
               freedRanges.erase(freedRanges.begin()+i);
             else {
               freedRanges[i].begin += size;
               freedRanges[i].size  -= size;
             }
-            return where;
+            return (int)where;
           }
         }
-        int where = maxAllocedID;
+        size_t where = maxAllocedID;
         maxAllocedID+=size;
-        return where;
+		assert(maxAllocedID == size_t(int(maxAllocedID)));
+        return (int)where;
       }
-      void RangeAllocator::release(int begin, int size)
+      void RangeAllocator::release(size_t begin, size_t size)
       {
-        for (int i=0;i<freedRanges.size();i++) {
+        for (size_t i=0;i<freedRanges.size();i++) {
           if (freedRanges[i].begin+freedRanges[i].size == begin) {
             begin -= freedRanges[i].size;
             size  += freedRanges[i].size;
@@ -869,7 +870,7 @@ namespace owl {
     }
     
     void Device::userGeomSetPrimCount(int geomID,
-                                           int count)
+                                      size_t count)
     {
       UserGeom *user
         = checkGetUserGeom(geomID);
@@ -880,9 +881,9 @@ namespace owl {
 
     void Device::trianglesGeomSetVertexBuffer(int geomID,
                                               int bufferID,
-                                              int count,
-                                              int stride,
-                                              int offset)
+		size_t count,
+		size_t stride,
+		size_t offset)
     {
       TrianglesGeom *triangles
         = checkGetTrianglesGeom(geomID);
@@ -907,9 +908,9 @@ namespace owl {
     
     void Device::trianglesGeomSetIndexBuffer(int geomID,
                                              int bufferID,
-                                             int count,
-                                             int stride,
-                                             int offset)
+		size_t count,
+		size_t stride,
+		size_t offset)
     {
       TrianglesGeom *triangles
         = checkGetTrianglesGeom(geomID);
@@ -1280,7 +1281,7 @@ namespace owl {
                                   then be 'geomTypeID *
                                   numRayTypes) */
                                 int geomTypeID,
-                                int numPrims)
+                                size_t numPrims)
     {
       assert("check ID is valid" && geomID >= 0);
       assert("check ID is valid" && geomID < geoms.size());

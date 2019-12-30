@@ -29,13 +29,13 @@ namespace owl {
     /*! allocator that allows for allocating ranges of STB indices as
       required for adding groups of geometries to the SBT */
     struct RangeAllocator {
-      int alloc(int size);
-      void release(int begin, int size);
-      int maxAllocedID = 0;
+      int alloc(size_t size);
+      void release(size_t begin, size_t size);
+      size_t maxAllocedID = 0;
     private:
       struct FreedRange {
-        int begin;
-        int size;
+        size_t begin;
+        size_t size;
       };
       std::vector<FreedRange> freedRanges;
     };
@@ -125,8 +125,6 @@ namespace owl {
     };
     
     struct ProgramGroup {
-      // OptixProgramGroupOptions  pgOptions = {};
-      // OptixProgramGroupDesc     pgDesc;
       OptixProgramGroup         pg        = nullptr;
     };
     struct Program {
@@ -158,14 +156,14 @@ namespace owl {
       OptixShaderBindingTable sbt = {};
       
       size_t rayGenRecordCount   = 0;
-      size_t rayGenRecordSize   = 0;
+      size_t rayGenRecordSize    = 0;
       DeviceMemory rayGenRecordsBuffer;
 
-      size_t hitGroupRecordSize = 0;
+      size_t hitGroupRecordSize  = 0;
       size_t hitGroupRecordCount = 0;
       DeviceMemory hitGroupRecordsBuffer;
 
-      size_t missProgRecordSize = 0;
+      size_t missProgRecordSize  = 0;
       size_t missProgRecordCount = 0;
       DeviceMemory missProgRecordsBuffer;
 
@@ -247,7 +245,7 @@ namespace owl {
       const int geomTypeID;
     };
     struct UserGeom : public Geom {
-      UserGeom(int geomID, int geomTypeID, int numPrims)
+      UserGeom(int geomID, int geomTypeID, size_t numPrims)
         : Geom(geomID,geomTypeID),
           numPrims(numPrims)
       {}
@@ -344,7 +342,7 @@ namespace owl {
     };
     struct UserGeomGroup : public GeomGroup {
       UserGeomGroup(size_t numChildren,
-                size_t sbtOffset)
+                    size_t sbtOffset)
         : GeomGroup(numChildren,
                     sbtOffset)
       {}
@@ -377,8 +375,6 @@ namespace owl {
           buildPrograms() and createPipeline(), so should be called
           *before* those functions get called */
       void setMaxInstancingDepth(int maxInstancingDepth);
-      
-
 
       void createPipeline()
       {
@@ -468,6 +464,7 @@ namespace owl {
                           size_t programDataSize);
         
       void allocRayGens(size_t count);
+
       /*! each geom will always use "numRayTypes" successive hit
         groups (one per ray type), so this must be a multiple of the
         number of ray types to be used */
@@ -494,10 +491,10 @@ namespace owl {
                             then be 'geomTypeID *
                             numRayTypes) */
                           int geomTypeID,
-                          int numPrims);
+                          size_t numPrims);
 
       void userGeomSetPrimCount(int geomID,
-                                int numPrims);
+                                size_t numPrims);
 
       void trianglesGeomCreate(int geomID,
                                /*! the "logical" hit group ID:
@@ -523,11 +520,12 @@ namespace owl {
       
       void trianglesGeomGroupCreate(int groupID,
                                     const int *geomIDs,
-                                    int geomCount);
+                                    size_t geomCount);
 
       void userGeomGroupCreate(int groupID,
                                const int *geomIDs,
-                               int geomCount);
+                               size_t geomCount);
+
       /*! create a new instance group with given list of children */
       void instanceGroupCreate(/*! the group we are defining */
                                int groupID,
@@ -537,7 +535,8 @@ namespace owl {
                                   'childCount' valid group ID */
                                const int *childGroupIDs,
                                /*! number of children in this group */
-                               int childCount);
+                               size_t childCount);
+
       /*! set given child's instance transform. groupID must be a
           valid instance group, childID must be wihtin
           [0..numChildren) */
@@ -578,15 +577,15 @@ namespace owl {
       void userGeomSetBoundsBuffer(int geomID, int bufferID);
       
       void trianglesGeomSetVertexBuffer(int geomID,
-                                        int bufferID,
-                                        int count,
-                                        int stride,
-                                        int offset);
+                                        int32_t bufferID,
+		  size_t count,
+		  size_t stride,
+		  size_t offset);
       void trianglesGeomSetIndexBuffer(int geomID,
-                                       int bufferID,
-                                       int count,
-                                       int stride,
-                                       int offset);
+		  int32_t bufferID,
+		  size_t count,
+		  size_t stride,
+		  size_t offset);
       
       void destroyGeom(size_t ID)
       {

@@ -200,7 +200,7 @@ namespace owl {
                                        then be 'logicalHitGroupID *
                                        rayTypeCount) */
                                      int logicalHitGroupID,
-                                     int numPrims)
+                                     size_t numPrims)
     {
       for (auto device : devices)
         device->userGeomCreate(geomID,logicalHitGroupID,numPrims);
@@ -222,7 +222,7 @@ namespace owl {
 
     void DeviceGroup::trianglesGeomGroupCreate(int groupID,
                                                const int *geomIDs,
-                                               int geomCount)
+                                               size_t geomCount)
     {
       for (auto device : devices) {
         device->trianglesGeomGroupCreate(groupID,geomIDs,geomCount);
@@ -231,7 +231,7 @@ namespace owl {
 
     void DeviceGroup::userGeomGroupCreate(int groupID,
                                           const int *geomIDs,
-                                          int geomCount)
+                                          size_t geomCount)
     {
       for (auto device : devices) {
         device->userGeomGroupCreate(groupID,geomIDs,geomCount);
@@ -293,7 +293,7 @@ namespace owl {
     }
     
     void DeviceGroup::userGeomSetPrimCount(int geomID,
-                                           int count)
+                                           size_t count)
     {
       for (auto device : devices) 
         device->userGeomSetPrimCount(geomID,count);
@@ -444,7 +444,7 @@ namespace owl {
                                              'childCount' valid group ID */
                                           const int *childGroupIDs,
                                           /*! number of children in this group */
-                                          int childCount)
+                                          size_t childCount)
     {
       for (auto device : devices)
         device->instanceGroupCreate(groupID,

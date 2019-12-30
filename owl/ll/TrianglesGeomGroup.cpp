@@ -41,7 +41,7 @@ namespace owl {
 
     void Device::trianglesGeomGroupCreate(int groupID,
                                           const int *geomIDs,
-                                          int geomCount)
+                                          size_t geomCount)
     {
       assert("check for valid ID" && groupID >= 0);
       assert("check for valid ID" && groupID < groups.size());
