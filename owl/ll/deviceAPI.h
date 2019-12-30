@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "gdt/math/vec.h"
-#include "gdt/math/box.h"
+#include "owl/common/math/vec.h"
+#include "owl/common/math/box.h"
 // the 'actual' optix
 #include <optix.h>
 

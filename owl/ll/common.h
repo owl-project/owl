@@ -20,10 +20,10 @@
 
 #pragma once
 
-// device-safe parts of gdt
-#include "gdt/math/vec.h"
-#include "gdt/math/box.h"
-#include "gdt/math/AffineSpace.h"
+// device-safe parts of owl
+#include "owl/common/math/vec.h"
+#include "owl/common/math/box.h"
+#include "owl/common/math/AffineSpace.h"
 
 #include <string.h>
 #include <set>
@@ -82,7 +82,5 @@ namespace owl {
     
 }
 
-#define IGNORING_THIS() std::cout << "## ignoring " << __PRETTY_FUNCTION__ << std::endl;
+#define IGNORING_THIS() std::cout << OWL_TERMINAL_YELLOW << "## ignoring " << __PRETTY_FUNCTION__ << OWL_TERMINAL_DEFAULT << std::endl;
   
-#define OWL_NOTIMPLEMENTED std::cerr << (std::string(__PRETTY_FUNCTION__)+" : not implemented") << std::endl; exit(1);
-

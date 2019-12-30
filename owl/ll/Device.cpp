@@ -23,9 +23,9 @@
   << std::endl
 
 #define LOG_OK(message)                                 \
-  std::cout << GDT_TERMINAL_GREEN                       \
+  std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
+  << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
@@ -33,9 +33,9 @@
   << std::endl
 
 #define CLOG_OK(message)                                \
-  std::cout << GDT_TERMINAL_GREEN                       \
+  std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
+  << message << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
   namespace ll {
@@ -44,10 +44,10 @@ namespace owl {
     {
       WarnOnce(const char *message)
       {
-        std::cout << GDT_TERMINAL_RED
+        std::cout << OWL_TERMINAL_RED
                   << "#owl.ll(warning): "
                   << message
-                  << GDT_TERMINAL_DEFAULT << std::endl;
+                  << OWL_TERMINAL_DEFAULT << std::endl;
       }
     };
       
@@ -726,7 +726,6 @@ namespace owl {
 
     void Device::allocGeomTypes(size_t count)
     {
-      assert(geomTypes.empty());
       geomTypes.resize(count);
       for (auto &gt : geomTypes) {
         if (gt.perRayType.empty())
@@ -737,13 +736,13 @@ namespace owl {
     
     void Device::allocRayGens(size_t count)
     {
-      assert(rayGenPGs.empty());
+      // assert(rayGenPGs.empty());
       rayGenPGs.resize(count);
     }
     
     void Device::allocMissProgs(size_t count)
     {
-      assert(missProgPGs.empty());
+      // assert(missProgPGs.empty());
       missProgPGs.resize(count);
     }
       
@@ -823,10 +822,10 @@ namespace owl {
       DeviceBuffer *buffer = new DeviceBuffer(elementCount,elementSize);
       if (initData) {
         buffer->devMem.upload(initData,"createDeviceBuffer: uploading initData");
-        LOG("uploading " << elementCount
-            << " items of size " << elementSize
-            << " from host ptr " << initData
-            << " to device ptr " << buffer->devMem.get());
+        // LOG("uploading " << elementCount
+        //     << " items of size " << elementSize
+        //     << " from host ptr " << initData
+        //     << " to device ptr " << buffer->devMem.get());
       }
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
@@ -867,6 +866,15 @@ namespace owl {
       assert("double-check valid buffer" && buffer);
       size_t offset = 0; // don't support offset/stride yet
       user->d_boundsMemory = addPointerOffset(buffer->get(),offset);
+    }
+    
+    void Device::userGeomSetPrimCount(int geomID,
+                                           int count)
+    {
+      UserGeom *user
+        = checkGetUserGeom(geomID);
+      assert("double-check valid geom" && user);
+      user->setPrimCount(count);
     }
     
 
@@ -945,6 +953,20 @@ namespace owl {
 
 
 
+
+    /*! set given child to {childGroupID+xfm}  */
+    void Device::geomGroupSetChild(int groupID,
+                                   int childNo,
+                                   int childID)
+    {
+      GeomGroup *gg       = checkGetGeomGroup(groupID);
+      Geom      *newChild = checkGetGeom(childID);
+      Geom      *oldChild = gg->children[childNo];
+      if (oldChild)
+        oldChild->numTimesReferenced--;
+      gg->children[childNo] = newChild;
+      newChild->numTimesReferenced++;
+    }
 
 
 
@@ -1140,11 +1162,11 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
-      for (int rgID=0;rgID<(int)missProgPGs.size();rgID++) {
+      for (int mpID=0;mpID<(int)missProgPGs.size();mpID++) {
         // ------------------------------------------------------------------
         // compute pointer to entire record:
         // ------------------------------------------------------------------
-        const int recordID = rgID;
+        const int recordID = mpID;
         uint8_t *const sbtRecord
           = missProgRecords.data() + recordID*missProgRecordSize;
         
@@ -1155,7 +1177,7 @@ namespace owl {
         char    *const sbtRecordHeader = (char *)sbtRecord;
         // ... find the PG that goes into the record header...
         const MissProgPG &rgPG
-          = missProgPGs[rgID];
+          = missProgPGs[mpID];
         // ... and tell optix to write that into the record
         OPTIX_CALL(SbtRecordPackHeader(rgPG.pg,sbtRecordHeader));
           
@@ -1167,7 +1189,7 @@ namespace owl {
           = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
         writeMissProgDataCB(sbtRecordData,
                             context->owlDeviceID,
-                            rgID,
+                            mpID,
                             callBackUserData);
       }
       sbt.missProgRecordsBuffer.alloc(missProgRecords.size());

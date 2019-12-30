@@ -238,6 +238,19 @@ namespace owl {
                              (int32_t)numPrims);
         });
     }
+
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloUserGeomSetPrimCount(LLOContext llo,
+                                      int32_t geomID,
+                                      int32_t numPrims)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->userGeomSetPrimCount(geomID,
+                                   numPrims);
+         });
+    }
     
     extern "C" OWL_LL_INTERFACE
     LLOResult lloGeomTypeClosestHit(LLOContext llo,
@@ -638,6 +651,19 @@ namespace owl {
           DeviceGroup *dg = (DeviceGroup *)llo;
           dg->instanceGroupSetChild(groupID,childID,childGroupID,
                                     *(const affine3f*)xfm);
+        });
+    }
+    
+    extern "C" OWL_LL_INTERFACE
+    LLOResult lloGeomGroupSetChild(LLOContext llo,
+                                   int32_t    groupID,
+                                   int32_t    childNo,
+                                   int32_t    childID)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->geomGroupSetChild(groupID,childNo,childID);
         });
     }
     

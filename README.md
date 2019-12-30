@@ -79,6 +79,29 @@ Latest Progress/Revision History
 v0.5.x - First Public Release Cleanups
 --------------------------------------
 
+*v0.5.3*: First *serious* node graph sample
+
+- ported `ll05-rtow` sample to node graph api
+
+- added bound program, user geom, user geom group, setprimcount and
+  other missing functionality to node graph api
+
+- `ng05-rtow` ported, working, and passing tests
+
+*v0.5.2*: First (partial) node graph sample
+
+- first working version of subset of node graph library (all that is
+  required for 'firstTriangleMesh' example)
+
+- `ng01-firstTriangleMesh` working
+
+- significant renames and cleanups of owl/common (in particular, all
+  'gdt::' and 'gdt/' merged into owl::common and owl/common)
+  
+- cleaned up owl/common/viewerWidget. Not used in owl itself (to avoid
+  dependencies to glut etc), but now working successfully in first
+  external test project
+
 *v0.5.1*: First "c-api" version
 
 - added public c-linkage api (in `include/owl/ll.h`)

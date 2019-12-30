@@ -252,7 +252,13 @@ namespace owl {
           numPrims(numPrims)
       {}
       virtual PrimType primType() { return USER; }
-
+      void setPrimCount(size_t numPrims)
+      {
+        assert("check size hasn't previously been set (changing not yet implemented...)"
+               && this->numPrims == 0);
+        this->numPrims = numPrims;
+      }
+      
       /*! the pointer to the device-side bounds array. Note this
           pointer _can_ be the same as 'boundsBuffer' (if *we* manage
           that memory), but in the case of user-supplied bounds buffer
@@ -490,6 +496,9 @@ namespace owl {
                           int geomTypeID,
                           int numPrims);
 
+      void userGeomSetPrimCount(int geomID,
+                                int numPrims);
+
       void trianglesGeomCreate(int geomID,
                                /*! the "logical" hit group ID:
                                  will always count 0,1,2... evne
@@ -540,6 +549,9 @@ namespace owl {
                                  int childNo,
                                  int childGroupID,
                                  const affine3f &xfm=affine3f(owl::common::one));
+      void geomGroupSetChild(int groupID,
+                             int childNo,
+                             int childID);
 
       /*! destroy the given buffer, and release all host and/or device
           memory associated with it */
@@ -639,6 +651,15 @@ namespace owl {
       }
 
       // accessor helpers:
+      GeomGroup *checkGetGeomGroup(int groupID)
+      {
+        Group *group = checkGetGroup(groupID);
+        assert("check valid group" && group != nullptr);
+        GeomGroup *gg = dynamic_cast<GeomGroup*>(group);
+        assert("check group is a geom group" && gg != nullptr);
+        return gg;
+      }
+      // accessor helpers:
       UserGeomGroup *checkGetUserGeomGroup(int groupID)
       {
         Group *group = checkGetGroup(groupID);
@@ -662,8 +683,8 @@ namespace owl {
       
       Buffer *checkGetBuffer(int bufferID)
       {
-        assert("check valid geom ID" && bufferID >= 0);
-        assert("check valid geom ID" && bufferID <  buffers.size());
+        assert("check valid buffer ID" && bufferID >= 0);
+        assert("check valid buffer ID" && bufferID <  buffers.size());
         Buffer *buffer = buffers[bufferID];
         assert("check valid buffer" && buffer != nullptr);
         return buffer;

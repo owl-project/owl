@@ -22,9 +22,9 @@
   << std::endl
 
 #define LOG_OK(message)                                 \
-  std::cout << GDT_TERMINAL_GREEN                       \
+  std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
+  << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
@@ -32,9 +32,9 @@
   << std::endl
 
 #define CLOG_OK(message)                                \
-  std::cout << GDT_TERMINAL_GREEN                       \
+  std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
-  << message << GDT_TERMINAL_DEFAULT << std::endl
+  << message << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
   namespace ll {
@@ -47,10 +47,6 @@ namespace owl {
       assert("check for valid ID" && groupID < groups.size());
       assert("check group ID is available" && groups[groupID] ==nullptr);
         
-      assert("check for valid combinations of child list" &&
-             ((geomIDs == nullptr && geomCount == 0) ||
-              (geomIDs != nullptr && geomCount >  0)));
-        
       TrianglesGeomGroup *group
         = new TrianglesGeomGroup(geomCount,
                                  sbt.rangeAllocator.alloc(geomCount));
@@ -58,6 +54,7 @@ namespace owl {
       groups[groupID] = group;
 
       // set children - todo: move to separate (api?) function(s)!?
+      if (geomIDs) {
       for (int childID=0;childID<geomCount;childID++) {
         int geomID = geomIDs[childID];
         assert("check geom child geom ID is valid" && geomID >= 0);
@@ -67,6 +64,7 @@ namespace owl {
         assert("check geom is valid type" && geom->primType() == TRIANGLES);
         geom->numTimesReferenced++;
         group->children[childID] = geom;
+      }
       }
     }
 

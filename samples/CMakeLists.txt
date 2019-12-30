@@ -16,7 +16,7 @@
 
 include_directories(${PROJECT_SOURCE_DIR}/)
 # for STB image read/write
-include_directories(${PROJECT_SOURCE_DIR}/common/3rdParty)
+include_directories(${PROJECT_SOURCE_DIR}/owl/common/3rdParty)
 # public API:
 include_directories(${PROJECT_SOURCE_DIR}/owl/include/)
 
@@ -24,4 +24,4 @@ include_directories(${PROJECT_SOURCE_DIR}/owl/include/)
 add_subdirectory(ll)
 
 # node graph layer
-# currently disabled: add_subdirectory(ng)
+add_subdirectory(ng)
