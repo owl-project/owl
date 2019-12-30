@@ -15,13 +15,10 @@
 # ======================================================================== #
 
 include_directories(${PROJECT_SOURCE_DIR}/)
-#include_directories(${PROJECT_SOURCE_DIR}/owl)
-#include_directories(${PROJECT_SOURCE_DIR}/owl/ng)
-include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
 
 add_library(owl-ng
 
-  include/owl/owl.h
+  ../include/owl/owl.h
   
   api/impl.cpp
   api/APIContext.h

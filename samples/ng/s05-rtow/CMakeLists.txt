@@ -14,9 +14,7 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-option(exp_ng05 "Build experimental ng05 sample (will fail tests)" OFF)
 
-if (exp_ng05)
 include_directories(${PROJECT_SOURCE_DIR}/owl)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
@@ -31,7 +29,4 @@ target_link_libraries(ng05-rtow
 add_test(ng05-rtow
   ${CMAKE_BINARY_DIR}/ng05-rtow)
 
-
-
-endif()
 
