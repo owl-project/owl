@@ -80,7 +80,7 @@ namespace owl {
                                         'childCount' valid group ID */
                                      const int *childGroupIDs,
                                      /*! number of children in this group */
-                                     int childCount)
+                                     size_t childCount)
     {
       assert("check for valid ID" && groupID >= 0);
       assert("check for valid ID" && groupID < groups.size());

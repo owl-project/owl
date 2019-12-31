@@ -53,7 +53,7 @@ namespace owl {
     std::lock_guard<std::mutex> lock(mutex);
     if (previouslyReleasedIDs.empty()) {
       objects.push_back(nullptr);
-      const int newID = objects.size()-1;
+      const int newID = int(objects.size()-1);
       if (newID >= numIDsAllocedInContext) {
         while (newID >= numIDsAllocedInContext)
           numIDsAllocedInContext = std::max(1,numIDsAllocedInContext*2);

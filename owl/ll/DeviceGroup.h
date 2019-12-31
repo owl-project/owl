@@ -211,7 +211,7 @@ namespace owl {
                             then be 'geomTypeID *
                             rayTypeCount) */
                           int geomTypeID,
-                          int numPrims);
+                          size_t numPrims);
 
       /*! create a new group object (with an associated BVH) over
         triangle geometries. All geomIDs in this group must be
@@ -224,10 +224,10 @@ namespace owl {
       */
       void trianglesGeomGroupCreate(int groupID,
                                     const int *geomIDs,
-                                    int geomCount);
+                                    size_t geomCount);
       void userGeomGroupCreate(int groupID,
                                const int *geomIDs,
-                               int geomCount);
+                               size_t geomCount);
       /*! create a new instance group with given list of children */
       void instanceGroupCreate(/*! the group we are defining */
                                int groupID,
@@ -237,7 +237,7 @@ namespace owl {
                                   'childCount' valid group ID */
                                const int *childGroupIDs,
                                /*! number of children in this group */
-                               int childCount);
+                               size_t childCount);
       /*! set given child's instance transform. groupID must be a
         valid instance group, childID must be wihtin
         [0..numChildren) */
@@ -281,7 +281,7 @@ namespace owl {
         given time */
       void userGeomSetBoundsBuffer(int geomID, int bufferID);
       void userGeomSetPrimCount(int geomID,
-                                int numPrims);
+                                size_t numPrims);
 
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int bufferID,
