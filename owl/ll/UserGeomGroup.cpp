@@ -46,8 +46,6 @@ namespace owl {
                                            WriteUserGeomBoundsDataCB cb,
                                            const void *cbData)
     {
-      PING;
-      
       context->pushActive();
       UserGeomGroup *ugg
         = checkGetUserGeomGroup(groupID);

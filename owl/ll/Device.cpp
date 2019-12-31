@@ -1355,15 +1355,12 @@ namespace owl {
         pinnedMem->free();
         
         this->elementCount = newElementCount;
-        PRINT(elementCount);
-        PRINT(elementSize);
         pinnedMem->alloc(elementCount*elementSize);
         
         device->context->popActive();
       }
       
       d_pointer = pinnedMem->get();
-      PING; PRINT((void*)d_pointer);
     }
     
     void HostPinnedBuffer::upload(Device *device, const void *hostPtr) 
@@ -1378,11 +1375,8 @@ namespace owl {
       devMem.free();
       
       this->elementCount = newElementCount;
-      PRINT(elementCount);
-      PRINT(elementSize);
       devMem.alloc(elementCount*elementSize);
       d_pointer = devMem.get();
-      PING; PRINT((void*)d_pointer);
       
       device->context->popActive();
     }
