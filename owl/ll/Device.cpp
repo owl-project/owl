@@ -521,7 +521,6 @@ namespace owl {
 
     void Modules::alloc(size_t count)
     {
-      assert(modules.empty());
       modules.resize(count);
     }
 

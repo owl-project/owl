@@ -54,8 +54,10 @@ namespace owl {
 
     void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
     {
-      assert(buffer);
-      const void *value = buffer->getPointer(deviceID);
+      const void *value
+        = buffer
+        ? buffer->getPointer(deviceID)
+        : nullptr;
       *(const void**)sbtEntry = value;
     }
     
