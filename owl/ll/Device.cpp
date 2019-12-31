@@ -60,48 +60,49 @@ namespace owl {
     }
 
 
-      int RangeAllocator::alloc(int size)
-      {
-        for (int i=0;i<freedRanges.size();i++) {
-          if (freedRanges[i].size >= size) {
-            int where = freedRanges[i].begin;
-            if (freedRanges[i].size == size)
-              freedRanges.erase(freedRanges.begin()+i);
-            else {
-              freedRanges[i].begin += size;
-              freedRanges[i].size  -= size;
-            }
-            return where;
+    int RangeAllocator::alloc(size_t size)
+    {
+      for (size_t i=0;i<freedRanges.size();i++) {
+        if (freedRanges[i].size >= size) {
+          size_t where = freedRanges[i].begin;
+          if (freedRanges[i].size == size)
+            freedRanges.erase(freedRanges.begin()+i);
+          else {
+            freedRanges[i].begin += size;
+            freedRanges[i].size  -= size;
           }
+          return (int)where;
         }
-        int where = maxAllocedID;
-        maxAllocedID+=size;
-        return where;
       }
-      void RangeAllocator::release(int begin, int size)
-      {
-        for (int i=0;i<freedRanges.size();i++) {
-          if (freedRanges[i].begin+freedRanges[i].size == begin) {
-            begin -= freedRanges[i].size;
-            size  += freedRanges[i].size;
-            freedRanges.erase(freedRanges.begin()+i);
-            release(begin,size);
-            return;
-          }
-          if (begin+size == freedRanges[i].begin) {
-            size  += freedRanges[i].size;
-            freedRanges.erase(freedRanges.begin()+i);
-            release(begin,size);
-            return;
-          }
-        }
-        if (begin+size == maxAllocedID) {
-          maxAllocedID -= size;
+      size_t where = maxAllocedID;
+      maxAllocedID+=size;
+      assert(maxAllocedID == size_t(int(maxAllocedID)));
+      return (int)where;
+    }
+    void RangeAllocator::release(size_t begin, size_t size)
+    {
+      for (size_t i=0;i<freedRanges.size();i++) {
+        if (freedRanges[i].begin+freedRanges[i].size == begin) {
+          begin -= freedRanges[i].size;
+          size  += freedRanges[i].size;
+          freedRanges.erase(freedRanges.begin()+i);
+          release(begin,size);
           return;
         }
-        // could not merge with any existing range: add new one
-        freedRanges.push_back({begin,size});
+        if (begin+size == freedRanges[i].begin) {
+          size  += freedRanges[i].size;
+          freedRanges.erase(freedRanges.begin()+i);
+          release(begin,size);
+          return;
+        }
       }
+      if (begin+size == maxAllocedID) {
+        maxAllocedID -= size;
+        return;
+      }
+      // could not merge with any existing range: add new one
+      freedRanges.push_back({begin,size});
+    }
 
     /*! construct a new owl device on given cuda device. throws an
       exception if for any reason that cannot be done */
@@ -520,7 +521,6 @@ namespace owl {
 
     void Modules::alloc(size_t count)
     {
-      assert(modules.empty());
       modules.resize(count);
     }
 
@@ -682,8 +682,8 @@ namespace owl {
             + geomType.boundsProg.progName;
           
           CUresult rc = cuModuleGetFunction(&geomType.boundsFuncKernel,
-                                   module->boundsModule,
-                                   annotatedProgName.c_str());
+                                            module->boundsModule,
+                                            annotatedProgName.c_str());
           switch(rc) {
           case CUDA_SUCCESS:
             /* all OK, nothing to do */
@@ -869,7 +869,7 @@ namespace owl {
     }
     
     void Device::userGeomSetPrimCount(int geomID,
-                                           int count)
+                                      size_t count)
     {
       UserGeom *user
         = checkGetUserGeom(geomID);
@@ -880,9 +880,9 @@ namespace owl {
 
     void Device::trianglesGeomSetVertexBuffer(int geomID,
                                               int bufferID,
-                                              int count,
-                                              int stride,
-                                              int offset)
+                                              size_t count,
+                                              size_t stride,
+                                              size_t offset)
     {
       TrianglesGeom *triangles
         = checkGetTrianglesGeom(geomID);
@@ -903,13 +903,22 @@ namespace owl {
       return (void*)checkGetBuffer(bufferID)->d_pointer;
     }
       
+    void Device::bufferResize(int bufferID, size_t newItemCount)
+    {
+      checkGetBuffer(bufferID)->resize(this,newItemCount);
+    }
     
+    void Device::bufferUpload(int bufferID, const void *hostPtr)
+    {
+      checkGetBuffer(bufferID)->upload(this,hostPtr);
+    }
+
     
     void Device::trianglesGeomSetIndexBuffer(int geomID,
                                              int bufferID,
-                                             int count,
-                                             int stride,
-                                             int offset)
+                                             size_t count,
+                                             size_t stride,
+                                             size_t offset)
     {
       TrianglesGeom *triangles
         = checkGetTrianglesGeom(geomID);
@@ -977,7 +986,7 @@ namespace owl {
       LOG("building sbt hit group records");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
-      if (sbt.hitGroupRecordsBuffer.valid())
+      if (sbt.hitGroupRecordsBuffer.alloced())
         sbt.hitGroupRecordsBuffer.free();
 
       size_t maxHitProgDataSize = 0;
@@ -1008,7 +1017,7 @@ namespace owl {
       // now, write all records (only on the host so far): we need to
       // write one record per geometry, per ray type
       // ------------------------------------------------------------------
-       for (auto group : groups) {
+      for (auto group : groups) {
         if (!group) continue;
         if (!group->containsGeom()) continue;
         GeomGroup *gg = (GeomGroup *)group;
@@ -1071,7 +1080,7 @@ namespace owl {
         LOG("building sbt ray gen records (only showing first 10 instances)");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
-      if (sbt.rayGenRecordsBuffer.valid())
+      if (sbt.rayGenRecordsBuffer.alloced())
         sbt.rayGenRecordsBuffer.free();
 
       size_t maxRayGenDataSize = 0;
@@ -1139,13 +1148,13 @@ namespace owl {
       
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
-      if (sbt.missProgRecordsBuffer.valid())
+      if (sbt.missProgRecordsBuffer.alloced())
         sbt.missProgRecordsBuffer.free();
 
       size_t maxMissProgDataSize = 0;
       for (int mpID=0;mpID<(int)missProgPGs.size();mpID++) 
         maxMissProgDataSize = std::max(maxMissProgDataSize,
-                                     rayGenPGs[mpID].program.dataSize);
+                                       rayGenPGs[mpID].program.dataSize);
       
       size_t numMissProgRecords = missProgPGs.size();
       size_t missProgRecordSize
@@ -1212,8 +1221,8 @@ namespace owl {
         = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
                                         rgID * sbt.rayGenRecordSize);
 
-      if (!sbt.missProgRecordsBuffer.valid() &&
-          !sbt.hitGroupRecordsBuffer.valid()) {
+      if (!sbt.missProgRecordsBuffer.alloced() &&
+          !sbt.hitGroupRecordsBuffer.alloced()) {
         // apparently this program does not have any hit records *or*
         // miss records, which means either something's horribly wrong
         // in the app, or this is more cuda-style "raygen-only" launch
@@ -1253,7 +1262,7 @@ namespace owl {
           = (uint32_t)sbt.hitGroupRecordCount;
       }
 
-      if (!sbt.launchParamsBuffer.valid()) {
+      if (!sbt.launchParamsBuffer.alloced()) {
         LOG("creating dummy launch params buffer ...");
         sbt.launchParamsBuffer.alloc(8);
       }
@@ -1280,7 +1289,7 @@ namespace owl {
                                   then be 'geomTypeID *
                                   numRayTypes) */
                                 int geomTypeID,
-                                int numPrims)
+                                size_t numPrims)
     {
       assert("check ID is valid" && geomID >= 0);
       assert("check ID is valid" && geomID < geoms.size());
@@ -1337,6 +1346,48 @@ namespace owl {
       buffers.resize(newCount);
     }
 
+    void HostPinnedBuffer::resize(Device *device, size_t newElementCount) 
+    {
+      if (device->context->owlDeviceID == 0) {
+      
+        device->context->pushActive();
+        
+        pinnedMem->free();
+        
+        this->elementCount = newElementCount;
+        pinnedMem->alloc(elementCount*elementSize);
+        
+        device->context->popActive();
+      }
+      
+      d_pointer = pinnedMem->get();
+    }
+    
+    void HostPinnedBuffer::upload(Device *device, const void *hostPtr) 
+    {
+      OWL_NOTIMPLEMENTED;
+    }
+    
+    void DeviceBuffer::resize(Device *device, size_t newElementCount) 
+    {
+      device->context->pushActive();
+
+      devMem.free();
+      
+      this->elementCount = newElementCount;
+      devMem.alloc(elementCount*elementSize);
+      d_pointer = devMem.get();
+      
+      device->context->popActive();
+    }
+    
+    void DeviceBuffer::upload(Device *device, const void *hostPtr) 
+    {
+      device->context->pushActive();
+      devMem.upload(hostPtr,"DeviceBuffer::upload");
+      device->context->popActive();
+    }
+    
   } // ::owl::ll
 } //::owl
   

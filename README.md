@@ -36,27 +36,33 @@ One of the key insights of early exprimentation with OWL was that a
 single node graph API on top of OptiX 7 is a major
 undertaking. Consequently, owl actually aims for two independent but
 stacked API layers: one as-minimalistic-as-possible low-level API
-layer (`ll-owl`) that does not yet deal with nodes, variables,
-lifetime-handling, etc; and the actual node graph (`owl-ng`) that then
-builds on this.
+layer (`ll-owl`) that does intentionally not deal with nodes,
+variables, lifetime-handling, etc; and the actual node graph
+(`owl-ng`) that then builds on this.
 
-As of the time of this writing the node graph layer is not yet
-functional, and thus not yet included; the ll-layer is still rather
-basic, but at least functional enough to reproduce previous OptiX
-samples such as the "Ray Tracing in One Weekend in OptiX" example.
+As of the time of this writing the ll layer is significantly more
+fleshed out than the node graph layer. Though there are clearly
+missing pieces even in the ll layer I do already have several of my
+originally Optix 6 base research sandboxes ported over to owl-ll; the
+node graph layer can - since 0.5.3 - also support all that is requires
+for the "Ray Tracing in One Weekend" example (see
+`samples/ng/s05-rtow`), but the other ll examples are not yet ported,
+and will surely be missing a few bits and pieces.
 
-To eventually accomodate two separate API layers the project's
-directory structure is already organized into separate "ll/" and "ng/"
-directory layers (though as the latter isn't functional yet it is
-still missing in master an devel branches):
+To clearly separate the two API layers the project's directory
+structure is organized into separate "ll/" and "ng/" directory layers:
 
 - `owl/`: The Optix Wrappers *library*
   - `owl/ll/`: the owl *low-level* API layer
-  - `owl/ng/`: the owl *node graph* API layer (currently disabled because not yet functional)
+    - `owl/ll/include`: public API headers for the `llowl` shared library
+    - `owl/ll/<other>`: implementation of that api layer
+  - `owl/ng/`: the owl *node graph* API layer (build on top of owl/ll)
+    - `owl/ng/include`: public API headers for the `owl-ng` shared library
+    - `owl/ng/<other>`: implementation of that api layer
 
 - `samples/`: Samples/Tutorials/TestCases for OWL
   - `samples/ll/`: samples for the ll layer
-  - `samples/ng/`: samples for the ng layer (currently disabled because not yet functional)
+  - `samples/ng/`: samples for the ng layer (some ll samples not yet ported over)
 
 <!--- ------------------------------------------------------- -->
 (Main) TODOs:

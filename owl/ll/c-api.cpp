@@ -52,7 +52,7 @@ namespace owl {
 
     extern "C" OWL_LL_INTERFACE
     LLOContext lloContextCreate(const int32_t *deviceIDs,
-                                int32_t        numDeviceIDs)
+                                size_t         numDeviceIDs)
     {
       DeviceGroup *dg = DeviceGroup::create(deviceIDs,numDeviceIDs);
       return (LLOContext)dg;
@@ -242,7 +242,7 @@ namespace owl {
     extern "C" OWL_LL_INTERFACE
     LLOResult lloUserGeomSetPrimCount(LLOContext llo,
                                       int32_t geomID,
-                                      int32_t numPrims)
+                                      size_t numPrims)
     {
       return squashExceptions
         ([&](){
@@ -318,7 +318,7 @@ namespace owl {
     LLOResult lloTrianglesGeomGroupCreate(LLOContext llo,
                                           int32_t        groupID,
                                           const int32_t *geomIDs,
-                                          int32_t        numGeomIDs)
+                                          size_t        numGeomIDs)
     {
       return squashExceptions
         ([&](){
@@ -331,7 +331,7 @@ namespace owl {
     LLOResult lloUserGeomGroupCreate(LLOContext llo,
                                           int32_t        groupID,
                                           const int32_t *geomIDs,
-                                          int32_t        numGeomIDs)
+                                          size_t        numGeomIDs)
     {
       return squashExceptions
         ([&](){
@@ -344,7 +344,7 @@ namespace owl {
     LLOResult lloInstanceGroupCreate(LLOContext llo,
                                           int32_t        groupID,
                                           const int32_t *childGroupIDs,
-                                          int32_t        numChildGroupIDs)
+                                          size_t        numChildGroupIDs)
     {
       return squashExceptions
         ([&](){
@@ -582,7 +582,32 @@ namespace owl {
         return nullptr;
       }
     }
-       
+
+  extern "C" OWL_LL_INTERFACE
+  LLOResult lloBufferUpload(LLOContext llo,
+                            int32_t bufferID,
+                            const void *hostPtr)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->bufferUpload(bufferID,hostPtr);
+        });
+    }
+
+  extern "C" OWL_LL_INTERFACE
+  LLOResult lloBufferResize(LLOContext llo,
+                            int32_t bufferID,
+                            size_t newItemCount)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->bufferResize(bufferID,newItemCount);
+        });
+    }
+  
+    
     /*! returns the device-side pointer of the given buffer, on the
      *  given device */
     extern "C" OWL_LL_INTERFACE

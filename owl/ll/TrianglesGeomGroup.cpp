@@ -41,7 +41,7 @@ namespace owl {
 
     void Device::trianglesGeomGroupCreate(int groupID,
                                           const int *geomIDs,
-                                          int geomCount)
+                                          size_t geomCount)
     {
       assert("check for valid ID" && groupID >= 0);
       assert("check for valid ID" && groupID < groups.size());
@@ -81,7 +81,7 @@ namespace owl {
     void TrianglesGeomGroup::buildAccel(Context *context) 
     {
       assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && !bvhMemory.valid());
+      assert("check does not yet exist" && bvhMemory.empty());
       
       context->pushActive();
       LOG("building triangles accel over "

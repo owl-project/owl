@@ -35,7 +35,12 @@ namespace owl {
       typedef std::shared_ptr<HostPinnedMemory> SP;
       HostPinnedMemory(size_t amount);
       ~HostPinnedMemory();
-      void *pointer;
+
+      void free();
+      void alloc(size_t newSizeInBytes);
+      void *get() const { return pointer; }
+      
+      void *pointer = nullptr;
     };
 
     typedef void
@@ -211,7 +216,7 @@ namespace owl {
                             then be 'geomTypeID *
                             rayTypeCount) */
                           int geomTypeID,
-                          int numPrims);
+                          size_t numPrims);
 
       /*! create a new group object (with an associated BVH) over
         triangle geometries. All geomIDs in this group must be
@@ -224,10 +229,10 @@ namespace owl {
       */
       void trianglesGeomGroupCreate(int groupID,
                                     const int *geomIDs,
-                                    int geomCount);
+                                    size_t geomCount);
       void userGeomGroupCreate(int groupID,
                                const int *geomIDs,
-                               int geomCount);
+                               size_t geomCount);
       /*! create a new instance group with given list of children */
       void instanceGroupCreate(/*! the group we are defining */
                                int groupID,
@@ -237,7 +242,7 @@ namespace owl {
                                   'childCount' valid group ID */
                                const int *childGroupIDs,
                                /*! number of children in this group */
-                               int childCount);
+                               size_t childCount);
       /*! set given child's instance transform. groupID must be a
         valid instance group, childID must be wihtin
         [0..numChildren) */
@@ -267,6 +272,9 @@ namespace owl {
       void hostPinnedBufferCreate(int bufferID,
                                   size_t elementCount,
                                   size_t elementSize);
+
+      void bufferResize(int bufferID, size_t newItemCount);
+      void bufferUpload(int bufferID, const void *hostPtr);
       
       /*! returns the given device's buffer address on the specified
         device */
@@ -281,7 +289,7 @@ namespace owl {
         given time */
       void userGeomSetBoundsBuffer(int geomID, int bufferID);
       void userGeomSetPrimCount(int geomID,
-                                int numPrims);
+                                size_t numPrims);
 
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int bufferID,

@@ -1,3 +1,18 @@
+// ======================================================================== //
+// Copyright 2019 Ingo Wald                                                 //
+//                                                                          //
+// Licensed under the Apache License, Version 2.0 (the "License");          //
+// you may not use this file except in compliance with the License.         //
+// You may obtain a copy of the License at                                  //
+//                                                                          //
+//     http://www.apache.org/licenses/LICENSE-2.0                           //
+//                                                                          //
+// Unless required by applicable law or agreed to in writing, software      //
+// distributed under the License is distributed on an "AS IS" BASIS,        //
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. //
+// See the License for the specific language governing permissions and      //
+// limitations under the License.                                           //
+// ======================================================================== //
 
 #pragma once
 
@@ -209,6 +224,12 @@ owlHostPinnedBufferCreate(OWLContext context,
 OWL_API const void *
 owlBufferGetPointer(OWLBuffer buffer, int deviceID);
 
+OWL_API void 
+owlBufferResize(OWLBuffer buffer, size_t newItemCount);
+
+OWL_API void 
+owlBufferUpload(OWLBuffer buffer, const void *hostPtr);
+
 /*! executes an optix lauch of given size, with given launch
   program. Note this call is asynchronous, and may _not_ be
   completed by the time this function returns. */
@@ -291,6 +312,7 @@ owlMissProgGetVariable(OWLMissProg geom,
 // -------------------------------------------------------
 OWL_API void owlVariableSet1i(OWLVariable variable, int value);
 OWL_API void owlVariableSet1f(OWLVariable variable, float value);
+OWL_API void owlVariableSet2i(OWLVariable variable, int x, int y);
 OWL_API void owlVariableSet2iv(OWLVariable variable, const int *value);
 OWL_API void owlVariableSet3fv(OWLVariable variable, const float *value);
 OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
@@ -335,6 +357,27 @@ inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName, const owl2i &v
 {
   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
   owlVariableSet2iv(var,&v.x);
+  owlVariableRelease(var);
+}
+inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName,
+                           int x, int y)
+{
+  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+  owlVariableSet2i(var,x,y);
+  owlVariableRelease(var);
+}
+
+
+inline void owlGeomSet1f(OWLGeom rayGen, const char *varName, float v)
+{
+  OWLVariable var = owlGeomGetVariable(rayGen,varName);
+  owlVariableSet1f(var,v);
+  owlVariableRelease(var);
+}
+inline void owlRayGenSet1f(OWLRayGen rayGen, const char *varName, float v)
+{
+  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+  owlVariableSet1f(var,v);
   owlVariableRelease(var);
 }
 

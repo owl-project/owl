@@ -80,7 +80,7 @@ namespace owl {
                                         'childCount' valid group ID */
                                      const int *childGroupIDs,
                                      /*! number of children in this group */
-                                     int childCount)
+                                     size_t childCount)
     {
       assert("check for valid ID" && groupID >= 0);
       assert("check for valid ID" && groupID < groups.size());
@@ -116,7 +116,7 @@ namespace owl {
     void InstanceGroup::buildAccel(Context *context) 
     {
       assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && !bvhMemory.valid());
+      assert("check does not yet exist" && bvhMemory.empty());
       
       context->pushActive();
       LOG("building instance accel over "

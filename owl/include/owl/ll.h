@@ -22,13 +22,13 @@
 #ifndef _USE_MATH_DEFINES
 #  define _USE_MATH_DEFINES
 #endif
-
-#include <iostream>
 #include <math.h> // using cmath causes issues under Windows
 #ifdef _WIN32
 #else
 #  include <unistd.h>
 #endif
+
+#include <iostream>
 #include <stdint.h>
 
 #ifdef _WIN32
@@ -39,11 +39,6 @@
 #include <optix.h>
 #ifdef _WIN32
 #pragma warning( push )
-#endif
-
-#ifdef _WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
 #if defined(_MSC_VER)
@@ -159,8 +154,8 @@ extern "C" {
    *  value is null, and lloGetLastErrorText should contain an error
    *  message. */
   OWL_LL_INTERFACE
-  LLOContext lloContextCreate(const int32_t *deviceIDs = nullptr,
-                              int32_t        numDeviceIDs     = 0);
+  LLOContext lloContextCreate(const int32_t *deviceIDs    = nullptr,
+                              size_t         numDeviceIDs = 0);
   
   OWL_LL_INTERFACE
   LLOResult lloContextDestroy(LLOContext llo);
@@ -293,6 +288,17 @@ extern "C" {
                                   int32_t    bufferID,
                                   int32_t    deviceID);
 
+  OWL_LL_INTERFACE
+  LLOResult lloBufferUpload(LLOContext  llo,
+                            int32_t     bufferID,
+                            const void *hostPtr);
+
+  OWL_LL_INTERFACE
+  LLOResult lloBufferResize(LLOContext llo,
+                            int32_t    bufferID,
+                            size_t     newItemCount);
+  
+
   /*! returns the device-side pointer of the given buffer, on the
    *  given device */
   OWL_LL_INTERFACE
@@ -376,23 +382,23 @@ extern "C" {
   OWL_LL_INTERFACE
   LLOResult lloUserGeomSetPrimCount(LLOContext llo,
                                     int32_t geomID,
-                                    int32_t numPrims);
+                                    size_t  numPrims);
   
   OWL_LL_INTERFACE
   LLOResult lloInstanceGroupCreate(LLOContext     llo,
                                    int32_t        groupID,
                                    const int32_t *childGroupIDs,
-                                   int32_t        numChildGroupIDs);
+                                   size_t         numChildGroupIDs);
   OWL_LL_INTERFACE
   LLOResult lloTrianglesGeomGroupCreate(LLOContext     llo,
                                         int32_t        groupID,
                                         const int32_t *geomIDs,
-                                        int32_t        numGeomIDs);
+                                        size_t         numGeomIDs);
   OWL_LL_INTERFACE
   LLOResult lloUserGeomGroupCreate(LLOContext     llo,
                                    int32_t        groupID,
                                    const int32_t *geomIDs,
-                                   int32_t        numGeomIDs);
+                                   size_t         numGeomIDs);
   
   OWL_LL_INTERFACE
   LLOResult lloGroupAccelBuild(LLOContext llo,

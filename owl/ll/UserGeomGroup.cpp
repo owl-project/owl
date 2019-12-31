@@ -46,8 +46,6 @@ namespace owl {
                                            WriteUserGeomBoundsDataCB cb,
                                            const void *cbData)
     {
-      PING;
-      
       context->pushActive();
       UserGeomGroup *ugg
         = checkGetUserGeomGroup(groupID);
@@ -130,7 +128,7 @@ namespace owl {
     void UserGeomGroup::buildAccel(Context *context) 
     {
       assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && !bvhMemory.valid());
+      assert("check does not yet exist" && bvhMemory.empty());
       
       context->pushActive();
       LOG("building user accel over "
@@ -164,7 +162,7 @@ namespace owl {
         assert("double-check it's really user"
                && userGeom != nullptr);
         assert("user geom has valid bounds buffer *or* user-supplied bounds"
-               && (userGeom->internalBufferForBoundsProgram.valid()
+               && (userGeom->internalBufferForBoundsProgram.alloced()
                    || userGeom->d_boundsMemory));
         d_bounds = (CUdeviceptr)userGeom->d_boundsMemory;
         
@@ -294,7 +292,7 @@ namespace owl {
 
     void Device::userGeomGroupCreate(int groupID,
                                      const int *geomIDs,
-                                     int childCount)
+                                     size_t childCount)
     {
       assert("check for valid ID" && groupID >= 0);
       assert("check for valid ID" && groupID < groups.size());

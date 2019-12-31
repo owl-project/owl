@@ -19,8 +19,10 @@
 
 namespace owl {
 
-  Buffer::Buffer(Context *const context)
-    : RegisteredObject(context,context->buffers)
+  Buffer::Buffer(Context *const context,
+                 OWLDataType type)
+    : RegisteredObject(context,context->buffers),
+      type(type)
   {}
 
   const void *Buffer::getPointer(int deviceID)
@@ -28,11 +30,20 @@ namespace owl {
     return lloBufferGetPointer(context->llo,this->ID,deviceID);
   }
 
+  void Buffer::resize(size_t newSize)
+  {
+    lloBufferResize(context->llo,this->ID,newSize*sizeOf(type));
+  }
+  
+  void Buffer::upload(const void *hostPtr)
+  {
+    lloBufferUpload(context->llo,this->ID,hostPtr);
+  }
 
   HostPinnedBuffer::HostPinnedBuffer(Context *const context,
-                             OWLDataType type,
-                             size_t count)
-    : Buffer(context)
+                                     OWLDataType type,
+                                     size_t count)
+    : Buffer(context,type)
   {
     lloHostPinnedBufferCreate(context->llo,
                               this->ID,
@@ -43,7 +54,7 @@ namespace owl {
                              OWLDataType type,
                              size_t count,
                              const void *init)
-    : Buffer(context)
+    : Buffer(context,type)
   {
     lloDeviceBufferCreate(context->llo,
                           this->ID,
