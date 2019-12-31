@@ -339,6 +339,20 @@ inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName, const owl2i &v
 }
 
 
+inline void owlGeomSet1f(OWLGeom rayGen, const char *varName, float v)
+{
+  OWLVariable var = owlGeomGetVariable(rayGen,varName);
+  owlVariableSet1f(var,v);
+  owlVariableRelease(var);
+}
+inline void owlRayGenSet1f(OWLRayGen rayGen, const char *varName, float v)
+{
+  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+  owlVariableSet1f(var,v);
+  owlVariableRelease(var);
+}
+
+
 inline void owlRayGenSet3f(OWLRayGen rayGen, const char *varName, const owl3f &v)
 {
   OWLVariable var = owlRayGenGetVariable(rayGen,varName);

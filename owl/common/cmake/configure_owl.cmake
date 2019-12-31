@@ -26,7 +26,7 @@
 
 set(OWL_INCLUDES
   # owl needs cuda:
-  ${CUDA_TOOLKIT_ROOT_DIR}
+  ${CUDA_TOOLKIT_ROOT_DIR}/include
   # owl needs optix:
   ${OptiX_INCLUDE}
   # public API
