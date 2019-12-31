@@ -661,6 +661,13 @@ namespace owl {
     setVariable((APIHandle *)_variable,*(const vec2i*)value);
   }
 
+  // ----------- set3 -----------
+  OWL_API void owlVariableSet3f(OWLVariable _variable,
+                                float x, float y, float z)
+  {
+    LOG_API_CALL();
+    setVariable((APIHandle *)_variable,vec3f(x,y,z));
+  }
   // ----------- set3v -----------
   OWL_API void owlVariableSet3fv(OWLVariable _variable, const float *value)
   {
