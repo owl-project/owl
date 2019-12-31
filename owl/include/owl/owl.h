@@ -209,6 +209,12 @@ owlHostPinnedBufferCreate(OWLContext context,
 OWL_API const void *
 owlBufferGetPointer(OWLBuffer buffer, int deviceID);
 
+OWL_API void 
+owlBufferResize(OWLBuffer buffer, size_t newItemCount);
+
+OWL_API void 
+owlBufferUpload(OWLBuffer buffer, const void *hostPtr);
+
 /*! executes an optix lauch of given size, with given launch
   program. Note this call is asynchronous, and may _not_ be
   completed by the time this function returns. */
@@ -291,6 +297,7 @@ owlMissProgGetVariable(OWLMissProg geom,
 // -------------------------------------------------------
 OWL_API void owlVariableSet1i(OWLVariable variable, int value);
 OWL_API void owlVariableSet1f(OWLVariable variable, float value);
+OWL_API void owlVariableSet2i(OWLVariable variable, int x, int y);
 OWL_API void owlVariableSet2iv(OWLVariable variable, const int *value);
 OWL_API void owlVariableSet3fv(OWLVariable variable, const float *value);
 OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
@@ -335,6 +342,13 @@ inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName, const owl2i &v
 {
   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
   owlVariableSet2iv(var,&v.x);
+  owlVariableRelease(var);
+}
+inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName,
+                           int x, int y)
+{
+  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+  owlVariableSet2i(var,x,y);
   owlVariableRelease(var);
 }
 

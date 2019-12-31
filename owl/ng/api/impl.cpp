@@ -347,6 +347,19 @@ namespace owl {
     return buffer->getPointer(deviceID);
   }
 
+  OWL_API void 
+  owlBufferResize(OWLBuffer _buffer, size_t newItemCount)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+  OWL_API void 
+  owlBufferUpload(OWLBuffer _buffer, const void *hostPtr)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+  
 
   OWL_API OWLGeomType
   owlGeomTypeCreate(OWLContext _context,
@@ -610,7 +623,8 @@ namespace owl {
     variable->set(value);
   }
 
-  
+
+  // ----------- set1 -----------
   OWL_API void owlVariableSet1f(OWLVariable _variable, float value)
   {
     LOG_API_CALL();
@@ -623,6 +637,16 @@ namespace owl {
     setVariable((APIHandle *)_variable,value);
   }
 
+  
+  // ----------- set2 -----------
+  OWL_API void owlVariableSet2i(OWLVariable _variable, int x, int y)
+  {
+    LOG_API_CALL();
+    assert(value);
+    setVariable((APIHandle *)_variable,vec2i(x,y));
+  }
+
+  // ----------- set2v -----------
   OWL_API void owlVariableSet2iv(OWLVariable _variable, const int *value)
   {
     LOG_API_CALL();
@@ -630,6 +654,7 @@ namespace owl {
     setVariable((APIHandle *)_variable,*(const vec2i*)value);
   }
 
+  // ----------- set3v -----------
   OWL_API void owlVariableSet3fv(OWLVariable _variable, const float *value)
   {
     LOG_API_CALL();
@@ -637,6 +662,7 @@ namespace owl {
     setVariable((APIHandle *)_variable,*(const vec3f*)value);
   }
 
+  // ----------- set<other> -----------
   OWL_API void owlVariableSetGroup(OWLVariable _variable, OWLGroup _group)
   {
     LOG_API_CALL();

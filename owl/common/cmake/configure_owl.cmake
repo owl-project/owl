@@ -41,3 +41,8 @@ set(OWL_NG_LIBRARIES
   llowl-static
   owl-ng
   )
+# if in doubt, use both:
+set(OWL_LIBRARIES
+  ${OWL_LL_LIBRARIES}
+  ${OWL_NG_LIBRARIES}
+  )
