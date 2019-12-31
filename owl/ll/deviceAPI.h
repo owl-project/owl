@@ -124,25 +124,79 @@ namespace owl {
   static __forceinline__ __device__ T &getPRD()
   { return *(T*)getPRDPointer(); }
 
-
-  struct Ray {
-    inline __device__ Ray() {}
-    inline __device__ Ray(const vec3f &origin,
+  template<int _rayType=0, int _numRayTypes=1>
+  struct RayT {
+    enum { rayType = _rayType };
+    enum { numRayTypes = _numRayTypes };
+    inline __device__ RayT() {}
+    inline __device__ RayT(const vec3f &origin,
                           const vec3f &direction,
-                          int rayType,
+                          // int rayType,
                           float tmin,
                           float tmax)
       : origin(origin),
         direction(direction),
-        rayType(rayType),
+        // rayType(rayType),
+        tmin(tmin),
+        tmax(tmax)
+    {}
+    /* DEPRECATED: rayType is now part of the type, not a parameter,
+       so do not use this any more */
+    inline __device__ RayT(const vec3f &origin,
+                          const vec3f &direction,
+                           int _ignored_rayType,
+                          float tmin,
+                          float tmax)
+      : origin(origin),
+        direction(direction),
+        // rayType(rayType),
         tmin(tmin),
         tmax(tmax)
     {}
     vec3f origin, direction;
-    int   rayType = 0;
+    // int   rayType = 0;
     float tmin=0.f,tmax=1e30f,time=0.f;
   };
+  typedef RayT<0,1> Ray;
 
+
+  template<typename RayType, typename PRD>
+  inline __device__
+  void traceRay(OptixTraversableHandle traversable,
+                int sbtOffset,
+                const RayType &ray,
+                PRD           &prd,
+                uint32_t rayFlags = 0u)
+  {
+    unsigned int           p0 = 0;
+    unsigned int           p1 = 0;
+    owl::packPointer(&prd,p0,p1);
+    
+    optixTrace(traversable,
+               (const float3&)ray.origin,
+               (const float3&)ray.direction,
+               ray.tmin,
+               ray.tmax,
+               ray.time,
+               (OptixVisibilityMask)-1,
+               /*rayFlags     */rayFlags,
+               /*SBToffset    */ray.rayType + ray.numRayTypes*sbtOffset,
+               /*SBTstride    */ray.numRayTypes,
+               /*missSBTIndex */ray.rayType,
+               p0,
+               p1);
+  }
+
+  template<typename RayType, typename PRD>
+  inline __device__
+  void traceRay(OptixTraversableHandle traversable,
+                const RayType &ray,
+                PRD           &prd,
+                uint32_t rayFlags = 0u)
+  {
+    traceRay(traversable,0,
+             ray,prd,rayFlags);
+  }
 
   template<typename PRD>
   inline __device__
