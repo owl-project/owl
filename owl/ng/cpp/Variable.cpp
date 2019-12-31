@@ -105,7 +105,9 @@ namespace owl {
     void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
     {
       const OptixTraversableHandle value
-        = lloGroupGetTraversable(group->context->llo,group->ID,deviceID);
+        = group
+        ? lloGroupGetTraversable(group->context->llo,group->ID,deviceID)
+        : 0;
       *(OptixTraversableHandle*)sbtEntry = value;
     }
     
