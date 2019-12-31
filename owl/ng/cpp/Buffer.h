@@ -24,7 +24,7 @@ namespace owl {
   {
     typedef std::shared_ptr<Buffer> SP;
     
-    Buffer(Context *const context);
+    Buffer(Context *const context, OWLDataType type);
     
     virtual std::string toString() const { return "Buffer"; }
 
@@ -32,13 +32,15 @@ namespace owl {
 
     void resize(size_t newSize);
     void upload(const void *hostPtr);
+
+    OWLDataType type;
   };
 
   struct HostPinnedBuffer : public Buffer {
     typedef std::shared_ptr<HostPinnedBuffer> SP;
     
     HostPinnedBuffer(Context *const context,
-                             OWLDataType type,
+                     OWLDataType type,
                              size_t count);
     
     virtual std::string toString() const { return "HostPinnedBuffer"; }

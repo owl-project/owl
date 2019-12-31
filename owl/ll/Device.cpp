@@ -1348,17 +1348,22 @@ namespace owl {
 
     void HostPinnedBuffer::resize(Device *device, size_t newElementCount) 
     {
-      if (device->context->owlDeviceID != 0) return;
+      if (device->context->owlDeviceID == 0) {
       
-      device->context->pushActive();
-
-      pinnedMem->free();
+        device->context->pushActive();
+        
+        pinnedMem->free();
+        
+        this->elementCount = newElementCount;
+        PRINT(elementCount);
+        PRINT(elementSize);
+        pinnedMem->alloc(elementCount*elementSize);
+        
+        device->context->popActive();
+      }
       
-      this->elementCount = newElementCount;
-      pinnedMem->alloc(elementCount*elementSize);
       d_pointer = pinnedMem->get();
-
-      device->context->popActive();
+      PING; PRINT((void*)d_pointer);
     }
     
     void HostPinnedBuffer::upload(Device *device, const void *hostPtr) 
@@ -1373,9 +1378,12 @@ namespace owl {
       devMem.free();
       
       this->elementCount = newElementCount;
+      PRINT(elementCount);
+      PRINT(elementSize);
       devMem.alloc(elementCount*elementSize);
       d_pointer = devMem.get();
-
+      PING; PRINT((void*)d_pointer);
+      
       device->context->popActive();
     }
     

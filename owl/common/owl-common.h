@@ -75,13 +75,11 @@
 
 #ifndef PRINT
 # define PRINT(var) std::cout << #var << "=" << var << std::endl;
-# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __FUNCTION__ << std::endl;
-#endif
-
 #ifdef __WIN32__
-// #define XSTRING(s) STRING(s)
-// #define STRING(s) #s
-#define  __PRETTY_FUNCTION__ __FUNCTION__ 
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __FUNCTION__ << std::endl;
+#else
+# define PING std::cout << __PRETTY_FUNCTION__ << std::endl;
+#endif
 #endif
 
 #if defined(__CUDACC__)
@@ -101,9 +99,13 @@
 #define MAYBE_UNUSED
 #endif
 
-#if defined(_MSC_VER) && !defined(__PRETTY_FUNCTION__)
-#  define __PRETTY_FUNCTION__ __FUNCTION__
+
+#ifdef __WIN32__
+#define  __PRETTY_FUNCTION__ __FUNCTION__ 
 #endif
+// #if defined(_MSC_VER) && !defined(__PRETTY_FUNCTION__)
+// #  define __PRETTY_FUNCTION__ __FUNCTION__
+// #endif
 
 
 #define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" not implemented")
