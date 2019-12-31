@@ -642,7 +642,6 @@ namespace owl {
   OWL_API void owlVariableSet2i(OWLVariable _variable, int x, int y)
   {
     LOG_API_CALL();
-    assert(value);
     setVariable((APIHandle *)_variable,vec2i(x,y));
   }
 
