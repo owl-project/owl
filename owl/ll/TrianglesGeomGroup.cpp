@@ -81,7 +81,7 @@ namespace owl {
     void TrianglesGeomGroup::buildAccel(Context *context) 
     {
       assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && !bvhMemory.valid());
+      assert("check does not yet exist" && bvhMemory.empty());
       
       context->pushActive();
       LOG("building triangles accel over "

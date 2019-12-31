@@ -22,8 +22,10 @@ namespace owl {
   namespace ll {
     
     struct DeviceMemory {
-      inline bool   empty() const { return !valid(); }
-      inline bool   valid() const { return d_pointer != 0 && sizeInBytes > 0; }
+      inline bool   alloced() const { return !empty(); }
+      inline bool   empty() const { return sizeInBytes == 0; }
+      inline bool   notEmpty() const { return !empty(); }
+      // inline bool   valid() const { return d_pointer != 0 || sizeInBytes == 0; }
       inline size_t size()  const { return sizeInBytes; }
     
       inline void alloc(size_t size);
@@ -44,7 +46,7 @@ namespace owl {
       assert(empty());
       this->sizeInBytes = size;
       CUDA_CHECK(cudaMalloc( (void**)&d_pointer, sizeInBytes));
-      assert(valid());
+      assert(alloced() || size == 0);
     }
     
     inline void DeviceMemory::allocManaged(size_t size)
@@ -52,18 +54,17 @@ namespace owl {
       assert(empty());
       this->sizeInBytes = size;
       CUDA_CHECK(cudaMallocManaged( (void**)&d_pointer, sizeInBytes));
-      assert(valid());
+      assert(alloced() || size == 0);
     }
     
     inline void *DeviceMemory::get()
     {
-      assert(valid());
       return (void*)d_pointer;
     }
 
     inline void DeviceMemory::upload(const void *h_pointer, const char *debugMessage)
     {
-      assert(valid());
+      assert(alloced() || empty());
       CUDA_CHECK2(debugMessage,
                   cudaMemcpy((void*)d_pointer, h_pointer,
                              sizeInBytes, cudaMemcpyHostToDevice));
@@ -71,15 +72,16 @@ namespace owl {
     
     inline void DeviceMemory::download(void *h_pointer)
     {
-      assert(valid());
+      assert(alloced() || sizeInBytes == 0);
       CUDA_CHECK(cudaMemcpy(h_pointer, (void*)d_pointer, 
                             sizeInBytes, cudaMemcpyDeviceToHost));
     }
     
     inline void DeviceMemory::free()
     {
-      assert(valid());
-      CUDA_CHECK(cudaFree((void*)d_pointer));
+      assert(alloced() || empty());
+      if (!empty())
+        CUDA_CHECK(cudaFree((void*)d_pointer));
       sizeInBytes = 0;
       d_pointer   = 0;
       assert(empty());
@@ -88,12 +90,12 @@ namespace owl {
     template<typename T>
     inline void DeviceMemory::upload(const std::vector<T> &vec)
     {
-      if (!valid()) {
+      if (!alloced()) {
         alloc(vec.size()*sizeof(T));
       } else {
         assert(size() == vec.size()*sizeof(T));
       }
-      assert(valid());
+      assert(alloced() || vec.empty());
       upload(vec.data());
     }
     
