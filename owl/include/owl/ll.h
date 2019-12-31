@@ -288,6 +288,17 @@ extern "C" {
                                   int32_t    bufferID,
                                   int32_t    deviceID);
 
+  OWL_LL_INTERFACE
+  LLOResult lloBufferUpload(LLOContext  llo,
+                            int32_t     bufferID,
+                            const void *hostPtr);
+
+  OWL_LL_INTERFACE
+  LLOResult lloBufferResize(LLOContext llo,
+                            int32_t    bufferID,
+                            size_t     newItemCount);
+  
+
   /*! returns the device-side pointer of the given buffer, on the
    *  given device */
   OWL_LL_INTERFACE

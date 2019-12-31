@@ -350,13 +350,21 @@ namespace owl {
   OWL_API void 
   owlBufferResize(OWLBuffer _buffer, size_t newItemCount)
   {
-    OWL_NOTIMPLEMENTED;
+    LOG_API_CALL();
+    assert(_buffer);
+    Buffer::SP buffer = ((APIHandle *)_buffer)->get<Buffer>();
+    assert(buffer);
+    return buffer->resize(newItemCount);
   }
 
   OWL_API void 
   owlBufferUpload(OWLBuffer _buffer, const void *hostPtr)
   {
-    OWL_NOTIMPLEMENTED;
+    LOG_API_CALL();
+    assert(_buffer);
+    Buffer::SP buffer = ((APIHandle *)_buffer)->get<Buffer>();
+    assert(buffer);
+    return buffer->upload(hostPtr);
   }
 
   

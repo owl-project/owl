@@ -35,7 +35,12 @@ namespace owl {
       typedef std::shared_ptr<HostPinnedMemory> SP;
       HostPinnedMemory(size_t amount);
       ~HostPinnedMemory();
-      void *pointer;
+
+      void free();
+      void alloc(size_t newSizeInBytes);
+      void *get() const { return pointer; }
+      
+      void *pointer = nullptr;
     };
 
     typedef void
@@ -267,6 +272,9 @@ namespace owl {
       void hostPinnedBufferCreate(int bufferID,
                                   size_t elementCount,
                                   size_t elementSize);
+
+      void bufferResize(int bufferID, size_t newItemCount);
+      void bufferUpload(int bufferID, const void *hostPtr);
       
       /*! returns the given device's buffer address on the specified
         device */

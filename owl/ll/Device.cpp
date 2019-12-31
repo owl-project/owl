@@ -904,7 +904,16 @@ namespace owl {
       return (void*)checkGetBuffer(bufferID)->d_pointer;
     }
       
+    void Device::bufferResize(int bufferID, size_t newItemCount)
+    {
+      checkGetBuffer(bufferID)->resize(this,newItemCount);
+    }
     
+    void Device::bufferUpload(int bufferID, const void *hostPtr)
+    {
+      checkGetBuffer(bufferID)->upload(this,hostPtr);
+    }
+
     
     void Device::trianglesGeomSetIndexBuffer(int geomID,
                                              int bufferID,
@@ -1338,6 +1347,44 @@ namespace owl {
       buffers.resize(newCount);
     }
 
+    void HostPinnedBuffer::resize(Device *device, size_t newElementCount) 
+    {
+      if (device->context->owlDeviceID != 0) return;
+      
+      device->context->pushActive();
+
+      pinnedMem->free();
+      
+      this->elementCount = newElementCount;
+      pinnedMem->alloc(elementCount*elementSize);
+      d_pointer = pinnedMem->get();
+
+      device->context->popActive();
+    }
+    
+    void HostPinnedBuffer::upload(Device *device, const void *hostPtr) 
+    {
+      OWL_NOTIMPLEMENTED;
+    }
+    
+    void DeviceBuffer::resize(Device *device, size_t newElementCount) 
+    {
+      device->context->pushActive();
+
+      devMem.free();
+      
+      this->elementCount = newElementCount;
+      devMem.alloc(elementCount*elementSize);
+      d_pointer = devMem.get();
+
+      device->context->popActive();
+    }
+    
+    void DeviceBuffer::upload(Device *device, const void *hostPtr) 
+    {
+      OWL_NOTIMPLEMENTED;
+    }
+    
   } // ::owl::ll
 } //::owl
   

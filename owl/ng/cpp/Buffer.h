@@ -29,6 +29,9 @@ namespace owl {
     virtual std::string toString() const { return "Buffer"; }
 
     const void *getPointer(int deviceID);
+
+    void resize(size_t newSize);
+    void upload(const void *hostPtr);
   };
 
   struct HostPinnedBuffer : public Buffer {

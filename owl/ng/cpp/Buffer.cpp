@@ -28,6 +28,15 @@ namespace owl {
     return lloBufferGetPointer(context->llo,this->ID,deviceID);
   }
 
+  void Buffer::resize(size_t newSize)
+  {
+    lloBufferResize(context->llo,this->ID,newSize);
+  }
+  
+  void Buffer::upload(const void *hostPtr)
+  {
+    lloBufferUpload(context->llo,this->ID,hostPtr);
+  }
 
   HostPinnedBuffer::HostPinnedBuffer(Context *const context,
                              OWLDataType type,
