@@ -148,11 +148,12 @@ namespace owl {
       // ------------------------------------------------------------------
       // configure default module compile options
       // ------------------------------------------------------------------
-      moduleCompileOptions.maxRegisterCount  = 100;
 #if 1
+      moduleCompileOptions.maxRegisterCount  = 50;
       moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
       moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_NONE;
 #else
+      moduleCompileOptions.maxRegisterCount  = 100;
       moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
       moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
 #endif

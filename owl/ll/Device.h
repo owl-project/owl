@@ -88,7 +88,7 @@ namespace owl {
 
       /*! maximum depth instancing tree as specified by
           `setMaxInstancingDepth` */
-      int maxInstancingDepth = 2;      
+      int maxInstancingDepth = 1;      
       int numRayTypes { 1 };
     };
     

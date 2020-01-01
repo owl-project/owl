@@ -143,8 +143,9 @@ namespace owl {
       std::vector<CUdeviceptr> boundsPointers(children.size());
 
      // for now we use the same flags for all geoms
-      uint32_t userGeomInputFlags[1] = { 0 };
-      // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
+      uint32_t userGeomInputFlags[1]
+        = { 0 };
+      // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT };
 
       // now go over all children to set up the buildinputs
       for (int childID=0;childID<children.size();childID++) {
