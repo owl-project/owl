@@ -26,7 +26,7 @@
 
 set(OWL_INCLUDES
   # owl needs cuda:
-  ${CUDA_TOOLKIT_ROOT_DIR}
+  ${CUDA_TOOLKIT_ROOT_DIR}/include
   # owl needs optix:
   ${OptiX_INCLUDE}
   # public API
@@ -40,4 +40,9 @@ set(OWL_LL_LIBRARIES
 set(OWL_NG_LIBRARIES
   llowl-static
   owl-ng
+  )
+# if in doubt, use both:
+set(OWL_LIBRARIES
+  ${OWL_LL_LIBRARIES}
+  ${OWL_NG_LIBRARIES}
   )

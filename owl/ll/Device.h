@@ -45,14 +45,6 @@ namespace owl {
       Context(int owlDeviceID, int cudaDeviceID);
       ~Context();
       
-      /*! linear ID (0,1,2,...) of how *we* number devices (ie,
-        'first' device is alwasys device 0, no matter if it runs on
-        another physical/cuda device */
-      const int          owlDeviceID;
-      
-      /* the cuda device ID that this logical device runs on */
-      const int          cudaDeviceID;
-
       void setActive() { CUDA_CHECK(cudaSetDevice(cudaDeviceID)); }
       void pushActive()
       {
@@ -66,12 +58,21 @@ namespace owl {
         CUDA_CHECK(cudaSetDevice(savedActiveDeviceID));
         savedActiveDeviceID = -1;
       }
-      int  savedActiveDeviceID = -1;
-      
+
       void createPipeline(Device *device);
       void destroyPipeline();
 
       
+      /*! linear ID (0,1,2,...) of how *we* number devices (ie,
+        'first' device is alwasys device 0, no matter if it runs on
+        another physical/cuda device */
+      const int          owlDeviceID;
+      
+      /* the cuda device ID that this logical device runs on */
+      const int          cudaDeviceID;
+
+      int  savedActiveDeviceID = -1;
+
       OptixDeviceContext optixContext = nullptr;
       CUcontext          cudaContext  = nullptr;
       CUstream           stream       = nullptr;
@@ -87,7 +88,7 @@ namespace owl {
 
       /*! maximum depth instancing tree as specified by
           `setMaxInstancingDepth` */
-      int maxInstancingDepth = 2;      
+      int maxInstancingDepth = 1;      
       int numRayTypes { 1 };
     };
     
@@ -187,8 +188,11 @@ namespace owl {
         assert(numTimesReferenced == 0);
       }
       inline void *get() const { return d_pointer; }
-      const size_t elementCount;
-      const size_t elementSize;
+      virtual void resize(Device *device, size_t newElementCount) = 0;
+      virtual void upload(Device *device, const void *hostPtr) = 0;
+      
+      size_t       elementCount;
+      size_t       elementSize;
       void        *d_pointer = nullptr;
       /*! only for error checking - we do NOT do reference counting
         ourselves, but will use this to track erorrs like destroying
@@ -212,6 +216,8 @@ namespace owl {
       {
         devMem.free();
       }
+      void resize(Device *device, size_t newElementCount) override;
+      void upload(Device *device, const void *hostPtr) override;
       DeviceMemory devMem;
     };
     
@@ -225,6 +231,8 @@ namespace owl {
       {
         d_pointer = pinnedMem->pointer;
       }
+      void resize(Device *device, size_t newElementCount) override;
+      void upload(Device *device, const void *hostPtr) override;
       HostPinnedMemory::SP pinnedMem;
     };
       
@@ -558,6 +566,9 @@ namespace owl {
       
       /*! returns the given buffers device pointer */
       void *bufferGetPointer(int bufferID);
+      void bufferResize(int bufferID, size_t newItemCount);
+      void bufferUpload(int bufferID, const void *hostPtr);
+      
       void deviceBufferCreate(int bufferID,
                               size_t elementCount,
                               size_t elementSize,

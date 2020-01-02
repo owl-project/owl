@@ -46,8 +46,6 @@ namespace owl {
                                            WriteUserGeomBoundsDataCB cb,
                                            const void *cbData)
     {
-      PING;
-      
       context->pushActive();
       UserGeomGroup *ugg
         = checkGetUserGeomGroup(groupID);
@@ -130,7 +128,7 @@ namespace owl {
     void UserGeomGroup::buildAccel(Context *context) 
     {
       assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && !bvhMemory.valid());
+      assert("check does not yet exist" && bvhMemory.empty());
       
       context->pushActive();
       LOG("building user accel over "
@@ -145,8 +143,9 @@ namespace owl {
       std::vector<CUdeviceptr> boundsPointers(children.size());
 
      // for now we use the same flags for all geoms
-      uint32_t userGeomInputFlags[1] = { 0 };
-      // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
+      uint32_t userGeomInputFlags[1]
+        = { 0 };
+      // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT };
 
       // now go over all children to set up the buildinputs
       for (int childID=0;childID<children.size();childID++) {
@@ -164,7 +163,7 @@ namespace owl {
         assert("double-check it's really user"
                && userGeom != nullptr);
         assert("user geom has valid bounds buffer *or* user-supplied bounds"
-               && (userGeom->internalBufferForBoundsProgram.valid()
+               && (userGeom->internalBufferForBoundsProgram.alloced()
                    || userGeom->d_boundsMemory));
         d_bounds = (CUdeviceptr)userGeom->d_boundsMemory;
         
@@ -192,7 +191,10 @@ namespace owl {
       // first: compute temp memory for bvh
       // ------------------------------------------------------------------
       OptixAccelBuildOptions accelOptions = {};
-      accelOptions.buildFlags             = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+      accelOptions.buildFlags             =
+        OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+        |
+        OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
       accelOptions.motionOptions.numKeys  = 1;
       accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
       

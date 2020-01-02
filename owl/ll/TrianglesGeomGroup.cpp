@@ -81,7 +81,7 @@ namespace owl {
     void TrianglesGeomGroup::buildAccel(Context *context) 
     {
       assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && !bvhMemory.valid());
+      assert("check does not yet exist" && bvhMemory.empty());
       
       context->pushActive();
       LOG("building triangles accel over "
@@ -155,7 +155,11 @@ namespace owl {
       // first: compute temp memory for bvh
       // ------------------------------------------------------------------
       OptixAccelBuildOptions accelOptions = {};
-      accelOptions.buildFlags             = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+      accelOptions.buildFlags =
+        OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+        |
+        OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+
       accelOptions.motionOptions.numKeys  = 1;
       accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
       

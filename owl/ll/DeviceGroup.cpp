@@ -32,17 +32,27 @@ namespace owl {
 
     HostPinnedMemory::HostPinnedMemory(size_t amount)
     {
-      CUDA_CALL(MallocHost((void**)&pointer, amount));
+      alloc(amount);
       assert(pointer != nullptr);
     }
     
     HostPinnedMemory::~HostPinnedMemory()
     {
       assert(pointer != nullptr);
+      free();
+    }
+
+    void HostPinnedMemory::alloc(size_t amount)
+    {
+      CUDA_CALL(MallocHost((void**)&pointer, amount));
+    }
+
+    void HostPinnedMemory::free()
+    {
       CUDA_CALL_NOTHROW(FreeHost(pointer));
       pointer = nullptr;
     }
-    
+
     DeviceGroup::DeviceGroup(const std::vector<Device *> &devices)
       : devices(devices)
     {
@@ -424,6 +434,18 @@ namespace owl {
                                       xfm);
     }
 
+    void DeviceGroup::bufferResize(int bufferID, size_t newItemCount)
+    {
+      for (auto device : devices)
+        device->bufferResize(bufferID,newItemCount);
+    }
+    
+    void DeviceGroup::bufferUpload(int bufferID, const void *hostPtr)
+    {
+      for (auto device : devices)
+        device->bufferUpload(bufferID,hostPtr);
+    }
+      
 
     void DeviceGroup::geomGroupSetChild(int groupID,
                                         int childNo,
