@@ -65,6 +65,40 @@ structure is organized into separate "ll/" and "ng/" directory layers:
   - `samples/ng/`: samples for the ng layer (some ll samples not yet ported over)
 
 <!--- ------------------------------------------------------- -->
+Supported Platforms
+===================
+
+General Requirements:
+- OptiX 7 SDK
+- CUDA 10 (preferably 10.2, but 10.1 is tested, too)
+- a C++-11 capable compiler (regular gcc on CentOS and Linux should do, VS on Windows)
+
+Per-OS Instructions:
+
+- Ubuntu 18 & 19 (automatically tested on 18)
+    - Requires: `sudo apt install cmake-curses-gui`
+	- Build:
+	```
+	mkdir build
+	cd build
+	cmake ..
+	make
+	```
+- CentOS 7:
+    - Requires: `sudo yum install cmake3`
+	- Build:
+	```
+	mkdir build
+	cd build
+	cmake3 ..
+	make
+	```
+	(mind to use `cmake3`, not `cmake`, using the wrong one will mess up the build directory)
+- Windows
+    - Requires: Visual Studio (2019 works), cmake
+	- Build: Use CMake-GUI to build visual studio project, then use VS to build
+
+<!--- ------------------------------------------------------- -->
 (Main) TODOs:
 =============
 
