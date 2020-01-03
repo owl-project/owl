@@ -32,6 +32,15 @@ namespace owl {
   namespace common {
 
     template<typename INDEX_T, typename TASK_T>
+    inline void serial_for(INDEX_T nTasks, TASK_T&& taskFunction)
+    {
+      for (INDEX_T taskIndex = 0; taskIndex < nTasks; ++taskIndex) {
+        taskFunction(taskIndex);
+      }
+    }
+  
+#if HAVE_TBB
+    template<typename INDEX_T, typename TASK_T>
     inline void parallel_for(INDEX_T nTasks, TASK_T&& taskFunction)
     {
       if (nTasks == 0) return;
@@ -40,14 +49,12 @@ namespace owl {
       else
         tbb::parallel_for(INDEX_T(0), nTasks, std::forward<TASK_T>(taskFunction));
     }
-  
+#else
+# pragma message("warning: TBB not available, will replace all parallel_for's with serial_for's")
     template<typename INDEX_T, typename TASK_T>
-    inline void serial_for(INDEX_T nTasks, TASK_T&& taskFunction)
-    {
-      for (INDEX_T taskIndex = 0; taskIndex < nTasks; ++taskIndex) {
-        taskFunction(taskIndex);
-      }
-    }
+    inline void parallel_for(INDEX_T nTasks, TASK_T&& taskFunction)
+    { serial_for(nTasks,taskFunction); }
+#endif
   
     // template<typename TASK_T>
     // void parallel_for_blocked(size_t numTasks, size_t blockSize,
