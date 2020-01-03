@@ -105,8 +105,7 @@ SET(TBB_ROOT_PATH_LAST ${TBB_ROOT_PATH} CACHE INTERNAL "Last value of TBB_ROOT_P
 
 SET(TBB_ERROR_MESSAGE
   "Threading Building Blocks (TBB) with minimum version ${TBB_VERSION_REQUIRED} not found.
-OSPRay uses TBB as default tasking system. Please make sure you have the TBB headers installed as well (the package is typically named 'libtbb-dev' or 'tbb-devel') and/or hint the location of TBB in TBB_ROOT_PATH.
-Alternatively, you can try to use OpenMP as tasking system by setting OSPRAY_TASKING_SYSTEM=OpenMP")
+OWL uses TBB as default tasking system. Please make sure you have the TBB headers installed as well (the package is typically named 'libtbb-dev' or 'tbb-devel') and/or hint the location of TBB in TBB_ROOT_PATH. This error message means that TBB could not be found, and that a non-parallel scalar fall-back will be used")
 
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(TBB
@@ -125,7 +124,8 @@ IF (TBB_INCLUDE_DIR)
   SET(TBB_VERSION "${TBB_VERSION_MAJOR}.${CMAKE_MATCH_1}")
 
   IF (TBB_VERSION VERSION_LESS TBB_VERSION_REQUIRED)
-    MESSAGE(FATAL_ERROR ${TBB_ERROR_MESSAGE})
+    MESSAGE(WARNING ${TBB_ERROR_MESSAGE})
+    SET(TBB_FOUND FALSE)
   ENDIF()
 
   SET(TBB_VERSION ${TBB_VERSION} CACHE STRING "TBB Version")
