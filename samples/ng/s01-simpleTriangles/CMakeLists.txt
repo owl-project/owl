@@ -23,7 +23,7 @@ add_executable(ng01-simpleTriangles
   ${ptxCode}
   )
 target_link_libraries(ng01-simpleTriangles
-  owl-ng
+  owl_ng
   )
 add_test(ng01-simpleTriangles ${CMAKE_BINARY_DIR}/ng01-simpleTriangles)
 
