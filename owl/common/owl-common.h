@@ -180,10 +180,12 @@ namespace owl {
     using ::cos; // this is the double version
 #endif
   
-    inline __both__ float rsqrt(const float f)   { return 1.f/sqrtf(f); }
-    inline __both__ double rsqrt(const double d)   { return 1./sqrt(d); }
-    inline __both__ float sqrt(const float f)   { return sqrtf(f); }
+    inline __both__ float rsqrt(const float f)    { return 1.f/sqrtf(f); }
+    inline __both__ double rsqrt(const double d)  { return 1./sqrt(d); }
+    inline __both__ float sqrt(const float f)     { return sqrtf(f); }
     inline __both__ double sqrt(const double d)   { return sqrt(d); }
+    // inline __both__ float abs(const float f)     { return fabsf(f); }
+    // inline __both__ double abs(const double d)   { return fabs(d); }
 
 
 #ifdef __WIN32__
