@@ -97,7 +97,7 @@ namespace owl {
     {
       /*! initialize the random number generator with a new seed (usually
         per pixel) */
-      inline __device__ void init(int seed = 0)
+      inline __both__ void init(int seed = 0)
       {
         state = seed;
         for (int warmUp=0;warmUp<10;warmUp++)
@@ -105,7 +105,7 @@ namespace owl {
       }
 
       /*! get the next 'random' number in the sequence */
-      inline __device__ float operator() ()
+      inline __both__ float operator() ()
       {
         const uint64_t a = 0x5DEECE66DULL;
         const uint64_t c = 0xBULL;
