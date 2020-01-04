@@ -119,6 +119,15 @@ Latest Progress/Revision History
 v0.5.x - First Public Release Cleanups
 --------------------------------------
 
+*v0.5.4*: First external windows-app
+
+- various changes to cmake scripts, library names, and in partciualr
+  owl/common/viewerWidget to remove roadblocks for windows apps using
+  that infrastructure
+  
+- first external windows sandbox app (particle viewer) using owl/ng
+  and owl/viewerWidget
+
 *v0.5.3*: First *serious* node graph sample
 
 - ported `ll05-rtow` sample to node graph api

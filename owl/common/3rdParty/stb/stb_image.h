@@ -7189,4 +7189,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 */
 
+#if _WIN32
+#else
 #pragma clang diagnostic pop
+#endif
+

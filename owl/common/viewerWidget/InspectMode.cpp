@@ -100,8 +100,8 @@ namespace owl {
     void InspectModeManip::rotate(const float deg_u,
                                   const float deg_v)
     {
-      float rad_u = -M_PI/180.f*deg_u;
-      float rad_v = -M_PI/180.f*deg_v;
+      float rad_u = -(float)M_PI/180.f*deg_u;
+      float rad_v = -(float)M_PI/180.f*deg_v;
 
       assert(widget);
       FullCamera &fc = widget->fullCamera;

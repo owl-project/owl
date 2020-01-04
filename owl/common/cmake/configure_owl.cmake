@@ -35,11 +35,11 @@ set(OWL_INCLUDES
   ${owl_dir}/
   )
 set(OWL_LL_LIBRARIES
-  llowl
+  llowl_static
   )
 set(OWL_NG_LIBRARIES
-  llowl-static
-  owl-ng
+  llowl_static
+  owl_ng_static
   )
 # if in doubt, use both:
 set(OWL_LIBRARIES

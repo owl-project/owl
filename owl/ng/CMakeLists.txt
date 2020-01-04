@@ -16,7 +16,7 @@
 
 include_directories(${PROJECT_SOURCE_DIR}/)
 
-add_library(owl-ng
+set(OWL_NG_SOURCES
 
   ../include/owl/owl.h
   
@@ -38,12 +38,23 @@ add_library(owl-ng
   cpp/MissProg.cpp
   cpp/Geometry.cpp
   cpp/Variable.cpp
+)
+
+add_library(owl_ng
+${OWL_NG_SOURCES}
+  )
+add_library(owl_ng_static STATIC
+${OWL_NG_SOURCES}
   )
 
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
-target_link_libraries(owl-ng
-  llowl-static
+target_link_libraries(owl_ng
+  llowl
+  )
+
+target_link_libraries(owl_ng_static
+  llowl_static
   )
 
 

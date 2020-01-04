@@ -24,7 +24,7 @@ add_executable(ng05-rtow
   ${ptxCode}
   )
 target_link_libraries(ng05-rtow
-  owl-ng
+  owl_ng
   )
 add_test(ng05-rtow
   ${CMAKE_BINARY_DIR}/ng05-rtow)

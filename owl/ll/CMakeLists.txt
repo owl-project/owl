@@ -33,14 +33,14 @@ set(OWL_LL_SOURCES
   DeviceGroup.cpp
   )
 
-add_library(llowl-static STATIC
+add_library(llowl_static STATIC
   ${OWL_LL_SOURCES}
   )
-target_link_libraries(llowl-static
+target_link_libraries(llowl_static
   ${CUDA_LIBRARIES}
   ${CUDA_CUDA_LIBRARY}
   )
-target_compile_definitions(llowl-static PUBLIC -Dllowl_EXPORTS=1)
+target_compile_definitions(llowl_static PUBLIC -Dllowl_EXPORTS=1)
 
 add_library(llowl SHARED
   ${OWL_LL_SOURCES}

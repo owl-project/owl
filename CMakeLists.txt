@@ -15,7 +15,7 @@
 # ======================================================================== #
 
 cmake_policy(SET CMP0048 NEW)
-project(Optix-OWL VERSION 0.5.3)
+project(Optix-OWL VERSION 0.5.4)
 
 cmake_minimum_required(VERSION 2.8)
 # iw, 1/3/20: yes, i know this is 'old' cmake style, but on CentOS7
@@ -23,8 +23,10 @@ cmake_minimum_required(VERSION 2.8)
 # the cxx11 standard doesnt propagate those flags to nvcc for the cuda
 # programs. TODO: check to see if this can be fixed in the
 # configure_cuda script instead.
+if (NOT WIN32)
 set (CMAKE_CXX_FLAGS "--std=c++11")
 set (CUDA_PROPAGATE_HOST_FLAGS ON)
+endif()
 
 # ------------------------------------------------------------------
 # first, include gdt project to do some general configuration stuff
