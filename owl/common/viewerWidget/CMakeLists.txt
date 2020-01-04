@@ -49,5 +49,5 @@ target_compile_definitions(owl_viewerWidget PUBLIC owl_viewerWidget_DLL_INTERFAC
 target_link_libraries(owl_viewerWidget_static
   ${OPENGL_LIBRARIES}
   ${GLUT_LIBRARIES}
-  llowl
+  llowl_static
   )
