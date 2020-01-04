@@ -48,7 +48,7 @@ namespace owl {
         -> height = 2*tan(fov/2)*dist
       */
       float screen_height
-        = 2.f*tanf(fovyInDegrees/2 * M_PI/180.f)
+        = 2.f*tanf(fovyInDegrees/2 * (float)M_PI/180.f)
         * max(minFocalDistance,focalDistance);
       easy.screen.vertical   = screen_height * frame.vy;
       easy.screen.horizontal = screen_height * aspect * frame.vx;
