@@ -41,6 +41,30 @@
 namespace owl {
   namespace ll {
 
+    void dbgPrintBVHSizes(size_t numItems,
+                          size_t boundsArraySize,
+                          size_t tempMemSize,
+                          size_t initialBVHSize,
+                          size_t finalBVHSize)
+    {
+#if _WIN32
+      static char *wantToPrint = nullptr;
+#else
+      static char *wantToPrint = getenv("OWL_PRINT_BVH_MEM");
+#endif
+      if (!wantToPrint) return;
+      
+      std::cout << OWL_TERMINAL_YELLOW
+                << "@owl: bvh build mem: "
+                << prettyNumber(numItems) << " items, "
+                << prettyNumber(boundsArraySize) << "b bounds, "
+                << prettyNumber(tempMemSize) << "b temp, "
+                << prettyNumber(initialBVHSize) << "b initBVH, "
+                << prettyNumber(finalBVHSize) << "b finalBVH"
+                << OWL_TERMINAL_DEFAULT
+                << std::endl;
+    }
+    
     void Device::groupBuildPrimitiveBounds(int groupID,
                                            size_t maxGeomDataSize,
                                            WriteUserGeomBoundsDataCB cb,
@@ -182,7 +206,7 @@ namespace owl {
         aa.sbtIndexOffsetSizeInBytes   = 0; 
         aa.sbtIndexOffsetStrideInBytes = 0; 
       }
-      
+
       // ==================================================================
       // BLAS setup: buildinputs set up, build the blas
       // ==================================================================
@@ -221,9 +245,13 @@ namespace owl {
       tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
 #endif
 
+      
       // buffer for initial, uncompacted bvh
       DeviceMemory outputBuffer;
       // output buffer in current driver is NOT allowed be in managed memory:
+
+
+
       
       // #if MANAGED_TEST
       //        outputBuffer.allocManaged(blasBufferSizes.outputSizeInBytes);
@@ -268,6 +296,8 @@ namespace owl {
       // download builder's compacted size from device
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
+
+
       
       // alloc the buffer...
       bvhMemory.alloc(compactedSize);
@@ -287,10 +317,25 @@ namespace owl {
       outputBuffer.free(); // << the UNcompacted, temporary output buffer
       tempBuffer.free();
       compactedSizeBuffer.free();
-      
       context->popActive();
 
-      LOG_OK("successfully build user geom group accel");
+      LOG_OK("successfully built user geom group accel");
+
+      size_t sumPrims = 0;
+      size_t sumBoundsMem = 0;
+      for (int childID=0;childID<children.size();childID++) {
+        Geom *geom = children[childID];
+        UserGeom *userGeom = dynamic_cast<UserGeom*>(geom);
+        sumPrims += userGeom->numPrims;
+        sumBoundsMem += userGeom->internalBufferForBoundsProgram.sizeInBytes;
+        if (userGeom->internalBufferForBoundsProgram.alloced())
+          userGeom->internalBufferForBoundsProgram.free();
+      }
+      dbgPrintBVHSizes(/*numItems*/sumPrims,
+                       /*boundsArraySize*/sumBoundsMem,
+                       /*tempMemSize*/blasBufferSizes.tempSizeInBytes,
+                       /*initialBVHSize*/blasBufferSizes.outputSizeInBytes,
+                       /*finalBVHSize*/compactedSize);
     }
     
 
