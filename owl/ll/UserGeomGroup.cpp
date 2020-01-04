@@ -38,6 +38,10 @@
 
 // #define MANAGED_TEST 1
 
+
+
+#define COMPACT_ONLY_IF_IT_SAVES_ANYTHING 1
+
 namespace owl {
   namespace ll {
 
@@ -297,24 +301,27 @@ namespace owl {
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
 
-
+#if COMPACT_ONLY_IF_IT_SAVES_ANYTHING 
+      if (compactedSize < outputBuffer.sizeInBytes)
+#endif
+        {
+        // alloc the buffer...
+        bvhMemory.alloc(compactedSize);
+        // ... and perform compaction
+        OPTIX_CALL(AccelCompact(context->optixContext,
+                                /*TODO: stream:*/0,
+                                // OPTIX_COPY_MODE_COMPACT,
+                                traversable,
+                                (CUdeviceptr)bvhMemory.get(),
+                                bvhMemory.size(),
+                                &traversable));
+        CUDA_SYNC_CHECK();
       
-      // alloc the buffer...
-      bvhMemory.alloc(compactedSize);
-      // ... and perform compaction
-      OPTIX_CALL(AccelCompact(context->optixContext,
-                              /*TODO: stream:*/0,
-                              // OPTIX_COPY_MODE_COMPACT,
-                              traversable,
-                              (CUdeviceptr)bvhMemory.get(),
-                              bvhMemory.size(),
-                              &traversable));
-      CUDA_SYNC_CHECK();
-      
-      // ==================================================================
-      // aaaaaand .... clean up
-      // ==================================================================
-      outputBuffer.free(); // << the UNcompacted, temporary output buffer
+        // ==================================================================
+        // aaaaaand .... clean up
+        // ==================================================================
+        outputBuffer.free(); // << the UNcompacted, temporary output buffer
+      }
       tempBuffer.free();
       compactedSizeBuffer.free();
       context->popActive();
