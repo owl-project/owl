@@ -17,6 +17,7 @@
 #pragma once
 
 #include "owl/ll/optix.h"
+#include "../include/owl/ll.h"
 
 #define OWL_THROWS_EXCEPTIONS 1
 #if OWL_THROWS_EXCEPTIONS
@@ -43,70 +44,71 @@ namespace owl {
       void *pointer = nullptr;
     };
 
-    typedef void
-    (*WriteUserGeomBoundsDataCB)(uint8_t *userGeomDataToWrite,
-                                 int deviceID,
-                                 int geomID,
-                                 int childID,
-                                 const void *cbUserData);
     
-    /*! callback with which the app can specify what data is to be
-      written into the SBT for a given geometry, ray type, and
-      device */
-    typedef void
-    (*WriteHitProgDataCB)(uint8_t *hitProgDataToWrite,
-                          /*! ID of the device we're
-                            writing for (differnet
-                            devices may need to write
-                            different pointers */
-                          int deviceID,
-                          /*! the geometry ID for which
-                            we're generating the SBT
-                            entry for */
-                          int geomID,
-                          /*! the ray type for which
-                            we're generating the SBT
-                            entry for */
-                          int rayType,
-                          /*! the raw void pointer the app has passed
-                            during sbtHitGroupsBuild() */
-                          const void *callBackUserData);
+    // typedef void
+    // (*WriteUserGeomBoundsDataCB)(uint8_t *userGeomDataToWrite,
+    //                              int deviceID,
+    //                              int geomID,
+    //                              int childID,
+    //                              const void *cbUserData);
+    
+    // /*! callback with which the app can specify what data is to be
+    //   written into the SBT for a given geometry, ray type, and
+    //   device */
+    // typedef void
+    // (*WriteHitProgDataCB)(uint8_t *hitProgDataToWrite,
+    //                       /*! ID of the device we're
+    //                         writing for (differnet
+    //                         devices may need to write
+    //                         different pointers */
+    //                       int deviceID,
+    //                       /*! the geometry ID for which
+    //                         we're generating the SBT
+    //                         entry for */
+    //                       int geomID,
+    //                       /*! the ray type for which
+    //                         we're generating the SBT
+    //                         entry for */
+    //                       int rayType,
+    //                       /*! the raw void pointer the app has passed
+    //                         during sbtHitGroupsBuild() */
+    //                       const void *callBackUserData);
 
-    /*! callback with which the app can specify what data is to be
-      written into the SBT for a given geometry, ray type, and
-      device */
-    typedef void
-    (*WriteRayGenDataCB)(uint8_t *rayGenDataToWrite,
-                         /*! ID of the device we're
-                           writing for (differnet
-                           devices may need to write
-                           different pointers */
-                         int deviceID,
-                         /*! the geometry ID for which
-                           we're generating the SBT
-                           entry for */
-                         int rayGenID,
-                         /*! the raw void pointer the app has passed
-                           during sbtGeomTypesBuild() */
-                         const void *callBackUserData);
+    // /*! callback with which the app can specify what data is to be
+    //   written into the SBT for a given geometry, ray type, and
+    //   device */
+    // typedef void
+    // (*WriteRayGenDataCB)(uint8_t *rayGenDataToWrite,
+    //                      /*! ID of the device we're
+    //                        writing for (differnet
+    //                        devices may need to write
+    //                        different pointers */
+    //                      int deviceID,
+    //                      /*! the geometry ID for which
+    //                        we're generating the SBT
+    //                        entry for */
+    //                      int rayGenID,
+    //                      /*! the raw void pointer the app has passed
+    //                        during sbtGeomTypesBuild() */
+    //                      const void *callBackUserData);
     
-    /*! callback with which the app can specify what data is to be
-      written into the SBT for a given geometry, ray type, and
-      device */
-    typedef void
-    (*WriteMissProgDataCB)(uint8_t *missProgDataToWrite,
-                           /*! ID of the device we're
-                             writing for (differnet
-                             devices may need to write
-                             different pointers */
-                           int deviceID,
-                           /*! the ray type for which
-                             we're generating the SBT
-                             entry for */
-                           int rayType,
-                           /*! the raw void pointer the app has passed
-                             during sbtMissProgsBuildd() */
-                           const void *callBackUserData);
+    // /*! callback with which the app can specify what data is to be
+    //   written into the SBT for a given geometry, ray type, and
+    //   device */
+    // typedef void
+    // (*WriteMissProgDataCB)(uint8_t *missProgDataToWrite,
+    //                        /*! ID of the device we're
+    //                          writing for (differnet
+    //                          devices may need to write
+    //                          different pointers */
+    //                        int deviceID,
+    //                        /*! the ray type for which
+    //                          we're generating the SBT
+    //                          entry for */
+    //                        int rayType,
+    //                        /*! the raw void pointer the app has passed
+    //                          during sbtMissProgsBuildd() */
+    //                        const void *callBackUserData);
     
     struct Device;
     
@@ -310,13 +312,13 @@ namespace owl {
 
       void groupBuildPrimitiveBounds(int groupID,
                                      size_t maxGeomDataSize,
-                                     WriteUserGeomBoundsDataCB cb,
+                                     LLOWriteUserGeomBoundsDataCB cb,
                                      const void *cbData);
-      void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+      void sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
                             const void *callBackData);
-      void sbtRayGensBuild(WriteRayGenDataCB WriteRayGenDataCB,
+      void sbtRayGensBuild(LLOWriteRayGenDataCB WriteRayGenDataCB,
                            const void *callBackData);
-      void sbtMissProgsBuild(WriteMissProgDataCB WriteMissProgDataCB,
+      void sbtMissProgsBuild(LLOWriteMissProgDataCB WriteMissProgDataCB,
                              const void *callBackData);
       
       template<typename Lambda>
@@ -373,8 +375,14 @@ namespace owl {
       }
 
       size_t getDeviceCount() const { return devices.size(); }
-      void launch(int rgID, const vec2i &dims);
+      void launch(int rgID,
+                  const vec2i &dims);
 
+      void launch(int rgID,
+                  const vec2i &dims,
+                  int32_t launchParamsID,
+                  LLOWriteLaunchParamsCB writeLaunchParamsCB,
+                  const void *cbData);
       
       /* create an instance of this object that has properly
          initialized devices for given cuda device IDs. */

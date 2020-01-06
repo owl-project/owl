@@ -728,16 +728,22 @@ namespace owl {
           box program */
       void groupBuildPrimitiveBounds(int groupID,
                                      size_t maxGeomDataSize,
-                                     WriteUserGeomBoundsDataCB cb,
+                                     LLOWriteUserGeomBoundsDataCB cb,
                                      const void *cbData);
-      void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+      void sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
                             const void *callBackUserData);
-      void sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
+      void sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
                            const void *callBackUserData);
-      void sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
+      void sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgDataCB,
                              const void *callBackUserData);
 
       void launch(int rgID, const vec2i &dims);
+
+      void launch(int rgID,
+                  const vec2i &dims,
+                  int32_t launchParamsID,
+                  LLOWriteLaunchParamsCB writeLaunchParamsCB,
+                  const void *cbData);
       
       Context                  *context;
       

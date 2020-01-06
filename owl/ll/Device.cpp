@@ -986,7 +986,7 @@ namespace owl {
 
 
 
-    void Device::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+    void Device::sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
                                   const void *callBackUserData)
     {
       LOG("building sbt hit group records");
@@ -1076,7 +1076,7 @@ namespace owl {
       LOG_OK("done building (and uploading) sbt hit group records");
     }
       
-    void Device::sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
+    void Device::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
                                  const void *callBackUserData)
     {
       static size_t numTimesCalled = 0;
@@ -1145,7 +1145,7 @@ namespace owl {
         LOG_OK("done building (and uploading) sbt ray gen records (only showing first 10 instances)");
     }
       
-    void Device::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
+    void Device::sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgDataCB,
                                    const void *callBackUserData)
     {
       LOG("building sbt miss prog records");
@@ -1286,6 +1286,87 @@ namespace owl {
       context->popActive();
     }
     
+
+    void Device::launch(int rgID,
+                        const vec2i &dims,
+                        int32_t launchParamsID,
+                        LLOWriteLaunchParamsCB writeLaunchParamsCB,
+                        const void *cbData)
+    {
+      throw std::runtime_error("no launch params yet ...");
+      context->pushActive();
+      // LOG("launching ...");
+      assert("check valid launch dims" && dims.x > 0);
+      assert("check valid launch dims" && dims.y > 0);
+      assert("check valid ray gen program ID" && rgID >= 0);
+      assert("check valid ray gen program ID" && rgID <  rayGenPGs.size());
+
+      assert("check raygen records built" && sbt.rayGenRecordCount != 0);
+      sbt.sbt.raygenRecord
+        = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
+                                        rgID * sbt.rayGenRecordSize);
+
+      if (!sbt.missProgRecordsBuffer.alloced() &&
+          !sbt.hitGroupRecordsBuffer.alloced()) {
+        // apparently this program does not have any hit records *or*
+        // miss records, which means either something's horribly wrong
+        // in the app, or this is more cuda-style "raygen-only" launch
+        // (ie, a lauch of a raygen programthat doesn't actualy trace
+        // any rays. If the latter, let's "fake" a valid SBT by
+        // writing in some (senseless) values to not trigger optix's
+        // own sanity checks
+        static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+        sbt.sbt.missRecordBase
+          = (CUdeviceptr)32;
+        sbt.sbt.missRecordStrideInBytes
+          = (uint32_t)32;
+        sbt.sbt.missRecordCount
+          = 1;
+
+        sbt.sbt.hitgroupRecordBase
+          = (CUdeviceptr)32;
+        sbt.sbt.hitgroupRecordStrideInBytes
+          = (uint32_t)32;
+        sbt.sbt.hitgroupRecordCount
+          = 1;
+      } else {
+        assert("check miss records built" && sbt.missProgRecordCount != 0);
+        sbt.sbt.missRecordBase
+          = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
+        sbt.sbt.missRecordStrideInBytes
+          = (uint32_t)sbt.missProgRecordSize;
+        sbt.sbt.missRecordCount
+          = (uint32_t)sbt.missProgRecordCount;
+
+        assert("check hit records built" && sbt.hitGroupRecordCount != 0);
+        sbt.sbt.hitgroupRecordBase
+          = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
+        sbt.sbt.hitgroupRecordStrideInBytes
+          = (uint32_t)sbt.hitGroupRecordSize;
+        sbt.sbt.hitgroupRecordCount
+          = (uint32_t)sbt.hitGroupRecordCount;
+      }
+
+      if (!sbt.launchParamsBuffer.alloced()) {
+        LOG("creating dummy launch params buffer ...");
+        sbt.launchParamsBuffer.alloc(8);
+      }
+
+      // launchParamsBuffer.upload((void *)device_launchParams);
+      OPTIX_CALL(Launch(context->pipeline,
+                        context->stream,
+                        (CUdeviceptr)sbt.launchParamsBuffer.get(),
+                        sbt.launchParamsBuffer.sizeInBytes,
+                        &sbt.sbt,
+                        dims.x,dims.y,1
+                        ));
+
+      // cudaDeviceSynchronize();
+      context->popActive();
+    }
+    
+
+
     void Device::userGeomCreate(int geomID,
                                 /*! the "logical" hit group ID:
                                   will always count 0,1,2... evne
