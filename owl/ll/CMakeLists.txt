@@ -54,6 +54,8 @@ set_target_properties(llowl PROPERTIES CXX_VISIBILITY_PRESET hidden)
 #target_compile_definitions(llowl PUBLIC LLOWL_INTERFACE)
 target_compile_definitions(llowl PUBLIC -Dllowl_EXPORTS=1)
 
+set_target_properties(llowl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(llowl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 
 

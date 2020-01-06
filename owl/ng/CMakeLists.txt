@@ -58,6 +58,10 @@ target_link_libraries(owl_ng_static
   )
 
 
+set_target_properties(owl_ng PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(owl_ng_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+
 
 
 
