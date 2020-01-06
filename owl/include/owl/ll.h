@@ -88,6 +88,11 @@ extern "C" {
                                   int childID,
                                   const void *cbUserData);
     
+  typedef void
+  (*LLOWriteLaunchParamsCB)(uint8_t *userGeomDataToWrite,
+                            int deviceID,
+                            const void *cbUserData);
+    
   /*! callback with which the app can specify what data is to be
     written into the SBT for a given geometry, ray type, and
     device */
@@ -167,6 +172,15 @@ extern "C" {
                         int32_t launchDimY);
   
   OWL_LL_INTERFACE
+  LLOResult lloParamsLaunch2D(LLOContext llo,
+                              int32_t rayGenID,                              
+                              int32_t launchDimX,
+                              int32_t launchDimY,
+                              int32_t launchParamsID,
+                              LLOWriteLaunchParamsCB writeLaunchParamsCB,
+                              const void *cbData);
+  
+  OWL_LL_INTERFACE
   LLOResult lloSetMaxInstancingDepth(LLOContext llo,
                                      int32_t maxInstanceDepth);
   
@@ -175,6 +189,12 @@ extern "C" {
                             /*! number of buffers valid after this
                              *  function call */
                             int32_t numBuffers);
+
+  OWL_LL_INTERFACE
+  LLOResult lloAllocLaunchParams(LLOContext llo,
+                                 /*! number of buffers valid after this
+                                  *  function call */
+                                 int32_t numLaunchParams);
 
   OWL_LL_INTERFACE
   LLOResult lloAllocModules(LLOContext llo,
@@ -221,6 +241,12 @@ extern "C" {
                             const char *programName,
                             /*! size of that program's SBT data */
                             size_t      dataSizeOfRayGen);
+  
+  OWL_LL_INTERFACE
+  LLOResult lloLaunchParamsCreate(LLOContext  llo,
+                                  int         launchParamsID,
+                                  /*! size of that program's SBT data */
+                                  size_t      sizeOfVarsStruct);
   
   OWL_LL_INTERFACE
   LLOResult lloMissProgCreate(LLOContext  llo,
@@ -524,6 +550,40 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
        (*lambda)(output,devID,geomID,childID);
      },
      (const void *)&l);
+}
+
+/*! C++-only wrapper of callback method with lambda function */
+template<typename Lambda>
+void lloParamsLaunch2D(LLOContext   llo,
+                       int32_t      rayGenID,
+                       int32_t      Nx,
+                       int32_t      Ny,
+                       int32_t      launchParamsObjectID,
+                       const Lambda &l)
+{
+  lloParamsLaunch2D
+    (llo,rayGenID,Nx,Ny,
+     launchParamsObjectID,
+     [](uint8_t *output,
+        int devID,
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID);
+     },
+     (const void *)&l);
+  // lloGroupBuildPrimitiveBounds
+  //   (llo,groupID,sizeOfData,
+  //    [](uint8_t *output,
+  //       int devID,
+  //       int geomID,
+  //       int childID, 
+  //       const void *cbData)
+  //    {
+  //      const Lambda *lambda = (const Lambda *)cbData;
+  //      (*lambda)(output,devID,geomID,childID);
+  //    },
+  //    (const void *)&l);
 }
 #endif
 
