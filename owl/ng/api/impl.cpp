@@ -171,6 +171,9 @@ namespace owl {
   std::vector<OWLVarDecl> checkAndPackVariables(const OWLVarDecl *vars,
                                                 size_t            numVars)
   {
+    if (vars == nullptr && (numVars == 0 || numVars == -1))
+      return {};
+
     // *copy* the vardecls here, so we can catch any potential memory
     // *access errors early
 
