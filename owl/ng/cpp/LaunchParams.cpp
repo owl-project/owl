@@ -38,11 +38,5 @@ namespace owl {
                           type->varStructSize);
   }
 
-  void LaunchParams::launch(const vec2i &dims)
-  {
-    throw std::runtime_error("wrong ...");
-    lloLaunch2D(context->llo,this->ID,dims.x,dims.y);
-  }
-  
 } // ::owl
 

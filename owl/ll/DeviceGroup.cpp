@@ -111,6 +111,13 @@ namespace owl {
     
     void DeviceGroup::moduleCreate(int moduleID, const char *ptxCode)
     { for (auto device : devices) device->modules.set(moduleID,ptxCode); }
+
+    void DeviceGroup::launchParamsCreate(int launchParamsID, size_t sizeOfVars)
+    {
+      for (auto device : devices)
+        device->launchParamsCreate(launchParamsID,sizeOfVars);
+    }
+
     
     void DeviceGroup::buildModules()
     {

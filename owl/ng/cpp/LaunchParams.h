@@ -29,7 +29,10 @@ namespace owl {
 
     virtual std::string toString() const { return "LaunchParamsType"; }
   };
-  
+
+  /*! an object that stores the variables used for building the launch
+      params data - this is all this object does: store values and
+      write them when requested */
   struct LaunchParams : public SBTObject<LaunchParamsType> {
     typedef std::shared_ptr<LaunchParams> SP;
     
@@ -37,8 +40,6 @@ namespace owl {
            LaunchParamsType::SP type);
     
     virtual std::string toString() const { return "LaunchParams"; }
-
-    void launch(const vec2i &dims);
   };
 
 } // ::owl

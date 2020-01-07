@@ -135,7 +135,9 @@ namespace owl {
       size_t      dataSize = 0;
     };
     struct LaunchParams {
-      size_t               dataSize;
+      LaunchParams(Context *context, size_t sizeOfData);
+      
+      const size_t         dataSize;
       
       /*! host-size memory for the launch paramters - we have a
           host-side copy, too, so we can leave the launch2D call
@@ -148,7 +150,7 @@ namespace owl {
       
       /*! a cuda stream we can use for the async upload and the
           following async launch */
-      CUstream             stream;
+      cudaStream_t         stream;
     };
     struct RayGenPG : public ProgramGroup {
       Program program;
@@ -490,6 +492,8 @@ namespace owl {
 
       void geomTypeCreate(int geomTypeID,
                           size_t programDataSize);
+      void launchParamsCreate(int launchParamsID,
+                              size_t sizeOfData);
         
       void allocRayGens(size_t count);
 
@@ -659,6 +663,14 @@ namespace owl {
         Geom *geom = geoms[geomID];
         assert("check valid geom" && geom != nullptr);
         return geom;
+      }
+      LaunchParams *checkGetLaunchParams(int launchParamsID)
+      {
+        assert("check valid launchParams ID" && launchParamsID >= 0);
+        assert("check valid launchParams ID" && launchParamsID <  launchParams.size());
+        LaunchParams *launchParams = this->launchParams[launchParamsID];
+        assert("check valid launchParams" && launchParams != nullptr);
+        return launchParams;
       }
 
       GeomType *checkGetGeomType(int geomTypeID)

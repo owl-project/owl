@@ -63,6 +63,25 @@ namespace owl {
     context->buildPipeline();
   }
   
+  OWL_API void owlParamsLaunch2D(OWLRayGen _rayGen,
+                                 int dims_x, int dims_y,
+                                 OWLLaunchParams _launchParams)
+  {
+    LOG_API_CALL();
+
+    assert(_rayGen);
+    RayGen::SP rayGen
+      = ((APIHandle *)_rayGen)->get<RayGen>();
+    assert(rayGen);
+
+    assert(_launchParams);
+    LaunchParams::SP launchParams
+      = ((APIHandle *)_launchParams)->get<LaunchParams>();
+    assert(launchParams);
+
+    rayGen->launch(vec2i(dims_x,dims_y),launchParams);
+  }
+
   OWL_API void owlRayGenLaunch2D(OWLRayGen _rayGen,
                                  int dims_x, int dims_y)
   {
@@ -138,6 +157,14 @@ namespace owl {
   {
     LOG_API_CALL();
     return getVariableHelper<MissProg>((APIHandle*)_prog,varName);
+  }
+
+  OWL_API OWLVariable
+  owlLaunchParamsGetVariable(OWLLaunchParams _prog,
+                       const char *varName)
+  {
+    LOG_API_CALL();
+    return getVariableHelper<LaunchParams>((APIHandle*)_prog,varName);
   }
   
 

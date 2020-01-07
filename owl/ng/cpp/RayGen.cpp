@@ -49,6 +49,14 @@ namespace owl {
   {
     lloLaunch2D(context->llo,this->ID,dims.x,dims.y);
   }
+
+  void RayGen::launch(const vec2i &dims, const LaunchParams::SP &lp)
+  {
+    lloParamsLaunch2D(context->llo,this->ID,dims.x,dims.y,
+                      lp->ID,[&](uint8_t *launchParamsToWrite, int deviceID){
+                        lp->writeVariables(launchParamsToWrite,deviceID);
+                      });
+  }
   
 } // ::owl
 
