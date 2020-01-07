@@ -62,8 +62,6 @@ namespace osc {
     
     bool denoiserOn = true;
     bool accumulate = true;
-  protected:
-
 
     // ------------------------------------------------------------------
     // internal helper functions
@@ -133,6 +131,7 @@ namespace osc {
     /*! the camera we are to render with. */
     Camera lastSetCamera;
     int    frameID = 0;
+    int    numPixelSamples = 1;
     vec2i  fbSize;
     
     /*! the model we are going to trace rays against */

@@ -18,6 +18,7 @@
 #include "LaunchParams.h"
 // this include may only appear in a single source file:
 #include <optix_function_table_definition.h>
+#include <string.h>
 
 /*! \namespace osc - Optix Siggraph Course */
 namespace osc {
@@ -387,12 +388,17 @@ namespace osc {
     // if (denoiser) {
     //   OPTIX_CHECK(optixDenoiserDestroy(denoiser));
     // };
-    if (fbColor) owlBufferDestroy(fbColor);
+    if (fbColor) {
+      std::cout << "todo: buffer destroy" << std::endl;
+      // owlBufferDestroy(fbColor);
+    }
 
     this->fbSize = newSize;
-    fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
+    // fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
+    fbColor = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
+    // fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
 
-    owlLaunchParamsSetBuffer(launchParams,"frame.colorBuffer",colorBuffer);
+    owlLaunchParamsSetBuffer(launchParams,"frame.colorBuffer",fbColor);
     owlLaunchParamsSet2i(launchParams,"frame.fbSize",(const owl2i&)fbSize);
 
     // and re-set the camera, since aspect may have changed
@@ -410,8 +416,10 @@ namespace osc {
   /*! download the rendered color buffer */
   void SampleRenderer::downloadPixels(uint32_t h_pixels[])
   {
-    finalColorBuffer.download(h_pixels,
-                              launchParams.frame.size.x*launchParams.frame.size.y);
+    std::cout <<" todo: download buffer..." << std::endl;
+    memcpy(h_pixels,owlBufferGetPointer(fbColor,0),fbSize.x*fbSize.y*sizeof(int));
+    // finalColorBuffer.download(h_pixels,
+    //                           launchParams.frame.size.x*launchParams.frame.size.y);
   }
   
 } // ::osc

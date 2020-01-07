@@ -30,6 +30,7 @@ add_executable(ex12_denoiseSeparateChannels
   Model.cpp
   main.cpp
   )
+add_subdirectory(glfWindow)
 
 target_link_libraries(ex12_denoiseSeparateChannels
   toneMap
@@ -42,4 +43,5 @@ target_link_libraries(ex12_denoiseSeparateChannels
   glfWindow
   glfw
   ${OPENGL_gl_LIBRARY}
+  owl_ng
   )

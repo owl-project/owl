@@ -19,6 +19,7 @@
 
 #include "LaunchParams.h"
 #include "owl/common/math/random.h"
+#include "owl/ll/deviceAPI.h"
 
 using namespace osc;
 
@@ -297,7 +298,8 @@ namespace osc {
         *  vec4f(optixLaunchParams.frame.colorBuffer[fbIndex]);
       rgba /= (optixLaunchParams.frame.frameID+1.f);
     }
-    optixLaunchParams.frame.colorBuffer[fbIndex] = (float4)rgba;
+    // optixLaunchParams.frame.colorBuffer[fbIndex] = (float4)rgba;
+    optixLaunchParams.frame.colorBuffer[fbIndex] = owl::make_rgba(rgba);
   }
   
 } // ::osc

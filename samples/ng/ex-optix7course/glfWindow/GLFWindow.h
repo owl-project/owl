@@ -17,15 +17,15 @@
 #pragma once
 
 // common gdt helper tools
-#include "gdt/math/AffineSpace.h"
+#include "owl/common/math/AffineSpace.h"
 // glfw framework
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 /*! \namespace osc - Optix Siggraph Course */
 namespace osc {
-  using namespace gdt;
-
+  using namespace owl;
+  using namespace owl::common;
 
   struct GLFWindow {
     GLFWindow(const std::string &title);

@@ -18,7 +18,6 @@
 
 /*! \namespace osc - Optix Siggraph Course */
 namespace osc {
-  using namespace gdt;
   
   static void glfw_error_callback(int error, const char* description)
   {

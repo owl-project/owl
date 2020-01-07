@@ -16,10 +16,10 @@
 
 #include "Model.h"
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "3rdParty/tiny_obj_loader.h"
+#include "tiny_obj_loader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "3rdParty/stb_image.h"
+#include "owl/common/3rdParty/stb/stb_image.h"
 
 //std
 #include <set>
@@ -128,9 +128,9 @@ namespace osc {
       
       model->textures.push_back(texture);
     } else {
-      std::cout << GDT_TERMINAL_RED
+      std::cout << OWL_TERMINAL_RED
                 << "Could not load texture from " << fileName << "!"
-                << GDT_TERMINAL_DEFAULT << std::endl;
+                << OWL_TERMINAL_DEFAULT << std::endl;
     }
     
     knownTextures[inFileName] = textureID;
@@ -189,11 +189,16 @@ namespace osc {
                     addVertex(mesh, attributes, idx1, knownVertices),
                     addVertex(mesh, attributes, idx2, knownVertices));
           mesh->index.push_back(idx);
-          mesh->diffuse = (const vec3f&)materials[materialID].diffuse;
-          mesh->diffuseTextureID = loadTexture(model,
-                                               knownTextures,
-                                               materials[materialID].diffuse_texname,
-                                               modelDir);
+          if (materialID < 0) {
+            mesh->diffuse = vec3f(1,0,0);
+            mesh->diffuseTextureID = -1;
+          } else {
+            mesh->diffuse = (const vec3f&)materials[materialID].diffuse;
+            mesh->diffuseTextureID = loadTexture(model,
+                                                 knownTextures,
+                                                 materials[materialID].diffuse_texname,
+                                                 modelDir);
+          }
         }
 
         if (mesh->vertex.empty())

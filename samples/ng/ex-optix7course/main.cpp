@@ -113,16 +113,16 @@ namespace osc {
         std::cout << "accumulation/progressive refinement now " << (sample.accumulate?"ON":"OFF") << std::endl;
       }
       if (key == ',') {
-        sample.launchParams.numPixelSamples
-          = std::max(1,sample.launchParams.numPixelSamples-1);
+        sample.numPixelSamples
+          = std::max(1,sample.numPixelSamples-1);
         std::cout << "num samples/pixel now "
-                  << sample.launchParams.numPixelSamples << std::endl;
+                  << sample.numPixelSamples << std::endl;
       }
       if (key == '.') {
-        sample.launchParams.numPixelSamples
-          = std::max(1,sample.launchParams.numPixelSamples+1);
+        sample.numPixelSamples
+          = std::max(1,sample.numPixelSamples+1);
         std::cout << "num samples/pixel now "
-                  << sample.launchParams.numPixelSamples << std::endl;
+                  << sample.numPixelSamples << std::endl;
       }
     }
     
@@ -138,8 +138,7 @@ namespace osc {
     world, then exit */
   extern "C" int main(int ac, char **av)
   {
-    try {
-      Model *model = loadOBJ(
+    std::string inFileName = 
 #ifdef _WIN32
       // on windows, visual studio creates _two_ levels of build dir
       // (x86/Release)
@@ -149,7 +148,11 @@ namespace osc {
       // (say, <project>/build/)...
       "../models/sponza.obj"
 #endif
-                             );
+      ;
+    if (ac == 2)
+      inFileName = av[1];
+    try {
+      Model *model = loadOBJ(inFileName);
       Camera camera = { /*from*/vec3f(-1293.07f, 154.681f, -0.7304f),
                         /* at */model->bounds.center()-vec3f(0,400,0),
                         /* up */vec3f(0.f,1.f,0.f) };
@@ -176,8 +179,8 @@ namespace osc {
       window->run();
       
     } catch (std::runtime_error& e) {
-      std::cout << GDT_TERMINAL_RED << "FATAL ERROR: " << e.what()
-                << GDT_TERMINAL_DEFAULT << std::endl;
+      std::cout << OWL_TERMINAL_RED << "FATAL ERROR: " << e.what()
+                << OWL_TERMINAL_DEFAULT << std::endl;
 	  std::cout << "Did you forget to copy sponza.obj and sponza.mtl into your optix7course/models directory?" << std::endl;
 	  exit(1);
     }

@@ -171,15 +171,17 @@ namespace owl {
   std::vector<OWLVarDecl> checkAndPackVariables(const OWLVarDecl *vars,
                                                 size_t            numVars)
   {
+    if (vars == nullptr && (numVars == 0 || numVars == -1))
+      return {};
     // *copy* the vardecls here, so we can catch any potential memory
     // *access errors early
 
+    assert(vars);
     if (numVars == size_t(-1)) {
       // using -1 as count value for a variable list means the list is
       // null-terminated... so just count it
       for (numVars = 0; vars[numVars].name != nullptr; numVars++);
     }
-    assert(vars);
     for (int i=0;i<numVars;i++)
       assert(vars[i].name != nullptr);
     std::vector<OWLVarDecl> varDecls(numVars);
