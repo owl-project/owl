@@ -260,25 +260,25 @@ namespace owl {
         scalar_t tr = a.vx.x+a.vy.y+a.vz.z+1;
         vector_t diag(a.vx.x,a.vy.y,a.vz.z);
         if (tr > 1) {
-          scalar_t s = owl::common::sqrt(tr) * 2;
+          scalar_t s = owl::common::polymorphic::sqrt(tr) * 2;
           return QuaternionT<scalar_t>(.25f * s,
                                        (a.vz.y-a.vy.z)/s,
                                        (a.vx.z-a.vz.x)/s,
                                        (a.vy.x-a.vx.y)/s);
         } else if (arg_min(diag) == 0) {
-          scalar_t s = owl::common::sqrt(1.f+diag.x-diag.y-diag.z)*2.f;
+          scalar_t s = owl::common::polymorphic::sqrt(1.f+diag.x-diag.y-diag.z)*2.f;
           return QuaternionT<scalar_t>((a.vz.y-a.vy.z)/s,
                                        .25f * s,
                                        (a.vx.y-a.vy.x)/s,
                                        (a.vx.z-a.vz.x)/s);
         } else if (arg_min(diag) == 1) {
-          scalar_t s = owl::common::sqrt(1.f+diag.y-diag.x-diag.z)*2.f;
+          scalar_t s = owl::common::polymorphic::sqrt(1.f+diag.y-diag.x-diag.z)*2.f;
           return QuaternionT<scalar_t>((a.vx.z-a.vz.x)/s,
                                        (a.vx.y-a.vy.x)/s,
                                        .25f * s,
                                        (a.vy.z-a.vz.y)/s);
         } else {
-          scalar_t s = owl::common::sqrt(1.f+diag.z-diag.x-diag.y)*2.f;
+          scalar_t s = owl::common::polymorphic::sqrt(1.f+diag.z-diag.x-diag.y)*2.f;
           return QuaternionT<scalar_t>((a.vy.x-a.vx.y)/s,
                                        (a.vx.z-a.vz.x)/s,
                                        (a.vy.z-a.vz.y)/s,
