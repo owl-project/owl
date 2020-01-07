@@ -41,7 +41,7 @@ namespace owl {
     3-dimensional launches we'll need separate functions */
   inline __device__ vec2i getLaunchDims()
   {
-    return (vec2i)optixGetLaunchIndex();
+    return (vec2i)optixGetLaunchDimensions();
   }
 
   /*! return pointer to currently running program's "SBT Data" (which
