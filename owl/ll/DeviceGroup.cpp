@@ -105,9 +105,19 @@ namespace owl {
 
     void DeviceGroup::allocModules(size_t count)
     { for (auto device : devices) device->allocModules(count); }
+
+    void DeviceGroup::allocLaunchParams(size_t count)
+    { for (auto device : devices) device->allocLaunchParams(count); }
     
     void DeviceGroup::moduleCreate(int moduleID, const char *ptxCode)
     { for (auto device : devices) device->modules.set(moduleID,ptxCode); }
+
+    void DeviceGroup::launchParamsCreate(int launchParamsID, size_t sizeOfVars)
+    {
+      for (auto device : devices)
+        device->launchParamsCreate(launchParamsID,sizeOfVars);
+    }
+
     
     void DeviceGroup::buildModules()
     {
@@ -354,7 +364,7 @@ namespace owl {
       return checkGetDevice(deviceID)->groupGetTraversable(groupID);
     }
 
-    void DeviceGroup::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+    void DeviceGroup::sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
                                        const void *callBackData)
     {
       for (auto device : devices) 
@@ -371,7 +381,7 @@ namespace owl {
     }
                           
 
-    void DeviceGroup::sbtRayGensBuild(WriteRayGenDataCB writeRayGenCB,
+    void DeviceGroup::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenCB,
                                       const void *callBackData)
     {
       for (auto device : devices) 
@@ -379,7 +389,7 @@ namespace owl {
                                 callBackData);
     }
     
-    void DeviceGroup::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgCB,
+    void DeviceGroup::sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgCB,
                                         const void *callBackData)
     {
       for (auto device : devices) 
@@ -389,7 +399,7 @@ namespace owl {
 
     void DeviceGroup::groupBuildPrimitiveBounds(int groupID,
                                                 size_t maxGeomDataSize,
-                                                WriteUserGeomBoundsDataCB cb,
+                                                LLOWriteUserGeomBoundsDataCB cb,
                                                 const void *cbData)
     {
       // try {
@@ -484,6 +494,20 @@ namespace owl {
     void DeviceGroup::launch(int rgID, const vec2i &dims)
     {
       for (auto device : devices) device->launch(rgID,dims);
+      CUDA_SYNC_CHECK();
+    }
+    
+    void DeviceGroup::launch(int rgID,
+                             const vec2i &dims,
+                             int32_t launchParamsID,
+                             LLOWriteLaunchParamsCB writeLaunchParamsCB,
+                             const void *cbData)
+    {
+      for (auto device : devices)
+        device->launch(rgID,dims,
+                       launchParamsID,
+                       writeLaunchParamsCB,
+                       cbData);
       CUDA_SYNC_CHECK();
     }
     

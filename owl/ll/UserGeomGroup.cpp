@@ -71,7 +71,7 @@ namespace owl {
     
     void Device::groupBuildPrimitiveBounds(int groupID,
                                            size_t maxGeomDataSize,
-                                           WriteUserGeomBoundsDataCB cb,
+                                           LLOWriteUserGeomBoundsDataCB cb,
                                            const void *cbData)
     {
       context->pushActive();

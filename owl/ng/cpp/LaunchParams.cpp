@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,30 +14,29 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "MissProg.h"
+#include "LaunchParams.h"
 #include "Context.h"
 
 namespace owl {
 
-  MissProgType::MissProgType(Context *const context,
-                             Module::SP module,
-                             const std::string &progName,
-                             size_t varStructSize,
-                             const std::vector<OWLVarDecl> &varDecls)
-    : SBTObjectType(context,context->missProgTypes,varStructSize,varDecls),
-      module(module),
-      progName(progName)
-  {}
-  
-  MissProg::MissProg(Context *const context,
-                     MissProgType::SP type) 
-    : SBTObject(context,context->missProgs,type)
+  LaunchParamsType::LaunchParamsType(Context *const context,
+                                     size_t varStructSize,
+                                     const std::vector<OWLVarDecl> &varDecls)
+    : SBTObjectType(context,context->launchParamTypes,varStructSize,varDecls)
   {
-    lloMissProgCreate(context->llo,this->ID,
-                      type->module->ID,
-                      type->progName.c_str(),
-                      type->varStructSize);
   }
   
+  LaunchParams::LaunchParams(Context *const context,
+                 LaunchParamsType::SP type) 
+    : SBTObject(context,context->launchParams,type)
+  {
+    assert(context);
+    assert(type);
+    assert(type.get());
+    lloLaunchParamsCreate(context->llo,
+                          this->ID,
+                          type->varStructSize);
+  }
+
 } // ::owl
 

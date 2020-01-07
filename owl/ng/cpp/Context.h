@@ -20,6 +20,7 @@
 #include "Buffer.h"
 #include "Group.h"
 #include "RayGen.h"
+#include "LaunchParams.h"
 #include "MissProg.h"
 // ll
 #include "owl/ll.h"
@@ -50,6 +51,8 @@ namespace owl {
     ObjectRegistryT<GeomType>     geomTypes;
     ObjectRegistryT<Geom>         geoms;
     ObjectRegistryT<Module>       modules;
+    ObjectRegistryT<LaunchParamsType> launchParamTypes;
+    ObjectRegistryT<LaunchParams>     launchParams;
     
     //! TODO: allow changing that via api ..
     size_t numRayTypes = 1;
@@ -84,6 +87,13 @@ namespace owl {
                      const std::string &progName,
                      size_t varStructSize,
                      const std::vector<OWLVarDecl> &varDecls);
+    
+    LaunchParams::SP
+    createLaunchParams(const std::shared_ptr<LaunchParamsType> &type);
+    
+    LaunchParamsType::SP
+    createLaunchParamsType(size_t varStructSize,
+                           const std::vector<OWLVarDecl> &varDecls);
     
     MissProg::SP
     createMissProg(const std::shared_ptr<MissProgType> &type);

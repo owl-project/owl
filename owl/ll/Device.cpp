@@ -59,6 +59,15 @@ namespace owl {
       fprintf( stderr, "[%2d][%12s]: %s\n", level, tag, message );
     }
 
+    LaunchParams::LaunchParams(Context *context, size_t sizeOfData)
+      : dataSize(sizeOfData)
+    {
+      context->pushActive();
+      CUDA_CHECK(cudaStreamCreate(&stream));
+      deviceMemory.alloc(dataSize);
+      hostMemory.resize(dataSize);
+      context->popActive();
+    }
 
     int RangeAllocator::alloc(size_t size)
     {
@@ -986,7 +995,7 @@ namespace owl {
 
 
 
-    void Device::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+    void Device::sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
                                   const void *callBackUserData)
     {
       LOG("building sbt hit group records");
@@ -1076,7 +1085,7 @@ namespace owl {
       LOG_OK("done building (and uploading) sbt hit group records");
     }
       
-    void Device::sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
+    void Device::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
                                  const void *callBackUserData)
     {
       static size_t numTimesCalled = 0;
@@ -1145,9 +1154,11 @@ namespace owl {
         LOG_OK("done building (and uploading) sbt ray gen records (only showing first 10 instances)");
     }
       
-    void Device::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
+    void Device::sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgDataCB,
                                    const void *callBackUserData)
     {
+      if (missProgPGs.size() == 0) return;
+      
       LOG("building sbt miss prog records");
       assert("check correct number of miss progs"
              && missProgPGs.size() == context->numRayTypes);
@@ -1286,6 +1297,9 @@ namespace owl {
       context->popActive();
     }
     
+
+
+
     void Device::userGeomCreate(int geomID,
                                 /*! the "logical" hit group ID:
                                   will always count 0,1,2... evne
@@ -1393,7 +1407,117 @@ namespace owl {
       devMem.upload(hostPtr,"DeviceBuffer::upload");
       device->context->popActive();
     }
+
+
+
     
+    void Device::allocLaunchParams(size_t count)
+    {
+      if (count < launchParams.size())
+        // to prevent unobserved memory hole that a simple
+        // shrink-without-clean-deletion woudl cause, force an
+        // error:
+        throw std::runtime_error("shrinking launch params not yet implemented");
+      launchParams.resize(count);
+    }
+    
+    void Device::launchParamsCreate(int launchParamsID,
+                                    size_t sizeOfData)
+    {
+      assert(launchParamsID >= 0
+             && "sanity check launch param ID already allocated");
+      assert(launchParamsID < launchParams.size()
+             && "sanity check launch param ID already allocated");
+      assert(launchParams[launchParamsID] == nullptr
+             && "re-defining launch param types not yet implemented");
+      LaunchParams *lp = new LaunchParams(context,sizeOfData);
+      launchParams[launchParamsID] = lp;
+    }
+
+    /*! launch *with* launch params */
+    void Device::launch(int rgID,
+                        const vec2i &dims,
+                        int32_t launchParamsID,
+                        LLOWriteLaunchParamsCB writeLaunchParamsCB,
+                        const void *cbData)
+    {
+      LaunchParams *lp
+        = checkGetLaunchParams(launchParamsID);
+      
+      // call the callback to generate the host-side copy of the
+      // launch params struct
+      writeLaunchParamsCB(lp->hostMemory.data(),context->owlDeviceID,cbData);
+      context->pushActive();
+
+      // upload the buffer - TODO: async
+      lp->deviceMemory.uploadAsync(lp->hostMemory.data(),
+                                   lp->stream);
+      
+      // LOG("launching ...");
+      assert("check valid launch dims" && dims.x > 0);
+      assert("check valid launch dims" && dims.y > 0);
+      assert("check valid ray gen program ID" && rgID >= 0);
+      assert("check valid ray gen program ID" && rgID <  rayGenPGs.size());
+
+      assert("check raygen records built" && sbt.rayGenRecordCount != 0);
+      sbt.sbt.raygenRecord
+        = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
+                                        rgID * sbt.rayGenRecordSize);
+
+      if (!sbt.missProgRecordsBuffer.alloced() &&
+          !sbt.hitGroupRecordsBuffer.alloced()) {
+        // apparently this program does not have any hit records *or*
+        // miss records, which means either something's horribly wrong
+        // in the app, or this is more cuda-style "raygen-only" launch
+        // (ie, a lauch of a raygen programthat doesn't actualy trace
+        // any rays. If the latter, let's "fake" a valid SBT by
+        // writing in some (senseless) values to not trigger optix's
+        // own sanity checks
+        static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+        sbt.sbt.missRecordBase
+          = (CUdeviceptr)32;
+        sbt.sbt.missRecordStrideInBytes
+          = (uint32_t)32;
+        sbt.sbt.missRecordCount
+          = 1;
+
+        sbt.sbt.hitgroupRecordBase
+          = (CUdeviceptr)32;
+        sbt.sbt.hitgroupRecordStrideInBytes
+          = (uint32_t)32;
+        sbt.sbt.hitgroupRecordCount
+          = 1;
+      } else {
+        assert("check miss records built" && sbt.missProgRecordCount != 0);
+        sbt.sbt.missRecordBase
+          = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
+        sbt.sbt.missRecordStrideInBytes
+          = (uint32_t)sbt.missProgRecordSize;
+        sbt.sbt.missRecordCount
+          = (uint32_t)sbt.missProgRecordCount;
+
+        assert("check hit records built" && sbt.hitGroupRecordCount != 0);
+        sbt.sbt.hitgroupRecordBase
+          = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
+        sbt.sbt.hitgroupRecordStrideInBytes
+          = (uint32_t)sbt.hitGroupRecordSize;
+        sbt.sbt.hitgroupRecordCount
+          = (uint32_t)sbt.hitGroupRecordCount;
+      }
+
+      OPTIX_CALL(Launch(context->pipeline,
+                        lp->stream,
+                        (CUdeviceptr)lp->deviceMemory.get(),
+                        lp->deviceMemory.sizeInBytes,
+                        &sbt.sbt,
+                        dims.x,dims.y,1
+                        ));
+      context->popActive();
+    }
+    
+
+
+
   } // ::owl::ll
 } //::owl
   

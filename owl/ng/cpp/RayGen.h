@@ -18,6 +18,7 @@
 
 #include "SBTObject.h"
 #include "Module.h"
+#include "LaunchParams.h"
 
 namespace owl {
 
@@ -44,6 +45,7 @@ namespace owl {
     virtual std::string toString() const { return "RayGen"; }
 
     void launch(const vec2i &dims);
+    void launch(const vec2i &dims, const LaunchParams::SP &launchParams);
   };
 
 } // ::owl
