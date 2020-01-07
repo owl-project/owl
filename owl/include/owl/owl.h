@@ -104,8 +104,14 @@ typedef enum
 
 typedef enum
   {
+    // soon to be deprecated old naming
     OWL_GEOMETRY_USER,
+    // new naming, to be consistent with type OLWGeom (not OWLGeometry):
+    OWL_GEOM_USER=OWL_GEOMETRY_USER,
+    // soon to be deprecated old naming
     OWL_GEOMETRY_TRIANGLES,
+    // new naming, to be consistent with type OLWGeom (not OWLGeometry):
+    OWL_GEOM_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
     OWL_TRIANGLES=OWL_GEOMETRY_TRIANGLES
   }
   OWLGeomKind;
