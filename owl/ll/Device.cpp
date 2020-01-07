@@ -1447,8 +1447,6 @@ namespace owl {
       // call the callback to generate the host-side copy of the
       // launch params struct
       writeLaunchParamsCB(lp->hostMemory.data(),context->owlDeviceID,cbData);
-      PRINT(lp->hostMemory.size());
-      PRINT(*(int*)lp->hostMemory.data());
       context->pushActive();
 
       // upload the buffer - TODO: async
