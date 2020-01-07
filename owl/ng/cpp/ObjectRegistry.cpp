@@ -126,6 +126,18 @@ namespace owl {
   }
 
   template<>
+  void ObjectRegistryT<LaunchParams>::reallocContextIDs(int newMaxIDs)
+  {
+    lloAllocLaunchParams(context->llo,newMaxIDs);
+  }
+  
+  template<>
+  void ObjectRegistryT<LaunchParamsType>::reallocContextIDs(int newMaxIDs)
+  {
+    OWL_NOTIMPLEMENTED;
+  }
+
+  template<>
   void ObjectRegistryT<Group>::reallocContextIDs(int newMaxIDs)
   {
     lloAllocGroups(context->llo,newMaxIDs);

@@ -22,27 +22,25 @@ namespace owl {
   LaunchParamsType::LaunchParamsType(Context *const context,
                                      size_t varStructSize,
                                      const std::vector<OWLVarDecl> &varDecls)
-    : SBTObjectType(context,context->launchParamsTypes,varStructSize,varDecls)
+    : SBTObjectType(context,context->launchParamTypes,varStructSize,varDecls)
   {
   }
   
   LaunchParams::LaunchParams(Context *const context,
                  LaunchParamsType::SP type) 
-    : SBTObject(context,context->launchParamss,type)
+    : SBTObject(context,context->launchParams,type)
   {
     assert(context);
     assert(type);
     assert(type.get());
-    assert(type->module);
-    assert(type->progName != "");
-    lloLaunchParamsCreate(context->llo,this->ID,
-                    type->module->ID,
-                    type->progName.c_str(),
-                    type->varStructSize);
+    lloLaunchParamsCreate(context->llo,
+                          this->ID,
+                          type->varStructSize);
   }
 
   void LaunchParams::launch(const vec2i &dims)
   {
+    throw std::runtime_error("wrong ...");
     lloLaunch2D(context->llo,this->ID,dims.x,dims.y);
   }
   
