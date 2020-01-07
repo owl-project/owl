@@ -776,6 +776,8 @@ namespace owl {
                   int32_t launchParamsID,
                   LLOWriteLaunchParamsCB writeLaunchParamsCB,
                   const void *cbData);
+
+      void setRayTypeCount(size_t rayTypeCount);
       
       Context                  *context;
       

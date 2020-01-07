@@ -751,7 +751,18 @@ namespace owl {
           dg->setMaxInstancingDepth(maxInstanceDepth);
         });
     }
-  
+
+    OWL_LL_INTERFACE
+    LLOResult lloSetRayTypeCount(LLOContext llo,
+                                 size_t rayTypeCount)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->setRayTypeCount(rayTypeCount);
+        });
+    }
+    
 
   } // ::owl::ll
 } //::owl

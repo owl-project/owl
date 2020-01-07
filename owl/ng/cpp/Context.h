@@ -57,6 +57,7 @@ namespace owl {
     //! TODO: allow changing that via api ..
     size_t numRayTypes = 1;
 
+    void setRayTypeCount(size_t rayTypeCount);
     /*! experimentation code for sbt construction */
     void buildSBT();
     void buildPipeline();

@@ -101,7 +101,13 @@ namespace owl {
       for (auto device : devices)
         device->setMaxInstancingDepth(maxInstancingDepth);
     }
-    
+
+    void DeviceGroup::setRayTypeCount(size_t rayTypeCount)
+    {
+      for (auto device : devices)
+        device->setRayTypeCount(rayTypeCount);
+    }
+
 
     void DeviceGroup::allocModules(size_t count)
     { for (auto device : devices) device->allocModules(count); }

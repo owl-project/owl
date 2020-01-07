@@ -378,6 +378,8 @@ namespace owl {
       }
 
       size_t getDeviceCount() const { return devices.size(); }
+      void setRayTypeCount(size_t rayTypeCount);
+      
       void launch(int rgID,
                   const vec2i &dims);
 

@@ -185,6 +185,10 @@ extern "C" {
                                      int32_t maxInstanceDepth);
   
   OWL_LL_INTERFACE
+  LLOResult lloSetRayTypeCount(LLOContext llo,
+                               size_t rayTypeCount);
+  
+  OWL_LL_INTERFACE
   LLOResult lloAllocBuffers(LLOContext llo,
                             /*! number of buffers valid after this
                              *  function call */

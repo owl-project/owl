@@ -168,6 +168,13 @@ owlGetDeviceCount(OWLContext context);
 OWL_API OWLContext
 owlContextCreate();
 
+/*! set number of ray types to be used in this context; this should be
+    done before any programs, pipelines, geometries, etc get
+    created */
+OWL_API OWLContext
+owlContextSetRayTypeCount(OWLContext context,
+                          size_t numRayTypes);
+
 OWL_API void
 owlContextDestroy(OWLContext context);
 

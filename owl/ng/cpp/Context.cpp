@@ -241,4 +241,13 @@ namespace owl {
     lloBuildPrograms(llo);
   }
 
+  void Context::setRayTypeCount(size_t rayTypeCount)
+  {
+    /* TODO; sanity checking that this is a useful value, and that
+       no geoms etc are created yet */
+    this->numRayTypes = rayTypeCount;
+      
+    lloSetRayTypeCount(llo,rayTypeCount);
+  }
+  
 } // ::owl

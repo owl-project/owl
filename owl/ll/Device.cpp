@@ -1516,6 +1516,12 @@ namespace owl {
     }
     
 
+    void Device::setRayTypeCount(size_t rayTypeCount)
+    {
+      // TODO: sanity check values, and that nothing has been created
+      // yet
+      context->numRayTypes = rayTypeCount;
+    }
 
 
   } // ::owl::ll

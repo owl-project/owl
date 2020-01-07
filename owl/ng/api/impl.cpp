@@ -33,6 +33,22 @@ namespace owl {
     return (OWLContext)context->createHandle(context);
   }
 
+/*! set number of ray types to be used in this context; this should be
+    done before any programs, pipelines, geometries, etc get
+    created */
+  OWL_API OWLContext
+  owlContextSetRayTypeCount(OWLContext _context,
+                            size_t numRayTypes)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    context->setRayTypeCount(numRayTypes);
+  }
+
+  
   OWL_API void owlBuildSBT(OWLContext _context)
   {
     LOG_API_CALL();
@@ -173,6 +189,7 @@ namespace owl {
   {
     if (vars == nullptr && (numVars == 0 || numVars == -1))
       return {};
+
     // *copy* the vardecls here, so we can catch any potential memory
     // *access errors early
 
@@ -755,8 +772,6 @@ namespace owl {
       = handle
       ? handle->get<Buffer>()
       : Buffer::SP();
-    
-    assert(buffer);
 
     setVariable((APIHandle *)_variable,buffer);
   }

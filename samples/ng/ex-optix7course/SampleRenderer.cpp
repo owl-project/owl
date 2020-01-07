@@ -58,6 +58,7 @@ namespace osc {
   {
     // createContext();
     context = owlContextCreate();
+    owlContextSetRayTypeCount(context,2);
     
     // createModule();
     module = owlModuleCreate(context,embedded_ptx_code);
@@ -75,8 +76,8 @@ namespace osc {
 
     buildAccel();
     
-    owlBuildPipeline(context);
     owlBuildPrograms(context);
+    owlBuildPipeline(context);
     owlBuildSBT(context);
     
     OWLVarDecl launchParamsVars[] = {
@@ -173,8 +174,8 @@ namespace osc {
       { "texcoord", OWL_BUFPTR, OWL_OFFSETOF(TriangleMeshSBTData,texcoord) },
       { "hasTexture",OWL_INT,
         OWL_OFFSETOF(TriangleMeshSBTData,index) },
-      { "texture",   OWL_USER_TYPE(cudaTextureObject_t),
-        OWL_OFFSETOF(TriangleMeshSBTData,index) },
+      // { "texture",   OWL_USER_TYPE(cudaTextureObject_t),
+      //   OWL_OFFSETOF(TriangleMeshSBTData,index) },
       { nullptr /* sentinel to mark end of list */ }
     };
     OWLGeomType triMeshGeomType
