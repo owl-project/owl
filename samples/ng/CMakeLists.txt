@@ -22,3 +22,12 @@ foreach(sample ${samples})
   add_subdirectory(${sample})
 endforeach()
 
+option(BUILD_EX_OPTIX7COURSE "Build Siggraph 2018 Optix Course Version" OFF)
+if (BUILD_EX_OPTIX7COURSE)
+  if(BUILD_VISUAL_SAMPLES)
+    add_subdirectory(ex-optix7course)
+  else ()
+    message("optix7course example requires BUILD_VISUAL_EXAMPLES to be turned on")
+  endif()
+endif()
+
