@@ -202,11 +202,13 @@ namespace owl {
       (llo,
        [&](uint8_t *output,
            int devID,
-           int rayType) {
-         // TODO: need the ID of the miss prog we're writing!
-         int missProgID = 0;
-         assert(missProgs.size() == 1);
-         
+           int rayTypeID) {
+        // TODO: eventually, we want to be able to 'assign' miss progs
+        // to different ray types, in which case we ahve to be able to
+        // look up wich miss prog is used for a given ray types - for
+        // now, we assume miss progs are created in exactly the right
+        // order ...
+        int missProgID = rayTypeID;
          const MissProg *missProg = missProgs.getPtr(missProgID);
          assert(missProg);
          missProg->writeVariables(output,devID);

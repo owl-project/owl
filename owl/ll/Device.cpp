@@ -1169,9 +1169,12 @@ namespace owl {
         sbt.missProgRecordsBuffer.free();
 
       size_t maxMissProgDataSize = 0;
-      for (int mpID=0;mpID<(int)missProgPGs.size();mpID++) 
+      for (int mpID=0;mpID<(int)missProgPGs.size();mpID++) {
+        PING; PRINT(maxMissProgDataSize);
+        PRINT(missProgPGs[mpID].program.dataSize);
         maxMissProgDataSize = std::max(maxMissProgDataSize,
-                                       rayGenPGs[mpID].program.dataSize);
+                                       missProgPGs[mpID].program.dataSize);
+      }
       
       size_t numMissProgRecords = missProgPGs.size();
       size_t missProgRecordSize
@@ -1182,6 +1185,10 @@ namespace owl {
       sbt.missProgRecordCount = numMissProgRecords;
       size_t totalMissProgRecordsArraySize
         = numMissProgRecords * missProgRecordSize;
+      PRINT(numMissProgRecords);
+      PRINT(missProgRecordSize);
+      PRINT(totalMissProgRecordsArraySize);
+      
       std::vector<uint8_t> missProgRecords(totalMissProgRecordsArraySize);
 
       // ------------------------------------------------------------------
