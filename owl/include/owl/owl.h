@@ -148,6 +148,7 @@ typedef struct _OWLModule        *OWLModule;
 typedef struct _OWLGroup         *OWLGroup;
 typedef struct _OWLRayGen        *OWLRayGen;
 typedef struct _OWLMissProg      *OWLMissProg;
+typedef struct _OWLLaunchParams  *OWLLaunchParams;
 
 // typedef OWLGeom OWLTriangles;
 
@@ -171,6 +172,12 @@ owlModuleCreate(OWLContext context,
 OWL_API OWLGeom
 owlGeomCreate(OWLContext context,
               OWLGeomType type);
+
+OWL_API OWLLaunchParams
+owlLaunchParamsCreate(OWLContext context,
+                      size_t      sizeOfVarStruct,
+                      OWLVarDecl *vars,
+                      size_t      numVars);
 
 OWL_API OWLRayGen
 owlRayGenCreate(OWLContext  context,

@@ -193,6 +193,31 @@ namespace owl {
   }
 
 
+  OWL_API OWLLaunchParams
+  owlLaunchParamsCreate(OWLContext _context,
+                        size_t      sizeOfVarStruct,
+                        OWLVarDecl *vars,
+                        size_t      numVars)
+  {
+    LOG_API_CALL();
+
+    assert(_context);
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    
+    LaunchParamsType::SP  launchParamsType
+      = context->createLaunchParamsType(sizeOfVarStruct,
+                                        checkAndPackVariables(vars,numVars));
+    assert(launchParamsType);
+    
+    LaunchParams::SP  launchParams
+      = context->createLaunchParams(launchParamsType);
+    assert(launchParams);
+    return (OWLLaunchParams)context->createHandle(launchParams);
+  }
+
+
 
   OWL_API OWLMissProg
   owlMissProgCreate(OWLContext _context,
