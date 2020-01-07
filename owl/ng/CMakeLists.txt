@@ -35,6 +35,7 @@ set(OWL_NG_SOURCES
   cpp/ObjectRegistry.cpp
   cpp/Context.cpp
   cpp/RayGen.cpp
+  cpp/LaunchParams.cpp
   cpp/MissProg.cpp
   cpp/Geometry.cpp
   cpp/Variable.cpp

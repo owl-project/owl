@@ -14,41 +14,32 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "RayGen.h"
-#include "Context.h"
+#pragma once
+
+#include "SBTObject.h"
+#include "Module.h"
 
 namespace owl {
 
-  RayGenType::RayGenType(Context *const context,
-                         Module::SP module,
-                         const std::string &progName,
-                         size_t varStructSize,
-                         const std::vector<OWLVarDecl> &varDecls)
-    : SBTObjectType(context,context->rayGenTypes,varStructSize,varDecls),
-      module(module),
-      progName(progName)
-  {
-  }
-  
-  RayGen::RayGen(Context *const context,
-                 RayGenType::SP type) 
-    : SBTObject(context,context->rayGens,type)
-  {
-    assert(context);
-    assert(type);
-    assert(type.get());
-    assert(type->module);
-    assert(type->progName != "");
-    lloRayGenCreate(context->llo,this->ID,
-                    type->module->ID,
-                    type->progName.c_str(),
-                    type->varStructSize);
-  }
+  struct LaunchParamsType : public SBTObjectType {
+    typedef std::shared_ptr<LaunchParamsType> SP;
+    LaunchParamsType(Context *const context,
+               size_t varStructSize,
+               const std::vector<OWLVarDecl> &varDecls);
 
-  void RayGen::launch(const vec2i &dims)
-  {
-    lloLaunch2D(context->llo,this->ID,dims.x,dims.y);
-  }
+    virtual std::string toString() const { return "LaunchParamsType"; }
+  };
   
+  struct LaunchParams : public SBTObject<LaunchParamsType> {
+    typedef std::shared_ptr<LaunchParams> SP;
+    
+    LaunchParams(Context *const context,
+           LaunchParamsType::SP type);
+    
+    virtual std::string toString() const { return "LaunchParams"; }
+
+    void launch(const vec2i &dims);
+  };
+
 } // ::owl
 

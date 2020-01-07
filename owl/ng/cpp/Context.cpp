@@ -48,6 +48,8 @@ namespace owl {
       groups(this),
       rayGenTypes(this),
       rayGens(this),
+      launchParamTypes(this),
+      launchParams(this),
       missProgTypes(this),
       missProgs(this),
       geomTypes(this),
@@ -83,6 +85,12 @@ namespace owl {
     return std::make_shared<RayGen>(this,type);
   }
 
+  LaunchParams::SP
+  Context::createLaunchParams(const std::shared_ptr<LaunchParamsType> &type)
+  {
+    return std::make_shared<LaunchParams>(this,type);
+  }
+
   MissProg::SP
   Context::createMissProg(const std::shared_ptr<MissProgType> &type)
   {
@@ -104,6 +112,16 @@ namespace owl {
                                         module,progName,
                                         varStructSize,
                                         varDecls);
+  }
+  
+
+  LaunchParamsType::SP
+  Context::createLaunchParamsType(size_t varStructSize,
+                                  const std::vector<OWLVarDecl> &varDecls)
+  {
+    return std::make_shared<LaunchParamsType>(this,
+                                              varStructSize,
+                                              varDecls);
   }
   
 
