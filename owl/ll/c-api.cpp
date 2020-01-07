@@ -26,6 +26,13 @@
 # define EXCEPTIONS_ARE_FATAL 1
 #endif
 
+#undef OWL_LL_INTERFACE
+#  ifdef llowl_EXPORTS
+#    define OWL_LL_INTERFACE extern "C" OWL_LL_DLL_EXPORT
+#  else
+#    define OWL_LL_INTERFACE extern "C" OWL_LL_DLL_IMPORT
+#  endif
+
 namespace owl {
   namespace ll {
 
@@ -50,7 +57,7 @@ namespace owl {
     
 
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOContext lloContextCreate(const int32_t *deviceIDs,
                                 size_t         numDeviceIDs)
     {
@@ -59,7 +66,7 @@ namespace owl {
     }
 
       
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloContextDestroy(LLOContext llo)
     {
       return squashExceptions
@@ -69,7 +76,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloLaunch2D(LLOContext llo,
                           int32_t rayGenID,
                           int32_t launchDimX,
@@ -82,7 +89,26 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+  OWL_LL_INTERFACE
+  LLOResult lloParamsLaunch2D(LLOContext llo,
+                              int32_t rayGenID,                              
+                              int32_t launchDimX,
+                              int32_t launchDimY,
+                              int32_t launchParamsID,
+                              LLOWriteLaunchParamsCB writeLaunchParamsCB,
+                              const void *cbData)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->launch(rayGenID,vec2i(launchDimX,launchDimY),
+                     launchParamsID,writeLaunchParamsCB,cbData);
+        });
+    }
+  
+
+    
+    OWL_LL_INTERFACE
     LLOResult lloAllocModules(LLOContext llo,
                               int numModules)
     {
@@ -93,7 +119,18 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
+    LLOResult lloAllocLaunchParams(LLOContext llo,
+                              int numLaunchParams)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->allocLaunchParams(numLaunchParams);
+        });
+    }
+
+    OWL_LL_INTERFACE
     LLOResult lloAllocGroups(LLOContext llo,
                              int numGroups)
     {
@@ -104,7 +141,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloAllocGeoms(LLOContext llo,
                             int numGeoms)
     {
@@ -115,7 +152,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloAllocGeomTypes(LLOContext llo,
                                 int numGeomTypes)
     {
@@ -126,7 +163,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloAllocMissProgs(LLOContext llo,
                                 int numMissProgs)
     {
@@ -137,7 +174,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloAllocRayGens(LLOContext llo,
                               int32_t    rayGenProgCount)
     {
@@ -148,7 +185,7 @@ namespace owl {
         });
     }
     
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloGeomTypeCreate(LLOContext llo,
                                 int32_t    geomTypeID,
                                 size_t     sizeOfSBTData)
@@ -161,7 +198,19 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
+    LLOResult lloLaunchParamsCreate(LLOContext llo,
+                                    int32_t    launchParamsID,
+                                    size_t     sizeOfSBTData)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->launchParamsCreate(launchParamsID,sizeOfSBTData);
+        });
+    }
+
+    OWL_LL_INTERFACE
     LLOResult lloGeomTypeIntersect(LLOContext llo,
                                    int32_t geomTypeID,
                                    int32_t rayTypeID,
@@ -184,7 +233,7 @@ namespace owl {
       programs are not 'per ray type', but exist only once per
       geometry type. obviously only allowed for user geometry
       typed. */
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloGeomTypeBoundsProgDevice(LLOContext llo,
                                           int32_t geomTypeID,
                                           int32_t moduleID,
@@ -202,7 +251,7 @@ namespace owl {
     }
 
     
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloTrianglesGeomCreate(LLOContext llo,
                                      /*! ID of the geometry to create */
                                      int32_t    geomID,
@@ -219,7 +268,7 @@ namespace owl {
         });
     }
     
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloUserGeomCreate(LLOContext llo,
                                 /*! ID of the geometry to create */
                                 int32_t    geomID,
@@ -239,7 +288,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloUserGeomSetPrimCount(LLOContext llo,
                                       int32_t geomID,
                                       size_t numPrims)
@@ -252,7 +301,7 @@ namespace owl {
          });
     }
     
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloGeomTypeClosestHit(LLOContext llo,
                                     int32_t geomTypeID,
                                     int32_t rayTypeID,
@@ -271,7 +320,7 @@ namespace owl {
     }
 
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloTrianglesGeomSetVertexBuffer(LLOContext llo,
                                               int32_t    geomID,
                                               int32_t    bufferID,
@@ -291,7 +340,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloTrianglesGeomSetIndexBuffer(LLOContext llo,
                                              int32_t    geomID,
                                              int32_t    bufferID,
@@ -314,7 +363,7 @@ namespace owl {
 
 
     
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloTrianglesGeomGroupCreate(LLOContext llo,
                                           int32_t        groupID,
                                           const int32_t *geomIDs,
@@ -327,7 +376,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloUserGeomGroupCreate(LLOContext llo,
                                           int32_t        groupID,
                                           const int32_t *geomIDs,
@@ -340,7 +389,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloInstanceGroupCreate(LLOContext llo,
                                           int32_t        groupID,
                                           const int32_t *childGroupIDs,
@@ -359,7 +408,7 @@ namespace owl {
       other two being a) setting the geometry type's boundsFunc, or b)
       setting a host-callback fr computing the bounds). Only one of
       the three methods can be set at any given time */
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloUserGeomSetBoundsBuffer(LLOContext llo,
                                          int32_t geomID,
                                          int32_t bufferID)
@@ -372,7 +421,7 @@ namespace owl {
         });
     }
     
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloModuleCreate(LLOContext llo,
                               int32_t moduleID,
                               const char *ptxCode)
@@ -386,7 +435,7 @@ namespace owl {
 
     /*! (re-)builds the modules that have been set via
      *  lloModuleCreate */
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloBuildModules(LLOContext llo)
     {
       return squashExceptions
@@ -396,7 +445,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloRayGenCreate(LLOContext  llo,
                               /*! ID of ray gen prog to create */
                               int32_t     programID,
@@ -414,7 +463,7 @@ namespace owl {
         });
     }
   
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloMissProgCreate(LLOContext  llo,
                                 /*! ID of ray gen prog to create */
                                 int32_t     programID,
@@ -432,7 +481,7 @@ namespace owl {
         });
     }
   
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloBuildPrograms(LLOContext llo)
     {
       return squashExceptions
@@ -442,7 +491,7 @@ namespace owl {
         });
     }
   
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloCreatePipeline(LLOContext llo)
     {
       return squashExceptions
@@ -452,7 +501,7 @@ namespace owl {
         });
     }
       
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloHostPinnedBufferCreate(LLOContext llo,
                                         /*! ID of buffer to create */
                                         int32_t bufferID,
@@ -466,7 +515,7 @@ namespace owl {
         });
     }
       
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloDeviceBufferCreate(LLOContext llo,
                                     /*! ID of buffer to create */
                                     int32_t bufferID,
@@ -481,7 +530,7 @@ namespace owl {
         });
     }
       
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloAllocBuffers(LLOContext llo,
                               /*! number of buffers valid after this
                                *  function call */
@@ -497,7 +546,7 @@ namespace owl {
     /*! builds the SBT's ray gen program entries, using the given
      *  callback to query the app as as to what values to write for a
      *  given ray gen program */
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloSbtRayGensBuild(LLOContext llo,
                                  LLOWriteRayGenDataCB writeRayGenDataCB,
                                  const void *callbackData)
@@ -505,12 +554,12 @@ namespace owl {
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
-          dg->sbtRayGensBuild(owl::ll::WriteRayGenDataCB(writeRayGenDataCB),
+          dg->sbtRayGensBuild(writeRayGenDataCB,//owl::ll::WriteRayGenDataCB(writeRayGenDataCB),
                               callbackData);
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloSbtHitProgsBuild(LLOContext llo,
                                   LLOWriteHitProgDataCB writeHitProgDataCB,
                                   const void *callbackData)
@@ -518,12 +567,12 @@ namespace owl {
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
-          dg->sbtHitProgsBuild(owl::ll::WriteHitProgDataCB(writeHitProgDataCB),
+          dg->sbtHitProgsBuild(writeHitProgDataCB,//owl::ll::WriteHitProgDataCB(writeHitProgDataCB),
                                callbackData);
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloSbtMissProgsBuild(LLOContext llo,
                                    LLOWriteMissProgDataCB writeMissProgDataCB,
                                    const void *callbackData)
@@ -531,12 +580,12 @@ namespace owl {
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
-          dg->sbtMissProgsBuild(owl::ll::WriteMissProgDataCB(writeMissProgDataCB),
+          dg->sbtMissProgsBuild(writeMissProgDataCB,//owl::ll::WriteMissProgDataCB(writeMissProgDataCB),
                                 callbackData);
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloGroupBuildPrimitiveBounds(LLOContext llo,
                                            int32_t    groupID,
                                            size_t     maxGeomDataSize,
@@ -548,14 +597,14 @@ namespace owl {
           DeviceGroup *dg = (DeviceGroup *)llo;
           dg->groupBuildPrimitiveBounds
             (groupID,maxGeomDataSize,
-             owl::ll::WriteUserGeomBoundsDataCB(cb),
+             cb,//owl::ll::WriteUserGeomBoundsDataCB(cb),
              cbData);
         });
     }
 
 
     
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     int32_t lloGetDeviceCount(LLOContext llo)
     {
       try {
@@ -569,7 +618,7 @@ namespace owl {
   
     /*! returns the device-side pointer of the given buffer, on the
      *  given device */
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     const void *lloBufferGetPointer(LLOContext llo,
                                     int32_t    bufferID,
                                     int32_t    deviceID)
@@ -583,7 +632,7 @@ namespace owl {
       }
     }
 
-  extern "C" OWL_LL_INTERFACE
+  OWL_LL_INTERFACE
   LLOResult lloBufferUpload(LLOContext llo,
                             int32_t bufferID,
                             const void *hostPtr)
@@ -595,7 +644,7 @@ namespace owl {
         });
     }
 
-  extern "C" OWL_LL_INTERFACE
+  OWL_LL_INTERFACE
   LLOResult lloBufferResize(LLOContext llo,
                             int32_t bufferID,
                             size_t newItemCount)
@@ -610,7 +659,7 @@ namespace owl {
     
     /*! returns the device-side pointer of the given buffer, on the
      *  given device */
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     OptixTraversableHandle lloGroupGetTraversable(LLOContext llo,
                                                   int32_t    groupID,
                                                   int32_t    deviceID)
@@ -624,7 +673,7 @@ namespace owl {
       }
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     uint32_t lloGroupGetSbtOffset(LLOContext llo,
                                   int32_t    groupID)
     {
@@ -639,7 +688,7 @@ namespace owl {
     
 
   
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloGroupAccelBuild(LLOContext llo,
                                  int32_t    groupID)
     {
@@ -650,7 +699,7 @@ namespace owl {
         });
     }
 
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloInstanceGroupSetTransform(LLOContext llo,
                                            int32_t    groupID,
                                            int32_t    childID,
@@ -664,7 +713,7 @@ namespace owl {
         });
     }
         
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloInstanceGroupSetChild(LLOContext llo,
                                        int32_t    groupID,
                                        int32_t    childID,
@@ -679,7 +728,7 @@ namespace owl {
         });
     }
     
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloGeomGroupSetChild(LLOContext llo,
                                    int32_t    groupID,
                                    int32_t    childNo,
@@ -692,7 +741,7 @@ namespace owl {
         });
     }
     
-    extern "C" OWL_LL_INTERFACE
+    OWL_LL_INTERFACE
     LLOResult lloSetMaxInstancingDepth(LLOContext llo,
                                        int32_t maxInstanceDepth)
     {

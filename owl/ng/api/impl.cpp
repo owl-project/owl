@@ -63,6 +63,25 @@ namespace owl {
     context->buildPipeline();
   }
   
+  OWL_API void owlParamsLaunch2D(OWLRayGen _rayGen,
+                                 int dims_x, int dims_y,
+                                 OWLLaunchParams _launchParams)
+  {
+    LOG_API_CALL();
+
+    assert(_rayGen);
+    RayGen::SP rayGen
+      = ((APIHandle *)_rayGen)->get<RayGen>();
+    assert(rayGen);
+
+    assert(_launchParams);
+    LaunchParams::SP launchParams
+      = ((APIHandle *)_launchParams)->get<LaunchParams>();
+    assert(launchParams);
+
+    rayGen->launch(vec2i(dims_x,dims_y),launchParams);
+  }
+
   OWL_API void owlRayGenLaunch2D(OWLRayGen _rayGen,
                                  int dims_x, int dims_y)
   {
@@ -139,6 +158,14 @@ namespace owl {
     LOG_API_CALL();
     return getVariableHelper<MissProg>((APIHandle*)_prog,varName);
   }
+
+  OWL_API OWLVariable
+  owlLaunchParamsGetVariable(OWLLaunchParams _prog,
+                       const char *varName)
+  {
+    LOG_API_CALL();
+    return getVariableHelper<LaunchParams>((APIHandle*)_prog,varName);
+  }
   
 
   std::vector<OWLVarDecl> checkAndPackVariables(const OWLVarDecl *vars,
@@ -190,6 +217,31 @@ namespace owl {
       = context->createRayGen(rayGenType);
     assert(rayGen);
     return (OWLRayGen)context->createHandle(rayGen);
+  }
+
+
+  OWL_API OWLLaunchParams
+  owlLaunchParamsCreate(OWLContext _context,
+                        size_t      sizeOfVarStruct,
+                        OWLVarDecl *vars,
+                        size_t      numVars)
+  {
+    LOG_API_CALL();
+
+    assert(_context);
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    
+    LaunchParamsType::SP  launchParamsType
+      = context->createLaunchParamsType(sizeOfVarStruct,
+                                        checkAndPackVariables(vars,numVars));
+    assert(launchParamsType);
+    
+    LaunchParams::SP  launchParams
+      = context->createLaunchParams(launchParamsType);
+    assert(launchParams);
+    return (OWLLaunchParams)context->createHandle(launchParams);
   }
 
 

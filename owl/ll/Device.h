@@ -40,6 +40,7 @@ namespace owl {
       std::vector<FreedRange> freedRanges;
     };
 
+
     struct Context {
       
       Context(int owlDeviceID, int cudaDeviceID);
@@ -132,6 +133,24 @@ namespace owl {
       const char *progName = nullptr;
       int         moduleID = -1;
       size_t      dataSize = 0;
+    };
+    struct LaunchParams {
+      LaunchParams(Context *context, size_t sizeOfData);
+      
+      const size_t         dataSize;
+      
+      /*! host-size memory for the launch paramters - we have a
+          host-side copy, too, so we can leave the launch2D call
+          without having to first wait for the cudaMemcpy to
+          complete */
+      std::vector<uint8_t> hostMemory;
+      
+      /*! the cuda device memory we copy the launch params to */
+      DeviceMemory         deviceMemory;
+      
+      /*! a cuda stream we can use for the async upload and the
+          following async launch */
+      cudaStream_t         stream;
     };
     struct RayGenPG : public ProgramGroup {
       Program program;
@@ -463,6 +482,9 @@ namespace owl {
       
       void allocModules(size_t count)
       { modules.alloc(count); }
+
+      void allocLaunchParams(size_t count);
+      
       /*! each geom will always use "numRayTypes" successive hit
         groups (one per ray type), so this must be a multiple of the
         number of ray types to be used */
@@ -470,6 +492,8 @@ namespace owl {
 
       void geomTypeCreate(int geomTypeID,
                           size_t programDataSize);
+      void launchParamsCreate(int launchParamsID,
+                              size_t sizeOfData);
         
       void allocRayGens(size_t count);
 
@@ -640,6 +664,14 @@ namespace owl {
         assert("check valid geom" && geom != nullptr);
         return geom;
       }
+      LaunchParams *checkGetLaunchParams(int launchParamsID)
+      {
+        assert("check valid launchParams ID" && launchParamsID >= 0);
+        assert("check valid launchParams ID" && launchParamsID <  launchParams.size());
+        LaunchParams *launchParams = this->launchParams[launchParamsID];
+        assert("check valid launchParams" && launchParams != nullptr);
+        return launchParams;
+      }
 
       GeomType *checkGetGeomType(int geomTypeID)
       {
@@ -728,27 +760,34 @@ namespace owl {
           box program */
       void groupBuildPrimitiveBounds(int groupID,
                                      size_t maxGeomDataSize,
-                                     WriteUserGeomBoundsDataCB cb,
+                                     LLOWriteUserGeomBoundsDataCB cb,
                                      const void *cbData);
-      void sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+      void sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
                             const void *callBackUserData);
-      void sbtRayGensBuild(WriteRayGenDataCB writeRayGenDataCB,
+      void sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
                            const void *callBackUserData);
-      void sbtMissProgsBuild(WriteMissProgDataCB writeMissProgDataCB,
+      void sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgDataCB,
                              const void *callBackUserData);
 
       void launch(int rgID, const vec2i &dims);
+
+      void launch(int rgID,
+                  const vec2i &dims,
+                  int32_t launchParamsID,
+                  LLOWriteLaunchParamsCB writeLaunchParamsCB,
+                  const void *cbData);
       
       Context                  *context;
       
-      Modules                   modules;
-      std::vector<GeomType>     geomTypes;
-      std::vector<RayGenPG>     rayGenPGs;
-      std::vector<MissProgPG>   missProgPGs;
-      std::vector<Geom *>       geoms;
-      std::vector<Group *>      groups;
-      std::vector<Buffer *>     buffers;
-      SBT                       sbt;
+      Modules                     modules;
+      std::vector<GeomType>       geomTypes;
+      std::vector<RayGenPG>       rayGenPGs;
+      std::vector<MissProgPG>     missProgPGs;
+      std::vector<LaunchParams *> launchParams;
+      std::vector<Geom *>         geoms;
+      std::vector<Group *>        groups;
+      std::vector<Buffer *>       buffers;
+      SBT                         sbt;
     };
     
   } // ::owl::ll
