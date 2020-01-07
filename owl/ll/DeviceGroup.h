@@ -133,6 +133,7 @@ namespace owl {
       void setMaxInstancingDepth(int maxInstancingDepth);
       
       void allocModules(size_t count);
+      void allocLaunchParams(size_t count);
 
       void moduleCreate(int moduleID, const char *ptxCode);
       void buildModules();
@@ -145,6 +146,8 @@ namespace owl {
 
       void geomTypeCreate(int geomTypeID,
                           size_t programDataSize);
+      void launchParamsCreate(int launchParamsID,
+                              size_t sizeOfData);
                           
       /*! set bounding box program for given geometry type, using a
         bounding box program to be called on the device. note that

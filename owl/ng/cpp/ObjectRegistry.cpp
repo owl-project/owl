@@ -122,7 +122,8 @@ namespace owl {
   template<>
   void ObjectRegistryT<MissProgType>::reallocContextIDs(int newMaxIDs)
   {
-    OWL_NOTIMPLEMENTED;
+    PING; /* nothign do to here!? */
+    // OWL_NOTIMPLEMENTED;
   }
 
   template<>
@@ -134,7 +135,7 @@ namespace owl {
   template<>
   void ObjectRegistryT<LaunchParamsType>::reallocContextIDs(int newMaxIDs)
   {
-    OWL_NOTIMPLEMENTED;
+    PING; /* nothign do to here!? */
   }
 
   template<>

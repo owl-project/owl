@@ -1475,6 +1475,16 @@ namespace owl {
       device->context->popActive();
     }
     
+    void Device::allocLaunchParams(size_t count)
+    {
+      if (count < launchParams.size())
+        // to prevent unobserved memory hole that a simple
+        // shrink-without-clean-deletion woudl cause, force an
+        // error:
+        throw std::runtime_error("shrinking launch params not yet implemented");
+      launchParams.resize(count);
+    }
+    
   } // ::owl::ll
 } //::owl
   

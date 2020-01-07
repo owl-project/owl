@@ -105,6 +105,9 @@ namespace owl {
 
     void DeviceGroup::allocModules(size_t count)
     { for (auto device : devices) device->allocModules(count); }
+
+    void DeviceGroup::allocLaunchParams(size_t count)
+    { for (auto device : devices) device->allocLaunchParams(count); }
     
     void DeviceGroup::moduleCreate(int moduleID, const char *ptxCode)
     { for (auto device : devices) device->modules.set(moduleID,ptxCode); }

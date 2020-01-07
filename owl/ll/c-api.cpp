@@ -120,6 +120,17 @@ namespace owl {
     }
 
     OWL_LL_INTERFACE
+    LLOResult lloAllocLaunchParams(LLOContext llo,
+                              int numLaunchParams)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->allocLaunchParams(numLaunchParams);
+        });
+    }
+
+    OWL_LL_INTERFACE
     LLOResult lloAllocGroups(LLOContext llo,
                              int numGroups)
     {
@@ -184,6 +195,18 @@ namespace owl {
           DeviceGroup *dg = (DeviceGroup *)llo;
           dg->geomTypeCreate(geomTypeID,
                              sizeOfSBTData);
+        });
+    }
+
+    OWL_LL_INTERFACE
+    LLOResult lloLaunchParamsCreate(LLOContext llo,
+                                    int32_t    launchParamsID,
+                                    size_t     sizeOfSBTData)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->launchParamsCreate(launchParamsID,sizeOfSBTData);
         });
     }
 
