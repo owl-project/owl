@@ -522,9 +522,17 @@ namespace owl {
     DeviceGroup *DeviceGroup::create(const int *deviceIDs,
                                      size_t     numDevices)
     {
+      std::vector<int> tmpDeviceIDs;
+      if (deviceIDs == 0) {
+        for (int i=0;i<numDevices;i++)
+          tmpDeviceIDs.push_back(i);
+        deviceIDs = tmpDeviceIDs.data();
+      }
+      
       assert((deviceIDs == nullptr && numDevices == 0)
              ||
-             (deviceIDs != nullptr && numDevices > 0));
+             (deviceIDs != nullptr && numDevices > 0)
+             );
       
       // ------------------------------------------------------------------
       // init cuda, and error-out if no cuda devices exist
