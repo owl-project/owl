@@ -105,6 +105,8 @@ namespace owl {
                      launchParamsID,writeLaunchParamsCB,cbData);
         });
     }
+
+    
   
 
     
@@ -209,6 +211,23 @@ namespace owl {
           dg->launchParamsCreate(launchParamsID,sizeOfSBTData);
         });
     }
+
+    /*! return the cuda stream by the given launchparams object, on
+      given device */
+    OWL_LL_INTERFACE
+    cudaStream_t lloLaunchParamsGetStream(LLOContext  llo,
+                                          int         launchParamsID,
+                                          int         deviceID)
+    {
+      try {
+        DeviceGroup *dg = (DeviceGroup *)llo;
+        return dg->launchParamsGetStream(launchParamsID,deviceID);
+      } catch (const std::runtime_error &e) {
+        lastErrorText = e.what();
+        return nullptr;
+      }
+    }
+    
 
     OWL_LL_INTERFACE
     LLOResult lloGeomTypeIntersect(LLOContext llo,

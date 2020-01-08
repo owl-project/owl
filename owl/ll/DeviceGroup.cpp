@@ -498,6 +498,14 @@ namespace owl {
     {
       return checkGetDevice(devID)->bufferGetPointer(bufferID);
     }
+    
+    /*! return the cuda stream by the given launchparams object, on
+      given device */
+    CUstream DeviceGroup::launchParamsGetStream(int launchParamsID, int devID)
+    {
+      return checkGetDevice(devID)->launchParamsGetStream(launchParamsID);
+    }
+    
       
     void DeviceGroup::launch(int rgID, const vec2i &dims)
     {
@@ -516,7 +524,7 @@ namespace owl {
                        launchParamsID,
                        writeLaunchParamsCB,
                        cbData);
-      CUDA_SYNC_CHECK();
+      // CUDA_SYNC_CHECK();
     }
     
     /* create an instance of this object that has properly

@@ -597,6 +597,11 @@ namespace owl {
       
       /*! returns the given buffers device pointer */
       void *bufferGetPointer(int bufferID);
+
+      /*! return the cuda stream by the given launchparams object, on
+        given device */
+      cudaStream_t launchParamsGetStream(int lpID);
+      
       void bufferResize(int bufferID, size_t newItemCount);
       void bufferUpload(int bufferID, const void *hostPtr);
       

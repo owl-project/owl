@@ -251,6 +251,13 @@ extern "C" {
                                   int         launchParamsID,
                                   /*! size of that program's SBT data */
                                   size_t      sizeOfVarsStruct);
+
+  /*! return the cuda stream by the given launchparams object, on
+      given device */
+  OWL_LL_INTERFACE
+  CUstream lloLaunchParamsGetStream(LLOContext  llo,
+                                    int         launchParamsID,
+                                    int         deviceID);
   
   OWL_LL_INTERFACE
   LLOResult lloMissProgCreate(LLOContext  llo,

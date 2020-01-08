@@ -438,6 +438,16 @@ namespace owl {
     return buffer->getPointer(deviceID);
   }
 
+  OWL_API CUstream
+  owlParamsGetCudaStream(OWLLaunchParams _lp, int deviceID)
+  {
+    LOG_API_CALL();
+    assert(_lp);
+    LaunchParams::SP lp = ((APIHandle *)_lp)->get<LaunchParams>();
+    assert(lp);
+    return lp->getCudaStream(deviceID);
+  }
+
   OWL_API void 
   owlBufferResize(OWLBuffer _buffer, size_t newItemCount)
   {

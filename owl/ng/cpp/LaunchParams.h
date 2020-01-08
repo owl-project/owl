@@ -38,8 +38,10 @@ namespace owl {
     
     LaunchParams(Context *const context,
            LaunchParamsType::SP type);
+
+    CUstream getCudaStream(int deviceID);
     
-    virtual std::string toString() const { return "LaunchParams"; }
+    std::string toString() const override { return "LaunchParams"; }
   };
 
 } // ::owl

@@ -932,6 +932,14 @@ namespace owl {
     {
       return (void*)checkGetBuffer(bufferID)->d_pointer;
     }
+
+    /*! return the cuda stream by the given launchparams object, on
+      given device */
+    CUstream Device::launchParamsGetStream(int lpID)
+    {
+      return checkGetLaunchParams(lpID)->stream;
+    }
+   
       
     void Device::bufferResize(int bufferID, size_t newItemCount)
     {
@@ -1469,8 +1477,6 @@ namespace owl {
       
       lp->deviceMemory.uploadAsync(lp->hostMemory.data(),
                                    lp->stream);
-      CUDA_SYNC_CHECK();
-      
       // LOG("launching ...");
       assert("check valid launch dims" && dims.x > 0);
       assert("check valid launch dims" && dims.y > 0);

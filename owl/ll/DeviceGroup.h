@@ -285,6 +285,10 @@ namespace owl {
         device */
       void *bufferGetPointer(int bufferID, int devID);
       
+      /*! return the cuda stream by the given launchparams object, on
+        given device */
+      cudaStream_t launchParamsGetStream(int launchParamsID, int devID);
+      
       /*! set a buffer of bounding boxes that this user geometry will
         use when building the accel structure. this is one of
         multiple ways of specifying the bounding boxes for a user

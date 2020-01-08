@@ -269,6 +269,9 @@ OWL_API void
 owlParamsLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
                   OWLLaunchParams launchParams);
 
+OWL_API CUstream
+owlParamsGetCudaStream(OWLLaunchParams params, int deviceID);
+
 // OWL_API OWLTriangles owlTrianglesCreate(OWLContext context,
 //                                         size_t varsStructSize);
 
