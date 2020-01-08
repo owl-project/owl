@@ -100,7 +100,8 @@ namespace osc {
     launchParams
       = owlLaunchParamsCreate(context,sizeof(LaunchParams),
                               launchParamsVars,-1);
-    
+
+    createTextures();
     buildAccel();
     
     owlBuildPrograms(context);
@@ -119,7 +120,8 @@ namespace osc {
 
     textureArrays.resize(numTextures);
     textureObjects.resize(numTextures);
-    
+
+    PING; PRINT(numTextures);
     for (int textureID=0;textureID<numTextures;textureID++) {
       auto texture = model->textures[textureID];
       
@@ -171,10 +173,6 @@ namespace osc {
     const int numMeshes = (int)model->meshes.size();
     std::vector<OWLGeom> meshes;
 
-    OWLBuffer texturesBuffer 
-      = owlDeviceBufferCreate(context,OWL_USER_TYPE(cudaTextureObject_t),
-                              textureObjects.size(),textureObjects.data());
-    
     OWLVarDecl triMeshVars[] = {
       { "color",    OWL_FLOAT3, OWL_OFFSETOF(TriangleMeshSBTData,color) },
       { "vertex",   OWL_BUFPTR, OWL_OFFSETOF(TriangleMeshSBTData,vertex) },
@@ -183,8 +181,8 @@ namespace osc {
       { "texcoord", OWL_BUFPTR, OWL_OFFSETOF(TriangleMeshSBTData,texcoord) },
       { "hasTexture",OWL_INT,
         OWL_OFFSETOF(TriangleMeshSBTData,hasTexture) },
-      // { "texture",   OWL_USER_TYPE(cudaTextureObject_t),
-      //   OWL_OFFSETOF(TriangleMeshSBTData,index) },
+      { "texture",   OWL_USER_TYPE(cudaTextureObject_t),
+        OWL_OFFSETOF(TriangleMeshSBTData,texture) },
       { nullptr /* sentinel to mark end of list */ }
     };
     OWLGeomType triMeshGeomType
@@ -231,11 +229,10 @@ namespace osc {
       owlGeomSetBuffer(geom,"texcoord",texcoordBuffer);
 
       owlGeomSet3f(geom,"color",(const owl3f &)mesh.diffuse);
-      PRINT(mesh.diffuse);
       if (mesh.diffuseTextureID >= 0) {
+        assert(mesh.diffuseTextureID < textureObjects.size());
         owlGeomSet1i(geom,"hasTexture",1);
-        // for now:
-        owlGeomSet1i(geom,"hasTexture",0);
+        owlGeomSetRaw(geom,"texture",&textureObjects[mesh.diffuseTextureID]);
       } else {
         owlGeomSet1i(geom,"hasTexture",0);
       }

@@ -350,6 +350,7 @@ owlLaunchParamsGetVariable(OWLLaunchParams object,
 
 OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
 OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
+OWL_API void owlVariableSetRaw(OWLVariable variable, const void *valuePtr);
 #define _OWL_SET_HELPER(stype,abb)                      \
   OWL_API void owlVariableSet1##abb(OWLVariable var,    \
                                     stype v);           \
@@ -430,13 +431,22 @@ _OWL_SET_HELPER(float,f)
 
 #define _OWL_SET_HELPERS(Type)                            \
   /* group, buffer, other */                              \
-  inline void owl##Type##SetGroup(OWL##Type rayGen,       \
+  inline void owl##Type##SetGroup(OWL##Type object,       \
                                   const char *varName,    \
                                   OWLGroup v)             \
   {                                                       \
     OWLVariable var                                       \
-      = owl##Type##GetVariable(rayGen,varName);           \
+      = owl##Type##GetVariable(object,varName);           \
     owlVariableSetGroup(var,v);                           \
+    owlVariableRelease(var);                              \
+  }                                                       \
+  inline void owl##Type##SetRaw(OWL##Type object,         \
+                                const char *varName,      \
+                                const void *v)            \
+  {                                                       \
+    OWLVariable var                                       \
+      = owl##Type##GetVariable(object,varName);           \
+    owlVariableSetRaw(var,v);                             \
     owlVariableRelease(var);                              \
   }                                                       \
   inline void owl##Type##SetBuffer(OWL##Type object,      \

@@ -778,6 +778,20 @@ namespace owl {
     setVariable((APIHandle *)_variable,buffer);
   }
 
+  OWL_API void owlVariableSetRaw(OWLVariable _variable, const void *valuePtr)
+  {
+    LOG_API_CALL();
+
+    APIHandle *handle = (APIHandle*)_variable;
+    assert(handle);
+
+    Variable::SP variable
+      = handle->get<Variable>();
+    assert(variable);
+
+    variable->setRaw(valuePtr);
+  }
+
   // -------------------------------------------------------
   // group/hierarchy creation and setting
   // -------------------------------------------------------

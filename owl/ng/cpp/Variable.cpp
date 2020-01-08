@@ -26,6 +26,27 @@ namespace owl {
                              +typeToString(varDecl->type));
   }
 
+  struct UserTypeVariable : public Variable
+  {
+    UserTypeVariable(const OWLVarDecl *const varDecl)
+      : Variable(varDecl),
+        data(/* actual size is 'type' - constant */varDecl->type - OWL_USER_TYPE_BEGIN)
+    {}
+    
+    void setRaw(const void *ptr) override
+    {
+      assert(size == data.size());
+      memcpy(data.data(),ptr,data.size());
+    }
+
+    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    {
+      memcpy(sbtEntry,data.data(),data.size());
+    }
+    
+    std::vector<uint8_t> data;
+  };
+    
   template<typename T>
   struct VariableT : public Variable {
     typedef std::shared_ptr<VariableT<T>> SP;
@@ -119,6 +140,8 @@ namespace owl {
   {
     assert(decl);
     assert(decl->name);
+    if (decl->type >= OWL_USER_TYPE_BEGIN)
+      return std::make_shared<UserTypeVariable>(decl);
     switch(decl->type) {
     case OWL_INT:
       return std::make_shared<VariableT<int>>(decl);
