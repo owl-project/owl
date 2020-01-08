@@ -25,10 +25,12 @@ namespace owl {
 # define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
 #endif
   
-  OWL_API OWLContext owlContextCreate()
+  OWL_API OWLContext owlContextCreate(int32_t *requestedDeviceIDs,
+                                      int      numRequestedDevices)
   {
     LOG_API_CALL();
-    APIContext::SP context = std::make_shared<APIContext>();
+    APIContext::SP context = std::make_shared<APIContext>(requestedDeviceIDs,
+                                                          numRequestedDevices);
     std::cout << "#owl.api: context created..." << std::endl;
     return (OWLContext)context->createHandle(context);
   }

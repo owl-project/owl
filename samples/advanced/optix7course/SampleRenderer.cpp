@@ -57,7 +57,8 @@ namespace osc {
     : model(model)
   {
     // createContext();
-    context = owlContextCreate();
+    std::cout << "for now, create exactly one device" << std::endl;
+    context = owlContextCreate(nullptr,1);
     owlContextSetRayTypeCount(context,2);
     
     // createModule();

@@ -36,6 +36,11 @@
 #  define OWL_DLL_IMPORT
 #endif
 
+#ifdef __cplusplus
+# define OWL_IF_CPP(a) a
+#else
+# define OWL_IF_CPP(a) /* drop it */
+#endif
 
 #if defined(OWL_DLL_INTERFACE)
 #  ifdef owl_EXPORTS
@@ -166,7 +171,8 @@ OWL_API int32_t
 owlGetDeviceCount(OWLContext context);
 
 OWL_API OWLContext
-owlContextCreate();
+owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
+                 int numDevices OWL_IF_CPP(=0));
 
 /*! set number of ray types to be used in this context; this should be
     done before any programs, pipelines, geometries, etc get

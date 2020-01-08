@@ -32,9 +32,11 @@ namespace owl {
   struct Context : public Object {
     typedef std::shared_ptr<Context> SP;
 
-    static Context::SP create();
+    static Context::SP create(int32_t *requestedDeviceIDs,
+                              int      numRequestedDevices);
 
-    Context();
+    Context(int32_t *requestedDeviceIDs,
+            int      numRequestedDevices);
     
     virtual ~Context()
     {

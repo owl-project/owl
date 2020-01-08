@@ -37,13 +37,16 @@ namespace owl {
 
   
   
-  Context::SP Context::create()
+  Context::SP Context::create(int32_t *requestedDeviceIDs,
+                              int      numRequestedDevices)
   {
     LOG("creating node-graph context");
-    return std::make_shared<Context>();
+    return std::make_shared<Context>(requestedDeviceIDs,
+                                     numRequestedDevices);
   }
   
-  Context::Context()
+  Context::Context(int32_t *requestedDeviceIDs,
+                   int      numRequestedDevices)
     : buffers(this),
       groups(this),
       rayGenTypes(this),
@@ -58,7 +61,8 @@ namespace owl {
   {
     LOG("context ramping up - creating low-level devicegroup");
     // ll = ll::DeviceGroup::create();
-    llo = lloContextCreate(nullptr,0);
+    llo = lloContextCreate(requestedDeviceIDs,
+                           numRequestedDevices);
     LOG_OK("device group created");
   }
   
