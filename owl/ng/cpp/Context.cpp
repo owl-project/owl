@@ -19,23 +19,27 @@
 #include "Geometry.h"
 #include "owl/ll/Device.h"
 
-#define LOG(message)                               \
-  std::cout                                        \
-  << OWL_TERMINAL_LIGHT_BLUE                       \
-  << "#owl.ng: "                                   \
-  << message                                       \
-  << OWL_TERMINAL_DEFAULT << std::endl
+#define LOG(message)                            \
+  if (ll::Context::logging())                   \
+    std::cout                                   \
+      << OWL_TERMINAL_LIGHT_BLUE                \
+      << "#owl.ng: "                            \
+      << message                                \
+      << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  std::cout                                     \
-  << OWL_TERMINAL_BLUE                          \
-  << "#owl.ng: "                                \
-  << message                                    \
-  << OWL_TERMINAL_DEFAULT << std::endl
+  if (ll::Context::logging())                   \
+    std::cout                                   \
+      << OWL_TERMINAL_BLUE                      \
+      << "#owl.ng: "                            \
+      << message                                \
+      << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
 
-  
+  Context::~Context()
+  {
+  }
   
   Context::SP Context::create(int32_t *requestedDeviceIDs,
                               int      numRequestedDevices)

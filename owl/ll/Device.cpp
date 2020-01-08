@@ -18,24 +18,36 @@
 #include <optix_function_table_definition.h>
 
 #define LOG(message)                                            \
+  if (Context::logging()) \
   std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
   << message                                                    \
   << std::endl
 
 #define LOG_OK(message)                                 \
+  if (Context::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
   << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
+  if (Context::logging()) \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
   << message                                            \
   << std::endl
 
 #define CLOG_OK(message)                                \
+  if (Context::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << OWL_TERMINAL_DEFAULT << std::endl
+
+
+// iw - the variants Context::pushActive/popActive are *not*
+// thread-safe (they store the value in the context, so for async
+// operations we need to store on the stack:
+#define STACK_PUSH_ACTIVE(context) int _savedActiveDeviceID=0; CUDA_CHECK(cudaGetDevice(&_savedActiveDeviceID)); context->setActive();
+#define STACK_POP_ACTIVE(context) CUDA_CHECK(cudaSetDevice(_savedActiveDeviceID));
+
 
 namespace owl {
   namespace ll {
@@ -56,17 +68,18 @@ namespace owl {
                                const char *message,
                                void *)
     {
-      fprintf( stderr, "[%2d][%12s]: %s\n", level, tag, message );
+      if (level == 1 || level == 2)
+        fprintf( stderr, "[%2d][%12s]: %s\n", level, tag, message );
     }
 
     LaunchParams::LaunchParams(Context *context, size_t sizeOfData)
       : dataSize(sizeOfData)
     {
-      context->pushActive();
+      STACK_PUSH_ACTIVE(context);
       CUDA_CHECK(cudaStreamCreate(&stream));
       deviceMemory.alloc(dataSize);
       hostMemory.resize(dataSize);
-      context->popActive();
+      STACK_POP_ACTIVE();
     }
 
     int RangeAllocator::alloc(size_t size)
@@ -766,7 +779,7 @@ namespace owl {
     {
       if (pipeline != nullptr)
         throw std::runtime_error("pipeline already created!?");
-      
+
       std::vector<OptixProgramGroup> allPGs;
       assert(!device->rayGenPGs.empty());
       for (auto &pg : device->rayGenPGs)
@@ -786,7 +799,7 @@ namespace owl {
       
       char log[2048];
       size_t sizeof_log = sizeof( log );
-      
+
       OPTIX_CHECK(optixPipelineCreate(optixContext,
                                       &pipelineCompileOptions,
                                       &pipelineLinkOptions,
@@ -833,7 +846,8 @@ namespace owl {
       assert("check valid buffer ID" && bufferID >= 0);
       assert("check valid buffer ID" && bufferID <  buffers.size());
       assert("check buffer ID available" && buffers[bufferID] == nullptr);
-      context->pushActive();
+      STACK_PUSH_ACTIVE(context);
+      // context->pushActive();
       DeviceBuffer *buffer = new DeviceBuffer(elementCount,elementSize);
       if (initData) {
         buffer->devMem.upload(initData,"createDeviceBuffer: uploading initData");
@@ -844,7 +858,8 @@ namespace owl {
       }
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
-      context->popActive();
+      // context->popActive();
+      STACK_POP_ACTIVE();
     }
     
     void Device::hostPinnedBufferCreate(int bufferID,
@@ -1170,8 +1185,6 @@ namespace owl {
 
       size_t maxMissProgDataSize = 0;
       for (int mpID=0;mpID<(int)missProgPGs.size();mpID++) {
-        PING; PRINT(maxMissProgDataSize);
-        PRINT(missProgPGs[mpID].program.dataSize);
         maxMissProgDataSize = std::max(maxMissProgDataSize,
                                        missProgPGs[mpID].program.dataSize);
       }
@@ -1185,9 +1198,6 @@ namespace owl {
       sbt.missProgRecordCount = numMissProgRecords;
       size_t totalMissProgRecordsArraySize
         = numMissProgRecords * missProgRecordSize;
-      PRINT(numMissProgRecords);
-      PRINT(missProgRecordSize);
-      PRINT(totalMissProgRecordsArraySize);
       
       std::vector<uint8_t> missProgRecords(totalMissProgRecordsArraySize);
 
@@ -1241,7 +1251,8 @@ namespace owl {
       assert("check valid ray gen program ID" && rgID <  rayGenPGs.size());
 
       assert("check raygen records built" && sbt.rayGenRecordCount != 0);
-      sbt.sbt.raygenRecord
+      OptixShaderBindingTable localSBT = {};
+      localSBT.raygenRecord
         = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
                                         rgID * sbt.rayGenRecordSize);
 
@@ -1255,34 +1266,34 @@ namespace owl {
         // writing in some (senseless) values to not trigger optix's
         // own sanity checks
         static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
-        sbt.sbt.missRecordBase
+        localSBT.missRecordBase
           = (CUdeviceptr)32;
-        sbt.sbt.missRecordStrideInBytes
+        localSBT.missRecordStrideInBytes
           = (uint32_t)32;
-        sbt.sbt.missRecordCount
+        localSBT.missRecordCount
           = 1;
 
-        sbt.sbt.hitgroupRecordBase
+        localSBT.hitgroupRecordBase
           = (CUdeviceptr)32;
-        sbt.sbt.hitgroupRecordStrideInBytes
+        localSBT.hitgroupRecordStrideInBytes
           = (uint32_t)32;
-        sbt.sbt.hitgroupRecordCount
+        localSBT.hitgroupRecordCount
           = 1;
       } else {
         assert("check miss records built" && sbt.missProgRecordCount != 0);
-        sbt.sbt.missRecordBase
+        localSBT.missRecordBase
           = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
-        sbt.sbt.missRecordStrideInBytes
+        localSBT.missRecordStrideInBytes
           = (uint32_t)sbt.missProgRecordSize;
-        sbt.sbt.missRecordCount
+        localSBT.missRecordCount
           = (uint32_t)sbt.missProgRecordCount;
 
         assert("check hit records built" && sbt.hitGroupRecordCount != 0);
-        sbt.sbt.hitgroupRecordBase
+        localSBT.hitgroupRecordBase
           = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
-        sbt.sbt.hitgroupRecordStrideInBytes
+        localSBT.hitgroupRecordStrideInBytes
           = (uint32_t)sbt.hitGroupRecordSize;
-        sbt.sbt.hitgroupRecordCount
+        localSBT.hitgroupRecordCount
           = (uint32_t)sbt.hitGroupRecordCount;
       }
 
@@ -1296,7 +1307,7 @@ namespace owl {
                         context->stream,
                         (CUdeviceptr)sbt.launchParamsBuffer.get(),
                         sbt.launchParamsBuffer.sizeInBytes,
-                        &sbt.sbt,
+                        &localSBT,
                         dims.x,dims.y,1
                         ));
 
@@ -1448,17 +1459,17 @@ namespace owl {
                         LLOWriteLaunchParamsCB writeLaunchParamsCB,
                         const void *cbData)
     {
+      STACK_PUSH_ACTIVE(context);
       LaunchParams *lp
         = checkGetLaunchParams(launchParamsID);
       
       // call the callback to generate the host-side copy of the
       // launch params struct
       writeLaunchParamsCB(lp->hostMemory.data(),context->owlDeviceID,cbData);
-      context->pushActive();
-
-      // upload the buffer - TODO: async
+      
       lp->deviceMemory.uploadAsync(lp->hostMemory.data(),
                                    lp->stream);
+      CUDA_SYNC_CHECK();
       
       // LOG("launching ...");
       assert("check valid launch dims" && dims.x > 0);
@@ -1467,7 +1478,8 @@ namespace owl {
       assert("check valid ray gen program ID" && rgID <  rayGenPGs.size());
 
       assert("check raygen records built" && sbt.rayGenRecordCount != 0);
-      sbt.sbt.raygenRecord
+      OptixShaderBindingTable localSBT = {};
+      localSBT.raygenRecord
         = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
                                         rgID * sbt.rayGenRecordSize);
 
@@ -1481,34 +1493,34 @@ namespace owl {
         // writing in some (senseless) values to not trigger optix's
         // own sanity checks
         static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
-        sbt.sbt.missRecordBase
+        localSBT.missRecordBase
           = (CUdeviceptr)32;
-        sbt.sbt.missRecordStrideInBytes
+        localSBT.missRecordStrideInBytes
           = (uint32_t)32;
-        sbt.sbt.missRecordCount
+        localSBT.missRecordCount
           = 1;
 
-        sbt.sbt.hitgroupRecordBase
+        localSBT.hitgroupRecordBase
           = (CUdeviceptr)32;
-        sbt.sbt.hitgroupRecordStrideInBytes
+        localSBT.hitgroupRecordStrideInBytes
           = (uint32_t)32;
-        sbt.sbt.hitgroupRecordCount
+        localSBT.hitgroupRecordCount
           = 1;
       } else {
         assert("check miss records built" && sbt.missProgRecordCount != 0);
-        sbt.sbt.missRecordBase
+        localSBT.missRecordBase
           = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
-        sbt.sbt.missRecordStrideInBytes
+        localSBT.missRecordStrideInBytes
           = (uint32_t)sbt.missProgRecordSize;
-        sbt.sbt.missRecordCount
+        localSBT.missRecordCount
           = (uint32_t)sbt.missProgRecordCount;
 
         assert("check hit records built" && sbt.hitGroupRecordCount != 0);
-        sbt.sbt.hitgroupRecordBase
+        localSBT.hitgroupRecordBase
           = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
-        sbt.sbt.hitgroupRecordStrideInBytes
+        localSBT.hitgroupRecordStrideInBytes
           = (uint32_t)sbt.hitGroupRecordSize;
-        sbt.sbt.hitgroupRecordCount
+        localSBT.hitgroupRecordCount
           = (uint32_t)sbt.hitGroupRecordCount;
       }
 
@@ -1516,10 +1528,10 @@ namespace owl {
                         lp->stream,
                         (CUdeviceptr)lp->deviceMemory.get(),
                         lp->deviceMemory.sizeInBytes,
-                        &sbt.sbt,
+                        &localSBT,
                         dims.x,dims.y,1
                         ));
-      context->popActive();
+      STACK_POP_ACTIVE();
     }
     
 

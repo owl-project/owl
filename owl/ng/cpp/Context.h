@@ -38,11 +38,7 @@ namespace owl {
     Context(int32_t *requestedDeviceIDs,
             int      numRequestedDevices);
     
-    virtual ~Context()
-    {
-      std::cout << "=======================================================" << std::endl;
-      std::cout << "#owl: destroying context" << std::endl;
-    }
+    virtual ~Context();
 
     ObjectRegistryT<Buffer>       buffers;
     ObjectRegistryT<Group>        groups;

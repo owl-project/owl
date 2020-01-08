@@ -17,21 +17,25 @@
 #include "Device.h"
 
 #define LOG(message)                                            \
-  std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
+  if (Context::logging()) \
+    std::cout << "#owl.ll(" << context->owlDeviceID << "): "    \
   << message                                                    \
   << std::endl
 
 #define LOG_OK(message)                                 \
-  std::cout << OWL_TERMINAL_GREEN                       \
+  if (Context::logging()) \
+    std::cout << OWL_TERMINAL_GREEN                     \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
   << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
-  std::cout << "#owl.ll(" << owlDeviceID << "): "       \
+  if (Context::logging()) \
+    std::cout << "#owl.ll(" << owlDeviceID << "): "     \
   << message                                            \
   << std::endl
 
 #define CLOG_OK(message)                                \
+  if (Context::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << OWL_TERMINAL_DEFAULT << std::endl
@@ -126,8 +130,6 @@ namespace owl {
         d_indices  = (CUdeviceptr )tris->indexPointer;
         assert("triangles geom has index array set" && d_indices);
 
-        PING; PRINT(childID);
-        
         triangleInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
         auto &ta = triangleInput.triangleArray;
         ta.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
@@ -148,7 +150,7 @@ namespace owl {
         // number of per-ray-type 'groups' of SBT enties (ie, before
         // scaling by the SBT_STRIDE that gets passed to
         // optixTrace. So, for the build itput this value remains *1*.
-        ta.numSbtRecords               = 1; //context->numRayTypes;
+        ta.numSbtRecords               = 1; 
         ta.sbtIndexOffsetBuffer        = 0; 
         ta.sbtIndexOffsetSizeInBytes   = 0; 
         ta.sbtIndexOffsetStrideInBytes = 0; 

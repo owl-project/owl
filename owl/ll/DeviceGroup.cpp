@@ -18,14 +18,16 @@
 #include "owl/ll/DeviceGroup.h"
 
 #define LOG(message)                            \
-  std::cout << "#owl.ll: "                      \
-  << message                                    \
-  << std::endl
+  if (Context::logging())                       \
+    std::cout << "#owl.ll: "                    \
+              << message                        \
+              << std::endl
 
 #define LOG_OK(message)                                 \
-  std::cout << OWL_TERMINAL_LIGHT_GREEN                 \
-  << "#owl.ll: "                                        \
-  << message << OWL_TERMINAL_DEFAULT << std::endl
+  if (Context::logging())                               \
+    std::cout << OWL_TERMINAL_LIGHT_GREEN               \
+              << "#owl.ll: "                            \
+              << message << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
   namespace ll {
@@ -550,7 +552,7 @@ namespace owl {
       // ------------------------------------------------------------------
       // init optix itself
       // ------------------------------------------------------------------
-      std::cout << "#owl.ll: initializing optix 7" << std::endl;
+      LOG("initializing optix 7");
       OPTIX_CHECK(optixInit());
       
       // ------------------------------------------------------------------

@@ -16,6 +16,7 @@
 
 #include "APIContext.h"
 #include "APIHandle.h"
+#include "owl/ll/Device.h"
 
 namespace owl {
 
@@ -24,6 +25,23 @@ namespace owl {
 #else 
 # define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
 #endif
+
+
+#define LOG(message)                            \
+  if (ll::Context::logging())                   \
+    std::cout                                   \
+      << OWL_TERMINAL_LIGHT_BLUE                \
+      << "#owl.ng: "                            \
+      << message                                \
+      << OWL_TERMINAL_DEFAULT << std::endl
+
+#define LOG_OK(message)                         \
+  if (ll::Context::logging())                   \
+    std::cout                                   \
+      << OWL_TERMINAL_BLUE                      \
+      << "#owl.ng: "                            \
+      << message                                \
+      << OWL_TERMINAL_DEFAULT << std::endl
   
   OWL_API OWLContext owlContextCreate(int32_t *requestedDeviceIDs,
                                       int      numRequestedDevices)
@@ -31,7 +49,7 @@ namespace owl {
     LOG_API_CALL();
     APIContext::SP context = std::make_shared<APIContext>(requestedDeviceIDs,
                                                           numRequestedDevices);
-    std::cout << "#owl.api: context created..." << std::endl;
+    LOG("context created...");
     return (OWLContext)context->createHandle(context);
   }
 

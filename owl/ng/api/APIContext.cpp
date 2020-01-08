@@ -16,7 +16,24 @@
 
 #include "APIContext.h"
 #include "APIHandle.h"
+#include "owl/ll/Device.h"
 
+#define LOG(message)                            \
+  if (ll::Context::logging())                   \
+    std::cout                                   \
+      << OWL_TERMINAL_LIGHT_BLUE                \
+      << "#owl.ng: "                            \
+      << message                              \
+      << OWL_TERMINAL_DEFAULT << std::endl
+
+#define LOG_OK(message)                         \
+  if (ll::Context::logging())                   \
+    std::cout                                   \
+      << OWL_TERMINAL_BLUE                      \
+      << "#owl.ng: "                            \
+      << message                              \
+      << OWL_TERMINAL_DEFAULT << std::endl
+  
 namespace owl {
   
   void APIContext::forget(APIHandle *object)
@@ -29,12 +46,11 @@ namespace owl {
 
   void APIContext::releaseAll()
   {
-    std::cout << "#owl: context is dying, num api handles (other than context itself) "
-              << "that have not yet been released: "
-              << (activeHandles.size()-1)
-              << std::endl;
+    LOG("#owl: context is dying, num api handles (other than context itself) "
+        << "that have not yet been released: "
+        << (activeHandles.size()-1));
     for (auto handle : activeHandles)
-      std::cout << " - " << handle->toString() << std::endl;
+      LOG(" - " + handle->toString());
 
     // create a COPY of the handles we need to destroy, else
     // destroying the handles modifies the std::set while we're
