@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cuda.h>
 #include <optix.h>
 
 #include <sys/types.h>
