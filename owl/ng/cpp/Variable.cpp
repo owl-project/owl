@@ -35,7 +35,6 @@ namespace owl {
     
     void setRaw(const void *ptr) override
     {
-      assert(size == data.size());
       memcpy(data.data(),ptr,data.size());
     }
 
