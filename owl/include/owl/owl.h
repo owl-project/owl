@@ -16,13 +16,14 @@
 
 #pragma once
 
+#include <optix.h>
+
 #include <sys/types.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
 # include <cstddef> // is this c++??
 #endif
-#include "optix.h"
 
 
 #if defined(_MSC_VER)

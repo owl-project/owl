@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "owl/ll/optix.h"
+#include "owl/ll/helper/optix.h"
 #include "../include/owl/ll.h"
 
 #define OWL_THROWS_EXCEPTIONS 1

@@ -95,7 +95,7 @@ namespace osc {
     
     const int ix = optixGetLaunchIndex().x;
     const int iy = optixGetLaunchIndex().y;
-    bool dbg = ix == 500 && iy == 500;
+    // bool dbg = ix == 500 && iy == 500;
 
     const int   primID = optixGetPrimitiveIndex();
     const vec3i index  = sbtData.index[primID];

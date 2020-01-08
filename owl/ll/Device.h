@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "owl/ll/optix.h"
+#include "owl/ll/helper/optix.h"
 #include "owl/ll/DeviceMemory.h"
 // for the hit group callback type, which is part of the API
 #include "owl/ll/DeviceGroup.h"
