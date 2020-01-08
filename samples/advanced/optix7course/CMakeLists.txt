@@ -20,7 +20,7 @@ cuda_compile_and_embed(embedded_ptx_code devicePrograms.cu)
 
 cuda_add_library(toneMap STATIC
   toneMap.cu)
-add_executable(ex12_denoiseSeparateChannels
+add_executable(adv_optix7course
   ${embedded_ptx_code}
   devicePrograms.cu
   optix7.h
@@ -32,7 +32,7 @@ add_executable(ex12_denoiseSeparateChannels
   )
 add_subdirectory(glfWindow)
 
-target_link_libraries(ex12_denoiseSeparateChannels
+target_link_libraries(adv_optix7course
   toneMap
   # optix dependencies, for rendering
   ${optix_LIBRARY}

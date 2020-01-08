@@ -20,11 +20,10 @@ include_directories(${PROJECT_SOURCE_DIR}/owl/common/3rdParty)
 # public API:
 include_directories(${PROJECT_SOURCE_DIR}/owl/include/)
 
-option(BUILD_VISUAL_SAMPLES "Build Visual Examples (requires glut)" OFF)
-
-if(BUILD_VISUAL_SAMPLES)
-  add_subdirectory(../owl/common/viewerWidget sub_viewerWidget)
-endif()
+#option(BUILD_VISUAL_SAMPLES "Build Visual Examples (requires glut)" OFF)
+#if(BUILD_VISUAL_SAMPLES)
+#  add_subdirectory(../owl/common/viewerWidget sub_viewerWidget)
+#endif()
 
 
 # low-level interface
@@ -32,3 +31,14 @@ add_subdirectory(ll)
 
 # node graph layer
 add_subdirectory(ng)
+
+
+option(BUILD_EX_OPTIX7COURSE "Build Siggraph 2018 Optix Course Version" OFF)
+if (BUILD_EX_OPTIX7COURSE)
+  if(BUILD_VISUAL_SAMPLES)
+    add_subdirectory(advanced/optix7course)
+  else ()
+    message("optix7course example requires BUILD_VISUAL_EXAMPLES to be turned on")
+  endif()
+endif()
+
