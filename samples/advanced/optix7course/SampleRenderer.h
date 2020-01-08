@@ -122,7 +122,7 @@ namespace osc {
     OWLBuffer denoisedBuffer = nullptr;
     
     /* the actual final color buffer used for display, in rgba8 */
-    OWLBuffer finalColorBuffer = nullptr;
+    OWLBuffer fbFinal = nullptr;
 
     OWLBuffer    denoiserScratch = nullptr;
     OWLBuffer    denoiserState = nullptr;

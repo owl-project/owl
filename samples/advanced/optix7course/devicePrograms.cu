@@ -79,7 +79,6 @@ namespace osc {
   
   extern "C" __global__ void __closesthit__shadow()
   {
-    printf("shadow\n");
     return;
     /* not going to be used ... */
   }
@@ -99,16 +98,7 @@ namespace osc {
     bool dbg = ix == 500 && iy == 500;
 
     const int   primID = optixGetPrimitiveIndex();
-    if (dbg) {
-      printf("primid %i %lx\n",primID,sbtData.index);
-    }
     const vec3i index  = sbtData.index[primID];
-    if (dbg) {
-      printf("index %i %i %i\n",
-             index.x,
-             index.y,
-             index.z);
-    }
     
     const float u = optixGetTriangleBarycentrics().x;
     const float v = optixGetTriangleBarycentrics().y;
@@ -120,41 +110,14 @@ namespace osc {
     const vec3f &A     = sbtData.vertex[index.x];
     const vec3f &B     = sbtData.vertex[index.y];
     const vec3f &C     = sbtData.vertex[index.z];
-    if (dbg) {
-      printf("A %f %f %f\n",
-             A.x,
-             A.y,
-             A.z);
-      printf("B %f %f %f\n",
-             B.x,
-             B.y,
-             B.z);
-      printf("C %f %f %f\n",
-             C.x,
-             C.y,
-             C.z);
-    }
 
     vec3f Ng = cross(B-A,C-A);
-    if (dbg) {
-      printf("Ng %f %f %f\n",
-             Ng.x,
-             Ng.y,
-             Ng.z);
-    }
     vec3f Ns = (sbtData.normal)
       ? ((1.f-u-v) * sbtData.normal[index.x]
          +       u * sbtData.normal[index.y]
          +       v * sbtData.normal[index.z])
       : Ng;
 
-    if (dbg) {
-      printf("Ns %f %f %f\n",
-             Ns.x,
-             Ns.y,
-             Ns.z);
-    }
-    
     // ------------------------------------------------------------------
     // face-forward and normalize normals
     // ------------------------------------------------------------------
@@ -173,8 +136,6 @@ namespace osc {
     // ------------------------------------------------------------------
     vec3f diffuseColor = sbtData.color;
     if (sbtData.hasTexture && sbtData.texcoord) {
-      printf("TEXTURE\n");
-      return;
       const vec2f tc
         = (1.f-u-v) * sbtData.texcoord[index.x]
         +         u * sbtData.texcoord[index.y]
@@ -186,16 +147,6 @@ namespace osc {
 
     // start with some ambient term
     vec3f pixelColor = (0.1f + 0.2f*fabsf(dot(Ns,rayDir)))*diffuseColor;
-    if (dbg) {
-      printf("diffuseColor %f %f %f\n",
-             diffuseColor.x,
-             diffuseColor.y,
-             diffuseColor.z);
-      printf("pixelColor %f %f %f\n",
-             pixelColor.x,
-             pixelColor.y,
-             pixelColor.z);
-    }
     
     // ------------------------------------------------------------------
     // compute shadow
@@ -348,29 +299,16 @@ namespace osc {
     }
 
     vec4f rgba(pixelColor/numPixelSamples,1.f);
-    if (fbIndex == 100000)
-      printf("rgba %f frameID %i\n",rgba.x,optixLaunchParams.frame.frameID);
 
     // and write/accumulate to frame buffer ...
-    if (0 && optixLaunchParams.frame.frameID > 0) {
-      if (fbIndex == 100000)
-        printf("rgba %f\n",rgba.x);
+    if (optixLaunchParams.frame.frameID > 0) {
       rgba
         += float(optixLaunchParams.frame.frameID)
-        *  vec4f(optixLaunchParams.frame.colorBuffer[fbIndex]);
-      if (fbIndex == 100000)
-        printf("rgba %f\n",rgba.x);
+        *  vec4f(optixLaunchParams.frame.fbColor[fbIndex]);
       rgba /= (optixLaunchParams.frame.frameID+1.f);
-      if (fbIndex == 100000)
-        printf("rgba %f\n",rgba.x);
     }
-
-    // printf("fbPointer %lx %i\n",optixLaunchParams.frame.colorBuffer,fbIndex);
-    // optixLaunchParams.frame.colorBuffer[fbIndex] = (float4)rgba;
-    uint32_t fbVal = owl::make_rgba(rgba);
-    if (fbIndex == 100000)
-      printf("color %x %i\n",fbVal,optixLaunchParams.frame.frameID);
-    optixLaunchParams.frame.colorBuffer[fbIndex] = fbVal;
+    optixLaunchParams.frame.fbColor[fbIndex] = (float4)rgba;
+    optixLaunchParams.frame.fbFinal[fbIndex] = owl::make_rgba(rgba);
   }
   
 } // ::osc

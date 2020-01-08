@@ -42,7 +42,10 @@ namespace osc {
     int numPixelSamples = 1;
     struct {
       int       frameID = 0;
-      uint32_t     *colorBuffer;
+      // the *final* frame buffer, after accum
+      uint32_t    *fbFinal;
+      // the color buffer, for accum buffering
+      float4      *fbColor;
       // float4   *colorBuffer;
       // float4   *normalBuffer;
       // float4   *albedoBuffer;

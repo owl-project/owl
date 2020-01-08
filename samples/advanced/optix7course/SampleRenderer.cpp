@@ -81,7 +81,8 @@ namespace osc {
       { "numPixelSamples", OWL_INT,    OWL_OFFSETOF(LaunchParams,numPixelSamples)},
       
       { "frame.frameID", OWL_INT,    OWL_OFFSETOF(LaunchParams,frame.frameID)},
-      { "frame.colorBuffer",OWL_BUFPTR,OWL_OFFSETOF(LaunchParams,frame.colorBuffer)},
+      { "frame.fbColor",OWL_BUFPTR,OWL_OFFSETOF(LaunchParams,frame.fbColor)},
+      { "frame.fbFinal",OWL_BUFPTR,OWL_OFFSETOF(LaunchParams,frame.fbFinal)},
       { "frame.fbSize",OWL_INT2,OWL_OFFSETOF(LaunchParams,frame.fbSize)},
 
       // light settings:
@@ -416,13 +417,14 @@ namespace osc {
     }
 
     this->fbSize = newSize;
-    // fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
-    fbColor = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
+    fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
+    fbFinal = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
     PRINT(newSize);
     PING; PRINT(owlBufferGetPointer(fbColor,0));
     // fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
 
-    owlLaunchParamsSetBuffer(launchParams,"frame.colorBuffer",fbColor);
+    owlLaunchParamsSetBuffer(launchParams,"frame.fbColor",fbColor);
+    owlLaunchParamsSetBuffer(launchParams,"frame.fbFinal",fbFinal);
     owlLaunchParamsSet2i(launchParams,"frame.fbSize",(const owl2i&)fbSize);
 
     // and re-set the camera, since aspect may have changed
@@ -440,8 +442,7 @@ namespace osc {
   /*! download the rendered color buffer */
   void SampleRenderer::downloadPixels(uint32_t h_pixels[])
   {
-    std::cout <<" todo: download buffer..." << std::endl;
-    memcpy(h_pixels,owlBufferGetPointer(fbColor,0),fbSize.x*fbSize.y*sizeof(int));
+    memcpy(h_pixels,owlBufferGetPointer(fbFinal,0),fbSize.x*fbSize.y*sizeof(int));
     // finalColorBuffer.download(h_pixels,
     //                           launchParams.frame.size.x*launchParams.frame.size.y);
   }
