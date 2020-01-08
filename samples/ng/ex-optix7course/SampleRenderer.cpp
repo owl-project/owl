@@ -74,15 +74,15 @@ namespace osc {
       = owlMissProgCreate(context,module,"shadow",
                           /* no sbt data: */0,nullptr,-1);
 
-    buildAccel();
-    
-    owlBuildPrograms(context);
-    owlBuildPipeline(context);
-    owlBuildSBT(context);
-    
     OWLVarDecl launchParamsVars[] = {
+      { "world", OWL_GROUP, OWL_OFFSETOF(LaunchParams,traversable)},
+      
       { "numPixelSamples", OWL_INT,    OWL_OFFSETOF(LaunchParams,numPixelSamples)},
-      { "frameID", OWL_INT,    OWL_OFFSETOF(LaunchParams,frame.frameID)},
+      
+      { "frame.frameID", OWL_INT,    OWL_OFFSETOF(LaunchParams,frame.frameID)},
+      { "frame.colorBuffer",OWL_BUFPTR,OWL_OFFSETOF(LaunchParams,frame.colorBuffer)},
+      { "frame.fbSize",OWL_INT2,OWL_OFFSETOF(LaunchParams,frame.fbSize)},
+
       // light settings:
       { "light.origin",    OWL_FLOAT3, OWL_OFFSETOF(LaunchParams,light.origin)},
       { "light.du",    OWL_FLOAT3, OWL_OFFSETOF(LaunchParams,light.du)},
@@ -98,6 +98,13 @@ namespace osc {
     launchParams
       = owlLaunchParamsCreate(context,sizeof(LaunchParams),
                               launchParamsVars,-1);
+    
+    buildAccel();
+    
+    owlBuildPrograms(context);
+    owlBuildPipeline(context);
+    owlBuildSBT(context);
+    
     owlLaunchParamsSet3f(launchParams,"light.origin",(const owl3f&)light.origin);
     owlLaunchParamsSet3f(launchParams,"light.du",(const owl3f&)light.du);
     owlLaunchParamsSet3f(launchParams,"light.dv",(const owl3f&)light.dv);
@@ -173,7 +180,7 @@ namespace osc {
       { "index",    OWL_BUFPTR, OWL_OFFSETOF(TriangleMeshSBTData,index) },
       { "texcoord", OWL_BUFPTR, OWL_OFFSETOF(TriangleMeshSBTData,texcoord) },
       { "hasTexture",OWL_INT,
-        OWL_OFFSETOF(TriangleMeshSBTData,index) },
+        OWL_OFFSETOF(TriangleMeshSBTData,hasTexture) },
       // { "texture",   OWL_USER_TYPE(cudaTextureObject_t),
       //   OWL_OFFSETOF(TriangleMeshSBTData,index) },
       { nullptr /* sentinel to mark end of list */ }
@@ -183,6 +190,8 @@ namespace osc {
                           OWL_GEOM_TRIANGLES,
                           sizeof(TriangleMeshSBTData),
                           triMeshVars,-1);
+    owlGeomTypeSetClosestHit(triMeshGeomType,0,module,"radiance");
+    owlGeomTypeSetClosestHit(triMeshGeomType,1,module,"shadow");
     std::vector<OWLGeom> geoms;
     for (int meshID=0;meshID<numMeshes;meshID++) {
       // upload the model to the device: the builder
@@ -220,8 +229,11 @@ namespace osc {
       owlGeomSetBuffer(geom,"texcoord",texcoordBuffer);
 
       owlGeomSet3f(geom,"color",(const owl3f &)mesh.diffuse);
+      PRINT(mesh.diffuse);
       if (mesh.diffuseTextureID >= 0) {
         owlGeomSet1i(geom,"hasTexture",1);
+        // for now:
+        owlGeomSet1i(geom,"hasTexture",0);
       } else {
         owlGeomSet1i(geom,"hasTexture",0);
       }
@@ -229,34 +241,42 @@ namespace osc {
     }
     
     world = owlTrianglesGeomGroupCreate(context,geoms.size(),geoms.data());
+    owlGroupBuildAccel(world);
+    PING;
+    PRINT(world);
+    PRINT(launchParams);
+    owlLaunchParamsSetGroup(launchParams,"world",world);
   }
   
 
   /*! render one frame */
   void SampleRenderer::render()
   {
-#if 0
     // sanity check: make sure we launch only after first resize is
     // already done:
-    if (launchParams.frame.size.x == 0) return;
+    if (fbSize.x == 0) return;
 
     if (!accumulate)
-      launchParams.frame.frameID = 0;
-    launchParamsBuffer.upload(&launchParams,1);
-    launchParams.frame.frameID++;
-    
-    OPTIX_CHECK(optixLaunch(/*! pipeline we're launching launch: */
-                            pipeline,stream,
-                            /*! parameters and SBT */
-                            launchParamsBuffer.d_pointer(),
-                            launchParamsBuffer.sizeInBytes,
-                            &sbt,
-                            /*! dimensions of the launch: */
-                            launchParams.frame.size.x,
-                            launchParams.frame.size.y,
-                            1
-                            ));
+      frameID = 0;
+    // launchParamsBuffer.upload(&launchParams,1);
+    owlLaunchParamsSet1i(launchParams,"frame.frameID",frameID);
+    owlLaunchParamsSet1i(launchParams,"numPixelSamples",numPixelSamples);
+    frameID++;
 
+    owlParamsLaunch2D(rayGen,fbSize.x,fbSize.y,launchParams);
+    // OPTIX_CHECK(optixLaunch(/*! pipeline we're launching launch: */
+    //                         pipeline,stream,
+    //                         /*! parameters and SBT */
+    //                         launchParamsBuffer.d_pointer(),
+    //                         launchParamsBuffer.sizeInBytes,
+    //                         &sbt,
+    //                         /*! dimensions of the launch: */
+    //                         launchParams.frame.size.x,
+    //                         launchParams.frame.size.y,
+    //                         1
+    //                         ));
+
+#if 0
     OptixDenoiserParams denoiserParams;
     denoiserParams.denoiseAlpha = 1;
     denoiserParams.hdrIntensity = denoiserIntensity.d_pointer();
@@ -363,7 +383,7 @@ namespace osc {
     // reset accumulation
     // launchParams.frame.frameID = 0;
     frameID = 0;
-    owlLaunchParamsSet1i(launchParams,"frameID",0);
+    owlLaunchParamsSet1i(launchParams,"frame.frameID",0);
     const vec3f position  = camera.from;
     const vec3f direction = normalize(camera.at-camera.from);
     
@@ -397,6 +417,8 @@ namespace osc {
     this->fbSize = newSize;
     // fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
     fbColor = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
+    PRINT(newSize);
+    PING; PRINT(owlBufferGetPointer(fbColor,0));
     // fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
 
     owlLaunchParamsSetBuffer(launchParams,"frame.colorBuffer",fbColor);

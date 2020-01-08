@@ -126,6 +126,8 @@ namespace owl {
         d_indices  = (CUdeviceptr )tris->indexPointer;
         assert("triangles geom has index array set" && d_indices);
 
+        PING; PRINT(childID);
+        
         triangleInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
         auto &ta = triangleInput.triangleArray;
         ta.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
@@ -141,7 +143,12 @@ namespace owl {
         // we always have exactly one SBT entry per shape (ie, triangle
         // mesh), and no per-primitive materials:
         ta.flags                       = triangleInputFlags;
-        ta.numSbtRecords               = context->numRayTypes;
+        // iw, jan 7, 2020: note this is not the "actual" number of
+        // SBT entires we'll generate when we build the SBT, only the
+        // number of per-ray-type 'groups' of SBT enties (ie, before
+        // scaling by the SBT_STRIDE that gets passed to
+        // optixTrace. So, for the build itput this value remains *1*.
+        ta.numSbtRecords               = 1; //context->numRayTypes;
         ta.sbtIndexOffsetBuffer        = 0; 
         ta.sbtIndexOffsetSizeInBytes   = 0; 
         ta.sbtIndexOffsetStrideInBytes = 0; 

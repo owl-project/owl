@@ -79,6 +79,8 @@ namespace osc {
   
   extern "C" __global__ void __closesthit__shadow()
   {
+    printf("shadow\n");
+    return;
     /* not going to be used ... */
   }
   
@@ -91,8 +93,23 @@ namespace osc {
     // ------------------------------------------------------------------
     // gather some basic hit information
     // ------------------------------------------------------------------
+    
+    const int ix = optixGetLaunchIndex().x;
+    const int iy = optixGetLaunchIndex().y;
+    bool dbg = ix == 500 && iy == 500;
+
     const int   primID = optixGetPrimitiveIndex();
+    if (dbg) {
+      printf("primid %i %lx\n",primID,sbtData.index);
+    }
     const vec3i index  = sbtData.index[primID];
+    if (dbg) {
+      printf("index %i %i %i\n",
+             index.x,
+             index.y,
+             index.z);
+    }
+    
     const float u = optixGetTriangleBarycentrics().x;
     const float v = optixGetTriangleBarycentrics().y;
 
@@ -103,12 +120,40 @@ namespace osc {
     const vec3f &A     = sbtData.vertex[index.x];
     const vec3f &B     = sbtData.vertex[index.y];
     const vec3f &C     = sbtData.vertex[index.z];
+    if (dbg) {
+      printf("A %f %f %f\n",
+             A.x,
+             A.y,
+             A.z);
+      printf("B %f %f %f\n",
+             B.x,
+             B.y,
+             B.z);
+      printf("C %f %f %f\n",
+             C.x,
+             C.y,
+             C.z);
+    }
+
     vec3f Ng = cross(B-A,C-A);
+    if (dbg) {
+      printf("Ng %f %f %f\n",
+             Ng.x,
+             Ng.y,
+             Ng.z);
+    }
     vec3f Ns = (sbtData.normal)
       ? ((1.f-u-v) * sbtData.normal[index.x]
          +       u * sbtData.normal[index.y]
          +       v * sbtData.normal[index.z])
       : Ng;
+
+    if (dbg) {
+      printf("Ns %f %f %f\n",
+             Ns.x,
+             Ns.y,
+             Ns.z);
+    }
     
     // ------------------------------------------------------------------
     // face-forward and normalize normals
@@ -128,6 +173,8 @@ namespace osc {
     // ------------------------------------------------------------------
     vec3f diffuseColor = sbtData.color;
     if (sbtData.hasTexture && sbtData.texcoord) {
+      printf("TEXTURE\n");
+      return;
       const vec2f tc
         = (1.f-u-v) * sbtData.texcoord[index.x]
         +         u * sbtData.texcoord[index.y]
@@ -139,6 +186,16 @@ namespace osc {
 
     // start with some ambient term
     vec3f pixelColor = (0.1f + 0.2f*fabsf(dot(Ns,rayDir)))*diffuseColor;
+    if (dbg) {
+      printf("diffuseColor %f %f %f\n",
+             diffuseColor.x,
+             diffuseColor.y,
+             diffuseColor.z);
+      printf("pixelColor %f %f %f\n",
+             pixelColor.x,
+             pixelColor.y,
+             pixelColor.z);
+    }
     
     // ------------------------------------------------------------------
     // compute shadow
@@ -233,9 +290,10 @@ namespace osc {
     const int ix = optixGetLaunchIndex().x;
     const int iy = optixGetLaunchIndex().y;
     const auto &camera = optixLaunchParams.camera;
+    const uint32_t fbIndex = ix+iy*optixLaunchParams.frame.fbSize.x;
     
     PRD prd;
-    prd.random.init(ix+optixLaunchParams.frame.size.x*iy,
+    prd.random.init(ix+optixLaunchParams.frame.fbSize.x*iy,
                     optixLaunchParams.frame.frameID);
     prd.pixelColor = vec3f(0.f);
 
@@ -256,12 +314,12 @@ namespace osc {
       // screen then the actual screen plane we shuld be using during
       // rendreing is slightly larger than [0,1]^2
       vec2f screen(vec2f(ix+prd.random(),iy+prd.random())
-                   / vec2f(optixLaunchParams.frame.size));
+                   / vec2f(optixLaunchParams.frame.fbSize));
       // screen
       //   = screen
       //   * vec2f(optixLaunchParams.frame.denoisedSize)
-      //   * vec2f(optixLaunchParams.frame.size)
-      //   - 0.5f*(vec2f(optixLaunchParams.frame.size)
+      //   * vec2f(optixLaunchParams.frame.fbSize)
+      //   - 0.5f*(vec2f(optixLaunchParams.frame.fbSize)
       //           -
       //           vec2f(optixLaunchParams.frame.denoisedSize)
       //           );
@@ -283,23 +341,36 @@ namespace osc {
                  RAY_TYPE_COUNT,               // SBT stride
                  RADIANCE_RAY_TYPE,            // missSBTIndex 
                  u0, u1 );
+
       pixelColor  += prd.pixelColor;
-      pixelNormal += prd.pixelNormal;
-      pixelAlbedo += prd.pixelAlbedo;
+      // pixelNormal += prd.pixelNormal;
+      // pixelAlbedo += prd.pixelAlbedo;
     }
 
     vec4f rgba(pixelColor/numPixelSamples,1.f);
+    if (fbIndex == 100000)
+      printf("rgba %f frameID %i\n",rgba.x,optixLaunchParams.frame.frameID);
 
     // and write/accumulate to frame buffer ...
-    const uint32_t fbIndex = ix+iy*optixLaunchParams.frame.size.x;
-    if (optixLaunchParams.frame.frameID > 0) {
+    if (0 && optixLaunchParams.frame.frameID > 0) {
+      if (fbIndex == 100000)
+        printf("rgba %f\n",rgba.x);
       rgba
         += float(optixLaunchParams.frame.frameID)
         *  vec4f(optixLaunchParams.frame.colorBuffer[fbIndex]);
+      if (fbIndex == 100000)
+        printf("rgba %f\n",rgba.x);
       rgba /= (optixLaunchParams.frame.frameID+1.f);
+      if (fbIndex == 100000)
+        printf("rgba %f\n",rgba.x);
     }
+
+    // printf("fbPointer %lx %i\n",optixLaunchParams.frame.colorBuffer,fbIndex);
     // optixLaunchParams.frame.colorBuffer[fbIndex] = (float4)rgba;
-    optixLaunchParams.frame.colorBuffer[fbIndex] = owl::make_rgba(rgba);
+    uint32_t fbVal = owl::make_rgba(rgba);
+    if (fbIndex == 100000)
+      printf("color %x %i\n",fbVal,optixLaunchParams.frame.frameID);
+    optixLaunchParams.frame.colorBuffer[fbIndex] = fbVal;
   }
   
 } // ::osc

@@ -205,7 +205,12 @@ namespace owl {
         // we always have exactly one SBT entry per shape (ie, triangle
         // mesh), and no per-primitive materials:
         aa.flags                       = userGeomInputFlags;
-        aa.numSbtRecords               = context->numRayTypes;
+        // iw, jan 7, 2020: note this is not the "actual" number of
+        // SBT entires we'll generate when we build the SBT, only the
+        // number of per-ray-type 'groups' of SBT enties (ie, before
+        // scaling by the SBT_STRIDE that gets passed to
+        // optixTrace. So, for the build itput this value remains *1*.
+        aa.numSbtRecords               = 1; //context->numRayTypes;
         aa.sbtIndexOffsetBuffer        = 0; 
         aa.sbtIndexOffsetSizeInBytes   = 0; 
         aa.sbtIndexOffsetStrideInBytes = 0; 

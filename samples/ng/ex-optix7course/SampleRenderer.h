@@ -103,12 +103,12 @@ namespace osc {
     /*! upload textures, and create cuda texture objects for them */
     void createTextures();
 
-    OWLContext      context;
-    OWLModule       module;
-    OWLLaunchParams launchParams;
-    OWLRayGen       rayGen;
-    OWLMissProg     missProgRadiance;
-    OWLMissProg     missProgShadow;
+    OWLContext      context = nullptr;
+    OWLModule       module = nullptr;
+    OWLLaunchParams launchParams = nullptr;
+    OWLRayGen       rayGen = nullptr;
+    OWLMissProg     missProgRadiance = nullptr;
+    OWLMissProg     missProgShadow = nullptr;
 
     /*! the color buffer we use during _rendering_, which is a bit
       larger than the actual displayed frame buffer (to account for
@@ -138,13 +138,13 @@ namespace osc {
     const Model *model;
     
     /*! @{ one buffer per input mesh */
-    std::vector<OWLBuffer> vertexBuffer;
-    std::vector<OWLBuffer> normalBuffer;
-    std::vector<OWLBuffer> texcoordBuffer;
-    std::vector<OWLBuffer> indexBuffer;
+    // std::vector<OWLBuffer> vertexBuffer;
+    // std::vector<OWLBuffer> normalBuffer;
+    // std::vector<OWLBuffer> texcoordBuffer;
+    // std::vector<OWLBuffer> indexBuffer;
     /*! @} */
     
-    OWLGroup world;
+    OWLGroup world = nullptr;
 
     /*! @{ one texture object and pixel array per used texture */
     std::vector<cudaArray_t>         textureArrays;

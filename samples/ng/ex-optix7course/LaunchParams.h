@@ -42,13 +42,13 @@ namespace osc {
     int numPixelSamples = 1;
     struct {
       int       frameID = 0;
-      int32_t     *colorBuffer;
+      uint32_t     *colorBuffer;
       // float4   *colorBuffer;
       // float4   *normalBuffer;
       // float4   *albedoBuffer;
       
       /*! the size of the frame buffer to render */
-      vec2i     size;
+      vec2i     fbSize;
     } frame;
     
     struct {
