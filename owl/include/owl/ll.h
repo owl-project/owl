@@ -588,18 +588,6 @@ void lloParamsLaunch2D(LLOContext   llo,
        (*lambda)(output,devID);
      },
      (const void *)&l);
-  // lloGroupBuildPrimitiveBounds
-  //   (llo,groupID,sizeOfData,
-  //    [](uint8_t *output,
-  //       int devID,
-  //       int geomID,
-  //       int childID, 
-  //       const void *cbData)
-  //    {
-  //      const Lambda *lambda = (const Lambda *)cbData;
-  //      (*lambda)(output,devID,geomID,childID);
-  //    },
-  //    (const void *)&l);
 }
 #endif
 
