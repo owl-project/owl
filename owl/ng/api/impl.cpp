@@ -56,7 +56,7 @@ namespace owl {
 /*! set number of ray types to be used in this context; this should be
     done before any programs, pipelines, geometries, etc get
     created */
-  OWL_API OWLContext
+  OWL_API void
   owlContextSetRayTypeCount(OWLContext _context,
                             size_t numRayTypes)
   {
