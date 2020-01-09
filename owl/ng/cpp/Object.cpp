@@ -76,6 +76,8 @@ namespace owl {
 
   std::string typeToString(OWLDataType type)
   {
+    if (type >= OWL_USER_TYPE_BEGIN)
+      return "(user defined type)";
     switch(type) {
       
     case OWL_INT:

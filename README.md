@@ -116,6 +116,53 @@ Per-OS Instructions:
 Latest Progress/Revision History
 ================================
 
+v0.6.x - Buffer updates, launch params, first interactive example, ...
+----------------------------------------------------------------------
+
+- Added OWL-port of github.com/ingowald/optix7course siggraph course
+  notes sample as a first 'advanced' sample that allows for
+  interactive fly-throughs trhough a "real" model. See original course
+  notes for instructions on how to use. 
+
+Process of adding this sample also required, among others, the following
+feature changes/additions
+
+- added support for resizing (`owlBufferResize`), destroying
+  (`owlBufferDestroy`), and uploading data to (`owlBufferUpload`)
+  buffers.
+
+- added concept of LaunchParams (with variables, similar to geoms),
+  both for creating (`owlLaunchParamsCreate`) and launching with
+  launch params (`owlParamLaunch2D`)
+
+- added support for *asynchronous* launches, where multiple launches
+  can be in flight in parallel, using different streams. Wrote
+  experimental "owl prime" project to debug, debug, and test this;
+  project allow, for example, highly threaded cpu-side shading with
+  owl-based, async GPU offload of the ray tracing (this project is not
+  yet included).
+  
+- worked on better interoperability between owl and CUDA-based host
+  app; app can query buffer device pointers, add can add raw data (eg,
+  cuda textures) to objects, app can query streams used for async
+  launches (eg to add async cudamemcpys to that same stream, sync
+  itself w/ owl, etc) and fixed includes to allow mixing cuda and
+  optix code
+
+- added ability to create user-type variables (to pass, e.g.,
+  CUDA texture objects as parameters to meshes)
+
+- rewritten interface for getting and setting variables using macros,
+  all object and variable types now supported
+  
+- added support for more than one ray type (`owlContextSetRayTypeCount`)
+
+- clamped down on verbosity of the logging - most logs now visible
+  only in debug mode
+
+- various minor bugfixes throughout the code
+
+
 v0.5.x - First Public Release Cleanups
 --------------------------------------
 

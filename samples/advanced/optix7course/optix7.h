@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2018-2019 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,22 +16,29 @@
 
 #pragma once
 
-#include "owl/ll/cuda.h"
-
-// #define OPTIX_COMPATIBILITY 7
-
-#ifdef _WIN32
-#pragma warning( push )
-#pragma warning( disable : 4996 )
-#endif
-
+// optix 7
+#include <cuda_runtime.h>
 #include <optix.h>
-#include <optix_function_table.h>
 #include <optix_stubs.h>
+#include <sstream>
+#include <stdexcept>
 
-#ifdef _WIN32
-#pragma warning( push )
-#endif
+#define CUDA_CHECK(call)							\
+    {									\
+      cudaError_t rc = cuda##call;                                      \
+      if (rc != cudaSuccess) {                                          \
+        std::stringstream txt;                                          \
+        cudaError_t err =  rc; /*cudaGetLastError();*/                  \
+        txt << "CUDA Error " << cudaGetErrorName(err)                   \
+            << " (" << cudaGetErrorString(err) << ")";                  \
+        throw std::runtime_error(txt.str());                            \
+      }                                                                 \
+    }
+
+#define CUDA_CHECK_NOEXCEPT(call)                                        \
+    {									\
+      cuda##call;                                                       \
+    }
 
 #define OPTIX_CHECK( call )                                             \
   {                                                                     \
@@ -43,16 +50,14 @@
       }                                                                 \
   }
 
-#define OPTIX_CHECK_LOG( call )                                         \
+#define CUDA_SYNC_CHECK()                                               \
   {                                                                     \
-    OptixResult res = call;                                             \
-    if( res != OPTIX_SUCCESS )                                          \
+    cudaDeviceSynchronize();                                            \
+    cudaError_t error = cudaGetLastError();                             \
+    if( error != cudaSuccess )                                          \
       {                                                                 \
-        fprintf( stderr, "Optix call (%s) failed with code %d (line %d)\n", #call, res, __LINE__ ); \
-        fprintf( stderr, "Log:\n%s\n", log );                           \
+        fprintf( stderr, "error (%s: line %d): %s\n", __FILE__, __LINE__, cudaGetErrorString( error ) ); \
         exit( 2 );                                                      \
       }                                                                 \
   }
-
-#define OPTIX_CALL( call ) OPTIX_CHECK(optix##call)
 

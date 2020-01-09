@@ -24,7 +24,7 @@ namespace owl {
                              const std::string &progName,
                              size_t varStructSize,
                              const std::vector<OWLVarDecl> &varDecls)
-    : SBTObjectType(context,context->rayGenTypes,varStructSize,varDecls),
+    : SBTObjectType(context,context->missProgTypes,varStructSize,varDecls),
       module(module),
       progName(progName)
   {}

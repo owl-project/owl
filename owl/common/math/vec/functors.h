@@ -57,13 +57,13 @@ namespace owl {
   
 #define _define_float_functor(func)                                     \
     template<typename T> inline __both__ vec_t<T,2> func(const vec_t<T,2> &v) \
-    { return vec_t<T,2>(func(v.x),func(v.y)); }                         \
+    { return vec_t<T,2>(owl::common::func(v.x),owl::common::func(v.y)); }                         \
                                                                         \
     template<typename T> inline __both__ vec_t<T,3> func(const vec_t<T,3> &v) \
-    { return vec_t<T,3>(func(v.x),func(v.y),func(v.z)); }               \
+    { return vec_t<T,3>(owl::common::func(v.x),owl::common::func(v.y),owl::common::func(v.z)); }               \
                                                                         \
     template<typename T> inline __both__ vec_t<T,4> func(const vec_t<T,4> &v) \
-    { return vec_t<T,4>(func(v.x),func(v.y),func(v.z),func(v.w)); }     \
+    { return vec_t<T,4>(owl::common::func(v.x),owl::common::func(v.y),owl::common::func(v.z),owl::common::func(v.w)); } \
 
     _define_float_functor(rcp)
     _define_float_functor(sin)

@@ -16,38 +16,40 @@
 
 #pragma once
 
-#include "gdt/gdt.h"
+#include "../math/vec.h"
 
-namespace gdt {
-  namespace array2D {
-
-    inline int linear(const vec2i &ID, const vec2i &dims)
-    { return ID.x + dims.x*ID.y; }
-
-    template<typename Lambda>
-    inline void for_each(const vec2i &dims, const Lambda &lambda)
-    {
-      for (int iy=0;iy<dims.y;iy++)
-        for (int ix=0;ix<dims.x;ix++)
-          lambda(vec2i(ix,iy));
-    }
-
-#if HAVE_GDT_PARALLEL_FOR
-    template<typename Lambda>
-    inline void parallel_for(const vec2i &dims, const Lambda &lambda)
-    {
-      gdt::parallel_for(dims.x*dims.y,[&](int index){
-          lambda(vec2i(index%dims.x,index/dims.x));
-        });
-    }
-    template<typename Lambda>
-    inline void serial_for(const vec2i &dims, const Lambda &lambda)
-    {
-      gdt::serial_for(dims.x*dims.y,[&](int index){
-          lambda(vec2i(index%dims.x,index/dims.x));
-        });
-    }
-#endif
+namespace owl {
+  namespace common {
+    namespace array2D {
     
-  } // gdt::array2D
-} // gdt
+      inline int linear(const vec2i &ID, const vec2i &dims)
+      { return ID.x + dims.x*ID.y; }
+
+      template<typename Lambda>
+      inline void for_each(const vec2i &dims, const Lambda &lambda)
+      {
+        for (int iy=0;iy<dims.y;iy++)
+          for (int ix=0;ix<dims.x;ix++)
+            lambda(vec2i(ix,iy));
+      }
+
+#if OWL_HAVE_PARALLEL_FOR
+      template<typename Lambda>
+      inline void parallel_for(const vec2i &dims, const Lambda &lambda)
+      {
+        owl::common::parallel_for(dims.x*dims.y,[&](int index){
+            lambda(vec2i(index%dims.x,index/dims.x));
+          });
+      }
+#endif
+      template<typename Lambda>
+      inline void serial_for(const vec2i &dims, const Lambda &lambda)
+      {
+        owl::common::serial_for(dims.x*dims.y,[&](int index){
+            lambda(vec2i(index%dims.x,index/dims.x));
+          });
+      }
+    
+    } // owl::common::array2D
+  } // owl::common
+} // owl

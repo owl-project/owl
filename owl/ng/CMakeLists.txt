@@ -35,6 +35,7 @@ set(OWL_NG_SOURCES
   cpp/ObjectRegistry.cpp
   cpp/Context.cpp
   cpp/RayGen.cpp
+  cpp/LaunchParams.cpp
   cpp/MissProg.cpp
   cpp/Geometry.cpp
   cpp/Variable.cpp
@@ -56,6 +57,10 @@ target_link_libraries(owl_ng
 target_link_libraries(owl_ng_static
   llowl_static
   )
+
+
+set_target_properties(owl_ng PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(owl_ng_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 
 

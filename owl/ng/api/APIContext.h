@@ -22,6 +22,12 @@ namespace owl {
   
   struct APIContext : public Context {
     typedef std::shared_ptr<APIContext> SP;
+
+    APIContext(int32_t *requestedDeviceIDs,
+               int      numRequestedDevices)
+      : Context(requestedDeviceIDs,
+                numRequestedDevices)
+    {}
     
     APIHandle *createHandle(Object::SP object);
 

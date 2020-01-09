@@ -18,14 +18,16 @@
 #include "owl/ll/DeviceGroup.h"
 
 #define LOG(message)                            \
-  std::cout << "#owl.ll: "                      \
-  << message                                    \
-  << std::endl
+  if (Context::logging())                       \
+    std::cout << "#owl.ll: "                    \
+              << message                        \
+              << std::endl
 
 #define LOG_OK(message)                                 \
-  std::cout << OWL_TERMINAL_LIGHT_GREEN                 \
-  << "#owl.ll: "                                        \
-  << message << OWL_TERMINAL_DEFAULT << std::endl
+  if (Context::logging())                               \
+    std::cout << OWL_TERMINAL_LIGHT_GREEN               \
+              << "#owl.ll: "                            \
+              << message << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
   namespace ll {
@@ -101,13 +103,29 @@ namespace owl {
       for (auto device : devices)
         device->setMaxInstancingDepth(maxInstancingDepth);
     }
-    
+
+    void DeviceGroup::setRayTypeCount(size_t rayTypeCount)
+    {
+      for (auto device : devices)
+        device->setRayTypeCount(rayTypeCount);
+    }
+
 
     void DeviceGroup::allocModules(size_t count)
     { for (auto device : devices) device->allocModules(count); }
+
+    void DeviceGroup::allocLaunchParams(size_t count)
+    { for (auto device : devices) device->allocLaunchParams(count); }
     
     void DeviceGroup::moduleCreate(int moduleID, const char *ptxCode)
     { for (auto device : devices) device->modules.set(moduleID,ptxCode); }
+
+    void DeviceGroup::launchParamsCreate(int launchParamsID, size_t sizeOfVars)
+    {
+      for (auto device : devices)
+        device->launchParamsCreate(launchParamsID,sizeOfVars);
+    }
+
     
     void DeviceGroup::buildModules()
     {
@@ -354,7 +372,7 @@ namespace owl {
       return checkGetDevice(deviceID)->groupGetTraversable(groupID);
     }
 
-    void DeviceGroup::sbtHitProgsBuild(WriteHitProgDataCB writeHitProgDataCB,
+    void DeviceGroup::sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
                                        const void *callBackData)
     {
       for (auto device : devices) 
@@ -371,7 +389,7 @@ namespace owl {
     }
                           
 
-    void DeviceGroup::sbtRayGensBuild(WriteRayGenDataCB writeRayGenCB,
+    void DeviceGroup::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenCB,
                                       const void *callBackData)
     {
       for (auto device : devices) 
@@ -379,7 +397,7 @@ namespace owl {
                                 callBackData);
     }
     
-    void DeviceGroup::sbtMissProgsBuild(WriteMissProgDataCB writeMissProgCB,
+    void DeviceGroup::sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgCB,
                                         const void *callBackData)
     {
       for (auto device : devices) 
@@ -389,7 +407,7 @@ namespace owl {
 
     void DeviceGroup::groupBuildPrimitiveBounds(int groupID,
                                                 size_t maxGeomDataSize,
-                                                WriteUserGeomBoundsDataCB cb,
+                                                LLOWriteUserGeomBoundsDataCB cb,
                                                 const void *cbData)
     {
       // try {
@@ -480,6 +498,14 @@ namespace owl {
     {
       return checkGetDevice(devID)->bufferGetPointer(bufferID);
     }
+    
+    /*! return the cuda stream by the given launchparams object, on
+      given device */
+    CUstream DeviceGroup::launchParamsGetStream(int launchParamsID, int devID)
+    {
+      return checkGetDevice(devID)->launchParamsGetStream(launchParamsID);
+    }
+    
       
     void DeviceGroup::launch(int rgID, const vec2i &dims)
     {
@@ -487,14 +513,36 @@ namespace owl {
       CUDA_SYNC_CHECK();
     }
     
+    void DeviceGroup::launch(int rgID,
+                             const vec2i &dims,
+                             int32_t launchParamsID,
+                             LLOWriteLaunchParamsCB writeLaunchParamsCB,
+                             const void *cbData)
+    {
+      for (auto device : devices)
+        device->launch(rgID,dims,
+                       launchParamsID,
+                       writeLaunchParamsCB,
+                       cbData);
+      // CUDA_SYNC_CHECK();
+    }
+    
     /* create an instance of this object that has properly
        initialized devices */
     DeviceGroup *DeviceGroup::create(const int *deviceIDs,
                                      size_t     numDevices)
     {
+      std::vector<int> tmpDeviceIDs;
+      if (deviceIDs == 0) {
+        for (int i=0;i<numDevices;i++)
+          tmpDeviceIDs.push_back(i);
+        deviceIDs = tmpDeviceIDs.data();
+      }
+      
       assert((deviceIDs == nullptr && numDevices == 0)
              ||
-             (deviceIDs != nullptr && numDevices > 0));
+             (deviceIDs != nullptr && numDevices > 0)
+             );
       
       // ------------------------------------------------------------------
       // init cuda, and error-out if no cuda devices exist
@@ -512,7 +560,7 @@ namespace owl {
       // ------------------------------------------------------------------
       // init optix itself
       // ------------------------------------------------------------------
-      std::cout << "#owl.ll: initializing optix 7" << std::endl;
+      LOG("initializing optix 7");
       OPTIX_CHECK(optixInit());
       
       // ------------------------------------------------------------------

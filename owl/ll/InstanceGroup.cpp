@@ -17,21 +17,25 @@
 #include "Device.h"
 
 #define LOG(message)                                            \
+  if (Context::logging()) \
   std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
   << message                                                    \
   << std::endl
 
 #define LOG_OK(message)                                 \
+  if (Context::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
   << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
+  if (Context::logging()) \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
   << message                                            \
   << std::endl
 
 #define CLOG_OK(message)                                \
+  if (Context::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << OWL_TERMINAL_DEFAULT << std::endl

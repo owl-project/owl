@@ -91,7 +91,7 @@
 #endif
 #endif
 
-#if defined(__CUDACC__)
+#if defined(__CUDA_ARCH__)
 # define __owl_device   __device__
 # define __owl_host     __host__
 #else
@@ -140,7 +140,7 @@
 namespace owl {
   namespace common {
 
-#ifdef __CUDACC__
+#ifdef __CUDA_ARCH__
     using ::min;
     using ::max;
     // inline __both__ float abs(float f)      { return fabsf(f); }
@@ -170,21 +170,35 @@ namespace owl {
     inline __both__ int64_t divRoundUp(int64_t a, int64_t b) { return (a+b-1)/b; }
     inline __both__ uint64_t divRoundUp(uint64_t a, uint64_t b) { return (a+b-1)/b; }
   
-#ifdef __CUDACC__
+// #ifdef __CUDA_ARCH__
+//     using ::sin; // this is the double version
+//     // inline __both__ float sin(float f) { return ::sinf(f); }
+//     using ::cos; // this is the double version
+//     // inline __both__ float cos(float f) { return ::cosf(f); }
+// #else
     using ::sin; // this is the double version
-    // inline __both__ float sin(float f) { return ::sinf(f); }
     using ::cos; // this is the double version
-    // inline __both__ float cos(float f) { return ::cosf(f); }
-#else
-    using ::sin; // this is the double version
-    using ::cos; // this is the double version
-#endif
-  
-    inline __both__ float rsqrt(const float f)   { return 1.f/sqrtf(f); }
-    inline __both__ double rsqrt(const double d)   { return 1./sqrt(d); }
-    inline __both__ float sqrt(const float f)   { return sqrtf(f); }
-    inline __both__ double sqrt(const double d)   { return sqrt(d); }
+// #endif
 
+    /*! namespace that offers polymorphic overloads of functions like
+        sqrt, rsqrt, sin, cos, etc (that vary based on float vs
+        double), and that is NOT in a default namespace where ti
+        would/could clash with cuda or system-defines of the same name
+        - TODO: make sure that cos, sin, abs, etc are also properly
+        handled here. */
+    namespace polymorphic {
+#ifdef __CUDA_ARCH__
+      inline __both__ float sqrt(const float f)     { return ::sqrtf(f); }
+      inline __both__ double sqrt(const double d)   { return ::sqrt(d); }
+#else
+      inline __both__ float sqrt(const float f)     { return ::sqrtf(f); }
+      inline __both__ double sqrt(const double d)   { return ::sqrt(d); }
+#endif
+      
+      inline __both__ float rsqrt(const float f)    { return 1.f/owl::common::polymorphic::sqrt(f); }
+      inline __both__ double rsqrt(const double d)  { return 1./owl::common::polymorphic::sqrt(d); }
+    }
+    
 
 #ifdef __WIN32__
 #  define osp_snprintf sprintf_s

@@ -19,6 +19,7 @@
 #include "owl/common/math/vec.h"
 #include "owl/common/math/box.h"
 // the 'actual' optix
+#include <cuda.h>
 #include <optix.h>
 
 // ==================================================================
@@ -41,7 +42,7 @@ namespace owl {
     3-dimensional launches we'll need separate functions */
   inline __device__ vec2i getLaunchDims()
   {
-    return (vec2i)optixGetLaunchIndex();
+    return (vec2i)optixGetLaunchDimensions();
   }
 
   /*! return pointer to currently running program's "SBT Data" (which

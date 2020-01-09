@@ -26,7 +26,7 @@
 
 // define a macro that tells other includes (eg, in array2D and
 // array3D that we do have parallel for)
-#define HAVE_OWL_PARALLEL_FOR 1
+#define OWL_HAVE_PARALLEL_FOR 1
 
 namespace owl {
   namespace common {
@@ -39,7 +39,7 @@ namespace owl {
       }
     }
   
-#if HAVE_TBB
+#if OWL_HAVE_TBB
     template<typename INDEX_T, typename TASK_T>
     inline void parallel_for(INDEX_T nTasks, TASK_T&& taskFunction)
     {

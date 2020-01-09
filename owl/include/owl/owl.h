@@ -16,13 +16,15 @@
 
 #pragma once
 
+#include <cuda.h>
+#include <optix.h>
+
 #include <sys/types.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
 # include <cstddef> // is this c++??
 #endif
-#include "optix.h"
 
 
 #if defined(_MSC_VER)
@@ -36,6 +38,11 @@
 #  define OWL_DLL_IMPORT
 #endif
 
+#ifdef __cplusplus
+# define OWL_IF_CPP(a) a
+#else
+# define OWL_IF_CPP(a) /* drop it */
+#endif
 
 #if defined(OWL_DLL_INTERFACE)
 #  ifdef owl_EXPORTS
@@ -104,8 +111,14 @@ typedef enum
 
 typedef enum
   {
+    // soon to be deprecated old naming
     OWL_GEOMETRY_USER,
+    // new naming, to be consistent with type OLWGeom (not OWLGeometry):
+    OWL_GEOM_USER=OWL_GEOMETRY_USER,
+    // soon to be deprecated old naming
     OWL_GEOMETRY_TRIANGLES,
+    // new naming, to be consistent with type OLWGeom (not OWLGeometry):
+    OWL_GEOM_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
     OWL_TRIANGLES=OWL_GEOMETRY_TRIANGLES
   }
   OWLGeomKind;
@@ -148,6 +161,7 @@ typedef struct _OWLModule        *OWLModule;
 typedef struct _OWLGroup         *OWLGroup;
 typedef struct _OWLRayGen        *OWLRayGen;
 typedef struct _OWLMissProg      *OWLMissProg;
+typedef struct _OWLLaunchParams  *OWLLaunchParams;
 
 // typedef OWLGeom OWLTriangles;
 
@@ -159,7 +173,15 @@ OWL_API int32_t
 owlGetDeviceCount(OWLContext context);
 
 OWL_API OWLContext
-owlContextCreate();
+owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
+                 int numDevices OWL_IF_CPP(=0));
+
+/*! set number of ray types to be used in this context; this should be
+    done before any programs, pipelines, geometries, etc get
+    created */
+OWL_API void
+owlContextSetRayTypeCount(OWLContext context,
+                          size_t numRayTypes);
 
 OWL_API void
 owlContextDestroy(OWLContext context);
@@ -171,6 +193,12 @@ owlModuleCreate(OWLContext context,
 OWL_API OWLGeom
 owlGeomCreate(OWLContext context,
               OWLGeomType type);
+
+OWL_API OWLLaunchParams
+owlLaunchParamsCreate(OWLContext context,
+                      size_t      sizeOfVarStruct,
+                      OWLVarDecl *vars,
+                      size_t      numVars);
 
 OWL_API OWLRayGen
 owlRayGenCreate(OWLContext  context,
@@ -227,14 +255,31 @@ owlBufferGetPointer(OWLBuffer buffer, int deviceID);
 OWL_API void 
 owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 
+/*! destroy the given buffer; this will both release the app's
+    refcount on the given buffer handle, *and* the buffer itself; ie,
+    even if some objects still hold variables that refer to the old
+    handle the buffer itself will be freed */
+OWL_API void 
+owlBufferDestroy(OWLBuffer buffer);
+
 OWL_API void 
 owlBufferUpload(OWLBuffer buffer, const void *hostPtr);
+
+/*! executes an optix lauch of given size, with given launch
+  program. Note this is asynchronous, and may _not_ be
+  completed by the time this function returns. */
+OWL_API void
+owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
 /*! executes an optix lauch of given size, with given launch
   program. Note this call is asynchronous, and may _not_ be
   completed by the time this function returns. */
 OWL_API void
-owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
+owlParamsLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
+                  OWLLaunchParams launchParams);
+
+OWL_API CUstream
+owlParamsGetCudaStream(OWLLaunchParams params, int deviceID);
 
 // OWL_API OWLTriangles owlTrianglesCreate(OWLContext context,
 //                                         size_t varsStructSize);
@@ -307,13 +352,17 @@ OWL_API OWLVariable
 owlMissProgGetVariable(OWLMissProg geom,
                        const char *varName);
 
+OWL_API OWLVariable
+owlLaunchParamsGetVariable(OWLLaunchParams object,
+                           const char *varName);
+
 // -------------------------------------------------------
 // VariableSet for different variable types
 // -------------------------------------------------------
 
-#if 1
 OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
 OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
+OWL_API void owlVariableSetRaw(OWLVariable variable, const void *valuePtr);
 #define _OWL_SET_HELPER(stype,abb)                      \
   OWL_API void owlVariableSet1##abb(OWLVariable var,    \
                                     stype v);           \
@@ -328,15 +377,6 @@ OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
 _OWL_SET_HELPER(int,i)
 _OWL_SET_HELPER(float,f)
 #undef _OWL_SET_HELPER
-#else
-OWL_API void owlVariableSet1i(OWLVariable variable, int value);
-OWL_API void owlVariableSet1f(OWLVariable variable, float value);
-OWL_API void owlVariableSet2i(OWLVariable variable, int x, int y);
-OWL_API void owlVariableSet2iv(OWLVariable variable, const int *value);
-OWL_API void owlVariableSet3fv(OWLVariable variable, const float *value);
-OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
-OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
-#endif
 
 
 
@@ -346,7 +386,7 @@ OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
 // VariableSet for different *object* types
 // -------------------------------------------------------
 
-#if 1
+// #if 1
 #define _OWL_SET_HELPERS2(OType,stype,abb)                \
   /* set1 */                                              \
   inline void owl##OType##Set1##abb(OWL##OType object,    \
@@ -403,13 +443,22 @@ OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
 
 #define _OWL_SET_HELPERS(Type)                            \
   /* group, buffer, other */                              \
-  inline void owl##Type##SetGroup(OWL##Type rayGen,       \
+  inline void owl##Type##SetGroup(OWL##Type object,       \
                                   const char *varName,    \
                                   OWLGroup v)             \
   {                                                       \
     OWLVariable var                                       \
-      = owl##Type##GetVariable(rayGen,varName);           \
+      = owl##Type##GetVariable(object,varName);           \
     owlVariableSetGroup(var,v);                           \
+    owlVariableRelease(var);                              \
+  }                                                       \
+  inline void owl##Type##SetRaw(OWL##Type object,         \
+                                const char *varName,      \
+                                const void *v)            \
+  {                                                       \
+    OWLVariable var                                       \
+      = owl##Type##GetVariable(object,varName);           \
+    owlVariableSetRaw(var,v);                             \
     owlVariableRelease(var);                              \
   }                                                       \
   inline void owl##Type##SetBuffer(OWL##Type object,      \
@@ -428,86 +477,87 @@ OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
 
 _OWL_SET_HELPERS(RayGen)
 _OWL_SET_HELPERS(Geom)
+_OWL_SET_HELPERS(LaunchParams)
 _OWL_SET_HELPERS(MissProg)
 
 #undef _OWL_SET_HELPERS2
 #undef _OWL_SET_HELPERS
-#else
-inline void owlRayGenSetGroup(OWLRayGen rayGen, const char *varName, OWLGroup v)
-{
-  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-  owlVariableSetGroup(var,v);
-  owlVariableRelease(var);
-}
-inline void owlRayGenSetBuffer(OWLRayGen rayGen, const char *varName, OWLBuffer v)
-{
-  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-  owlVariableSetBuffer(var,v);
-  owlVariableRelease(var);
-}
-inline void owlGeomSetBuffer(OWLGeom rayGen, const char *varName, OWLBuffer v)
-{
-  OWLVariable var = owlGeomGetVariable(rayGen,varName);
-  owlVariableSetBuffer(var,v);
-  owlVariableRelease(var);
-}
+// #else
+// inline void owlRayGenSetGroup(OWLRayGen rayGen, const char *varName, OWLGroup v)
+// {
+//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+//   owlVariableSetGroup(var,v);
+//   owlVariableRelease(var);
+// }
+// inline void owlRayGenSetBuffer(OWLRayGen rayGen, const char *varName, OWLBuffer v)
+// {
+//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+//   owlVariableSetBuffer(var,v);
+//   owlVariableRelease(var);
+// }
+// inline void owlGeomSetBuffer(OWLGeom rayGen, const char *varName, OWLBuffer v)
+// {
+//   OWLVariable var = owlGeomGetVariable(rayGen,varName);
+//   owlVariableSetBuffer(var,v);
+//   owlVariableRelease(var);
+// }
 
 
-inline void owlRayGenSet1i(OWLRayGen rayGen, const char *varName, int v)
-{
-  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-  owlVariableSet1i(var,v);
-  owlVariableRelease(var);
-}
+// inline void owlRayGenSet1i(OWLRayGen rayGen, const char *varName, int v)
+// {
+//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+//   owlVariableSet1i(var,v);
+//   owlVariableRelease(var);
+// }
 
-inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName, const owl2i &v)
-{
-  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-  owlVariableSet2iv(var,&v.x);
-  owlVariableRelease(var);
-}
-inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName,
-                           int x, int y)
-{
-  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-  owlVariableSet2i(var,x,y);
-  owlVariableRelease(var);
-}
-
-
-inline void owlGeomSet1f(OWLGeom rayGen, const char *varName, float v)
-{
-  OWLVariable var = owlGeomGetVariable(rayGen,varName);
-  owlVariableSet1f(var,v);
-  owlVariableRelease(var);
-}
-inline void owlRayGenSet1f(OWLRayGen rayGen, const char *varName, float v)
-{
-  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-  owlVariableSet1f(var,v);
-  owlVariableRelease(var);
-}
+// inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName, const owl2i &v)
+// {
+//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+//   owlVariableSet2iv(var,&v.x);
+//   owlVariableRelease(var);
+// }
+// inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName,
+//                            int x, int y)
+// {
+//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+//   owlVariableSet2i(var,x,y);
+//   owlVariableRelease(var);
+// }
 
 
-inline void owlRayGenSet3f(OWLRayGen rayGen, const char *varName, const owl3f &v)
-{
-  OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-  owlVariableSet3fv(var,&v.x);
-  owlVariableRelease(var);
-}
-inline void owlMissProgSet3f(OWLMissProg rayGen, const char *varName, const owl3f &v)
-{
-  OWLVariable var = owlMissProgGetVariable(rayGen,varName);
-  owlVariableSet3fv(var,&v.x);
-  owlVariableRelease(var);
-}
-inline void owlGeomSet3f(OWLGeom rayGen, const char *varName, const owl3f &v)
-{
-  OWLVariable var = owlGeomGetVariable(rayGen,varName);
-  owlVariableSet3fv(var,&v.x);
-  owlVariableRelease(var);
-}
-#endif
+// inline void owlGeomSet1f(OWLGeom rayGen, const char *varName, float v)
+// {
+//   OWLVariable var = owlGeomGetVariable(rayGen,varName);
+//   owlVariableSet1f(var,v);
+//   owlVariableRelease(var);
+// }
+// inline void owlRayGenSet1f(OWLRayGen rayGen, const char *varName, float v)
+// {
+//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+//   owlVariableSet1f(var,v);
+//   owlVariableRelease(var);
+// }
+
+
+// inline void owlRayGenSet3f(OWLRayGen rayGen, const char *varName, const owl3f &v)
+// {
+//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
+//   owlVariableSet3fv(var,&v.x);
+//   owlVariableRelease(var);
+// }
+// inline void owlMissProgSet3f(OWLMissProg rayGen, const char *varName, const owl3f &v)
+// {
+//   OWLVariable var = owlMissProgGetVariable(rayGen,varName);
+//   owlVariableSet3fv(var,&v.x);
+//   owlVariableRelease(var);
+// }
+// inline void owlGeomSet3f(OWLGeom rayGen, const char *varName, const owl3f &v)
+// {
+//   OWLVariable var = owlGeomGetVariable(rayGen,varName);
+//   owlVariableSet3fv(var,&v.x);
+//   owlVariableRelease(var);
+// }
+// #endif
 
 
 

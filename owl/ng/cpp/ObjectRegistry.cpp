@@ -28,7 +28,12 @@ namespace owl {
   void ObjectRegistry::forget(RegisteredObject *object)
   {
     assert(object);
-      
+    if (object->ID == -1)
+      // object is already de-registered (eg, with an explicit
+      // bufferdestroy, even if owl::buffer object still has a
+      // reference count and thus hasn't been deleted yet.
+      return;
+    
     std::lock_guard<std::mutex> lock(mutex);
     assert(object->ID >= 0);
     assert(object->ID < objects.size());
@@ -36,6 +41,8 @@ namespace owl {
     objects[object->ID] = nullptr;
       
     previouslyReleasedIDs.push(object->ID);
+
+    object->ID = -1;
   }
     
   void ObjectRegistry::track(RegisteredObject *object)
@@ -122,7 +129,19 @@ namespace owl {
   template<>
   void ObjectRegistryT<MissProgType>::reallocContextIDs(int newMaxIDs)
   {
-    OWL_NOTIMPLEMENTED;
+    /* nothign do to here!? */
+  }
+
+  template<>
+  void ObjectRegistryT<LaunchParams>::reallocContextIDs(int newMaxIDs)
+  {
+    lloAllocLaunchParams(context->llo,newMaxIDs);
+  }
+  
+  template<>
+  void ObjectRegistryT<LaunchParamsType>::reallocContextIDs(int newMaxIDs)
+  {
+    /* nothign do to here!? */
   }
 
   template<>

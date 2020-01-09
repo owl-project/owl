@@ -16,6 +16,7 @@
 
 find_package(TBB REQUIRED)
 if (TBB_FOUND)
-    include_directories(${TBB_INCLUDE_DIR})
+  include_directories(${TBB_INCLUDE_DIR})
+  add_definitions(-DOWL_HAVE_TBB=1)
 endif()
 

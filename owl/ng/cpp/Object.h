@@ -33,7 +33,7 @@ namespace owl {
 
     Object();
 
-    //! pretty-printer, for debugging
+    /*! pretty-printer, for debugging */
     virtual std::string toString() const { return "Object"; }
 
     template<typename T>

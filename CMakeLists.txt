@@ -15,7 +15,7 @@
 # ======================================================================== #
 
 cmake_policy(SET CMP0048 NEW)
-project(Optix-OWL VERSION 0.5.4)
+project(Optix-OWL VERSION 0.6.0)
 
 cmake_minimum_required(VERSION 2.8)
 # iw, 1/3/20: yes, i know this is 'old' cmake style, but on CentOS7

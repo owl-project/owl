@@ -14,6 +14,10 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
+if (POLICY CMD0077)
+  cmake_policy(SET CMP0077 NEW)
+endif()
+
 set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
 #find_package(CUDA REQUIRED)
 find_package(CUDA)

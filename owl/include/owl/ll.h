@@ -88,6 +88,11 @@ extern "C" {
                                   int childID,
                                   const void *cbUserData);
     
+  typedef void
+  (*LLOWriteLaunchParamsCB)(uint8_t *userGeomDataToWrite,
+                            int deviceID,
+                            const void *cbUserData);
+    
   /*! callback with which the app can specify what data is to be
     written into the SBT for a given geometry, ray type, and
     device */
@@ -167,14 +172,33 @@ extern "C" {
                         int32_t launchDimY);
   
   OWL_LL_INTERFACE
+  LLOResult lloParamsLaunch2D(LLOContext llo,
+                              int32_t rayGenID,                              
+                              int32_t launchDimX,
+                              int32_t launchDimY,
+                              int32_t launchParamsID,
+                              LLOWriteLaunchParamsCB writeLaunchParamsCB,
+                              const void *cbData);
+  
+  OWL_LL_INTERFACE
   LLOResult lloSetMaxInstancingDepth(LLOContext llo,
                                      int32_t maxInstanceDepth);
+  
+  OWL_LL_INTERFACE
+  LLOResult lloSetRayTypeCount(LLOContext llo,
+                               size_t rayTypeCount);
   
   OWL_LL_INTERFACE
   LLOResult lloAllocBuffers(LLOContext llo,
                             /*! number of buffers valid after this
                              *  function call */
                             int32_t numBuffers);
+
+  OWL_LL_INTERFACE
+  LLOResult lloAllocLaunchParams(LLOContext llo,
+                                 /*! number of buffers valid after this
+                                  *  function call */
+                                 int32_t numLaunchParams);
 
   OWL_LL_INTERFACE
   LLOResult lloAllocModules(LLOContext llo,
@@ -223,6 +247,19 @@ extern "C" {
                             size_t      dataSizeOfRayGen);
   
   OWL_LL_INTERFACE
+  LLOResult lloLaunchParamsCreate(LLOContext  llo,
+                                  int         launchParamsID,
+                                  /*! size of that program's SBT data */
+                                  size_t      sizeOfVarsStruct);
+
+  /*! return the cuda stream by the given launchparams object, on
+      given device */
+  OWL_LL_INTERFACE
+  CUstream lloLaunchParamsGetStream(LLOContext  llo,
+                                    int         launchParamsID,
+                                    int         deviceID);
+  
+  OWL_LL_INTERFACE
   LLOResult lloMissProgCreate(LLOContext  llo,
                               /*! ID of ray gen prog to create */
                               int32_t     programID,
@@ -253,6 +290,11 @@ extern "C" {
                                   /*! number of elements */
                                   size_t      sizeInBytes,
                                   const void *initData = nullptr);
+
+  OWL_LL_INTERFACE
+  LLOResult lloBufferDestroy(LLOContext llo,
+                             /*! ID of buffer to create */
+                             int32_t    bufferID);
   
   /*! builds the SBT's ray gen program entries, using the given
    *  callback to query the app as as to what values to write for a
@@ -522,6 +564,28 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
      {
        const Lambda *lambda = (const Lambda *)cbData;
        (*lambda)(output,devID,geomID,childID);
+     },
+     (const void *)&l);
+}
+
+/*! C++-only wrapper of callback method with lambda function */
+template<typename Lambda>
+void lloParamsLaunch2D(LLOContext   llo,
+                       int32_t      rayGenID,
+                       int32_t      Nx,
+                       int32_t      Ny,
+                       int32_t      launchParamsObjectID,
+                       const Lambda &l)
+{
+  lloParamsLaunch2D
+    (llo,rayGenID,Nx,Ny,
+     launchParamsObjectID,
+     [](uint8_t *output,
+        int devID,
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID);
      },
      (const void *)&l);
 }

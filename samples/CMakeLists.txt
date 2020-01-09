@@ -25,3 +25,10 @@ add_subdirectory(ll)
 
 # node graph layer
 add_subdirectory(ng)
+
+
+option(BUILD_EX_OPTIX7COURSE "Build Siggraph 2018 Optix Course Version" OFF)
+if (BUILD_EX_OPTIX7COURSE)
+  add_subdirectory(advanced/optix7course)
+endif()
+

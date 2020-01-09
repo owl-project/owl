@@ -17,33 +17,65 @@
 #include "Device.h"
 
 #define LOG(message)                                            \
+  if (Context::logging()) \
   std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
   << message                                                    \
   << std::endl
 
 #define LOG_OK(message)                                 \
+  if (Context::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
   << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
+  if (Context::logging()) \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
   << message                                            \
   << std::endl
 
 #define CLOG_OK(message)                                \
+  if (Context::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << OWL_TERMINAL_DEFAULT << std::endl
 
 // #define MANAGED_TEST 1
 
+
+
+#define COMPACT_ONLY_IF_IT_SAVES_ANYTHING 1
+
 namespace owl {
   namespace ll {
 
+    void dbgPrintBVHSizes(size_t numItems,
+                          size_t boundsArraySize,
+                          size_t tempMemSize,
+                          size_t initialBVHSize,
+                          size_t finalBVHSize)
+    {
+#if _WIN32
+      static char *wantToPrint = nullptr;
+#else
+      static char *wantToPrint = getenv("OWL_PRINT_BVH_MEM");
+#endif
+      if (!wantToPrint) return;
+      
+      std::cout << OWL_TERMINAL_YELLOW
+                << "@owl: bvh build mem: "
+                << prettyNumber(numItems) << " items, "
+                << prettyNumber(boundsArraySize) << "b bounds, "
+                << prettyNumber(tempMemSize) << "b temp, "
+                << prettyNumber(initialBVHSize) << "b initBVH, "
+                << prettyNumber(finalBVHSize) << "b finalBVH"
+                << OWL_TERMINAL_DEFAULT
+                << std::endl;
+    }
+    
     void Device::groupBuildPrimitiveBounds(int groupID,
                                            size_t maxGeomDataSize,
-                                           WriteUserGeomBoundsDataCB cb,
+                                           LLOWriteUserGeomBoundsDataCB cb,
                                            const void *cbData)
     {
       context->pushActive();
@@ -177,12 +209,17 @@ namespace owl {
         // we always have exactly one SBT entry per shape (ie, triangle
         // mesh), and no per-primitive materials:
         aa.flags                       = userGeomInputFlags;
-        aa.numSbtRecords               = context->numRayTypes;
+        // iw, jan 7, 2020: note this is not the "actual" number of
+        // SBT entires we'll generate when we build the SBT, only the
+        // number of per-ray-type 'groups' of SBT enties (ie, before
+        // scaling by the SBT_STRIDE that gets passed to
+        // optixTrace. So, for the build itput this value remains *1*.
+        aa.numSbtRecords               = 1; //context->numRayTypes;
         aa.sbtIndexOffsetBuffer        = 0; 
         aa.sbtIndexOffsetSizeInBytes   = 0; 
         aa.sbtIndexOffsetStrideInBytes = 0; 
       }
-      
+
       // ==================================================================
       // BLAS setup: buildinputs set up, build the blas
       // ==================================================================
@@ -221,9 +258,13 @@ namespace owl {
       tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
 #endif
 
+      
       // buffer for initial, uncompacted bvh
       DeviceMemory outputBuffer;
       // output buffer in current driver is NOT allowed be in managed memory:
+
+
+
       
       // #if MANAGED_TEST
       //        outputBuffer.allocManaged(blasBufferSizes.outputSizeInBytes);
@@ -268,29 +309,49 @@ namespace owl {
       // download builder's compacted size from device
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
+
+#if COMPACT_ONLY_IF_IT_SAVES_ANYTHING 
+      if (compactedSize < outputBuffer.sizeInBytes)
+#endif
+        {
+        // alloc the buffer...
+        bvhMemory.alloc(compactedSize);
+        // ... and perform compaction
+        OPTIX_CALL(AccelCompact(context->optixContext,
+                                /*TODO: stream:*/0,
+                                // OPTIX_COPY_MODE_COMPACT,
+                                traversable,
+                                (CUdeviceptr)bvhMemory.get(),
+                                bvhMemory.size(),
+                                &traversable));
+        CUDA_SYNC_CHECK();
       
-      // alloc the buffer...
-      bvhMemory.alloc(compactedSize);
-      // ... and perform compaction
-      OPTIX_CALL(AccelCompact(context->optixContext,
-                              /*TODO: stream:*/0,
-                              // OPTIX_COPY_MODE_COMPACT,
-                              traversable,
-                              (CUdeviceptr)bvhMemory.get(),
-                              bvhMemory.size(),
-                              &traversable));
-      CUDA_SYNC_CHECK();
-      
-      // ==================================================================
-      // aaaaaand .... clean up
-      // ==================================================================
-      outputBuffer.free(); // << the UNcompacted, temporary output buffer
+        // ==================================================================
+        // aaaaaand .... clean up
+        // ==================================================================
+        outputBuffer.free(); // << the UNcompacted, temporary output buffer
+      }
       tempBuffer.free();
       compactedSizeBuffer.free();
-      
       context->popActive();
 
-      LOG_OK("successfully build user geom group accel");
+      LOG_OK("successfully built user geom group accel");
+
+      size_t sumPrims = 0;
+      size_t sumBoundsMem = 0;
+      for (int childID=0;childID<children.size();childID++) {
+        Geom *geom = children[childID];
+        UserGeom *userGeom = dynamic_cast<UserGeom*>(geom);
+        sumPrims += userGeom->numPrims;
+        sumBoundsMem += userGeom->internalBufferForBoundsProgram.sizeInBytes;
+        if (userGeom->internalBufferForBoundsProgram.alloced())
+          userGeom->internalBufferForBoundsProgram.free();
+      }
+      dbgPrintBVHSizes(/*numItems*/sumPrims,
+                       /*boundsArraySize*/sumBoundsMem,
+                       /*tempMemSize*/blasBufferSizes.tempSizeInBytes,
+                       /*initialBVHSize*/blasBufferSizes.outputSizeInBytes,
+                       /*finalBVHSize*/compactedSize);
     }
     
 
