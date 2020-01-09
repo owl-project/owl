@@ -46,7 +46,7 @@
 // thread-safe (they store the value in the context, so for async
 // operations we need to store on the stack:
 #define STACK_PUSH_ACTIVE(context) int _savedActiveDeviceID=0; CUDA_CHECK(cudaGetDevice(&_savedActiveDeviceID)); context->setActive();
-#define STACK_POP_ACTIVE(context) CUDA_CHECK(cudaSetDevice(_savedActiveDeviceID));
+#define STACK_POP_ACTIVE() CUDA_CHECK(cudaSetDevice(_savedActiveDeviceID));
 
 
 namespace owl {
@@ -819,7 +819,7 @@ namespace owl {
                       direct callables invoked from RG, MS, or CH.  */
                    2*1024,
                    /* [in] The continuation stack requirement. */
-                   (maxInstancingDepth+1)
+                   int(maxInstancingDepth+1)
                    /* [in] The maximum depth of a traversable graph
                       passed to trace. */
                    ));
@@ -1545,7 +1545,7 @@ namespace owl {
     {
       // TODO: sanity check values, and that nothing has been created
       // yet
-      context->numRayTypes = rayTypeCount;
+      context->numRayTypes = (int)rayTypeCount;
     }
 
 
