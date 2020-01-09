@@ -32,15 +32,13 @@ namespace owl {
   struct Context : public Object {
     typedef std::shared_ptr<Context> SP;
 
-    static Context::SP create();
+    static Context::SP create(int32_t *requestedDeviceIDs,
+                              int      numRequestedDevices);
 
-    Context();
+    Context(int32_t *requestedDeviceIDs,
+            int      numRequestedDevices);
     
-    virtual ~Context()
-    {
-      std::cout << "=======================================================" << std::endl;
-      std::cout << "#owl: destroying context" << std::endl;
-    }
+    virtual ~Context();
 
     ObjectRegistryT<Buffer>       buffers;
     ObjectRegistryT<Group>        groups;
@@ -57,6 +55,7 @@ namespace owl {
     //! TODO: allow changing that via api ..
     size_t numRayTypes = 1;
 
+    void setRayTypeCount(size_t rayTypeCount);
     /*! experimentation code for sbt construction */
     void buildSBT();
     void buildPipeline();

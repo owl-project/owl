@@ -18,14 +18,16 @@
 #include "owl/ll/DeviceGroup.h"
 
 #define LOG(message)                            \
-  std::cout << "#owl.ll: "                      \
-  << message                                    \
-  << std::endl
+  if (Context::logging())                       \
+    std::cout << "#owl.ll: "                    \
+              << message                        \
+              << std::endl
 
 #define LOG_OK(message)                                 \
-  std::cout << OWL_TERMINAL_LIGHT_GREEN                 \
-  << "#owl.ll: "                                        \
-  << message << OWL_TERMINAL_DEFAULT << std::endl
+  if (Context::logging())                               \
+    std::cout << OWL_TERMINAL_LIGHT_GREEN               \
+              << "#owl.ll: "                            \
+              << message << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
   namespace ll {
@@ -101,7 +103,13 @@ namespace owl {
       for (auto device : devices)
         device->setMaxInstancingDepth(maxInstancingDepth);
     }
-    
+
+    void DeviceGroup::setRayTypeCount(size_t rayTypeCount)
+    {
+      for (auto device : devices)
+        device->setRayTypeCount(rayTypeCount);
+    }
+
 
     void DeviceGroup::allocModules(size_t count)
     { for (auto device : devices) device->allocModules(count); }
@@ -490,6 +498,14 @@ namespace owl {
     {
       return checkGetDevice(devID)->bufferGetPointer(bufferID);
     }
+    
+    /*! return the cuda stream by the given launchparams object, on
+      given device */
+    CUstream DeviceGroup::launchParamsGetStream(int launchParamsID, int devID)
+    {
+      return checkGetDevice(devID)->launchParamsGetStream(launchParamsID);
+    }
+    
       
     void DeviceGroup::launch(int rgID, const vec2i &dims)
     {
@@ -508,7 +524,7 @@ namespace owl {
                        launchParamsID,
                        writeLaunchParamsCB,
                        cbData);
-      CUDA_SYNC_CHECK();
+      // CUDA_SYNC_CHECK();
     }
     
     /* create an instance of this object that has properly
@@ -516,9 +532,17 @@ namespace owl {
     DeviceGroup *DeviceGroup::create(const int *deviceIDs,
                                      size_t     numDevices)
     {
+      std::vector<int> tmpDeviceIDs;
+      if (deviceIDs == 0) {
+        for (int i=0;i<numDevices;i++)
+          tmpDeviceIDs.push_back(i);
+        deviceIDs = tmpDeviceIDs.data();
+      }
+      
       assert((deviceIDs == nullptr && numDevices == 0)
              ||
-             (deviceIDs != nullptr && numDevices > 0));
+             (deviceIDs != nullptr && numDevices > 0)
+             );
       
       // ------------------------------------------------------------------
       // init cuda, and error-out if no cuda devices exist
@@ -536,7 +560,7 @@ namespace owl {
       // ------------------------------------------------------------------
       // init optix itself
       // ------------------------------------------------------------------
-      std::cout << "#owl.ll: initializing optix 7" << std::endl;
+      LOG("initializing optix 7");
       OPTIX_CHECK(optixInit());
       
       // ------------------------------------------------------------------

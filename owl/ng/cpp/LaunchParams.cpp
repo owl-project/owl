@@ -38,5 +38,10 @@ namespace owl {
                           type->varStructSize);
   }
 
+  CUstream LaunchParams::getCudaStream(int deviceID)
+  {
+    return lloLaunchParamsGetStream(context->llo,this->ID,deviceID);
+  }
+
 } // ::owl
 

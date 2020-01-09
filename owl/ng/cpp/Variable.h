@@ -33,6 +33,8 @@ namespace owl {
     virtual void set(const std::shared_ptr<Buffer> &value) { mismatchingType(); }
     virtual void set(const std::shared_ptr<Group>  &value) { mismatchingType(); }
     
+    virtual void setRaw(const void *ptr) { mismatchingType(); }
+
     virtual void set(const int &value)   { mismatchingType(); }
     virtual void set(const vec2i &value) { mismatchingType(); }
     virtual void set(const vec3i &value) { mismatchingType(); }

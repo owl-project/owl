@@ -19,6 +19,7 @@
 #include "owl/common/math/vec.h"
 #include "owl/common/math/box.h"
 // the 'actual' optix
+#include <cuda.h>
 #include <optix.h>
 
 // ==================================================================

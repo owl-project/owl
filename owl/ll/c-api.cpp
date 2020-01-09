@@ -105,6 +105,8 @@ namespace owl {
                      launchParamsID,writeLaunchParamsCB,cbData);
         });
     }
+
+    
   
 
     
@@ -209,6 +211,23 @@ namespace owl {
           dg->launchParamsCreate(launchParamsID,sizeOfSBTData);
         });
     }
+
+    /*! return the cuda stream by the given launchparams object, on
+      given device */
+    OWL_LL_INTERFACE
+    cudaStream_t lloLaunchParamsGetStream(LLOContext  llo,
+                                          int         launchParamsID,
+                                          int         deviceID)
+    {
+      try {
+        DeviceGroup *dg = (DeviceGroup *)llo;
+        return dg->launchParamsGetStream(launchParamsID,deviceID);
+      } catch (const std::runtime_error &e) {
+        lastErrorText = e.what();
+        return nullptr;
+      }
+    }
+    
 
     OWL_LL_INTERFACE
     LLOResult lloGeomTypeIntersect(LLOContext llo,
@@ -529,7 +548,19 @@ namespace owl {
           dg->deviceBufferCreate(bufferID,sizeInBytes,1,initData);
         });
     }
-      
+
+    OWL_LL_INTERFACE
+    LLOResult lloBufferDestroy(LLOContext llo,
+                               /*! ID of buffer to create */
+                               int32_t    bufferID)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->bufferDestroy(bufferID);
+        });
+    }
+    
     OWL_LL_INTERFACE
     LLOResult lloAllocBuffers(LLOContext llo,
                               /*! number of buffers valid after this
@@ -751,7 +782,18 @@ namespace owl {
           dg->setMaxInstancingDepth(maxInstanceDepth);
         });
     }
-  
+
+    OWL_LL_INTERFACE
+    LLOResult lloSetRayTypeCount(LLOContext llo,
+                                 size_t rayTypeCount)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->setRayTypeCount(rayTypeCount);
+        });
+    }
+    
 
   } // ::owl::ll
 } //::owl

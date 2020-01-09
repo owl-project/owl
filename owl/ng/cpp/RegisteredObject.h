@@ -32,7 +32,7 @@ namespace owl {
                      ObjectRegistry &registry);
     ~RegisteredObject();
 
-    const int       ID;
+    int             ID;
     ObjectRegistry &registry;
   };
 

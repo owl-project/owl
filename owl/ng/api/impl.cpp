@@ -16,6 +16,7 @@
 
 #include "APIContext.h"
 #include "APIHandle.h"
+#include "owl/ll/Device.h"
 
 namespace owl {
 
@@ -24,15 +25,50 @@ namespace owl {
 #else 
 # define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
 #endif
+
+
+#define LOG(message)                            \
+  if (ll::Context::logging())                   \
+    std::cout                                   \
+      << OWL_TERMINAL_LIGHT_BLUE                \
+      << "#owl.ng: "                            \
+      << message                                \
+      << OWL_TERMINAL_DEFAULT << std::endl
+
+#define LOG_OK(message)                         \
+  if (ll::Context::logging())                   \
+    std::cout                                   \
+      << OWL_TERMINAL_BLUE                      \
+      << "#owl.ng: "                            \
+      << message                                \
+      << OWL_TERMINAL_DEFAULT << std::endl
   
-  OWL_API OWLContext owlContextCreate()
+  OWL_API OWLContext owlContextCreate(int32_t *requestedDeviceIDs,
+                                      int      numRequestedDevices)
   {
     LOG_API_CALL();
-    APIContext::SP context = std::make_shared<APIContext>();
-    std::cout << "#owl.api: context created..." << std::endl;
+    APIContext::SP context = std::make_shared<APIContext>(requestedDeviceIDs,
+                                                          numRequestedDevices);
+    LOG("context created...");
     return (OWLContext)context->createHandle(context);
   }
 
+/*! set number of ray types to be used in this context; this should be
+    done before any programs, pipelines, geometries, etc get
+    created */
+  OWL_API void
+  owlContextSetRayTypeCount(OWLContext _context,
+                            size_t numRayTypes)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    context->setRayTypeCount(numRayTypes);
+  }
+
+  
   OWL_API void owlBuildSBT(OWLContext _context)
   {
     LOG_API_CALL();
@@ -171,15 +207,18 @@ namespace owl {
   std::vector<OWLVarDecl> checkAndPackVariables(const OWLVarDecl *vars,
                                                 size_t            numVars)
   {
+    if (vars == nullptr && (numVars == 0 || numVars == -1))
+      return {};
+
     // *copy* the vardecls here, so we can catch any potential memory
     // *access errors early
 
+    assert(vars);
     if (numVars == size_t(-1)) {
       // using -1 as count value for a variable list means the list is
       // null-terminated... so just count it
       for (numVars = 0; vars[numVars].name != nullptr; numVars++);
     }
-    assert(vars);
     for (int i=0;i<numVars;i++)
       assert(vars[i].name != nullptr);
     std::vector<OWLVarDecl> varDecls(numVars);
@@ -399,6 +438,16 @@ namespace owl {
     return buffer->getPointer(deviceID);
   }
 
+  OWL_API CUstream
+  owlParamsGetCudaStream(OWLLaunchParams _lp, int deviceID)
+  {
+    LOG_API_CALL();
+    assert(_lp);
+    LaunchParams::SP lp = ((APIHandle *)_lp)->get<LaunchParams>();
+    assert(lp);
+    return lp->getCudaStream(deviceID);
+  }
+
   OWL_API void 
   owlBufferResize(OWLBuffer _buffer, size_t newItemCount)
   {
@@ -419,7 +468,26 @@ namespace owl {
     return buffer->upload(hostPtr);
   }
 
-  
+  /*! destroy the given buffer; this will both release the app's
+    refcount on the given buffer handle, *and* the buffer itself; ie,
+    even if some objects still hold variables that refer to the old
+    handle the buffer itself will be freed */
+  OWL_API void 
+  owlBufferDestroy(OWLBuffer _buffer)
+  {
+    LOG_API_CALL();
+    assert(_buffer);
+    APIHandle *handle = (APIHandle *)_buffer;
+    assert(handle);
+    
+    Buffer::SP buffer = handle->get<Buffer>();
+    assert(buffer);
+    buffer->destroy();
+
+    handle->clear();
+  }
+
+
 
   OWL_API OWLGeomType
   owlGeomTypeCreate(OWLContext _context,
@@ -753,10 +821,22 @@ namespace owl {
       = handle
       ? handle->get<Buffer>()
       : Buffer::SP();
-    
-    assert(buffer);
 
     setVariable((APIHandle *)_variable,buffer);
+  }
+
+  OWL_API void owlVariableSetRaw(OWLVariable _variable, const void *valuePtr)
+  {
+    LOG_API_CALL();
+
+    APIHandle *handle = (APIHandle*)_variable;
+    assert(handle);
+
+    Variable::SP variable
+      = handle->get<Variable>();
+    assert(variable);
+
+    variable->setRaw(valuePtr);
   }
 
   // -------------------------------------------------------

@@ -185,6 +185,10 @@ extern "C" {
                                      int32_t maxInstanceDepth);
   
   OWL_LL_INTERFACE
+  LLOResult lloSetRayTypeCount(LLOContext llo,
+                               size_t rayTypeCount);
+  
+  OWL_LL_INTERFACE
   LLOResult lloAllocBuffers(LLOContext llo,
                             /*! number of buffers valid after this
                              *  function call */
@@ -247,6 +251,13 @@ extern "C" {
                                   int         launchParamsID,
                                   /*! size of that program's SBT data */
                                   size_t      sizeOfVarsStruct);
+
+  /*! return the cuda stream by the given launchparams object, on
+      given device */
+  OWL_LL_INTERFACE
+  CUstream lloLaunchParamsGetStream(LLOContext  llo,
+                                    int         launchParamsID,
+                                    int         deviceID);
   
   OWL_LL_INTERFACE
   LLOResult lloMissProgCreate(LLOContext  llo,
@@ -279,6 +290,11 @@ extern "C" {
                                   /*! number of elements */
                                   size_t      sizeInBytes,
                                   const void *initData = nullptr);
+
+  OWL_LL_INTERFACE
+  LLOResult lloBufferDestroy(LLOContext llo,
+                             /*! ID of buffer to create */
+                             int32_t    bufferID);
   
   /*! builds the SBT's ray gen program entries, using the given
    *  callback to query the app as as to what values to write for a

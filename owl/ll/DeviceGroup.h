@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "owl/ll/optix.h"
+#include "owl/ll/helper/optix.h"
 #include "../include/owl/ll.h"
 
 #define OWL_THROWS_EXCEPTIONS 1
@@ -285,6 +285,10 @@ namespace owl {
         device */
       void *bufferGetPointer(int bufferID, int devID);
       
+      /*! return the cuda stream by the given launchparams object, on
+        given device */
+      cudaStream_t launchParamsGetStream(int launchParamsID, int devID);
+      
       /*! set a buffer of bounding boxes that this user geometry will
         use when building the accel structure. this is one of
         multiple ways of specifying the bounding boxes for a user
@@ -378,6 +382,8 @@ namespace owl {
       }
 
       size_t getDeviceCount() const { return devices.size(); }
+      void setRayTypeCount(size_t rayTypeCount);
+      
       void launch(int rgID,
                   const vec2i &dims);
 

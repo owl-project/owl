@@ -19,31 +19,38 @@
 #include "Geometry.h"
 #include "owl/ll/Device.h"
 
-#define LOG(message)                               \
-  std::cout                                        \
-  << OWL_TERMINAL_LIGHT_BLUE                       \
-  << "#owl.ng: "                                   \
-  << message                                       \
-  << OWL_TERMINAL_DEFAULT << std::endl
+#define LOG(message)                            \
+  if (ll::Context::logging())                   \
+    std::cout                                   \
+      << OWL_TERMINAL_LIGHT_BLUE                \
+      << "#owl.ng: "                            \
+      << message                                \
+      << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  std::cout                                     \
-  << OWL_TERMINAL_BLUE                          \
-  << "#owl.ng: "                                \
-  << message                                    \
-  << OWL_TERMINAL_DEFAULT << std::endl
+  if (ll::Context::logging())                   \
+    std::cout                                   \
+      << OWL_TERMINAL_BLUE                      \
+      << "#owl.ng: "                            \
+      << message                                \
+      << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
 
-  
-  
-  Context::SP Context::create()
+  Context::~Context()
   {
-    LOG("creating node-graph context");
-    return std::make_shared<Context>();
   }
   
-  Context::Context()
+  Context::SP Context::create(int32_t *requestedDeviceIDs,
+                              int      numRequestedDevices)
+  {
+    LOG("creating node-graph context");
+    return std::make_shared<Context>(requestedDeviceIDs,
+                                     numRequestedDevices);
+  }
+  
+  Context::Context(int32_t *requestedDeviceIDs,
+                   int      numRequestedDevices)
     : buffers(this),
       groups(this),
       rayGenTypes(this),
@@ -58,7 +65,8 @@ namespace owl {
   {
     LOG("context ramping up - creating low-level devicegroup");
     // ll = ll::DeviceGroup::create();
-    llo = lloContextCreate(nullptr,0);
+    llo = lloContextCreate(requestedDeviceIDs,
+                           numRequestedDevices);
     LOG_OK("device group created");
   }
   
@@ -202,11 +210,13 @@ namespace owl {
       (llo,
        [&](uint8_t *output,
            int devID,
-           int rayType) {
-         // TODO: need the ID of the miss prog we're writing!
-         int missProgID = 0;
-         assert(missProgs.size() == 1);
-         
+           int rayTypeID) {
+        // TODO: eventually, we want to be able to 'assign' miss progs
+        // to different ray types, in which case we ahve to be able to
+        // look up wich miss prog is used for a given ray types - for
+        // now, we assume miss progs are created in exactly the right
+        // order ...
+        int missProgID = rayTypeID;
          const MissProg *missProg = missProgs.getPtr(missProgID);
          assert(missProg);
          missProg->writeVariables(output,devID);
@@ -241,4 +251,13 @@ namespace owl {
     lloBuildPrograms(llo);
   }
 
+  void Context::setRayTypeCount(size_t rayTypeCount)
+  {
+    /* TODO; sanity checking that this is a useful value, and that
+       no geoms etc are created yet */
+    this->numRayTypes = rayTypeCount;
+      
+    lloSetRayTypeCount(llo,rayTypeCount);
+  }
+  
 } // ::owl

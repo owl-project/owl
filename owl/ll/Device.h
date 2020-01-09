@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "owl/ll/optix.h"
+#include "owl/ll/helper/optix.h"
 #include "owl/ll/DeviceMemory.h"
 // for the hit group callback type, which is part of the API
 #include "owl/ll/DeviceGroup.h"
@@ -42,6 +42,15 @@ namespace owl {
 
 
     struct Context {
+
+      static int logging()
+      {
+#ifdef NDEBUG
+        return false;
+#else
+        return true;
+#endif
+      }
       
       Context(int owlDeviceID, int cudaDeviceID);
       ~Context();
@@ -150,7 +159,7 @@ namespace owl {
       
       /*! a cuda stream we can use for the async upload and the
           following async launch */
-      cudaStream_t         stream;
+      cudaStream_t         stream = nullptr;
     };
     struct RayGenPG : public ProgramGroup {
       Program program;
@@ -173,8 +182,6 @@ namespace owl {
     
     
     struct SBT {
-      OptixShaderBindingTable sbt = {};
-      
       size_t rayGenRecordCount   = 0;
       size_t rayGenRecordSize    = 0;
       DeviceMemory rayGenRecordsBuffer;
@@ -590,6 +597,11 @@ namespace owl {
       
       /*! returns the given buffers device pointer */
       void *bufferGetPointer(int bufferID);
+
+      /*! return the cuda stream by the given launchparams object, on
+        given device */
+      cudaStream_t launchParamsGetStream(int lpID);
+      
       void bufferResize(int bufferID, size_t newItemCount);
       void bufferUpload(int bufferID, const void *hostPtr);
       
@@ -776,6 +788,8 @@ namespace owl {
                   int32_t launchParamsID,
                   LLOWriteLaunchParamsCB writeLaunchParamsCB,
                   const void *cbData);
+
+      void setRayTypeCount(size_t rayTypeCount);
       
       Context                  *context;
       
