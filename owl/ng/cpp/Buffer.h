@@ -26,12 +26,20 @@ namespace owl {
     
     Buffer(Context *const context, OWLDataType type);
     
+    /*! destructor - free device data, de-regsiter, and destruct */
+    virtual ~Buffer() { destroy(); }
+    
     virtual std::string toString() const { return "Buffer"; }
 
     const void *getPointer(int deviceID);
 
     void resize(size_t newSize);
     void upload(const void *hostPtr);
+
+    /*! destroy whatever resouces this buffer's ll-layer handle this
+        may refer to; this will not destruct the current object
+        itself, but should already release all its references */
+    void destroy();
 
     OWLDataType type;
   };
@@ -41,9 +49,10 @@ namespace owl {
     
     HostPinnedBuffer(Context *const context,
                      OWLDataType type,
-                             size_t count);
-    
-    virtual std::string toString() const { return "HostPinnedBuffer"; }
+                     size_t count);
+
+    /*! pretty-printer, for debugging */
+    std::string toString() const override { return "HostPinnedBuffer"; }
   };
   
   struct DeviceBuffer : public Buffer {
@@ -53,8 +62,9 @@ namespace owl {
                  OWLDataType type,
                  size_t count,
                  const void *init);
-    
-    virtual std::string toString() const { return "DeviceBuffer"; }
+
+    /*! pretty-printer, for debugging */
+    std::string toString() const override { return "DeviceBuffer"; }
   };
   
 } // ::owl

@@ -73,13 +73,6 @@ namespace osc {
       while (mesh->texcoord.size() < mesh->vertex.size())
         mesh->texcoord.push_back(texcoord_array[idx.texcoord_index]);
     }
-
-    // just for sanity's sake:
-    if (mesh->texcoord.size() > 0)
-      mesh->texcoord.resize(mesh->vertex.size());
-    // just for sanity's sake:
-    if (mesh->normal.size() > 0)
-      mesh->normal.resize(mesh->vertex.size());
     
     return newID;
   }
@@ -181,6 +174,8 @@ namespace osc {
         
         for (int faceID=0;faceID<shape.mesh.material_ids.size();faceID++) {
           if (shape.mesh.material_ids[faceID] != materialID) continue;
+          if (shape.mesh.num_face_vertices[faceID] != 3)
+            throw std::runtime_error("not properly tessellated");
           tinyobj::index_t idx0 = shape.mesh.indices[3*faceID+0];
           tinyobj::index_t idx1 = shape.mesh.indices[3*faceID+1];
           tinyobj::index_t idx2 = shape.mesh.indices[3*faceID+2];
@@ -203,8 +198,22 @@ namespace osc {
 
         if (mesh->vertex.empty())
           delete mesh;
-        else
+        else {
+          // just for sanity's sake:
+          if (mesh->texcoord.size() > 0)
+            mesh->texcoord.resize(mesh->vertex.size());
+          // just for sanity's sake:
+          if (mesh->normal.size() > 0)
+            mesh->normal.resize(mesh->vertex.size());
+
+          for (auto idx : mesh->index) {
+            if (idx.x < 0 || idx.x >= mesh->vertex.size() ||
+                idx.y < 0 || idx.y >= mesh->vertex.size() ||
+                idx.z < 0 || idx.z >= mesh->vertex.size())
+              { PING; PRINT(idx); PRINT(mesh->vertex.size()); }
+          }
           model->meshes.push_back(mesh);
+        }
       }
     }
 
@@ -214,7 +223,6 @@ namespace osc {
       for (auto vtx : mesh->vertex)
         model->bounds.extend(vtx);
     
-    std::cout << "created a total of " << model->meshes.size() << " meshes" << std::endl;
     return model;
   }
 }

@@ -25,32 +25,6 @@ namespace osc {
 
   extern "C" char embedded_ptx_code[];
 
-  /*! SBT record for a raygen program */
-  struct __align__( OPTIX_SBT_RECORD_ALIGNMENT ) RaygenRecord
-  {
-    __align__( OPTIX_SBT_RECORD_ALIGNMENT ) char header[OPTIX_SBT_RECORD_HEADER_SIZE];
-    // just a dummy value - later examples will use more interesting
-    // data here
-    void *data;
-  };
-
-  /*! SBT record for a miss program */
-  struct __align__( OPTIX_SBT_RECORD_ALIGNMENT ) MissRecord
-  {
-    __align__( OPTIX_SBT_RECORD_ALIGNMENT ) char header[OPTIX_SBT_RECORD_HEADER_SIZE];
-    // just a dummy value - later examples will use more interesting
-    // data here
-    void *data;
-  };
-
-  /*! SBT record for a hitgroup program */
-  struct __align__( OPTIX_SBT_RECORD_ALIGNMENT ) HitgroupRecord
-  {
-    __align__( OPTIX_SBT_RECORD_ALIGNMENT ) char header[OPTIX_SBT_RECORD_HEADER_SIZE];
-    TriangleMeshSBTData data;
-  };
-
-
   /*! constructor - performs all setup, including initializing
     optix, creates module, pipeline, programs, SBT, etc. */
   SampleRenderer::SampleRenderer(const Model *model, const QuadLight &light)
@@ -121,7 +95,6 @@ namespace osc {
     textureArrays.resize(numTextures);
     textureObjects.resize(numTextures);
 
-    PING; PRINT(numTextures);
     for (int textureID=0;textureID<numTextures;textureID++) {
       auto texture = model->textures[textureID];
       
@@ -241,9 +214,6 @@ namespace osc {
     
     world = owlTrianglesGeomGroupCreate(context,geoms.size(),geoms.data());
     owlGroupBuildAccel(world);
-    PING;
-    PRINT(world);
-    PRINT(launchParams);
     owlLaunchParamsSetGroup(launchParams,"world",world);
   }
   
@@ -257,116 +227,11 @@ namespace osc {
 
     if (!accumulate)
       frameID = 0;
-    // launchParamsBuffer.upload(&launchParams,1);
     owlLaunchParamsSet1i(launchParams,"frame.frameID",frameID);
     owlLaunchParamsSet1i(launchParams,"numPixelSamples",numPixelSamples);
     frameID++;
 
     owlParamsLaunch2D(rayGen,fbSize.x,fbSize.y,launchParams);
-    // OPTIX_CHECK(optixLaunch(/*! pipeline we're launching launch: */
-    //                         pipeline,stream,
-    //                         /*! parameters and SBT */
-    //                         launchParamsBuffer.d_pointer(),
-    //                         launchParamsBuffer.sizeInBytes,
-    //                         &sbt,
-    //                         /*! dimensions of the launch: */
-    //                         launchParams.frame.size.x,
-    //                         launchParams.frame.size.y,
-    //                         1
-    //                         ));
-
-#if 0
-    OptixDenoiserParams denoiserParams;
-    denoiserParams.denoiseAlpha = 1;
-    denoiserParams.hdrIntensity = denoiserIntensity.d_pointer();
-    denoiserParams.blendFactor  = 1.f/(launchParams.frame.frameID);
-    
-    // -------------------------------------------------------
-    OptixImage2D inputLayer[3];
-    inputLayer[0].data = fbColor.d_pointer();
-    /// Width of the image (in pixels)
-    inputLayer[0].width = launchParams.frame.size.x;
-    /// Height of the image (in pixels)
-    inputLayer[0].height = launchParams.frame.size.y;
-    /// Stride between subsequent rows of the image (in bytes).
-    inputLayer[0].rowStrideInBytes = launchParams.frame.size.x * sizeof(float4);
-    /// Stride between subsequent pixels of the image (in bytes).
-    /// For now, only 0 or the value that corresponds to a dense packing of pixels (no gaps) is supported.
-    inputLayer[0].pixelStrideInBytes = sizeof(float4);
-    /// Pixel format.
-    inputLayer[0].format = OPTIX_PIXEL_FORMAT_FLOAT4;
-
-    // ..................................................................
-    inputLayer[2].data = fbNormal.d_pointer();
-    /// Width of the image (in pixels)
-    inputLayer[2].width = launchParams.frame.size.x;
-    /// Height of the image (in pixels)
-    inputLayer[2].height = launchParams.frame.size.y;
-    /// Stride between subsequent rows of the image (in bytes).
-    inputLayer[2].rowStrideInBytes = launchParams.frame.size.x * sizeof(float4);
-    /// Stride between subsequent pixels of the image (in bytes).
-    /// For now, only 0 or the value that corresponds to a dense packing of pixels (no gaps) is supported.
-    inputLayer[2].pixelStrideInBytes = sizeof(float4);
-    /// Pixel format.
-    inputLayer[2].format = OPTIX_PIXEL_FORMAT_FLOAT4;
-
-    // ..................................................................
-    inputLayer[1].data = fbAlbedo.d_pointer();
-    /// Width of the image (in pixels)
-    inputLayer[1].width = launchParams.frame.size.x;
-    /// Height of the image (in pixels)
-    inputLayer[1].height = launchParams.frame.size.y;
-    /// Stride between subsequent rows of the image (in bytes).
-    inputLayer[1].rowStrideInBytes = launchParams.frame.size.x * sizeof(float4);
-    /// Stride between subsequent pixels of the image (in bytes).
-    /// For now, only 0 or the value that corresponds to a dense packing of pixels (no gaps) is supported.
-    inputLayer[1].pixelStrideInBytes = sizeof(float4);
-    /// Pixel format.
-    inputLayer[1].format = OPTIX_PIXEL_FORMAT_FLOAT4;
-
-    // -------------------------------------------------------
-    OptixImage2D outputLayer;
-    outputLayer.data = denoisedBuffer.d_pointer();
-    /// Width of the image (in pixels)
-    outputLayer.width = launchParams.frame.size.x;
-    /// Height of the image (in pixels)
-    outputLayer.height = launchParams.frame.size.y;
-    /// Stride between subsequent rows of the image (in bytes).
-    outputLayer.rowStrideInBytes = launchParams.frame.size.x * sizeof(float4);
-    /// Stride between subsequent pixels of the image (in bytes).
-    /// For now, only 0 or the value that corresponds to a dense packing of pixels (no gaps) is supported.
-    outputLayer.pixelStrideInBytes = sizeof(float4);
-    /// Pixel format.
-    outputLayer.format = OPTIX_PIXEL_FORMAT_FLOAT4;
-
-    // -------------------------------------------------------
-    if (denoiserOn) {
-      OPTIX_CHECK(optixDenoiserComputeIntensity
-                  (denoiser,
-                   /*stream*/0,
-                   &inputLayer[0],
-                   (CUdeviceptr)denoiserIntensity.d_pointer(),
-                   (CUdeviceptr)denoiserScratch.d_pointer(),
-                   denoiserScratch.size()));
-      
-      OPTIX_CHECK(optixDenoiserInvoke(denoiser,
-                                      /*stream*/0,
-                                      &denoiserParams,
-                                      denoiserState.d_pointer(),
-                                      denoiserState.size(),
-                                      &inputLayer[0],2,
-                                      /*inputOffsetX*/0,
-                                      /*inputOffsetY*/0,
-                                      &outputLayer,
-                                      denoiserScratch.d_pointer(),
-                                      denoiserScratch.size()));
-    } else {
-      cudaMemcpy((void*)outputLayer.data,(void*)inputLayer[0].data,
-                 outputLayer.width*outputLayer.height*sizeof(float4),
-                 cudaMemcpyDeviceToDevice);
-    }
-    computeFinalPixelColors();
-#endif
     
     // sync - make sure the frame is rendered before we download and
     // display (obviously, for a high-performance application you
@@ -380,9 +245,8 @@ namespace osc {
   {
     lastSetCamera = camera;
     // reset accumulation
-    // launchParams.frame.frameID = 0;
     frameID = 0;
-    owlLaunchParamsSet1i(launchParams,"frame.frameID",0);
+    owlLaunchParamsSet1i(launchParams,"frame.frameID",frameID);
     const vec3f position  = camera.from;
     const vec3f direction = normalize(camera.at-camera.from);
     
@@ -405,20 +269,14 @@ namespace osc {
   /*! resize frame buffer to given resolution */
   void SampleRenderer::resize(const vec2i &newSize)
   {
-    // if (denoiser) {
-    //   OPTIX_CHECK(optixDenoiserDestroy(denoiser));
-    // };
     if (fbColor) {
-      std::cout << "todo: buffer destroy" << std::endl;
-      // owlBufferDestroy(fbColor);
+      owlBufferDestroy(fbColor);
+      owlBufferDestroy(fbFinal);
     }
 
     this->fbSize = newSize;
     fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
     fbFinal = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
-    PRINT(newSize);
-    PING; PRINT(owlBufferGetPointer(fbColor,0));
-    // fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
 
     owlLaunchParamsSetBuffer(launchParams,"frame.fbColor",fbColor);
     owlLaunchParamsSetBuffer(launchParams,"frame.fbFinal",fbFinal);
@@ -426,22 +284,16 @@ namespace osc {
 
     // and re-set the camera, since aspect may have changed
     setCamera(lastSetCamera);
-
-    // // ------------------------------------------------------------------
-    // OPTIX_CHECK(optixDenoiserSetup(denoiser,0,
-    //                                newSize.x,newSize.y,
-    //                                denoiserState.d_pointer(),
-    //                                denoiserState.size(),
-    //                                denoiserScratch.d_pointer(),
-    //                                denoiserScratch.size()));
   }
   
   /*! download the rendered color buffer */
   void SampleRenderer::downloadPixels(uint32_t h_pixels[])
   {
+    // this unnecessarily slows down the rendering; it would be just
+    // as well to directly use the owlBufferGetPointer() in the draw
+    // call - but for the sake of compatibility with the original
+    // samples let's just do it this way:
     memcpy(h_pixels,owlBufferGetPointer(fbFinal,0),fbSize.x*fbSize.y*sizeof(int));
-    // finalColorBuffer.download(h_pixels,
-    //                           launchParams.frame.size.x*launchParams.frame.size.y);
   }
   
 } // ::osc

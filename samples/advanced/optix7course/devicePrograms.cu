@@ -92,10 +92,8 @@ namespace osc {
     // ------------------------------------------------------------------
     // gather some basic hit information
     // ------------------------------------------------------------------
-    
     const int ix = optixGetLaunchIndex().x;
     const int iy = optixGetLaunchIndex().y;
-    // bool dbg = ix == 500 && iy == 500;
 
     const int   primID = optixGetPrimitiveIndex();
     const vec3i index  = sbtData.index[primID];
@@ -266,15 +264,6 @@ namespace osc {
       // rendreing is slightly larger than [0,1]^2
       vec2f screen(vec2f(ix+prd.random(),iy+prd.random())
                    / vec2f(optixLaunchParams.frame.fbSize));
-      // screen
-      //   = screen
-      //   * vec2f(optixLaunchParams.frame.denoisedSize)
-      //   * vec2f(optixLaunchParams.frame.fbSize)
-      //   - 0.5f*(vec2f(optixLaunchParams.frame.fbSize)
-      //           -
-      //           vec2f(optixLaunchParams.frame.denoisedSize)
-      //           );
-      
       // generate ray direction
       vec3f rayDir = normalize(camera.direction
                                + (screen.x - 0.5f) * camera.horizontal
@@ -292,12 +281,10 @@ namespace osc {
                  RAY_TYPE_COUNT,               // SBT stride
                  RADIANCE_RAY_TYPE,            // missSBTIndex 
                  u0, u1 );
-
       pixelColor  += prd.pixelColor;
       // pixelNormal += prd.pixelNormal;
       // pixelAlbedo += prd.pixelAlbedo;
     }
-
     vec4f rgba(pixelColor/numPixelSamples,1.f);
 
     // and write/accumulate to frame buffer ...

@@ -290,6 +290,11 @@ extern "C" {
                                   /*! number of elements */
                                   size_t      sizeInBytes,
                                   const void *initData = nullptr);
+
+  OWL_LL_INTERFACE
+  LLOResult lloBufferDestroy(LLOContext llo,
+                             /*! ID of buffer to create */
+                             int32_t    bufferID);
   
   /*! builds the SBT's ray gen program entries, using the given
    *  callback to query the app as as to what values to write for a

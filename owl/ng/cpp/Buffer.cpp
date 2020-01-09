@@ -62,5 +62,18 @@ namespace owl {
                           init);
   }
 
-      
+
+  /*! destroy whatever resouces this buffer's ll-layer handle this
+    may refer to; this will not destruct the current object
+    itself, but should already release all its references */
+  void Buffer::destroy()
+  {
+    if (ID < 0)
+      /* already destroyed */
+      return;
+    
+    lloBufferDestroy(context->llo,this->ID);
+    registry.forget(this); // sets ID to -1
+  }
+  
 } // ::owl

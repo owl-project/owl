@@ -468,7 +468,26 @@ namespace owl {
     return buffer->upload(hostPtr);
   }
 
-  
+  /*! destroy the given buffer; this will both release the app's
+    refcount on the given buffer handle, *and* the buffer itself; ie,
+    even if some objects still hold variables that refer to the old
+    handle the buffer itself will be freed */
+  OWL_API void 
+  owlBufferDestroy(OWLBuffer _buffer)
+  {
+    LOG_API_CALL();
+    assert(_buffer);
+    APIHandle *handle = (APIHandle *)_buffer;
+    assert(handle);
+    
+    Buffer::SP buffer = handle->get<Buffer>();
+    assert(buffer);
+    buffer->destroy();
+
+    handle->clear();
+  }
+
+
 
   OWL_API OWLGeomType
   owlGeomTypeCreate(OWLContext _context,

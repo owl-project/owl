@@ -548,7 +548,19 @@ namespace owl {
           dg->deviceBufferCreate(bufferID,sizeInBytes,1,initData);
         });
     }
-      
+
+    OWL_LL_INTERFACE
+    LLOResult lloBufferDestroy(LLOContext llo,
+                               /*! ID of buffer to create */
+                               int32_t    bufferID)
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->bufferDestroy(bufferID);
+        });
+    }
+    
     OWL_LL_INTERFACE
     LLOResult lloAllocBuffers(LLOContext llo,
                               /*! number of buffers valid after this

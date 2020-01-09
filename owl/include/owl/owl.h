@@ -255,6 +255,13 @@ owlBufferGetPointer(OWLBuffer buffer, int deviceID);
 OWL_API void 
 owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 
+/*! destroy the given buffer; this will both release the app's
+    refcount on the given buffer handle, *and* the buffer itself; ie,
+    even if some objects still hold variables that refer to the old
+    handle the buffer itself will be freed */
+OWL_API void 
+owlBufferDestroy(OWLBuffer buffer);
+
 OWL_API void 
 owlBufferUpload(OWLBuffer buffer, const void *hostPtr);
 
