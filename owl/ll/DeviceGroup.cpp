@@ -410,28 +410,20 @@ namespace owl {
                                                 LLOWriteUserGeomBoundsDataCB cb,
                                                 const void *cbData)
     {
-      // try {
         for (auto device : devices) 
           device->groupBuildPrimitiveBounds(groupID,
                                             maxGeomDataSize,
                                             cb,
                                             cbData);
-      // } catch (std::exception &e) {
-      //   std::cerr << OWL_TERMINAL_RED
-      //             << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
-      //             << e.what()
-      //             << OWL_TERMINAL_DEFAULT << std::endl;
-      //   throw e;
-      // }
     }
 
-
-      /*! set given child's instance transform. groupID must be a
-          valid instance group, childID must be wihtin
-          [0..numChildren) */
-      void DeviceGroup::instanceGroupSetTransform(int groupID,
-                                     int childNo,
-                                     const affine3f &xfm)
+    
+    /*! set given child's instance transform. groupID must be a
+      valid instance group, childID must be wihtin
+      [0..numChildren) */
+    void DeviceGroup::instanceGroupSetTransform(int groupID,
+                                                int childNo,
+                                                const affine3f &xfm)
     {
       for (auto device : devices)
         device->instanceGroupSetTransform(groupID,
@@ -442,14 +434,12 @@ namespace owl {
     /*! set given child to {childGroupID+xfm}  */
     void DeviceGroup::instanceGroupSetChild(int groupID,
                                             int childNo,
-                                            int childGroupID,
-                                            const affine3f &xfm)
+                                            int childGroupID)
     {
       for (auto device : devices)
         device->instanceGroupSetChild(groupID,
                                       childNo,
-                                      childGroupID,
-                                      xfm);
+                                      childGroupID);
     }
 
     void DeviceGroup::bufferResize(int bufferID, size_t newItemCount)

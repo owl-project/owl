@@ -126,25 +126,9 @@ namespace owl {
     assert(childID >= 0);
     assert(childID < children.size());
     children[childID] = child;
-#if 1
-    float unitXfm[12] = {
-      1,0,0,
-      0,1,0,
-      0,0,1,
-      0,0,0
-    };
-#else
-    float unitXfm[12] = {
-      1,0,0,0,
-      0,1,0,0,
-      0,0,1,0
-    };
-#endif
-    
     lloInstanceGroupSetChild(context->llo,this->ID,
                              childID,
-                             child->ID,
-                             unitXfm);
+                             child->ID);
   }
   
 } // ::owl

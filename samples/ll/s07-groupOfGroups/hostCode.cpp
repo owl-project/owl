@@ -507,9 +507,9 @@ int main(int ac, char **av)
                          /* geoms in group, pointer */ nullptr,
                          /* geoms in group, count   */ 2);
   lloInstanceGroupSetChild(llo,WORLD_GROUP,0,
-                           SPHERES_GROUP,(const float*)&unitXfm);
+                           SPHERES_GROUP);
   lloInstanceGroupSetChild(llo,WORLD_GROUP,1,
-                           BOXES_GROUP,(const float*)&unitXfm);
+                           BOXES_GROUP);
 #else
   int groupsInWorldGroup[]
     = { SPHERES_GROUP,

@@ -119,6 +119,20 @@ Latest Progress/Revision History
 v0.6.x - Buffer updates, launch params, first interactive example, ...
 ----------------------------------------------------------------------
 
+*v0.6.1*: cleanup/flesh-out of instance transform API
+
+- added creation of instance groups to ng/owl API
+
+- added ability to use different matrix memory layouts (row major, column major)
+
+- on ll layer: axed 'transform' parameter in `InstanceGroupSetChild`;
+  matrices should now get passed to dedicated
+  `InstanceGroupSetTransform` function.
+
+- fixed various bugs related to instancing
+
+*v0.6.0*: Buffer updates, launch params, first interactive example, ...
+
 - Added OWL-port of github.com/ingowald/optix7course siggraph course
   notes sample as a first 'advanced' sample that allows for
   interactive fly-throughs trhough a "real" model. See original course

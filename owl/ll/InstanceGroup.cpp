@@ -63,8 +63,7 @@ namespace owl {
     /*! set given child to {childGroupID+xfm}  */
     void Device::instanceGroupSetChild(int groupID,
                                        int childNo,
-                                       int childGroupID,
-                                       const affine3f &xfm)
+                                       int childGroupID)
     {
       InstanceGroup *ig = checkGetInstanceGroup(groupID);
       Group *newChild = checkGetGroup(childGroupID);

@@ -730,6 +730,12 @@ namespace owl {
         });
     }
 
+    /*! sets the transform for the childID'th child of given instance
+      
+      \param xfm points to a 4x3 affine transform matrix in the layout
+      of owl::common::affine3f, ie, in COLUMN-major format, NOT
+      row-major as optix desires it.
+    */
     OWL_LL_INTERFACE
     LLOResult lloInstanceGroupSetTransform(LLOContext llo,
                                            int32_t    groupID,
@@ -739,7 +745,9 @@ namespace owl {
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
-          PING; PRINT(*(affine3f*)xfm);
+          if (xfm == 0)
+            throw std::runtime_error
+              ("null transform passed to InstanceGroupSetTransform");
           dg->instanceGroupSetTransform(groupID,childID,
                                         *(const affine3f*)xfm);
         });
@@ -749,15 +757,12 @@ namespace owl {
     LLOResult lloInstanceGroupSetChild(LLOContext llo,
                                        int32_t    groupID,
                                        int32_t    childID,
-                                       int32_t    childGroupID,
-                                       const float *xfm)
+                                       int32_t    childGroupID)
     {
-      assert(xfm != nullptr);
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
-          dg->instanceGroupSetChild(groupID,childID,childGroupID,
-                                    *(const affine3f*)xfm);
+          dg->instanceGroupSetChild(groupID,childID,childGroupID);
         });
     }
     
