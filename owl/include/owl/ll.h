@@ -446,6 +446,12 @@ extern "C" {
   LLOResult lloGroupAccelBuild(LLOContext llo,
                                int32_t    groupID);
 
+  /*! sets the transform for the childID'th child of given instance
+
+    \param xfm points to a 4x3 affine transform matrix in the layout
+    of owl::common::affine3f, ie, in COLUMN-major format, NOT
+    row-major as optix desires it.
+   */
   OWL_LL_INTERFACE
   LLOResult lloInstanceGroupSetTransform(LLOContext llo,
                                          int32_t    groupID,
@@ -456,8 +462,7 @@ extern "C" {
   LLOResult lloInstanceGroupSetChild(LLOContext llo,
                                      int32_t    groupID,
                                      int32_t    childNo,
-                                     int32_t    childGroupID,
-                                     const float *xfm);
+                                     int32_t    childGroupID);
   
   OWL_LL_INTERFACE
   LLOResult lloGeomGroupSetChild(LLOContext llo,

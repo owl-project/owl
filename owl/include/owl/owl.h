@@ -72,6 +72,28 @@
    (char *)(((struct type *)0)))
 
 
+/*! enum that specifies the different possible memory layouts for
+    passing transformation matrices */
+typedef enum
+  {
+   /*! 4x3-float column-major matrix format, where a matrix is
+     specified through four vec3fs, the first three being the basis
+     vectors of the linear transform, and the fourth one the
+     translation part. This is exactly the same layout as used in
+     owl::common::affine3f (owl/common/math/AffineSpae.h) */
+   OWL_MATRIX_FORMAT_COLUMN_MAJOR=0,
+   
+   /*! just another name for OWL_MATRIX_FORMAT_4X3_COLUMN_MAJOR that
+     is easier to type - the "_OWL" indicates that this is the default
+     format in the owl::common namespace */
+   OWL_MATRIX_FORMAT_OWL=OWL_MATRIX_FORMAT_COLUMN_MAJOR,
+   
+   /*! 3x4-float *row-major* layout as preferred by optix; in this
+       case it doesn't matter if it's a 4x3 or 4x4 matrix, since the
+       last row in a 4x4 row major matrix can simply be ignored */
+   OWL_MATRIX_FORMAT_ROW_MAJOR
+  } OWLMatrixFormat;
+
 typedef enum
   {
     OWL_FLOAT=100,
@@ -137,6 +159,8 @@ typedef struct _OWL_float3 { float   x,y,z; } owl3f;
 
 typedef struct _OWL_int4   { int32_t x,y,z,w; } owl4i;
 typedef struct _OWL_float4 { float   x,y,z,w; } owl4f;
+
+typedef struct _OWL_affine3f { owl3f vx,vy,vz,t; } owl4x3f;
 
 typedef struct _OWLVarDecl {
   const char *name;
@@ -306,6 +330,14 @@ owlInstanceGroupSetChild(OWLGroup group,
                          int whichChild,
                          OWLGroup child);
 
+/*! sets the transformatoin matrix to be applied to the childID'th
+    child of the given instance group */
+OWL_API void
+owlInstanceGroupSetTransform(OWLGroup group,
+                             int whichChild,
+                             const float *floats,
+                             OWLMatrixFormat matrixFormat);
+
 OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,
                          int rayType,
@@ -386,7 +418,6 @@ _OWL_SET_HELPER(float,f)
 // VariableSet for different *object* types
 // -------------------------------------------------------
 
-// #if 1
 #define _OWL_SET_HELPERS2(OType,stype,abb)                \
   /* set1 */                                              \
   inline void owl##OType##Set1##abb(OWL##OType object,    \
@@ -482,83 +513,30 @@ _OWL_SET_HELPERS(MissProg)
 
 #undef _OWL_SET_HELPERS2
 #undef _OWL_SET_HELPERS
-// #else
-// inline void owlRayGenSetGroup(OWLRayGen rayGen, const char *varName, OWLGroup v)
-// {
-//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-//   owlVariableSetGroup(var,v);
-//   owlVariableRelease(var);
-// }
-// inline void owlRayGenSetBuffer(OWLRayGen rayGen, const char *varName, OWLBuffer v)
-// {
-//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-//   owlVariableSetBuffer(var,v);
-//   owlVariableRelease(var);
-// }
-// inline void owlGeomSetBuffer(OWLGeom rayGen, const char *varName, OWLBuffer v)
-// {
-//   OWLVariable var = owlGeomGetVariable(rayGen,varName);
-//   owlVariableSetBuffer(var,v);
-//   owlVariableRelease(var);
-// }
 
 
-// inline void owlRayGenSet1i(OWLRayGen rayGen, const char *varName, int v)
-// {
-//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-//   owlVariableSet1i(var,v);
-//   owlVariableRelease(var);
-// }
-
-// inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName, const owl2i &v)
-// {
-//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-//   owlVariableSet2iv(var,&v.x);
-//   owlVariableRelease(var);
-// }
-// inline void owlRayGenSet2i(OWLRayGen rayGen, const char *varName,
-//                            int x, int y)
-// {
-//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-//   owlVariableSet2i(var,x,y);
-//   owlVariableRelease(var);
-// }
-
-
-// inline void owlGeomSet1f(OWLGeom rayGen, const char *varName, float v)
-// {
-//   OWLVariable var = owlGeomGetVariable(rayGen,varName);
-//   owlVariableSet1f(var,v);
-//   owlVariableRelease(var);
-// }
-// inline void owlRayGenSet1f(OWLRayGen rayGen, const char *varName, float v)
-// {
-//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-//   owlVariableSet1f(var,v);
-//   owlVariableRelease(var);
-// }
-
-
-// inline void owlRayGenSet3f(OWLRayGen rayGen, const char *varName, const owl3f &v)
-// {
-//   OWLVariable var = owlRayGenGetVariable(rayGen,varName);
-//   owlVariableSet3fv(var,&v.x);
-//   owlVariableRelease(var);
-// }
-// inline void owlMissProgSet3f(OWLMissProg rayGen, const char *varName, const owl3f &v)
-// {
-//   OWLVariable var = owlMissProgGetVariable(rayGen,varName);
-//   owlVariableSet3fv(var,&v.x);
-//   owlVariableRelease(var);
-// }
-// inline void owlGeomSet3f(OWLGeom rayGen, const char *varName, const owl3f &v)
-// {
-//   OWLVariable var = owlGeomGetVariable(rayGen,varName);
-//   owlVariableSet3fv(var,&v.x);
-//   owlVariableRelease(var);
-// }
-// #endif
-
+#ifdef __cplusplus
+/*! c++ "convenience variant" of owlInstanceGroupSetTransform that
+  also allows passing C++ types) */
+inline void
+owlInstanceGroupSetTransform(OWLGroup group,
+                             int childID,
+                             const owl4x3f &xfm)
+{
+  owlInstanceGroupSetTransform(group,childID,(const float *)&xfm,
+                               OWL_MATRIX_FORMAT_OWL);
+}
+/*! c++ "convenience variant" of owlInstanceGroupSetTransform that
+  also allows passing C++ types) */
+inline void
+owlInstanceGroupSetTransform(OWLGroup group,
+                             int childID,
+                             const owl4x3f *xfm)
+{
+  owlInstanceGroupSetTransform(group,childID,(const float *)xfm,
+                               OWL_MATRIX_FORMAT_OWL);
+}
+#endif
 
 
 

@@ -57,7 +57,9 @@ namespace owl {
       // Constructors, Assignment, Cast, Copy Operations
       ////////////////////////////////////////////////////////////////////////////////
 
-      inline AffineSpaceT           ( ) = default;
+      // inline AffineSpaceT           ( ) = default;
+      inline AffineSpaceT           ( ) : l(one), p(zero) {}
+
       inline AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
       inline AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(zero); }
       inline AffineSpaceT& operator=( const AffineSpaceT& other ) { l = other.l; p = other.p; return *this; }

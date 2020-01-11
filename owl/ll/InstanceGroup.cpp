@@ -56,14 +56,14 @@ namespace owl {
       
       if (ig->transforms.empty())
         ig->transforms.resize(ig->children.size());
+      PING; PRINT(xfm);
       ig->transforms[childNo] = xfm;
     }
     
     /*! set given child to {childGroupID+xfm}  */
     void Device::instanceGroupSetChild(int groupID,
                                        int childNo,
-                                       int childGroupID,
-                                       const affine3f &xfm)
+                                       int childGroupID)
     {
       InstanceGroup *ig = checkGetInstanceGroup(groupID);
       Group *newChild = checkGetGroup(childGroupID);

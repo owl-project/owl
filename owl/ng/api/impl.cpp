@@ -369,8 +369,8 @@ namespace owl {
   }
 
   OWL_API OWLGroup
-  owlContextCreateInstanceGroup(OWLContext _context,
-                                size_t numInstances)
+  owlInstanceGroupCreate(OWLContext _context,
+                         size_t numInstances)
   {
     LOG_API_CALL();
     assert(_context);
@@ -379,6 +379,8 @@ namespace owl {
     InstanceGroup::SP  group = context->createInstanceGroup(numInstances);
     assert(group);
 
+    PING; PRINT(group->ID);
+    
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     assert(_group);
     return _group;
@@ -858,6 +860,37 @@ namespace owl {
     assert(child);
 
     group->setChild(whichChild, child);
+  }
+
+  OWL_API void
+  owlInstanceGroupSetTransform(OWLGroup _group,
+                               int whichChild,
+                               const float *floats,
+                               OWLMatrixFormat matrixFormat)
+  {
+    LOG_API_CALL();
+
+    assert("check for valid transform" && floats != nullptr);
+    affine3f xfm;
+    switch(matrixFormat) {
+    case OWL_MATRIX_FORMAT_OWL:
+      xfm = *(const affine3f*)floats;
+      break;
+    case OWL_MATRIX_FORMAT_ROW_MAJOR:
+      xfm.l.vx = vec3f(floats[0+0],floats[4+0],floats[8+0]);
+      xfm.l.vy = vec3f(floats[0+1],floats[4+1],floats[8+1]);
+      xfm.l.vz = vec3f(floats[0+2],floats[4+2],floats[8+2]);
+      xfm.p    = vec3f(floats[0+3],floats[4+3],floats[8+3]);
+      break;
+    default:
+      throw std::runtime_error("un-recognized matrix format");
+    }
+    
+    assert(_group);
+    InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+    assert(group);
+
+    group->setTransform(whichChild, xfm);
   }
 
 

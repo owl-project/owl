@@ -189,7 +189,13 @@ namespace owl {
       // using scalar_t = typename T::scalar_t;
 
       /*! default matrix constructor */
-      inline LinearSpace3           ( ) = default;
+      // inline LinearSpace3           ( ) = default;
+      inline LinearSpace3()
+        : vx(one,zero,zero),
+        vy(zero,one,zero),
+        vz(zero,zero,one)
+        {}
+        
       inline __both__ LinearSpace3           ( const LinearSpace3& other ) { vx = other.vx; vy = other.vy; vz = other.vz; }
       inline __both__ LinearSpace3& operator=( const LinearSpace3& other ) { vx = other.vx; vy = other.vy; vz = other.vz; return *this; }
 

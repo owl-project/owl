@@ -585,8 +585,7 @@ namespace owl {
       /*! set given child to {childGroupID+xfm}  */
       void instanceGroupSetChild(int groupID,
                                  int childNo,
-                                 int childGroupID,
-                                 const affine3f &xfm=affine3f(owl::common::one));
+                                 int childGroupID);
       void geomGroupSetChild(int groupID,
                              int childNo,
                              int childID);

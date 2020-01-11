@@ -65,9 +65,13 @@ inline __device__ void intersectProg()
   const int primID = optixGetPrimitiveIndex();
   const auto &self
     = owl::getProgramData<SpheresGeomType>().prims[primID];
-  
-  const vec3f org  = optixGetWorldRayOrigin();
-  const vec3f dir  = optixGetWorldRayDirection();
+
+  /* iw, jan 11, 2020: for this particular example (where we do not
+     yet use instancing) we could also use the World ray; but this
+     verion is cleaner since it would/will also work with
+     instancing */
+  const vec3f org  = optixGetObjectRayOrigin();
+  const vec3f dir  = optixGetObjectRayDirection();
   float hit_t      = optixGetRayTmax();
   const float tmin = optixGetRayTmin();
 
@@ -106,6 +110,12 @@ OPTIX_INTERSECT_PROGRAM(DielectricSpheres)()
 { intersectProg<DielectricSpheresGeom>(); }
 
 
+/*! transform a _point_ from object to world space */
+inline __device__ vec3f pointToWorld(const vec3f &P)
+{
+  return (vec3f)optixTransformPointFromObjectToWorldSpace(P);
+}
+
 // ==================================================================
 // plumbing for closest hit
 // ==================================================================
@@ -120,11 +130,16 @@ void closestHit()
   
   PerRayData &prd = owl::getPRD<PerRayData>();
 
-  const vec3f org   = optixGetWorldRayOrigin();
-  const vec3f dir   = optixGetWorldRayDirection();
+  const vec3f org  = optixGetWorldRayOrigin();
+  const vec3f dir  = optixGetWorldRayDirection();
   const float hit_t = optixGetRayTmax();
   const vec3f hit_P = org + hit_t * dir;
-  const vec3f N     = (hit_P-self.sphere.center);
+  /* iw, jan 11, 2020: for this particular example (where we do not
+     yet use instancing) we could also get away with just using the
+     sphere.center value directly (since we don't use instancing the
+     transform will not have any effect, anyway); but this verion is
+     cleaner since it would/will also work with instancing */
+  const vec3f N     = hit_P-pointToWorld(self.sphere.center);
 
   prd.out.scatterEvent
     = scatter(self.material,

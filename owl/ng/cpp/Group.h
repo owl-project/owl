@@ -39,6 +39,7 @@ namespace owl {
     GeomGroup(Context *const context,
               size_t numChildren);
     void setChild(int childID, Geom::SP child);
+    
     virtual std::string toString() const { return "GeomGroup"; }
     std::vector<Geom::SP> geometries;
   };
@@ -61,13 +62,16 @@ namespace owl {
     
     InstanceGroup(Context *const context,
                   size_t numChildren);
-    void setChild(int childID, Group::SP child)
-    {
-      assert(childID >= 0);
-      assert(childID < children.size());
-      children[childID] = child;
-    }
+    void setChild(int childID, Group::SP child);
+
+    /*! set transformation matrix of given child */
+    void setTransform(int childID, const affine3f &xfm);
+    
     virtual std::string toString() const { return "InstanceGroup"; }
+
+    /*! the list of children - note we do have to keep them both in
+        the ll layer _and_ here for the refcounting to work; the
+        transforms are only stored once, on the ll layer */
     std::vector<Group::SP> children;
   };
 
