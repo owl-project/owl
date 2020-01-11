@@ -56,7 +56,6 @@ namespace owl {
       
       if (ig->transforms.empty())
         ig->transforms.resize(ig->children.size());
-      PING; PRINT(xfm);
       ig->transforms[childNo] = xfm;
     }
     
