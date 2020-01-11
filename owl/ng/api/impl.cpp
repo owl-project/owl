@@ -379,8 +379,6 @@ namespace owl {
     InstanceGroup::SP  group = context->createInstanceGroup(numInstances);
     assert(group);
 
-    PING; PRINT(group->ID);
-    
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     assert(_group);
     return _group;

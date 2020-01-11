@@ -93,32 +93,9 @@ namespace owl {
     assert(childID >= 0);
     assert(childID < children.size());
 
-#if 1
-    PING; PRINT(xfm);
     lloInstanceGroupSetTransform(context->llo,this->ID,
                                  childID,
                                  (const float *)&xfm);
-#else
-    float transposed[12] = {
-      xfm.l.vx.x,
-      xfm.l.vy.x,
-      xfm.l.vz.x,
-      xfm.p.x,
-
-      xfm.l.vx.y,
-      xfm.l.vy.y,
-      xfm.l.vz.y,
-      xfm.p.y,
-
-      xfm.l.vx.z,
-      xfm.l.vy.z,
-      xfm.l.vz.z,
-      xfm.p.z
-    };
-    lloInstanceGroupSetTransform(context->llo,this->ID,
-                                 childID,
-                                 (const float *)transposed);
-#endif
   }
 
   void InstanceGroup::setChild(int childID, Group::SP child)
