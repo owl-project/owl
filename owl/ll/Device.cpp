@@ -487,6 +487,10 @@ namespace owl {
       
       for (int moduleID=0;moduleID<modules.size();moduleID++) {
         Module &module = modules[moduleID];
+        if (module.ptxCode == nullptr)
+          // module has not been set - skip
+          continue;
+        
         assert(module.module == nullptr);
 
         // ------------------------------------------------------------------
