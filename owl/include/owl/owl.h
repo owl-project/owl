@@ -138,6 +138,8 @@ typedef struct _OWL_float3 { float   x,y,z; } owl3f;
 typedef struct _OWL_int4   { int32_t x,y,z,w; } owl4i;
 typedef struct _OWL_float4 { float   x,y,z,w; } owl4f;
 
+typedef struct _OWL_affine3f { owl3f vx,vy,vz,t; } owl4x3f;
+
 typedef struct _OWLVarDecl {
   const char *name;
   OWLDataType type;
@@ -305,6 +307,10 @@ OWL_API void
 owlInstanceGroupSetChild(OWLGroup group,
                          int whichChild,
                          OWLGroup child);
+OWL_API void
+owlInstanceGroupSetTransform(OWLGroup group,
+                             int whichChild,
+                             const owl4x3f *xfm);
 
 OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,

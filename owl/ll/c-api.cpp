@@ -739,6 +739,7 @@ namespace owl {
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;
+          PING; PRINT(*(affine3f*)xfm);
           dg->instanceGroupSetTransform(groupID,childID,
                                         *(const affine3f*)xfm);
         });
@@ -751,6 +752,7 @@ namespace owl {
                                        int32_t    childGroupID,
                                        const float *xfm)
     {
+      assert(xfm != nullptr);
       return squashExceptions
         ([&](){
           DeviceGroup *dg = (DeviceGroup *)llo;

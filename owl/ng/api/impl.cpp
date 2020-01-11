@@ -369,8 +369,8 @@ namespace owl {
   }
 
   OWL_API OWLGroup
-  owlContextCreateInstanceGroup(OWLContext _context,
-                                size_t numInstances)
+  owlInstanceGroupCreate(OWLContext _context,
+                         size_t numInstances)
   {
     LOG_API_CALL();
     assert(_context);
@@ -379,6 +379,8 @@ namespace owl {
     InstanceGroup::SP  group = context->createInstanceGroup(numInstances);
     assert(group);
 
+    PING; PRINT(group->ID);
+    
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     assert(_group);
     return _group;
@@ -858,6 +860,21 @@ namespace owl {
     assert(child);
 
     group->setChild(whichChild, child);
+  }
+
+  OWL_API void
+  owlInstanceGroupSetTransform(OWLGroup _group,
+                               int whichChild,
+                               const owl4x3f *xfm)
+  {
+    LOG_API_CALL();
+
+    PING; PRINT(*(affine3f*)xfm);
+    assert(_group);
+    InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+    assert(group);
+
+    group->setTransform(whichChild, *(affine3f*)xfm);
   }
 
 

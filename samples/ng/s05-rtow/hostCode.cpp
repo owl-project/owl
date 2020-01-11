@@ -213,9 +213,27 @@ int main(int ac, char **av)
     metalSpheresGeom,
     dielectricSpheresGeom
   };
+#if 1
+  OWLGroup test
+    = owlUserGeomGroupCreate(context,3,userGeoms);
+  owlGroupBuildAccel(test);
+
+  OWLGroup world
+    = owlInstanceGroupCreate(context,2);
+  owlInstanceGroupSetChild(world,0,test);
+  owlInstanceGroupSetChild(world,1,test);
+
+  affine3f xfm0 = affine3f(owl::one);
+  affine3f xfm1 = affine3f::translate(vec3f(0,0,+2.f));
+  owlInstanceGroupSetTransform(world,0,&(const owl4x3f &)xfm0);
+  owlInstanceGroupSetTransform(world,1,&(const owl4x3f &)xfm1);
+  owlGroupBuildAccel(world);
+#else
   OWLGroup world
     = owlUserGeomGroupCreate(context,3,userGeoms);
   owlGroupBuildAccel(world);
+#endif
+  
 
   // ##################################################################
   // set miss and raygen programs

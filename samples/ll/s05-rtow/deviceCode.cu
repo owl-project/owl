@@ -66,8 +66,10 @@ inline __device__ void intersectProg()
   const auto &self
     = owl::getProgramData<SpheresGeomType>().prims[primID];
   
-  const vec3f org  = optixGetWorldRayOrigin();
-  const vec3f dir  = optixGetWorldRayDirection();
+  const vec3f org  = optixGetObjectRayOrigin();
+  const vec3f dir  = optixGetObjectRayDirection();
+  // const vec3f org  = optixGetWorldRayOrigin();
+  // const vec3f dir  = optixGetWorldRayDirection();
   float hit_t      = optixGetRayTmax();
   const float tmin = optixGetRayTmin();
 
@@ -120,11 +122,11 @@ void closestHit()
   
   PerRayData &prd = owl::getPRD<PerRayData>();
 
-  const vec3f org   = optixGetWorldRayOrigin();
-  const vec3f dir   = optixGetWorldRayDirection();
+  const vec3f org  = optixGetWorldRayOrigin();
+  const vec3f dir  = optixGetWorldRayDirection();
   const float hit_t = optixGetRayTmax();
   const vec3f hit_P = org + hit_t * dir;
-  const vec3f N     = (hit_P-self.sphere.center);
+  const vec3f N     = (hit_P-(vec3f)optixTransformPointFromObjectToWorldSpace(self.sphere.center));
 
   prd.out.scatterEvent
     = scatter(self.material,
