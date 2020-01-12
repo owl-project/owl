@@ -280,7 +280,7 @@ namespace owl {
     instances) */
   void Context::setMaxInstancingDepth(int32_t maxInstanceDepth)
   {
-    lloSetRayTypeCount(llo,maxInstanceDepth);
+    lloSetMaxInstancingDepth(llo,maxInstanceDepth);
   }
   
 } // ::owl
