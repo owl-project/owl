@@ -221,7 +221,6 @@ vec3f tracePath(const RayGenData &self,
       attenuation *= prd.out.attenuation;
       ray = owl::Ray(/* origin   : */ prd.out.scattered_origin,
                      /* direction: */ prd.out.scattered_direction,
-                     /* ray type : */ 0,
                      /* tmin     : */ 1e-3f,
                      /* tmax     : */ 1e10f);
     }

@@ -166,7 +166,7 @@ namespace owl {
         oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
         oi.instanceId        = childID; // ???
         oi.visibilityMask    = 255;
-        oi.sbtOffset         = child->getSBTOffset();
+        oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
         oi.visibilityMask    = 255;
         assert(child->traversable);
         oi.traversableHandle = child->traversable;
