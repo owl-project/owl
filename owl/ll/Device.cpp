@@ -1038,6 +1038,7 @@ namespace owl {
         GeomType &gt = geomTypes[geom->geomTypeID];
         maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
       }
+      
       if (maxHitProgDataSize == size_t(-1))
         throw std::runtime_error("in sbtHitProgsBuild: at least on geometry uses a type for which geomTypeCreate has not been called");
       assert("make sure all geoms had their program size set"
@@ -1075,6 +1076,7 @@ namespace owl {
             // ------------------------------------------------------------------
             const int recordID
               = (sbtOffset+childID)*context->numRayTypes + rayTypeID;
+            assert(recordID < numHitGroupRecords);
             uint8_t *const sbtRecord
               = hitGroupRecords.data() + recordID*hitGroupRecordSize;
 
@@ -1210,7 +1212,6 @@ namespace owl {
       sbt.missProgRecordCount = numMissProgRecords;
       size_t totalMissProgRecordsArraySize
         = numMissProgRecords * missProgRecordSize;
-      
       std::vector<uint8_t> missProgRecords(totalMissProgRecordsArraySize);
 
       // ------------------------------------------------------------------
@@ -1481,7 +1482,6 @@ namespace owl {
       
       lp->deviceMemory.uploadAsync(lp->hostMemory.data(),
                                    lp->stream);
-      // LOG("launching ...");
       assert("check valid launch dims" && dims.x > 0);
       assert("check valid launch dims" && dims.y > 0);
       assert("check valid ray gen program ID" && rgID >= 0);
