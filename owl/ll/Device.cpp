@@ -539,7 +539,7 @@ namespace owl {
         };
         rc = cuModuleLoadDataEx(&module.boundsModule, (void *)fixedPtxCode.c_str(),
                                 3, options, optionValues);
-        if (rc = CUDA_SUCCESS) {
+        if (rc != CUDA_SUCCESS) {
           const char *errName = 0;
           cuGetErrorName(rc,&errName);
           PRINT(errName);
