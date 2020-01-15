@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019-2020 Ingo Wald                                            #
+# Copyright 2019 Ingo Wald                                                 #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,21 +14,13 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/)
-# for STB image read/write
-include_directories(${PROJECT_SOURCE_DIR}/owl/common/3rdParty)
-# public API:
-include_directories(${PROJECT_SOURCE_DIR}/owl/include/)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
+add_executable(test00-c99-compliant-header
+  hostCode.c
+  )
+target_link_libraries(test00-c99-compliant-header
+  owl_ng
+  )
+add_test(test00-c99-compliant-header ${CMAKE_BINARY_DIR}/test00-c99-compliant-header)
 
-# low-level interface
-add_subdirectory(ll)
-
-# node graph layer
-add_subdirectory(ng)
-
-
-option(BUILD_EX_OPTIX7COURSE "Build Siggraph 2018 Optix Course Version" OFF)
-if (BUILD_EX_OPTIX7COURSE)
-  add_subdirectory(advanced/optix7course)
-endif()
 

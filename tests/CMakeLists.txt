@@ -20,15 +20,7 @@ include_directories(${PROJECT_SOURCE_DIR}/owl/common/3rdParty)
 # public API:
 include_directories(${PROJECT_SOURCE_DIR}/owl/include/)
 
-# low-level interface
-add_subdirectory(ll)
-
-# node graph layer
-add_subdirectory(ng)
-
-
-option(BUILD_EX_OPTIX7COURSE "Build Siggraph 2018 Optix Course Version" OFF)
-if (BUILD_EX_OPTIX7COURSE)
-  add_subdirectory(advanced/optix7course)
-endif()
-
+file(GLOB tests RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "t??-*")
+foreach(test ${tests})
+  add_subdirectory(${test})
+endforeach()
