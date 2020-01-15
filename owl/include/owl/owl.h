@@ -73,26 +73,26 @@
 
 
 /*! enum that specifies the different possible memory layouts for
-    passing transformation matrices */
-typedef enum
-  {
-   /*! 4x3-float column-major matrix format, where a matrix is
-     specified through four vec3fs, the first three being the basis
-     vectors of the linear transform, and the fourth one the
-     translation part. This is exactly the same layout as used in
-     owl::common::affine3f (owl/common/math/AffineSpae.h) */
-   OWL_MATRIX_FORMAT_COLUMN_MAJOR=0,
+  passing transformation matrices */
+  typedef enum
+    {
+/*! 4x3-float column-major matrix format, where a matrix is
+  specified through four vec3fs, the first three being the basis
+  vectors of the linear transform, and the fourth one the
+  translation part. This is exactly the same layout as used in
+  owl::common::affine3f (owl/common/math/AffineSpae.h) */
+      OWL_MATRIX_FORMAT_COLUMN_MAJOR=0,
    
-   /*! just another name for OWL_MATRIX_FORMAT_4X3_COLUMN_MAJOR that
-     is easier to type - the "_OWL" indicates that this is the default
-     format in the owl::common namespace */
-   OWL_MATRIX_FORMAT_OWL=OWL_MATRIX_FORMAT_COLUMN_MAJOR,
+      /*! just another name for OWL_MATRIX_FORMAT_4X3_COLUMN_MAJOR that
+        is easier to type - the "_OWL" indicates that this is the default
+        format in the owl::common namespace */
+      OWL_MATRIX_FORMAT_OWL=OWL_MATRIX_FORMAT_COLUMN_MAJOR,
    
-   /*! 3x4-float *row-major* layout as preferred by optix; in this
-       case it doesn't matter if it's a 4x3 or 4x4 matrix, since the
-       last row in a 4x4 row major matrix can simply be ignored */
-   OWL_MATRIX_FORMAT_ROW_MAJOR
-  } OWLMatrixFormat;
+      /*! 3x4-float *row-major* layout as preferred by optix; in this
+        case it doesn't matter if it's a 4x3 or 4x4 matrix, since the
+        last row in a 4x4 row major matrix can simply be ignored */
+      OWL_MATRIX_FORMAT_ROW_MAJOR
+    } OWLMatrixFormat;
 
 typedef enum
   {
@@ -201,8 +201,8 @@ owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
                  int numDevices OWL_IF_CPP(=0));
 
 /*! set number of ray types to be used in this context; this should be
-    done before any programs, pipelines, geometries, etc get
-    created */
+  done before any programs, pipelines, geometries, etc get
+  created */
 OWL_API void
 owlContextSetRayTypeCount(OWLContext context,
                           size_t numRayTypes);
@@ -303,9 +303,9 @@ OWL_API void
 owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 
 /*! destroy the given buffer; this will both release the app's
-    refcount on the given buffer handle, *and* the buffer itself; ie,
-    even if some objects still hold variables that refer to the old
-    handle the buffer itself will be freed */
+  refcount on the given buffer handle, *and* the buffer itself; ie,
+  even if some objects still hold variables that refer to the old
+  handle the buffer itself will be freed */
 OWL_API void 
 owlBufferDestroy(OWLBuffer buffer);
 
@@ -354,7 +354,7 @@ owlInstanceGroupSetChild(OWLGroup group,
                          OWLGroup child);
 
 /*! sets the transformatoin matrix to be applied to the childID'th
-    child of the given instance group */
+  child of the given instance group */
 OWL_API void
 owlInstanceGroupSetTransform(OWLGroup group,
                              int whichChild,
@@ -441,92 +441,102 @@ _OWL_SET_HELPER(float,f)
 // VariableSet for different *object* types
 // -------------------------------------------------------
 
-#define _OWL_SET_HELPERS2(OType,stype,abb)                \
-  /* set1 */                                              \
-  inline void owl##OType##Set1##abb(OWL##OType object,    \
-                                    const char *varName,  \
-                                    stype v)              \
-  {                                                       \
-    OWLVariable var                                       \
-      = owl##OType##GetVariable(object,varName);          \
-    owlVariableSet1##abb(var,v);                          \
-    owlVariableRelease(var);                              \
-  }                                                       \
-  /* set2 */                                              \
-  inline void owl##OType##Set2##abb(OWL##OType object,    \
-                                    const char *varName,  \
-                                    stype x,              \
-                                    stype y)              \
-  {                                                       \
-    OWLVariable var                                        \
-      = owl##OType##GetVariable(object,varName);           \
-    owlVariableSet2##abb(var,x,y);                         \
-    owlVariableRelease(var);                               \
-  }                                                       \
-  inline void owl##OType##Set2##abb(OWL##OType object,     \
-                                    const char *varName,   \
-                                    const owl2##abb &v)    \
-  {                                                        \
-    OWLVariable var                                        \
-      = owl##OType##GetVariable(object,varName);           \
-    owlVariableSet2##abb(var,v.x,v.y);                        \
-    owlVariableRelease(var);                               \
-  }                                                       \
-  /* set3 */                                              \
-  inline void owl##OType##Set3##abb(OWL##OType object,    \
-                                    const char *varName,  \
-                                    stype x,              \
-                                    stype y,              \
-                                    stype z)              \
-  {                                                       \
-    OWLVariable var                                        \
-      = owl##OType##GetVariable(object,varName);           \
-    owlVariableSet3##abb(var,x,y,z);                        \
-    owlVariableRelease(var);                               \
-  }                                                        \
-  inline void owl##OType##Set3##abb(OWL##OType object,     \
-                                    const char *varName,   \
-                                    const owl3##abb &v)    \
-  {                                                        \
-    OWLVariable var                                        \
-      = owl##OType##GetVariable(object,varName);           \
-    owlVariableSet3##abb(var,v.x,v.y,v.z);                        \
-    owlVariableRelease(var);                               \
-  }                                                       \
+#define _OWL_SET_HELPERS_C(OType,stype,abb)                     \
+  /* set1 */                                                    \
+  inline void owl##OType##Set1##abb(OWL##OType object,          \
+                                    const char *varName,        \
+                                    stype v)                    \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet1##abb(var,v);                                \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  /* set2 */                                                    \
+  inline void owl##OType##Set2##abb(OWL##OType object,          \
+                                    const char *varName,        \
+                                    stype x,                    \
+                                    stype y)                    \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet2##abb(var,x,y);                              \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  /* set3 */                                                    \
+  inline void owl##OType##Set3##abb(OWL##OType object,          \
+                                    const char *varName,        \
+                                    stype x,                    \
+                                    stype y,                    \
+                                    stype z)                    \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet3##abb(var,x,y,z);                            \
+    owlVariableRelease(var);                                    \
+  }                                                             \
   /* end of macro */
 
-#define _OWL_SET_HELPERS(Type)                            \
-  /* group, buffer, other */                              \
-  inline void owl##Type##SetGroup(OWL##Type object,       \
-                                  const char *varName,    \
-                                  OWLGroup v)             \
-  {                                                       \
-    OWLVariable var                                       \
-      = owl##Type##GetVariable(object,varName);           \
-    owlVariableSetGroup(var,v);                           \
-    owlVariableRelease(var);                              \
-  }                                                       \
-  inline void owl##Type##SetRaw(OWL##Type object,         \
-                                const char *varName,      \
-                                const void *v)            \
-  {                                                       \
-    OWLVariable var                                       \
-      = owl##Type##GetVariable(object,varName);           \
-    owlVariableSetRaw(var,v);                             \
-    owlVariableRelease(var);                              \
-  }                                                       \
-  inline void owl##Type##SetBuffer(OWL##Type object,      \
-                                   const char *varName,   \
-                                   OWLBuffer v)           \
-  {                                                       \
-    OWLVariable var                                       \
-      = owl##Type##GetVariable(object,varName);           \
-    owlVariableSetBuffer(var,v);                          \
-    owlVariableRelease(var);                              \
-  }                                                       \
-                                                          \
-  _OWL_SET_HELPERS2(Type,int,i)                           \
-  _OWL_SET_HELPERS2(Type,float,f)                         \
+
+#ifdef __cplusplus
+#define _OWL_SET_HELPERS_CPP(OType,stype,abb)                   \
+  inline void owl##OType##Set2##abb(OWL##OType object,          \
+                                    const char *varName,        \
+                                    const owl2##abb &v)         \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet2##abb(var,v.x,v.y);                          \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  inline void owl##OType##Set3##abb(OWL##OType object,          \
+                                    const char *varName,        \
+                                    const owl3##abb &v)         \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet3##abb(var,v.x,v.y,v.z);                      \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  /* end of macro */
+#else
+#define _OWL_SET_HELPERS_CPP(OType,stype,abb)  /* ignore in C99 mode */
+#endif
+
+#define _OWL_SET_HELPERS(Type)                          \
+  /* group, buffer, other */                            \
+  inline void owl##Type##SetGroup(OWL##Type object,     \
+                                  const char *varName,  \
+                                  OWLGroup v)           \
+  {                                                     \
+    OWLVariable var                                     \
+      = owl##Type##GetVariable(object,varName);         \
+    owlVariableSetGroup(var,v);                         \
+    owlVariableRelease(var);                            \
+  }                                                     \
+  inline void owl##Type##SetRaw(OWL##Type object,       \
+                                const char *varName,    \
+                                const void *v)          \
+  {                                                     \
+    OWLVariable var                                     \
+      = owl##Type##GetVariable(object,varName);         \
+    owlVariableSetRaw(var,v);                           \
+    owlVariableRelease(var);                            \
+  }                                                     \
+  inline void owl##Type##SetBuffer(OWL##Type object,    \
+                                   const char *varName, \
+                                   OWLBuffer v)         \
+  {                                                     \
+    OWLVariable var                                     \
+      = owl##Type##GetVariable(object,varName);         \
+    owlVariableSetBuffer(var,v);                        \
+    owlVariableRelease(var);                            \
+  }                                                     \
+                                                        \
+  _OWL_SET_HELPERS_C(Type,int,i)                        \
+  _OWL_SET_HELPERS_C(Type,float,f)                      \
+  _OWL_SET_HELPERS_CPP(Type,int,i)                      \
+  _OWL_SET_HELPERS_CPP(Type,float,f)                    \
   /* end of macro */
 
 _OWL_SET_HELPERS(RayGen)
@@ -534,7 +544,8 @@ _OWL_SET_HELPERS(Geom)
 _OWL_SET_HELPERS(LaunchParams)
 _OWL_SET_HELPERS(MissProg)
 
-#undef _OWL_SET_HELPERS2
+#undef _OWL_SET_HELPERS_CPP
+#undef _OWL_SET_HELPERS_C
 #undef _OWL_SET_HELPERS
 
 
