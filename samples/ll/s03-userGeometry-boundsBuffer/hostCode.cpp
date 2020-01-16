@@ -140,7 +140,7 @@ int main(int ac, char **av)
   lloUserGeomGroupCreate(llo,/* group ID */SPHERES_GROUP,
                          /* geoms in group, pointer */ geomsInGroup,
                          /* geoms in group, count   */ 8);
-  // in this mode, we supply the boudns through a buffer, so don't
+  // in this mode, we supply the bounds through a buffer, so don't
   // build them on the device at all ...
   lloGroupAccelBuild(llo,SPHERES_GROUP);
 

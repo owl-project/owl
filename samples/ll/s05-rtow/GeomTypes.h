@@ -20,7 +20,7 @@ namespace owl {
 
   // ==================================================================
   /* the raw geometric shape of a sphere, without material - this is
-     what goes into intersection and bonuds programs */
+     what goes into intersection and bounds programs */
   // ==================================================================
   struct Sphere {
     vec3f center;
