@@ -17,6 +17,9 @@
 #include "Device.h"
 #include <optix_function_table_definition.h>
 
+// to make C99 compilers happy:
+extern inline OptixResult optixInit( void** handlePtr );
+
 #define LOG(message)                                            \
   if (Context::logging()) \
   std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
