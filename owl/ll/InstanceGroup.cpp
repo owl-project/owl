@@ -192,8 +192,11 @@ namespace owl {
       // ==================================================================
       accelOptions.buildFlags =
         OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+#if DO_COMPACTION
         |
-        OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+        OPTIX_BUILD_FLAG_ALLOW_COMPACTION
+#endif
+        ;
       accelOptions.motionOptions.numKeys = 1;
       accelOptions.operation             = OPTIX_BUILD_OPERATION_BUILD;
       
@@ -212,12 +215,15 @@ namespace owl {
       // prepare compaction
       // ==================================================================
     
+#if DO_COMPACTION
       DeviceMemory compactedSizeBuffer;
       compactedSizeBuffer.alloc(sizeof(uint64_t));
       
       OptixAccelEmitDesc emitDesc;
       emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
       emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
+#endif
+      
       // ==================================================================
       // trigger the build ....
       // ==================================================================
@@ -232,8 +238,7 @@ namespace owl {
       
       DeviceMemory outputBuffer;
       outputBuffer.alloc(bufferSizes.outputSizeInBytes);
-      
-      
+            
       OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
@@ -248,7 +253,11 @@ namespace owl {
                                   /* the traversable we're building: */ 
                                   &traversable,
                                   /* we're also querying compacted size: */
+#if DO_COMPACTION
                                   &emitDesc,1u
+#else
+                                  nullptr,0u
+#endif
                                   ));
       
       CUDA_SYNC_CHECK();
@@ -256,6 +265,7 @@ namespace owl {
       // ==================================================================
       // perform compaction
       // ==================================================================
+#if DO_COMPACTION
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
       
@@ -269,6 +279,7 @@ namespace owl {
                                     &traversable));
       CUDA_SYNC_CHECK();
       outputBuffer.free(); // << the UNcompacted, temporary output buffer
+#endif
       
       // ==================================================================
       // aaaaaand .... clean up
@@ -276,8 +287,9 @@ namespace owl {
       // TODO: move those free's to the destructor, so we can delay the
       // frees until all objects are done
       tempBuildBuffer.free();
+#if DO_COMPACTION
       compactedSizeBuffer.free();
-      
+#endif      
       context->popActive();
       
       LOG_OK("successfully built instance group accel");
