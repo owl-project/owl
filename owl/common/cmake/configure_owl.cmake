@@ -24,7 +24,9 @@
 # OWL_NG_LIBRARIES - list of library names required to build apps
 # using the node graph layer
 
-include(configure_tbb)
+if (NOT WIN32)
+  include(configure_tbb)
+endif()
 
 set(OWL_INCLUDES
   # owl needs cuda:
