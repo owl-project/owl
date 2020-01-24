@@ -14,7 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-find_package(TBB REQUIRED)
+#find_package(TBB REQUIRED)
+find_package(TBB)
 if (TBB_FOUND)
   include_directories(${TBB_INCLUDE_DIR})
   add_definitions(-DOWL_HAVE_TBB=1)

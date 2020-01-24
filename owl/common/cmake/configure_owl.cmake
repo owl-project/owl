@@ -24,6 +24,8 @@
 # OWL_NG_LIBRARIES - list of library names required to build apps
 # using the node graph layer
 
+include(configure_tbb)
+
 set(OWL_INCLUDES
   # owl needs cuda:
   ${CUDA_TOOLKIT_ROOT_DIR}/include
@@ -46,3 +48,7 @@ set(OWL_LIBRARIES
   ${OWL_LL_LIBRARIES}
   ${OWL_NG_LIBRARIES}
   )
+if (TBB_FOUND)
+  set(OWL_LIBRARIES ${OWL_LIBRARIES} tbb)
+  message("adding tbb ...")
+endif()
