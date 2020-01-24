@@ -252,17 +252,24 @@ namespace owl {
    programs from the host - todo: move to deviceAPI.h once working */
 #define OPTIX_BOUNDS_PROGRAM(progName)                                  \
   /* fwd decl for the kernel func to call */                            \
-  inline __device__ void __boundsFunc__##progName(const void *geomData,       \
-                                                  box3f &bounds,        \
-                                                  const int primID);          \
+  inline __device__                                                     \
+  void __boundsFunc__##progName(const void *geomData,                   \
+                                box3f &bounds,                          \
+                                const int32_t primID);                  \
                                                                         \
   /* the '__global__' kernel we can get a function handle on */         \
   extern "C" __global__                                                 \
-  void __boundsFuncKernel__##progName(const void  *geomData,                  \
-                                      box3f *const boundsArray,               \
-                                      const int    numPrims)                  \
+  void __boundsFuncKernel__##progName(const void  *geomData,            \
+                                      box3f *const boundsArray,         \
+                                      const uint32_t numPrims)          \
   {                                                                     \
-    int primID = threadIdx.x + blockDim.x*blockIdx.x;                 \
+    uint32_t blockIndex                                                 \
+      = blockIdx.x                                                      \
+      + blockIdx.y * gridDim.x                                          \
+      + blockIdx.z * gridDim.x * gridDim.y;                             \
+    uint32_t primID                                                     \
+      = threadIdx.x + blockDim.x*threadIdx.y                            \
+      + blockDim.x*blockDim.y*blockIndex;                               \
     if (primID < numPrims) {                                            \
       __boundsFunc__##progName(geomData,boundsArray[primID],primID);    \
     }                                                                   \

@@ -15,36 +15,33 @@
 // ======================================================================== //
 
 #include "Device.h"
+#include <fstream>
 
 #define LOG(message)                                            \
-  if (Context::logging()) \
-  std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
-  << message                                                    \
-  << std::endl
+  if (Context::logging())                                       \
+    std::cout << "#owl.ll(" << context->owlDeviceID << "): "    \
+              << message                                        \
+              << std::endl
 
-#define LOG_OK(message)                                 \
-  if (Context::logging()) \
-  std::cout << OWL_TERMINAL_GREEN                       \
-  << "#owl.ll(" << context->owlDeviceID << "): "        \
-  << message << OWL_TERMINAL_DEFAULT << std::endl
+#define LOG_OK(message)                                         \
+  if (Context::logging())                                       \
+    std::cout << OWL_TERMINAL_GREEN                             \
+              << "#owl.ll(" << context->owlDeviceID << "): "    \
+              << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
-  if (Context::logging()) \
-  std::cout << "#owl.ll(" << owlDeviceID << "): "       \
-  << message                                            \
-  << std::endl
+  if (Context::logging())                               \
+    std::cout << "#owl.ll(" << owlDeviceID << "): "     \
+              << message                                \
+              << std::endl
 
-#define CLOG_OK(message)                                \
-  if (Context::logging()) \
-  std::cout << OWL_TERMINAL_GREEN                       \
-  << "#owl.ll(" << owlDeviceID << "): "                 \
-  << message << OWL_TERMINAL_DEFAULT << std::endl
+#define CLOG_OK(message)                                        \
+  if (Context::logging())                                       \
+    std::cout << OWL_TERMINAL_GREEN                             \
+              << "#owl.ll(" << owlDeviceID << "): "             \
+              << message << OWL_TERMINAL_DEFAULT << std::endl
 
-// #define MANAGED_TEST 1
-
-
-
-#define COMPACT_ONLY_IF_IT_SAVES_ANYTHING 1
+// #define DO_COMPACTION 1
 
 namespace owl {
   namespace ll {
@@ -84,21 +81,22 @@ namespace owl {
       
       std::vector<uint8_t> userGeomData(maxGeomDataSize);
       DeviceMemory tempMem;
-#if MANAGED_TEST
-      tempMem.allocManaged(maxGeomDataSize);
-#else
       tempMem.alloc(maxGeomDataSize);
-#endif
+      size_t sumPrims = 0;
+      uint32_t maxPrimsPerGAS = 0;
+      optixDeviceContextGetProperty
+        (context->optixContext,
+         OPTIX_DEVICE_PROPERTY_LIMIT_MAX_PRIMITIVES_PER_GAS,
+         &maxPrimsPerGAS,
+         sizeof(maxPrimsPerGAS));
+      PRINT(maxPrimsPerGAS);
+      
       for (int childID=0;childID<ugg->children.size();childID++) {
         Geom *child = ugg->children[childID];
         assert("double-check valid child geom" && child != nullptr);
         assert(child);
         UserGeom *ug = (UserGeom *)child;
-#if MANAGED_TEST
-        ug->internalBufferForBoundsProgram.allocManaged(ug->numPrims*sizeof(box3f));
-#else
         ug->internalBufferForBoundsProgram.alloc(ug->numPrims*sizeof(box3f));
-#endif
         ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
         
         if (childID < 10)
@@ -109,11 +107,30 @@ namespace owl {
         cb(userGeomData.data(),context->owlDeviceID,
            ug->geomID,childID,cbData); 
         
-        // size of each thread block during bounds function call
-        uint32_t boundsFuncBlockSize = 128;
         uint32_t numPrims = (uint32_t)ug->numPrims;
-        vec3i blockDims(owl::common::divRoundUp(numPrims,boundsFuncBlockSize),1,1);
-        vec3i gridDims(boundsFuncBlockSize,1,1);
+        PRINT(numPrims);
+        sumPrims += numPrims;
+        if (sumPrims > maxPrimsPerGAS) {
+          PRINT(numPrims);
+          PRINT(maxPrimsPerGAS);
+          throw std::runtime_error("user geom group exceeded number of allowed prims");
+        }
+        // size of each thread block during bounds function call
+        vec3i blockDims(32,32,1);
+        uint32_t threadsPerBlock = blockDims.x*blockDims.y*blockDims.z;
+        
+        uint32_t numBlocks = owl::common::divRoundUp(numPrims,threadsPerBlock);
+        PRINT(numBlocks);
+        uint32_t numBlocks_x
+          = 1+int(powf(numBlocks,1.f/3.f));
+        uint32_t numBlocks_y
+          = 1+int(sqrtf(numBlocks/numBlocks_x));
+        uint32_t numBlocks_z
+          = owl::common::divRoundUp(numBlocks,numBlocks_x*numBlocks_y);
+        
+        vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
+        PRINT(blockDims);
+        PRINT(gridDims);
         
         tempMem.upload(userGeomData);
         
@@ -132,8 +149,8 @@ namespace owl {
         
         CUresult rc
           = cuLaunchKernel(gt->boundsFuncKernel,
-                           blockDims.x,blockDims.y,blockDims.z,
                            gridDims.x,gridDims.y,gridDims.z,
+                           blockDims.x,blockDims.y,blockDims.z,
                            0, stream, args, 0);
         if (rc) {
           const char *errName = 0;
@@ -203,6 +220,7 @@ namespace owl {
         auto &aa = userGeomInput.aabbArray;
         aa.aabbBuffers   = &d_bounds;
         aa.numPrimitives = (uint32_t)userGeom->numPrims;
+        PRINT(aa.numPrimitives);
         aa.strideInBytes = sizeof(box3f);
         aa.primitiveIndexOffset = 0;
       
@@ -229,11 +247,17 @@ namespace owl {
       // ------------------------------------------------------------------
       OptixAccelBuildOptions accelOptions = {};
       accelOptions.buildFlags             =
-        OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+        OPTIX_BUILD_FLAG_PREFER_FAST_BUILD
+        // OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+#if DO_COMPACTION
         |
-        OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+        OPTIX_BUILD_FLAG_ALLOW_COMPACTION
+#endif
+        ;
       accelOptions.motionOptions.numKeys  = 1;
       accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
+
+      PRINT((uint32_t)userGeomInputs.size());
       
       OptixAccelBufferSizes blasBufferSizes;
       OPTIX_CHECK(optixAccelComputeMemoryUsage
@@ -243,6 +267,8 @@ namespace owl {
                    (uint32_t)userGeomInputs.size(),
                    &blasBufferSizes
                    ));
+      PRINT(blasBufferSizes.tempSizeInBytes);
+      PRINT(blasBufferSizes.outputSizeInBytes);
       
       // ------------------------------------------------------------------
       // ... and allocate buffers: temp buffer, initial (uncompacted)
@@ -252,25 +278,12 @@ namespace owl {
 
       // temp memory:
       DeviceMemory tempBuffer;
-#if MANAGED_TEST
-      tempBuffer.allocManaged(blasBufferSizes.tempSizeInBytes);
-#else
       tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
-#endif
 
-      
+#if DO_COMPACTION
       // buffer for initial, uncompacted bvh
       DeviceMemory outputBuffer;
-      // output buffer in current driver is NOT allowed be in managed memory:
-
-
-
-      
-      // #if MANAGED_TEST
-      //        outputBuffer.allocManaged(blasBufferSizes.outputSizeInBytes);
-      // #else
       outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
-      // #endif
 
       // single size-t buffer to store compacted size in
       DeviceMemory compactedSizeBuffer;
@@ -282,7 +295,7 @@ namespace owl {
       OptixAccelEmitDesc emitDesc;
       emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
       emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
-      
+
       OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
@@ -291,7 +304,7 @@ namespace owl {
                                   (uint32_t)userGeomInputs.size(),
                                   // buffer of temp memory:
                                   (CUdeviceptr)tempBuffer.get(),
-                                  (uint32_t)tempBuffer.size(),
+                                  tempBuffer.size(),
                                   // where we store initial, uncomp bvh:
                                   (CUdeviceptr)outputBuffer.get(),
                                   outputBuffer.size(),
@@ -300,39 +313,67 @@ namespace owl {
                                   /* we're also querying compacted size: */
                                   &emitDesc,1u
                                   ));
+#else
+      bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      OPTIX_CHECK(optixAccelBuild(context->optixContext,
+                                  /* todo: stream */0,
+                                  &accelOptions,
+                                  // array of build inputs:
+                                  userGeomInputs.data(),
+                                  (uint32_t)userGeomInputs.size(),
+                                  // buffer of temp memory:
+                                  (CUdeviceptr)tempBuffer.get(),
+                                  tempBuffer.size(),
+                                  // where we store initial, uncomp bvh:
+                                  (CUdeviceptr)bvhMemory.get(),
+                                  bvhMemory.size(),
+                                  /* the traversable we're building: */ 
+                                  &traversable,
+                                  /* we're also querying compacted size: */
+                                  nullptr,0u
+                                  ));
+#endif
+
       CUDA_SYNC_CHECK();
+
+#if 0
+      std::vector<uint8_t> dumpBuffer(outputBuffer.size());
+      outputBuffer.download(dumpBuffer.data());
+      std::ofstream dump("/tmp/outputBuffer.bin",std::ios::binary);
+      dump.write((char*)dumpBuffer.data(),dumpBuffer.size());
+      PRINT(dumpBuffer.size());
+      exit(0);
+#endif
       
       // ==================================================================
       // perform compaction
       // ==================================================================
 
+#if DO_COMPACTION
       // download builder's compacted size from device
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
 
-#if COMPACT_ONLY_IF_IT_SAVES_ANYTHING 
-      if (compactedSize < outputBuffer.sizeInBytes)
-#endif
-        {
-        // alloc the buffer...
-        bvhMemory.alloc(compactedSize);
-        // ... and perform compaction
-        OPTIX_CALL(AccelCompact(context->optixContext,
-                                /*TODO: stream:*/0,
-                                // OPTIX_COPY_MODE_COMPACT,
-                                traversable,
-                                (CUdeviceptr)bvhMemory.get(),
-                                bvhMemory.size(),
-                                &traversable));
-        CUDA_SYNC_CHECK();
+      // alloc the buffer...
+      bvhMemory.alloc(compactedSize);
+      // ... and perform compaction
+      OPTIX_CALL(AccelCompact(context->optixContext,
+                              /*TODO: stream:*/0,
+                              // OPTIX_COPY_MODE_COMPACT,
+                              traversable,
+                              (CUdeviceptr)bvhMemory.get(),
+                              bvhMemory.size(),
+                              &traversable));
+      CUDA_SYNC_CHECK();
       
-        // ==================================================================
-        // aaaaaand .... clean up
-        // ==================================================================
-        outputBuffer.free(); // << the UNcompacted, temporary output buffer
-      }
-      tempBuffer.free();
+      // ==================================================================
+      // aaaaaand .... clean up
+      // ==================================================================
+      outputBuffer.free(); // << the UNcompacted, temporary output buffer
       compactedSizeBuffer.free();
+#endif
+
+      tempBuffer.free();
       context->popActive();
 
       LOG_OK("successfully built user geom group accel");
@@ -351,7 +392,13 @@ namespace owl {
                        /*boundsArraySize*/sumBoundsMem,
                        /*tempMemSize*/blasBufferSizes.tempSizeInBytes,
                        /*initialBVHSize*/blasBufferSizes.outputSizeInBytes,
-                       /*finalBVHSize*/compactedSize);
+                       /*finalBVHSize*/
+#if DO_COMPACTION
+                       compactedSize
+#else
+                       0
+#endif
+                       );
     }
     
 

@@ -171,17 +171,17 @@ namespace osc {
       // upload the model to the device: the builder
       TriangleMesh &mesh = *model->meshes[meshID];
 
-#if 0
-      char fileName[1000];
-      sprintf(fileName,"repro_%03i.obj",meshID);
-      std::ofstream out(fileName);
-      for (auto v : mesh.vertex)
-        out << "v " << v.x << " "  << v.y << " "  << v.z << std::endl;
-      for (auto idx : mesh.index) {
-        vec3i v = idx+1;
-        out << "f " << v.x << " "  << v.y << " "  << v.z << std::endl;
-      }
-#endif
+// #if 0
+//       char fileName[1000];
+//       sprintf(fileName,"repro_%03i.obj",meshID);
+//       std::ofstream out(fileName);
+//       for (auto v : mesh.vertex)
+//         out << "v " << v.x << " "  << v.y << " "  << v.z << std::endl;
+//       for (auto idx : mesh.index) {
+//         vec3i v = idx+1;
+//         out << "f " << v.x << " "  << v.y << " "  << v.z << std::endl;
+//       }
+// #endif
       OWLBuffer vertexBuffer 
         = owlDeviceBufferCreate(context,OWL_FLOAT3,mesh.vertex.size(),
                                 mesh.vertex.data());
@@ -224,7 +224,7 @@ namespace osc {
       geoms.push_back(geom);
     }
 
-#if 1
+#if 0
     OWLGroup triGroup = owlTrianglesGeomGroupCreate(context,geoms.size(),geoms.data());
     owlGroupBuildAccel(triGroup);
 
