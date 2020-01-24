@@ -36,6 +36,20 @@ inline __device__ void boundsProg(const void *geomData,
   primBounds = box3f()
     .extend(sphere.center - sphere.radius)
     .extend(sphere.center + sphere.radius);
+
+  // printf("boudns %i :  %f %f %f bounds %f %f %f - %f %f %f\n",
+  //        primID,
+  //        sphere.center.x,
+  //        sphere.center.y,
+  //        sphere.center.z,
+  //        primBounds.lower.x,
+  //        primBounds.lower.y,
+  //        primBounds.lower.z,
+  //        primBounds.upper.x,
+  //        primBounds.upper.y,
+  //        primBounds.upper.z
+  //        );
+  
 }
 
 OPTIX_BOUNDS_PROGRAM(LambertianSpheres)(const void  *geomData,
@@ -106,6 +120,13 @@ inline __device__ void intersectProg()
   const float q = b + sign * sqrtf(delta);
   
   float hit_t = min(c / q, q);
+  // printf("cspehre %i :  %f %f %f : %f hit_t %f\n",
+  //        primID,
+  //        self.sphere.center.x,
+  //        self.sphere.center.y,
+  //        self.sphere.center.z,
+  //        particleRadius,
+  //        hit_t);
   if (hit_t >= tmin && hit_t < optixGetRayTmax()) 
     optixReportIntersection(hit_t, 0);
 #endif
@@ -133,7 +154,7 @@ void closestHit()
   const int primID = optixGetPrimitiveIndex();
   const auto &self
     = owl::getProgramData<SpheresGeomType>().prims[primID];
-  
+
   PerRayData &prd = owl::getPRD<PerRayData>();
 
   const vec3f org  = optixGetWorldRayOrigin();
@@ -238,7 +259,7 @@ OPTIX_RAYGEN_PROGRAM(rayGen)()
   // for multi-gpu: only render every deviceCount'th column of 32 pixels:
   if (((pixelID.x/32) % self.deviceCount) != self.deviceIndex)
     return;
-  
+
   PerRayData prd;
   prd.random.init(pixelID.x,pixelID.y);
   

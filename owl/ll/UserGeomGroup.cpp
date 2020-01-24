@@ -247,8 +247,8 @@ namespace owl {
       // ------------------------------------------------------------------
       OptixAccelBuildOptions accelOptions = {};
       accelOptions.buildFlags             =
-        OPTIX_BUILD_FLAG_PREFER_FAST_BUILD
-        // OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+        // OPTIX_BUILD_FLAG_PREFER_FAST_BUILD
+        OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
 #if DO_COMPACTION
         |
         OPTIX_BUILD_FLAG_ALLOW_COMPACTION
