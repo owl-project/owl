@@ -52,5 +52,4 @@ set(OWL_LIBRARIES
   )
 if (TBB_FOUND)
   set(OWL_LIBRARIES ${OWL_LIBRARIES} tbb)
-  message("adding tbb ...")
 endif()
