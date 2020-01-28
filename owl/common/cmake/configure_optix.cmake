@@ -23,15 +23,13 @@ find_package(CUDA REQUIRED)
 find_package(OptiX REQUIRED VERSION 7)
 
 include_directories(${CUDA_TOOLKIT_INCLUDE})
-#if (CUDA_TOOLKIT_ROOT_DIR)
-#  include_directories(${CUDA_TOOLKIT_ROOT_DIR}/include)
-#endif()
 include_directories(${OptiX_INCLUDE})
 
 if (WIN32)
   add_definitions(-DNOMINMAX)
 endif()
 
+  
 find_program(BIN2C bin2c
   DOC "Path to the cuda-sdk bin2c executable.")
 
@@ -47,7 +45,16 @@ find_program(BIN2C bin2c
 #    'output_var', which can then be added to cmake targets.
 macro(cuda_compile_and_embed output_var cuda_file)
   set(c_var_name ${output_var})
-  cuda_compile_ptx(ptx_files ${cuda_file})
+  if(${CMAKE_BUILD_TYPE} MATCHES "Release")
+    cuda_compile_ptx(ptx_files
+      ${cuda_file}
+      OPTIONS -O3 -DNDEBUG=1
+      )
+  else()
+    cuda_compile_ptx(ptx_files
+      ${cuda_file}
+      )
+  endif()
   list(GET ptx_files 0 ptx_file)
   set(embedded_file ${ptx_file}_embedded.c)
 #  message("adding rule to compile and embed ${cuda_file} to \"const char ${var_name}[];\"")
