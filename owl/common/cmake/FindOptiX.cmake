@@ -26,8 +26,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-message("findOptix...")
-
 # Locate the OptiX distribution.  Search relative to the SDK first, then look in the system.
 
 # Our initial guess will be within the SDK.
