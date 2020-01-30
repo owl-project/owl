@@ -20,16 +20,13 @@ cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
 
-add_executable(ng05-rtow
+add_executable(test01-manySpheres
   hostCode.cpp
   ${ptxCode}
   )
 
-target_link_libraries(ng05-rtow
+target_link_libraries(test01-manySpheres
   owl_ng
   )
-
-add_test(ng05-rtow
-  ${CMAKE_BINARY_DIR}/ng05-rtow)
 
 
