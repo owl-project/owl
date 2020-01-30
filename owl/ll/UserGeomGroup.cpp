@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -40,8 +40,6 @@
     std::cout << OWL_TERMINAL_GREEN                             \
               << "#owl.ll(" << owlDeviceID << "): "             \
               << message << OWL_TERMINAL_DEFAULT << std::endl
-
-// #define DO_COMPACTION 1
 
 namespace owl {
   namespace ll {
@@ -249,10 +247,6 @@ namespace owl {
       accelOptions.buildFlags             =
         // OPTIX_BUILD_FLAG_PREFER_FAST_BUILD
         OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
-#if DO_COMPACTION
-        |
-        OPTIX_BUILD_FLAG_ALLOW_COMPACTION
-#endif
         ;
       accelOptions.motionOptions.numKeys  = 1;
       accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
@@ -280,40 +274,6 @@ namespace owl {
       DeviceMemory tempBuffer;
       tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
 
-#if DO_COMPACTION
-      // buffer for initial, uncompacted bvh
-      DeviceMemory outputBuffer;
-      outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
-
-      // single size-t buffer to store compacted size in
-      DeviceMemory compactedSizeBuffer;
-      compactedSizeBuffer.alloc(sizeof(uint64_t));
-      
-      // ------------------------------------------------------------------
-      // now execute initial, uncompacted build
-      // ------------------------------------------------------------------
-      OptixAccelEmitDesc emitDesc;
-      emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
-      emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
-
-      OPTIX_CHECK(optixAccelBuild(context->optixContext,
-                                  /* todo: stream */0,
-                                  &accelOptions,
-                                  // array of build inputs:
-                                  userGeomInputs.data(),
-                                  (uint32_t)userGeomInputs.size(),
-                                  // buffer of temp memory:
-                                  (CUdeviceptr)tempBuffer.get(),
-                                  tempBuffer.size(),
-                                  // where we store initial, uncomp bvh:
-                                  (CUdeviceptr)outputBuffer.get(),
-                                  outputBuffer.size(),
-                                  /* the traversable we're building: */ 
-                                  &traversable,
-                                  /* we're also querying compacted size: */
-                                  &emitDesc,1u
-                                  ));
-#else
       bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
       OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                   /* todo: stream */0,
@@ -332,11 +292,11 @@ namespace owl {
                                   /* we're also querying compacted size: */
                                   nullptr,0u
                                   ));
-#endif
 
       CUDA_SYNC_CHECK();
 
 #if 0
+      // for debugging only - dumps the BVH to disk
       std::vector<uint8_t> dumpBuffer(outputBuffer.size());
       outputBuffer.download(dumpBuffer.data());
       std::ofstream dump("/tmp/outputBuffer.bin",std::ios::binary);
@@ -348,30 +308,6 @@ namespace owl {
       // ==================================================================
       // perform compaction
       // ==================================================================
-
-#if DO_COMPACTION
-      // download builder's compacted size from device
-      uint64_t compactedSize;
-      compactedSizeBuffer.download(&compactedSize);
-
-      // alloc the buffer...
-      bvhMemory.alloc(compactedSize);
-      // ... and perform compaction
-      OPTIX_CALL(AccelCompact(context->optixContext,
-                              /*TODO: stream:*/0,
-                              // OPTIX_COPY_MODE_COMPACT,
-                              traversable,
-                              (CUdeviceptr)bvhMemory.get(),
-                              bvhMemory.size(),
-                              &traversable));
-      CUDA_SYNC_CHECK();
-      
-      // ==================================================================
-      // aaaaaand .... clean up
-      // ==================================================================
-      outputBuffer.free(); // << the UNcompacted, temporary output buffer
-      compactedSizeBuffer.free();
-#endif
 
       tempBuffer.free();
       context->popActive();
@@ -388,16 +324,16 @@ namespace owl {
         if (userGeom->internalBufferForBoundsProgram.alloced())
           userGeom->internalBufferForBoundsProgram.free();
       }
-      dbgPrintBVHSizes(/*numItems*/sumPrims,
-                       /*boundsArraySize*/sumBoundsMem,
-                       /*tempMemSize*/blasBufferSizes.tempSizeInBytes,
-                       /*initialBVHSize*/blasBufferSizes.outputSizeInBytes,
+      dbgPrintBVHSizes(/*numItems*/
+                       sumPrims,
+                       /*boundsArraySize*/
+                       sumBoundsMem,
+                       /*tempMemSize*/
+                       blasBufferSizes.tempSizeInBytes,
+                       /*initialBVHSize*/
+                       blasBufferSizes.outputSizeInBytes,
                        /*finalBVHSize*/
-#if DO_COMPACTION
-                       compactedSize
-#else
                        0
-#endif
                        );
     }
     

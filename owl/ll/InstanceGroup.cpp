@@ -239,6 +239,7 @@ namespace owl {
       DeviceMemory outputBuffer;
       outputBuffer.alloc(bufferSizes.outputSizeInBytes);
             
+#if DO_COMPACTION
       OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
@@ -253,12 +254,27 @@ namespace owl {
                                   /* the traversable we're building: */ 
                                   &traversable,
                                   /* we're also querying compacted size: */
-#if DO_COMPACTION
                                   &emitDesc,1u
-#else
-                                  nullptr,0u
-#endif
                                   ));
+#else
+
+      OPTIX_CHECK(optixAccelBuild(context->optixContext,
+                                  /* todo: stream */0,
+                                  &accelOptions,
+                                  // array of build inputs:
+                                  &instanceInput,1,
+                                  // buffer of temp memory:
+                                  (CUdeviceptr)tempBuildBuffer.get(),
+                                  tempBuildBuffer.size(),
+                                  // where we store initial, uncomp bvh:
+                                  (CUdeviceptr)outputBuffer.get(),
+                                  outputBuffer.size(),
+                                  /* the traversable we're building: */ 
+                                  &traversable,
+                                  /* we're also querying compacted size: */
+                                  nullptr,0u
+                                  ));
+#endif
       
       CUDA_SYNC_CHECK();
     
