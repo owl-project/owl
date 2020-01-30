@@ -192,10 +192,6 @@ namespace owl {
       // ==================================================================
       accelOptions.buildFlags =
         OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
-#if DO_COMPACTION
-        |
-        OPTIX_BUILD_FLAG_ALLOW_COMPACTION
-#endif
         ;
       accelOptions.motionOptions.numKeys = 1;
       accelOptions.operation             = OPTIX_BUILD_OPERATION_BUILD;
@@ -212,19 +208,6 @@ namespace owl {
                                                ));
     
       // ==================================================================
-      // prepare compaction
-      // ==================================================================
-    
-#if DO_COMPACTION
-      DeviceMemory compactedSizeBuffer;
-      compactedSizeBuffer.alloc(sizeof(uint64_t));
-      
-      OptixAccelEmitDesc emitDesc;
-      emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
-      emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
-#endif
-      
-      // ==================================================================
       // trigger the build ....
       // ==================================================================
       
@@ -239,7 +222,6 @@ namespace owl {
       DeviceMemory outputBuffer;
       outputBuffer.alloc(bufferSizes.outputSizeInBytes);
             
-#if DO_COMPACTION
       OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
@@ -253,59 +235,18 @@ namespace owl {
                                   outputBuffer.size(),
                                   /* the traversable we're building: */ 
                                   &traversable,
-                                  /* we're also querying compacted size: */
-                                  &emitDesc,1u
-                                  ));
-#else
-
-      OPTIX_CHECK(optixAccelBuild(context->optixContext,
-                                  /* todo: stream */0,
-                                  &accelOptions,
-                                  // array of build inputs:
-                                  &instanceInput,1,
-                                  // buffer of temp memory:
-                                  (CUdeviceptr)tempBuildBuffer.get(),
-                                  tempBuildBuffer.size(),
-                                  // where we store initial, uncomp bvh:
-                                  (CUdeviceptr)outputBuffer.get(),
-                                  outputBuffer.size(),
-                                  /* the traversable we're building: */ 
-                                  &traversable,
-                                  /* we're also querying compacted size: */
+                                  /* no compaction for instances: */
                                   nullptr,0u
                                   ));
-#endif
       
       CUDA_SYNC_CHECK();
     
-      // ==================================================================
-      // perform compaction
-      // ==================================================================
-#if DO_COMPACTION
-      uint64_t compactedSize;
-      compactedSizeBuffer.download(&compactedSize);
-      
-      bvhMemory.alloc(compactedSize);
-      OPTIX_CHECK(optixAccelCompact(context->optixContext,
-                                    /*TODO: stream:*/0,
-                                    // OPTIX_COPY_MODE_COMPACT,
-                                    traversable,
-                                    (CUdeviceptr)bvhMemory.get(),
-                                    bvhMemory.size(),
-                                    &traversable));
-      CUDA_SYNC_CHECK();
-      outputBuffer.free(); // << the UNcompacted, temporary output buffer
-#endif
-      
       // ==================================================================
       // aaaaaand .... clean up
       // ==================================================================
       // TODO: move those free's to the destructor, so we can delay the
       // frees until all objects are done
       tempBuildBuffer.free();
-#if DO_COMPACTION
-      compactedSizeBuffer.free();
-#endif      
       context->popActive();
       
       LOG_OK("successfully built instance group accel");
