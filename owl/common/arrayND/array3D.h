@@ -17,39 +17,45 @@
 #pragma once
 
 #include "../math/vec.h"
+#include "owl/common/parallel/parallel_for.h"
 
 namespace owl {
   namespace common {
-    namespace array2D {
+    namespace array3D {
     
-      inline int linear(const vec2i &ID, const vec2i &dims)
-      { return ID.x + dims.x*ID.y; }
+      inline int64_t linear(const vec3i &ID, const vec3i &dims)
+      { return ID.x + dims.x*(ID.y + dims.y*(int64_t)ID.z); }
 
       template<typename Lambda>
-      inline void for_each(const vec2i &dims, const Lambda &lambda)
+      inline void for_each(const vec3i &dims, const Lambda &lambda)
       {
-        for (int iy=0;iy<dims.y;iy++)
-          for (int ix=0;ix<dims.x;ix++)
-            lambda(vec2i(ix,iy));
+        for (int iz=0;iz<dims.z;iz++)
+          for (int iy=0;iy<dims.y;iy++)
+            for (int ix=0;ix<dims.x;ix++)
+              lambda(vec3i(ix,iy,iz));
       }
 
 #if OWL_HAVE_PARALLEL_FOR
       template<typename Lambda>
-      inline void parallel_for(const vec2i &dims, const Lambda &lambda)
+      inline void parallel_for(const vec3i &dims, const Lambda &lambda)
       {
-        owl::common::parallel_for(dims.x*dims.y,[&](int index){
-            lambda(vec2i(index%dims.x,index/dims.x));
+        owl::common::parallel_for(dims.x*(size_t)dims.y*dims.z,[&](size_t index){
+            lambda(vec3i(index%dims.x,
+                         (index/dims.x)%dims.y,
+                         index/((size_t)dims.x*dims.y)));
           });
       }
 #endif
       template<typename Lambda>
-      inline void serial_for(const vec2i &dims, const Lambda &lambda)
+      inline void serial_for(const vec3i &dims, const Lambda &lambda)
       {
-        owl::common::serial_for(dims.x*dims.y,[&](int index){
-            lambda(vec2i(index%dims.x,index/dims.x));
+        owl::common::serial_for(dims.x*size_t(dims.y)*dims.z,[&](size_t index){
+            lambda(vec3i(index%dims.x,
+                         (index/dims.x)%dims.y,
+                         index/((size_t)dims.x*dims.y)));
           });
       }
     
-    } // owl::common::array2D
+    } // owl::common::array3D
   } // owl::common
 } // owl
