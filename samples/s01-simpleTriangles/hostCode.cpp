@@ -22,13 +22,13 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
-#define LOG(message)                                    \
-  std::cout << OWL_TERMINAL_BLUE;                       \
-  std::cout << "#owl.ng.sample(main): " << message << std::endl;  \
+#define LOG(message)                                            \
+  std::cout << OWL_TERMINAL_BLUE;                               \
+  std::cout << "#owl.sample(main): " << message << std::endl;   \
   std::cout << OWL_TERMINAL_DEFAULT;
-#define LOG_OK(message)                                    \
-  std::cout << OWL_TERMINAL_LIGHT_BLUE;                       \
-  std::cout << "#owl.ng.sample(main): " << message << std::endl;  \
+#define LOG_OK(message)                                         \
+  std::cout << OWL_TERMINAL_LIGHT_BLUE;                         \
+  std::cout << "#owl.sample(main): " << message << std::endl;   \
   std::cout << OWL_TERMINAL_DEFAULT;
 
 extern "C" char ptxCode[];
@@ -36,25 +36,25 @@ extern "C" char ptxCode[];
 const int NUM_VERTICES = 8;
 vec3f vertices[NUM_VERTICES] =
   {
-   { -1.f,-1.f,-1.f },
-   { +1.f,-1.f,-1.f },
-   { -1.f,+1.f,-1.f },
-   { +1.f,+1.f,-1.f },
-   { -1.f,-1.f,+1.f },
-   { +1.f,-1.f,+1.f },
-   { -1.f,+1.f,+1.f },
-   { +1.f,+1.f,+1.f }
+    { -1.f,-1.f,-1.f },
+    { +1.f,-1.f,-1.f },
+    { -1.f,+1.f,-1.f },
+    { +1.f,+1.f,-1.f },
+    { -1.f,-1.f,+1.f },
+    { +1.f,-1.f,+1.f },
+    { -1.f,+1.f,+1.f },
+    { +1.f,+1.f,+1.f }
   };
 
 const int NUM_INDICES = 12;
 vec3i indices[NUM_INDICES] =
   {
-   { 0,1,3 }, { 2,3,0 },
-   { 5,7,6 }, { 5,6,4 },
-   { 0,4,5 }, { 0,5,1 },
-   { 2,3,7 }, { 2,7,6 },
-   { 1,5,7 }, { 1,7,3 },
-   { 4,0,2 }, { 4,2,6 }
+    { 0,1,3 }, { 2,3,0 },
+    { 5,7,6 }, { 5,6,4 },
+    { 0,4,5 }, { 0,5,1 },
+    { 2,3,7 }, { 2,7,6 },
+    { 1,5,7 }, { 1,7,3 },
+    { 4,0,2 }, { 4,2,6 }
   };
 
 const char *outFileName = "ng01-simpleTriangles.png";
@@ -136,9 +136,9 @@ int main(int ac, char **av)
   // -------------------------------------------------------
   OWLVarDecl missProgVars[]
     = {
-       { "color0", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color0)},
-       { "color1", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color1)},
-       { /* sentinel to mark end of list */ }
+    { "color0", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color0)},
+    { "color1", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color1)},
+    { /* sentinel to mark end of list */ }
   };
   // ----------- create object  ----------------------------
   OWLMissProg missProg
@@ -182,7 +182,6 @@ int main(int ac, char **av)
   camera_d00 -= 0.5f * camera_ddv;
 
   // ----------- set variables  ----------------------------
-  owlRayGenSet1i    (rayGen,"deviceCount",  owlGetDeviceCount(context));
   owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
   owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
   owlRayGenSetGroup (rayGen,"world",        trianglesGroup);

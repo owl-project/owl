@@ -37,10 +37,9 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
                 + screen.v * self.camera.dir_dv);
 
   vec3f color;
-  owl::trace(/*accel to trace against*/self.world,
-             /*the ray to trace*/ ray,
-             /*numRayTypes*/1,
-             /*prd*/color);
+  owl::traceRay(/*accel to trace against*/self.world,
+                /*the ray to trace*/ray,
+                /*prd*/color);
     
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
