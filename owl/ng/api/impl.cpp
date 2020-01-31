@@ -518,12 +518,10 @@ namespace owl {
     handle->clear();
   }
 
-
-
   OWL_API OWLGeomType
-  owlGeomTypeCreate(OWLContext _context,
+  owlGeomTypeCreate(OWLContext  _context,
                     OWLGeomKind kind,
-                    size_t varStructSize,
+                    size_t      varStructSize,
                     OWLVarDecl *vars,
                     size_t      numVars)
   {
@@ -539,7 +537,7 @@ namespace owl {
   }
   
   OWL_API OWLGeom
-  owlGeomCreate(OWLContext      _context,
+  owlGeomCreate(OWLContext  _context,
                 OWLGeomType _geometryType)
   {
     assert(_geometryType);
@@ -559,10 +557,13 @@ namespace owl {
 
     return (OWLGeom)context->createHandle(geometry);
   }
-
+  
+  /*! set the primitive count for the given uesr geometry. this _has_
+    to be set before the group(s) that this geom is used in get
+    built */
   OWL_API void
   owlGeomSetPrimCount(OWLGeom _geom,
-                           size_t  primCount)
+                      size_t  primCount)
   {
     assert(_geom);
     UserGeom::SP geom = ((APIHandle *)_geom)->get<UserGeom>();
@@ -606,6 +607,12 @@ namespace owl {
   {
     LOG_API_CALL();
     releaseObject<Buffer>((APIHandle*)buffer);
+  }
+  
+  OWL_API void owlModuleRelease(OWLModule module) 
+  {
+    LOG_API_CALL();
+    releaseObject<Module>((APIHandle*)module);
   }
   
   OWL_API void owlGroupRelease(OWLGroup group)

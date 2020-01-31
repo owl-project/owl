@@ -378,6 +378,8 @@ owlGeomTypeSetBoundsProg(OWLGeomType type,
                          OWLModule module,
                          const char *progName);
 
+/*! set the primitive count for the given uesr geometry. this _has_ to
+    be set before the group(s) that this geom is used in get built */
 OWL_API void
 owlGeomSetPrimCount(OWLGeom geom,
                     size_t  primCount);
@@ -388,6 +390,7 @@ owlGeomSetPrimCount(OWLGeom geom,
 // -------------------------------------------------------
 OWL_API void owlGeomRelease(OWLGeom geometry);
 OWL_API void owlVariableRelease(OWLVariable variable);
+OWL_API void owlModuleRelease(OWLModule module);
 OWL_API void owlBufferRelease(OWLBuffer buffer);
 OWL_API void owlRayGenRelease(OWLRayGen rayGen);
 OWL_API void owlGroupRelease(OWLGroup group);

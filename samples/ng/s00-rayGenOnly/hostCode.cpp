@@ -106,6 +106,9 @@ int main(int ac, char **av)
   // ##################################################################
   
   LOG("cleaning up ...");
+  owlModuleRelease(module);
+  owlRayGenRelease(rayGen);
+  owlBufferRelease(frameBuffer);
   owlContextDestroy(owl);
   
   LOG_OK("seems all went ok; app is done, this should be the last output ...");
