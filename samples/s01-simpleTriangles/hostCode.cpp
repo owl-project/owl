@@ -68,7 +68,8 @@ int main(int ac, char **av)
 {
   LOG("owl::ng example '" << av[0] << "' starting up");
 
-  OWLContext context = owlContextCreate();
+  // create a context on the first device:
+  OWLContext context = owlContextCreate(nullptr,1);
   OWLModule module = owlModuleCreate(context,ptxCode);
   
   // ##################################################################
@@ -152,8 +153,6 @@ int main(int ac, char **av)
   // set up ray gen program
   // -------------------------------------------------------
   OWLVarDecl rayGenVars[] = {
-    { "deviceIndex",   OWL_DEVICE, OWL_OFFSETOF(RayGenData,deviceIndex)},
-    { "deviceCount",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceCount)},
     { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
     { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
     { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
