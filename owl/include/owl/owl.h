@@ -74,25 +74,25 @@
 
 /*! enum that specifies the different possible memory layouts for
   passing transformation matrices */
-  typedef enum
-    {
-/*! 4x3-float column-major matrix format, where a matrix is
-  specified through four vec3fs, the first three being the basis
-  vectors of the linear transform, and the fourth one the
-  translation part. This is exactly the same layout as used in
-  owl::common::affine3f (owl/common/math/AffineSpae.h) */
-      OWL_MATRIX_FORMAT_COLUMN_MAJOR=0,
+typedef enum
+  {
+   /*! 4x3-float column-major matrix format, where a matrix is
+     specified through four vec3fs, the first three being the basis
+     vectors of the linear transform, and the fourth one the
+     translation part. This is exactly the same layout as used in
+     owl::common::affine3f (owl/common/math/AffineSpae.h) */
+   OWL_MATRIX_FORMAT_COLUMN_MAJOR=0,
    
-      /*! just another name for OWL_MATRIX_FORMAT_4X3_COLUMN_MAJOR that
-        is easier to type - the "_OWL" indicates that this is the default
-        format in the owl::common namespace */
-      OWL_MATRIX_FORMAT_OWL=OWL_MATRIX_FORMAT_COLUMN_MAJOR,
+   /*! just another name for OWL_MATRIX_FORMAT_4X3_COLUMN_MAJOR that
+     is easier to type - the "_OWL" indicates that this is the default
+     format in the owl::common namespace */
+   OWL_MATRIX_FORMAT_OWL=OWL_MATRIX_FORMAT_COLUMN_MAJOR,
    
-      /*! 3x4-float *row-major* layout as preferred by optix; in this
-        case it doesn't matter if it's a 4x3 or 4x4 matrix, since the
-        last row in a 4x4 row major matrix can simply be ignored */
-      OWL_MATRIX_FORMAT_ROW_MAJOR
-    } OWLMatrixFormat;
+   /*! 3x4-float *row-major* layout as preferred by optix; in this
+     case it doesn't matter if it's a 4x3 or 4x4 matrix, since the
+     last row in a 4x4 row major matrix can simply be ignored */
+   OWL_MATRIX_FORMAT_ROW_MAJOR
+  } OWLMatrixFormat;
 
 typedef enum
   {
@@ -118,7 +118,11 @@ typedef enum
     OWL_BUFPTR=OWL_BUFFER_POINTER,
 
     OWL_GROUP=3000,
-   
+
+    /*! implicit variable of type integer that specifies the *index*
+        of the given device. this variable type is implicit in the
+        sense that it only gets _declared_ on the host, and gets set
+        automatically during SBT creation */
     OWL_DEVICE=4000,
 
     /*! at least for now, use that for buffers with user-defined types:
