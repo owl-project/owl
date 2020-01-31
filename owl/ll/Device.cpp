@@ -1281,7 +1281,9 @@ namespace owl {
         // any rays. If the latter, let's "fake" a valid SBT by
         // writing in some (senseless) values to not trigger optix's
         // own sanity checks
+#ifndef NDEBUG
         static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+#endif
         localSBT.missRecordBase
           = (CUdeviceptr)32;
         localSBT.missRecordStrideInBytes
