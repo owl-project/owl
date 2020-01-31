@@ -139,9 +139,21 @@ namespace owl {
       inline __both__ vec_t(const T &t) : x(t), y(t), z(t) {}
       inline __both__ vec_t(const T &_x, const T &_y, const T &_z) : x(_x), y(_y), z(_z) {}
 #ifdef __CUDACC__
-      inline __both__ vec_t(const int3 &v) : x(v.x), y(v.y), z(v.z) {}
-      inline __both__ vec_t(const uint3 &v) : x(v.x), y(v.y), z(v.z) {}
+      inline __both__ vec_t(const int3 &v)   : x(v.x), y(v.y), z(v.z) {}
+      inline __both__ vec_t(const uint3 &v)  : x(v.x), y(v.y), z(v.z) {}
       inline __both__ vec_t(const float3 &v) : x(v.x), y(v.y), z(v.z) {}
+      /*! initialize from a float4 - use an actual copy rather than
+          const-ref here to force nvcc to actually do the full float4
+          load if tihs is from memory */
+      inline __both__ vec_t(const float4 v)  : x(v.x), y(v.y), z(v.z) {}
+      /*! initialize from a int4 - use an actual copy rather than
+          const-ref here to force nvcc to actually do the full float4
+          load if tihs is from memory */
+      inline __both__ vec_t(const int4 v)  : x(v.x), y(v.y), z(v.z) {}
+      /*! initialize from a uint4 - use an actual copy rather than
+          const-ref here to force nvcc to actually do the full float4
+          load if tihs is from memory */
+      inline __both__ vec_t(const uint4 v)  : x(v.x), y(v.y), z(v.z) {}
       inline __both__ operator float3() const { return make_float3(x,y,z); }
       inline __both__ operator int3() const { return make_int3(x,y,z); }
       inline __both__ operator uint3() const { return make_uint3(x,y,z); }
@@ -180,15 +192,32 @@ namespace owl {
     // vec3a
     // ------------------------------------------------------------------
     template<typename T>
-    struct OWL_INTERFACE vec3a_t : public vec_t<T,3> {
+    struct OWL_INTERFACE OWL_ALIGN(16) vec3a_t : public vec_t<T,3> {
       inline vec3a_t() {}
       inline vec3a_t(const T &t) : vec_t<T,3>(t) {}
       inline vec3a_t(const T &x, const T &y, const T &z) : vec_t<T,3>(x,y,z) {}
+#ifdef __CUDACC__
+      
+      inline __both__ vec3a_t(const int3 &v) : vec3_t<T,3>(v) {};
+      inline __both__ vec3a_t(const uint3 &v) : vec3_t<T,3>(v) {};
+      inline __both__ vec3a_t(const float3 &v) : vec3_t<T,3>(v) {};
+      inline __both__ vec3a_t(const int4 v) : vec3_t<T,3>(v) {};
+      inline __both__ vec3a_t(const uint4 v) : vec3_t<T,3>(v) {};
+      inline __both__ vec3a_t(const float4 v) : vec3_t<T,3>(v) {};
+      
+      inline __both__ operator float3() const { return make_float3(x,y,z); }
+      inline __both__ operator int3() const { return make_int3(x,y,z); }
+      inline __both__ operator uint3() const { return make_uint3(x,y,z); }
+      inline __both__ operator float4() const { return make_float4(x,y,z,T(0)); }
+      inline __both__ operator int4() const { return make_int4(x,y,z,T(0)); }
+      inline __both__ operator uint4() const { return make_uint4(x,y,z,T(0)); }
+#endif
 
       template<typename OT>
         inline vec3a_t(const vec_t<OT,3> &v) : vec_t<T,3>(v.x,v.y,v.z) {}
     
       T a;
+      // add one elemnet for 'forced' alignment
     };
   
     // ------------------------------------------------------------------
@@ -218,7 +247,11 @@ namespace owl {
       inline __both__ vec_t(const int4 &v)
         : x(v.x), y(v.y), z(v.z), w(v.w)
         {}
+      inline __both__ vec_t(const uint4 &v)
+        : x(v.x), y(v.y), z(v.z), w(v.w)
+        {}
       inline __both__ operator float4() const { return make_float4(x,y,z,w); }
+      inline __both__ operator uint4()  const { return make_uint4(x,y,z,w); }
       inline __both__ operator int4()   const { return make_int4(x,y,z,w); }
 #endif
       /*! construct 3-vector from 3-vector of another type */
