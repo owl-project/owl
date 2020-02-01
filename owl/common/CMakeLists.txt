@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -20,12 +20,14 @@ add_library(owl-common STATIC
 
   owl-common.cpp
   
-  owl-common.h
-  math/vec.h
-  math/box.h
-  math/LinearSpace.h
-  math/AffineSpace.h
+  ../include/owl/common/owl-common.h
+  ../include/owl/common/math/vec.h
+  ../include/owl/common/math/box.h
+  ../include/owl/common/math/LinearSpace.h
+  ../include/owl/common/math/AffineSpace.h
 
+  parallel/parallel_for.h
+  
   cmake/configure_optix.cmake
   cmake/configure_cuda.cmake
   cmake/configure_build_type.cmake

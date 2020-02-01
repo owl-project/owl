@@ -17,8 +17,6 @@
 /*! \file include/owl/ll.h Implements the dynamically linkable "C-API"
  *  for the low-level owl::ll abstraction layer */
 
-// public API:
-#include "../include/owl/ll.h"
 // internal C++ classes that implement this API
 #include "owl/ll/DeviceGroup.h"
 

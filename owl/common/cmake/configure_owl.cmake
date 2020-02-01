@@ -18,11 +18,11 @@
 #
 # OWL_INCLUDES - list of directories required to compile progs using owl
 #
-# OWL_LL_LIBRARIES - list of library names required to build apps
-# using (only) the ll layer
-#
-# OWL_NG_LIBRARIES - list of library names required to build apps
-# using the node graph layer
+# OWL_LIBRARIES - list of libraries to link against when building owl programs
+
+if (NOT WIN32)
+  include(configure_tbb)
+endif()
 
 set(OWL_INCLUDES
   # owl needs cuda:
@@ -34,15 +34,9 @@ set(OWL_INCLUDES
   # device API and common currently still include non-public header files
   ${owl_dir}/
   )
-set(OWL_LL_LIBRARIES
-  llowl_static
-  )
-set(OWL_NG_LIBRARIES
-  llowl_static
-  owl_ng_static
-  )
-# if in doubt, use both:
 set(OWL_LIBRARIES
-  ${OWL_LL_LIBRARIES}
-  ${OWL_NG_LIBRARIES}
+  owl_static
   )
+if (TBB_FOUND)
+  set(OWL_LIBRARIES ${OWL_LIBRARIES} tbb)
+endif()

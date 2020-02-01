@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2019 Ingo Wald                                            //
+// Copyright 2018-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,7 +16,8 @@
 
 #pragma once
 
-#include "owl/common/math/AffineSpace.h"
+#include <owl/owl.h>
+#include <owl/common/math/AffineSpace.h>
 #include <vector>
 
 /*! \namespace osc - Optix Siggraph Course */

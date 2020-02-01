@@ -16,7 +16,8 @@
 
 #pragma once
 
-#include "owl/owl.h"
+#include <owl/owl.h>
+
 // common std stuff
 #include <vector>
 #include <assert.h>

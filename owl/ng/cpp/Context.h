@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -23,7 +23,7 @@
 #include "LaunchParams.h"
 #include "MissProg.h"
 // ll
-#include "owl/ll.h"
+#include "../ll/Device.h"
 
 namespace owl {
 
@@ -56,7 +56,28 @@ namespace owl {
     size_t numRayTypes = 1;
 
     void setRayTypeCount(size_t rayTypeCount);
-    /*! experimentation code for sbt construction */
+
+    /*! sets maximum instancing depth for the given context:
+
+      '0' means 'no instancing allowed, only bottom-level accels; 
+  
+      '1' means 'at most one layer of instances' (ie, a two-level scene),
+      where the 'root' world rays are traced against can be an instance
+      group, but every child in that inscne group is a geometry group.
+
+      'N>1" means "up to N layers of instances are allowed.
+
+      The default instancing depth is 1 (ie, a two-level scene), since
+      this allows for most use cases of instancing and is still
+      hardware-accelerated. Using a node graph with instancing deeper than
+      the configured value will result in wrong results; but be aware that
+      using any value > 1 here will come with a cost. It is recommended
+      to, if at all possible, leave this value to one and convert the
+      input scene to a two-level scene layout (ie, with only one level of
+      instances) */
+    void setMaxInstancingDepth(int32_t maxInstanceDepth);
+
+  /*! experimentation code for sbt construction */
     void buildSBT();
     void buildPipeline();
     void buildPrograms();

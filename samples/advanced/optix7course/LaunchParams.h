@@ -17,8 +17,6 @@
 #pragma once
 
 #include "Model.h"
-//#include "owl/owl.h"
-//#include "owl/common/math/vec.h"
 #include "optix7.h"
 
 namespace osc {

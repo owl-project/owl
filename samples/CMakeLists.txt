@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,21 +14,32 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+include(configure_owl)
+
 include_directories(${PROJECT_SOURCE_DIR}/)
 # for STB image read/write
 include_directories(${PROJECT_SOURCE_DIR}/owl/common/3rdParty)
 # public API:
-include_directories(${PROJECT_SOURCE_DIR}/owl/include/)
+include_directories(${OWL_INCLUDES})
 
-# low-level interface
-add_subdirectory(ll)
+# ---------------------------------------------------------------------------
+# the default "tutorial-style" samples that intoduce, step by step,
+# individual capabililies like creating a raygen (s00), creating a
+# triangle mesh (s01), ... instancing (s08), etc.
+# ---------------------------------------------------------------------------
+file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
 
-# node graph layer
-add_subdirectory(ng)
+foreach(sample ${samples})
+  add_subdirectory(${sample})
+endforeach()
 
-
+# ---------------------------------------------------------------------------
+# a more serious kind of example with model loader, viewer, simple
+# path tracer, etc
+# ---------------------------------------------------------------------------
 option(BUILD_EX_OPTIX7COURSE "Build Siggraph 2018 Optix Course Version" OFF)
 if (BUILD_EX_OPTIX7COURSE)
   add_subdirectory(advanced/optix7course)
 endif()
+
 

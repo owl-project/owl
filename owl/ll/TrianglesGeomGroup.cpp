@@ -15,6 +15,7 @@
 // ======================================================================== //
 
 #include "Device.h"
+#include <fstream>
 
 #define LOG(message)                                            \
   if (Context::logging()) \
@@ -214,7 +215,7 @@ namespace owl {
                                   (uint32_t)triangleInputs.size(),
                                   // buffer of temp memory:
                                   (CUdeviceptr)tempBuffer.get(),
-                                  (uint32_t)tempBuffer.size(),
+                                  tempBuffer.size(),
                                   // where we store initial, uncomp bvh:
                                   (CUdeviceptr)outputBuffer.get(),
                                   outputBuffer.size(),
@@ -244,6 +245,14 @@ namespace owl {
                               bvhMemory.size(),
                               &traversable));
       CUDA_SYNC_CHECK();
+
+#if 0
+      std::vector<uint8_t> dumpBuffer(bvhMemory.size());
+      bvhMemory.download(dumpBuffer.data());
+      std::ofstream dump("/tmp/bvhMemory.bin",std::ios::binary);
+      dump.write((char*)dumpBuffer.data(),dumpBuffer.size());
+      PRINT(dumpBuffer.size());
+#endif
       
       // ==================================================================
       // aaaaaand .... clean up

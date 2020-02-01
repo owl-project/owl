@@ -16,9 +16,8 @@
 
 #include "SampleRenderer.h"
 #include "LaunchParams.h"
-// this include may only appear in a single source file:
-#include <optix_function_table_definition.h>
 #include <string.h>
+#include <fstream>
 
 /*! \namespace osc - Optix Siggraph Course */
 namespace osc {
@@ -169,7 +168,18 @@ namespace osc {
     for (int meshID=0;meshID<numMeshes;meshID++) {
       // upload the model to the device: the builder
       TriangleMesh &mesh = *model->meshes[meshID];
-      
+
+// #if 0
+//       char fileName[1000];
+//       sprintf(fileName,"repro_%03i.obj",meshID);
+//       std::ofstream out(fileName);
+//       for (auto v : mesh.vertex)
+//         out << "v " << v.x << " "  << v.y << " "  << v.z << std::endl;
+//       for (auto idx : mesh.index) {
+//         vec3i v = idx+1;
+//         out << "f " << v.x << " "  << v.y << " "  << v.z << std::endl;
+//       }
+// #endif
       OWLBuffer vertexBuffer 
         = owlDeviceBufferCreate(context,OWL_FLOAT3,mesh.vertex.size(),
                                 mesh.vertex.data());
@@ -211,9 +221,18 @@ namespace osc {
       }
       geoms.push_back(geom);
     }
-    
+
+#if 0
+    OWLGroup triGroup = owlTrianglesGeomGroupCreate(context,geoms.size(),geoms.data());
+    owlGroupBuildAccel(triGroup);
+
+    world = owlInstanceGroupCreate(context,1);
+    owlInstanceGroupSetChild(world,0,triGroup);
+    owlGroupBuildAccel(world);
+#else
     world = owlTrianglesGeomGroupCreate(context,geoms.size(),geoms.data());
     owlGroupBuildAccel(world);
+#endif
     owlLaunchParamsSetGroup(launchParams,"world",world);
   }
   

@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -15,7 +15,7 @@
 # ======================================================================== #
 
 cmake_policy(SET CMP0048 NEW)
-project(Optix-OWL VERSION 0.6.1)
+project(Optix-OWL VERSION 0.7.0)
 
 cmake_minimum_required(VERSION 2.8)
 # iw, 1/3/20: yes, i know this is 'old' cmake style, but on CentOS7
@@ -23,6 +23,10 @@ cmake_minimum_required(VERSION 2.8)
 # the cxx11 standard doesnt propagate those flags to nvcc for the cuda
 # programs. TODO: check to see if this can be fixed in the
 # configure_cuda script instead.
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 if (NOT WIN32)
 set (CMAKE_CXX_FLAGS "--std=c++11")
 set (CUDA_PROPAGATE_HOST_FLAGS ON)
@@ -33,17 +37,14 @@ endif()
 # (build modes, glut, optix, etc)
 # ------------------------------------------------------------------
 set(owl_dir ${PROJECT_SOURCE_DIR})
-set(owl_common_dir ${owl_dir}/owl/common/)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_common_dir}/cmake/")
+include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/common/cmake/")
 
 include(configure_cuda)
 include(configure_optix)
-#include(configure_tbb)
 include(configure_build_type)
-
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 enable_testing()
 
@@ -57,4 +58,9 @@ add_subdirectory(owl)
 # tutorial/samples
 # ------------------------------------------------------------------
 add_subdirectory(samples)
+
+# ------------------------------------------------------------------
+# some basic testing
+# ------------------------------------------------------------------
+add_subdirectory(tests)
 

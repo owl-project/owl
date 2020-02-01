@@ -17,6 +17,9 @@
 #include "Device.h"
 #include <optix_function_table_definition.h>
 
+// to make C99 compilers happy:
+extern inline OptixResult optixInit( void** handlePtr );
+
 #define LOG(message)                                            \
   if (Context::logging()) \
   std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
@@ -539,7 +542,7 @@ namespace owl {
         };
         rc = cuModuleLoadDataEx(&module.boundsModule, (void *)fixedPtxCode.c_str(),
                                 3, options, optionValues);
-        if (rc = CUDA_SUCCESS) {
+        if (rc != CUDA_SUCCESS) {
           const char *errName = 0;
           cuGetErrorName(rc,&errName);
           PRINT(errName);
@@ -1278,7 +1281,9 @@ namespace owl {
         // any rays. If the latter, let's "fake" a valid SBT by
         // writing in some (senseless) values to not trigger optix's
         // own sanity checks
+#ifndef NDEBUG
         static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+#endif
         localSBT.missRecordBase
           = (CUdeviceptr)32;
         localSBT.missRecordStrideInBytes

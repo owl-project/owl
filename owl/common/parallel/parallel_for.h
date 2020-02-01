@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "../owl-common.h"
+#include <owl/common/owl-common.h>
 // std
 #include <mutex>
 // tbb

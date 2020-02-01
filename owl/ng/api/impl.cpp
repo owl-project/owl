@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,9 +14,9 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#include <owl/owl.h>
 #include "APIContext.h"
 #include "APIHandle.h"
-#include "owl/ll/Device.h"
 
 namespace owl {
 
@@ -53,7 +53,7 @@ namespace owl {
     return (OWLContext)context->createHandle(context);
   }
 
-/*! set number of ray types to be used in this context; this should be
+  /*! set number of ray types to be used in this context; this should be
     done before any programs, pipelines, geometries, etc get
     created */
   OWL_API void
@@ -68,6 +68,37 @@ namespace owl {
     context->setRayTypeCount(numRayTypes);
   }
 
+
+  /*! sets maximum instancing depth for the given context:
+
+    '0' means 'no instancing allowed, only bottom-level accels; 
+  
+    '1' means 'at most one layer of instances' (ie, a two-level scene),
+    where the 'root' world rays are traced against can be an instance
+    group, but every child in that inscne group is a geometry group.
+
+    'N>1" means "up to N layers of instances are allowed.
+
+    The default instancing depth is 1 (ie, a two-level scene), since
+    this allows for most use cases of instancing and is still
+    hardware-accelerated. Using a node graph with instancing deeper than
+    the configured value will result in wrong results; but be aware that
+    using any value > 1 here will come with a cost. It is recommended
+    to, if at all possible, leave this value to one and convert the
+    input scene to a two-level scene layout (ie, with only one level of
+    instances) */
+  OWL_API void
+  owlSetMaxInstancingDepth(OWLContext _context,
+                           int32_t maxInstanceDepth)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    context->setMaxInstancingDepth(maxInstanceDepth);
+  }
+  
   
   OWL_API void owlBuildSBT(OWLContext _context)
   {
@@ -487,12 +518,10 @@ namespace owl {
     handle->clear();
   }
 
-
-
   OWL_API OWLGeomType
-  owlGeomTypeCreate(OWLContext _context,
+  owlGeomTypeCreate(OWLContext  _context,
                     OWLGeomKind kind,
-                    size_t varStructSize,
+                    size_t      varStructSize,
                     OWLVarDecl *vars,
                     size_t      numVars)
   {
@@ -508,7 +537,7 @@ namespace owl {
   }
   
   OWL_API OWLGeom
-  owlGeomCreate(OWLContext      _context,
+  owlGeomCreate(OWLContext  _context,
                 OWLGeomType _geometryType)
   {
     assert(_geometryType);
@@ -528,10 +557,13 @@ namespace owl {
 
     return (OWLGeom)context->createHandle(geometry);
   }
-
+  
+  /*! set the primitive count for the given uesr geometry. this _has_
+    to be set before the group(s) that this geom is used in get
+    built */
   OWL_API void
   owlGeomSetPrimCount(OWLGeom _geom,
-                           size_t  primCount)
+                      size_t  primCount)
   {
     assert(_geom);
     UserGeom::SP geom = ((APIHandle *)_geom)->get<UserGeom>();
@@ -575,6 +607,12 @@ namespace owl {
   {
     LOG_API_CALL();
     releaseObject<Buffer>((APIHandle*)buffer);
+  }
+  
+  OWL_API void owlModuleRelease(OWLModule module) 
+  {
+    LOG_API_CALL();
+    releaseObject<Module>((APIHandle*)module);
   }
   
   OWL_API void owlGroupRelease(OWLGroup group)
