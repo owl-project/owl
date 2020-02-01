@@ -36,20 +36,6 @@ inline __device__ void boundsProg(const void *geomData,
   primBounds = box3f()
     .extend(sphere.center - sphere.radius)
     .extend(sphere.center + sphere.radius);
-
-  // printf("boudns %i :  %f %f %f bounds %f %f %f - %f %f %f\n",
-  //        primID,
-  //        sphere.center.x,
-  //        sphere.center.y,
-  //        sphere.center.z,
-  //        primBounds.lower.x,
-  //        primBounds.lower.y,
-  //        primBounds.lower.z,
-  //        primBounds.upper.x,
-  //        primBounds.upper.y,
-  //        primBounds.upper.z
-  //        );
-  
 }
 
 OPTIX_BOUNDS_PROGRAM(LambertianSpheres)(const void  *geomData,

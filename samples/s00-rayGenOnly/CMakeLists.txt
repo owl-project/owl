@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -18,13 +18,13 @@ include_directories(${PROJECT_SOURCE_DIR}/owl)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(ng00-rayGenOnly
+add_executable(sample00-rayGenOnly
   hostCode.cpp
   ${ptxCode}
   )
-target_link_libraries(ng00-rayGenOnly
-  owl_ng
+target_link_libraries(sample00-rayGenOnly
+  ${OWL_LIBRARIES}
   )
-add_test(ng00-rayGenOnly ${CMAKE_BINARY_DIR}/ng00-rayGenOnly)
+add_test(sample00-rayGenOnly ${CMAKE_BINARY_DIR}/sample00-rayGenOnly)
 
 

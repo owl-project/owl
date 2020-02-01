@@ -102,7 +102,7 @@ int main(int ac, char **av)
   // init owl
   // ##################################################################
 
-  OWLContext context = owlContextCreate();
+  OWLContext context = owlContextCreate(nullptr,1);
   OWLModule  module  = owlModuleCreate(context,ptxCode);
   
   // ##################################################################
@@ -239,8 +239,6 @@ int main(int ac, char **av)
   // set up ray gen program
   // -------------------------------------------------------
   OWLVarDecl rayGenVars[] = {
-    { "deviceIndex",   OWL_DEVICE, OWL_OFFSETOF(RayGenData,deviceIndex)},
-    { "deviceCount",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceCount)},
     { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
     { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
     { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},

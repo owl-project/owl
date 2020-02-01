@@ -19,7 +19,7 @@
 
 using namespace owl;
 
-#define NUM_SAMPLES_PER_PIXEL 128
+#define NUM_SAMPLES_PER_PIXEL 16
 
 // ----------- "triangle+material" -----------
 template<typename LambertianTriangleMesh>
@@ -114,13 +114,7 @@ OPTIX_RAYGEN_PROGRAM(renderFrame)()
   const RayGenData &self = owl::getProgramData<RayGenData>();
   const vec2i pixelID = owl::getLaunchIndex();
   
-  if (pixelID.x >= self.fbSize.x) return;
-  if (pixelID.y >= self.fbSize.y) return;
   const int pixelIdx = pixelID.x+self.fbSize.x*(self.fbSize.y-1-pixelID.y);
-
-  // for multi-gpu: only render every deviceCount'th column of 32 pixels:
-  if (((pixelID.x/32) % self.deviceCount) != self.deviceIndex)
-    return;
 
   PerRayData prd;
   prd.random.init(pixelID.x,pixelID.y);

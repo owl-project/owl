@@ -41,26 +41,26 @@ set(OWL_NG_SOURCES
   cpp/Variable.cpp
 )
 
-add_library(owl_ng
+add_library(owl
 ${OWL_NG_SOURCES}
   )
-add_library(owl_ng_static STATIC
+add_library(owl_static STATIC
 ${OWL_NG_SOURCES}
   )
 
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
-target_link_libraries(owl_ng
-  llowl
+target_link_libraries(owl
+  llowl_static
   )
 
-target_link_libraries(owl_ng_static
+target_link_libraries(owl_static
   llowl_static
   )
 
 
-set_target_properties(owl_ng PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties(owl_ng_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 
 

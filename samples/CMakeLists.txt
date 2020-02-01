@@ -14,11 +14,13 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+include(configure_owl)
+
 include_directories(${PROJECT_SOURCE_DIR}/)
 # for STB image read/write
 include_directories(${PROJECT_SOURCE_DIR}/owl/common/3rdParty)
 # public API:
-include_directories(${PROJECT_SOURCE_DIR}/owl/include/)
+include_directories(${OWL_INCLUDES})
 
 # ---------------------------------------------------------------------------
 # the default "tutorial-style" samples that intoduce, step by step,

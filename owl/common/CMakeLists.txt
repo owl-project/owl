@@ -20,12 +20,14 @@ add_library(owl-common STATIC
 
   owl-common.cpp
   
-  owl-common.h
-  math/vec.h
-  math/box.h
-  math/LinearSpace.h
-  math/AffineSpace.h
+  ../include/owl/types/common.h
+  ../include/owl/types/vec.h
+  ../include/owl/types/box.h
+  ../include/owl/types/LinearSpace.h
+  ../include/owl/types/AffineSpace.h
 
+  parallel/parallel_for.h
+  
   cmake/configure_optix.cmake
   cmake/configure_cuda.cmake
   cmake/configure_build_type.cmake

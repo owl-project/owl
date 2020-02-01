@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -35,13 +35,13 @@ enable_c_compiler_flag_if_supported("-pedantic")
 
 
 
-include_directories(${PROJECT_SOURCE_DIR}/owl)
+include_directories(${OWL_INCLUDES})
 add_executable(test00-c99-compliant-header
   hostCode.c
   )
 set_property(TARGET test00-c99-compliant-header PROPERTY C_STANDARD 99)
 target_link_libraries(test00-c99-compliant-header
-  owl_ng
+  ${OWL_LIBRARIES}
   )
 add_test(test00-c99-compliant-header ${CMAKE_BINARY_DIR}/test00-c99-compliant-header)
 

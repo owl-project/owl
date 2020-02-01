@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -18,13 +18,13 @@ include_directories(${PROJECT_SOURCE_DIR}/owl)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(ng08-sierpinski
+add_executable(sample08-sierpinski
   hostCode.cpp
   ${ptxCode}
   )
-target_link_libraries(ng08-sierpinski
-  owl_ng
+target_link_libraries(sample08-sierpinski
+  ${OWL_LIBRARIES}
   )
-add_test(ng08-sierpinski ${CMAKE_BINARY_DIR}/ng08-sierpinski)
+add_test(sample08-sierpinski ${CMAKE_BINARY_DIR}/sample08-sierpinski)
 
 

@@ -14,7 +14,10 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/llowl.h"
+#pragma once
+
+#include <owl/owl.h>
+#include <owl/types/vec.h>
 
 using namespace owl;
 

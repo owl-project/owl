@@ -51,7 +51,7 @@ int main(int ac, char **av)
   LOG("building module, programs, and pipeline");
 
   OWLContext owl
-    = owlContextCreate();
+    = owlContextCreate(nullptr,1);
   OWLModule module
     = owlModuleCreate(owl,ptxCode);
 

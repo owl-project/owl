@@ -16,7 +16,8 @@
 
 #pragma once
 
-#include "owl/common/math/AffineSpace.h"
+#include <owl/owl.h>
+#include <owl/types/AffineSpace.h>
 #include <vector>
 
 /*! \namespace osc - Optix Siggraph Course */

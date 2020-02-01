@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -20,16 +20,16 @@ cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
 
-add_executable(ng05-rtow
+add_executable(sample05-rtow
   hostCode.cpp
   ${ptxCode}
   )
 
-target_link_libraries(ng05-rtow
-  owl_ng
+target_link_libraries(sample05-rtow
+  ${OWL_LIBRARIES}
   )
 
-add_test(ng05-rtow
-  ${CMAKE_BINARY_DIR}/ng05-rtow)
+add_test(sample05-rtow
+  ${CMAKE_BINARY_DIR}/sample05-rtow)
 
 

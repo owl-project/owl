@@ -20,10 +20,9 @@
 
 #pragma once
 
-// device-safe parts of owl
-#include "owl/common/math/vec.h"
-#include "owl/common/math/box.h"
-#include "owl/common/math/AffineSpace.h"
+#include <owl/types/vec.h>
+#include <owl/types/box.h>
+#include <owl/types/AffineSpace.h>
 
 #include <string.h>
 #include <set>

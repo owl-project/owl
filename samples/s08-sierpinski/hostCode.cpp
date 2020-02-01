@@ -21,6 +21,7 @@
 // external helper stuff for image output
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
+#include <vector>
 
 #define LOG(message)                                            \
   std::cout << OWL_TERMINAL_BLUE;                               \
@@ -77,7 +78,7 @@ int main(int ac, char **av)
   // ##################################################################
   
   OWLContext owl
-    = owlContextCreate();
+    = owlContextCreate(nullptr,1);
   owlSetMaxInstancingDepth(owl,numLevels-1);
   
   OWLModule module
@@ -101,8 +102,6 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   OWLVarDecl rayGenVars[]
     = {
-       { "deviceIndex",   OWL_DEVICE, OWL_OFFSETOF(RayGenData,deviceIndex) },
-       { "deviceCount",   OWL_INT,    OWL_OFFSETOF(RayGenData,deviceCount) },
        { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr) },
        { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize) },
        { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world) },
@@ -210,7 +209,6 @@ int main(int ac, char **av)
   owlRayGenSetGroup(rayGen,"world",world);
   owlRayGenSetBuffer(rayGen,"fbPtr",frameBuffer);
   owlRayGenSet2i(rayGen,"fbSize",fbSize.x,fbSize.y);
-  owlRayGenSet1i(rayGen,"deviceCount",owlGetDeviceCount(owl));
 
   // compute camera frame:
   const float vfov = fovy;

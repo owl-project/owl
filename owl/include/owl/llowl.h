@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -15,7 +15,8 @@
 // ======================================================================== //
 
 /*! \file include/owl/ll.h Defines the dynamically linkable "C-API"
- *  for the low-level owl::ll abstraction layer */
+ *  for the low-level owl::ll abstraction layer - most users should
+ *  use owl.h / owl_host.h instead */
 
 #pragma once
 

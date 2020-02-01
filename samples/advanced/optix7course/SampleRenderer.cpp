@@ -16,8 +16,6 @@
 
 #include "SampleRenderer.h"
 #include "LaunchParams.h"
-// this include may only appear in a single source file:
-#include <optix_function_table_definition.h>
 #include <string.h>
 #include <fstream>
 

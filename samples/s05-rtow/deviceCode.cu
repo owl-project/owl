@@ -183,15 +183,6 @@ OPTIX_MISS_PROGRAM(miss)()
 {
   PerRayData &prd = owl::getPRD<PerRayData>();
   prd.out.scatterEvent = rayDidntHitAnything;
-  // const vec2i pixelID = owl::getLaunchIndex();
-
-  // const MissProgData &self = owl::getProgramData<MissProgData>();
-
-  // const vec3f unit_direction = normalize((vec3f)optixGetWorldRayDirection());
-  // const float t = 0.5f*(unit_direction.y + 1.0f);
-  // const vec3f c = (1.0f - t)*vec3f(1.0f, 1.0f, 1.0f) + t * vec3f(0.5f, 0.7f, 1.0f);
-  // vec3f &prd = owl::getPRD<vec3f>();
-  // prd = c;
 }
 
 
@@ -234,14 +225,8 @@ OPTIX_RAYGEN_PROGRAM(rayGen)()
   const RayGenData &self = owl::getProgramData<RayGenData>();
   const vec2i pixelID = owl::getLaunchIndex();
   
-  if (pixelID.x >= self.fbSize.x) return;
-  if (pixelID.y >= self.fbSize.y) return;
-  const int pixelIdx = pixelID.x+self.fbSize.x*(self.fbSize.y-1-pixelID.y);
+  const int pixelIdx  = pixelID.x+self.fbSize.x*(self.fbSize.y-1-pixelID.y);
 
-  // for multi-gpu: only render every deviceCount'th column of 32 pixels:
-  if (((pixelID.x/32) % self.deviceCount) != self.deviceIndex)
-    return;
-  
   PerRayData prd;
   prd.random.init(pixelID.x,pixelID.y);
   

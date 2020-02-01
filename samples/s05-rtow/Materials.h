@@ -16,8 +16,9 @@
 
 #pragma once
 
-#include "ll/llowl.h"
-#include "owl/common/math/random.h"
+#include <owl/owl.h>
+#include <owl/types/AffineSpace.h>
+#include "owl/common/random.h"
 
 using namespace owl;
 

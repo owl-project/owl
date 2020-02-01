@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,9 +14,9 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#include <owl/owl.h>
 #include "APIContext.h"
 #include "APIHandle.h"
-#include "owl/ll/Device.h"
 
 namespace owl {
 

@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -26,7 +26,7 @@ add_executable(test01-manySpheres
   )
 
 target_link_libraries(test01-manySpheres
-  owl_ng
+  ${OWL_LIBRARIES}
   )
 
 

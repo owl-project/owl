@@ -14,7 +14,6 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ll/llowl.h"
 #include "../s05-rtow/Materials.h"
 
 using namespace owl;
@@ -30,8 +29,6 @@ struct LambertianTriangleMesh {
 
 struct RayGenData
 {
-  int deviceIndex;
-  int deviceCount;
   uint32_t *fbPtr;
   vec2i     fbSize;
   OptixTraversableHandle world;

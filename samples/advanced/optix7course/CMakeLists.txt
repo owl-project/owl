@@ -16,6 +16,8 @@
 
 find_package(OpenGL REQUIRED)
 
+include(configure_owl)
+
 cuda_compile_and_embed(embedded_ptx_code devicePrograms.cu)
 
 cuda_add_library(toneMap STATIC
@@ -43,5 +45,5 @@ target_link_libraries(adv_optix7course
   glfWindow
   glfw
   ${OPENGL_gl_LIBRARY}
-  owl_ng
+  ${OWL_LIBRARIES}
   )

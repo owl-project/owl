@@ -66,8 +66,6 @@ namespace owl {
   // ==================================================================
   struct RayGenData
   {
-    int deviceIndex;
-    int deviceCount;
     uint32_t *fbPtr;
     vec2i  fbSize;
     OptixTraversableHandle world;

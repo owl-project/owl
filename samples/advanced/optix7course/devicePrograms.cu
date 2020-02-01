@@ -18,8 +18,7 @@
 #include <cuda_runtime.h>
 
 #include "LaunchParams.h"
-#include "owl/common/math/random.h"
-#include "owl/ll/deviceAPI.h"
+#include "owl/common/random.h"
 
 using namespace osc;
 
