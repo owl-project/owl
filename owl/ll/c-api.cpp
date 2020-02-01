@@ -246,11 +246,11 @@ namespace owl {
         });
     }
 
-    /*! set bounding box program for given geometry type, using a
-      bounding box program to be called on the device. note that
+    /*! Set bounding box program for given geometry type, using a
+      bounding box program to be called on the device. Note that
       unlike other programs (intersect, closesthit, anyhit) these
       programs are not 'per ray type', but exist only once per
-      geometry type. obviously only allowed for user geometry
+      geometry type. Obviously only allowed for user geometry
       typed. */
     OWL_LL_INTERFACE
     LLOResult lloGeomTypeBoundsProgDevice(LLOContext llo,
@@ -277,7 +277,7 @@ namespace owl {
                                      /*! ID of the geometry *type* to
                                        use for this geometry (this is
                                        what defines the SBT data size,
-                                       closest hit program, etc */
+                                       closest hit program, etc.) */
                                      int32_t    geomTypeID)
     {
       return squashExceptions
@@ -294,7 +294,7 @@ namespace owl {
                                 /*! ID of the geometry *type* to
                                   use for this geometry (this is
                                   what defines the SBT data size,
-                                  closest hit program, etc */
+                                  closest hit program, etc.) */
                                 int32_t    geomTypeID,
                                 size_t     numPrims)
     {
@@ -421,12 +421,12 @@ namespace owl {
         });
     }
 
-    /*! set a buffer of bounding boxes that this user geometry will
-      use when building the accel structure. this is one of multiple
-      ways of specifying the bounding boxes for a user gometry (the
+    /*! Set a buffer of bounding boxes that this user geometry will
+      use when building the accel structure. This is one of multiple
+      ways of specifying the bounding boxes for a user geometry (the
       other two being a) setting the geometry type's boundsFunc, or b)
       setting a host-callback fr computing the bounds). Only one of
-      the three methods can be set at any given time */
+      the three methods can be set at any given time. */
     OWL_LL_INTERFACE
     LLOResult lloUserGeomSetBoundsBuffer(LLOContext llo,
                                          int32_t geomID,
@@ -466,7 +466,7 @@ namespace owl {
 
     OWL_LL_INTERFACE
     LLOResult lloRayGenCreate(LLOContext  llo,
-                              /*! ID of ray gen prog to create */
+                              /*! ID of ray gen program to create */
                               int32_t     programID,
                               /*! ID of module in which to look for that program */
                               int32_t     moduleID,
@@ -484,7 +484,7 @@ namespace owl {
   
     OWL_LL_INTERFACE
     LLOResult lloMissProgCreate(LLOContext  llo,
-                                /*! ID of ray gen prog to create */
+                                /*! ID of ray gen program to create */
                                 int32_t     programID,
                                 /*! ID of module in which to look for that program */
                                 int32_t     moduleID,
@@ -575,7 +575,7 @@ namespace owl {
     }
 
     /*! builds the SBT's ray gen program entries, using the given
-     *  callback to query the app as as to what values to write for a
+     *  callback to query the app as to what values to write for a
      *  given ray gen program */
     OWL_LL_INTERFACE
     LLOResult lloSbtRayGensBuild(LLOContext llo,
@@ -733,7 +733,7 @@ namespace owl {
     /*! sets the transform for the childID'th child of given instance
       
       \param xfm points to a 4x3 affine transform matrix in the layout
-      of owl::common::affine3f, ie, in COLUMN-major format, NOT
+      of owl::common::affine3f, i.e., in COLUMN-major format, NOT
       row-major as optix desires it.
     */
     OWL_LL_INTERFACE

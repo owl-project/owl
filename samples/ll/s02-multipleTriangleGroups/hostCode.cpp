@@ -271,7 +271,7 @@ int main(int ac, char **av)
   LOG_OK("everything set up ...");
 
   // ##################################################################
-  // now that everything is readly: launch it ....
+  // now that everything is ready: launch it ....
   // ##################################################################
   
   LOG("executing the launch ...");
@@ -294,5 +294,5 @@ int main(int ac, char **av)
   // lloContextDestroy(llo);
   lloContextDestroy(llo);
   
-  LOG_OK("seems all went ok; app is done, this should be the last output ...");
+  LOG_OK("seems all went OK; app is done, this should be the last output ...");
 }

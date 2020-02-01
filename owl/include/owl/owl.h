@@ -280,7 +280,7 @@ OWL_API void
 owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 
 /*! destroy the given buffer; this will both release the app's
-    refcount on the given buffer handle, *and* the buffer itself; ie,
+    refcount on the given buffer handle, *and* the buffer itself; i.e.,
     even if some objects still hold variables that refer to the old
     handle the buffer itself will be freed */
 OWL_API void 
@@ -289,13 +289,13 @@ owlBufferDestroy(OWLBuffer buffer);
 OWL_API void 
 owlBufferUpload(OWLBuffer buffer, const void *hostPtr);
 
-/*! executes an optix lauch of given size, with given launch
+/*! executes an optix launch of given size, with given launch
   program. Note this is asynchronous, and may _not_ be
   completed by the time this function returns. */
 OWL_API void
 owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
-/*! executes an optix lauch of given size, with given launch
+/*! executes an optix launch of given size, with given launch
   program. Note this call is asynchronous, and may _not_ be
   completed by the time this function returns. */
 OWL_API void
@@ -330,7 +330,7 @@ owlInstanceGroupSetChild(OWLGroup group,
                          int whichChild,
                          OWLGroup child);
 
-/*! sets the transformatoin matrix to be applied to the childID'th
+/*! sets the transformation matrix to be applied to the childID'th
     child of the given instance group */
 OWL_API void
 owlInstanceGroupSetTransform(OWLGroup group,

@@ -469,7 +469,7 @@ namespace owl {
   }
 
   /*! destroy the given buffer; this will both release the app's
-    refcount on the given buffer handle, *and* the buffer itself; ie,
+    refcount on the given buffer handle, *and* the buffer itself; i.e.,
     even if some objects still hold variables that refer to the old
     handle the buffer itself will be freed */
   OWL_API void 

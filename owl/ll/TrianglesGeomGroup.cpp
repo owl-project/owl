@@ -142,14 +142,14 @@ namespace owl {
         ta.numIndexTriplets    = (uint32_t)tris->indexCount;
         ta.indexBuffer         = d_indices;
       
-        // we always have exactly one SBT entry per shape (ie, triangle
+        // we always have exactly one SBT entry per shape (i.e., triangle
         // mesh), and no per-primitive materials:
         ta.flags                       = triangleInputFlags;
         // iw, jan 7, 2020: note this is not the "actual" number of
         // SBT entires we'll generate when we build the SBT, only the
-        // number of per-ray-type 'groups' of SBT enties (ie, before
+        // number of per-ray-type 'groups' of SBT entities (i.e., before
         // scaling by the SBT_STRIDE that gets passed to
-        // optixTrace. So, for the build itput this value remains *1*.
+        // optixTrace. So, for the build input this value remains *1*).
         ta.numSbtRecords               = 1; 
         ta.sbtIndexOffsetBuffer        = 0; 
         ta.sbtIndexOffsetSizeInBytes   = 0; 

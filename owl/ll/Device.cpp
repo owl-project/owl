@@ -126,7 +126,7 @@ namespace owl {
       freedRanges.push_back({begin,size});
     }
 
-    /*! construct a new owl device on given cuda device. throws an
+    /*! Construct a new owl device on given cuda device. Throws an
       exception if for any reason that cannot be done */
     Context::Context(int owlDeviceID,
                      int cudaDeviceID)
@@ -163,7 +163,7 @@ namespace owl {
       context->configurePipelineOptions();
     }
 
-    /*! sets the pipelineCompileOptions etc based on
+    /*! sets the pipelineCompileOptions etc. based on
       maxConfiguredInstanceDepth */
     void Context::configurePipelineOptions()
     {
@@ -218,7 +218,7 @@ namespace owl {
       
     }
 
-    /*! construct a new owl device on given cuda device. throws an
+    /*! Construct a new owl device on given cuda device. Throws an
       exception if for any reason that cannot be done */
     Context::~Context()
     {
@@ -229,7 +229,7 @@ namespace owl {
     }
     
     
-    /*! construct a new owl device on given cuda device. throws an
+    /*! Construct a new owl device on given cuda device. Throws an
       exception if for any reason that cannot be done */
     Device::Device(int owlDeviceID, int cudaDeviceID)
       : context(new Context(owlDeviceID,cudaDeviceID))
@@ -277,11 +277,11 @@ namespace owl {
       geomType.hitProgDataSize = programDataSize;
     }
 
-    /*! set bounding box program for given geometry type, using a
-      bounding box program to be called on the device. note that
+    /*! Set bounding box program for given geometry type, using a
+      bounding box program to be called on the device. Note that
       unlike other programs (intersect, closesthit, anyhit) these
       programs are not 'per ray type', but exist only once per
-      geometry type. obviously only allowed for user geometry
+      geometry type. Obviously only allowed for user geometry
       typed. */
     void Device::setGeomTypeBoundsProgDevice(int geomTypeID,
                                              int moduleID,
@@ -305,10 +305,10 @@ namespace owl {
       geomType.boundsProgDataSize  = geomDataSize;
     }
       
-    /*! set intersect program for given geometry type and ray type
+    /*! Set intersect program for given geometry type and ray type
       (only allowed for user geometry types). Note progName will
       *not* be copied, so the pointer must remain valid as long as
-      this geom may ever get recompiled */
+      this geom may ever get recompiled. */
     void Device::setGeomTypeIntersect(int geomTypeID,
                                       int rayTypeID,
                                       int moduleID,
@@ -509,17 +509,17 @@ namespace owl {
         assert(module.module != nullptr);
 
         // ------------------------------------------------------------------
-        // now, buidl separate cuda-only module that does not contain
+        // Now, build separate cuda-only module that does not contain
         // any optix-internal symbols. Note this does not actually
-        // *remove* any potentially existing anyhit/closesthit/etc
+        // *remove* any potentially existing anyhit/closesthit/etc.
         // programs in this module - it just removed all optix-related
         // calls from this module, but leaves the remaining (now
-        // dysfunctional) anyhit/closesthit/etc programs still in that
-        // PTX code. It woudl obviously be cleaner to completely
+        // dysfunctional) anyhit/closesthit/etc. programs still in that
+        // PTX code. It would obviously be cleaner to completely
         // remove those programs, but that would require significantly
         // more advanced parsing of the PTX string, so right now we'll
         // just leave them in (and as it's in a module that never gets
-        // used by optix, this should actually be OK)
+        // used by optix, this should actually be OK).
         // ------------------------------------------------------------------
         const char *ptxCode = module.ptxCode;
         LOG("generating second, 'non-optix' version of that module, too");
@@ -881,13 +881,13 @@ namespace owl {
       context->popActive();
     }
     
-    /*! set a buffer of bounding boxes that this user geometry will
-      use when building the accel structure. this is one of
+    /*! Set a buffer of bounding boxes that this user geometry will
+      use when building the accel structure. This is one of
       multiple ways of specifying the bounding boxes for a user
-      gometry (the other two being a) setting the geometry type's
+      geometry (the other two being a) setting the geometry type's
       boundsFunc, or b) setting a host-callback fr computing the
       bounds). Only one of the three methods can be set at any
-      given time */
+      given time. */
     void Device::userGeomSetBoundsBuffer(int geomID,
                                          int bufferID)
     {
@@ -1274,7 +1274,7 @@ namespace owl {
         // apparently this program does not have any hit records *or*
         // miss records, which means either something's horribly wrong
         // in the app, or this is more cuda-style "raygen-only" launch
-        // (ie, a lauch of a raygen programthat doesn't actualy trace
+        // (i.e., a launch of a raygen program that doesn't actually trace
         // any rays. If the latter, let's "fake" a valid SBT by
         // writing in some (senseless) values to not trigger optix's
         // own sanity checks
@@ -1446,7 +1446,7 @@ namespace owl {
     {
       if (count < launchParams.size())
         // to prevent unobserved memory hole that a simple
-        // shrink-without-clean-deletion woudl cause, force an
+        // shrink-without-clean-deletion would cause, force an
         // error:
         throw std::runtime_error("shrinking launch params not yet implemented");
       launchParams.resize(count);
@@ -1495,13 +1495,13 @@ namespace owl {
 
       if (!sbt.missProgRecordsBuffer.alloced() &&
           !sbt.hitGroupRecordsBuffer.alloced()) {
-        // apparently this program does not have any hit records *or*
+        // Apparently this program does not have any hit records *or*
         // miss records, which means either something's horribly wrong
         // in the app, or this is more cuda-style "raygen-only" launch
-        // (ie, a lauch of a raygen programthat doesn't actualy trace
-        // any rays. If the latter, let's "fake" a valid SBT by
+        // (i.e., a launch of a raygen program that doesn't actually trace
+        // any rays). If the latter, let's "fake" a valid SBT by
         // writing in some (senseless) values to not trigger optix's
-        // own sanity checks
+        // own sanity checks.
         static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
         localSBT.missRecordBase
           = (CUdeviceptr)32;
