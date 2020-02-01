@@ -17,7 +17,7 @@
 #pragma once
 
 #include <owl/owl.h>
-#include <owl/types/vec.h>
+#include <owl/common/math/vec.h>
 
 using namespace owl;
 

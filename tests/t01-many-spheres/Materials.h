@@ -17,7 +17,7 @@
 #pragma once
 
 #include <owl/owl.h>
-#include "owl/common/random.h"
+#include <owl/common/math/random.h>
 
 using namespace owl;
 

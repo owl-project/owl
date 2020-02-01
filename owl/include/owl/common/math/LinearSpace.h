@@ -34,8 +34,8 @@
 
 #pragma once
 
-#include "../types/vec.h"
-#include "../types/Quaternion.h"
+#include "../math/vec.h"
+#include "../math/Quaternion.h"
 
 namespace owl {
   namespace common {

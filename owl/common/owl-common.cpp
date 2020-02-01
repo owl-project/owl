@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2019 Ingo Wald                                            //
+// Copyright 2018-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "owl-common.h"
+#include <owl/common/owl-common.h>
 
 namespace owl {
   namespace common {

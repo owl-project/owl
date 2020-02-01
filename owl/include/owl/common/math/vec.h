@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "owl/types/common.h"
-#include "owl/types/constants.h"
+#include "owl/common/owl-common.h"
+#include "owl/common/math/constants.h"
 #include <iostream>
 #include <math.h>
 #include <algorithm>

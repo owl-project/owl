@@ -34,8 +34,8 @@
 
 #pragma once
 
-#include "../types/LinearSpace.h"
-#include "../types/box.h"
+#include "../math/LinearSpace.h"
+#include "../math/box.h"
 
 namespace owl {
   namespace common {

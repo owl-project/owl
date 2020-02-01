@@ -34,7 +34,7 @@
 
 #pragma once
 
-#include "../types/vec.h"
+#include "../math/vec.h"
 
 namespace owl {
   namespace common {

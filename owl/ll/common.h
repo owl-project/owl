@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <owl/types/vec.h>
-#include <owl/types/box.h>
-#include <owl/types/AffineSpace.h>
+#include <owl/common/math/vec.h>
+#include <owl/common/math/box.h>
+#include <owl/common/math/AffineSpace.h>
 
 #include <string.h>
 #include <set>

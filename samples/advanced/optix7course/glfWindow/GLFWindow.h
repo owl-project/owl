@@ -17,7 +17,7 @@
 #pragma once
 
 // common gdt helper tools
-#include <owl/types/AffineSpace.h>
+#include <owl/common/math/AffineSpace.h>
 // glfw framework
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>

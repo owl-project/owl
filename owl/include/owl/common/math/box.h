@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "../types/vec.h"
+#include "vec.h"
 
 namespace owl {
   namespace common {
