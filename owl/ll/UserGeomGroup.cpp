@@ -117,9 +117,9 @@ namespace owl {
         
         uint32_t numBlocks = owl::common::divRoundUp(numPrims,threadsPerBlock);
         uint32_t numBlocks_x
-          = 1+int(powf(numBlocks,1.f/3.f));
+          = 1+uint32_t(powf((float)numBlocks,1.f/3.f));
         uint32_t numBlocks_y
-          = 1+int(sqrtf(numBlocks/numBlocks_x));
+          = 1+uint32_t(sqrtf((float)(numBlocks/numBlocks_x)));
         uint32_t numBlocks_z
           = owl::common::divRoundUp(numBlocks,numBlocks_x*numBlocks_y);
         

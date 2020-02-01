@@ -57,7 +57,7 @@ void createScene(int N)
   for (int iz=0;iz<N;iz++)
     for (int iy=0;iy<N;iy++)
       for (int ix=0;ix<N;ix++) {
-        Sphere sphere = {vec3f(ix,iy,iz), .5f};
+        Sphere sphere = {vec3f((float)ix,(float)iy,(float)iz), .5f};
         // Sphere sphere = {vec3f(ix,iy+.01f*ix,iz+.1f*ix), .45f};
         lambertianSpheres.push_back({sphere,
                                      Lambertian{vec3f(0.5f, 0.5f, 0.5f)}});
@@ -204,7 +204,7 @@ int main(int ac, char **av)
   const float half_width = aspect * half_height;
   const float aperture = 0.f;
   const float focusDist = 10.f;
-  vec3f lookFrom = 1.8f*vec3f(1.3f,1.5f,2.f)*vec3f(N);
+  vec3f lookFrom = 1.8f*vec3f(1.3f,1.5f,2.f)*vec3f((float)N);
   vec3f lookAt   = vec3f(0.5f*N);
   const vec3f origin = lookFrom;
   const vec3f w = normalize(lookFrom - lookAt);
