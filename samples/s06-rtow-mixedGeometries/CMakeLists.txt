@@ -20,17 +20,17 @@ cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
 
-add_executable(ll06-rtow-mixedGeometries
+add_executable(sample06-rtow-mixedGeometries
   hostCode.cpp
   ${ptxCode}
   )
 
-target_link_libraries(ll06-rtow-mixedGeometries
+target_link_libraries(sample06-rtow-mixedGeometries
   ${OWL_LIBRARIES}
   )
 
-add_test(ll06-rtow-mixedGeometries
-  ${CMAKE_BINARY_DIR}/ll06-rtow-mixedGeometries)
+add_test(sample06-rtow-mixedGeometries
+  ${CMAKE_BINARY_DIR}/sample06-rtow-mixedGeometries)
 
 
 
