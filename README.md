@@ -26,6 +26,8 @@ Key links:
 
 - For a brief (visual) overview over latest samples:
   http://owl-project.github.io/Samples.html
+  
+- The OWL API is explained in part here: https://owl-project.github.io/ng-api-overview.html
 
 
 <!--- ------------------------------------------------------- -->
@@ -95,8 +97,11 @@ Per-OS Instructions:
 	```
 	(mind to use `cmake3`, not `cmake`, using the wrong one will mess up the build directory)
 - Windows
-    - Requires: Visual Studio (2019 works), cmake
-	- Build: Use CMake-GUI to build visual studio project, then use VS to build
+    - Requires: Visual Studio (both 2017 and 2019 work), OptiX 7.0, cmake
+	- Build: Use CMake-GUI to build Visual Studio project, then use VS to build
+		- Specifics: source code path is ```...Gitlab/owl```, binaries ```...Gitlab/owl/build```, and use ```x64``` after pushing the Configure button.
+		- You may need to Configure twice.
+		- If you get "OptiX headers (optix.h and friends) not found." then define OptiX_INCLUDE manually in CMake-gui by setting it to ```C:/ProgramData/NVIDIA Corporation/OptiX SDK 7.0.0/include```
 
 <!--- ------------------------------------------------------- -->
 (Main) TODOs:
@@ -324,3 +329,4 @@ Contributors
 
 - Ingo Wald
 - Nate Morrical
+- Eric Haines

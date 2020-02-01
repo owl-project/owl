@@ -73,9 +73,9 @@ namespace owl {
       void destroyPipeline();
 
       
-      /*! linear ID (0,1,2,...) of how *we* number devices (ie,
-        'first' device is alwasys device 0, no matter if it runs on
-        another physical/cuda device */
+      /*! linear ID (0,1,2,...) of how *we* number devices (i.e.,
+        'first' device is always device 0, no matter if it runs on
+        another physical/cuda device) */
       const int          owlDeviceID;
       
       /* the cuda device ID that this logical device runs on */
@@ -397,7 +397,7 @@ namespace owl {
 
       /*! set the maximum instancing depth that will be allowed; '0'
           means 'no instancing, only bottom level accels', '1' means
-          'only one singel level of instances' (ie, instancegroups
+          'only one single level of instances' (i.e., instancegroups
           never have children that are themselves instance groups),
           etc. Note we currently do *not* yet check the node graph as
           to whether it adheres to this value - if you use a node
@@ -437,11 +437,11 @@ namespace owl {
         buildOptixPrograms();
       }
 
-      /*! set bounding box program for given geometry type, using a
-          bounding box program to be called on the device. note that
+      /*! Set bounding box program for given geometry type, using a
+          bounding box program to be called on the device. Note that
           unlike other programs (intersect, closesthit, anyhit) these
           programs are not 'per ray type', but exist only once per
-          geometry type. obviously only allowed for user geometry
+          geometry type. Obviously only allowed for user geometry
           typed. */
       void setGeomTypeBoundsProgDevice(int geomTypeID,
                                        int moduleID,
@@ -509,10 +509,10 @@ namespace owl {
         number of ray types to be used */
       void allocMissProgs(size_t count);
 
-      /*! resize the array of geom IDs. this can be either a
+      /*! Resize the array of geom IDs. This can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
-        destroyed */
+        destroyed. */
       void allocGeoms(size_t newCount)
       {
         for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)geoms.size();idxWeWouldLose++)
@@ -613,13 +613,13 @@ namespace owl {
                                   size_t elementSize,
                                   HostPinnedMemory::SP pinnedMem);
 
-      /*! set a buffer of bounding boxes that this user geometry will
-          use when building the accel structure. this is one of
+      /*! Set a buffer of bounding boxes that this user geometry will
+          use when building the accel structure. This is one of
           multiple ways of specifying the bounding boxes for a user
-          gometry (the other two being a) setting the geometry type's
+          geometry (the other two being a) setting the geometry type's
           boundsFunc, or b) setting a host-callback fr computing the
           bounds). Only one of the three methods can be set at any
-          given time */
+          given time. */
       void userGeomSetBoundsBuffer(int geomID, int bufferID);
       
       void trianglesGeomSetVertexBuffer(int geomID,
@@ -643,13 +643,13 @@ namespace owl {
       }
 
       /*! for each valid program group, use optix to compile/build the
-        acutal program to an optix-usable form (ie, this builds the
+        actual program to an optix-usable form (i.e., this builds the
         OptixProgramGroup object for each PG) */
       void buildOptixPrograms();
 
       /*! destroys all currently active OptixProgramGroup group
         objects in all our PG vectors, but NOT those PG vectors
-        themselves; ie, we can always call 'buildOptixPrograms' to
+        themselves; i.e., we can always call 'buildOptixPrograms' to
         re-build them (which allows, for example, to
         'destroyOptixPrograms', chance compile/link options, and
         rebuild them) */

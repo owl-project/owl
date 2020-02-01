@@ -14,6 +14,9 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+// Ray gen shader for ll01-simpleTriangles. Shoot rays from the camera and
+// test against the mesh. Closest-hit if a hit is found, else Miss shader is invoked.
+
 #include "deviceCode.h"
 #include <optix_device.h>
 
@@ -28,14 +31,18 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
            self.deviceCount,
            OWL_TERMINAL_DEFAULT);
   }
-  if (pixelID.x >= self.fbSize.x) return;
-  if (pixelID.y >= self.fbSize.y) return;
 
+  // Compute a screen location, in the range 0.0 to 1.0. The .5f is for
+  // offsetting to (0.5,0.5), the center of each pixel.
   const vec2f screen = (vec2f(pixelID)+vec2f(.5f)) / vec2f(self.fbSize);
   owl::Ray ray;
   ray.origin    
     = self.camera.pos;
-  ray.direction 
+  // dir_00 is the upper left corner of the image, with dir_du being the
+  // 3D change per pixel going to the right, dir_dv the change going down.
+  // Another way to think of it is that dir_du goes the width of the image
+  // plane in world space, dir_dv the height (downwards).
+  ray.direction
     = normalize(self.camera.dir_00
                 + screen.u * self.camera.dir_du
                 + screen.v * self.camera.dir_dv);

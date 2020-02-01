@@ -86,7 +86,7 @@ namespace owl {
     
     /*! set the maximum instancing depth that will be allowed; '0'
       means 'no instancing, only bottom level accels', '1' means
-      'only one singel level of instances' (ie, instancegroups
+      'only one single level of instances' (i.e., instancegroups
       never have children that are themselves instance groups),
       etc. 
 
@@ -143,11 +143,11 @@ namespace owl {
     void DeviceGroup::allocMissProgs(size_t count)
     { for (auto device : devices) device->allocMissProgs(count); }
 
-    /*! set bounding box program for given geometry type, using a
-      bounding box program to be called on the device. note that
+    /*! Set bounding box program for given geometry type, using a
+      bounding box program to be called on the device. Note that
       unlike other programs (intersect, closesthit, anyhit) these
       programs are not 'per ray type', but exist only once per
-      geometry type. obviously only allowed for user geometry
+      geometry type. Obviously only allowed for user geometry
       typed. */
     void DeviceGroup::setGeomTypeBoundsProgDevice(int geomTypeID,
                                                   int moduleID,
@@ -211,13 +211,22 @@ namespace owl {
       geoms that would get 'lost' have alreay been
       destroyed */
     void DeviceGroup::allocGroups(size_t newCount)
-    { for (auto device : devices) device->allocGroups(newCount); }
+    {
+      for (auto device : devices)
+        device->allocGroups(newCount);
+    }
       
     void DeviceGroup::allocBuffers(size_t newCount)
-    { for (auto device : devices) device->allocBuffers(newCount); }
+    {
+      for (auto device : devices)
+        device->allocBuffers(newCount);
+    }
       
     void DeviceGroup::allocGeoms(size_t newCount)
-    { for (auto device : devices) device->allocGeoms(newCount); }
+    {
+      for (auto device : devices)
+        device->allocGeoms(newCount);
+    }
 
     void DeviceGroup::userGeomCreate(int geomID,
                                      /*! the "logical" hit group ID:
@@ -306,13 +315,13 @@ namespace owl {
     }
 
       
-    /*! set a buffer of bounding boxes that this user geometry will
-      use when building the accel structure. this is one of
+    /*! Set a buffer of bounding boxes that this user geometry will
+      use when building the accel structure. This is one of
       multiple ways of specifying the bounding boxes for a user
-      gometry (the other two being a) setting the geometry type's
+      geometry (the other two being a) setting the geometry type's
       boundsFunc, or b) setting a host-callback fr computing the
       bounds). Only one of the three methods can be set at any
-      given time */
+      given time. */
     void DeviceGroup::userGeomSetBoundsBuffer(int geomID,
                                               int bufferID)
     {

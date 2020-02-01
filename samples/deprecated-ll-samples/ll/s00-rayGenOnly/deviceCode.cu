@@ -14,26 +14,41 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+// Ray gen shader for ll00-rayGenOnly. No actual rays are harmed in the making of
+// this shader. The pixel location is simply translated into a checkerboard pattern.
+
 #include "deviceCode.h"
 #include <optix_device.h>
 
+// OPTIX_RAYGEN_PROGRAM() is a simple macro defined in deviceAPI.h to add standard
+// code for defining a shader method.
+// It puts:
+//   extern "C" __global__ void __raygen__##programName
+// in front of the program name given
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
+  // read in the program data set by the calling program hostCode.cpp using lloSbtRayGensBuild;
+  // see RayGenData in deviceCode.h
   const RayGenData &self = owl::getProgramData<RayGenData>();
+  // TODO get a thread ID from a CUDA 2D thread block, or something...
+  // TODO how is this launch index piece mapped to the frame buffer?
   const vec2i pixelID = owl::getLaunchIndex();
   if (pixelID == owl::vec2i(0)) {
+    // the first thread ID is always (0,0), so we can generate a message to show things are working
     printf("%sHello OptiX From your First RayGen Program (on device %i/%i)%s\n",
            OWL_TERMINAL_CYAN,
            self.deviceIndex,
            self.deviceCount,
            OWL_TERMINAL_DEFAULT);
   }
-  if (pixelID.x >= self.fbSize.x) return;
-  if (pixelID.y >= self.fbSize.y) return;
 
-  int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
+  // Generate a simple checkerboard pattern as a test. Note that the upper left corner is pixel (0,0).
+  int pattern = (pixelID.x/8) ^ (pixelID.y/8);
+  // alternate pattern, showing that pixel (0,0) is in the upper left corner
+  // pattern = (pixelID.x*pixelID.x + pixelID.y*pixelID.y) / 100000;
   const vec3f color = (pattern&1) ? self.color1 : self.color0;
 
+  // find the frame buffer location (x + width*y) and put the "computed" result there
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
     = owl::make_rgba(color);

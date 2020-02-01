@@ -156,7 +156,7 @@ extern "C" {
   
   /*! creates a new ll-owl device(group) context using the given CUDA
    *  device IDs. An empty list of device IDs is synonymous with "use
-   *  all available device". If no context could be crated, the return
+   *  all available devices". If no context could be created, the return
    *  value is null, and lloGetLastErrorText should contain an error
    *  message. */
   OWL_LL_INTERFACE
@@ -382,11 +382,11 @@ extern "C" {
                                  int32_t moduleID,
                                  const char *programName);
   
-  /*! set bounding box program for given geometry type, using a
-    bounding box program to be called on the device. note that
+  /*! Set bounding box program for given geometry type, using a
+    bounding box program to be called on the device. Note that
     unlike other programs (intersect, closesthit, anyhit) these
     programs are not 'per ray type', but exist only once per
-    geometry type. obviously only allowed for user geometry
+    geometry type. Obviously only allowed for user geometry
     typed. */
   OWL_LL_INTERFACE
   LLOResult lloGeomTypeBoundsProgDevice(LLOContext llo,
@@ -429,12 +429,12 @@ extern "C" {
                               size_t     numPrims);
 
       
-  /*! set a buffer of bounding boxes that this user geometry will use
-    when building the accel structure. this is one of multiple ways of
-    specifying the bounding boxes for a user gometry (the other two
+  /*! Set a buffer of bounding boxes that this user geometry will use
+    when building the accel structure. This is one of multiple ways of
+    specifying the bounding boxes for a user geometry (the other two
     being a) setting the geometry type's boundsFunc, or b) setting a
     host-callback fr computing the bounds). Only one of the three
-    methods can be set at any given time */
+    methods can be set at any given time. */
   OWL_LL_INTERFACE
   LLOResult lloUserGeomSetBoundsBuffer(LLOContext llo,
                                        int32_t geomID,
@@ -468,7 +468,7 @@ extern "C" {
   /*! sets the transform for the childID'th child of given instance
 
     \param xfm points to a 4x3 affine transform matrix in the layout
-    of owl::common::affine3f, ie, in COLUMN-major format, NOT
+    of owl::common::affine3f, i.e., in COLUMN-major format, NOT
     row-major as optix desires it.
    */
   OWL_LL_INTERFACE

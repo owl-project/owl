@@ -70,8 +70,8 @@
   ((char *)(&((struct type *)0)-> member )      \
    -                                            \
    (char *)(((struct type *)0)))
-
-
+  
+  
 /*! enum that specifies the different possible memory layouts for
   passing transformation matrices */
 typedef enum
@@ -238,15 +238,15 @@ OWL_API void
 owlContextDestroy(OWLContext context);
 
 OWL_API OWLModule
-owlModuleCreate(OWLContext context,
+owlModuleCreate(OWLContext  context,
                 const char *ptxCode);
 
 OWL_API OWLGeom
-owlGeomCreate(OWLContext context,
+owlGeomCreate(OWLContext  context,
               OWLGeomType type);
 
 OWL_API OWLLaunchParams
-owlLaunchParamsCreate(OWLContext context,
+owlLaunchParamsCreate(OWLContext  context,
                       size_t      sizeOfVarStruct,
                       OWLVarDecl *vars,
                       size_t      numVars);
@@ -267,19 +267,49 @@ owlMissProgCreate(OWLContext  context,
                   OWLVarDecl *vars,
                   size_t      numVars);
 
+
+// ------------------------------------------------------------------
+/*! create a new group (which handles the acceleration strucure) for
+    triangle geometries.
+
+  \param numGeometries Number of geometries in this group, must be
+  non-zero.
+
+  \param arrayOfChildGeoms A array of 'numGeomteries' child
+  geometries. Every geom in this array must be a valid owl geometry
+  created with owlGeomCreate, and must be of a OWL_GEOM_USER
+  type.
+*/
 OWL_API OWLGroup
 owlUserGeomGroupCreate(OWLContext context,
                        size_t     numGeometries,
-                       OWLGeom   *initValues);
+                       OWLGeom   *arrayOfChildGeoms);
 
+
+// ------------------------------------------------------------------
+/*! create a new group (which handles the acceleration strucure) for
+    triangle geometries.
+
+  \param numGeometries Number of geometries in this group, must be
+  non-zero.
+
+  \param arrayOfChildGeoms A array of 'numGeometries' child
+  geometries. Every geom in this array must be a valid owl geometry
+  created with owlGeomCreate, and must be of a OWL_GEOM_TRIANGLES
+  type.
+*/
 OWL_API OWLGroup
 owlTrianglesGeomGroupCreate(OWLContext context,
                             size_t     numGeometries,
                             OWLGeom   *initValues);
 
+// ------------------------------------------------------------------
+/*! create a new instance group with given number of children. The
+    child groups and their transforms can then be set via \see
+    owlInstanceGroupSetChild and \see owlInstanceGroupSetTransform */
 OWL_API OWLGroup
 owlInstanceGroupCreate(OWLContext context,
-                       size_t numInstances);
+                       size_t     numInstances);
 
 OWL_API void owlGroupBuildAccel(OWLGroup group);
 

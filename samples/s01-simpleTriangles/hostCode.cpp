@@ -199,7 +199,7 @@ int main(int ac, char **av)
   owlBuildSBT(context);
 
   // ##################################################################
-  // now that everything is readly: launch it ....
+  // now that everything is ready: launch it ....
   // ##################################################################
   
   LOG("launching ...");
@@ -221,5 +221,5 @@ int main(int ac, char **av)
   LOG("destroying devicegroup ...");
   owlContextDestroy(context);
   
-  LOG_OK("seems all went ok; app is done, this should be the last output ...");
+  LOG_OK("seems all went OK; app is done, this should be the last output ...");
 }
