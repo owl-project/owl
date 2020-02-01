@@ -34,37 +34,33 @@ Key links:
 API Abstraction Level and Directory Structure
 =============================================
 
-One of the key insights of early exprimentation with OWL was that a
-single node graph API on top of OptiX 7 is a major
-undertaking. Consequently, owl actually aims for two independent but
-stacked API layers: one as-minimalistic-as-possible low-level API
-layer (`ll-owl`) that does intentionally not deal with nodes,
-variables, lifetime-handling, etc; and the actual node graph
-(`owl-ng`) that then builds on this.
+The OWL API aims at an abstraction that is similar to OptiX 6's node
+graph. To do so it introduces logical types such as `OWLBuffer`s (to
+handle buffers of data), `OWLGeomType`(s) (abstractions for geometry
+*types* that define what closest hit, any hit, etc programs to run for
+a given type), `OWLGeom`s (instances of geometry types, with specific
+inputs for those programs to operate on), etc.
 
-As of the time of this writing the ll layer is significantly more
-fleshed out than the node graph layer. Though there are clearly
-missing pieces even in the ll layer I do already have several of my
-originally Optix 6 base research sandboxes ported over to owl-ll; the
-node graph layer can - since 0.5.3 - also support all that is requires
-for the "Ray Tracing in One Weekend" example (see
-`samples/ng/s05-rtow`), but the other ll examples are not yet ported,
-and will surely be missing a few bits and pieces.
+Internally OWL actually uses two different abstration layers that live
+on top of each other: a "low-level" API (`llowl`) that is still rather
+basic; and the actual "node graph" owl API (`owl`). Externally only
+the public owl API is exposed.
 
-To clearly separate the two API layers the project's directory
-structure is organized into separate "ll/" and "ng/" directory layers:
+Directory Structure of the Project:
 
-- `owl/`: The Optix Wrappers *library*
-  - `owl/ll/`: the owl *low-level* API layer
-    - `owl/ll/include`: public API headers for the `llowl` shared library
-    - `owl/ll/<other>`: implementation of that api layer
-  - `owl/ng/`: the owl *node graph* API layer (build on top of owl/ll)
-    - `owl/ng/include`: public API headers for the `owl-ng` shared library
-    - `owl/ng/<other>`: implementation of that api layer
+- `owl/`: the root OWL *library* defined in this project
+  - `owl/ll/`: *implementation* the low-level API layer
+  - `owl/ng/`: *implementation* the node graph API
+  - `owl/common/`: common helper classes
+  - `include/owl/owl.h`: header for the public, C-linkage host-side API 
+  - `include/owl/common`: C++ math/vector classes required for the device-side API
 
 - `samples/`: Samples/Tutorials/TestCases for OWL
-  - `samples/ll/`: samples for the ll layer
-  - `samples/ng/`: samples for the ng layer (some ll samples not yet ported over)
+  - `samples/`: tutorial-style samples that show how to create geometries, instances, etc
+  - `samples/advanced`: more advanced sample containing a full OBJ model viewer
+     (based on the siggraph 2019 OptiX course)
+
+- `tests/`: Some internal test cases; only for CI/testing/debugging
 
 <!--- ------------------------------------------------------- -->
 Supported Platforms
@@ -120,6 +116,32 @@ Per-OS Instructions:
 <!--- ------------------------------------------------------- -->
 Latest Progress/Revision History
 ================================
+
+
+v0.7.x - Unifiction of ng and ll APIs into one single owl API
+----------------------------------------------------------------------
+
+*v0.7.0*: merged ng and ll APIs into one single API
+
+- now have a single owl library, a single header file, etc
+
+- eliminated all old ll/ samples (they only confused users)
+
+- sierpinski, rtow, and rtow-mixedGeom samples now in owl API
+
+- eliminated compaction in user geom and instance groups (doesn't
+  help, anyway, and now have lower peak memory)
+  
+- camke now defines (and all samples etc use) cmake variables for
+  `OWL_INCLUDES` and `OWL_LIBRARIES`
+
+- fixes for TBB; TBB now gets detected more automatically, and used
+  if found, with fallback to serial implementation if not
+
+- added array3D, various cleanups and exntensions to owl/common
+
+- various bugfixes and sanity/range checks throughout
+
 
 v0.6.x - Buffer updates, launch params, first interactive example, ...
 ----------------------------------------------------------------------
