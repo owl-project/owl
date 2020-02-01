@@ -790,6 +790,48 @@ namespace owl {
   }
 
 
+#if 1
+
+#define _OWL_SET_HELPER(stype,abb)                      \
+  OWL_API void owlVariableSet1##abb(OWLVariable var,    \
+                                    stype v)            \
+  {                                                     \
+    LOG_API_CALL();                                     \
+    setVariable((APIHandle *)var,v);                    \
+  }                                                     \
+  OWL_API void owlVariableSet2##abb(OWLVariable var,    \
+                                    stype x,            \
+                                    stype y)            \
+  {                                                     \
+    LOG_API_CALL();                                     \
+    setVariable((APIHandle *)var,vec2##abb(x,y));       \
+  }                                                     \
+  OWL_API void owlVariableSet3##abb(OWLVariable var,    \
+                                    stype x,            \
+                                    stype y,            \
+                                    stype z)            \
+  {                                                     \
+    LOG_API_CALL();                                     \
+    setVariable((APIHandle *)var,vec3##abb(x,y,z));     \
+  }                                                     \
+  OWL_API void owlVariableSet4##abb(OWLVariable var,    \
+                                    stype x,            \
+                                    stype y,            \
+                                    stype z,            \
+                                    stype w)            \
+  {                                                     \
+    LOG_API_CALL();                                     \
+    setVariable((APIHandle *)var,vec4##abb(x,y,z,w));   \
+  }                                                     \
+  /*end of macro */
+  _OWL_SET_HELPER(int32_t,i)
+  _OWL_SET_HELPER(uint32_t,ui)
+  _OWL_SET_HELPER(int64_t,l)
+  _OWL_SET_HELPER(uint64_t,ul)
+  _OWL_SET_HELPER(float,f)
+#undef _OWL_SET_HELPER
+
+#else
   // ----------- set1 -----------
   OWL_API void owlVariableSet1f(OWLVariable _variable, float value)
   {
@@ -798,6 +840,11 @@ namespace owl {
   }
 
   OWL_API void owlVariableSet1i(OWLVariable _variable, int value)
+  {
+    LOG_API_CALL();
+    setVariable((APIHandle *)_variable,value);
+  }
+  OWL_API void owlVariableSeti(OWLVariable _variable, int value)
   {
     LOG_API_CALL();
     setVariable((APIHandle *)_variable,value);
@@ -833,7 +880,8 @@ namespace owl {
     assert(value);
     setVariable((APIHandle *)_variable,*(const vec3f*)value);
   }
-
+#endif
+  
   // ----------- set<other> -----------
   OWL_API void owlVariableSetGroup(OWLVariable _variable, OWLGroup _group)
   {

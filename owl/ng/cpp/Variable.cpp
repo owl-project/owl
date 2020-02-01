@@ -143,7 +143,7 @@ namespace owl {
       return std::make_shared<UserTypeVariable>(decl);
     switch(decl->type) {
     case OWL_INT:
-      return std::make_shared<VariableT<int>>(decl);
+      return std::make_shared<VariableT<int32_t>>(decl);
     case OWL_INT2:
       return std::make_shared<VariableT<vec2i>>(decl);
     case OWL_INT3:
@@ -152,13 +152,33 @@ namespace owl {
       return std::make_shared<VariableT<vec4i>>(decl);
 
     case OWL_UINT:
-      return std::make_shared<VariableT<int>>(decl);
+      return std::make_shared<VariableT<uint32_t>>(decl);
     case OWL_UINT2:
       return std::make_shared<VariableT<vec2ui>>(decl);
     case OWL_UINT3:
       return std::make_shared<VariableT<vec3ui>>(decl);
     case OWL_UINT4:
       return std::make_shared<VariableT<vec4ui>>(decl);
+
+      
+    case OWL_LONG:
+      return std::make_shared<VariableT<int64_t>>(decl);
+    case OWL_LONG2:
+      return std::make_shared<VariableT<vec2l>>(decl);
+    case OWL_LONG3:
+      return std::make_shared<VariableT<vec3l>>(decl);
+    case OWL_LONG4:
+      return std::make_shared<VariableT<vec4l>>(decl);
+
+    case OWL_ULONG:
+      return std::make_shared<VariableT<uint64_t>>(decl);
+    case OWL_ULONG2:
+      return std::make_shared<VariableT<vec2ul>>(decl);
+    case OWL_ULONG3:
+      return std::make_shared<VariableT<vec3ul>>(decl);
+    case OWL_ULONG4:
+      return std::make_shared<VariableT<vec4ul>>(decl);
+
 
     case OWL_FLOAT:
       return std::make_shared<VariableT<float>>(decl);
