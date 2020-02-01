@@ -40,7 +40,7 @@ target_link_libraries(llowl_static
   ${CUDA_LIBRARIES}
   ${CUDA_CUDA_LIBRARY}
   )
-#target_compile_definitions(llowl_static PUBLIC -Dllowl_EXPORTS=1)
+target_compile_definitions(llowl_static PUBLIC -Dllowl_EXPORTS=1)
 
 #add_library(llowl
 #  ${OWL_LL_SOURCES}
