@@ -37,7 +37,6 @@ endif()
 # (build modes, glut, optix, etc)
 # ------------------------------------------------------------------
 set(owl_dir ${PROJECT_SOURCE_DIR})
-#set(owl_common_dir ${owl_dir}/owl/common/)
 
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
@@ -45,7 +44,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/common/cmake/")
 
 include(configure_cuda)
 include(configure_optix)
-#include(configure_tbb)
 include(configure_build_type)
 
 enable_testing()
