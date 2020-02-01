@@ -14,6 +14,7 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+if (NOT WIN32)
 # from https://stackoverflow.com/questions/33222569/best-way-to-portably-set-compiler-options-like-wall-and-pedantic-in-cmake
 include(CheckCCompilerFlag)
 
@@ -45,4 +46,4 @@ target_link_libraries(test00-c99-compliant-header
   )
 add_test(test00-c99-compliant-header ${CMAKE_BINARY_DIR}/test00-c99-compliant-header)
 
-
+endif()
