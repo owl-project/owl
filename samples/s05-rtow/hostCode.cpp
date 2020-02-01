@@ -274,7 +274,6 @@ int main(int ac, char **av)
   const vec3f vertical = 2.0f*half_height*focusDist*v;
 
   // ----------- set variables  ----------------------------
-  owlRayGenSet1i    (rayGen,"deviceCount",  owlGetDeviceCount(context));
   owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
   owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
   owlRayGenSetGroup (rayGen,"world",        world);

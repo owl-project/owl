@@ -87,7 +87,6 @@ namespace owl {
          OPTIX_DEVICE_PROPERTY_LIMIT_MAX_PRIMITIVES_PER_GAS,
          &maxPrimsPerGAS,
          sizeof(maxPrimsPerGAS));
-      PRINT(maxPrimsPerGAS);
       
       for (int childID=0;childID<ugg->children.size();childID++) {
         Geom *child = ugg->children[childID];
@@ -106,7 +105,6 @@ namespace owl {
            ug->geomID,childID,cbData); 
         
         uint32_t numPrims = (uint32_t)ug->numPrims;
-        PRINT(numPrims);
         sumPrims += numPrims;
         if (sumPrims > maxPrimsPerGAS) {
           PRINT(numPrims);
@@ -118,7 +116,6 @@ namespace owl {
         uint32_t threadsPerBlock = blockDims.x*blockDims.y*blockDims.z;
         
         uint32_t numBlocks = owl::common::divRoundUp(numPrims,threadsPerBlock);
-        PRINT(numBlocks);
         uint32_t numBlocks_x
           = 1+int(powf(numBlocks,1.f/3.f));
         uint32_t numBlocks_y
@@ -127,8 +124,6 @@ namespace owl {
           = owl::common::divRoundUp(numBlocks,numBlocks_x*numBlocks_y);
         
         vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
-        PRINT(blockDims);
-        PRINT(gridDims);
         
         tempMem.upload(userGeomData);
         
@@ -218,7 +213,6 @@ namespace owl {
         auto &aa = userGeomInput.aabbArray;
         aa.aabbBuffers   = &d_bounds;
         aa.numPrimitives = (uint32_t)userGeom->numPrims;
-        PRINT(aa.numPrimitives);
         aa.strideInBytes = sizeof(box3f);
         aa.primitiveIndexOffset = 0;
       
@@ -251,8 +245,6 @@ namespace owl {
       accelOptions.motionOptions.numKeys  = 1;
       accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
 
-      PRINT((uint32_t)userGeomInputs.size());
-      
       OptixAccelBufferSizes blasBufferSizes;
       OPTIX_CHECK(optixAccelComputeMemoryUsage
                   (context->optixContext,
@@ -261,8 +253,6 @@ namespace owl {
                    (uint32_t)userGeomInputs.size(),
                    &blasBufferSizes
                    ));
-      PRINT(blasBufferSizes.tempSizeInBytes);
-      PRINT(blasBufferSizes.outputSizeInBytes);
       
       // ------------------------------------------------------------------
       // ... and allocate buffers: temp buffer, initial (uncompacted)
