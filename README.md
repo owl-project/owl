@@ -121,6 +121,13 @@ Latest Progress/Revision History
 v0.7.x - Unifiction of ng and ll APIs into one single owl API
 ----------------------------------------------------------------------
 
+*v0.7.1*: bugfix release.
+
+- added variable plumbing for missing unsigned and 64-bit types 
+
+- fixed race condition in creating/using api handles that caused
+  random crashes when setting launch params from different threads
+
 *v0.7.0*: merged ng and ll APIs into one single API
 
 - now have a single owl library, a single header file, etc

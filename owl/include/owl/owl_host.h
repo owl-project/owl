@@ -111,6 +111,16 @@ typedef enum
     OWL_UINT3,
     OWL_UINT4,
    
+    OWL_LONG=130,
+    OWL_LONG2,
+    OWL_LONG3,
+    OWL_LONG4,
+   
+    OWL_ULONG=140,
+    OWL_ULONG2,
+    OWL_ULONG3,
+    OWL_ULONG4,
+   
     OWL_BUFFER=1000,
     OWL_BUFFER_SIZE,
     OWL_BUFFER_ID,
@@ -152,17 +162,29 @@ typedef enum
 #define OWL_ALL_RAY_TYPES -1
 
 
-typedef float OWL_float;
-typedef int32_t OWL_int;
+typedef float    OWL_float;
+typedef int32_t  OWL_int;
+typedef uint32_t OWL_uint;
+typedef int64_t  OWL_long;
+typedef uint64_t OWL_ulong;
 
 typedef struct _OWL_int2   { int32_t x,y; } owl2i;
+typedef struct _OWL_uint2  { int32_t x,y; } owl2ui;
+typedef struct _OWL_long2  { int64_t x,y; } owl2l;
+typedef struct _OWL_ulong2 { int64_t x,y; } owl2ul;
 typedef struct _OWL_float2 { float   x,y; } owl2f;
 
-typedef struct _OWL_int3   { int32_t x,y,z; } owl3i;
-typedef struct _OWL_float3 { float   x,y,z; } owl3f;
+typedef struct _OWL_int3   { int32_t  x,y,z; } owl3i;
+typedef struct _OWL_uint3  { uint32_t x,y,z; } owl3ui;
+typedef struct _OWL_long3  { int64_t  x,y,z; } owl3l;
+typedef struct _OWL_ulong3 { uint64_t x,y,z; } owl3ul;
+typedef struct _OWL_float3 { float    x,y,z; } owl3f;
 
-typedef struct _OWL_int4   { int32_t x,y,z,w; } owl4i;
-typedef struct _OWL_float4 { float   x,y,z,w; } owl4f;
+typedef struct _OWL_int4   { int32_t  x,y,z,w; } owl4i;
+typedef struct _OWL_uint4  { uint32_t x,y,z,w; } owl4ui;
+typedef struct _OWL_long4  { int64_t  x,y,z,w; } owl4l;
+typedef struct _OWL_ulong4 { uint64_t x,y,z,w; } owl4ul;
+typedef struct _OWL_float4 { float    x,y,z,w; } owl4f;
 
 typedef struct _OWL_affine3f { owl3f vx,vy,vz,t; } owl4x3f;
 
@@ -466,7 +488,10 @@ OWL_API void owlVariableSetRaw(OWLVariable variable, const void *valuePtr);
                                     stype y,            \
                                     stype z);           \
   /*end of macro */
-_OWL_SET_HELPER(int,i)
+_OWL_SET_HELPER(int32_t,i)
+_OWL_SET_HELPER(uint32_t,ui)
+_OWL_SET_HELPER(int64_t,l)
+_OWL_SET_HELPER(uint64_t,ul)
 _OWL_SET_HELPER(float,f)
 #undef _OWL_SET_HELPER
 
@@ -570,9 +595,15 @@ _OWL_SET_HELPER(float,f)
     owlVariableRelease(var);                            \
   }                                                     \
                                                         \
-  _OWL_SET_HELPERS_C(Type,int,i)                        \
-  _OWL_SET_HELPERS_C(Type,float,f)                      \
-  _OWL_SET_HELPERS_CPP(Type,int,i)                      \
+  _OWL_SET_HELPERS_C(Type,int32_t,i)                          \
+  _OWL_SET_HELPERS_C(Type,uint32_t,ui)                        \
+  _OWL_SET_HELPERS_C(Type,int64_t,l)                          \
+  _OWL_SET_HELPERS_C(Type,uint64_t,ul)                        \
+  _OWL_SET_HELPERS_C(Type,float,f)                            \
+  _OWL_SET_HELPERS_CPP(Type,int32_t,i)                        \
+  _OWL_SET_HELPERS_CPP(Type,uint32_t,ui)                      \
+  _OWL_SET_HELPERS_CPP(Type,int64_t,l)                        \
+  _OWL_SET_HELPERS_CPP(Type,uint64_t,ul)                      \
   _OWL_SET_HELPERS_CPP(Type,float,f)                    \
   /* end of macro */
 

@@ -29,9 +29,9 @@ struct LambertianTriangleMesh {
 
 struct RayGenData
 {
+  OptixTraversableHandle world;
   uint32_t *fbPtr;
   vec2i     fbSize;
-  OptixTraversableHandle world;
   
   struct {
     vec3f origin;

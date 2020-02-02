@@ -32,13 +32,13 @@ namespace owl {
     switch(type) {
       
     case OWL_INT:
-      return sizeof(int);
+      return sizeof(int32_t);
     case OWL_INT2:
-      return 2*sizeof(int);
+      return 2*sizeof(int32_t);
     case OWL_INT3:
-      return 3*sizeof(int);
+      return 3*sizeof(int32_t);
     case OWL_INT4:
-      return 4*sizeof(int);
+      return 4*sizeof(int32_t);
       
     case OWL_UINT:
       return sizeof(uint32_t);
@@ -48,6 +48,24 @@ namespace owl {
       return 3*sizeof(uint32_t);
     case OWL_UINT4:
       return 4*sizeof(uint32_t);
+      
+    case OWL_LONG:
+      return sizeof(int64_t);
+    case OWL_LONG2:
+      return 2*sizeof(int64_t);
+    case OWL_LONG3:
+      return 3*sizeof(int64_t);
+    case OWL_LONG4:
+      return 4*sizeof(int64_t);
+      
+    case OWL_ULONG:
+      return sizeof(uint64_t);
+    case OWL_ULONG2:
+      return 2*sizeof(uint64_t);
+    case OWL_ULONG3:
+      return 3*sizeof(uint64_t);
+    case OWL_ULONG4:
+      return 4*sizeof(uint64_t);
       
     case OWL_FLOAT:
       return sizeof(float);
@@ -97,6 +115,24 @@ namespace owl {
       return "uint3";
     case OWL_UINT4:
       return "uint4";
+      
+    case OWL_LONG:
+      return "long";
+    case OWL_LONG2:
+      return "long2";
+    case OWL_LONG3:
+      return "long3";
+    case OWL_LONG4:
+      return "long4";
+      
+    case OWL_ULONG:
+      return "ulong";
+    case OWL_ULONG2:
+      return "ulong2";
+    case OWL_ULONG3:
+      return "ulong3";
+    case OWL_ULONG4:
+      return "ulong4";
       
     case OWL_FLOAT:
       return "float";
