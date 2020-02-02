@@ -15,6 +15,7 @@
 // ======================================================================== //
 
 #include "owl/ng/cpp/Context.h"
+#include <mutex>
 
 namespace owl {
 
@@ -39,6 +40,8 @@ namespace owl {
       own. */
     void releaseAll();
     std::set<APIHandle *> activeHandles;
+    
+    std::mutex monitor;
   };
   
 } // ::owl  

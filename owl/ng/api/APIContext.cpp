@@ -38,6 +38,7 @@ namespace owl {
   
   void APIContext::forget(APIHandle *object)
   {
+    std::lock_guard<std::mutex> lock(monitor);
     assert(object);
     auto it = activeHandles.find(object);
     assert(it != activeHandles.end());
@@ -67,7 +68,9 @@ namespace owl {
   void APIContext::track(APIHandle *object)
   {
     assert(object);
-      
+
+    std::lock_guard<std::mutex> lock(monitor);
+    
     auto it = activeHandles.find(object);
     assert(it == activeHandles.end());
     activeHandles.insert(object);
