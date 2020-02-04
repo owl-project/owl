@@ -42,12 +42,12 @@ add_library(owl_viewerWidget_static STATIC ${owl_viewerWidget_sources})
 target_link_libraries(owl_viewerWidget
   ${OPENGL_LIBRARIES}
   ${GLUT_LIBRARIES}
-  llowl
+  owl
   )
 target_compile_definitions(owl_viewerWidget PUBLIC owl_viewerWidget_DLL_INTERFACE)
 
 target_link_libraries(owl_viewerWidget_static
   ${OPENGL_LIBRARIES}
   ${GLUT_LIBRARIES}
-  llowl_static
+  owl_static
   )

@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018 Ingo Wald                                                 #
+# Copyright 2018-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -66,9 +66,5 @@ macro(cuda_compile_and_embed output_var cuda_file)
     )
   set(${output_var} ${embedded_file})
 endmacro()
-
-include_directories(${OptiX_INCLUDE})
-
-#add_definitions(-D__CUDA_INCLUDE_COMPILER_INTERNAL_HEADERS__=1)
 
 

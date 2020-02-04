@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "../math/vec.h"
+#include "owl/common/math/vec.h"
 #include "owl/common/parallel/parallel_for.h"
 
 namespace owl {
