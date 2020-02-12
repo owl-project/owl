@@ -242,8 +242,19 @@ namespace owl {
       /// Constants
       ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __CUDA_ARCH__
+      inline __both__ LinearSpace3( const ZeroTy & )
+        : vx(ZeroTy()), vy(ZeroTy()), vz(ZeroTy())
+        {}
+      inline __both__ LinearSpace3( const OneTy & )
+        : vx(OneTy(), ZeroTy(), ZeroTy()),
+        vy(ZeroTy(), OneTy(), ZeroTy()),
+        vz(ZeroTy(), ZeroTy(), OneTy())
+        {}
+#else
       inline __both__ LinearSpace3( ZeroTy ) : vx(zero), vy(zero), vz(zero) {}
       inline __both__ LinearSpace3( OneTy ) : vx(one, zero, zero), vy(zero, one, zero), vz(zero, zero, one) {}
+#endif
 
       /*! return matrix for scaling */
       static inline __both__ LinearSpace3 scale(const vector_t& s) {

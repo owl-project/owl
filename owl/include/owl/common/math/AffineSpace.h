@@ -58,7 +58,11 @@ namespace owl {
       ////////////////////////////////////////////////////////////////////////////////
 
       // inline AffineSpaceT           ( ) = default;
+#ifdef __CUDA_ARCH__
+      inline AffineSpaceT           ( ) : l(OneTy()), p(ZeroTy()) {}
+#else
       inline AffineSpaceT           ( ) : l(one), p(zero) {}
+#endif
 
       inline AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
       inline AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(zero); }

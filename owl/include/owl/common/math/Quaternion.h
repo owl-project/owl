@@ -68,8 +68,13 @@ namespace owl {
       /// Constants
       ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __CUDA_ARCH__
+      __both__ QuaternionT( const ZeroTy & ) : r(zero), i(zero), j(zero), k(zero) {}
+      __both__ QuaternionT( const OneTy &  ) : r( one), i(zero), j(zero), k(zero) {}
+#else
       __both__ QuaternionT( ZeroTy ) : r(zero), i(zero), j(zero), k(zero) {}
       __both__ QuaternionT( OneTy  ) : r( one), i(zero), j(zero), k(zero) {}
+#endif
 
       /*! return quaternion for rotation around arbitrary axis */
       static __both__ QuaternionT rotate(const Vector& u, const T& r) {
