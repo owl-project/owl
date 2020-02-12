@@ -25,6 +25,11 @@ namespace owl {
       type(type)
   {}
 
+  Buffer::~Buffer()
+  {
+    destroy();
+  }
+  
   const void *Buffer::getPointer(int deviceID)
   {
     return lloBufferGetPointer(context->llo,this->ID,deviceID);

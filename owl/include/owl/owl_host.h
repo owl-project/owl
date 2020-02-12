@@ -115,11 +115,20 @@ typedef enum
     OWL_LONG2,
     OWL_LONG3,
     OWL_LONG4,
-   
+
     OWL_ULONG=140,
     OWL_ULONG2,
     OWL_ULONG3,
     OWL_ULONG4,
+
+    /*! just another name for a 64-bit data type - unlike
+        OWL_BUFFER_POINTER's (which gets translated from OWLBuffer's
+        to actual device-side poiners) these OWL_RAW_POINTER types get
+        copied binary without any translation. This is useful for
+        owl-cuda interaction (where the user already has device
+        pointers), but should not be used for logical buffers */
+    OWL_RAW_POINTER=OWL_ULONG,
+    
    
     OWL_BUFFER=1000,
     OWL_BUFFER_SIZE,
