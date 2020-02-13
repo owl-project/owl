@@ -113,8 +113,8 @@ namespace owl {
     static struct NaNTy
     {
 #ifdef __CUDA_ARCH__
-      __device__ operator double( ) const { return CUDART_NAN_F; }
-      __device__ operator float ( ) const { return CUDART_NAN; }
+      __device__ operator double( ) const { return CUDART_NAN; }
+      __device__ operator float ( ) const { return CUDART_NAN_F; }
 #else
       __both__ operator double( ) const { return std::numeric_limits<double>::quiet_NaN(); }
       __both__ operator float ( ) const { return std::numeric_limits<float>::quiet_NaN(); }
