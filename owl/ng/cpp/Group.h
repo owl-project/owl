@@ -30,6 +30,8 @@ namespace owl {
     {}
     virtual std::string toString() const { return "Group"; }
     virtual void buildAccel();
+
+    OptixTraversableHandle getTraversable(int deviceID);
   };
 
   

@@ -364,6 +364,9 @@ owlHostPinnedBufferCreate(OWLContext context,
 OWL_API const void *
 owlBufferGetPointer(OWLBuffer buffer, int deviceID);
 
+OWL_API OptixTraversableHandle 
+owlGroupGetTraversable(OWLGroup group, int deviceID);
+
 OWL_API void 
 owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 
