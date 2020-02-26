@@ -225,7 +225,7 @@ OPTIX_RAYGEN_PROGRAM(rayGen)()
   const RayGenData &self = owl::getProgramData<RayGenData>();
   const vec2i pixelID = owl::getLaunchIndex();
   
-  const int pixelIdx  = pixelID.x+self.fbSize.x*(self.fbSize.y-1-pixelID.y);
+  const int pixelIdx = pixelID.x+self.fbSize.x*(self.fbSize.y-1-pixelID.y);
 
   PerRayData prd;
   prd.random.init(pixelID.x,pixelID.y);

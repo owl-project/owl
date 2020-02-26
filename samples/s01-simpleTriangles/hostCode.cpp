@@ -14,7 +14,10 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// public owl node-graph api
+// This program sets up a single geometric object, a mesh for a cube, and
+// its acceleration structure, then ray traces it.
+
+// public owl node-graph API
 #include "owl/owl.h"
 // our device-side data structures
 #include "deviceCode.h"

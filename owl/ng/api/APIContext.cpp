@@ -47,7 +47,7 @@ namespace owl {
 
   void APIContext::releaseAll()
   {
-    LOG("#owl: context is dying, num api handles (other than context itself) "
+    LOG("#owl: context is dying; number of API handles (other than context itself) "
         << "that have not yet been released: "
         << (activeHandles.size()-1));
     for (auto handle : activeHandles)

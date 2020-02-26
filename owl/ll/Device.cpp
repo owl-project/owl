@@ -1028,7 +1028,7 @@ namespace owl {
     void Device::sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
                                   const void *callBackUserData)
     {
-      LOG("building sbt hit group records");
+      LOG("building SBT hit group records");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.hitGroupRecordsBuffer.alloced())
@@ -1114,7 +1114,7 @@ namespace owl {
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       context->popActive();
-      LOG_OK("done building (and uploading) sbt hit group records");
+      LOG_OK("done building (and uploading) SBT hit group records");
     }
       
     void Device::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
@@ -1124,7 +1124,7 @@ namespace owl {
       ++numTimesCalled;
       
       if (numTimesCalled < 10)
-        LOG("building sbt ray gen records (only showing first 10 instances)");
+        LOG("building SBT ray gen records (only showing first 10 instances)");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.rayGenRecordsBuffer.alloced())
@@ -1183,7 +1183,7 @@ namespace owl {
       sbt.rayGenRecordsBuffer.upload(rayGenRecords);
       context->popActive();
       if (numTimesCalled < 10)
-        LOG_OK("done building (and uploading) sbt ray gen records (only showing first 10 instances)");
+        LOG_OK("done building (and uploading) SBT ray gen records (only showing first 10 instances)");
     }
       
     void Device::sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgDataCB,
@@ -1191,7 +1191,7 @@ namespace owl {
     {
       if (missProgPGs.size() == 0) return;
       
-      LOG("building sbt miss prog records");
+      LOG("building SBT miss prog records");
       assert("check correct number of miss progs"
              && missProgPGs.size() == context->numRayTypes);
       
@@ -1254,7 +1254,7 @@ namespace owl {
       sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
       sbt.missProgRecordsBuffer.upload(missProgRecords);
       context->popActive();
-      LOG_OK("done building (and uploading) sbt miss prog records");
+      LOG_OK("done building (and uploading) SBT miss prog records");
     }
 
     void Device::launch(int rgID, const vec2i &dims)
@@ -1282,7 +1282,7 @@ namespace owl {
         // writing in some (senseless) values to not trigger optix's
         // own sanity checks
 #ifndef NDEBUG
-        static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+        static WarnOnce warn("launching an optix pipeline that has neither miss nor hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
 #endif
         localSBT.missRecordBase
           = (CUdeviceptr)32;
@@ -1507,7 +1507,7 @@ namespace owl {
         // any rays). If the latter, let's "fake" a valid SBT by
         // writing in some (senseless) values to not trigger optix's
         // own sanity checks.
-        static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+        static WarnOnce warn("launching an optix pipeline that has neither miss nor hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
         localSBT.missRecordBase
           = (CUdeviceptr)32;
         localSBT.missRecordStrideInBytes
