@@ -73,19 +73,19 @@ namespace owl {
 
     '0' means 'no instancing allowed, only bottom-level accels; 
   
-    '1' means 'at most one layer of instances' (ie, a two-level scene),
+    '1' means 'at most one layer of instances' (i.e., a two-level scene),
     where the 'root' world rays are traced against can be an instance
-    group, but every child in that inscne group is a geometry group.
+    group, but every child in that instance group is a geometry group.
 
     'N>1" means "up to N layers of instances are allowed.
 
-    The default instancing depth is 1 (ie, a two-level scene), since
+    The default instancing depth is 1 (i.e., a two-level scene), since
     this allows for most use cases of instancing and is still
     hardware-accelerated. Using a node graph with instancing deeper than
     the configured value will result in wrong results; but be aware that
     using any value > 1 here will come with a cost. It is recommended
     to, if at all possible, leave this value to one and convert the
-    input scene to a two-level scene layout (ie, with only one level of
+    input scene to a two-level scene layout (i.e., with only one level of
     instances) */
   OWL_API void
   owlSetMaxInstancingDepth(OWLContext _context,
@@ -558,7 +558,7 @@ namespace owl {
     return (OWLGeom)context->createHandle(geometry);
   }
   
-  /*! set the primitive count for the given uesr geometry. this _has_
+  /*! Set the primitive count for the given user geometry. This _has_
     to be set before the group(s) that this geom is used in get
     built */
   OWL_API void

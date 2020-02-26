@@ -14,6 +14,9 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+// The Ray Tracing in One Weekend scene.
+// See https://github.com/raytracing/InOneWeekend/releases/ for this free book.
+
 // public owl API
 #include <owl/owl.h>
 // our device-side data structures

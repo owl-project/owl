@@ -342,7 +342,7 @@ namespace owl {
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
 
-      // set children - todo: move to separate (api?) function(s)!?
+      // set children - todo: move to separate (API?) function(s)!?
       if (geomIDs) {
         for (int childID=0;childID<childCount;childID++) {
           int geomID = geomIDs[childID];

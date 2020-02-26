@@ -14,6 +14,10 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+// The Ray Tracing in One Weekend scene, but with cubes substituted for some
+// spheres. This program shows how different geometric types in a single scene
+// are handled.
+
 // public owl API
 #include <owl/owl.h>
 // our device-side data structures
