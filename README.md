@@ -95,7 +95,7 @@ Per-OS Instructions:
 - Windows
     - Requires: Visual Studio (both 2017 and 2019 work), OptiX 7.0, cmake
 	- Build: Use CMake-GUI to build Visual Studio project, then use VS to build
-		- Specifics: source code path is ```...Gitlab/owl```, binaries ```...Gitlab/owl/build```, and use ```x64``` after pushing the Configure button.
+		- Specifics: source code path is ```...Gitlab/owl```, binaries ```...Gitlab/owl/build```, and after pushing the Configure button choose ```x64``` for the optional platform.
 		- You may need to Configure twice.
 		- If you get "OptiX headers (optix.h and friends) not found." then define OptiX_INCLUDE manually in CMake-gui by setting it to ```C:/ProgramData/NVIDIA Corporation/OptiX SDK 7.0.0/include```
 

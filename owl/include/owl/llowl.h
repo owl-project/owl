@@ -73,7 +73,7 @@ extern "C" {
 
   typedef enum
     {
-      /*! no error - api did what it was asked to do */
+      /*! no error - API did what it was asked to do */
       LLO_SUCCESS = 0,
       /*! some un-specified error happened. use lloGetLastErrorString
        *  to get a textual description */
@@ -100,7 +100,7 @@ extern "C" {
   typedef void
   (*LLOWriteHitProgDataCB)(uint8_t *hitProgDataToWrite,
                            /*! ID of the device we're
-                             writing for (differnet
+                             writing for (different
                              devices may need to write
                              different pointers */
                            int deviceID,
@@ -122,7 +122,7 @@ extern "C" {
   typedef void
   (*LLOWriteRayGenDataCB)(uint8_t *rayGenDataToWrite,
                           /*! ID of the device we're
-                            writing for (differnet
+                            writing for (different
                             devices may need to write
                             different pointers */
                           int deviceID,
@@ -140,7 +140,7 @@ extern "C" {
   typedef void
   LLOWriteMissProgDataCB(uint8_t *missProgDataToWrite,
                          /*! ID of the device we're
-                           writing for (differnet
+                           writing for (different
                            devices may need to write
                            different pointers */
                          int deviceID,
@@ -185,19 +185,19 @@ extern "C" {
 
     '0' means 'no instancing allowed, only bottom-level accels; 
   
-    '1' means 'at most one layer of instances' (ie, a two-level scene),
+    '1' means 'at most one layer of instances' (i.e., a two-level scene),
     where the 'root' world rays are traced against can be an instance
-    group, but every child in that inscne group is a geometry group.
+    group, but every child in that instance group is a geometry group.
 
     'N>1" means "up to N layers of instances are allowed.
 
-    The default instancing depth is 1 (ie, a two-level scene), since
+    The default instancing depth is 1 (i.e., a two-level scene), since
     this allows for most use cases of instancing and is still
     hardware-accelerated. Using a node graph with instancing deeper than
     the configured value will result in wrong results; but be aware that
     using any value > 1 here will come with a cost. It is recommended
     to, if at all possible, leave this value to one and convert the
-    input scene to a two-level scene layout (ie, with only one level of
+    input scene to a two-level scene layout (i.e., with only one level of
     instances) */
   OWL_LL_INTERFACE
   LLOResult lloSetMaxInstancingDepth(LLOContext llo,

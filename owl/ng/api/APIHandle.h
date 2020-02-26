@@ -21,8 +21,8 @@ namespace owl {
   struct APIContext;
 
   /*! class that wraps an internal object-sharedptr to a 64-bit
-      'handle' that is accessible through the c-api, and does the
-      app-side create/release. Handle are owned by an api context,
+      'handle' that is accessible through the C-API, and does the
+      app-side create/release. Handle are owned by an API context,
       which creates handles and will, upon 'ContextDestroy' release
       all of them (and of course, release them individually if the app
       releases them).

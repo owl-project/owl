@@ -14,6 +14,9 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+// This program renders the recursive Sierpinski tetrahedron to a given depth.
+// The code demonstrates how to create nested instances.
+
 // public owl API
 #include <owl/owl.h>
 // our device-side data structures
@@ -241,7 +244,7 @@ int main(int ac, char **av)
   LOG_OK("everything set up ...");
   
   // ##################################################################
-  // now that everything is readly: launch it ....
+  // now that everything is ready: launch it ....
   // ##################################################################
   
   owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
@@ -260,5 +263,5 @@ int main(int ac, char **av)
   LOG("destroying devicegroup ...");
   owlContextDestroy(owl);
   
-  LOG_OK("seems all went ok; app is done, this should be the last output ...");
+  LOG_OK("seems all went OK; app is done, this should be the last output ...");
 }
