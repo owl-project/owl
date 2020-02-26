@@ -46,11 +46,12 @@ include(configure_cuda)
 include(configure_optix)
 include(configure_build_type)
 
+include_directories(${OWL_INCLUDES})
+
 enable_testing()
 
 # ------------------------------------------------------------------
-# owl library itself, noth ll and node graph layer, and including
-# owl-common
+# owl library itself, including owl-common
 # ------------------------------------------------------------------
 add_subdirectory(owl)
 

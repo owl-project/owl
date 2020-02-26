@@ -216,6 +216,7 @@ int main(int ac, char **av)
     metalSpheresGeom,
     dielectricSpheresGeom
   };
+
   OWLGroup world
     = owlUserGeomGroupCreate(context,3,userGeoms);
   owlGroupBuildAccel(world);

@@ -27,7 +27,7 @@ namespace owl {
     Buffer(Context *const context, OWLDataType type);
     
     /*! destructor - free device data, de-regsiter, and destruct */
-    virtual ~Buffer() { destroy(); }
+    virtual ~Buffer();
     
     virtual std::string toString() const { return "Buffer"; }
 

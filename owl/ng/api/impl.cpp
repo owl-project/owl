@@ -469,6 +469,16 @@ namespace owl {
     return buffer->getPointer(deviceID);
   }
 
+  OWL_API OptixTraversableHandle 
+  owlGroupGetTraversable(OWLGroup _group, int deviceID)
+  {
+    LOG_API_CALL();
+    assert(_group);
+    Group::SP group = ((APIHandle *)_group)->get<Group>();
+    assert(group);
+    return group->getTraversable(deviceID);
+  }
+
   OWL_API CUstream
   owlParamsGetCudaStream(OWLLaunchParams _lp, int deviceID)
   {

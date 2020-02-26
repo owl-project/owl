@@ -27,7 +27,7 @@ namespace owl {
     inline __both__ float rotate(const float a, const float b)
     {
       float sum = a+b;
-      return (sum-1.f)<0.f?sum:(sum-1.f);
+      return ((sum-1.f)<0.f)?(sum):(sum-1.f);
     }
 
     /*! perform 'rotation' of float a by amount b. Both a and b must be

@@ -23,7 +23,12 @@ namespace owl {
   {
     lloGroupAccelBuild(context->llo,this->ID);
   }
-
+  
+  OptixTraversableHandle Group::getTraversable(int deviceID)
+  {
+    return lloGroupGetTraversable(context->llo,this->ID,deviceID);
+  }
+  
   void UserGeomGroup::buildAccel()
   {
     size_t maxVarSize = 0;
