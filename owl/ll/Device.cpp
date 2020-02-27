@@ -372,6 +372,35 @@ namespace owl {
       hitGroup.closestHit.progName = progName;
     }
     
+    /*! set any hit program for given geometry type and ray
+      type. Note progName will *not* be copied, so the pointer
+      must remain valid as long as this geom may ever get
+      recompiled */
+    void Device::setGeomTypeAnyHit(int geomTypeID,
+                                       int rayTypeID,
+                                       int moduleID,
+                                       const char *progName)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      
+      assert(rayTypeID >= 0);
+      assert(rayTypeID < context->numRayTypes);
+      assert(rayTypeID < geomType.perRayType.size());
+      auto &hitGroup = geomType.perRayType[rayTypeID];
+      
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      assert("check hitgroup isn't currently active" && hitGroup.pg == nullptr);
+      hitGroup.anyHit.moduleID = moduleID;
+      hitGroup.anyHit.progName = progName;
+    }
+    
     void Device::setRayGen(int programID,
                            int moduleID,
                            const char *progName,

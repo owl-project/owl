@@ -44,6 +44,11 @@ namespace owl {
 
     std::vector<ProgramDesc> closestHit;
     
+    virtual void setAnyHitProgram(int rayType,
+                                      Module::SP module,
+                                      const std::string &progName);
+
+    std::vector<ProgramDesc> anyHit;
     virtual std::shared_ptr<Geom> createGeom() = 0;
   };
 

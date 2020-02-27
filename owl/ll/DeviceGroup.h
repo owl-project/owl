@@ -99,6 +99,10 @@ namespace owl {
                                  int rayTypeID,
                                  int moduleID,
                                  const char *progName);
+      void setGeomTypeAnyHit(int pgID,
+                                 int rayTypeID,
+                                 int moduleID,
+                                 const char *progName);
       void setGeomTypeIntersect(int pgID,
                                 int rayTypeID,
                                 int moduleID,

@@ -169,6 +169,15 @@ namespace owl {
         device->setGeomTypeClosestHit(geomTypeID,rayTypeID,moduleID,progName);
     }
     
+    void DeviceGroup::setGeomTypeAnyHit(int geomTypeID,
+                                            int rayTypeID,
+                                            int moduleID,
+                                            const char *progName)
+    {
+      for (auto device : devices)
+        device->setGeomTypeAnyHit(geomTypeID,rayTypeID,moduleID,progName);
+    }
+    
     void DeviceGroup::setGeomTypeIntersect(int geomTypeID,
                                             int rayTypeID,
                                             int moduleID,

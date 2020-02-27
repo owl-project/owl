@@ -436,6 +436,12 @@ owlGeomTypeSetClosestHit(OWLGeomType type,
                          const char *progName);
 
 OWL_API void
+owlGeomTypeSetAnyHit(OWLGeomType type,
+                     int rayType,
+                     OWLModule module,
+                     const char *progName);
+
+OWL_API void
 owlGeomTypeSetIntersectProg(OWLGeomType type,
                             int rayType,
                             OWLModule module,

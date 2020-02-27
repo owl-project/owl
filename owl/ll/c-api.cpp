@@ -336,6 +336,24 @@ namespace owl {
         });
     }
 
+    OWL_LL_INTERFACE
+    LLOResult lloGeomTypeAnyHit(LLOContext llo,
+                                    int32_t geomTypeID,
+                                    int32_t rayTypeID,
+                                    int32_t moduleID,
+                                    const char *programName)
+      
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->setGeomTypeAnyHit(geomTypeID,
+                                    rayTypeID,
+                                    moduleID,
+                                    programName);
+        });
+    }
+
 
     OWL_LL_INTERFACE
     LLOResult lloTrianglesGeomSetVertexBuffer(LLOContext llo,

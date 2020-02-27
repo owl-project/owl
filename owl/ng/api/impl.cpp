@@ -738,6 +738,29 @@ namespace owl {
   }
 
   OWL_API void
+  owlGeomTypeSetAnyHit(OWLGeomType _geometryType,
+                           int             rayType,
+                           OWLModule       _module,
+                           const char     *progName)
+  {
+    LOG_API_CALL();
+    
+    assert(_geometryType);
+    assert(_module);
+    assert(progName);
+
+    GeomType::SP geometryType
+      = ((APIHandle *)_geometryType)->get<GeomType>();
+    assert(geometryType);
+
+    Module::SP module
+      = ((APIHandle *)_module)->get<Module>();
+    assert(module);
+
+    geometryType->setAnyHitProgram(rayType,module,progName);
+  }
+
+  OWL_API void
   owlGeomTypeSetIntersectProg(OWLGeomType _geometryType,
                            int             rayType,
                            OWLModule       _module,

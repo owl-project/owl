@@ -457,6 +457,15 @@ namespace owl {
                                  int moduleID,
                                  const char *progName);
       
+      /*! set any hit program for given geometry type and ray
+          type. Note progName will *not* be copied, so the pointer
+          must remain valid as long as this geom may ever get
+          recompiled */
+      void setGeomTypeAnyHit(int geomTypeID,
+                                 int rayTypeID,
+                                 int moduleID,
+                                 const char *progName);
+      
       /*! set intersect program for given geometry type and ray type
         (only allowed for user geometry types). Note progName will
         *not* be copied, so the pointer must remain valid as long as
