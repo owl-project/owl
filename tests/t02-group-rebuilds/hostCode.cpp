@@ -565,17 +565,18 @@ int main(int ac, char **av)
             << " re-builds of every group (and SBT, of course)" << std::endl;
   for (int i=0;i<Nrebuilds;i++) {
     std::cout << "." << std::flush;
-    owlGroupBuildAccel(userGeomGroup);
-    owlGroupBuildAccel(triangleGeomGroup);
+    // owlGroupBuildAccel(userGeomGroup);
+    // owlGroupBuildAccel(triangleGeomGroup);
     owlGroupBuildAccel(world);
-    owlBuildSBT(context);
-    static int nextRenderPing = 0;
-    if (i >= nextRenderPing) {
-      std::cout << "+" << std::flush;
-      owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
-      nextRenderPing = std::max(1,2*nextRenderPing);
-    }
+    // owlBuildSBT(context);
+    // static int nextRenderPing = 0;
+    // if (i >= nextRenderPing) {
+    //   std::cout << "+" << std::flush;
+    //   owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
+    //   nextRenderPing = std::max(1,2*nextRenderPing);
+    // }
   }
+    owlBuildSBT(context);
   LOG("final launch ...");
   owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
   
