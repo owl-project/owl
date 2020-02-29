@@ -95,10 +95,22 @@ namespace owl {
     deviceBufferCreate(OWLDataType type,
                        size_t count,
                        const void *init);
+
+    /*! creates a buffer that uses CUDA host pinned memory; that
+      memory is pinned on the host and accessive to all devices in the
+      device group */
     Buffer::SP
     hostPinnedBufferCreate(OWLDataType type,
-                       size_t count);
-
+                           size_t count);
+    
+    /*! creates a buffer that uses CUDA managed memory; that memory is
+      managed by CUDA (see CUDAs documentatoin on managed memory) and
+      accessive to all devices in the deviec group */
+    Buffer::SP
+    managedMemoryBufferCreate(OWLDataType type,
+                              size_t count,
+                              const void *init);
+    
     RayGen::SP
     createRayGen(const std::shared_ptr<RayGenType> &type);
     

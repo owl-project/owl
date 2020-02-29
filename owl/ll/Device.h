@@ -20,6 +20,7 @@
 #include "owl/ll/DeviceMemory.h"
 // for the hit group callback type, which is part of the API
 #include "owl/ll/DeviceGroup.h"
+#include "owl/ll/Buffers.h"
 
 namespace owl {
   namespace ll {
@@ -201,67 +202,6 @@ namespace owl {
 
     typedef enum { TRIANGLES, USER } PrimType;
     
-    struct Buffer {
-      Buffer(const size_t elementCount,
-             const size_t elementSize)
-        : elementCount(elementCount),
-          elementSize(elementSize)
-      {
-        assert(elementSize > 0);
-      }
-      virtual ~Buffer()
-      {
-        assert(numTimesReferenced == 0);
-      }
-      inline void *get() const { return d_pointer; }
-      virtual void resize(Device *device, size_t newElementCount) = 0;
-      virtual void upload(Device *device, const void *hostPtr) = 0;
-      
-      size_t       elementCount;
-      size_t       elementSize;
-      void        *d_pointer = nullptr;
-      /*! only for error checking - we do NOT do reference counting
-        ourselves, but will use this to track erorrs like destroying
-        a geom/group that is still being refrerenced by a
-        group. Note we wil *NOT* automatically free a buffer if
-        refcount reaches zero - this is ONLY for sanity checking
-        during object deletion */
-      int numTimesReferenced = 0;
-    };
-
-    struct DeviceBuffer : public Buffer
-    {
-      DeviceBuffer(const size_t elementCount,
-                   const size_t elementSize)
-        : Buffer(elementCount, elementSize)
-      {
-        devMem.alloc(elementCount*elementSize);
-        d_pointer = devMem.get();
-      }
-      ~DeviceBuffer()
-      {
-        devMem.free();
-      }
-      void resize(Device *device, size_t newElementCount) override;
-      void upload(Device *device, const void *hostPtr) override;
-      DeviceMemory devMem;
-    };
-    
-    struct HostPinnedBuffer : public Buffer
-    {
-      HostPinnedBuffer(const size_t elementCount,
-                       const size_t elementSize,
-                       HostPinnedMemory::SP pinnedMem)
-        : Buffer(elementCount, elementSize),
-          pinnedMem(pinnedMem)
-      {
-        d_pointer = pinnedMem->pointer;
-      }
-      void resize(Device *device, size_t newElementCount) override;
-      void upload(Device *device, const void *hostPtr) override;
-      HostPinnedMemory::SP pinnedMem;
-    };
-      
     struct Geom {
       Geom(int geomID, int geomTypeID)
         : geomID(geomID), geomTypeID(geomTypeID)
@@ -617,6 +557,13 @@ namespace owl {
                               size_t elementCount,
                               size_t elementSize,
                               const void *initData);
+
+      /*! create a managed memory buffer */
+      void managedMemoryBufferCreate(int bufferID,
+                                     size_t elementCount,
+                                     size_t elementSize,
+                                     ManagedMemory::SP managedMem);
+      
       void hostPinnedBufferCreate(int bufferID,
                                   size_t elementCount,
                                   size_t elementSize,

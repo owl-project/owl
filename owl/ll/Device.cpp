@@ -900,6 +900,22 @@ namespace owl {
       STACK_POP_ACTIVE();
     }
     
+      /*! create a managed memory buffer */
+    void Device::managedMemoryBufferCreate(int bufferID,
+                                           size_t elementCount,
+                                           size_t elementSize,
+                                           ManagedMemory::SP managedMem)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID <  buffers.size());
+      assert("check buffer ID available" && buffers[bufferID] == nullptr);
+      context->pushActive();
+      Buffer *buffer = new ManagedMemoryBuffer(elementCount,elementSize,managedMem);
+      assert("check buffer properly created" && buffer != nullptr);
+      buffers[bufferID] = buffer;
+      context->popActive();
+    }
+      
     void Device::hostPinnedBufferCreate(int bufferID,
                                         size_t elementCount,
                                         size_t elementSize,
@@ -1433,51 +1449,6 @@ namespace owl {
       buffers.resize(newCount);
     }
 
-    void HostPinnedBuffer::resize(Device *device, size_t newElementCount) 
-    {
-      if (device->context->owlDeviceID == 0) {
-      
-        device->context->pushActive();
-        
-        pinnedMem->free();
-        
-        this->elementCount = newElementCount;
-        pinnedMem->alloc(elementCount*elementSize);
-        
-        device->context->popActive();
-      }
-      
-      d_pointer = pinnedMem->get();
-    }
-    
-    void HostPinnedBuffer::upload(Device *device, const void *hostPtr) 
-    {
-      OWL_NOTIMPLEMENTED;
-    }
-    
-    void DeviceBuffer::resize(Device *device, size_t newElementCount) 
-    {
-      device->context->pushActive();
-
-      devMem.free();
-      
-      this->elementCount = newElementCount;
-      devMem.alloc(elementCount*elementSize);
-      d_pointer = devMem.get();
-      
-      device->context->popActive();
-    }
-    
-    void DeviceBuffer::upload(Device *device, const void *hostPtr) 
-    {
-      device->context->pushActive();
-      devMem.upload(hostPtr,"DeviceBuffer::upload");
-      device->context->popActive();
-    }
-
-
-
-    
     void Device::allocLaunchParams(size_t count)
     {
       if (count < launchParams.size())

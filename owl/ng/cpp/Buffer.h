@@ -44,6 +44,18 @@ namespace owl {
     OWLDataType type;
   };
 
+  struct DeviceBuffer : public Buffer {
+    typedef std::shared_ptr<DeviceBuffer> SP;
+    
+    DeviceBuffer(Context *const context,
+                 OWLDataType type,
+                 size_t count,
+                 const void *init);
+
+    /*! pretty-printer, for debugging */
+    std::string toString() const override { return "DeviceBuffer"; }
+  };
+  
   struct HostPinnedBuffer : public Buffer {
     typedef std::shared_ptr<HostPinnedBuffer> SP;
     
@@ -55,16 +67,19 @@ namespace owl {
     std::string toString() const override { return "HostPinnedBuffer"; }
   };
   
-  struct DeviceBuffer : public Buffer {
-    typedef std::shared_ptr<DeviceBuffer> SP;
+  struct ManagedMemoryBuffer : public Buffer {
+    typedef std::shared_ptr<ManagedMemoryBuffer> SP;
     
-    DeviceBuffer(Context *const context,
-                 OWLDataType type,
-                 size_t count,
-                 const void *init);
+    ManagedMemoryBuffer(Context *const context,
+                        OWLDataType type,
+                        size_t count,
+                        /*! data with which to populate this buffer;
+                          may be null, but has to be of size 'amount'
+                          if not */
+                        const void *initData);
 
     /*! pretty-printer, for debugging */
-    std::string toString() const override { return "DeviceBuffer"; }
+    std::string toString() const override { return "ManagedMemoryBuffer"; }
   };
   
 } // ::owl

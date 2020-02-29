@@ -70,6 +70,9 @@ namespace owl {
     LOG_OK("device group created");
   }
   
+  /*! creates a buffer that uses CUDA host pinned memory; that
+    memory is pinned on the host and accessive to all devices in the
+    device group */
   Buffer::SP Context::hostPinnedBufferCreate(OWLDataType type,
                                              size_t count)
   {
@@ -78,11 +81,26 @@ namespace owl {
     return buffer;
   }
 
+  /*! creates a buffer that uses CUDA managed memory; that memory is
+    managed by CUDA (see CUDAs documentatoin on managed memory) and
+    accessive to all devices in the deviec group */
+  Buffer::SP
+  Context::managedMemoryBufferCreate(OWLDataType type,
+                                     size_t count,
+                                     const void *init)
+  {
+    Buffer::SP buffer
+      = std::make_shared<ManagedMemoryBuffer>(this,type,count,init);
+    assert(buffer);
+    return buffer;
+  }
+  
   Buffer::SP Context::deviceBufferCreate(OWLDataType type,
                                          size_t count,
                                          const void *init)
   {
-    Buffer::SP buffer = std::make_shared<DeviceBuffer>(this,type,count,init);
+    Buffer::SP buffer
+      = std::make_shared<DeviceBuffer>(this,type,count,init);
     assert(buffer);
     return buffer;
   }

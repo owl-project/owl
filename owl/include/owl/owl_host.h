@@ -351,16 +351,40 @@ owlGeomTypeCreate(OWLContext context,
                   OWLVarDecl *vars,
                   size_t      numVars);
 
+
+/*! creates a device buffer where every device has its own local copy
+  of the given buffer */
 OWL_API OWLBuffer
 owlDeviceBufferCreate(OWLContext  context,
                       OWLDataType type,
                       size_t      count,
                       const void *init);
+
+/*! creates a buffer that uses CUDA host pinned memory; that memory is
+  pinned on the host and accessive to all devices in the deviec
+  group */
 OWL_API OWLBuffer
 owlHostPinnedBufferCreate(OWLContext context,
                           OWLDataType type,
                           size_t      count);
 
+/*! creates a buffer that uses CUDA managed memory; that memory is
+  managed by CUDA (see CUDAs documentatoin on managed memory) and
+  accessive to all devices in the deviec group */
+OWL_API OWLBuffer
+owlManagedMemoryBufferCreate(OWLContext context,
+                             OWLDataType type,
+                             size_t      count,
+                             const void *init);
+
+/*! returns the device pointer of the given pointer for the given
+    device ID. For host-pinned or managed memory buffers (where the
+    buffer is shared across all devices) this pointer should be the
+    same across all devices (and even be accessible on the host); for
+    device buffers each device *may* see this buffer under a different
+    address, and that address is not valid on the host. Note this
+    function is paricuarly useful for CUDA-interop; allowing to
+    cudaMemcpy to/from an owl buffer directly from CUDA code */
 OWL_API const void *
 owlBufferGetPointer(OWLBuffer buffer, int deviceID);
 
