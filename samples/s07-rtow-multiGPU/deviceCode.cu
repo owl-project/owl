@@ -256,6 +256,13 @@ OPTIX_RAYGEN_PROGRAM(rayGen)()
   
   const int pixelIdx = pixelID.x+self.fbSize.x*(self.fbSize.y-1-pixelID.y);
 
+  /* compute who is repsonible for a given group of pixels: */
+  int deviceThatIsResponsible = (pixelID.x>>5) % self.deviceCount;
+  /* ... and if it's not us, just return (some other device will
+     compute these pixels */
+  if (self.deviceIndex != deviceThatIsResponsible)
+    return;
+  
   PerRayData prd;
   prd.random.init(pixelID.x,pixelID.y);
   

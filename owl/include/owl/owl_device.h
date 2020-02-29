@@ -238,6 +238,10 @@ namespace owl {
   extern "C" __global__ \
   void __closesthit__##programName
 
+#define OPTIX_ANY_HIT_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __anyhit__##programName
+
 #define OPTIX_INTERSECT_PROGRAM(programName) \
   extern "C" __global__ \
   void __intersection__##programName

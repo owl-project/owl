@@ -38,7 +38,7 @@ struct RayGenData
     vec3f lower_left_corner;
     vec3f horizontal;
     vec3f vertical;
-  } camera;
+  } camera; 
 };
 
 struct MissProgData

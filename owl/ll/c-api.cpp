@@ -336,6 +336,24 @@ namespace owl {
         });
     }
 
+    OWL_LL_INTERFACE
+    LLOResult lloGeomTypeAnyHit(LLOContext llo,
+                                    int32_t geomTypeID,
+                                    int32_t rayTypeID,
+                                    int32_t moduleID,
+                                    const char *programName)
+      
+    {
+      return squashExceptions
+        ([&](){
+          DeviceGroup *dg = (DeviceGroup *)llo;
+          dg->setGeomTypeAnyHit(geomTypeID,
+                                    rayTypeID,
+                                    moduleID,
+                                    programName);
+        });
+    }
+
 
     OWL_LL_INTERFACE
     LLOResult lloTrianglesGeomSetVertexBuffer(LLOContext llo,
@@ -518,6 +536,9 @@ namespace owl {
         });
     }
       
+  /*! creates a buffer that uses CUDA host pinned memory; that memory
+      is pinned on the host and accessive to all devices in the deviec
+      group */
     OWL_LL_INTERFACE
     LLOResult lloHostPinnedBufferCreate(LLOContext llo,
                                         /*! ID of buffer to create */
@@ -531,7 +552,29 @@ namespace owl {
           dg->hostPinnedBufferCreate(bufferID,sizeInBytes,1);
         });
     }
-      
+
+  /*! creates a buffer that uses CUDA managed memory; that memory is
+      managed by CUDA (see CUDAs documentatoin on managed memory) and
+      accessive to all devices in the deviec group */
+    OWL_LL_INTERFACE
+    LLOResult lloManagedMemoryBufferCreate(LLOContext llo,
+                                           /*! ID of buffer to create */
+                                           int32_t bufferID,
+                                           /*! number of elements */
+                                           size_t sizeInBytes,
+                                           /*! data with which to
+                                             populate this buffer; may
+                                             be null, but has to be of
+                                             size 'amount' if not */
+                                           const void *initData)
+    {
+      return squashExceptions
+        ([&](){
+           DeviceGroup *dg = (DeviceGroup *)llo;
+           dg->managedMemoryBufferCreate(bufferID,sizeInBytes,1,initData);
+         });
+    }
+    
     OWL_LL_INTERFACE
     LLOResult lloDeviceBufferCreate(LLOContext llo,
                                     /*! ID of buffer to create */

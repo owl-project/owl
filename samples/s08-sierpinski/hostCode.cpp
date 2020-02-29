@@ -62,7 +62,10 @@ const float fovy = 30.f;
 
 int main(int ac, char **av)
 {
-  uint32_t numLevels = 8;
+  /* iw, feb 29 - after update to latest driver this sample no longer
+     works for numLevels > 2. Currently investigating if this is owl
+     issue, or a driver issue */
+  uint32_t numLevels = 2;
   LOG("owl example '" << av[0] << "' starting up");
 
   for (int i=1;i<ac;i++) {
@@ -82,7 +85,7 @@ int main(int ac, char **av)
   
   OWLContext owl
     = owlContextCreate(nullptr,1);
-  owlSetMaxInstancingDepth(owl,numLevels-1);
+  owlSetMaxInstancingDepth(owl,numLevels);
   
   OWLModule module
     = owlModuleCreate(owl,ptxCode);

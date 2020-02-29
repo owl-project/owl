@@ -24,7 +24,8 @@ namespace owl {
                      const std::vector<OWLVarDecl> &varDecls)
     : SBTObjectType(context,context->geomTypes,
                     varStructSize,varDecls),
-      closestHit(context->numRayTypes)
+      closestHit(context->numRayTypes),
+      anyHit(context->numRayTypes)
   {
     lloGeomTypeCreate(context->llo,this->ID,
                       varStructSize);
@@ -114,6 +115,23 @@ namespace owl {
                           // the one on the constructor list will go out of
                           // scope after this function
                           closestHit[rayType].progName.c_str());
+  }
+
+  void GeomType::setAnyHitProgram(int rayType,
+                                      Module::SP module,
+                                      const std::string &progName)
+  {
+    assert(rayType < anyHit.size());
+      
+    anyHit[rayType].progName = progName;
+    anyHit[rayType].module   = module;
+    lloGeomTypeAnyHit(context->llo,this->ID,
+                          rayType,module->ID,
+                          // warning: this 'this' here is importat, since
+                          // *we* manage the lifetime of this string, and
+                          // the one on the constructor list will go out of
+                          // scope after this function
+                          anyHit[rayType].progName.c_str());
   }
 
 

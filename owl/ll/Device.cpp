@@ -160,6 +160,7 @@ namespace owl {
     {
       if (maxInstancingDepth == context->maxInstancingDepth)
         return;
+
       assert("check pipeline isn't already created"
              && context->pipeline == nullptr);
       context->maxInstancingDepth = maxInstancingDepth;
@@ -370,6 +371,35 @@ namespace owl {
       assert("check hitgroup isn't currently active" && hitGroup.pg == nullptr);
       hitGroup.closestHit.moduleID = moduleID;
       hitGroup.closestHit.progName = progName;
+    }
+    
+    /*! set any hit program for given geometry type and ray
+      type. Note progName will *not* be copied, so the pointer
+      must remain valid as long as this geom may ever get
+      recompiled */
+    void Device::setGeomTypeAnyHit(int geomTypeID,
+                                       int rayTypeID,
+                                       int moduleID,
+                                       const char *progName)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      
+      assert(rayTypeID >= 0);
+      assert(rayTypeID < context->numRayTypes);
+      assert(rayTypeID < geomType.perRayType.size());
+      auto &hitGroup = geomType.perRayType[rayTypeID];
+      
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      assert("check hitgroup isn't currently active" && hitGroup.pg == nullptr);
+      hitGroup.anyHit.moduleID = moduleID;
+      hitGroup.anyHit.progName = progName;
     }
     
     void Device::setRayGen(int programID,
@@ -817,6 +847,19 @@ namespace owl {
                                       log,&sizeof_log,
                                       &pipeline
                                       ));
+      
+      uint32_t maxAllowedByOptix = 0;
+      optixDeviceContextGetProperty
+        (optixContext,
+         OPTIX_DEVICE_PROPERTY_LIMIT_MAX_TRAVERSABLE_GRAPH_DEPTH,
+         &maxAllowedByOptix,
+         sizeof(maxAllowedByOptix));
+      if ((maxInstancingDepth+1) > maxAllowedByOptix)
+        throw std::runtime_error
+          ("error when building pipeline: "
+           "attempting to set max instancing depth to "
+           "value that exceeds OptiX's MAX_TRAVERSABLE_GRAPH_DEPTH limit");
+      
       OPTIX_CHECK(optixPipelineSetStackSize
                   (pipeline,
                    /* [in] The pipeline to configure the stack size for */
@@ -871,6 +914,22 @@ namespace owl {
       STACK_POP_ACTIVE();
     }
     
+      /*! create a managed memory buffer */
+    void Device::managedMemoryBufferCreate(int bufferID,
+                                           size_t elementCount,
+                                           size_t elementSize,
+                                           ManagedMemory::SP managedMem)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID <  buffers.size());
+      assert("check buffer ID available" && buffers[bufferID] == nullptr);
+      context->pushActive();
+      Buffer *buffer = new ManagedMemoryBuffer(elementCount,elementSize,managedMem);
+      assert("check buffer properly created" && buffer != nullptr);
+      buffers[bufferID] = buffer;
+      context->popActive();
+    }
+      
     void Device::hostPinnedBufferCreate(int bufferID,
                                         size_t elementCount,
                                         size_t elementSize,
@@ -1404,51 +1463,6 @@ namespace owl {
       buffers.resize(newCount);
     }
 
-    void HostPinnedBuffer::resize(Device *device, size_t newElementCount) 
-    {
-      if (device->context->owlDeviceID == 0) {
-      
-        device->context->pushActive();
-        
-        pinnedMem->free();
-        
-        this->elementCount = newElementCount;
-        pinnedMem->alloc(elementCount*elementSize);
-        
-        device->context->popActive();
-      }
-      
-      d_pointer = pinnedMem->get();
-    }
-    
-    void HostPinnedBuffer::upload(Device *device, const void *hostPtr) 
-    {
-      OWL_NOTIMPLEMENTED;
-    }
-    
-    void DeviceBuffer::resize(Device *device, size_t newElementCount) 
-    {
-      device->context->pushActive();
-
-      devMem.free();
-      
-      this->elementCount = newElementCount;
-      devMem.alloc(elementCount*elementSize);
-      d_pointer = devMem.get();
-      
-      device->context->popActive();
-    }
-    
-    void DeviceBuffer::upload(Device *device, const void *hostPtr) 
-    {
-      device->context->pushActive();
-      devMem.upload(hostPtr,"DeviceBuffer::upload");
-      device->context->popActive();
-    }
-
-
-
-    
     void Device::allocLaunchParams(size_t count)
     {
       if (count < launchParams.size())
