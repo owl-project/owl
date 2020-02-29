@@ -124,6 +124,20 @@ namespace owl {
       context->pushActive();
       LOG("building instance accel over "
           << children.size() << " groups");
+
+      // ==================================================================
+      // sanity check that that many instances are actualy allowed by optix:
+      // ==================================================================
+      uint32_t maxInstsPerIAS = 0;
+      optixDeviceContextGetProperty
+        (context->optixContext,
+         OPTIX_DEVICE_PROPERTY_LIMIT_MAX_INSTANCES_PER_IAS,
+         &maxInstsPerIAS,
+         sizeof(maxInstsPerIAS));
+      if (children.size() > maxInstsPerIAS)
+        throw std::runtime_error("number of children in instnace group exceeds "
+                                 "OptiX's MAX_INSTANCES_PER_IAS limit");
+      
       // ==================================================================
       // create instance build inputs
       // ==================================================================
