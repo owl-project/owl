@@ -39,7 +39,7 @@
 
 extern "C" char ptxCode[];
 
-const char *outFileName = "s06-rtow-mixedGeometries.png";
+const char *outFileName = "t02-group-rebuilds.png";
 const vec2i fbSize(600,300);
 const vec3f lookFrom(13, 2, 3);
 const vec3f lookAt(0, 0, 0);
