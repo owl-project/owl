@@ -160,6 +160,7 @@ namespace owl {
     {
       if (maxInstancingDepth == context->maxInstancingDepth)
         return;
+
       assert("check pipeline isn't already created"
              && context->pipeline == nullptr);
       context->maxInstancingDepth = maxInstancingDepth;
@@ -846,6 +847,19 @@ namespace owl {
                                       log,&sizeof_log,
                                       &pipeline
                                       ));
+      
+      uint32_t maxAllowedByOptix = 0;
+      optixDeviceContextGetProperty
+        (optixContext,
+         OPTIX_DEVICE_PROPERTY_LIMIT_MAX_TRAVERSABLE_GRAPH_DEPTH,
+         &maxAllowedByOptix,
+         sizeof(maxAllowedByOptix));
+      if ((maxInstancingDepth+1) > maxAllowedByOptix)
+        throw std::runtime_error
+          ("error when building pipeline: "
+           "attempting to set max instancing depth to "
+           "value that exceeds OptiX's MAX_TRAVERSABLE_GRAPH_DEPTH limit");
+      
       OPTIX_CHECK(optixPipelineSetStackSize
                   (pipeline,
                    /* [in] The pipeline to configure the stack size for */
