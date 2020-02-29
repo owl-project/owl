@@ -178,12 +178,17 @@ void createScene()
   
 int main(int ac, char **av)
 {
+  int Nrebuilds = 1000;
+
   // ##################################################################
   // pre-owl host-side set-up
   // ##################################################################
 
-  LOG("owl example '" << av[0] << "' starting up");
-
+  LOG("owl test case '" << av[0] << "' starting up");
+  if (ac == 2)
+    Nrebuilds = atoi(av[1]);
+  LOG("going to run with " << Nrebuilds << " rebuilds");
+  
   LOG("creating the scene ...");
   createScene();
   LOG_OK("created scene:");
@@ -560,21 +565,20 @@ int main(int ac, char **av)
   // ##################################################################
 
 
-  int Nrebuilds = 100000;
   std::cout << "performing " << Nrebuilds
             << " re-builds of every group (and SBT, of course)" << std::endl;
   for (int i=0;i<Nrebuilds;i++) {
     std::cout << "." << std::flush;
-    // owlGroupBuildAccel(userGeomGroup);
-    // owlGroupBuildAccel(triangleGeomGroup);
+    owlGroupBuildAccel(userGeomGroup);
+    owlGroupBuildAccel(triangleGeomGroup);
     owlGroupBuildAccel(world);
-    // owlBuildSBT(context);
-    // static int nextRenderPing = 0;
-    // if (i >= nextRenderPing) {
-    //   std::cout << "+" << std::flush;
-    //   owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
-    //   nextRenderPing = std::max(1,2*nextRenderPing);
-    // }
+    owlBuildSBT(context);
+    static int nextRenderPing = 0;
+    if (i >= nextRenderPing) {
+      std::cout << "+" << std::flush;
+      owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
+      nextRenderPing = std::max(1,2*nextRenderPing);
+    }
   }
     owlBuildSBT(context);
   LOG("final launch ...");
