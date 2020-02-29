@@ -86,10 +86,9 @@ vec3f tracePath(const RayGenData &self,
   
   /* iterative version of recursion, up to depth 50 */
   for (int depth=0;depth<5;depth++) {
-    owl::trace(/*accel to trace against*/self.world,
-               /*the ray to trace*/ ray,
-               /*numRayTypes*/1,
-               /*prd*/prd);
+    owl::traceRay(/*accel to trace against*/self.world,
+                  /*the ray to trace*/ ray,
+                  /*prd*/prd);
     if (prd.out.scatterEvent == rayDidntHitAnything) 
       /* ray got 'lost' to the environment - 'light' it with miss
          shader */

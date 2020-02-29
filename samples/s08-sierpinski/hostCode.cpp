@@ -65,7 +65,7 @@ int main(int ac, char **av)
   /* iw, feb 29 - after update to latest driver this sample no longer
      works for numLevels > 2. Currently investigating if this is owl
      issue, or a driver issue */
-  uint32_t numLevels = 2;
+  uint32_t numLevels = 6;
   LOG("owl example '" << av[0] << "' starting up");
 
   for (int i=1;i<ac;i++) {
@@ -206,7 +206,7 @@ int main(int ac, char **av)
       owlInstanceGroupSetChild(group,i,childGroup);
       owlInstanceGroupSetTransform(group,i,
                                    (const float *)&xfms[i],
-                                   OWL_MATRIX_FORMAT_COLUMN_MAJOR);
+                                   OWL_MATRIX_FORMAT_OWL);
     }
     owlGroupBuildAccel(group);
     world = group;

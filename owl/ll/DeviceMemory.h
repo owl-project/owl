@@ -45,6 +45,8 @@ namespace owl {
     
     inline void DeviceMemory::alloc(size_t size)
     {
+      if (alloced()) free();
+      
       assert(empty());
       this->sizeInBytes = size;
       CUDA_CHECK(cudaMalloc( (void**)&d_pointer, sizeInBytes));
