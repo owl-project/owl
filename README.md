@@ -123,6 +123,10 @@ v0.7.x - Unifiction of ng and ll APIs into one single owl API
 
 *v0.7.2*: various feature extensions and bug fixes
 
+- lots of additional use in owl prime, m-owl-ana, distributed renderer, etc.
+
+- fixed memory leak in instance builder
+
 - added multi-device sample (`s07-rtow-multiGPU`), including
   `samples/s07-rtow-multiGPU/README.md` with brief notes on how to do
   multi-GPU in owl
@@ -131,7 +135,8 @@ v0.7.x - Unifiction of ng and ll APIs into one single owl API
 
 - added ManagedMemory buffer type
 
-- added sanity checks for group sizes (checking w/ optix limits before trying to build)
+- added several sanity checks for group sizes, traversable graph
+  depth, etc (checking w/ optix limits before trying to build)
 
 - added AnyHit shader support
 
