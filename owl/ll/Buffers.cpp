@@ -35,7 +35,6 @@ namespace owl {
 
     Buffer::~Buffer()
     {
-      assert(numTimesReferenced == 0);
     }
 
 
