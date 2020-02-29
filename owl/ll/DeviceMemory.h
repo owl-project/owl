@@ -22,6 +22,7 @@ namespace owl {
   namespace ll {
     
     struct DeviceMemory {
+      inline ~DeviceMemory() { free(); }
       inline bool   alloced() const { return !empty(); }
       inline bool   empty() const { return sizeInBytes == 0; }
       inline bool   notEmpty() const { return !empty(); }
