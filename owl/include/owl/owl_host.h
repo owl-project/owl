@@ -228,9 +228,25 @@ OWL_API void owlBuildPrograms(OWLContext context);
 OWL_API void owlBuildPipeline(OWLContext context);
 OWL_API void owlBuildSBT(OWLContext context);
 
+/*! returns number of devices available in the given context */
 OWL_API int32_t
 owlGetDeviceCount(OWLContext context);
 
+/*! creates a new device context with the gives list of devices. 
+
+  If requested device IDs list if null it implicitly refers to the
+  list "0,1,2,...."; if numDevices <= 0 it automatically refers to
+  "all devices you can find". Examples:
+
+  - owlContextCreate(nullptr,1) creates one device on the first GPU
+
+  - owlContextCreate(nullptr,0) creates a context across all GPUs in
+  the system
+
+  - int gpu=2;owlContextCreate(&gpu,1) will create a context on GPU #2
+  (where 2 refers to the CUDA device ordinal; from that point on, from
+  owl's standpoint (eg, during owlBufferGetPointer() this GPU will
+  from that point on be known as device #0 */
 OWL_API OWLContext
 owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
                  int numDevices OWL_IF_CPP(=0));
@@ -351,16 +367,40 @@ owlGeomTypeCreate(OWLContext context,
                   OWLVarDecl *vars,
                   size_t      numVars);
 
+
+/*! creates a device buffer where every device has its own local copy
+  of the given buffer */
 OWL_API OWLBuffer
 owlDeviceBufferCreate(OWLContext  context,
                       OWLDataType type,
                       size_t      count,
                       const void *init);
+
+/*! creates a buffer that uses CUDA host pinned memory; that memory is
+  pinned on the host and accessive to all devices in the deviec
+  group */
 OWL_API OWLBuffer
 owlHostPinnedBufferCreate(OWLContext context,
                           OWLDataType type,
                           size_t      count);
 
+/*! creates a buffer that uses CUDA managed memory; that memory is
+  managed by CUDA (see CUDAs documentatoin on managed memory) and
+  accessive to all devices in the deviec group */
+OWL_API OWLBuffer
+owlManagedMemoryBufferCreate(OWLContext context,
+                             OWLDataType type,
+                             size_t      count,
+                             const void *init);
+
+/*! returns the device pointer of the given pointer for the given
+    device ID. For host-pinned or managed memory buffers (where the
+    buffer is shared across all devices) this pointer should be the
+    same across all devices (and even be accessible on the host); for
+    device buffers each device *may* see this buffer under a different
+    address, and that address is not valid on the host. Note this
+    function is paricuarly useful for CUDA-interop; allowing to
+    cudaMemcpy to/from an owl buffer directly from CUDA code */
 OWL_API const void *
 owlBufferGetPointer(OWLBuffer buffer, int deviceID);
 
@@ -395,9 +435,6 @@ owlParamsLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
 
 OWL_API CUstream
 owlParamsGetCudaStream(OWLLaunchParams params, int deviceID);
-
-// OWL_API OWLTriangles owlTrianglesCreate(OWLContext context,
-//                                         size_t varsStructSize);
 
 // ==================================================================
 // "Triangles" functions

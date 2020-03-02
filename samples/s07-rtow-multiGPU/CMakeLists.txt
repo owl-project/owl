@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,53 +14,23 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
 
-set(OWL_LL_SOURCES
-  common.h
-
-  ../include/owl/llowl.h
-  c-api.cpp
-
-  Buffers.h
-  Buffers.cpp
-  
-  Device.h
-  Device.cpp
-
-  TrianglesGeomGroup.cpp
-  UserGeomGroup.cpp
-  InstanceGroup.cpp
-  
-  DeviceGroup.h
-  DeviceGroup.cpp
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
   )
 
-add_library(llowl_static STATIC
-  ${OWL_LL_SOURCES}
+add_executable(sample07-rtow-multiGPU
+  hostCode.cpp
+  ${ptxCode}
   )
-target_link_libraries(llowl_static
-  ${CUDA_LIBRARIES}
-  ${CUDA_CUDA_LIBRARY}
+
+target_link_libraries(sample07-rtow-multiGPU
+  ${OWL_LIBRARIES}
   )
-target_compile_definitions(llowl_static PUBLIC -Dllowl_EXPORTS=1)
 
-#add_library(llowl
-#  ${OWL_LL_SOURCES}
-#  )
-#target_link_libraries(llowl
-#  ${CUDA_LIBRARIES}
-#  ${CUDA_CUDA_LIBRARY}
-#  )
-#set_target_properties(llowl PROPERTIES VERSION ${PROJECT_VERSION})
-#set_target_properties(llowl PROPERTIES CXX_VISIBILITY_PRESET hidden)
-#target_compile_definitions(llowl PUBLIC LLOWL_INTERFACE)
-#target_compile_definitions(llowl PUBLIC -Dllowl_EXPORTS=1)
-
-#set_target_properties(llowl PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties(llowl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-
+add_test(sample07-rtow-multiGPU
+  ${CMAKE_BINARY_DIR}/sample07-rtow-multiGPU)
 
 
 

@@ -430,6 +430,8 @@ namespace owl {
     context->releaseAll();
   }
 
+  /*! creates a device buffer where every device has its own local
+    copy of the given buffer */
   OWL_API OWLBuffer
   owlDeviceBufferCreate(OWLContext _context,
                         OWLDataType type,
@@ -445,6 +447,9 @@ namespace owl {
     return (OWLBuffer)context->createHandle(buffer);
   }
 
+  /*! creates a buffer that uses CUDA host pinned memory; that memory is
+    pinned on the host and accessive to all devices in the deviec
+    group */
   OWL_API OWLBuffer
   owlHostPinnedBufferCreate(OWLContext _context,
                             OWLDataType type,
@@ -459,6 +464,24 @@ namespace owl {
     return (OWLBuffer)context->createHandle(buffer);
   }
 
+  /*! creates a buffer that uses CUDA managed memory; that memory is
+    managed by CUDA (see CUDAs documentatoin on managed memory) and
+    accessive to all devices in the deviec group */
+  OWL_API OWLBuffer
+  owlManagedMemoryBufferCreate(OWLContext _context,
+                               OWLDataType type,
+                               size_t      count,
+                               const void *init)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    Buffer::SP  buffer  = context->managedMemoryBufferCreate(type,count,init);
+    assert(buffer);
+    return (OWLBuffer)context->createHandle(buffer);
+  }
+  
   OWL_API const void *
   owlBufferGetPointer(OWLBuffer _buffer, int deviceID)
   {

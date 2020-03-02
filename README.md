@@ -60,7 +60,8 @@ Directory Structure of the Project:
   - `samples/advanced`: more advanced sample containing a full OBJ model viewer
      (based on the siggraph 2019 OptiX course)
 
-- `tests/`: Some internal test cases; only for CI/testing/debugging
+- `tests/`: Some internal test cases; only for CI/testing/debugging,
+  should usually not be of much interest to users of the API
 
 <!--- ------------------------------------------------------- -->
 Supported Platforms
@@ -117,9 +118,27 @@ Per-OS Instructions:
 Latest Progress/Revision History
 ================================
 
-
 v0.7.x - Unifiction of ng and ll APIs into one single owl API
 ----------------------------------------------------------------------
+
+*v0.7.2*: various feature extensions and bug fixes
+
+- lots of additional use in owl prime, m-owl-ana, distributed renderer, etc.
+
+- fixed memory leak in instance builder
+
+- added multi-device sample (`s07-rtow-multiGPU`), including
+  `samples/s07-rtow-multiGPU/README.md` with brief notes on how to do
+  multi-GPU in owl
+
+- added a lot more documentation to api functions (though much is still missing)
+
+- added ManagedMemory buffer type
+
+- added several sanity checks for group sizes, traversable graph
+  depth, etc (checking w/ optix limits before trying to build)
+
+- added AnyHit shader support
 
 *v0.7.1*: bugfix release.
 

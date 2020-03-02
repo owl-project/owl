@@ -55,6 +55,22 @@ namespace owl {
                               count*sizeOf(type));
   }
   
+  ManagedMemoryBuffer::ManagedMemoryBuffer(Context *const context,
+                                           OWLDataType type,
+                                           size_t count,
+                                           /*! data with which to
+                                             populate this buffer; may
+                                             be null, but has to be of
+                                             size 'amount' if not */
+                                           const void *initData)
+    : Buffer(context,type)
+  {
+    lloManagedMemoryBufferCreate(context->llo,
+                                 this->ID,
+                                 count*sizeOf(type),
+                                 initData);
+  }
+  
   DeviceBuffer::DeviceBuffer(Context *const context,
                              OWLDataType type,
                              size_t count,

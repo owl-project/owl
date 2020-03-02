@@ -19,7 +19,7 @@
 
 using namespace owl;
 
-#define NUM_SAMPLES_PER_PIXEL 16
+#define NUM_SAMPLES_PER_PIXEL 1
 
 // ==================================================================
 // bounding box programs - since these don't actually use the material
@@ -212,7 +212,8 @@ vec3f missColor(const Ray &ray)
 
 OPTIX_MISS_PROGRAM(miss)()
 {
-  /* nothing to do */
+  // PerRayData &prd = owl::getPRD<PerRayData>();
+  // prd.out.scatterEvent = rayDidntHitAnything;
 }
 
 

@@ -295,13 +295,8 @@ extern "C" {
   OWL_LL_INTERFACE
   LLOResult lloCreatePipeline(LLOContext llo);
 
-  OWL_LL_INTERFACE
-  LLOResult lloHostPinnedBufferCreate(LLOContext llo,
-                                      /*! ID of buffer to create */
-                                      int32_t    bufferID,
-                                      /*! number of elements */
-                                      size_t     sizeInBytes);
-
+/*! creates a device buffer where every device has its own local copy
+    of the given buffer */
   OWL_LL_INTERFACE
   LLOResult lloDeviceBufferCreate(LLOContext  llo,
                                   /*! ID of buffer to create */
@@ -309,6 +304,31 @@ extern "C" {
                                   /*! number of elements */
                                   size_t      sizeInBytes,
                                   const void *initData = nullptr);
+
+  /*! creates a buffer that uses CUDA host pinned memory; that memory
+      is pinned on the host and accessive to all devices in the deviec
+      group */
+  OWL_LL_INTERFACE
+  LLOResult lloHostPinnedBufferCreate(LLOContext llo,
+                                      /*! ID of buffer to create */
+                                      int32_t    bufferID,
+                                      /*! number of elements */
+                                      size_t     sizeInBytes);
+
+  /*! creates a buffer that uses CUDA managed memory; that memory is
+      managed by CUDA (see CUDAs documentatoin on managed memory) and
+      accessive to all devices in the deviec group */
+  OWL_LL_INTERFACE
+  LLOResult lloManagedMemoryBufferCreate(LLOContext llo,
+                                         /*! ID of buffer to create */
+                                         int32_t    bufferID,
+                                         /*! number of elements */
+                                         size_t     sizeInBytes,
+                                         /*! data with which to
+                                           populate this buffer; may
+                                           be null, but has to be of
+                                           size 'amount' if not */
+                                         const void *initData);
 
   OWL_LL_INTERFACE
   LLOResult lloBufferDestroy(LLOContext llo,

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -30,12 +30,36 @@ namespace owl {
   namespace ll {
 
     typedef int32_t id_t;
-    
+
+    /*! class that maintains the cuda host pinned memoery handle for a
+        group of HostPinnedBuffer's (host pinned memory is shared
+        across all devices) */
     struct HostPinnedMemory
     {
       typedef std::shared_ptr<HostPinnedMemory> SP;
       HostPinnedMemory(size_t amount);
       ~HostPinnedMemory();
+
+      void free();
+      void alloc(size_t newSizeInBytes);
+      void *get() const { return pointer; }
+      
+      void *pointer = nullptr;
+    };
+
+    /*! class that maintains the cuda managed memoery address for a
+        group of ManagedMemoryBuffer's (managed memory is allocated
+        only once on the group level, and then shared across all
+        devices) */
+    struct ManagedMemory
+    {
+      typedef std::shared_ptr<ManagedMemory> SP;
+      ManagedMemory(size_t amount,
+                    /*! data with which to populate this buffer; may
+                        be null, but has to be of size 'amount' if
+                        not */
+                    const void *initData);
+      ~ManagedMemory();
 
       void free();
       void alloc(size_t newSizeInBytes);
@@ -211,10 +235,17 @@ namespace owl {
                               size_t elementSize,
                               const void *initData);
       
+      /*! create a host-pinned memory buffer */
       void hostPinnedBufferCreate(int bufferID,
                                   size_t elementCount,
                                   size_t elementSize);
 
+      /*! create a managed memory buffer */
+      void managedMemoryBufferCreate(int bufferID,
+                                     size_t elementCount,
+                                     size_t elementSize,
+                                     const void *initData);
+      
       void bufferResize(int bufferID, size_t newItemCount);
       void bufferUpload(int bufferID, const void *hostPtr);
       

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -32,6 +32,10 @@
 namespace owl {
   namespace ll {
 
+    // ##################################################################
+    // HostPinnedMemory
+    // ##################################################################
+
     HostPinnedMemory::HostPinnedMemory(size_t amount)
     {
       alloc(amount);
@@ -54,6 +58,48 @@ namespace owl {
       CUDA_CALL_NOTHROW(FreeHost(pointer));
       pointer = nullptr;
     }
+
+
+    // ##################################################################
+    // ManagedMemoryMemory
+    // ##################################################################
+
+    ManagedMemory::ManagedMemory(size_t amount,
+                                 /*! data with which to populate this buffer; may
+                                   be null, but has to be of size 'amount' if
+                                   not */
+                                 const void *initData)
+    {
+      alloc(amount);
+      if (initData)
+        CUDA_CALL(Memcpy(pointer,initData,amount,
+                         cudaMemcpyDefault));
+      assert(pointer != nullptr);
+    }
+    
+    ManagedMemory::~ManagedMemory()
+    {
+      assert(pointer != nullptr);
+      free();
+    }
+
+    void ManagedMemory::alloc(size_t amount)
+    {
+      CUDA_CALL(MallocManaged((void**)&pointer, amount));
+    }
+
+    void ManagedMemory::free()
+    {
+      CUDA_CALL_NOTHROW(Free(pointer));
+      pointer = nullptr;
+    }
+
+
+
+
+    // ##################################################################
+    // Device Group
+    // ##################################################################
 
     DeviceGroup::DeviceGroup(const std::vector<Device *> &devices)
       : devices(devices)
@@ -321,6 +367,17 @@ namespace owl {
         = std::make_shared<HostPinnedMemory>(elementCount*elementSize);
       for (auto device : devices) 
         device->hostPinnedBufferCreate(bufferID,elementCount,elementSize,pinned);
+    }
+
+    void DeviceGroup::managedMemoryBufferCreate(int bufferID,
+                                                size_t elementCount,
+                                                size_t elementSize,
+                                                const void *initData)
+    {
+      ManagedMemory::SP mem
+        = std::make_shared<ManagedMemory>(elementCount*elementSize,initData);
+      for (auto device : devices) 
+        device->managedMemoryBufferCreate(bufferID,elementCount,elementSize,mem);
     }
 
       
