@@ -38,5 +38,5 @@ set(OWL_LIBRARIES
   owl_static
   )
 if (TBB_FOUND)
-  set(OWL_LIBRARIES ${OWL_LIBRARIES} tbb)
+  set(OWL_LIBRARIES ${OWL_LIBRARIES} ${TBB_LIBRARIES})
 endif()
