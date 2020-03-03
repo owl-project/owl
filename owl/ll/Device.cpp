@@ -161,6 +161,9 @@ namespace owl {
       if (maxInstancingDepth == context->maxInstancingDepth)
         return;
 
+      if (maxInstancingDepth < 1)
+        throw std::runtime_error("a instancing depth of < 1 isnt' currently supported in OWL; pleaes see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
+
       assert("check pipeline isn't already created"
              && context->pipeline == nullptr);
       context->maxInstancingDepth = maxInstancingDepth;

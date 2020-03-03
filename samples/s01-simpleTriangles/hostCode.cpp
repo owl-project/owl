@@ -129,6 +129,10 @@ int main(int ac, char **av)
   OWLGroup trianglesGroup
     = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
+  OWLGroup world
+    = owlInstanceGroupCreate(context,1,&trianglesGroup);
+  owlGroupBuildAccel(world);
+  
 
   // ##################################################################
   // set miss and raygen program required for SBT
@@ -187,7 +191,7 @@ int main(int ac, char **av)
   // ----------- set variables  ----------------------------
   owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
   owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
-  owlRayGenSetGroup (rayGen,"world",        trianglesGroup);
+  owlRayGenSetGroup (rayGen,"world",        world);
   owlRayGenSet3f    (rayGen,"camera.pos",   (const owl3f&)camera_pos);
   owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);

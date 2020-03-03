@@ -401,7 +401,8 @@ namespace owl {
 
   OWL_API OWLGroup
   owlInstanceGroupCreate(OWLContext _context,
-                         size_t numInstances)
+                         size_t     numInstances,
+                         OWLGroup  *initValues)
   {
     LOG_API_CALL();
     assert(_context);
@@ -412,6 +413,11 @@ namespace owl {
 
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     assert(_group);
+
+    if (initValues)
+      for (int i=0;i<numInstances;i++)
+        owlInstanceGroupSetChild(_group,i,initValues[i]);
+    
     return _group;
   }
 

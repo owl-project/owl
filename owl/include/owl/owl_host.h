@@ -260,8 +260,12 @@ owlContextSetRayTypeCount(OWLContext context,
 
 /*! sets maximum instancing depth for the given context:
 
-  '0' means 'no instancing allowed, only bottom-level accels; 
-  
+  '0' means 'no instancing allowed, only bottom-level accels; Note
+  this mode isn't actually allowed in OWL right now, as the most
+  convenient way of realizing it is actually *slower* than simply
+  putting a single "dummy" instance (with just this one child, and a
+  identify transform) over each blas.
+
   '1' means 'at most one layer of instances' (ie, a two-level scene),
   where the 'root' world rays are traced against can be an instance
   group, but every child in that inscne group is a geometry group.
@@ -353,10 +357,18 @@ owlTrianglesGeomGroupCreate(OWLContext context,
 // ------------------------------------------------------------------
 /*! create a new instance group with given number of children. The
     child groups and their transforms can then be set via \see
-    owlInstanceGroupSetChild and \see owlInstanceGroupSetTransform */
+    owlInstanceGroupSetChild and \see owlInstanceGroupSetTransform 
+
+    If 'initGroups' is non-null, it should be an array of
+    'numInstances' elements, and these will be used as uni-transofrm
+    children of this group (transforms can still be overwritter later
+    using owlInstanceGroupSetTransform)
+*/
 OWL_API OWLGroup
 owlInstanceGroupCreate(OWLContext context,
-                       size_t     numInstances);
+                       size_t     numInstances,
+                       OWLGroup  *initGroups OWL_IF_CPP(= nullptr)
+                       );
 
 OWL_API void owlGroupBuildAccel(OWLGroup group);
 
