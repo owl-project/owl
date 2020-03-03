@@ -21,6 +21,8 @@ set(OWL_NG_SOURCES
   ../include/owl/owl.h
   ../common/cmake/configure_tbb.cmake
   ../common/cmake/configure_owl.cmake
+  ../common/cmake/configure_optix.cmake
+  ../common/cmake/FindOptiX.cmake
 
   api/impl.cpp
   api/APIContext.h
