@@ -92,7 +92,7 @@ namespace owl {
       }
       virtual void special(int key, const vec2i &where)
       {
-        if (widget) widget->key(key,where);
+        if (widget) widget->special(key,where);
       }
       
       /*! resize window */
