@@ -29,7 +29,11 @@
 # Locate the OptiX distribution.  Search relative to the SDK first, then look in the system.
 
 # Our initial guess will be within the SDK.
-SET(OptiX_INSTALL_DIR $ENV{OptiX_INSTALL_DIR})
+if (WIN32)
+  set(OptiX_INSTALL_DIR "c:/ProgramData/NVIDIA Corporation/OptiX 7.0.0 SDK")
+else()
+  set(OptiX_INSTALL_DIR $ENV{OptiX_INSTALL_DIR})
+endif()
 #set(OptiX_INSTALL_DIR "${CMAKE_SOURCE_DIR}/../" CACHE PATH "Path to OptiX installed location.")
 
 # The distribution contains both 32 and 64 bit libraries.  Adjust the library
