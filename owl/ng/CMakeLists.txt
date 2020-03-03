@@ -19,7 +19,9 @@ include_directories(${PROJECT_SOURCE_DIR}/)
 set(OWL_NG_SOURCES
 
   ../include/owl/owl.h
-  
+  ../common/cmake/configure_tbb.cmake
+  ../common/cmake/configure_owl.cmake
+
   api/impl.cpp
   api/APIContext.h
   api/APIContext.cpp

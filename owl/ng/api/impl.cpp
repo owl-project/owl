@@ -828,6 +828,7 @@ namespace owl {
     geometryType->setBoundsProg(module,progName);
   }
 
+#define FATAL(error) { std::cerr << "FATAL Error: " << error << std::endl; exit(1); }
 
   // ==================================================================
   // "VariableSet" functions, for each element type
@@ -1022,8 +1023,8 @@ namespace owl {
       xfm.l.vz = vec3f(floats[0+2],floats[4+2],floats[8+2]);
       xfm.p    = vec3f(floats[0+3],floats[4+3],floats[8+3]);
       break;
-    default:
-      throw std::runtime_error("un-recognized matrix format");
+    default: 
+		FATAL("un-recognized matrix format");
     }
     
     assert(_group);
