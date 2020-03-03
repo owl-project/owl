@@ -282,6 +282,8 @@ namespace owl {
       virtual void buildAccel(Context *context) override;
       virtual int  getSBTOffset() const override { return 0; }
 
+      DeviceMemory optixInstanceBuffer;
+      DeviceMemory outputBuffer;
       std::vector<Group *>  children;
       std::vector<affine3f> transforms;
     };

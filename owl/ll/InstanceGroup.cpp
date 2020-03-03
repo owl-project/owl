@@ -186,7 +186,6 @@ namespace owl {
         oi.traversableHandle = child->traversable;
       }
 
-      DeviceMemory optixInstanceBuffer;
       optixInstanceBuffer.alloc(optixInstances.size()*
                                 sizeof(optixInstances[0]));
       optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
@@ -233,7 +232,7 @@ namespace owl {
       DeviceMemory tempBuildBuffer;
       tempBuildBuffer.alloc(bufferSizes.tempSizeInBytes);
       
-      DeviceMemory outputBuffer;
+      DeviceMemory &outputBuffer = bvhMemory;
       outputBuffer.alloc(bufferSizes.outputSizeInBytes);
             
       OPTIX_CHECK(optixAccelBuild(context->optixContext,

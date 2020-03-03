@@ -23,11 +23,10 @@ namespace owl {
     
     struct DeviceMemory {
       inline ~DeviceMemory() { free(); }
-      inline bool   alloced() const { return !empty(); }
-      inline bool   empty() const { return sizeInBytes == 0; }
+      inline bool   alloced()  const { return !empty(); }
+      inline bool   empty()    const { return sizeInBytes == 0; }
       inline bool   notEmpty() const { return !empty(); }
-      // inline bool   valid() const { return d_pointer != 0 || sizeInBytes == 0; }
-      inline size_t size()  const { return sizeInBytes; }
+      inline size_t size()     const { return sizeInBytes; }
     
       inline void alloc(size_t size);
       inline void allocManaged(size_t size);
@@ -45,6 +44,8 @@ namespace owl {
     
     inline void DeviceMemory::alloc(size_t size)
     {
+      if (alloced()) free();
+      
       assert(empty());
       this->sizeInBytes = size;
       CUDA_CHECK(cudaMalloc( (void**)&d_pointer, sizeInBytes));
