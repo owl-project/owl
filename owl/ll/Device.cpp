@@ -197,7 +197,7 @@ namespace owl {
       case 1:
         pipelineCompileOptions.traversableGraphFlags
           = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
-          | OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
+          // | OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
           ;
         break;
       default:
