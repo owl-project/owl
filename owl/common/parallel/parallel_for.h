@@ -20,13 +20,12 @@
 // std
 #include <mutex>
 // tbb
+#if OWL_HAVE_TBB
 #include <tbb/parallel_for.h>
 #include <tbb/task_arena.h>
 #include <tbb/task_scheduler_init.h>
-
-// define a macro that tells other includes (eg, in array2D and
-// array3D that we do have parallel for)
 #define OWL_HAVE_PARALLEL_FOR 1
+#endif
 
 namespace owl {
   namespace common {

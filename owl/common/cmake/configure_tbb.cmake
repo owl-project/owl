@@ -15,9 +15,15 @@
 # ======================================================================== #
 
 #find_package(TBB REQUIRED)
+
+if (WIN32)
+set(TBB_FOUND FALSE)
+else()
 find_package(TBB)
 if (TBB_FOUND)
   include_directories(${TBB_INCLUDE_DIR})
   add_definitions(-DOWL_HAVE_TBB=1)
 endif()
+endif()
+
 

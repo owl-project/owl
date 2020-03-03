@@ -121,6 +121,13 @@ Latest Progress/Revision History
 v0.7.x - Unifiction of ng and ll APIs into one single owl API
 ----------------------------------------------------------------------
 
+*v0.7.3*: bug hotfix
+
+- hotfix for bug introduced when auto-freeing of device memory, which
+  accidentally freed instance BVH whiel still in use.
+  
+- various windows fixes; in particular removing tbb by default (windows only)
+
 *v0.7.2*: various feature extensions and bug fixes
 
 - lots of additional use in owl prime, m-owl-ana, distributed renderer, etc.

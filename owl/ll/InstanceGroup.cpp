@@ -232,6 +232,7 @@ namespace owl {
       DeviceMemory tempBuildBuffer;
       tempBuildBuffer.alloc(bufferSizes.tempSizeInBytes);
       
+      DeviceMemory &outputBuffer = bvhMemory;
       outputBuffer.alloc(bufferSizes.outputSizeInBytes);
             
       OPTIX_CHECK(optixAccelBuild(context->optixContext,

@@ -854,7 +854,7 @@ namespace owl {
          OPTIX_DEVICE_PROPERTY_LIMIT_MAX_TRAVERSABLE_GRAPH_DEPTH,
          &maxAllowedByOptix,
          sizeof(maxAllowedByOptix));
-      if ((maxInstancingDepth+1) > maxAllowedByOptix)
+      if (uint32_t(maxInstancingDepth+1) > maxAllowedByOptix)
         throw std::runtime_error
           ("error when building pipeline: "
            "attempting to set max instancing depth to "
