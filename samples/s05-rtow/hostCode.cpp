@@ -217,8 +217,12 @@ int main(int ac, char **av)
     dielectricSpheresGeom
   };
 
-  OWLGroup world
+  OWLGroup spheresGroup
     = owlUserGeomGroupCreate(context,3,userGeoms);
+  owlGroupBuildAccel(spheresGroup);
+  
+  OWLGroup world
+    = owlInstanceGroupCreate(context,1,&spheresGroup);
   owlGroupBuildAccel(world);
 
   // ##################################################################

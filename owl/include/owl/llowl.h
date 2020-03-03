@@ -183,7 +183,11 @@ extern "C" {
   
   /*! sets maximum instancing depth for the given context:
 
-    '0' means 'no instancing allowed, only bottom-level accels; 
+    '0' means 'no instancing allowed, only bottom-level accels; note
+    this mode isn't actually allowed in OWL right now, as the most
+    convenient way of realizing it is actually *slower* than simply
+    putting a single "dummy" instance (with just this one child, and a
+    identify transform) over each blas.
   
     '1' means 'at most one layer of instances' (i.e., a two-level scene),
     where the 'root' world rays are traced against can be an instance

@@ -161,6 +161,9 @@ namespace owl {
       if (maxInstancingDepth == context->maxInstancingDepth)
         return;
 
+      if (maxInstancingDepth < 1)
+        throw std::runtime_error("a instancing depth of < 1 isnt' currently supported in OWL; pleaes see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
+
       assert("check pipeline isn't already created"
              && context->pipeline == nullptr);
       context->maxInstancingDepth = maxInstancingDepth;
@@ -197,7 +200,7 @@ namespace owl {
       case 1:
         pipelineCompileOptions.traversableGraphFlags
           = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
-          | OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
+          // | OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
           ;
         break;
       default:
