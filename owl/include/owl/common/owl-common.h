@@ -250,7 +250,16 @@ namespace owl {
     {
 #ifdef _WIN32
       SYSTEMTIME tp; GetSystemTime(&tp);
-      return double(tp.wSecond) + double(tp.wMilliseconds) / 1E3;
+      /*
+         Please note: we are not handling the "leap year" issue.
+     */
+      size_t numSecsSince2020
+          = tp.wSecond
+          + (60ull) * tp.wMinute
+          + (60ull * 60ull) * tp.wHour
+          + (60ull * 60ul * 24ull) * tp.wDay
+          + (60ull * 60ul * 24ull * 365ull) * (tp.wYear - 2020);
+      return double(numSecsSince2020 + tp.wMilliseconds * 1e-3);
 #else
       struct timeval tp; gettimeofday(&tp,nullptr);
       return double(tp.tv_sec) + double(tp.tv_usec)/1E6;
