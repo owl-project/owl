@@ -285,6 +285,7 @@ namespace owl {
       DeviceMemory optixInstanceBuffer;
       DeviceMemory outputBuffer;
       std::vector<Group *>  children;
+      std::vector<int>      instanceID;
       std::vector<affine3f> transforms;
     };
 
