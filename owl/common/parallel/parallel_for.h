@@ -49,7 +49,7 @@ namespace owl {
         tbb::parallel_for(INDEX_T(0), nTasks, std::forward<TASK_T>(taskFunction));
       } else {
         const size_t numBlocks = (nTasks+blockSize-1)/blockSize;
-        tbb::parallel_for(numBlocks, nTasks, [&](size_t blockIdx){
+        tbb::parallel_for((size_t)0, numBlocks, [&](size_t blockIdx){
             size_t begin = blockIdx*blockSize;
             size_t end   = std::min(begin+blockSize,size_t(nTasks));
             for (size_t i=begin;i<end;i++)
