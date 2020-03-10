@@ -335,6 +335,14 @@ extern "C" {
                                          const void *initData);
 
   OWL_LL_INTERFACE
+      LLOResult lloGraphicsBufferCreate(LLOContext llo,
+          /*! ID of buffer to create */
+          int32_t    bufferID,
+          /*! number of elements */
+          size_t     sizeInBytes,
+          cudaGraphicsResource_t resource);
+
+  OWL_LL_INTERFACE
   LLOResult lloBufferDestroy(LLOContext llo,
                              /*! ID of buffer to create */
                              int32_t    bufferID);

@@ -110,6 +110,10 @@ namespace owl {
     managedMemoryBufferCreate(OWLDataType type,
                               size_t count,
                               const void *init);
+
+    Buffer::SP
+        graphicsBufferCreate(OWLDataType type,
+            size_t count, cudaGraphicsResource_t resource);
     
     RayGen::SP
     createRayGen(const std::shared_ptr<RayGenType> &type);

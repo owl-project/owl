@@ -487,6 +487,20 @@ namespace owl {
     assert(buffer);
     return (OWLBuffer)context->createHandle(buffer);
   }
+
+  OWL_API OWLBuffer
+      owlGraphicsBufferCreate(OWLContext _context,
+          OWLDataType type,
+          size_t      count, cudaGraphicsResource_t resource)
+  {
+      LOG_API_CALL();
+      assert(_context);
+      APIContext::SP context = ((APIHandle*)_context)->get<APIContext>();
+      assert(context);
+      Buffer::SP  buffer = context->graphicsBufferCreate(type, count, resource);
+      assert(buffer);
+      return (OWLBuffer)context->createHandle(buffer);
+  }
   
   OWL_API const void *
   owlBufferGetPointer(OWLBuffer _buffer, int deviceID)

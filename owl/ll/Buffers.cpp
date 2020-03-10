@@ -150,6 +150,44 @@ namespace owl {
     
 
 
+    GraphicsBuffer::GraphicsBuffer(const size_t elementCount,
+        const size_t elementSize,
+        const cudaGraphicsResource_t resource) :
+        Buffer(elementCount, elementSize), resource(resource)
+    {
+
+    }
+
+
+    void GraphicsBuffer::resize(Device* device, size_t newElementCount)
+    {
+        OWL_NOTIMPLEMENTED;
+    }
+
+
+    void GraphicsBuffer::upload(Device* device, const void* histPtr)
+    {
+        OWL_NOTIMPLEMENTED;
+    }
+
+
+    void GraphicsBuffer::map(Device* device, int lpID)
+    {
+        CUDA_CHECK(cudaGraphicsMapResources(1, &resource, device->launchParamsGetStream(lpID)));
+        size_t size = 0;
+        CUDA_CHECK(cudaGraphicsResourceGetMappedPointer(&d_pointer, &size, resource));
+        if (elementCount * elementSize != size)
+        {
+            throw std::runtime_error("mapped resource has unexpected size");
+        }
+    }
+
+
+    void GraphicsBuffer::unmap(Device* device, int lpID)
+    {
+        CUDA_CHECK(cudaGraphicsUnmapResources(1, &resource, device->launchParamsGetStream(lpID)));
+        d_pointer = nullptr;
+    }
     
 
   } // ::owl::ll

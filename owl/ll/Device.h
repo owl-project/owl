@@ -571,6 +571,10 @@ namespace owl {
                                   size_t elementSize,
                                   HostPinnedMemory::SP pinnedMem);
 
+      void graphicsBufferCreate(int bufferID,
+          size_t elementCount,
+          size_t elementSize, cudaGraphicsResource_t resource);
+
       /*! Set a buffer of bounding boxes that this user geometry will
           use when building the accel structure. This is one of
           multiple ways of specifying the bounding boxes for a user

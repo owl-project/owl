@@ -591,6 +591,20 @@ namespace owl {
     }
 
     OWL_LL_INTERFACE
+        LLOResult lloGraphicsBufferCreate(LLOContext llo,
+            /*! ID of buffer to create */
+            int32_t bufferID,
+            /*! number of elements */
+            size_t sizeInBytes,
+            cudaGraphicsResource_t resource)
+    {
+        return squashExceptions([&]() {
+            DeviceGroup* dg = (DeviceGroup*)llo;
+            dg->graphicsBufferCreate(bufferID, sizeInBytes, resource);
+            });
+    }
+
+    OWL_LL_INTERFACE
     LLOResult lloBufferDestroy(LLOContext llo,
                                /*! ID of buffer to create */
                                int32_t    bufferID)

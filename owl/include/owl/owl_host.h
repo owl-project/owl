@@ -405,6 +405,11 @@ owlManagedMemoryBufferCreate(OWLContext context,
                              size_t      count,
                              const void *init);
 
+OWL_API OWLBuffer
+owlGraphicsBufferCreate(OWLContext context,
+    OWLDataType type,
+    size_t      count, cudaGraphicsResource_t resource);
+
 /*! returns the device pointer of the given pointer for the given
     device ID. For host-pinned or managed memory buffers (where the
     buffer is shared across all devices) this pointer should be the

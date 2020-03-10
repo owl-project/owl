@@ -105,6 +105,15 @@ namespace owl {
     return buffer;
   }
 
+  Buffer::SP
+      Context::graphicsBufferCreate(OWLDataType type,
+          size_t count, cudaGraphicsResource_t resource)
+  {
+      Buffer::SP buffer = std::make_shared<GraphicsBuffer>(this, type, count, resource);
+      assert(buffer);
+      return buffer;
+  }
+
   RayGen::SP
   Context::createRayGen(const std::shared_ptr<RayGenType> &type)
   {
