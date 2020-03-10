@@ -14,34 +14,34 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "LaunchParams.h"
-#include "Context.h"
+#include "owl/api/Context.h"
+#include <mutex>
 
 namespace owl {
 
-  LaunchParamsType::LaunchParamsType(Context *const context,
-                                     size_t varStructSize,
-                                     const std::vector<OWLVarDecl> &varDecls)
-    : SBTObjectType(context,context->launchParamTypes,varStructSize,varDecls)
-  {
-  }
+  struct APIHandle;
   
-  LaunchParams::LaunchParams(Context *const context,
-                 LaunchParamsType::SP type) 
-    : SBTObject(context,context->launchParams,type)
-  {
-    assert(context);
-    assert(type);
-    assert(type.get());
-    lloLaunchParamsCreate(context->llo,
-                          this->ID,
-                          type->varStructSize);
-  }
+  struct APIContext : public Context {
+    typedef std::shared_ptr<APIContext> SP;
 
-  CUstream LaunchParams::getCudaStream(int deviceID)
-  {
-    return lloLaunchParamsGetStream(context->llo,this->ID,deviceID);
-  }
+    APIContext(int32_t *requestedDeviceIDs,
+               int      numRequestedDevices)
+      : Context(requestedDeviceIDs,
+                numRequestedDevices)
+    {}
+    
+    APIHandle *createHandle(Object::SP object);
 
-} // ::owl
+    void track(APIHandle *object);
+    
+    void forget(APIHandle *object);
 
+    /*! delete - and thereby, release - all handles that we still
+      own. */
+    void releaseAll();
+    std::set<APIHandle *> activeHandles;
+    
+    std::mutex monitor;
+  };
+  
+} // ::owl  

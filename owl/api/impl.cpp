@@ -17,6 +17,7 @@
 #include <owl/owl.h>
 #include "APIContext.h"
 #include "APIHandle.h"
+#include "owl/common/parallel/parallel_for.h"
 
 namespace owl {
 
@@ -28,7 +29,7 @@ namespace owl {
 
 
 #define LOG(message)                            \
-  if (ll::Context::logging())                   \
+  if (ll::DeviceGroup::logging())                   \
     std::cout                                   \
       << OWL_TERMINAL_LIGHT_BLUE                \
       << "#owl.ng: "                            \
@@ -36,7 +37,7 @@ namespace owl {
       << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  if (ll::Context::logging())                   \
+  if (ll::DeviceGroup::logging())                   \
     std::cout                                   \
       << OWL_TERMINAL_BLUE                      \
       << "#owl.ng: "                            \
@@ -170,7 +171,8 @@ namespace owl {
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->getContext();
     assert(context);
-    return (int32_t)lloGetDeviceCount(context->llo);
+    return context->llo->getDeviceCount();
+    // return (int32_t)lloGetDeviceCount(context->llo);
   }
     
 
@@ -401,17 +403,70 @@ namespace owl {
 
   OWL_API OWLGroup
   owlInstanceGroupCreate(OWLContext _context,
-                         size_t numInstances)
+                         
+                         /*! number of instances in this group */
+                         size_t     numInstances,
+                       
+                         /*! the initial list of owl groups to use by
+                           the instances in this group; must be either
+                           null, or an array of the size
+                           'numInstnaces', the i'th instnace in this
+                           gorup will be an instance o the i'th
+                           element in this list */
+                         const OWLGroup *_initGroups      OWL_IF_CPP(= nullptr),
+
+                         /*! instance IDs to use for the instance in
+                           this group; must be eithe rnull, or an
+                           array of size numInstnaces. If null, the
+                           i'th child of this instance group will use
+                           instanceID=i, otherwise, it will use the
+                           user-provided instnace ID from this
+                           list. Specifying an instanceID will affect
+                           what value 'optixGetInstanceID' will return
+                           in a CH program that refers to the given
+                           instance */
+                         const uint32_t *initInstanceIDs OWL_IF_CPP(= nullptr),
+                       
+                         /*! initial list of transforms that this
+                           instance group will use; must be either
+                           null, or an array of size numInstnaces, of
+                           the format specified */
+                         const float    *initTransforms  OWL_IF_CPP(= nullptr),
+                         OWLMatrixFormat matrixFormat=OWL_MATRIX_FORMAT_OWL)
   {
     LOG_API_CALL();
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
-    InstanceGroup::SP  group = context->createInstanceGroup(numInstances);
+    
+    std::vector<Group::SP> initGroups;
+    Group::SP *__initGroups = nullptr;
+    
+    if (_initGroups) {
+      initGroups.resize(numInstances);
+      parallel_for_blocked
+        (0,numInstances,16*1024,
+         [&](size_t begin, size_t end) {
+           for (size_t childID=begin;childID<end;childID++) {
+             OWLGroup child = _initGroups[childID];
+             initGroups[childID]  
+               = child
+               ? ((APIHandle *)child)->get<Group>()
+               : Group::SP();
+           }
+         });
+      __initGroups = initGroups.data();
+    }
+    
+    InstanceGroup::SP  group
+      = std::make_shared<InstanceGroup>
+      (context.get(),numInstances,
+       __initGroups,initInstanceIDs,initTransforms,matrixFormat);
     assert(group);
 
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     assert(_group);
+
     return _group;
   }
 

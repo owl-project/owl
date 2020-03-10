@@ -21,26 +21,28 @@ set(OWL_NG_SOURCES
   ../include/owl/owl.h
   ../common/cmake/configure_tbb.cmake
   ../common/cmake/configure_owl.cmake
+  ../common/cmake/configure_optix.cmake
+  ../common/cmake/FindOptiX.cmake
 
-  api/impl.cpp
-  api/APIContext.h
-  api/APIContext.cpp
-  api/APIHandle.h
-  api/APIHandle.cpp
+  impl.cpp
+  APIContext.h
+  APIContext.cpp
+  APIHandle.h
+  APIHandle.cpp
   
-  cpp/Object.cpp
-  cpp/Module.cpp
-  cpp/RegisteredObject.cpp
-  cpp/SBTObject.cpp
-  cpp/Buffer.cpp
-  cpp/Group.cpp
-  cpp/ObjectRegistry.cpp
-  cpp/Context.cpp
-  cpp/RayGen.cpp
-  cpp/LaunchParams.cpp
-  cpp/MissProg.cpp
-  cpp/Geometry.cpp
-  cpp/Variable.cpp
+  Object.cpp
+  Module.cpp
+  RegisteredObject.cpp
+  SBTObject.cpp
+  Buffer.cpp
+  Group.cpp
+  ObjectRegistry.cpp
+  Context.cpp
+  RayGen.cpp
+  LaunchParams.cpp
+  MissProg.cpp
+  Geometry.cpp
+  Variable.cpp
 )
 
 add_library(owl

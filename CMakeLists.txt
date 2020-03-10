@@ -15,7 +15,10 @@
 # ======================================================================== #
 
 cmake_policy(SET CMP0048 NEW)
-project(Optix-OWL VERSION 0.7.2)
+project(Optix-OWL VERSION 0.7.4)
+
+OPTION(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
+OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 
 cmake_minimum_required(VERSION 2.8)
 # iw, 1/3/20: yes, i know this is 'old' cmake style, but on CentOS7
@@ -48,8 +51,6 @@ include(configure_build_type)
 
 include_directories(${OWL_INCLUDES})
 
-enable_testing()
-
 # ------------------------------------------------------------------
 # owl library itself, including owl-common
 # ------------------------------------------------------------------
@@ -58,10 +59,16 @@ add_subdirectory(owl)
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
-add_subdirectory(samples)
+if (OWL_BUILD_SAMPLES)
+  enable_testing()
+  add_subdirectory(samples)
+endif()
 
 # ------------------------------------------------------------------
 # some basic testing
 # ------------------------------------------------------------------
-add_subdirectory(tests)
+if (OWL_BUILD_ADVANCED_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
 

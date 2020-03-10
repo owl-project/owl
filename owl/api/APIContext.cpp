@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,22 +16,22 @@
 
 #include "APIContext.h"
 #include "APIHandle.h"
-#include "owl/ll/Device.h"
+#include "owl/ll/DeviceGroup.h"
 
 #define LOG(message)                            \
-  if (ll::Context::logging())                   \
+  if (ll::DeviceGroup::logging())               \
     std::cout                                   \
       << OWL_TERMINAL_LIGHT_BLUE                \
       << "#owl.ng: "                            \
-      << message                              \
+      << message                                \
       << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  if (ll::Context::logging())                   \
+  if (ll::DeviceGroup::logging())               \
     std::cout                                   \
       << OWL_TERMINAL_BLUE                      \
       << "#owl.ng: "                            \
-      << message                              \
+      << message                                \
       << OWL_TERMINAL_DEFAULT << std::endl
   
 namespace owl {

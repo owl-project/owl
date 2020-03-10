@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -21,25 +21,25 @@
 extern inline OptixResult optixInit( void** handlePtr );
 
 #define LOG(message)                                            \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
   << message                                                    \
   << std::endl
 
 #define LOG_OK(message)                                 \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
   << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
   << message                                            \
   << std::endl
 
 #define CLOG_OK(message)                                \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << OWL_TERMINAL_DEFAULT << std::endl
@@ -161,6 +161,9 @@ namespace owl {
       if (maxInstancingDepth == context->maxInstancingDepth)
         return;
 
+      if (maxInstancingDepth < 1)
+        throw std::runtime_error("a instancing depth of < 1 isnt' currently supported in OWL; pleaes see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
+
       assert("check pipeline isn't already created"
              && context->pipeline == nullptr);
       context->maxInstancingDepth = maxInstancingDepth;
@@ -197,7 +200,7 @@ namespace owl {
       case 1:
         pipelineCompileOptions.traversableGraphFlags
           = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
-          | OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
+          // | OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
           ;
         break;
       default:

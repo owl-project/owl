@@ -543,18 +543,18 @@ namespace owl {
     /*! create a new instance group with given list of children */
     void DeviceGroup::instanceGroupCreate(/*! the group we are defining */
                                           int groupID,
+                                          size_t numChildren,
                                           /* list of children. list can be
                                              omitted by passing a nullptr, but if
                                              not null this must be a list of
                                              'childCount' valid group ID */
-                                          const int *childGroupIDs,
-                                          /*! number of children in this group */
-                                          size_t childCount)
+                                          const uint32_t *childGroupIDs,
+                                          const uint32_t *instIDs,
+                                          const affine3f *xfms)
     {
       for (auto device : devices)
-        device->instanceGroupCreate(groupID,
-                                    childGroupIDs,
-                                    childCount);
+        device->instanceGroupCreate(groupID,numChildren,
+                                    childGroupIDs,instIDs,xfms);
     }
 
     /*! returns the given device's buffer address on the specified

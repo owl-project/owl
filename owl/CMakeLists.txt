@@ -14,11 +14,13 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+include("common/cmake/configure_tbb.cmake")
+
 # owl-common library (math stuff, utils, etc; mostly header-only)
 add_subdirectory(common)
 
 # low-level interface
 add_subdirectory(ll)
 
-# node graph layer
-add_subdirectory(ng)
+# node graph layer API
+add_subdirectory(api)

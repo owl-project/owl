@@ -65,8 +65,8 @@ namespace owl {
   {
     LOG("context ramping up - creating low-level devicegroup");
     // ll = ll::DeviceGroup::create();
-    llo = lloContextCreate(requestedDeviceIDs,
-                           numRequestedDevices);
+    llo = ll::DeviceGroup::create(requestedDeviceIDs,
+                              numRequestedDevices);
     LOG_OK("device group created");
   }
   
@@ -123,11 +123,6 @@ namespace owl {
     return std::make_shared<MissProg>(this,type);
   }
 
-  InstanceGroup::SP Context::createInstanceGroup(size_t numChildren)
-  {
-    return std::make_shared<InstanceGroup>(this,numChildren);
-  }
-
   RayGenType::SP
   Context::createRayGenType(Module::SP module,
                             const std::string &progName,
@@ -153,14 +148,14 @@ namespace owl {
 
   MissProgType::SP
   Context::createMissProgType(Module::SP module,
-                            const std::string &progName,
-                            size_t varStructSize,
-                            const std::vector<OWLVarDecl> &varDecls)
+                              const std::string &progName,
+                              size_t varStructSize,
+                              const std::vector<OWLVarDecl> &varDecls)
   {
     return std::make_shared<MissProgType>(this,
-                                        module,progName,
-                                        varStructSize,
-                                        varDecls);
+                                          module,progName,
+                                          varStructSize,
+                                          varDecls);
   }
   
 
@@ -177,8 +172,8 @@ namespace owl {
 
   GeomType::SP
   Context::createGeomType(OWLGeomKind kind,
-                              size_t varStructSize,
-                              const std::vector<OWLVarDecl> &varDecls)
+                          size_t varStructSize,
+                          const std::vector<OWLVarDecl> &varDecls)
   {
     switch(kind) {
     case OWL_GEOMETRY_TRIANGLES:
@@ -215,35 +210,32 @@ namespace owl {
   void Context::buildSBT()
   {
     // ----------- build hitgroups -----------
-    lloSbtHitProgsBuild
-      (llo,
-       [&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
+    llo->sbtHitProgsBuild
+      ([&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
          const Geom *geom = geoms.getPtr(geomID);
          assert(geom);
          geom->writeVariables(output,devID);
        });
 
     // ----------- build miss prog(s) -----------
-    lloSbtMissProgsBuild
-      (llo,
-       [&](uint8_t *output,
+    llo->sbtMissProgsBuild
+      ([&](uint8_t *output,
            int devID,
            int rayTypeID) {
-        // TODO: eventually, we want to be able to 'assign' miss progs
-        // to different ray types, in which case we ahve to be able to
-        // look up wich miss prog is used for a given ray types - for
-        // now, we assume miss progs are created in exactly the right
-        // order ...
-        int missProgID = rayTypeID;
+         // TODO: eventually, we want to be able to 'assign' miss progs
+         // to different ray types, in which case we ahve to be able to
+         // look up wich miss prog is used for a given ray types - for
+         // now, we assume miss progs are created in exactly the right
+         // order ...
+         int missProgID = rayTypeID;
          const MissProg *missProg = missProgs.getPtr(missProgID);
          assert(missProg);
          missProg->writeVariables(output,devID);
        });
 
     // ----------- build raygens -----------
-    lloSbtRayGensBuild
-      (llo,
-       [&](uint8_t *output,
+    llo->sbtRayGensBuild
+      ([&](uint8_t *output,
            int devID,
            int rgID) {
 
@@ -260,13 +252,16 @@ namespace owl {
 
   void Context::buildPipeline()
   {
-    lloCreatePipeline(llo);
+    // lloCreatePipeline(llo);
+    llo->createPipeline();
   }
 
   void Context::buildPrograms()
   {
-    lloBuildModules(llo);
-    lloBuildPrograms(llo);
+    // lloBuildModules(llo);
+    // lloBuildPrograms(llo);
+    llo->buildModules();
+    llo->buildPrograms();
   }
 
   void Context::setRayTypeCount(size_t rayTypeCount)
@@ -275,7 +270,8 @@ namespace owl {
        no geoms etc are created yet */
     this->numRayTypes = rayTypeCount;
       
-    lloSetRayTypeCount(llo,rayTypeCount);
+    // lloSetRayTypeCount(llo,rayTypeCount);
+    llo->setRayTypeCount(rayTypeCount);
   }
 
   /*! sets maximum instancing depth for the given context:
@@ -298,7 +294,8 @@ namespace owl {
     instances) */
   void Context::setMaxInstancingDepth(int32_t maxInstanceDepth)
   {
-    lloSetMaxInstancingDepth(llo,maxInstanceDepth);
+    llo->setMaxInstancingDepth(maxInstanceDepth);
+    // lloSetMaxInstancingDepth(llo,maxInstanceDepth);
   }
   
 } // ::owl

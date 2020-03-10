@@ -120,13 +120,18 @@ namespace owl {
     GroupVariable(const OWLVarDecl *const varDecl)
       : Variable(varDecl)
     {}
-    void set(const Group::SP &value) override { this->group = value; }
+    void set(const Group::SP &value) override
+    {
+      if (value && !std::dynamic_pointer_cast<InstanceGroup>(value))
+        throw std::runtime_error("OWL currently supports only instance groups to be passed to traversal; if you do want to trace rays into a single User or Triangle group, please put them into a single 'dummy' instance with jsut this one child and a identity transform");
+      this->group = value;
+    }
 
     void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
     {
       const OptixTraversableHandle value
         = group
-        ? lloGroupGetTraversable(group->context->llo,group->ID,deviceID)
+        ? group->context->llo->groupGetTraversable(group->ID,deviceID)
         : 0;
       *(OptixTraversableHandle*)sbtEntry = value;
     }

@@ -14,22 +14,30 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Module.h"
+#include "MissProg.h"
 #include "Context.h"
 
 namespace owl {
 
-  Module::Module(Context *const context,
-                 const std::string &ptxCode)
-    : RegisteredObject(context,context->modules),
-      ptxCode(ptxCode)
+  MissProgType::MissProgType(Context *const context,
+                             Module::SP module,
+                             const std::string &progName,
+                             size_t varStructSize,
+                             const std::vector<OWLVarDecl> &varDecls)
+    : SBTObjectType(context,context->missProgTypes,varStructSize,varDecls),
+      module(module),
+      progName(progName)
+  {}
+  
+  MissProg::MissProg(Context *const context,
+                     MissProgType::SP type) 
+    : SBTObject(context,context->missProgs,type)
   {
-    lloModuleCreate(context->llo,this->ID,
-                    // warning: this 'this' here is importat, since
-                    // *we* manage the lifetime of this string, and
-                    // the one on the constructor list will go out of
-                    // scope after this function
-                    this->ptxCode.c_str());
+    context->llo->setMissProg(this->ID,
+                              type->module->ID,
+                              type->progName.c_str(),
+                              type->varStructSize);
   }
-
+  
 } // ::owl
+
