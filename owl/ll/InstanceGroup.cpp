@@ -17,7 +17,7 @@
 #include "Device.h"
 #include "owl/common/parallel/parallel_for.h"
 
-#define LOG(message)                                            \
+#define LOG(message)      \
   if (Context::logging()) \
   std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
   << message                                                    \
@@ -151,6 +151,18 @@ namespace owl {
          OPTIX_DEVICE_PROPERTY_LIMIT_MAX_INSTANCES_PER_IAS,
          &maxInstsPerIAS,
          sizeof(maxInstsPerIAS));
+
+      // uint32_t maxInstanceID = 0;
+      // optixDeviceContextGetProperty
+      //   (context->optixContext,
+      //    OPTIX_DEVICE_PROPERTY_LIMIT_MAX_INSTANCE_ID,
+      //    &maxInstanceID,
+      //    sizeof(maxInstanceID));
+      // PRINT(maxInstanceID);
+      // exit(0);
+      
+
+      
       if (children.size() > maxInstsPerIAS)
         throw std::runtime_error("number of children in instnace group exceeds "
                                  "OptiX's MAX_INSTANCES_PER_IAS limit");
@@ -195,7 +207,8 @@ namespace owl {
         oi.transform[2*4+3]  = xfm.p.z;
         
         oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
-        oi.instanceId        = childID; // ???
+        oi.instanceId        = instanceIDs.empty()?childID:instanceIDs[childID];
+        // PRINT(oi.instanceId);
         oi.visibilityMask    = 255;
         oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
         oi.visibilityMask    = 255;
