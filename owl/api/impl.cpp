@@ -444,17 +444,14 @@ namespace owl {
     
     if (_initGroups) {
       initGroups.resize(numInstances);
-      parallel_for_blocked
-        (0,numInstances,16*1024,
-         [&](size_t begin, size_t end) {
-           for (size_t childID=begin;childID<end;childID++) {
-             OWLGroup child = _initGroups[childID];
-             initGroups[childID]  
-               = child
-               ? ((APIHandle *)child)->get<Group>()
-               : Group::SP();
-           }
-         });
+      parallel_for
+        (numInstances,[&](size_t childID) {
+          OWLGroup child = _initGroups[childID];
+          initGroups[childID]  
+            = child
+            ? ((APIHandle *)child)->get<Group>()
+            : Group::SP();
+        },16*1024);
       __initGroups = initGroups.data();
     }
     

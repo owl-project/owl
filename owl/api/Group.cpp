@@ -83,23 +83,20 @@ namespace owl {
     if (groups) {
       childIDs.resize(numChildren);
       for (int i=0;i<numChildren;i++) {
+        assert(groups[i]);
         children[i] = groups[i];
         childIDs[i] = groups[i]->ID;
       }
     }
-
+    
     if (matrixFormat != OWL_MATRIX_FORMAT_OWL)
       throw std::runtime_error("currently only supporting OWL_MATRIX_FORMAT_OWL");
     const affine3f *affineXfms = (const affine3f *)xfms;
-// (owl::ll::DeviceGroup*)context->llo,    
-//   lloInstanceGroupCreate((owl::ll::DeviceGroup*)context->llo,
     context->llo->instanceGroupCreate(this->ID,
                                       numChildren,
                                       groups?childIDs.data():(uint32_t*)nullptr,
                                       instIDs,
                                       affineXfms);
-    
-    // dg->instanceGroupCreate(groupID,childGroupIDs,numChildGroupIDs);
   }
   
   TrianglesGeomGroup::TrianglesGeomGroup(Context *const context,
