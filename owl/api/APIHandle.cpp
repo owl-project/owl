@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,34 +14,27 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "owl/ng/cpp/Context.h"
-#include <mutex>
+#include "APIContext.h"
+#include "APIHandle.h"
 
 namespace owl {
 
-  struct APIHandle;
-  
-  struct APIContext : public Context {
-    typedef std::shared_ptr<APIContext> SP;
+  APIHandle::APIHandle(Object::SP object, APIContext *context)
+  {
+    assert(object);
+    assert(context);
+    this->object  = object;
+    this->context = std::dynamic_pointer_cast<APIContext>
+      (context->shared_from_this());
+    assert(this->object);
+    assert(this->context);
+  }
 
-    APIContext(int32_t *requestedDeviceIDs,
-               int      numRequestedDevices)
-      : Context(requestedDeviceIDs,
-                numRequestedDevices)
-    {}
-    
-    APIHandle *createHandle(Object::SP object);
+  APIHandle::~APIHandle()
+  {
+    context->forget(this);
+    object  = nullptr;
+    context = nullptr;
+  }
 
-    void track(APIHandle *object);
-    
-    void forget(APIHandle *object);
-
-    /*! delete - and thereby, release - all handles that we still
-      own. */
-    void releaseAll();
-    std::set<APIHandle *> activeHandles;
-    
-    std::mutex monitor;
-  };
-  
 } // ::owl  

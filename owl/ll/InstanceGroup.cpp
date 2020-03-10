@@ -15,6 +15,7 @@
 // ======================================================================== //
 
 #include "Device.h"
+#include "owl/common/parallel/parallel_for.h"
 
 #define LOG(message)                                            \
   if (Context::logging()) \
@@ -77,13 +78,14 @@ namespace owl {
 
     void Device::instanceGroupCreate(/*! the group we are defining */
                                      int groupID,
+                                     size_t childCount,
                                      /* list of children. list can be
                                         omitted by passing a nullptr, but if
                                         not null this must be a list of
                                         'childCount' valid group ID */
-                                     const int *childGroupIDs,
-                                     /*! number of children in this group */
-                                     size_t childCount)
+                                     const uint32_t *childGroupIDs,
+                                     const uint32_t *instIDs,
+                                     const affine3f *xfms)
     {
       assert("check for valid ID" && groupID >= 0);
       assert("check for valid ID" && groupID < groups.size());
@@ -94,16 +96,31 @@ namespace owl {
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
 
-      if (childGroupIDs) 
-        for (int childID=0;childID<childCount;childID++) {
-          int childGroupID = childGroupIDs[childID];
-          assert("check geom child child group ID is valid" && childGroupID >= 0);
-          assert("check geom child child group ID is valid" && childGroupID <  groups.size());
-          Group *childGroup = groups[childGroupID];
-          assert("check referened child groups is valid" && childGroup != nullptr);
-          childGroup->numTimesReferenced++;
-          group->children[childID] = childGroup;
-        }
+      if (instIDs)
+        group->instanceIDs.resize(childCount);
+      if (xfms)
+        group->transforms.resize(childCount);
+      owl::parallel_for_blocked
+        (size_t(0),childCount,16*1024,
+         [&](size_t begin, size_t end){
+           for (size_t childID=begin;childID<end;childID++) {
+             if (childGroupIDs) {
+               int childGroupID = childGroupIDs[childID];
+               assert("check geom child child group ID is valid"
+                      && childGroupID >= 0);
+               assert("check geom child child group ID is valid"
+                      && childGroupID <  groups.size());
+               Group *childGroup = groups[childGroupID];
+               assert("check referened child groups is valid" && childGroup != nullptr);
+               childGroup->numTimesReferenced++;
+               group->children[childID] = childGroup;
+             }
+             if (xfms)
+               group->transforms[childID] = xfms[childID];
+             if (instIDs)
+               group->instanceIDs[childID] = instIDs[childID];
+           }
+         });
     }
 
     void InstanceGroup::destroyAccel(Context *context) 

@@ -27,8 +27,8 @@ namespace owl {
       closestHit(context->numRayTypes),
       anyHit(context->numRayTypes)
   {
-    lloGeomTypeCreate(context->llo,this->ID,
-                      varStructSize);
+    context->llo->geomTypeCreate(this->ID,
+                                 varStructSize);
   }
   
   Geom::Geom(Context *const context,
@@ -63,7 +63,7 @@ namespace owl {
                                GeomType::SP geometryType)
     : Geom(context,geometryType)
   {
-    lloTrianglesGeomCreate(context->llo,this->ID,geometryType->ID);
+    context->llo->trianglesGeomCreate(this->ID,geometryType->ID);
   }
 
   UserGeom::UserGeom(Context *const context,
@@ -71,12 +71,12 @@ namespace owl {
     : Geom(context,geometryType)
   {
     int numPrims = 0;
-    lloUserGeomCreate(context->llo,this->ID,geometryType->ID,numPrims);
+    context->llo->userGeomCreate(this->ID,geometryType->ID,numPrims);
   }
 
   void UserGeom::setPrimCount(size_t count)
   {
-    lloUserGeomSetPrimCount(context->llo,this->ID,count);
+    context->llo->userGeomSetPrimCount(this->ID,count);
   }
 
 
@@ -87,7 +87,7 @@ namespace owl {
                                   size_t stride,
                                   size_t offset)
   {
-    lloTrianglesGeomSetVertexBuffer(context->llo,this->ID,
+    context->llo->trianglesGeomSetVertexBuffer(this->ID,
                                     vertices->ID,count,stride,offset);
   }
   
@@ -96,7 +96,7 @@ namespace owl {
                                  size_t stride,
                                  size_t offset)
   {
-    lloTrianglesGeomSetIndexBuffer(context->llo,this->ID,
+    context->llo->trianglesGeomSetIndexBuffer(this->ID,
                                     indices->ID,count,stride,offset);
   }
 
@@ -108,7 +108,7 @@ namespace owl {
       
     closestHit[rayType].progName = progName;
     closestHit[rayType].module   = module;
-    lloGeomTypeClosestHit(context->llo,this->ID,
+    context->llo->setGeomTypeClosestHit(this->ID,
                           rayType,module->ID,
                           // warning: this 'this' here is importat, since
                           // *we* manage the lifetime of this string, and
@@ -125,7 +125,7 @@ namespace owl {
       
     anyHit[rayType].progName = progName;
     anyHit[rayType].module   = module;
-    lloGeomTypeAnyHit(context->llo,this->ID,
+    context->llo->setGeomTypeAnyHit(this->ID,
                           rayType,module->ID,
                           // warning: this 'this' here is importat, since
                           // *we* manage the lifetime of this string, and
@@ -142,7 +142,7 @@ namespace owl {
     assert(rayType < intersectProg.size());
     intersectProg[rayType].progName = progName;
     intersectProg[rayType].module   = module;
-    lloGeomTypeIntersect(context->llo,this->ID,
+    context->llo->setGeomTypeIntersect(this->ID,
                          rayType,module->ID,
                          // warning: this 'this' here is importat, since
                          // *we* manage the lifetime of this string, and
@@ -156,7 +156,7 @@ namespace owl {
   {
     this->boundsProg.progName = progName;
     this->boundsProg.module   = module;
-    lloGeomTypeBoundsProgDevice(context->llo,this->ID,
+    context->llo->setGeomTypeBoundsProgDevice(this->ID,
                                 module->ID,
                                 // warning: this 'this' here is importat, since
                                 // *we* manage the lifetime of this string, and

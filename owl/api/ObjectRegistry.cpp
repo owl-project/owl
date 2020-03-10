@@ -87,31 +87,31 @@ namespace owl {
   template<>
   void ObjectRegistryT<Buffer>::reallocContextIDs(int newMaxIDs)
   {
-    lloAllocBuffers(context->llo,newMaxIDs);
+    context->llo->allocBuffers(newMaxIDs);
   }
 
   template<>
   void ObjectRegistryT<Module>::reallocContextIDs(int newMaxIDs)
   {
-    lloAllocModules(context->llo,newMaxIDs);
+    context->llo->allocModules(newMaxIDs);
   }
 
   template<>
   void ObjectRegistryT<Geom>::reallocContextIDs(int newMaxIDs)
   {
-    lloAllocGeoms(context->llo,newMaxIDs);
+    context->llo->allocGeoms(newMaxIDs);
   }
 
   template<>
   void ObjectRegistryT<GeomType>::reallocContextIDs(int newMaxIDs)
   {
-    lloAllocGeomTypes(context->llo,newMaxIDs);
+    context->llo->allocGeomTypes(newMaxIDs);
   }
 
   template<>
   void ObjectRegistryT<RayGen>::reallocContextIDs(int newMaxIDs)
   {
-    lloAllocRayGens(context->llo,newMaxIDs);
+    context->llo->allocRayGens(newMaxIDs);
   }
 
   template<>
@@ -123,7 +123,7 @@ namespace owl {
   template<>
   void ObjectRegistryT<MissProg>::reallocContextIDs(int newMaxIDs)
   {
-    lloAllocMissProgs(context->llo,newMaxIDs);
+    context->llo->allocMissProgs(newMaxIDs);
   }
 
   template<>
@@ -135,7 +135,7 @@ namespace owl {
   template<>
   void ObjectRegistryT<LaunchParams>::reallocContextIDs(int newMaxIDs)
   {
-    lloAllocLaunchParams(context->llo,newMaxIDs);
+    context->llo->allocLaunchParams(newMaxIDs);
   }
   
   template<>
@@ -147,7 +147,7 @@ namespace owl {
   template<>
   void ObjectRegistryT<Group>::reallocContextIDs(int newMaxIDs)
   {
-    lloAllocGroups(context->llo,newMaxIDs);
+    context->llo->allocGroups(newMaxIDs);
   }
 
 } // ::owl

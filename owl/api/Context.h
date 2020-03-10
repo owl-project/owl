@@ -23,7 +23,7 @@
 #include "LaunchParams.h"
 #include "MissProg.h"
 // ll
-#include "../ll/Device.h"
+#include "../ll/DeviceGroup.h"
 
 namespace owl {
 
@@ -82,8 +82,18 @@ namespace owl {
     void buildPipeline();
     void buildPrograms();
     
-    InstanceGroup::SP
-    createInstanceGroup(size_t numChildren);
+    // InstanceGroup::SP
+    // createInstanceGroup(size_t numChildren,
+    //                     Group::SP      *groups,
+    //                     const uint32_t *instIDs,
+    //                     const float    *xfms,
+    //                     OWLMatrixFormat matrixFormat)
+    // // InstanceGroup::SP createInstanceGroup(size_t numChildren)
+    // {
+    //   return std::make_shared<InstanceGroup>
+    //     (this,numChildren,groups,instIDs,xfms,matrixFormat);
+    // }
+
     
     GeomGroup::SP
     trianglesGeomGroupCreate(size_t numChildren);
@@ -143,8 +153,8 @@ namespace owl {
     
     Module::SP createModule(const std::string &ptxCode);
 
-    LLOContext llo;
-    //    ll::DeviceGroup::SP ll;
+    //LLOContext llo;
+    owl::ll::DeviceGroup *llo;
   };
 
 } // ::owl

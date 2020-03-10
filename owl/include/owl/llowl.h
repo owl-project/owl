@@ -65,6 +65,8 @@
 //#endif
 
 
+#if 0
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -469,11 +471,11 @@ extern "C" {
                                     int32_t geomID,
                                     size_t  numPrims);
   
-  OWL_LL_INTERFACE
-  LLOResult lloInstanceGroupCreate(LLOContext     llo,
-                                   int32_t        groupID,
-                                   const int32_t *childGroupIDs,
-                                   size_t         numChildGroupIDs);
+  // OWL_LL_INTERFACE
+  // LLOResult lloInstanceGroupCreate(LLOContext     llo,
+  //                                  int32_t        groupID,
+  //                                  const int32_t *childGroupIDs,
+  //                                  size_t         numChildGroupIDs);
   OWL_LL_INTERFACE
   LLOResult lloTrianglesGeomGroupCreate(LLOContext     llo,
                                         int32_t        groupID,
@@ -637,6 +639,7 @@ void lloParamsLaunch2D(LLOContext   llo,
      },
      (const void *)&l);
 }
+#endif
 #endif
 
 

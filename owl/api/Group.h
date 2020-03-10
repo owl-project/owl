@@ -63,9 +63,14 @@ namespace owl {
     typedef std::shared_ptr<InstanceGroup> SP;
     
     InstanceGroup(Context *const context,
-                  size_t numChildren);
-    void setChild(int childID, Group::SP child);
+                  size_t numChildren,
+                  Group::SP      *groups,
+                  const uint32_t *instIDs,
+                  const float    *xfms,
+                  OWLMatrixFormat matrixFormat);
 
+    void setChild(int childID, Group::SP child);
+                  
     /*! set transformation matrix of given child */
     void setTransform(int childID, const affine3f &xfm);
     

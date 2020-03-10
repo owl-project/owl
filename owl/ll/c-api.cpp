@@ -34,6 +34,7 @@
 namespace owl {
   namespace ll {
 
+#if 0
     std::string lastErrorText = "";
 
     template<typename Lambda>
@@ -424,18 +425,18 @@ namespace owl {
         });
     }
 
-    OWL_LL_INTERFACE
-    LLOResult lloInstanceGroupCreate(LLOContext llo,
-                                          int32_t        groupID,
-                                          const int32_t *childGroupIDs,
-                                          size_t        numChildGroupIDs)
-    {
-      return squashExceptions
-        ([&](){
-          DeviceGroup *dg = (DeviceGroup *)llo;
-          dg->instanceGroupCreate(groupID,childGroupIDs,numChildGroupIDs);
-        });
-    }
+    // OWL_LL_INTERFACE
+    // LLOResult lloInstanceGroupCreate(LLOContext llo,
+    //                                       int32_t        groupID,
+    //                                       const int32_t *childGroupIDs,
+    //                                       size_t        numChildGroupIDs)
+    // {
+    //   return squashExceptions
+    //     ([&](){
+    //       DeviceGroup *dg = (DeviceGroup *)llo;
+    //       dg->instanceGroupCreate(groupID,childGroupIDs,numChildGroupIDs);
+    //     });
+    // }
 
     /*! Set a buffer of bounding boxes that this user geometry will
       use when building the accel structure. This is one of multiple
@@ -456,17 +457,17 @@ namespace owl {
         });
     }
     
-    OWL_LL_INTERFACE
-    LLOResult lloModuleCreate(LLOContext llo,
-                              int32_t moduleID,
-                              const char *ptxCode)
-    {
-      return squashExceptions
-        ([&](){
-          DeviceGroup *dg = (DeviceGroup *)llo;
-          dg->moduleCreate(moduleID,ptxCode);
-        });
-    }
+    // OWL_LL_INTERFACE
+    // LLOResult lloModuleCreate(LLOContext llo,
+    //                           int32_t moduleID,
+    //                           const char *ptxCode)
+    // {
+    //   return squashExceptions
+    //     ([&](){
+    //       DeviceGroup *dg = (DeviceGroup *)llo;
+    //       dg->moduleCreate(moduleID,ptxCode);
+    //     });
+    // }
 
     /*! (re-)builds the modules that have been set via
      *  lloModuleCreate */
@@ -842,6 +843,6 @@ namespace owl {
         });
     }
     
-
+#endif
   } // ::owl::ll
 } //::owl
