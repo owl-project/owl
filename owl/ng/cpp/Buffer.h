@@ -90,6 +90,9 @@ namespace owl {
           size_t count,
           cudaGraphicsResource_t resource);
 
+      void map();
+      void unmap();
+
       /*! pretty-printer, for debugging */
       std::string toString() const override { return "GraphicsBuffer"; }
   };

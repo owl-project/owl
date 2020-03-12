@@ -171,9 +171,9 @@ namespace owl {
     }
 
 
-    void GraphicsBuffer::map(Device* device, int lpID)
+    void GraphicsBuffer::map(Device* device, CUstream stream)
     {
-        CUDA_CHECK(cudaGraphicsMapResources(1, &resource, device->launchParamsGetStream(lpID)));
+        CUDA_CHECK(cudaGraphicsMapResources(1, &resource, stream));
         size_t size = 0;
         CUDA_CHECK(cudaGraphicsResourceGetMappedPointer(&d_pointer, &size, resource));
         if (elementCount * elementSize != size)
@@ -183,9 +183,9 @@ namespace owl {
     }
 
 
-    void GraphicsBuffer::unmap(Device* device, int lpID)
+    void GraphicsBuffer::unmap(Device* device, CUstream stream)
     {
-        CUDA_CHECK(cudaGraphicsUnmapResources(1, &resource, device->launchParamsGetStream(lpID)));
+        CUDA_CHECK(cudaGraphicsUnmapResources(1, &resource, stream));
         d_pointer = nullptr;
     }
     

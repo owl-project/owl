@@ -249,6 +249,10 @@ namespace owl {
       void graphicsBufferCreate(int bufferID,
           size_t elementCount,
           size_t elementSize, cudaGraphicsResource_t resource);
+
+      void graphicsBufferMap(int bufferID);
+
+      void graphicsBufferUnmap(int bufferID);
       
       void bufferResize(int bufferID, size_t newItemCount);
       void bufferUpload(int bufferID, const void *hostPtr);

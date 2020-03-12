@@ -108,8 +108,8 @@ namespace owl {
         void resize(Device* device, size_t newElementCount) override;
         void upload(Device* device, const void* hostPtr) override;
 
-        void map(Device* device, int lpID);
-        void unmap(Device* device, int lpID);
+        void map(Device* device, CUstream stream);
+        void unmap(Device* device, CUstream stream);
 
         cudaGraphicsResource_t resource;
     };

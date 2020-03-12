@@ -388,6 +388,17 @@ namespace owl {
             device->graphicsBufferCreate(bufferID, elementCount, elementSize, resource);
     }
 
+    void DeviceGroup::graphicsBufferMap(int bufferID)
+    {
+        for (auto device : devices)
+            device->graphicsBufferMap(bufferID);
+    }
+
+    void DeviceGroup::graphicsBufferUnmap(int bufferID)
+    {
+        for (auto device : devices)
+            device->graphicsBufferUnmap(bufferID);
+    }
       
     /*! Set a buffer of bounding boxes that this user geometry will
       use when building the accel structure. This is one of

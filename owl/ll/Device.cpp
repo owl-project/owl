@@ -961,6 +961,28 @@ namespace owl {
         buffers[bufferID] = buffer;
         context->popActive();
     }
+
+    void Device::graphicsBufferMap(int bufferID)
+    {
+        assert("check valid buffer ID" && bufferID >= 0);
+        assert("check valid buffer ID" && bufferID < buffers.size());
+        context->pushActive();
+        GraphicsBuffer* buffer = dynamic_cast<GraphicsBuffer*>(buffers[bufferID]);
+        assert("check buffer properly casted" && buffer != nullptr);
+        buffer->map(this, context->stream);
+        context->popActive();
+    }
+
+    void Device::graphicsBufferUnmap(int bufferID)
+    {
+        assert("check valid buffer ID" && bufferID >= 0);
+        assert("check valid buffer ID" && bufferID < buffers.size());
+        context->pushActive();
+        GraphicsBuffer* buffer = dynamic_cast<GraphicsBuffer*>(buffers[bufferID]);
+        assert("check buffer properly casted" && buffer != nullptr);
+        buffer->unmap(this, context->stream);
+        context->popActive();
+    }
     
     /*! Set a buffer of bounding boxes that this user geometry will
       use when building the accel structure. This is one of

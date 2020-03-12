@@ -91,6 +91,16 @@ namespace owl {
       lloGraphicsBufferCreate(context->llo, this->ID, count * sizeOf(type), resource);
   }
 
+  void GraphicsBuffer::map()
+  {
+      lloGraphicsBufferMap(context->llo, this->ID);
+  }
+
+  void GraphicsBuffer::unmap()
+  {
+      lloGraphicsBufferUnmap(context->llo, this->ID);
+  }
+
   /*! destroy whatever resouces this buffer's ll-layer handle this
     may refer to; this will not destruct the current object
     itself, but should already release all its references */
