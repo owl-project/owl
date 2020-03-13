@@ -97,7 +97,7 @@ namespace owl {
                                  size_t offset)
   {
     context->llo->trianglesGeomSetIndexBuffer(this->ID,
-                                    indices->ID,count,stride,offset);
+                                    indices->ID, count, stride, offset);
   }
 
   void GeomType::setClosestHitProgram(int rayType,

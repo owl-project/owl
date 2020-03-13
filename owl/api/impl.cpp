@@ -171,8 +171,7 @@ namespace owl {
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->getContext();
     assert(context);
-    return context->llo->getDeviceCount();
-    // return (int32_t)lloGetDeviceCount(context->llo);
+    return (int32_t)context->llo->getDeviceCount();
   }
     
 

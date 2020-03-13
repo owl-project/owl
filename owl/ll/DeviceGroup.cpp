@@ -404,9 +404,9 @@ namespace owl {
     
     void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
                                                    int bufferID,
-                                                   int count,
-                                                   int stride,
-                                                   int offset)
+                                                   size_t count,
+        size_t stride,
+        size_t offset)
     {
       for (auto device : devices) 
         device->trianglesGeomSetVertexBuffer(geomID,bufferID,count,stride,offset);
@@ -414,9 +414,9 @@ namespace owl {
     
     void DeviceGroup::trianglesGeomSetIndexBuffer(int geomID,
                                                   int bufferID,
-                                                  int count,
-                                                  int stride,
-                                                  int offset)
+        size_t count,
+        size_t stride,
+        size_t offset)
     {
       for (auto device : devices) {
         device->trianglesGeomSetIndexBuffer(geomID,bufferID,count,stride,offset);

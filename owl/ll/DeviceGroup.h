@@ -429,14 +429,14 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
 
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int bufferID,
-                                        int count,
-                                        int stride,
-                                        int offset);
+          size_t count,
+          size_t stride,
+          size_t offset);
       void trianglesGeomSetIndexBuffer(int geomID,
                                        int bufferID,
-                                       int count,
-                                       int stride,
-                                       int offset);
+          size_t count,
+          size_t stride,
+          size_t offset);
       void groupBuildAccel(int groupID);
       // NEW naming:
       void groupAccelBuild(int groupID) { groupBuildAccel(groupID); }
