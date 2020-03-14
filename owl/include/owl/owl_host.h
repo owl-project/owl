@@ -399,7 +399,7 @@ owlInstanceGroupCreate(OWLContext context,
                            null, or an array of size numInstnaces, of
                            the format specified */
                        const float    *initTransforms  OWL_IF_CPP(= nullptr),
-                       OWLMatrixFormat matrixFormat=OWL_MATRIX_FORMAT_OWL
+                       OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL)
                        );
 
 OWL_API void owlGroupBuildAccel(OWLGroup group);

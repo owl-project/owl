@@ -25,8 +25,12 @@
 #  error "This is not a C99 compiler"
 #endif
 
+#define UNUSED(x) (void)(x)
+
 int main(int ac, char **av)
 {
+  UNUSED(ac);
+  UNUSED(av);
   printf("hello world from C99\n");
 
   OWLContext owl = owlContextCreate(NULL,0);
