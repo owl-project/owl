@@ -14,10 +14,10 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-set(CMAKE_MODULE_PATH
-  "${CMAKE_CURRENT_SOURCE_DIR}/../cmake"
-  ${CMAKE_MODULE_PATH}
-  )
+#set(CMAKE_MODULE_PATH
+#  "${CMAKE_CURRENT_SOURCE_DIR}/../cmake"
+#  ${CMAKE_MODULE_PATH}
+#  )
 
 find_package(CUDA REQUIRED)
 find_package(OptiX REQUIRED VERSION 7)
