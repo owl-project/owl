@@ -1257,7 +1257,7 @@ namespace owl {
       
       LOG("building SBT miss prog records");
       assert("check correct number of miss progs"
-             && missProgPGs.size() == context->numRayTypes);
+             && missProgPGs.size() >= context->numRayTypes);
       
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
