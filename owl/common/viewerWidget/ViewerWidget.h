@@ -30,6 +30,16 @@ namespace owl {
 
       ViewerWidget(GlutWindow::SP window);
 
+      /*! snaps a given vector to one of the three coordinate axis;
+          useful for pbrt models in which the upvector sometimes isn't
+          axis-aligend */
+      static inline vec3f getUpVector(const vec3f &v)
+      {
+        int dim = arg_max(abs(v));
+        vec3f up(0);
+        up[dim] = v[dim] < 0.f ? -1.f : 1.f;
+        return up;
+      }
 
       /*! window notifies us that we got resized */
       virtual void resize(const vec2i &newSize) {
