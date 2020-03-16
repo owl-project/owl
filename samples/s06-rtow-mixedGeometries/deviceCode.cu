@@ -19,7 +19,7 @@
 
 using namespace owl;
 
-#define NUM_SAMPLES_PER_PIXEL 16
+#define NUM_SAMPLES_PER_PIXEL 6000
 
 // ==================================================================
 // bounding box programs - since these don't actually use the material

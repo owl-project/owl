@@ -48,7 +48,7 @@ macro(cuda_compile_and_embed output_var cuda_file)
   if(${CMAKE_BUILD_TYPE} MATCHES "Release")
     cuda_compile_ptx(ptx_files
       ${cuda_file}
-      OPTIONS -O3 -DNDEBUG=1
+      OPTIONS -O3 -DNDEBUG=1 --use_fast_math
       )
   else()
     cuda_compile_ptx(ptx_files
