@@ -336,19 +336,21 @@ extern "C" {
                                            size 'amount' if not */
                                          const void *initData);
 
+  /*! creates a buffer wrapping a CUDA graphics resource;
+      the resource must be created and registered by the user */
   OWL_LL_INTERFACE
-      LLOResult lloGraphicsBufferCreate(LLOContext llo,
-          /*! ID of buffer to create */
-          int32_t    bufferID,
-          /*! number of elements */
-          size_t     sizeInBytes,
-          cudaGraphicsResource_t resource);
+  LLOResult lloGraphicsBufferCreate(LLOContext llo,
+                                    /*! ID of buffer to create */
+                                    int32_t    bufferID,
+                                    /*! number of elements */
+                                    size_t     sizeInBytes,
+                                    cudaGraphicsResource_t resource);
 
   OWL_LL_INTERFACE
-      LLOResult lloGraphicsBufferMap(LLOContext llo, int32_t bufferID);
+  LLOResult lloGraphicsBufferMap(LLOContext llo, int32_t bufferID);
 
   OWL_LL_INTERFACE
-      LLOResult lloGraphicsBufferUnmap(LLOContext llo, int32_t bufferID);
+  LLOResult lloGraphicsBufferUnmap(LLOContext llo, int32_t bufferID);
 
   OWL_LL_INTERFACE
   LLOResult lloBufferDestroy(LLOContext llo,

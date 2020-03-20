@@ -247,8 +247,9 @@ namespace owl {
                                      const void *initData);
 
       void graphicsBufferCreate(int bufferID,
-          size_t elementCount,
-          size_t elementSize, cudaGraphicsResource_t resource);
+                                size_t elementCount,
+                                size_t elementSize,
+                                cudaGraphicsResource_t resource);
 
       void graphicsBufferMap(int bufferID);
 

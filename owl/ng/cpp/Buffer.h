@@ -83,18 +83,18 @@ namespace owl {
   };
 
   struct GraphicsBuffer : public Buffer {
-      typedef std::shared_ptr<GraphicsBuffer> SP;
+    typedef std::shared_ptr<GraphicsBuffer> SP;
 
-      GraphicsBuffer(Context* const context,
-          OWLDataType type,
-          size_t count,
-          cudaGraphicsResource_t resource);
+    GraphicsBuffer(Context* const context,
+                   OWLDataType type,
+                   size_t count,
+                   cudaGraphicsResource_t resource);
 
-      void map();
-      void unmap();
+    void map();
+    void unmap();
 
-      /*! pretty-printer, for debugging */
-      std::string toString() const override { return "GraphicsBuffer"; }
+    /*! pretty-printer, for debugging */
+    std::string toString() const override { return "GraphicsBuffer"; }
   };
   
 } // ::owl

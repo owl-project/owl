@@ -489,37 +489,38 @@ namespace owl {
   }
 
   OWL_API OWLBuffer
-      owlGraphicsBufferCreate(OWLContext _context,
-          OWLDataType type,
-          size_t      count, cudaGraphicsResource_t resource)
+  owlGraphicsBufferCreate(OWLContext             _context,
+                          OWLDataType            type,
+                          size_t                 count,
+                          cudaGraphicsResource_t resource)
   {
-      LOG_API_CALL();
-      assert(_context);
-      APIContext::SP context = ((APIHandle*)_context)->get<APIContext>();
-      assert(context);
-      Buffer::SP  buffer = context->graphicsBufferCreate(type, count, resource);
-      assert(buffer);
-      return (OWLBuffer)context->createHandle(buffer);
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context = ((APIHandle*)_context)->get<APIContext>();
+    assert(context);
+    Buffer::SP  buffer = context->graphicsBufferCreate(type, count, resource);
+    assert(buffer);
+    return (OWLBuffer)context->createHandle(buffer);
   }
 
   OWL_API void
-      owlGraphicsBufferMap(OWLBuffer _buffer)
+  owlGraphicsBufferMap(OWLBuffer _buffer)
   {
-      LOG_API_CALL();
-      assert(_buffer);
-      GraphicsBuffer::SP buffer = ((APIHandle*)_buffer)->get<GraphicsBuffer>();
-      assert(buffer);
-      buffer->map();
+    LOG_API_CALL();
+    assert(_buffer);
+    GraphicsBuffer::SP buffer = ((APIHandle*)_buffer)->get<GraphicsBuffer>();
+    assert(buffer);
+    buffer->map();
   }
 
   OWL_API void
-      owlGraphicsBufferUnmap(OWLBuffer _buffer)
+  owlGraphicsBufferUnmap(OWLBuffer _buffer)
   {
-      LOG_API_CALL();
-      assert(_buffer);
-      GraphicsBuffer::SP buffer = ((APIHandle*)_buffer)->get<GraphicsBuffer>();
-      assert(buffer);
-      buffer->unmap();
+    LOG_API_CALL();
+    assert(_buffer);
+    GraphicsBuffer::SP buffer = ((APIHandle*)_buffer)->get<GraphicsBuffer>();
+    assert(buffer);
+    buffer->unmap();
   }
   
   OWL_API const void *
@@ -1064,7 +1065,7 @@ namespace owl {
       xfm.p    = vec3f(floats[0+3],floats[4+3],floats[8+3]);
       break;
     default: 
-		FATAL("un-recognized matrix format");
+        FATAL("un-recognized matrix format");
     }
     
     assert(_group);

@@ -406,10 +406,13 @@ owlManagedMemoryBufferCreate(OWLContext context,
                              size_t      count,
                              const void *init);
 
+/*! creates a buffer wrapping a CUDA graphics resource;
+  the resource must be created and registered by the user */
 OWL_API OWLBuffer
-owlGraphicsBufferCreate(OWLContext context,
-    OWLDataType type,
-    size_t      count, cudaGraphicsResource_t resource);
+owlGraphicsBufferCreate(OWLContext             context,
+                        OWLDataType            type,
+                        size_t                 count,
+                        cudaGraphicsResource_t resource);
 
 OWL_API void
 owlGraphicsBufferMap(OWLBuffer buffer);

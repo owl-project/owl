@@ -104,16 +104,19 @@ namespace owl {
                            size_t count);
     
     /*! creates a buffer that uses CUDA managed memory; that memory is
-      managed by CUDA (see CUDAs documentatoin on managed memory) and
+      managed by CUDA (see CUDAs documentation on managed memory) and
       accessive to all devices in the deviec group */
     Buffer::SP
     managedMemoryBufferCreate(OWLDataType type,
                               size_t count,
                               const void *init);
 
+    /*! creates a buffer that wraps a CUDA graphics resource
+      that can be, for instance, an OpenGL texture */
     Buffer::SP
-        graphicsBufferCreate(OWLDataType type,
-            size_t count, cudaGraphicsResource_t resource);
+    graphicsBufferCreate(OWLDataType type,
+                         size_t count,
+                         cudaGraphicsResource_t resource);
     
     RayGen::SP
     createRayGen(const std::shared_ptr<RayGenType> &type);

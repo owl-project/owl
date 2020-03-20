@@ -591,37 +591,40 @@ namespace owl {
     }
 
     OWL_LL_INTERFACE
-        LLOResult lloGraphicsBufferCreate(LLOContext llo,
-            /*! ID of buffer to create */
-            int32_t bufferID,
-            /*! number of elements */
-            size_t sizeInBytes,
-            cudaGraphicsResource_t resource)
+    LLOResult lloGraphicsBufferCreate(LLOContext llo,
+                                      /*! ID of buffer to create */
+                                      int32_t bufferID,
+                                      /*! number of elements */
+                                      size_t sizeInBytes,
+                                      cudaGraphicsResource_t resource)
     {
-        return squashExceptions([&]() {
-            DeviceGroup* dg = (DeviceGroup*)llo;
-            dg->graphicsBufferCreate(bufferID, sizeInBytes,1, resource);
-            });
+      return squashExceptions
+        ([&]() {
+          DeviceGroup* dg = (DeviceGroup*)llo;
+          dg->graphicsBufferCreate(bufferID,sizeInBytes,1,resource);
+        });
     }
 
     OWL_LL_INTERFACE
-        LLOResult lloGraphicsBufferMap(LLOContext llo,
-            int32_t bufferID)
+    LLOResult lloGraphicsBufferMap(LLOContext llo,
+                                   int32_t bufferID)
     {
-        return squashExceptions([&]() {
-            DeviceGroup* dg = (DeviceGroup*)llo;
-            dg->graphicsBufferMap(bufferID);
-            });
+      return squashExceptions
+        ([&]() {
+          DeviceGroup* dg = (DeviceGroup*)llo;
+          dg->graphicsBufferMap(bufferID);
+        });
     }
 
     OWL_LL_INTERFACE
-        LLOResult lloGraphicsBufferUnmap(LLOContext llo,
-            int32_t bufferID)
+    LLOResult lloGraphicsBufferUnmap(LLOContext llo,
+                                     int32_t bufferID)
     {
-        return squashExceptions([&]() {
-            DeviceGroup* dg = (DeviceGroup*)llo;
-            dg->graphicsBufferUnmap(bufferID);
-            });
+      return squashExceptions
+        ([&]() {
+          DeviceGroup* dg = (DeviceGroup*)llo;
+          dg->graphicsBufferUnmap(bufferID);
+        });
     }
 
     OWL_LL_INTERFACE

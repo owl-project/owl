@@ -83,22 +83,26 @@ namespace owl {
                           init);
   }
 
-  GraphicsBuffer::GraphicsBuffer(Context* const context,
-      OWLDataType type,
-      size_t count, cudaGraphicsResource_t resource)
-      : Buffer(context, type)
+  GraphicsBuffer::GraphicsBuffer(Context *const context,
+                                 OWLDataType type,
+                                 size_t count,
+                                 cudaGraphicsResource_t resource)
+    : Buffer(context, type)
   {
-      lloGraphicsBufferCreate(context->llo, this->ID, count * sizeOf(type), resource);
+    lloGraphicsBufferCreate(context->llo,
+                            this->ID,
+                            count*sizeOf(type),
+                            resource);
   }
 
   void GraphicsBuffer::map()
   {
-      lloGraphicsBufferMap(context->llo, this->ID);
+    lloGraphicsBufferMap(context->llo, this->ID);
   }
 
   void GraphicsBuffer::unmap()
   {
-      lloGraphicsBufferUnmap(context->llo, this->ID);
+    lloGraphicsBufferUnmap(context->llo, this->ID);
   }
 
   /*! destroy whatever resouces this buffer's ll-layer handle this
