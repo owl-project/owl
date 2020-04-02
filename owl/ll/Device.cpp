@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -21,25 +21,25 @@
 extern inline OptixResult optixInit( void** handlePtr );
 
 #define LOG(message)                                            \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
   << message                                                    \
   << std::endl
 
 #define LOG_OK(message)                                 \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
   << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
   << message                                            \
   << std::endl
 
 #define CLOG_OK(message)                                \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << OWL_TERMINAL_DEFAULT << std::endl
@@ -1294,7 +1294,7 @@ namespace owl {
       
       LOG("building SBT miss prog records");
       assert("check correct number of miss progs"
-             && missProgPGs.size() == context->numRayTypes);
+             && missProgPGs.size() >= context->numRayTypes);
       
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
@@ -1613,6 +1613,19 @@ namespace owl {
       context->numRayTypes = (int)rayTypeCount;
     }
 
+      /*! helper function - return cuda name of this device */
+    std::string Device::getDeviceName() const
+    {
+      cudaDeviceProp prop;
+      cudaGetDeviceProperties(&prop, getCudaDeviceID());
+      return prop.name;
+    }
+    
+    /*! helper function - return cuda device ID of this device */
+    int Device::getCudaDeviceID() const
+    {
+      return context->cudaDeviceID;
+    }
 
   } // ::owl::ll
 } //::owl

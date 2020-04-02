@@ -17,7 +17,7 @@
 #pragma once
 
 #include "owl/ll/helper/optix.h"
-#include <owl/llowl.h>
+#include <owl/owl.h>
 
 #define OWL_THROWS_EXCEPTIONS 1
 #if OWL_THROWS_EXCEPTIONS
@@ -30,6 +30,154 @@ namespace owl {
   namespace ll {
 
     typedef int32_t id_t;
+
+
+    struct DeviceGroup;
+    typedef DeviceGroup *LLOContext;
+    
+  typedef void
+  (*LLOWriteUserGeomBoundsDataCB)(uint8_t *userGeomDataToWrite,
+                                  int deviceID,
+                                  int geomID,
+                                  int childID,
+                                  const void *cbUserData);
+    
+  typedef void
+  (*LLOWriteLaunchParamsCB)(uint8_t *userGeomDataToWrite,
+                            int deviceID,
+                            const void *cbUserData);
+    
+  /*! callback with which the app can specify what data is to be
+    written into the SBT for a given geometry, ray type, and
+    device */
+  typedef void
+  (*LLOWriteHitProgDataCB)(uint8_t *hitProgDataToWrite,
+                           /*! ID of the device we're
+                             writing for (different
+                             devices may need to write
+                             different pointers */
+                           int deviceID,
+                           /*! the geometry ID for which
+                             we're generating the SBT
+                             entry for */
+                           int geomID,
+                           /*! the ray type for which
+                             we're generating the SBT
+                             entry for */
+                           int rayType,
+                           /*! the raw void pointer the app has passed
+                             during sbtHitGroupsBuild() */
+                           const void *callBackUserData);
+    
+  /*! callback with which the app can specify what data is to be
+    written into the SBT for a given geometry, ray type, and
+    device */
+  typedef void
+  (*LLOWriteRayGenDataCB)(uint8_t *rayGenDataToWrite,
+                          /*! ID of the device we're
+                            writing for (different
+                            devices may need to write
+                            different pointers */
+                          int deviceID,
+                          /*! the geometry ID for which
+                            we're generating the SBT
+                            entry for */
+                          int rayGenID,
+                          /*! the raw void pointer the app has passed
+                            during sbtGeomTypesBuild() */
+                          const void *callBackUserData);
+    
+  /*! callback with which the app can specify what data is to be
+    written into the SBT for a given geometry, ray type, and
+    device */
+  typedef void
+  LLOWriteMissProgDataCB(uint8_t *missProgDataToWrite,
+                         /*! ID of the device we're
+                           writing for (different
+                           devices may need to write
+                           different pointers */
+                         int deviceID,
+                         /*! the ray type for which
+                           we're generating the SBT
+                           entry for */
+                         int rayType,
+                         /*! the raw void pointer the app has passed
+                           during sbtMissProgsBuildd() */
+                         const void *callBackUserData);
+    
+/*! C++-only wrapper of callback method with lambda function */
+template<typename Lambda>
+void lloSbtRayGensBuild(LLOContext llo,
+                        const Lambda &l)
+{
+  lloSbtRayGensBuild
+    (llo,
+     [](uint8_t *output,
+        int devID, int rgID, 
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID,rgID);
+     },
+     (const void *)&l);
+}
+
+/*! C++-only wrapper of callback method with lambda function */
+template<typename Lambda>
+void lloSbtHitProgsBuild(LLOContext llo,
+                         const Lambda &l)
+{
+  lloSbtHitProgsBuild
+    (llo,
+     [](uint8_t *output,
+        int devID,
+        int geomID,
+        int rayTypeID,
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID,geomID,rayTypeID);
+     },
+     (const void *)&l);
+}
+
+/*! C++-only wrapper of callback method with lambda function */
+template<typename Lambda>
+void lloSbtMissProgsBuild(LLOContext llo,
+                          const Lambda &l)
+{
+  lloSbtMissProgsBuild
+    (llo,
+     [](uint8_t *output,
+        int devID, int rgID, 
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID,rgID);
+     },
+     (const void *)&l);
+}
+
+/*! C++-only wrapper of callback method with lambda function */
+template<typename Lambda>
+void lloGroupBuildPrimitiveBounds(LLOContext llo,
+                                  uint32_t groupID,
+                                  size_t sizeOfData,
+                                  const Lambda &l)
+{
+  lloGroupBuildPrimitiveBounds
+    (llo,groupID,sizeOfData,
+     [](uint8_t *output,
+        int devID,
+        int geomID,
+        int childID, 
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID,geomID,childID);
+     },
+     (const void *)&l);
+}
 
     /*! class that maintains the cuda host pinned memoery handle for a
         group of HostPinnedBuffer's (host pinned memory is shared
@@ -71,6 +219,16 @@ namespace owl {
     struct Device;
     
     struct DeviceGroup {
+      
+      static int logging()
+      {
+#ifdef NDEBUG
+        return false;
+#else
+        return true;
+#endif
+      }
+      
       DeviceGroup(const std::vector<Device *> &devices);
       ~DeviceGroup();
 
@@ -203,13 +361,14 @@ namespace owl {
       /*! create a new instance group with given list of children */
       void instanceGroupCreate(/*! the group we are defining */
                                int groupID,
+                               size_t numChildren,
                                /* list of children. list can be
                                   omitted by passing a nullptr, but if
                                   not null this must be a list of
                                   'childCount' valid group ID */
-                               const int *childGroupIDs,
-                               /*! number of children in this group */
-                               size_t childCount);
+                               const uint32_t *childGroupIDs,
+                               const uint32_t *instIDs,
+                               const affine3f *xfms);
       /*! set given child's instance transform. groupID must be a
         valid instance group, childID must be wihtin
         [0..numChildren) */
@@ -279,14 +438,14 @@ namespace owl {
 
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int bufferID,
-                                        int count,
-                                        int stride,
-                                        int offset);
+          size_t count,
+          size_t stride,
+          size_t offset);
       void trianglesGeomSetIndexBuffer(int geomID,
                                        int bufferID,
-                                       int count,
-                                       int stride,
-                                       int offset);
+          size_t count,
+          size_t stride,
+          size_t offset);
       void groupBuildAccel(int groupID);
       // NEW naming:
       void groupAccelBuild(int groupID) { groupBuildAccel(groupID); }
@@ -379,7 +538,10 @@ namespace owl {
       /*! accessor helpers that first checks the validity of the given
         device ID, then returns the given device */
       Device *checkGetDevice(int deviceID);
-      
+
+      /*! helper function that enables peer access across all devices */
+      void enablePeerAccess();
+
       const std::vector<Device *> devices;
     };
 

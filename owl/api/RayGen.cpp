@@ -19,6 +19,31 @@
 
 namespace owl {
 
+
+/*! C++-only wrapper of callback method with lambda function */
+template<typename Lambda>
+void lloParamsLaunch2D(ll::DeviceGroup *llo,
+                       int32_t      rayGenID,
+                       int32_t      Nx,
+                       int32_t      Ny,
+                       int32_t      launchParamsObjectID,
+                       const Lambda &l)
+{
+  llo->launch
+    (rayGenID,vec2i(Nx,Ny),
+     launchParamsObjectID,
+     [](uint8_t *output,
+        int devID,
+        const void *cbData)
+     {
+       const Lambda *lambda = (const Lambda *)cbData;
+       (*lambda)(output,devID);
+     },
+     (const void *)&l);
+}
+
+
+  
   RayGenType::RayGenType(Context *const context,
                          Module::SP module,
                          const std::string &progName,
@@ -39,7 +64,7 @@ namespace owl {
     assert(type.get());
     assert(type->module);
     assert(type->progName != "");
-    lloRayGenCreate(context->llo,this->ID,
+    context->llo->setRayGen(this->ID,
                     type->module->ID,
                     type->progName.c_str(),
                     type->varStructSize);
@@ -47,15 +72,26 @@ namespace owl {
 
   void RayGen::launch(const vec2i &dims)
   {
-    lloLaunch2D(context->llo,this->ID,dims.x,dims.y);
+    context->llo->launch(this->ID,dims);
   }
 
   void RayGen::launch(const vec2i &dims, const LaunchParams::SP &lp)
   {
-    lloParamsLaunch2D(context->llo,this->ID,dims.x,dims.y,
-                      lp->ID,[&](uint8_t *launchParamsToWrite, int deviceID){
+    lloParamsLaunch2D(context->llo,this->ID,dims.x,dims.y,lp->ID,
+                      [&](uint8_t *launchParamsToWrite, int deviceID){
                         lp->writeVariables(launchParamsToWrite,deviceID);
                       });
+                       // int32_t      rayGenID,
+                       // int32_t      Nx,
+                       // int32_t      Ny,
+                       // int32_t      launchParamsObjectID,
+                       // const Lambda &l)
+
+  // auto lambda = [&](uint8_t *launchParamsToWrite, int deviceID){
+    //                        lp->writeVariables(launchParamsToWrite,deviceID);
+    //               };
+    // context->llo->launch(this->ID,dims,lp->ID,
+    //                      ,(const void *)&lp);
   }
   
 } // ::owl

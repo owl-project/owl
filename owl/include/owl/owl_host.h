@@ -356,19 +356,51 @@ owlTrianglesGeomGroupCreate(OWLContext context,
                             OWLGeom   *initValues);
 
 // ------------------------------------------------------------------
-/*! create a new instance group with given number of children. The
-    child groups and their transforms can then be set via \see
-    owlInstanceGroupSetChild and \see owlInstanceGroupSetTransform 
+/*! create a new instance group with given number of instances. The
+    child groups and their instance IDs and/or transforms can either
+    be specified "in bulk" as part of this call, or can be set lateron
+    with inviidaul calls to \see owlInstanceGroupSetChild and \see
+    owlInstanceGroupSetTransform. Note however, that in the case of
+    having millions of instances in a group it will be *much* more
+    efficient to set them in bulk open creation, than in millions of
+    inidiviual API calls.
 
-    If 'initGroups' is non-null, it should be an array of
-    'numInstances' elements, and these will be used as uni-transofrm
-    children of this group (transforms can still be overwritter later
-    using owlInstanceGroupSetTransform)
+    Either or all of initGroups, initTranforms, or initInstanceIDs may
+    be null, in which case the values used for the 'th child will be a
+    null group, a unit transform, and 'i', respectively.
 */
 OWL_API OWLGroup
 owlInstanceGroupCreate(OWLContext context,
+                       
+                       /*! number of instances in this group */
                        size_t     numInstances,
-                       OWLGroup  *initGroups OWL_IF_CPP(= nullptr)
+                       
+                       /*! the initial list of owl groups to use by
+                           the instances in this group; must be either
+                           null, or an array of the size
+                           'numInstnaces', the i'th instnace in this
+                           gorup will be an instance o the i'th
+                           element in this list */
+                       const OWLGroup *initGroups      OWL_IF_CPP(= nullptr),
+
+                       /*! instance IDs to use for the instance in
+                           this group; must be eithe rnull, or an
+                           array of size numInstnaces. If null, the
+                           i'th child of this instance group will use
+                           instanceID=i, otherwise, it will use the
+                           user-provided instnace ID from this
+                           list. Specifying an instanceID will affect
+                           what value 'optixGetInstanceID' will return
+                           in a CH program that refers to the given
+                           instance */
+                       const uint32_t *initInstanceIDs OWL_IF_CPP(= nullptr),
+                       
+                       /*! initial list of transforms that this
+                         instance group will use; must be either
+                           null, or an array of size numInstnaces, of
+                           the format specified */
+                       const float    *initTransforms  OWL_IF_CPP(= nullptr),
+                       OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL)
                        );
 
 OWL_API void owlGroupBuildAccel(OWLGroup group);

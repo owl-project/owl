@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,27 +14,33 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "APIContext.h"
-#include "APIHandle.h"
+#include "LaunchParams.h"
+#include "Context.h"
 
 namespace owl {
 
-  APIHandle::APIHandle(Object::SP object, APIContext *context)
+  LaunchParamsType::LaunchParamsType(Context *const context,
+                                     size_t varStructSize,
+                                     const std::vector<OWLVarDecl> &varDecls)
+    : SBTObjectType(context,context->launchParamTypes,varStructSize,varDecls)
   {
-    assert(object);
+  }
+  
+  LaunchParams::LaunchParams(Context *const context,
+                 LaunchParamsType::SP type) 
+    : SBTObject(context,context->launchParams,type)
+  {
     assert(context);
-    this->object  = object;
-    this->context = std::dynamic_pointer_cast<APIContext>
-      (context->shared_from_this());
-    assert(this->object);
-    assert(this->context);
+    assert(type);
+    assert(type.get());
+    context->llo->launchParamsCreate(this->ID,
+                                     type->varStructSize);
   }
 
-  APIHandle::~APIHandle()
+  CUstream LaunchParams::getCudaStream(int deviceID)
   {
-    context->forget(this);
-    object  = nullptr;
-    context = nullptr;
+    return context->llo->launchParamsGetStream(this->ID,deviceID);
   }
 
-} // ::owl  
+} // ::owl
+

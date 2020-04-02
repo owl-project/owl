@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -44,14 +44,7 @@ namespace owl {
 
     struct Context {
 
-      static int logging()
-      {
-#ifdef NDEBUG
-        return false;
-#else
-        return true;
-#endif
-      }
+      inline static bool logging() { return DeviceGroup::logging(); }
       
       Context(int owlDeviceID, int cudaDeviceID);
       ~Context();
@@ -285,6 +278,7 @@ namespace owl {
       DeviceMemory optixInstanceBuffer;
       DeviceMemory outputBuffer;
       std::vector<Group *>  children;
+      std::vector<uint32_t> instanceIDs;
       std::vector<affine3f> transforms;
     };
 
@@ -336,7 +330,12 @@ namespace owl {
       Device(int owlDeviceID, int cudaDeviceID);
       ~Device();
 
-
+      /*! helper function - return cuda name of this device */
+      std::string getDeviceName() const;
+      
+      /*! helper function - return cuda device ID of this device */
+      int getCudaDeviceID() const;
+      
       /*! set the maximum instancing depth that will be allowed; '0'
           means 'no instancing, only bottom level accels', '1' means
           'only one single level of instances' (i.e., instancegroups
@@ -519,13 +518,14 @@ namespace owl {
       /*! create a new instance group with given list of children */
       void instanceGroupCreate(/*! the group we are defining */
                                int groupID,
+                               size_t numChildren,
                                /* list of children. list can be
                                   omitted by passing a nullptr, but if
                                   not null this must be a list of
                                   'childCount' valid group ID */
-                               const int *childGroupIDs,
-                               /*! number of children in this group */
-                               size_t childCount);
+                               const uint32_t *childGroupIDs,
+                               const uint32_t *instIDs,
+                               const affine3f *xfms);
 
       /*! set given child's instance transform. groupID must be a
           valid instance group, childID must be wihtin

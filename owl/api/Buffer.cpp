@@ -32,17 +32,19 @@ namespace owl {
   
   const void *Buffer::getPointer(int deviceID)
   {
-    return lloBufferGetPointer(context->llo,this->ID,deviceID);
+    return context->llo->bufferGetPointer(this->ID,deviceID);
+    // return lloBufferGetPointer(context->llo,this->ID,deviceID);
   }
 
   void Buffer::resize(size_t newSize)
   {
-    lloBufferResize(context->llo,this->ID,newSize*sizeOf(type));
+    return context->llo->bufferResize(this->ID,newSize*sizeOf(type));
   }
   
   void Buffer::upload(const void *hostPtr)
   {
-    lloBufferUpload(context->llo,this->ID,hostPtr);
+    context->llo->bufferUpload(this->ID,hostPtr);
+    // lloBufferUpload(context->llo,this->ID,hostPtr);
   }
 
   HostPinnedBuffer::HostPinnedBuffer(Context *const context,
@@ -50,9 +52,9 @@ namespace owl {
                                      size_t count)
     : Buffer(context,type)
   {
-    lloHostPinnedBufferCreate(context->llo,
-                              this->ID,
-                              count*sizeOf(type));
+    // lloHostPinnedBufferCreate(context->llo,
+    context->llo->hostPinnedBufferCreate(this->ID,
+                                         count*sizeOf(type),1);
   }
   
   ManagedMemoryBuffer::ManagedMemoryBuffer(Context *const context,
@@ -65,10 +67,10 @@ namespace owl {
                                            const void *initData)
     : Buffer(context,type)
   {
-    lloManagedMemoryBufferCreate(context->llo,
-                                 this->ID,
-                                 count*sizeOf(type),
-                                 initData);
+    // lloManagedMemoryBufferCreate(context->llo,
+    context->llo->managedMemoryBufferCreate(this->ID,
+                                            count*sizeOf(type),1,
+                                            initData);
   }
   
   DeviceBuffer::DeviceBuffer(Context *const context,
@@ -77,10 +79,9 @@ namespace owl {
                              const void *init)
     : Buffer(context,type)
   {
-    lloDeviceBufferCreate(context->llo,
-                          this->ID,
-                          count*sizeOf(type),
-                          init);
+    context->llo->deviceBufferCreate(this->ID,
+                                     count*sizeOf(type),1,
+                                     init);
   }
 
   GraphicsBuffer::GraphicsBuffer(Context *const context,
@@ -89,20 +90,19 @@ namespace owl {
                                  cudaGraphicsResource_t resource)
     : Buffer(context, type)
   {
-    lloGraphicsBufferCreate(context->llo,
-                            this->ID,
-                            count*sizeOf(type),
-                            resource);
+    context->llo->graphicsBufferCreate(this->ID,
+                                       count,sizeOf(type),
+                                       resource);
   }
-
+  
   void GraphicsBuffer::map()
   {
-    lloGraphicsBufferMap(context->llo, this->ID);
+    context->llo->graphicsBufferMap(this->ID);
   }
 
   void GraphicsBuffer::unmap()
   {
-    lloGraphicsBufferUnmap(context->llo, this->ID);
+    context->llo->graphicsBufferUnmap(this->ID);
   }
 
   /*! destroy whatever resouces this buffer's ll-layer handle this
@@ -114,7 +114,8 @@ namespace owl {
       /* already destroyed */
       return;
     
-    lloBufferDestroy(context->llo,this->ID);
+    context->llo->bufferDestroy(this->ID);
+    // lloBufferDestroy(context->llo,this->ID);
     registry.forget(this); // sets ID to -1
   }
   

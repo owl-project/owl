@@ -21,12 +21,14 @@ namespace owl {
 
   void Group::buildAccel()
   {
-    lloGroupAccelBuild(context->llo,this->ID);
+    // lloGroupAccelBuild(context->llo,this->ID);
+    context->llo->groupAccelBuild(this->ID);
   }
   
   OptixTraversableHandle Group::getTraversable(int deviceID)
   {
-    return lloGroupGetTraversable(context->llo,this->ID,deviceID);
+    // return lloGroupGetTraversable(context->llo,this->ID,deviceID);
+    return context->llo->groupGetTraversable(this->ID,deviceID);
   }
   
   void UserGeomGroup::buildAccel()
@@ -39,15 +41,16 @@ namespace owl {
     }
 
     // TODO: do this only if there's no explicit bounds buffer set
-    lloGroupBuildPrimitiveBounds
-      (context->llo,this->ID,maxVarSize,
+    context->llo->groupBuildPrimitiveBounds
+      (this->ID,maxVarSize,
        [&](uint8_t *output, int devID, int geomID, int childID) {
         assert(childID >= 0 && childID < geometries.size());
         Geom::SP child = geometries[childID];
         assert(child);
         child->writeVariables(output,devID);
       });
-    lloGroupAccelBuild(context->llo,this->ID);
+    context->llo->groupAccelBuild(this->ID);
+    // lloGroupAccelBuild(context->llo,this->ID);
   }
 
   void GeomGroup::setChild(int childID, Geom::SP child)
@@ -55,7 +58,8 @@ namespace owl {
     assert(childID >= 0);
     assert(childID < geometries.size());
     geometries[childID] = child;
-    lloGeomGroupSetChild(context->llo,this->ID,childID,child->ID);
+    context->llo->geomGroupSetChild(this->ID,childID,child->ID);
+    // lloGeomGroupSetChild(context->llo,this->ID,childID,child->ID);
   }
 
 
@@ -67,28 +71,48 @@ namespace owl {
   {}
   
   InstanceGroup::InstanceGroup(Context *const context,
-                               size_t numChildren)
+                               size_t numChildren,
+                               Group::SP      *groups,
+                               const uint32_t *instIDs,
+                               const float    *xfms,
+                               OWLMatrixFormat matrixFormat)
     : Group(context,context->groups),
       children(numChildren)
   {
-    lloInstanceGroupCreate(context->llo,this->ID,
-                           nullptr,numChildren);
+    std::vector<uint32_t> childIDs;
+    if (groups) {
+      childIDs.resize(numChildren);
+      for (int i=0;i<numChildren;i++) {
+        assert(groups[i]);
+        children[i] = groups[i];
+        childIDs[i] = groups[i]->ID;
+      }
+    }
+    
+    if (matrixFormat != OWL_MATRIX_FORMAT_OWL)
+      throw std::runtime_error("currently only supporting OWL_MATRIX_FORMAT_OWL");
+    const affine3f *affineXfms = (const affine3f *)xfms;
+    context->llo->instanceGroupCreate(this->ID,
+                                      numChildren,
+                                      groups?childIDs.data():(uint32_t*)nullptr,
+                                      instIDs,
+                                      affineXfms);
   }
   
   TrianglesGeomGroup::TrianglesGeomGroup(Context *const context,
                                  size_t numChildren)
     : GeomGroup(context,numChildren)
   {
-    lloTrianglesGeomGroupCreate(context->llo,this->ID,
-                                nullptr,numChildren);
+    context->llo->trianglesGeomGroupCreate(this->ID,
+                                           nullptr,numChildren);
   }
   
   UserGeomGroup::UserGeomGroup(Context *const context,
                                  size_t numChildren)
     : GeomGroup(context,numChildren)
   {
-    lloUserGeomGroupCreate(context->llo,this->ID,
-                           nullptr,numChildren);
+    context->llo->userGeomGroupCreate(this->ID,
+                                      nullptr,numChildren);
   }
 
     /*! set transformation matrix of given child */
@@ -98,9 +122,9 @@ namespace owl {
     assert(childID >= 0);
     assert(childID < children.size());
 
-    lloInstanceGroupSetTransform(context->llo,this->ID,
-                                 childID,
-                                 (const float *)&xfm);
+    context->llo->instanceGroupSetTransform(this->ID,
+                                            childID,
+                                            xfm);
   }
 
   void InstanceGroup::setChild(int childID, Group::SP child)
@@ -108,9 +132,9 @@ namespace owl {
     assert(childID >= 0);
     assert(childID < children.size());
     children[childID] = child;
-    lloInstanceGroupSetChild(context->llo,this->ID,
-                             childID,
-                             child->ID);
+    context->llo->instanceGroupSetChild(this->ID,
+                                        childID,
+                                        child->ID);
   }
   
 } // ::owl
