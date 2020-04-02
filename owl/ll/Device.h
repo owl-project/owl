@@ -330,7 +330,12 @@ namespace owl {
       Device(int owlDeviceID, int cudaDeviceID);
       ~Device();
 
-
+      /*! helper function - return cuda name of this device */
+      std::string getDeviceName() const;
+      
+      /*! helper function - return cuda device ID of this device */
+      int getCudaDeviceID() const;
+      
       /*! set the maximum instancing depth that will be allowed; '0'
           means 'no instancing, only bottom level accels', '1' means
           'only one single level of instances' (i.e., instancegroups

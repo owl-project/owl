@@ -538,7 +538,10 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       /*! accessor helpers that first checks the validity of the given
         device ID, then returns the given device */
       Device *checkGetDevice(int deviceID);
-      
+
+      /*! helper function that enables peer access across all devices */
+      void enablePeerAccess();
+
       const std::vector<Device *> devices;
     };
 

@@ -105,7 +105,50 @@ namespace owl {
       : devices(devices)
     {
       assert(!devices.empty());
+      enablePeerAccess();
     }
+
+
+    void DeviceGroup::enablePeerAccess()
+    {
+      LOG("enabling peer access ('.'=self, '+'=can access other device)");
+      int restoreActiveDevice = -1;
+      cudaGetDevice(&restoreActiveDevice);
+      int deviceCount = devices.size();
+      LOG("found " << deviceCount << " CUDA capable devices");
+      for (int i=0;i<deviceCount;i++) {
+        LOG(" - device #" << i << " : " << devices[i]->getDeviceName());
+      }
+      LOG("enabling peer access:");
+      for (int i=0;i<deviceCount;i++) {
+        std::stringstream ss;
+        ss << " - device #" << i << " : ";
+        int cuda_i = devices[i]->getCudaDeviceID();
+        for (int j=0;j<deviceCount;j++) {
+          if (j == i) {
+            ss << " ."; 
+          } else {
+            int cuda_j = devices[j]->getCudaDeviceID();
+            int canAccessPeer = 0;
+            cudaError_t rc = cudaDeviceCanAccessPeer(&canAccessPeer, cuda_i,cuda_j);
+            if (rc != cudaSuccess)
+              throw std::runtime_error("cuda error in cudaDeviceCanAccessPeer: "+std::to_string(rc));
+            if (!canAccessPeer)
+              throw std::runtime_error("could not enable peer access!?");
+            
+            cudaSetDevice(cuda_i);
+            rc = cudaDeviceEnablePeerAccess(cuda_j,0);
+            if (rc != cudaSuccess)
+              throw std::runtime_error("cuda error in cudaDeviceEnablePeerAccess: "+std::to_string(rc));
+            ss << " +";
+          }
+        }
+        LOG(ss.str()); 
+     }
+      cudaSetDevice(restoreActiveDevice);
+    }
+
+    
 
     DeviceGroup::~DeviceGroup()
     {

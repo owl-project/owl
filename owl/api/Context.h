@@ -160,7 +160,6 @@ namespace owl {
     
     Module::SP createModule(const std::string &ptxCode);
 
-    //LLOContext llo;
     owl::ll::DeviceGroup *llo;
   };
 

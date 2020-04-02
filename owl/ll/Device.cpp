@@ -1613,6 +1613,19 @@ namespace owl {
       context->numRayTypes = (int)rayTypeCount;
     }
 
+      /*! helper function - return cuda name of this device */
+    std::string Device::getDeviceName() const
+    {
+      cudaDeviceProp prop;
+      cudaGetDeviceProperties(&prop, getCudaDeviceID());
+      return prop.name;
+    }
+    
+    /*! helper function - return cuda device ID of this device */
+    int Device::getCudaDeviceID() const
+    {
+      return context->cudaDeviceID;
+    }
 
   } // ::owl::ll
 } //::owl
