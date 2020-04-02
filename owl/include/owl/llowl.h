@@ -37,6 +37,8 @@
 #pragma warning( disable : 4996 )
 #endif
 
+#include <cuda.h>
+#include <driver_types.h>
 #include <optix.h>
 #ifdef _WIN32
 #pragma warning( push )
@@ -333,6 +335,22 @@ extern "C" {
                                            be null, but has to be of
                                            size 'amount' if not */
                                          const void *initData);
+
+  /*! creates a buffer wrapping a CUDA graphics resource;
+      the resource must be created and registered by the user */
+  OWL_LL_INTERFACE
+  LLOResult lloGraphicsBufferCreate(LLOContext llo,
+                                    /*! ID of buffer to create */
+                                    int32_t    bufferID,
+                                    /*! number of elements */
+                                    size_t     sizeInBytes,
+                                    cudaGraphicsResource_t resource);
+
+  OWL_LL_INTERFACE
+  LLOResult lloGraphicsBufferMap(LLOContext llo, int32_t bufferID);
+
+  OWL_LL_INTERFACE
+  LLOResult lloGraphicsBufferUnmap(LLOContext llo, int32_t bufferID);
 
   OWL_LL_INTERFACE
   LLOResult lloBufferDestroy(LLOContext llo,

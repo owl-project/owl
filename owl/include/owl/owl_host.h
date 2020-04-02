@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cuda.h>
+#include <driver_types.h>
 #include <optix.h>
 
 #include <sys/types.h>
@@ -404,6 +405,20 @@ owlManagedMemoryBufferCreate(OWLContext context,
                              OWLDataType type,
                              size_t      count,
                              const void *init);
+
+/*! creates a buffer wrapping a CUDA graphics resource;
+  the resource must be created and registered by the user */
+OWL_API OWLBuffer
+owlGraphicsBufferCreate(OWLContext             context,
+                        OWLDataType            type,
+                        size_t                 count,
+                        cudaGraphicsResource_t resource);
+
+OWL_API void
+owlGraphicsBufferMap(OWLBuffer buffer);
+
+OWL_API void
+owlGraphicsBufferUnmap(OWLBuffer buffer);
 
 /*! returns the device pointer of the given pointer for the given
     device ID. For host-pinned or managed memory buffers (where the

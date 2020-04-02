@@ -380,6 +380,26 @@ namespace owl {
         device->managedMemoryBufferCreate(bufferID,elementCount,elementSize,mem);
     }
 
+    void DeviceGroup::graphicsBufferCreate(int bufferID,
+                                           size_t elementCount,
+                                           size_t elementSize,
+                                           cudaGraphicsResource_t resource)
+    {
+      for (auto device : devices)
+        device->graphicsBufferCreate(bufferID, elementCount, elementSize, resource);
+    }
+
+    void DeviceGroup::graphicsBufferMap(int bufferID)
+    {
+      for (auto device : devices)
+        device->graphicsBufferMap(bufferID);
+    }
+
+    void DeviceGroup::graphicsBufferUnmap(int bufferID)
+    {
+      for (auto device : devices)
+        device->graphicsBufferUnmap(bufferID);
+    }
       
     /*! Set a buffer of bounding boxes that this user geometry will
       use when building the accel structure. This is one of

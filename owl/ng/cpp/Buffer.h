@@ -81,5 +81,20 @@ namespace owl {
     /*! pretty-printer, for debugging */
     std::string toString() const override { return "ManagedMemoryBuffer"; }
   };
+
+  struct GraphicsBuffer : public Buffer {
+    typedef std::shared_ptr<GraphicsBuffer> SP;
+
+    GraphicsBuffer(Context* const context,
+                   OWLDataType type,
+                   size_t count,
+                   cudaGraphicsResource_t resource);
+
+    void map();
+    void unmap();
+
+    /*! pretty-printer, for debugging */
+    std::string toString() const override { return "GraphicsBuffer"; }
+  };
   
 } // ::owl
