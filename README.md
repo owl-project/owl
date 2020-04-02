@@ -52,7 +52,8 @@ Directory Structure of the Project:
   - `owl/ll/`: *implementation* the low-level API layer
   - `owl/ng/`: *implementation* the node graph API
   - `owl/common/`: common helper classes
-  - `include/owl/owl.h`: header for the public, C-linkage host-side API 
+  - `include/owl/owl_host.h`: header for the public, C-linkage host-side API 
+  - `include/owl/owl_device.h`: header to be used on device side, for isec/CH/AH programs.
   - `include/owl/common`: C++ math/vector classes required for the device-side API
 
 - `samples/`: Samples/Tutorials/TestCases for OWL
@@ -120,6 +121,13 @@ Latest Progress/Revision History
 
 v0.7.x - Unifiction of ng and ll APIs into one single owl API
 ----------------------------------------------------------------------
+
+*v0.7.4*: major cleanups of "low-level" and "api" layer abstractions
+
+- 'll' and 'ng' layers mostly merged, at least from the API layer; led
+  to significant reduction in duplicate code.
+  
+- merged in PRs to enable TBB on windows, and to add cuda grphics resource buffer
 
 *v0.7.3*: performance "guiding"
 
