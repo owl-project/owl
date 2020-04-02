@@ -98,6 +98,22 @@ namespace owl {
           meomry. */
       ManagedMemory::SP managedMem;
     };
+
+    /*! buffer type wrapping CUDA graphics resources */
+    struct GraphicsBuffer : public Buffer
+    {
+      GraphicsBuffer(const size_t elementCount,
+                     const size_t elementSize,
+                     const cudaGraphicsResource_t resource);
+
+      void resize(Device *device, size_t newElementCount) override;
+      void upload(Device *device, const void *hostPtr) override;
+
+      void map(Device *device, CUstream stream);
+      void unmap(Device *device, CUstream stream);
+
+      cudaGraphicsResource_t resource;
+    };
       
   } // ::owl::ll
 } // ::owl

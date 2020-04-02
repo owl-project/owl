@@ -566,6 +566,15 @@ namespace owl {
                                   size_t elementSize,
                                   HostPinnedMemory::SP pinnedMem);
 
+      void graphicsBufferCreate(int bufferID,
+                                size_t elementCount,
+                                size_t elementSize,
+                                cudaGraphicsResource_t resource);
+
+      void graphicsBufferMap(int bufferID);
+
+      void graphicsBufferUnmap(int bufferID);
+
       /*! Set a buffer of bounding boxes that this user geometry will
           use when building the accel structure. This is one of
           multiple ways of specifying the bounding boxes for a user
@@ -577,14 +586,14 @@ namespace owl {
       
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int32_t bufferID,
-		  size_t count,
-		  size_t stride,
-		  size_t offset);
+                                        size_t count,
+                                        size_t stride,
+                                        size_t offset);
       void trianglesGeomSetIndexBuffer(int geomID,
-		  int32_t bufferID,
-		  size_t count,
-		  size_t stride,
-		  size_t offset);
+                                       int32_t bufferID,
+                                       size_t count,
+                                       size_t stride,
+                                       size_t offset);
       
       void destroyGeom(size_t ID)
       {

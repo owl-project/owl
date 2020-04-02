@@ -79,13 +79,32 @@ namespace owl {
                              const void *init)
     : Buffer(context,type)
   {
-    // lloDeviceBufferCreate(context->llo
     context->llo->deviceBufferCreate(this->ID,
                                      count*sizeOf(type),1,
                                      init);
   }
+
+  GraphicsBuffer::GraphicsBuffer(Context *const context,
+                                 OWLDataType type,
+                                 size_t count,
+                                 cudaGraphicsResource_t resource)
+    : Buffer(context, type)
+  {
+    context->llo->graphicsBufferCreate(this->ID,
+                                       count,sizeOf(type),
+                                       resource);
+  }
   
-  
+  void GraphicsBuffer::map()
+  {
+    context->llo->graphicsBufferMap(this->ID);
+  }
+
+  void GraphicsBuffer::unmap()
+  {
+    context->llo->graphicsBufferUnmap(this->ID);
+  }
+
   /*! destroy whatever resouces this buffer's ll-layer handle this
     may refer to; this will not destruct the current object
     itself, but should already release all its references */

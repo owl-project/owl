@@ -40,7 +40,7 @@ namespace owl {
       easy.lens.dv     = frame.vy;
 
       const float minFocalDistance
-        = 1e6f*max(computeStableEpsilon(position),
+        = max(computeStableEpsilon(position),
                    computeStableEpsilon(frame.vx));
 
       /*
