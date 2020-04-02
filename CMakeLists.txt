@@ -14,7 +14,9 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-cmake_policy(SET CMP0048 NEW)
+if (POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif()
 project(Optix-OWL VERSION 0.7.4)
 
 OPTION(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
