@@ -202,7 +202,8 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
     struct ManagedMemory
     {
       typedef std::shared_ptr<ManagedMemory> SP;
-      ManagedMemory(size_t amount,
+      ManagedMemory(DeviceGroup *devGroup,
+                    size_t amount,
                     /*! data with which to populate this buffer; may
                         be null, but has to be of size 'amount' if
                         not */
@@ -214,6 +215,7 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       void *get() const { return pointer; }
       
       void *pointer = nullptr;
+      DeviceGroup *devGroup;
     };
 
     struct Device;

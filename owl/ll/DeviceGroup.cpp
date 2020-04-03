@@ -64,11 +64,13 @@ namespace owl {
     // ManagedMemoryMemory
     // ##################################################################
 
-    ManagedMemory::ManagedMemory(size_t amount,
+    ManagedMemory::ManagedMemory(DeviceGroup *devGroup,
+                                 size_t amount,
                                  /*! data with which to populate this buffer; may
                                    be null, but has to be of size 'amount' if
                                    not */
                                  const void *initData)
+      : devGroup(devGroup)
     {
       alloc(amount);
       if (initData)
@@ -86,8 +88,18 @@ namespace owl {
     void ManagedMemory::alloc(size_t amount)
     {
       CUDA_CALL(MallocManaged((void**)&pointer, amount));
+      // CUDA_CALL(MemAdvise((void*)pointer, amount, cudaMemAdviseSetReadMostly, -1));
+      unsigned char *mem_end = (unsigned char *)pointer + amount;
+      size_t pageSize = 16*1024*1024;
+      int pageID = 0;
+      for (unsigned char *begin = (unsigned char *)pointer; begin < mem_end; begin += pageSize) {
+        unsigned char *end = std::min(begin+pageSize,mem_end);
+        int devID = pageID++ % devGroup->devices.size();
+        int cudaDevID = devGroup->devices[devID]->getCudaDeviceID();
+        CUDA_CALL(MemAdvise((void*)begin, end-begin, cudaMemAdviseSetPreferredLocation, cudaDevID));
+      }
     }
-
+    
     void ManagedMemory::free()
     {
       CUDA_CALL_NOTHROW(Free(pointer));
@@ -418,7 +430,7 @@ namespace owl {
                                                 const void *initData)
     {
       ManagedMemory::SP mem
-        = std::make_shared<ManagedMemory>(elementCount*elementSize,initData);
+        = std::make_shared<ManagedMemory>(this,elementCount*elementSize,initData);
       for (auto device : devices) 
         device->managedMemoryBufferCreate(bufferID,elementCount,elementSize,mem);
     }
