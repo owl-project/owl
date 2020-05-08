@@ -222,7 +222,7 @@ namespace osc {
       geoms.push_back(geom);
     }
 
-#if 0
+#if 1
     OWLGroup triGroup = owlTrianglesGeomGroupCreate(context,geoms.size(),geoms.data());
     owlGroupBuildAccel(triGroup);
 
@@ -314,5 +314,19 @@ namespace osc {
     // samples let's just do it this way:
     memcpy(h_pixels,owlBufferGetPointer(fbFinal,0),fbSize.x*fbSize.y*sizeof(int));
   }
-  
+
+  void SampleRenderer::copyGPUPixels(cudaGraphicsResource_t &texture)
+  {
+    cudaArray_t array;
+    cudaGraphicsSubResourceGetMappedArray(&array, texture, 0, 0);
+    cudaMemcpy2DToArray(array,
+        0,
+        0,
+        reinterpret_cast<const void *>(owlBufferGetPointer(fbFinal, 0)),
+        fbSize.x * sizeof(uint32_t),
+        fbSize.x * sizeof(uint32_t),
+        fbSize.y,
+        cudaMemcpyDeviceToDevice);
+  }
+
 } // ::osc
