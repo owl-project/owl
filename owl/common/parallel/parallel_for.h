@@ -23,7 +23,7 @@
 #if OWL_HAVE_TBB
 #include <tbb/parallel_for.h>
 #include <tbb/task_arena.h>
-#include <tbb/task_scheduler_init.h>
+// #include <tbb/task_scheduler_init.h>
 #define OWL_HAVE_PARALLEL_FOR 1
 #endif
 
