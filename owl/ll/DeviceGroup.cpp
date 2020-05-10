@@ -96,7 +96,11 @@ namespace owl {
         unsigned char *end = std::min(begin+pageSize,mem_end);
         int devID = pageID++ % devGroup->devices.size();
         int cudaDevID = devGroup->devices[devID]->getCudaDeviceID();
-        CUDA_CALL(MemAdvise((void*)begin, end-begin, cudaMemAdviseSetPreferredLocation, cudaDevID));
+        int result = 0;
+        cudaDeviceGetAttribute (&result, cudaDevAttrConcurrentManagedAccess, cudaDevID);
+        if (result) {
+          CUDA_CALL(MemAdvise((void*)begin, end-begin, cudaMemAdviseSetPreferredLocation, cudaDevID));
+        }
       }
     }
     
