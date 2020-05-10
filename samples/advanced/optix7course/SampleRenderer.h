@@ -17,6 +17,7 @@
 #pragma once
 
 #include <owl/owl.h>
+#include <cuda_gl_interop.h>
 // our own classes, partly shared between host and device
 #include "CUDABuffer.h"
 #include "LaunchParams.h"
@@ -56,6 +57,11 @@ namespace osc {
 
     /*! download the rendered color buffer */
     void downloadPixels(uint32_t h_pixels[]);
+
+    /*! copy the pixels to the mapped GPU texture from GL.
+     * The resource should be mapped prior to calling this method.
+     * The texture should be RGBA8 format */
+    void copyGPUPixels(cudaGraphicsResource_t &texture);
 
     /*! set camera to render with */
     void setCamera(const Camera &camera);

@@ -49,15 +49,9 @@ namespace osc {
     
     virtual void draw() override
     {
-      sample.downloadPixels(pixels.data());
-      if (fbTexture == 0)
-        glGenTextures(1, &fbTexture);
-      
-      glBindTexture(GL_TEXTURE_2D, fbTexture);
-      GLenum texFormat = GL_RGBA;
-      GLenum texelType = GL_UNSIGNED_BYTE;
-      glTexImage2D(GL_TEXTURE_2D, 0, texFormat, fbSize.x, fbSize.y, 0, GL_RGBA,
-                   texelType, pixels.data());
+      cudaGraphicsMapResources(1, &cuDisplayTexture);
+      sample.copyGPUPixels(cuDisplayTexture);
+      cudaGraphicsUnmapResources(1, &cuDisplayTexture);
 
       glDisable(GL_LIGHTING);
       glColor3f(1, 1, 1);
@@ -99,7 +93,19 @@ namespace osc {
     {
       fbSize = newSize;
       sample.resize(newSize);
-      pixels.resize(newSize.x*newSize.y);
+      if (fbTexture == 0) {
+        glGenTextures(1, &fbTexture);
+      } else {
+        cudaGraphicsUnregisterResource(cuDisplayTexture);
+      }
+
+      glBindTexture(GL_TEXTURE_2D, fbTexture);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fbSize.x, fbSize.y, 0, GL_RGBA,
+          GL_UNSIGNED_BYTE, nullptr);
+
+      // We need to re-register when resizing the texture
+      cudaGraphicsGLRegisterImage(
+            &cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
     }
 
     virtual void key(int key, int mods)
@@ -129,6 +135,7 @@ namespace osc {
 
     vec2i                 fbSize;
     GLuint                fbTexture {0};
+    cudaGraphicsResource_t cuDisplayTexture;
     SampleRenderer        sample;
     std::vector<uint32_t> pixels;
   };
