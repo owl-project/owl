@@ -33,12 +33,15 @@ foreach(sample ${samples})
   add_subdirectory(${sample})
 endforeach()
 
+
+
 # ---------------------------------------------------------------------------
 # a more serious kind of example with model loader, viewer, simple
 # path tracer, etc
 # ---------------------------------------------------------------------------
-option(BUILD_EX_OPTIX7COURSE "Build Siggraph 2018 Optix Course Version" OFF)
-if (BUILD_EX_OPTIX7COURSE)
+include(configure_glfw)
+message("have glfw? ${OWL_HAVE_GLFW}")
+if (OWL_HAVE_GLFW)
   add_subdirectory(advanced/optix7course)
 endif()
 
