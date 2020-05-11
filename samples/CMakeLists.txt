@@ -16,11 +16,11 @@
 
 include(configure_owl)
 
-include_directories(${PROJECT_SOURCE_DIR}/)
 # for STB image read/write
-include_directories(${PROJECT_SOURCE_DIR}/owl/common/3rdParty)
-# public API:
+include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
+# for public OWL API:
 include_directories(${OWL_INCLUDES})
+
 
 # ---------------------------------------------------------------------------
 # the default "tutorial-style" samples that intoduce, step by step,
@@ -39,9 +39,10 @@ endforeach()
 # a more serious kind of example with model loader, viewer, simple
 # path tracer, etc
 # ---------------------------------------------------------------------------
-include(configure_glfw)
-message("have glfw? ${OWL_HAVE_GLFW}")
-if (OWL_HAVE_GLFW)
+
+include(configure_viewer)
+if (OWL_HAVE_VIEWER)
+  include_directories(${OWL_VIEWER_INCLUDES})
   add_subdirectory(advanced/optix7course)
 endif()
 

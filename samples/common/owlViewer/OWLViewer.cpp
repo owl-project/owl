@@ -36,11 +36,67 @@ namespace owl {
     {
     }
 
+    void ViewerWidget::resize(const vec2i &newSize)
+    {
+      windowSize = newSize;
+      if (fbTexture == 0) {
+        glGenTextures(1, &fbTexture);
+      } else {
+        cudaGraphicsUnregisterResource(cuDisplayTexture);
+      }
+      
+      glBindTexture(GL_TEXTURE_2D, fbTexture);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSize.x, newSize.y, 0, GL_RGBA,
+                   GL_UNSIGNED_BYTE, nullptr);
+      
+      // We need to re-register when resizing the texture
+      cudaGraphicsGLRegisterImage(&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
+    }
+
+    
     /*! re-draw the current frame. This function itself isn't
       virtual, but it calls the framebuffer's render(), which
       is */
     void ViewerWidget::draw()
     {
+      cudaGraphicsMapResources(1, &cuDisplayTexture);
+      sample.copyGPUPixels(cuDisplayTexture);
+      cudaGraphicsUnmapResources(1, &cuDisplayTexture);
+
+      glDisable(GL_LIGHTING);
+      glColor3f(1, 1, 1);
+
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, fbTexture);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      
+      glDisable(GL_DEPTH_TEST);
+
+      glViewport(0, 0, fbSize.x, fbSize.y);
+
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glOrtho(0.f, (float)fbSize.x, 0.f, (float)fbSize.y, -1.f, 1.f);
+
+      glBegin(GL_QUADS);
+      {
+        glTexCoord2f(0.f, 0.f);
+        glVertex3f(0.f, 0.f, 0.f);
+      
+        glTexCoord2f(0.f, 1.f);
+        glVertex3f(0.f, (float)fbSize.y, 0.f);
+      
+        glTexCoord2f(1.f, 1.f);
+        glVertex3f((float)fbSize.x, (float)fbSize.y, 0.f);
+      
+        glTexCoord2f(1.f, 0.f);
+        glVertex3f((float)fbSize.x, 0.f, 0.f);
+      }
+      glEnd();
     }
 
     /*! re-computes the 'camera' from the 'cameracontrol', and notify

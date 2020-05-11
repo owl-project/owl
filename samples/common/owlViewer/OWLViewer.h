@@ -16,20 +16,46 @@
 
 #pragma once
 
-#include "GlutWindow.h"
 #include "Camera.h"
 
 namespace owl {
   namespace viewer {
 
+    /*! base abstraction for a camera that can generate rays. For this
+      viewer, we assume we're dealine with a camera that has a
+      rectangular viewing plane that's in focus, and a circular (and
+      possible single-point) lens for depth of field. At some later
+      point this should also capture time.{t0,t1} for motion blur, but
+      let's leave this out for now. */
+    struct SimpleCamera
+    {
+      inline SimpleCamera() {}
+      SimpleCamera(const Camera &);
+
+      struct {
+        vec3f lower_left;
+        vec3f horizontal;
+        vec3f vertical;
+      } screen;
+      struct {
+        vec3f center;
+        vec3f du;
+        vec3f dv;
+        float radius { 0.f };
+      } lens;
+    };
+    
     // ------------------------------------------------------------------
     /*! a helper widget that opens and manages a viewer window,
       including some virtual mouse and frame buffer */
-    struct OWL_VIEWER_INTERFACE ViewerWidget {
-      GlutWindow::SP window;
+    struct OWLViewer {
 
-      ViewerWidget(GlutWindow::SP window);
-
+      OWLViewer(const std::string &title = "OWL Sample Viewer",
+                const vec3f &cameraInitFrom = vec3f(0,0,-1),
+                const vec3f &cameraInitAt   = vec3f(0,0,0),
+                const vec3f &cameraInitUp   = vec3f(0,1,0),
+                const float worldScale      = 1.f);
+      
       /*! snaps a given vector to one of the three coordinate axis;
           useful for pbrt models in which the upvector sometimes isn't
           axis-aligend */
@@ -41,27 +67,19 @@ namespace owl {
         return up;
       }
 
-      /*! window notifies us that we got resized */
-      virtual void resize(const vec2i &newSize) {
-        window->resize(newSize);
-        windowSize = newSize;
-      }
+      /*! window notifies us that we got resized */     
+      virtual void resize(const vec2i &newSize);
+      
       /*! gets called whenever the viewer needs us to re-render out widget */
       virtual void render() {}
+      
       /*! gets called whenever glut has nothing else to do */
-      virtual void idle() {};
+      virtual void idle() {}
 
       /*! draw framebuffer using OpenGL */
-      virtual void drawGL() {}
+      virtual void draw() {}
 
-      /*! gets called when the window gets shown for the very first time */
-      virtual void activate()
-      {
-        isActive = true;
-        updateCamera();
-      }
-
-      struct OWL_VIEWER_INTERFACE ButtonState {
+      struct ButtonState {
         bool  isPressed        { false };
         vec2i posFirstPressed  { -1 };
         vec2i posLastSeen      { -1 };
@@ -96,11 +114,6 @@ namespace owl {
       /*! this gets called when the user presses a 'special' key on the keyboard (cursor keys) ... */
       virtual void special(int key, const vec2i &/*where*/);
 
-      /*! re-draw the current frame. This function itself isn't
-        virtual, but it calls the framebuffer's render(), which
-        is */
-      void draw();
-
       /*! idle callback - called whenever glut deems the window to be
         idle. if this function return true (ie, "yes, we _are_ idle)
         then we'll automatically do a usleep with the \see
@@ -117,7 +130,7 @@ namespace owl {
         camera, and notify the app */
       void setAspect(const float aspect)
       {
-        fullCamera.setAspect(aspect);
+        camera.setAspect(aspect);
         updateCamera();
       }
 
@@ -128,8 +141,8 @@ namespace owl {
                                 /* up-vector        : */const vec3f &up,
                                 /* fovy, in degrees : */float fovyInDegrees)
       {
-        //fullCamera.setOrientation(origin,interest,up,fovyInDegrees);
-        fullCamera.setOrientation(origin,interest,up,fovyInDegrees,false);
+        //camera.setOrientation(origin,interest,up,fovyInDegrees);
+        camera.setOrientation(origin,interest,up,fovyInDegrees,false);
         updateCamera();
       }
 
@@ -138,8 +151,8 @@ namespace owl {
                             float focalDistance)
 
       {
-        fullCamera.setFovy(fovy);
-        fullCamera.setFocalDistance(focalDistance);
+        camera.setFovy(fovy);
+        camera.setFocalDistance(focalDistance);
         updateCamera();
       }
 
@@ -150,14 +163,14 @@ namespace owl {
       /*! return currently active window size */
       vec2i getWindowSize() const { return windowSize; }
 
-      const SimpleCamera &getCamera()     const
+      const SimpleCamera getSimplifiedCamera() const
       {
-        return simpleCamera;
+        return SimpleCamera(camera);
       }
 
-      std::shared_ptr<FullCameraManip> cameraManip;
-      std::shared_ptr<FullCameraManip> inspectModeManip;
-      std::shared_ptr<FullCameraManip> flyModeManip;
+      std::shared_ptr<CameraManipulator> cameraManipulator;
+      std::shared_ptr<CameraManipulator> inspectModeManipulator;
+      std::shared_ptr<CameraManipulator> flyModeManipulator;
 
       void enableFlyMode();
       enum RotateMode { POI, Arcball };
@@ -170,34 +183,24 @@ namespace owl {
                              float maxPoiDist=std::numeric_limits<float>::infinity());
       void setWorldScale(const float worldScale)
       {
-        fullCamera.motionSpeed = worldScale / sqrtf(3);
+        camera.motionSpeed = worldScale / sqrtf(3);
       }
 
       /*! re-computes the 'camera' from the 'cameracontrol', and notify
           app that the camera got changed */
       void updateCamera();
 
+      void showAndRun();
     private:
-      friend struct GlutWindow;
-      friend struct FullCameraManip;
-      friend struct InspectModeManip;
-      friend struct FlyModeManip;
-
+      friend struct CameraManipulator;
+      friend struct CameraInspectMode;
+      friend struct CameraFlyMode;
 
     protected:
       vec2i  windowSize        { 0 };
 
-      /*! a "preprocessed" camera that no longer tracks origin,
-          diction, up-vector, fovy, focal distance etc,and instead
-          only tracks the simplified 'focal plane and lens circle'
-          parametrization */
-      SimpleCamera simpleCamera;
-
       /*! the full camera state we are manipulating */
-      FullCamera   fullCamera;
-
-      /*! gets set to true when the window first gets shown */
-      bool isActive { false };
+      Camera camera;
     };
 
   } // ::owl::viewer

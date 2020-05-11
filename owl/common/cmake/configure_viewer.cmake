@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018-2019 Ingo Wald                                            #
+# Copyright 2020 Ingo Wald                                                 #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,40 +14,15 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(../cmake/configure_glut.cmake)
+# configures the glfw library
 
-if(GLUT_FOUND)
-  include_directories(${GLUT_INCLUDE_DIR})
+include(configure_glfw)
+if (OWL_HAVE_GLFW)
+  set(OWL_VIEWER_INCLUDES
+    ${glfw3_DIR}
+    ${owl_dir}/samples/common/
+    )
+  set(OWL_HAVE_VIEWER ON)
+else()
+  set(OWL_HAVE_VIEWER OFF)
 endif()
-
-set(owl_viewerWidget_sources
-  # add header files, so visual studio will properly show them as part of the solution
-  ViewerWidget.h
-  Camera.h
-  InspectMode.h
-  FlyMode.h
-  GlutWindow.h
-
-  # the actual source files
-  ViewerWidget.cpp
-  Camera.cpp
-  InspectMode.cpp
-  FlyMode.cpp
-  GlutWindow.cpp
-)
-# this is doing the same using OptiX
-add_library(owl_viewerWidget SHARED ${owl_viewerWidget_sources})
-add_library(owl_viewerWidget_static STATIC ${owl_viewerWidget_sources})
-  
-target_link_libraries(owl_viewerWidget
-  ${OPENGL_LIBRARIES}
-  ${GLUT_LIBRARIES}
-  owl
-  )
-target_compile_definitions(owl_viewerWidget PUBLIC owl_viewerWidget_DLL_INTERFACE)
-
-target_link_libraries(owl_viewerWidget_static
-  ${OPENGL_LIBRARIES}
-  ${GLUT_LIBRARIES}
-  owl_static
-  )

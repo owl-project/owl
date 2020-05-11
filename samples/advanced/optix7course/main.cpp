@@ -17,20 +17,20 @@
 #include "SampleRenderer.h"
 
 // our helper library for window handling
-#include "glfWindow/GLFWindow.h"
+#include "owlViewer/OWLViewer.h"
 #include <GL/gl.h>
 
 /*! \namespace osc - Optix Siggraph Course */
 namespace osc {
 
-  struct SampleWindow : public GLFCameraWindow
+  struct SampleWindow : public owl::viewer::OWLViewer
   {
     SampleWindow(const std::string &title,
                  const Model *model,
                  const Camera &camera,
                  const QuadLight &light,
                  const float worldScale)
-      : GLFCameraWindow(title,camera.from,camera.at,camera.up,worldScale),
+      : OWLViewer(title,camera.from,camera.at,camera.up,worldScale),
         sample(model,light)
     {
       sample.setCamera(camera);
@@ -38,74 +38,20 @@ namespace osc {
     
     virtual void render() override
     {
-      if (cameraFrame.modified) {
-        sample.setCamera(Camera{ cameraFrame.get_from(),
-                                 cameraFrame.get_at(),
-                                 cameraFrame.get_up() });
-        cameraFrame.modified = false;
+      if (camera.lastModified != 0) {
+        sample.setCamera(Camera{ camera.getFrom(),
+                                 camera.getAt(),
+                                 camera.getUp() });
+        camera.lastModified = 0;
       }
       sample.render();
     }
     
-    virtual void draw() override
-    {
-      cudaGraphicsMapResources(1, &cuDisplayTexture);
-      sample.copyGPUPixels(cuDisplayTexture);
-      cudaGraphicsUnmapResources(1, &cuDisplayTexture);
-
-      glDisable(GL_LIGHTING);
-      glColor3f(1, 1, 1);
-
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-
-      glEnable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D, fbTexture);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      
-      glDisable(GL_DEPTH_TEST);
-
-      glViewport(0, 0, fbSize.x, fbSize.y);
-
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      glOrtho(0.f, (float)fbSize.x, 0.f, (float)fbSize.y, -1.f, 1.f);
-
-      glBegin(GL_QUADS);
-      {
-        glTexCoord2f(0.f, 0.f);
-        glVertex3f(0.f, 0.f, 0.f);
-      
-        glTexCoord2f(0.f, 1.f);
-        glVertex3f(0.f, (float)fbSize.y, 0.f);
-      
-        glTexCoord2f(1.f, 1.f);
-        glVertex3f((float)fbSize.x, (float)fbSize.y, 0.f);
-      
-        glTexCoord2f(1.f, 0.f);
-        glVertex3f((float)fbSize.x, 0.f, 0.f);
-      }
-      glEnd();
-    }
-    
     virtual void resize(const vec2i &newSize) 
     {
+      OWLViewer::resize(newSize);
       fbSize = newSize;
       sample.resize(newSize);
-      if (fbTexture == 0) {
-        glGenTextures(1, &fbTexture);
-      } else {
-        cudaGraphicsUnregisterResource(cuDisplayTexture);
-      }
-
-      glBindTexture(GL_TEXTURE_2D, fbTexture);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fbSize.x, fbSize.y, 0, GL_RGBA,
-          GL_UNSIGNED_BYTE, nullptr);
-
-      // We need to re-register when resizing the texture
-      cudaGraphicsGLRegisterImage(
-            &cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
     }
 
     virtual void key(int key, int mods)
@@ -132,7 +78,6 @@ namespace osc {
       }
     }
     
-
     vec2i                 fbSize;
     GLuint                fbTexture {0};
     cudaGraphicsResource_t cuDisplayTexture;
@@ -183,7 +128,7 @@ namespace osc {
       std::cout << "Press ' ' to enable/disable denoising" << std::endl;
       std::cout << "Press ',' to reduce the number of paths/pixel" << std::endl;
       std::cout << "Press '.' to increase the number of paths/pixel" << std::endl;
-      window->run();
+      window->showAndRun();
       
     } catch (std::runtime_error& e) {
       std::cout << OWL_TERMINAL_RED << "FATAL ERROR: " << e.what()

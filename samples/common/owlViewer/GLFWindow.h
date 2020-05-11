@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018 Ingo Wald                                                 //
+// Copyright 2018-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,12 +16,12 @@
 
 #pragma once
 
-#include "gdt/window/common.h"
+#include "OWLViewer.h"
 
-namespace gdt {
-  namespace window {
-
+namespace owl {
+  namespace viewer {
+    using namespace owl::common;
     
-  } // ::gdt::window
-} // ::gdt
+  } // ::owl::viewer
+} // ::owl
 

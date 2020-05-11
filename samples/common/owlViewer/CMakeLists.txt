@@ -14,34 +14,46 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(configure_owl)
+include(../cmake/configure_glut.cmake)
 
-cuda_compile_and_embed(embedded_ptx_code devicePrograms.cu)
+if(GLUT_FOUND)
+  include_directories(${GLUT_INCLUDE_DIR})
+endif()
 
-cuda_add_library(toneMap STATIC
-  toneMap.cu)
-add_executable(adv_optix7course
-  ${embedded_ptx_code}
-  devicePrograms.cu
-  optix7.h
-  CUDABuffer.h
-  SampleRenderer.h
-  SampleRenderer.cpp
-  Model.cpp
-  main.cpp
+set(owl_viewerWidget_sources
+  # add header files, so visual studio will properly show them as part of the solution
+  ViewerWidget.h
+  Camera.h
+  InspectMode.h
+  FlyMode.h
+  GlutWindow.h
+
+  # the actual source files
+  ViewerWidget.cpp
+  Camera.cpp
+  InspectMode.cpp
+  FlyMode.cpp
+  GlutWindow.cpp
+)
+# this is doing the same using OptiX
+add_library(owl_viewerWidget SHARED ${owl_viewerWidget_sources})
+add_library(owl_viewerWidget_static STATIC ${owl_viewerWidget_sources})
+  
+target_link_libraries(owl_viewerWidget
+  ${OPENGL_LIBRARIES}
+  ${GLUT_LIBRARIES}
+  owl
   )
-#add_subdirectory(glfWindow)
+target_compile_definitions(owl_viewerWidget PUBLIC owl_viewerWidget_DLL_INTERFACE)
 
-find_package(OpenGL)
-message("optix 7 course : OPENGL_gl_LIBRARY =  ${OPENGL_gl_LIBRARY}")
-message("optix 7 course : OWL_VIEWER_LIBRARIES = ${OWL_VIEWER_LIBRARIES}")
+target_link_libraries(owl_viewerWidget_static
+  ${OPENGL_LIBRARIES}
+  ${GLUT_LIBRARIES}
+  owl_static
+  )
 
-target_link_libraries(adv_optix7course
-  toneMap
-  # optix dependencies, for rendering
-  ${optix_LIBRARY}
-  ${CUDA_LIBRARIES}
-  ${CUDA_CUDA_LIBRARY}
-  # owl viewer, and everything it requires
-  ${OWL_VIEWER_LIBRARIES}
+set(OWL_VIEWER_LIBRARIES
+  owl_viewerWidget_static
+  ${OPENGL_gl_LIBRARY}
+  ${OWL_LIBRARIES}
   )

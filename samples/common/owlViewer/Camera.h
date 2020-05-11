@@ -16,36 +16,19 @@
 
 #pragma once
 
-#include "GlutWindow.h"
+#include "owl/common/math/box.h"
+#include "owl/common/math/LinearSpace.h"
+
+#include <vector>
+#include <memory>
+#ifdef _GNUC_
+    #include <unistd.h>
+#endif
 
 namespace owl {
   namespace viewer {
     
-    struct ViewerWidget;
-
-    /*! base abstraction for a camera that can generate rays. For this
-      viewer, we assume we're dealine with a camera that has a
-      rectangular viewing plane that's in focus, and a circular (and
-      possible single-point) lens for depth of field. At some later
-      point this should also capture time.{t0,t1} for motion blur, but
-      let's leave this out for now. */
-    struct OWL_VIEWER_INTERFACE SimpleCamera
-    {
-      struct {
-        vec3f lower_left;
-        vec3f horizontal;
-        vec3f vertical;
-      } screen;
-      struct {
-        vec3f center;
-        vec3f du;
-        vec3f dv;
-        float radius { 0.f };
-      } lens;
-      /*! time (in seconds since system start) that camera was last
-        modified */
-      double lastModified { 0.f };
-    };
+    struct OWLViewer;
 
     /*! the entire state for someting that can 'control' a camera -
         ie, that can rotate, move, focus, force-up, etc, a
@@ -57,19 +40,18 @@ namespace owl {
         - right is x axis
         - depth is _NEGATIVE_ z axis
     */
-    struct OWL_VIEWER_INTERFACE FullCamera {
-      FullCamera()
+    struct Camera {
+      Camera()
       {}
-
-      /*! compute 'digest' of us as a "SimpleCamera", and set this
-          object's fields */
-      void digestInto(SimpleCamera &easy);
 
       vec3f getPOI() const
       {
         return position - poiDistance * frame.vz;
       }
-
+      vec3f getFrom() const;
+      vec3f getAt()   const;
+      vec3f getUp()   const;
+      
       void setFovy(const float fovy);
 
       void setFocalDistance(float focalDistance);
@@ -107,19 +89,21 @@ namespace owl {
           for each unit of "user specifeid motion" (ie, pixel
           count). Initial value typically should depend on the world
           size, but can also be adjusted. This is actually something
-          that should be more part of the manipulator widget(s), but
-          since that same value is shared by multiple such widgets
+          that should be more part of the manipulator viewer(s), but
+          since that same value is shared by multiple such viewers
           it's easiest to attach it to the camera here ...*/
       float         motionSpeed   { 1.f };
       float         aspect        { 1.f };
       float         fovyInDegrees { 60.f };
+
+      double        lastModified = 0.;
     };
 
     // ------------------------------------------------------------------
     /*! abstract base class that allows to manipulate a renderable
       camera */
-    struct OWL_VIEWER_INTERFACE FullCameraManip {
-      FullCameraManip(ViewerWidget *widget) : widget(widget) {}
+    struct CameraManipulator {
+      CameraManipulator(OWLViewer *viewer) : viewer(viewer) {}
 
       /*! this gets called when the user presses a key on the keyboard ... */
       virtual void key(char key, const vec2i &where);
@@ -149,39 +133,8 @@ namespace owl {
       virtual void mouseButtonRight (const vec2i &where, bool pressed) {}
 
     protected:
-      ViewerWidget *const widget;
+      OWLViewer *const viewer;
     };
-
-    // // ------------------------------------------------------------------
-    // /*! game-sylte "WASD" camera manipulator. Mouse changes ray
-    //   directoin, but its the WASD (and E,C) keys that move the
-    //   positoin. Right mouse also moves forward/backward */
-    // struct WasdFullCamera : public FullCamera {
-
-    //   void move(const vec3f &camera_delta)
-    //   {
-    //     // const vec3f world_delta = xfmVector(frame,camera_delta);
-    //     // camera.from += camera.motionSpeed * world_delta;
-    //     // camera.at   += camera.motionSpeed * world_delta;
-    //     // camera.dirty = true;
-    //   }
-    //   virtual void keyPress(char key, const vec2i &/*where*/)
-    //   {
-    //     switch(key) {
-    //     case 'a': move(vec3f(-.1f,0,0)); return true;
-    //     case 'd': move(vec3f(+.1f,0,0)); return true;
-
-    //     case 'e': move(vec3f(0,0,-.1f)); return true;
-    //     case 'q': move(vec3f(0,0,+.1f)); return true;
-
-    //     case 's': move(vec3f(0,-.1f,0)); return true;
-    //     case 'w': move(vec3f(0,+.1f,0)); return true;
-    //     }
-    //     return false;
-    //   }
-
-    // private:
-    // };
 
   } // ::owl::viewer
 } // ::owl
