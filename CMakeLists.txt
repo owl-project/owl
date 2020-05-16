@@ -19,7 +19,7 @@ if (POLICY CMP0048)
 endif()
 project(Optix-OWL VERSION 0.7.4)
 
-OPTION(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
+#OPTION(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
 OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 
 cmake_minimum_required(VERSION 2.8)
@@ -61,10 +61,10 @@ add_subdirectory(owl)
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
-if (OWL_BUILD_SAMPLES)
+#if (OWL_BUILD_SAMPLES)
   enable_testing()
   add_subdirectory(samples)
-endif()
+#endif()
 
 # ------------------------------------------------------------------
 # some basic testing

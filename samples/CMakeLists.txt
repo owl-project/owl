@@ -22,7 +22,7 @@ include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
 include_directories(${OWL_INCLUDES})
 
 
-
+message("#owl.samples.cmake.")
 
 # ------------------------------------------------------------------
 #cmdline-only samples, also used for 'make test'

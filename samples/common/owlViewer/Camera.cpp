@@ -20,6 +20,21 @@
 namespace owl {
   namespace viewer {
 
+    vec3f Camera::getFrom() const
+    {
+      return position;
+    }
+    
+    vec3f Camera::getAt() const
+    {
+      return position - frame.vz;
+    }
+
+    vec3f Camera::getUp() const
+    {
+      return frame.vy;
+    }
+      
     // void Camera::digestInto(SimpleCamera &easy)
     // {
     //   easy.lens.center = position;

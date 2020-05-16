@@ -45,7 +45,7 @@ namespace owl {
 
       const float minFocalDistance
         = max(computeStableEpsilon(camera.position),
-                   computeStableEpsilon(camera.frame.vx));
+              computeStableEpsilon(camera.frame.vx));
 
       /*
         tan(fov/2) = (height/2) / dist
@@ -257,5 +257,21 @@ namespace owl {
       if (cameraManipulator) cameraManipulator->special(key,where);
     }
 
+
+
+
+    OWLViewer::OWLViewer(const std::string &title,
+                         const vec3f &cameraInitFrom,
+                         const vec3f &cameraInitAt,
+                         const vec3f &cameraInitUp,
+                         const float worldScale)
+    {
+    }
+    
+    void OWLViewer::showAndRun()
+    {
+      PING;exit(0);
+    }
+    
   } // ::owl::viewer
 } // ::owl

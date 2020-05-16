@@ -39,6 +39,7 @@ namespace osc {
     virtual void render() override
     {
       if (camera.lastModified != 0) {
+        
         sample.setCamera(Camera{ camera.getFrom(),
                                  camera.getAt(),
                                  camera.getUp() });
