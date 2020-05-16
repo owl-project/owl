@@ -54,35 +54,40 @@ namespace osc {
       sample.render();
     }
     
-    virtual void resize(const vec2i &newSize) 
+    void resize(const vec2i &newSize) override
     {
       OWLViewer::resize(newSize);
       // fbSize = newSize;
       sample.resize(fbPointer,newSize);
     }
 
-    virtual void key(int key, int mods)
+    void key(char key, const vec2i &where) override
     {
-      if (key == 'D' || key == ' ' || key == 'd') {
+      if (key == 'D' || key == ' ') {
         sample.denoiserOn = !sample.denoiserOn;
         std::cout << "denoising now " << (sample.denoiserOn?"ON":"OFF") << std::endl;
+        return;
       }
-      if (key == 'A' || key == 'a') {
+      if (key == 'A') {
         sample.accumulate = !sample.accumulate;
         std::cout << "accumulation/progressive refinement now " << (sample.accumulate?"ON":"OFF") << std::endl;
+        return;
       }
       if (key == ',') {
         sample.numPixelSamples
           = std::max(1,sample.numPixelSamples-1);
         std::cout << "num samples/pixel now "
                   << sample.numPixelSamples << std::endl;
+        return;
       }
       if (key == '.') {
         sample.numPixelSamples
           = std::max(1,sample.numPixelSamples+1);
         std::cout << "num samples/pixel now "
                   << sample.numPixelSamples << std::endl;
+        return;
       }
+      OWLViewer::key(key,where);
     }
     
     // vec2i                 fbSize;
@@ -132,8 +137,8 @@ namespace osc {
                                               model,camera,light,worldScale);
       window->enableFlyMode();
       
-      std::cout << "Press 'a' to enable/disable accumulation/progressive refinement" << std::endl;
-      std::cout << "Press ' ' to enable/disable denoising" << std::endl;
+      std::cout << "Press 'A' to enable/disable accumulation/progressive refinement" << std::endl;
+      std::cout << "Press 'D' to enable/disable denoising" << std::endl;
       std::cout << "Press ',' to reduce the number of paths/pixel" << std::endl;
       std::cout << "Press '.' to increase the number of paths/pixel" << std::endl;
       window->showAndRun();

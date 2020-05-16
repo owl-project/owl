@@ -123,7 +123,7 @@ namespace owl {
       virtual void key(char key, const vec2i &/*where*/);
       /*! this gets called when the user presses a 'special' key on
           the keyboard (cursor keys) ... */
-      virtual void special(int key, const vec2i &/*where*/);
+      virtual void special(int key, int mods, const vec2i &/*where*/);
 
       /*! set a new window aspect ratio for the camera, update the
         camera, and notify the app */
@@ -194,6 +194,12 @@ namespace owl {
       
       void mouseButton(int button, int action, int mods);
       
+      inline vec2i getMousePos() const
+      {
+        double x,y;
+        glfwGetCursorPos(handle,&x,&y);
+        return vec2i((int)x, (int)y);
+      }
     private:
       friend struct CameraManipulator;
       friend struct CameraInspectMode;
@@ -201,12 +207,6 @@ namespace owl {
 
     protected:
 
-      inline vec2i getMousePos() const
-      {
-        double x,y;
-        glfwGetCursorPos(handle,&x,&y);
-        return vec2i((int)x, (int)y);
-      }
     
       
       vec2i    fbSize { 0 };
