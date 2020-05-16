@@ -21,14 +21,6 @@ include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
 # for public OWL API:
 include_directories(${OWL_INCLUDES})
 
-#cmdline-only samples, also used for 'make test'
-add_subdirectory(cmdline)
-
-# advanced samples (these will try to open windows)
-add_subdirectory(interacive)
-
-
-
 
 # ---------------------------------------------------------------------------
 # the default "tutorial-style" samples that intoduce, step by step,
@@ -40,21 +32,5 @@ file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
 foreach(sample ${samples})
   add_subdirectory(${sample})
 endforeach()
-
-
-
-# ---------------------------------------------------------------------------
-# a more serious kind of example with model loader, viewer, simple
-# path tracer, etc
-# ---------------------------------------------------------------------------
-
-option(OWL_ADVANCED_SAMPLES "Build Advanced Samples" ON)
-if (OWL_ADVANCED_SAMPLES)
-  add_subdirectory(common/owlViewer)
-  if (OWL_HAVE_VIEWER)
-    include_directories(${OWL_VIEWER_INCLUDES})
-    add_subdirectory(advanced/optix7course)
-  endif()
-endif()
 
 

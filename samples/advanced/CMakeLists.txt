@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,11 +14,21 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl/ng/include)
+include(configure_owl)
 
-file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
+# for STB image read/write
+include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
+# for public OWL API:
+include_directories(${OWL_INCLUDES})
 
-foreach(sample ${samples})
-  add_subdirectory(${sample})
-endforeach()
+# ---------------------------------------------------------------------------
+# a more serious kind of example with model loader, viewer, simple
+# path tracer, etc
+# ---------------------------------------------------------------------------
+add_subdirectory(common/owlViewer)
+if (OWL_HAVE_VIEWER)
+  include_directories(${OWL_VIEWER_INCLUDES})
+  add_subdirectory(advanced/optix7course)
+endif()
+
 
