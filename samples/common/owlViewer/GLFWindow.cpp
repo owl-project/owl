@@ -14,6 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#if 0
 // iw - include this first else glutwindow.h will include it without implementation
 #define GL_LITE_IMPLEMENTATION 1
 //#include "glew_lite.h"
@@ -441,3 +442,4 @@ namespace owl {
 
   } // ::owl::viewer
 } // ::owl
+#endif

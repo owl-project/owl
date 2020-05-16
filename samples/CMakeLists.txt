@@ -40,10 +40,13 @@ endforeach()
 # path tracer, etc
 # ---------------------------------------------------------------------------
 
-include(configure_viewer)
-if (OWL_HAVE_VIEWER)
-  include_directories(${OWL_VIEWER_INCLUDES})
-  add_subdirectory(advanced/optix7course)
+option(OWL_ADVANCED_SAMPLES "Build Advanced Samples" ON)
+if (OWL_ADVANCED_SAMPLES)
+  add_subdirectory(common/owlViewer)
+  if (OWL_HAVE_VIEWER)
+    include_directories(${OWL_VIEWER_INCLUDES})
+    add_subdirectory(advanced/optix7course)
+  endif()
 endif()
 
 

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2019 Ingo Wald                                            //
+// Copyright 2018-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -15,12 +15,7 @@
 // ======================================================================== //
 
 #include "FlyMode.h"
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
-#endif
-#include "ViewerWidget.h"
+#include "OWLViewer.h"
 
 namespace owl {
   namespace viewer {
@@ -33,31 +28,31 @@ namespace owl {
     // actual motion functions that do the actual work
     // ##################################################################
 
-    void FlyModeManip::move(const float step)
+    void CameraFlyMode::move(const float step)
     {
-      FullCamera &fc = widget->fullCamera;
+      Camera &fc = viewer->camera;
       // negative z axis: 'subtract' step
       fc.position = fc.position - step*fc.motionSpeed * fc.frame.vz;
-      widget->updateCamera();
+      viewer->updateCamera();
     }
 
-    void FlyModeManip::strafe(const vec2f step)
+    void CameraFlyMode::strafe(const vec2f step)
     {
-      FullCamera &fc = widget->fullCamera;
+      Camera &fc = viewer->camera;
       fc.position = fc.position
         - step.x*fc.motionSpeed * fc.frame.vx
         + step.y*fc.motionSpeed * fc.frame.vy;
-      widget->updateCamera();
+      viewer->updateCamera();
     }
 
-    void FlyModeManip::rotate(const float deg_u,
+    void CameraFlyMode::rotate(const float deg_u,
                                   const float deg_v)
     {
       float rad_u = -(float)M_PI/180.f*deg_u;
       float rad_v = -(float)M_PI/180.f*deg_v;
 
-      assert(widget);
-      FullCamera &fc = widget->fullCamera;
+      assert(viewer);
+      Camera &fc = viewer->camera;
       
       fc.frame
         = linear3f::rotate(fc.frame.vy,rad_u)
@@ -66,7 +61,7 @@ namespace owl {
 
       if (fc.forceUp) fc.forceUpFrame();
 
-      widget->updateCamera();
+      viewer->updateCamera();
     }
 
     // ##################################################################
@@ -75,26 +70,26 @@ namespace owl {
 
     /*! mouse got dragged with left button pressedn, by 'delta'
       pixels, at last position where */
-    void FlyModeManip::mouseDragLeft(const vec2i &where, const vec2i &delta)
+    void CameraFlyMode::mouseDragLeft(const vec2i &where, const vec2i &delta)
     {
-      const vec2f fraction = vec2f(delta) / vec2f(widget->windowSize);
+      const vec2f fraction = vec2f(delta) / vec2f(viewer->getWindowSize());
       rotate(fraction.x * degrees_per_drag_fraction,
              fraction.y * degrees_per_drag_fraction);
     }
 
     /*! mouse got dragged with left button pressedn, by 'delta'
       pixels, at last position where */
-    void FlyModeManip::mouseDragCenter(const vec2i &where, const vec2i &delta)
+    void CameraFlyMode::mouseDragCenter(const vec2i &where, const vec2i &delta)
     {
-      const vec2f fraction = vec2f(delta) / vec2f(widget->windowSize);
+      const vec2f fraction = vec2f(delta) / vec2f(viewer->getWindowSize());
       strafe(fraction*pixels_per_move);
     }
 
     /*! mouse got dragged with left button pressedn, by 'delta'
       pixels, at last position where */
-    void FlyModeManip::mouseDragRight(const vec2i &where, const vec2i &delta)
+    void CameraFlyMode::mouseDragRight(const vec2i &where, const vec2i &delta)
     {
-      const vec2f fraction = vec2f(delta) / vec2f(widget->windowSize);
+      const vec2f fraction = vec2f(delta) / vec2f(viewer->getWindowSize());
       move(fraction.y*pixels_per_move);
     }
 
@@ -102,12 +97,12 @@ namespace owl {
     // KEYBOARD interaction
     // ##################################################################
 
-    void FlyModeManip::kbd_up()
+    void CameraFlyMode::kbd_up()
     {
       rotate(0,+kbd_rotate_degrees);
     }
     
-    void FlyModeManip::kbd_down()
+    void CameraFlyMode::kbd_down()
     {
       rotate(0,-kbd_rotate_degrees);
     }
@@ -118,7 +113,7 @@ namespace owl {
         but _typing_ right 'moves' the viewer/camera, so rotates
         camera to the right). This _reads_ counter-intuitive, but
         feels more natural, so is intentional */
-    void FlyModeManip::kbd_right()
+    void CameraFlyMode::kbd_right()
     {
       rotate(-kbd_rotate_degrees,0);
     }
@@ -129,34 +124,34 @@ namespace owl {
         but _typing_ right 'moves' the viewer/camera, so rotates
         camera to the right). This _reads_ counter-intuitive, but
         feels more natural, so is intentional */
-    void FlyModeManip::kbd_left()
+    void CameraFlyMode::kbd_left()
     {
       rotate(+kbd_rotate_degrees,0);
     }
     
-    void FlyModeManip::kbd_forward()
+    void CameraFlyMode::kbd_forward()
     {
       move(+1.f);
     }
     
-    void FlyModeManip::kbd_back()
+    void CameraFlyMode::kbd_back()
     {
       move(-1.f);
-      // FullCamera &fc = widget->fullCamera;
+      // Camera &fc = viewer->camera;
       // float step = 1.f;
       
       // const vec3f poi  = fc.position - fc.poiDistance * fc.frame.vz;
       // fc.poiDistance   = max(maxDistance,fc.poiDistance+step);
       // fc.focalDistance = fc.poiDistance;
       // fc.position = poi + fc.poiDistance * fc.frame.vz;
-      // widget->updateCamera();
+      // viewer->updateCamera();
     }
     
     
     /*! this gets called when the user presses a key on the keyboard ... */
-    void FlyModeManip::key(char key, const vec2i &where) 
+    void CameraFlyMode::key(char key, const vec2i &where) 
     {
-      FullCamera &fc = widget->fullCamera;
+      Camera &fc = viewer->camera;
       
       switch(key) {
       case 'w':
@@ -178,30 +173,30 @@ namespace owl {
         kbd_back();
         break;
       default:
-        FullCameraManip::key(key,where);
+        CameraManipulator::key(key,where);
       }
     }
 
     /*! this gets called when the user presses a key on the keyboard ... */
-    void FlyModeManip::special(int key, const vec2i &where) 
+    void CameraFlyMode::special(int key, const vec2i &where) 
     {
       switch (key) {
-      case GLUT_KEY_UP:
+      case GLFW_KEY_UP:
         kbd_up();
         break;
-      case GLUT_KEY_DOWN:
+      case GLFW_KEY_DOWN:
         kbd_down();
         break;
-      case GLUT_KEY_RIGHT:
+      case GLFW_KEY_RIGHT:
         kbd_right();
         break;
-      case GLUT_KEY_LEFT:
+      case GLFW_KEY_LEFT:
         kbd_left();
         break;
-      case GLUT_KEY_PAGE_UP:
+      case GLFW_KEY_PAGE_UP:
         kbd_forward();
         break;
-      case GLUT_KEY_PAGE_DOWN:
+      case GLFW_KEY_PAGE_DOWN:
         kbd_back();
         break;
       }

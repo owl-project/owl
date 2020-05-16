@@ -22,7 +22,15 @@ if (OWL_HAVE_GLFW)
     ${glfw3_DIR}
     ${owl_dir}/samples/common/
     )
+  set(OWL_VIEWER_LIBRARIES
+    owlViewer
+    ${OWL_LIBRARIES}
+    glfw
+    )
   set(OWL_HAVE_VIEWER ON)
+  add_subdirectory
 else()
   set(OWL_HAVE_VIEWER OFF)
 endif()
+
+message("done configure_viewer : INCLUDES=${OWL_VIEWER_INCLUDES}, LIBRARIES=${OWL_VIEWER_LIBRARIES}")

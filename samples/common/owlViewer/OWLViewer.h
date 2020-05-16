@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018 Ingo Wald                                                 //
+// Copyright 2018-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include "GLFW/glfw3.h"
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
 #include "Camera.h"
 
 namespace owl {
@@ -30,7 +33,7 @@ namespace owl {
     struct SimpleCamera
     {
       inline SimpleCamera() {}
-      SimpleCamera(const Camera &);
+      SimpleCamera(const Camera &camera);
 
       struct {
         vec3f lower_left;
@@ -77,7 +80,7 @@ namespace owl {
       virtual void idle() {}
 
       /*! draw framebuffer using OpenGL */
-      virtual void draw() {}
+      virtual void draw();
 
       struct ButtonState {
         bool  isPressed        { false };
@@ -92,26 +95,35 @@ namespace owl {
       ButtonState centerButton;
       vec2i       lastMousePosition { -1,-1 };
 
-      /*! this gets called when the window determines that the mouse got
-        _moved_ to the given position */
+      /*! this gets called when the window determines that the mouse
+        got _moved_ to the given position */
       virtual void mouseMotion(const vec2i &newMousePosition);
 
-      /*! mouse got dragged with left button pressedn, by 'delta' pixels, at last position where */
+      /*! mouse got dragged with left button pressedn, by 'delta'
+          pixels, at last position where */
       virtual void mouseDragLeft  (const vec2i &where, const vec2i &delta);
-      /*! mouse got dragged with left button pressedn, by 'delta' pixels, at last position where */
+      
+      /*! mouse got dragged with left button pressedn, by 'delta'
+          pixels, at last position where */
       virtual void mouseDragCenter(const vec2i &where, const vec2i &delta);
-      /*! mouse got dragged with left button pressedn, by 'delta' pixels, at last position where */
+      
+      /*! mouse got dragged with left button pressedn, by 'delta'
+          pixels, at last position where */
       virtual void mouseDragRight (const vec2i &where, const vec2i &delta);
+      
       /*! mouse button got either pressed or released at given location */
       virtual void mouseButtonLeft  (const vec2i &where, bool pressed);
+      
       /*! mouse button got either pressed or released at given location */
       virtual void mouseButtonCenter(const vec2i &where, bool pressed);
+      
       /*! mouse button got either pressed or released at given location */
       virtual void mouseButtonRight (const vec2i &where, bool pressed);
 
       /*! this gets called when the user presses a key on the keyboard ... */
       virtual void key(char key, const vec2i &/*where*/);
-      /*! this gets called when the user presses a 'special' key on the keyboard (cursor keys) ... */
+      /*! this gets called when the user presses a 'special' key on
+          the keyboard (cursor keys) ... */
       virtual void special(int key, const vec2i &/*where*/);
 
       /*! idle callback - called whenever glut deems the window to be
@@ -153,6 +165,7 @@ namespace owl {
       {
         camera.setFovy(fovy);
         camera.setFocalDistance(focalDistance);
+
         updateCamera();
       }
 
@@ -161,7 +174,7 @@ namespace owl {
       virtual void cameraChanged() {}
 
       /*! return currently active window size */
-      vec2i getWindowSize() const { return windowSize; }
+      vec2i getWindowSize() const { return fbSize; }
 
       const SimpleCamera getSimplifiedCamera() const
       {
@@ -183,7 +196,7 @@ namespace owl {
                              float maxPoiDist=std::numeric_limits<float>::infinity());
       void setWorldScale(const float worldScale)
       {
-        camera.motionSpeed = worldScale / sqrtf(3);
+        camera.motionSpeed = worldScale / sqrtf(3.f);
       }
 
       /*! re-computes the 'camera' from the 'cameracontrol', and notify
@@ -197,8 +210,12 @@ namespace owl {
       friend struct CameraFlyMode;
 
     protected:
-      vec2i  windowSize        { 0 };
+      vec2i    fbSize { 0 };
 
+      GLuint   fbTexture  {0};
+      cudaGraphicsResource_t cuDisplayTexture { 0 };
+      uint32_t *fbPointer { nullptr };
+      
       /*! the full camera state we are manipulating */
       Camera camera;
     };

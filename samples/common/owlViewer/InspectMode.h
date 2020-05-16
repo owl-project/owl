@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2019 Ingo Wald                                            //
+// Copyright 2018-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -52,11 +52,11 @@ namespace owl {
       bounds)
       
     */
-    struct InspectModeManip : public FullCameraManip {
+    struct CameraInspectMode : public CameraManipulator {
 
       enum RotateMode { POI, Arcball };
 
-      InspectModeManip(ViewerWidget *widget,
+      CameraInspectMode(OWLViewer *widget,
                        const box3f &validPoiBounds,
                        const float minDistance,
                        const float maxDistance,

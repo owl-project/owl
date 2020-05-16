@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2019 Ingo Wald                                            //
+// Copyright 2018-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -15,12 +15,7 @@
 // ======================================================================== //
 
 #include "InspectMode.h"
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
-#endif
-#include "ViewerWidget.h"
+#include "OWLViewer.h"
 
 namespace owl {
   namespace viewer {
@@ -29,12 +24,12 @@ namespace owl {
     const float degrees_per_drag_fraction = 150;
     const float pixels_per_move = 10.f;
 
-    InspectModeManip::InspectModeManip(ViewerWidget *widget,
+    CameraInspectMode::CameraInspectMode(OWLViewer *viewer,
                                        const box3f &validPoiBounds,
                                        const float minDistance,
                                        const float maxDistance,
                                        const RotateMode rotateMode)
-      : FullCameraManip(widget),
+      : CameraManipulator(viewer),
         validPoiBounds(validPoiBounds),
         minDistance(minDistance),
         maxDistance(maxDistance),
@@ -42,7 +37,7 @@ namespace owl {
     {
     }
 
-    void InspectModeManip::setRotateMode(RotateMode rm)
+    void CameraInspectMode::setRotateMode(RotateMode rm)
     {
       rotateMode = rm;
     }
@@ -51,33 +46,33 @@ namespace owl {
     // actual motion functions that do the actual work
     // ##################################################################
 
-    void InspectModeManip::move(const float step)
+    void CameraInspectMode::move(const float step)
     {
-      FullCamera &fc = widget->fullCamera;
+      Camera &fc = viewer->camera;
       
       const vec3f poi  = fc.getPOI();
       fc.poiDistance   = min(maxDistance,max(minDistance,fc.poiDistance-step*fc.motionSpeed));
       //      fc.focalDistance = fc.poiDistance;
       fc.position = poi + fc.poiDistance * fc.frame.vz;
-      widget->updateCamera();
+      viewer->updateCamera();
     }
 
-    void InspectModeManip::movePOI(const vec2f step)
+    void CameraInspectMode::movePOI(const vec2f step)
     {
-      FullCamera &fc = widget->fullCamera;
+      Camera &fc = viewer->camera;
       
       const vec3f old_poi  = fc.getPOI();
       vec3f new_poi = old_poi - step.x * fc.motionSpeed * fc.frame.vx + step.y * fc.motionSpeed * fc.frame.vy;
       if (!validPoiBounds.empty())
         new_poi = max(min(new_poi,validPoiBounds.upper),validPoiBounds.lower);
       fc.position += (new_poi - old_poi);
-      widget->updateCamera();
+      viewer->updateCamera();
     }
 
-    vec3f InspectModeManip::arcballProject(const vec2i &where)
+    vec3f CameraInspectMode::arcballProject(const vec2i &where)
     {
-      int width  = widget->getWindowSize().x;
-      int height = widget->getWindowSize().y;
+      int width  = viewer->getWindowSize().x;
+      int height = viewer->getWindowSize().y;
 
       vec3f v(0.f);
 
@@ -97,14 +92,14 @@ namespace owl {
       return v;
     }
 
-    void InspectModeManip::rotate(const float deg_u,
+    void CameraInspectMode::rotate(const float deg_u,
                                   const float deg_v)
     {
       float rad_u = -(float)M_PI/180.f*deg_u;
       float rad_v = -(float)M_PI/180.f*deg_v;
 
-      assert(widget);
-      FullCamera &fc = widget->fullCamera;
+      assert(viewer);
+      Camera &fc = viewer->camera;
       
       const vec3f poi  = fc.getPOI();
       fc.frame
@@ -116,7 +111,7 @@ namespace owl {
 
       fc.position = poi + fc.poiDistance * fc.frame.vz;
       
-      widget->updateCamera();
+      viewer->updateCamera();
     }
 
     // ##################################################################
@@ -125,7 +120,7 @@ namespace owl {
 
     /*! mouse got dragged with left button pressedn, by 'delta'
       pixels, at last position where */
-    void InspectModeManip::mouseDragLeft(const vec2i &where, const vec2i &delta)
+    void CameraInspectMode::mouseDragLeft(const vec2i &where, const vec2i &delta)
     {
       if (rotateMode == Arcball) {
         vec3f curr_pos = arcballProject(where+delta);
@@ -135,8 +130,8 @@ namespace owl {
 
         LinearSpace3f rotation_matrix(conj(arcball.rotation));
 
-        assert(widget);
-        FullCamera &fc = widget->fullCamera;
+        assert(viewer);
+        Camera &fc = viewer->camera;
 
         vec3f eye(0.f,0.f,length(fc.getPOI()-fc.position));
         eye = rotation_matrix * eye;
@@ -148,9 +143,9 @@ namespace owl {
 
         if (fc.forceUp) fc.forceUpFrame();
 
-        widget->updateCamera();
+        viewer->updateCamera();
       } else {
-        const vec2f fraction = vec2f(delta) / vec2f(widget->windowSize);
+        const vec2f fraction = vec2f(delta) / vec2f(viewer->getWindowSize());
         rotate(fraction.x * degrees_per_drag_fraction,
                fraction.y * degrees_per_drag_fraction);
       }
@@ -158,25 +153,25 @@ namespace owl {
 
     /*! mouse got dragged with left button pressedn, by 'delta'
       pixels, at last position where */
-    void InspectModeManip::mouseDragCenter(const vec2i &where, const vec2i &delta)
+    void CameraInspectMode::mouseDragCenter(const vec2i &where, const vec2i &delta)
     {
-      const vec2f fraction = vec2f(delta) / vec2f(widget->windowSize);
+      const vec2f fraction = vec2f(delta) / vec2f(viewer->getWindowSize());
       movePOI(fraction*pixels_per_move);
     }
 
     /*! mouse got dragged with left button pressedn, by 'delta'
       pixels, at last position where */
-    void InspectModeManip::mouseDragRight(const vec2i &where, const vec2i &delta)
+    void CameraInspectMode::mouseDragRight(const vec2i &where, const vec2i &delta)
     {
-      const vec2f fraction = vec2f(delta) / vec2f(widget->windowSize);
+      const vec2f fraction = vec2f(delta) / vec2f(viewer->getWindowSize());
       move(fraction.y*pixels_per_move);
     }
 
-    void InspectModeManip::mouseButtonLeft(const vec2i &where, bool pressed)
+    void CameraInspectMode::mouseButtonLeft(const vec2i &where, bool pressed)
     {
       if (rotateMode == Arcball && pressed) {
         if (abs(arcball.rotation) < 1e-8f) {
-          FullCamera &fc = widget->fullCamera;
+          Camera &fc = viewer->camera;
           arcball.rotation = LinearSpace3f::rotation(fc.frame);
         }
         arcball.down_pos = arcballProject(where);
@@ -188,12 +183,12 @@ namespace owl {
     // KEYBOARD interaction
     // ##################################################################
 
-    void InspectModeManip::kbd_up()
+    void CameraInspectMode::kbd_up()
     {
       rotate(0,+kbd_rotate_degrees);
     }
     
-    void InspectModeManip::kbd_down()
+    void CameraInspectMode::kbd_down()
     {
       rotate(0,-kbd_rotate_degrees);
     }
@@ -204,7 +199,7 @@ namespace owl {
         but _typing_ right 'moves' the viewer/camera, so rotates
         camera to the right). This _reads_ counter-intuitive, but
         feels more natural, so is intentional */
-    void InspectModeManip::kbd_right()
+    void CameraInspectMode::kbd_right()
     {
       rotate(-kbd_rotate_degrees,0);
     }
@@ -215,34 +210,34 @@ namespace owl {
         but _typing_ right 'moves' the viewer/camera, so rotates
         camera to the right). This _reads_ counter-intuitive, but
         feels more natural, so is intentional */
-    void InspectModeManip::kbd_left()
+    void CameraInspectMode::kbd_left()
     {
       rotate(+kbd_rotate_degrees,0);
     }
     
-    void InspectModeManip::kbd_forward()
+    void CameraInspectMode::kbd_forward()
     {
       move(+1.f);
     }
     
-    void InspectModeManip::kbd_back()
+    void CameraInspectMode::kbd_back()
     {
       move(-1.f);
-      // FullCamera &fc = widget->fullCamera;
+      // Camera &fc = viewer->camera;
       // float step = 1.f;
       
       // const vec3f poi  = fc.position - fc.poiDistance * fc.frame.vz;
       // fc.poiDistance   = max(maxDistance,fc.poiDistance+step);
       // fc.focalDistance = fc.poiDistance;
       // fc.position = poi + fc.poiDistance * fc.frame.vz;
-      // widget->updateCamera();
+      // viewer->updateCamera();
     }
     
     
     /*! this gets called when the user presses a key on the keyboard ... */
-    void InspectModeManip::key(char key, const vec2i &where) 
+    void CameraInspectMode::key(char key, const vec2i &where) 
     {
-      FullCamera &fc = widget->fullCamera;
+      Camera &fc = viewer->camera;
       
       switch(key) {
       case 'w':
@@ -264,30 +259,30 @@ namespace owl {
         kbd_back();
         break;
       default:
-        FullCameraManip::key(key,where);
+        CameraManipulator::key(key,where);
       }
     }
 
     /*! this gets called when the user presses a key on the keyboard ... */
-    void InspectModeManip::special(int key, const vec2i &where) 
+    void CameraInspectMode::special(int key, const vec2i &where) 
     {
       switch (key) {
-      case GLUT_KEY_UP:
+      case GLFW_KEY_UP:
         kbd_up();
         break;
-      case GLUT_KEY_DOWN:
+      case GLFW_KEY_DOWN:
         kbd_down();
         break;
-      case GLUT_KEY_RIGHT:
+      case GLFW_KEY_RIGHT:
         kbd_right();
         break;
-      case GLUT_KEY_LEFT:
+      case GLFW_KEY_LEFT:
         kbd_left();
         break;
-      case GLUT_KEY_PAGE_UP:
+      case GLFW_KEY_PAGE_UP:
         kbd_forward();
         break;
-      case GLUT_KEY_PAGE_DOWN:
+      case GLFW_KEY_PAGE_DOWN:
         kbd_back();
         break;
       }

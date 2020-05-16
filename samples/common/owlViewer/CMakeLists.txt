@@ -14,46 +14,32 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(../cmake/configure_glut.cmake)
+include(configure_glfw)
 
-if(GLUT_FOUND)
-  include_directories(${GLUT_INCLUDE_DIR})
-endif()
-
-set(owl_viewerWidget_sources
+set(owl_viewer_sources
   # add header files, so visual studio will properly show them as part of the solution
-  ViewerWidget.h
+  OWLViewer.h
   Camera.h
   InspectMode.h
   FlyMode.h
-  GlutWindow.h
+  GLFWindow.h
 
   # the actual source files
-  ViewerWidget.cpp
+  OWLViewer.cpp
   Camera.cpp
   InspectMode.cpp
   FlyMode.cpp
-  GlutWindow.cpp
 )
 # this is doing the same using OptiX
-add_library(owl_viewerWidget SHARED ${owl_viewerWidget_sources})
-add_library(owl_viewerWidget_static STATIC ${owl_viewerWidget_sources})
+add_library(owl_viewer STATIC ${owl_viewer_sources})
   
-target_link_libraries(owl_viewerWidget
-  ${OPENGL_LIBRARIES}
-  ${GLUT_LIBRARIES}
-  owl
-  )
-target_compile_definitions(owl_viewerWidget PUBLIC owl_viewerWidget_DLL_INTERFACE)
-
-target_link_libraries(owl_viewerWidget_static
-  ${OPENGL_LIBRARIES}
-  ${GLUT_LIBRARIES}
-  owl_static
+target_link_libraries(owl_viewer
+  ${OWL_GLFW_LIBRARIES}
+  ${OWL_LIBRARIES}
   )
 
 set(OWL_VIEWER_LIBRARIES
-  owl_viewerWidget_static
-  ${OPENGL_gl_LIBRARY}
+  owl_viewer
+  ${OWL_GLFW_LIBRARIES}
   ${OWL_LIBRARIES}
   )

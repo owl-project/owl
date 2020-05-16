@@ -18,7 +18,7 @@ include(configure_owl)
 
 include_directories(${PROJECT_SOURCE_DIR}/)
 # for STB image read/write
-include_directories(${PROJECT_SOURCE_DIR}/owl/common/3rdParty)
+include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
 # public API:
 include_directories(${OWL_INCLUDES})
 

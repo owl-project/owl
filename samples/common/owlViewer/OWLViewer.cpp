@@ -14,12 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "ViewerWidget.h"
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#else
-#include "GL/glut.h"
-#endif
+#include "OWLViewer.h"
 #include "Camera.h"
 #include "InspectMode.h"
 #include "FlyMode.h"
@@ -27,18 +22,65 @@
 namespace owl {
   namespace viewer {
 
+
+    float computeStableEpsilon(float f)
+    {
+      return abs(f) * float(1./(1<<21));
+    }
+
+    float computeStableEpsilon(const vec3f v)
+    {
+      return max(max(computeStableEpsilon(v.x),
+                     computeStableEpsilon(v.y)),
+                 computeStableEpsilon(v.z));
+    }
+    
+    SimpleCamera::SimpleCamera(const Camera &camera)
+    {
+      auto &easy = *this;
+      easy.lens.center = camera.position;
+      easy.lens.radius = 0.f;
+      easy.lens.du     = camera.frame.vx;
+      easy.lens.dv     = camera.frame.vy;
+
+      const float minFocalDistance
+        = max(computeStableEpsilon(camera.position),
+                   computeStableEpsilon(camera.frame.vx));
+
+      /*
+        tan(fov/2) = (height/2) / dist
+        -> height = 2*tan(fov/2)*dist
+      */
+      float screen_height
+        = 2.f*tanf(camera.fovyInDegrees/2.f * (float)M_PI/180.f)
+        * max(minFocalDistance,camera.focalDistance);
+      easy.screen.vertical   = screen_height * camera.frame.vy;
+      easy.screen.horizontal = screen_height * camera.aspect * camera.frame.vx;
+      easy.screen.lower_left
+        = //easy.lens.center
+        /* NEGATIVE z axis! */
+        - max(minFocalDistance,camera.focalDistance) * camera.frame.vz
+        - 0.5f * easy.screen.vertical
+        - 0.5f * easy.screen.horizontal;
+      // easy.lastModified = getCurrentTime();
+    }
+    
     // ==================================================================
     // actual viewerwidget class
     // ==================================================================
-    ViewerWidget::ViewerWidget(GlutWindow::SP window)
-      : window(window),
-        windowSize(window->getSize())
-    {
-    }
+    // OWLViewer::OWLViewer(GlutWindow::SP window)
+    //   : window(window),
+    //     windowSize(window->getSize())
+    // {
+    // }
 
-    void ViewerWidget::resize(const vec2i &newSize)
+    void OWLViewer::resize(const vec2i &newSize)
     {
-      windowSize = newSize;
+      if (fbPointer)
+        cudaFree(fbPointer);
+      cudaMallocManaged(&fbPointer,newSize.x*newSize.y*sizeof(uint32_t));
+      
+      fbSize = newSize;
       if (fbTexture == 0) {
         glGenTextures(1, &fbTexture);
       } else {
@@ -57,12 +99,25 @@ namespace owl {
     /*! re-draw the current frame. This function itself isn't
       virtual, but it calls the framebuffer's render(), which
       is */
-    void ViewerWidget::draw()
+    void OWLViewer::draw()
     {
       cudaGraphicsMapResources(1, &cuDisplayTexture);
-      sample.copyGPUPixels(cuDisplayTexture);
-      cudaGraphicsUnmapResources(1, &cuDisplayTexture);
 
+      cudaArray_t array;
+      cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0);
+      {
+        // sample.copyGPUPixels(cuDisplayTexture);
+        cudaMemcpy2DToArray(array,
+                            0,
+                            0,
+                            reinterpret_cast<const void *>(fbPointer),
+                            fbSize.x * sizeof(uint32_t),
+                            fbSize.x * sizeof(uint32_t),
+                            fbSize.y,
+                            cudaMemcpyDeviceToDevice);
+      }
+      cudaGraphicsUnmapResources(1, &cuDisplayTexture);
+      
       glDisable(GL_LIGHTING);
       glColor3f(1, 1, 1);
 
@@ -101,43 +156,45 @@ namespace owl {
 
     /*! re-computes the 'camera' from the 'cameracontrol', and notify
       app that the camera got changed */
-    void ViewerWidget::updateCamera()
+    void OWLViewer::updateCamera()
     {
-      fullCamera.digestInto(simpleCamera);
+      // camera.digestInto(simpleCamera);
       // if (isActive)
+      camera.lastModified = getCurrentTime();
       cameraChanged();
     }
 
-    void ViewerWidget::enableInspectMode(RotateMode rm,
-                                         const box3f &validPoiRange,
-                                         float minPoiDist,
-                                         float maxPoiDist)
+    void OWLViewer::enableInspectMode(RotateMode rm,
+                                      const box3f &validPoiRange,
+                                      float minPoiDist,
+                                      float maxPoiDist)
     {
-      inspectModeManip
-        = std::make_shared<InspectModeManip>(this,validPoiRange,minPoiDist,maxPoiDist,
-                                             rm==POI? InspectModeManip::POI: InspectModeManip::Arcball);
-      if (!cameraManip)
-        cameraManip = inspectModeManip;
+      inspectModeManipulator
+        = std::make_shared<CameraInspectMode>
+        (this,validPoiRange,minPoiDist,maxPoiDist,
+         rm==POI? CameraInspectMode::POI: CameraInspectMode::Arcball);
+      if (!cameraManipulator)
+        cameraManipulator = inspectModeManipulator;
     }
 
-    void ViewerWidget::enableInspectMode(const box3f &validPoiRange,
-                                         float minPoiDist,
-                                         float maxPoiDist)
+    void OWLViewer::enableInspectMode(const box3f &validPoiRange,
+                                      float minPoiDist,
+                                      float maxPoiDist)
     {
       enableInspectMode(POI,validPoiRange,minPoiDist,maxPoiDist);
     }
 
-    void ViewerWidget::enableFlyMode()
+    void OWLViewer::enableFlyMode()
     {
-      flyModeManip
-        = std::make_shared<FlyModeManip>(this);
-      if (!cameraManip)
-        cameraManip = flyModeManip;
+      flyModeManipulator
+        = std::make_shared<CameraFlyMode>(this);
+      if (!cameraManipulator)
+        cameraManipulator = flyModeManipulator;
     }
 
     /*! this gets called when the window determines that the mouse got
       _moved_ to the given position */
-    void ViewerWidget::mouseMotion(const vec2i &newMousePosition)
+    void OWLViewer::mouseMotion(const vec2i &newMousePosition)
     {
       if (lastMousePosition != vec2i(-1)) {
         if (leftButton.isPressed)   mouseDragLeft  (newMousePosition,newMousePosition-lastMousePosition);
@@ -147,57 +204,57 @@ namespace owl {
       lastMousePosition = newMousePosition;
     }
 
-    void ViewerWidget::mouseDragLeft  (const vec2i &where, const vec2i &delta)
+    void OWLViewer::mouseDragLeft  (const vec2i &where, const vec2i &delta)
     {
-      if (cameraManip) cameraManip->mouseDragLeft(where,delta);
+      if (cameraManipulator) cameraManipulator->mouseDragLeft(where,delta);
     }
 
     /*! mouse got dragged with left button pressedn, by 'delta' pixels, at last position where */
-    void ViewerWidget::mouseDragCenter(const vec2i &where, const vec2i &delta)
+    void OWLViewer::mouseDragCenter(const vec2i &where, const vec2i &delta)
     {
-      if (cameraManip) cameraManip->mouseDragCenter(where,delta);
+      if (cameraManipulator) cameraManipulator->mouseDragCenter(where,delta);
     }
 
     /*! mouse got dragged with left button pressedn, by 'delta' pixels, at last position where */
-    void ViewerWidget::mouseDragRight (const vec2i &where, const vec2i &delta)
+    void OWLViewer::mouseDragRight (const vec2i &where, const vec2i &delta)
     {
-      if (cameraManip) cameraManip->mouseDragRight(where,delta);
+      if (cameraManipulator) cameraManipulator->mouseDragRight(where,delta);
     }
 
     /*! mouse button got either pressed or released at given location */
-    void ViewerWidget::mouseButtonLeft  (const vec2i &where, bool pressed)
+    void OWLViewer::mouseButtonLeft  (const vec2i &where, bool pressed)
     {
-      if (cameraManip) cameraManip->mouseButtonLeft(where,pressed);
+      if (cameraManipulator) cameraManipulator->mouseButtonLeft(where,pressed);
 
       lastMousePosition = where;
     }
 
     /*! mouse button got either pressed or released at given location */
-    void ViewerWidget::mouseButtonCenter(const vec2i &where, bool pressed)
+    void OWLViewer::mouseButtonCenter(const vec2i &where, bool pressed)
     {
-      if (cameraManip) cameraManip->mouseButtonCenter(where,pressed);
+      if (cameraManipulator) cameraManipulator->mouseButtonCenter(where,pressed);
 
       lastMousePosition = where;
     }
 
     /*! mouse button got either pressed or released at given location */
-    void ViewerWidget::mouseButtonRight (const vec2i &where, bool pressed)
+    void OWLViewer::mouseButtonRight (const vec2i &where, bool pressed)
     {
-      if (cameraManip) cameraManip->mouseButtonRight(where,pressed);
+      if (cameraManipulator) cameraManipulator->mouseButtonRight(where,pressed);
 
       lastMousePosition = where;
     }
 
     /*! this gets called when the user presses a key on the keyboard ... */
-    void ViewerWidget::key(char key, const vec2i &where)
+    void OWLViewer::key(char key, const vec2i &where)
     {
-      if (cameraManip) cameraManip->key(key,where);
+      if (cameraManipulator) cameraManipulator->key(key,where);
     }
 
     /*! this gets called when the user presses a key on the keyboard ... */
-    void ViewerWidget::special(int key, const vec2i &where)
+    void OWLViewer::special(int key, const vec2i &where)
     {
-      if (cameraManip) cameraManip->special(key,where);
+      if (cameraManipulator) cameraManipulator->special(key,where);
     }
 
   } // ::owl::viewer

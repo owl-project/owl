@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2019 Ingo Wald                                            //
+// Copyright 2018-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -31,10 +31,10 @@ namespace owl {
       - right buttton moves forward/backwards
       
     */
-    struct FlyModeManip : public FullCameraManip {
+    struct CameraFlyMode : public CameraManipulator {
 
-      FlyModeManip(ViewerWidget *widget)
-        : FullCameraManip(widget)
+      CameraFlyMode(OWLViewer *widget)
+        : CameraManipulator(widget)
       {}
 
       /*! this gets called when the user presses a key on the keyboard ... */
