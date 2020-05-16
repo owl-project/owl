@@ -30,9 +30,15 @@ namespace osc {
                  const Camera &camera,
                  const QuadLight &light,
                  const float worldScale)
-      : OWLViewer(title,camera.from,camera.at,camera.up,worldScale),
+      : OWLViewer(title// ,camera.from,camera.at,camera.up,worldScale
+                  ),
         sample(model,light)
     {
+      this->camera.setOrientation(camera.from,
+                                  camera.at,
+                                  camera.up,
+                                  60.f);
+      this->setWorldScale(worldScale);
       sample.setCamera(camera);
     }
     
@@ -99,7 +105,8 @@ namespace osc {
 #else
       // on linux, common practice is to have ONE level of build dir
       // (say, <project>/build/)...
-      "../models/sponza.obj"
+      "./sponza.obj"
+      //      "../models/sponza.obj"
 #endif
       ;
     if (ac == 2)

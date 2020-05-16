@@ -53,11 +53,13 @@ namespace owl {
       including some virtual mouse and frame buffer */
     struct OWLViewer {
 
-      OWLViewer(const std::string &title = "OWL Sample Viewer",
-                const vec3f &cameraInitFrom = vec3f(0,0,-1),
-                const vec3f &cameraInitAt   = vec3f(0,0,0),
-                const vec3f &cameraInitUp   = vec3f(0,1,0),
-                const float worldScale      = 1.f);
+      OWLViewer(const std::string &title = "OWL Sample Viewer"
+                // ,
+                // const vec3f &cameraInitFrom = vec3f(0,0,-1),
+                // const vec3f &cameraInitAt   = vec3f(0,0,0),
+                // const vec3f &cameraInitUp   = vec3f(0,1,0),
+                // const float worldScale      = 1.f
+                );
       
       /*! snaps a given vector to one of the three coordinate axis;
           useful for pbrt models in which the upvector sometimes isn't

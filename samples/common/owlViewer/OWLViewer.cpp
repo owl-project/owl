@@ -260,11 +260,11 @@ namespace owl {
 
 
 
-    OWLViewer::OWLViewer(const std::string &title,
-                         const vec3f &cameraInitFrom,
-                         const vec3f &cameraInitAt,
-                         const vec3f &cameraInitUp,
-                         const float worldScale)
+    OWLViewer::OWLViewer(const std::string &title)
+                         // const vec3f &cameraInitFrom,
+                         // const vec3f &cameraInitAt,
+                         // const vec3f &cameraInitUp,
+                         // const float worldScale)
     {
     }
     
