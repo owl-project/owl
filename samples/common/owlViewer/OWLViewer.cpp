@@ -71,12 +71,9 @@ namespace owl {
 
     void OWLViewer::resize(const vec2i &newSize)
     {
-      PING;
       if (fbPointer)
         cudaFree(fbPointer);
-      PING;
       cudaMallocManaged(&fbPointer,newSize.x*newSize.y*sizeof(uint32_t));
-      PING;
       
       fbSize = newSize;
       if (fbTexture == 0) {
@@ -85,16 +82,12 @@ namespace owl {
         cudaGraphicsUnregisterResource(cuDisplayTexture);
       }
       
-      PING;
       glBindTexture(GL_TEXTURE_2D, fbTexture);
-      PING;
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSize.x, newSize.y, 0, GL_RGBA,
                    GL_UNSIGNED_BYTE, nullptr);
       
       // We need to re-register when resizing the texture
-      PING;
       cudaGraphicsGLRegisterImage(&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
-      PING;
     }
 
     
@@ -103,16 +96,12 @@ namespace owl {
       is */
     void OWLViewer::draw()
     {
-      PING;
       cudaGraphicsMapResources(1, &cuDisplayTexture);
 
       cudaArray_t array;
-      PING;
       cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0);
-      PING;
       {
         // sample.copyGPUPixels(cuDisplayTexture);
-      PING;
         cudaMemcpy2DToArray(array,
                             0,
                             0,
@@ -122,7 +111,6 @@ namespace owl {
                             fbSize.y,
                             cudaMemcpyDeviceToDevice);
       }
-      PING;
       cudaGraphicsUnmapResources(1, &cuDisplayTexture);
       
       glDisable(GL_LIGHTING);
@@ -144,7 +132,6 @@ namespace owl {
       glLoadIdentity();
       glOrtho(0.f, (float)fbSize.x, 0.f, (float)fbSize.y, -1.f, 1.f);
 
-      PING;
       glBegin(GL_QUADS);
       {
         glTexCoord2f(0.f, 0.f);
@@ -357,7 +344,6 @@ namespace owl {
     {
       int width, height;
       glfwGetFramebufferSize(handle, &width, &height);
-      PING; PRINT(vec2i(width,height));
       resize(vec2i(width,height));
 
       // glfwSetWindowUserPointer(window, OWLViewer::current);
@@ -367,11 +353,8 @@ namespace owl {
       glfwSetCursorPosCallback(handle, glfwindow_mouseMotion_cb);
     
       while (!glfwWindowShouldClose(handle)) {
-        PING;
         render();
-        PING;
         draw();
-        PING;
         
         glfwSwapBuffers(handle);
         glfwPollEvents();

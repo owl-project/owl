@@ -62,7 +62,6 @@ vec3i indices[NUM_INDICES] =
     { 4,0,2 }, { 4,2,6 }
   };
 
-const char *outFileName = "ng01-simpleTriangles.png";
 const vec2i fbSize(800,600);
 const vec3f lookFrom(-4.f,-3.f,-2.f);
 const vec3f lookAt(0.f,0.f,0.f);
@@ -94,8 +93,28 @@ struct Viewer : public owl::viewer::OWLViewer
 void Viewer::resize(const vec2i &newSize)
 {
   OWLViewer::resize(newSize);
-  
-  owlRayGenSet1ul(rayGen,"fbPtr",        (uint64_t)fbPointer);
+
+
+  // ----------- compute variable values  ------------------
+  vec3f camera_pos = lookFrom;
+  vec3f camera_d00
+    = normalize(lookAt-lookFrom);
+  float aspect = fbSize.x / float(fbSize.y);
+  vec3f camera_ddu
+    = cosFovy * aspect * normalize(cross(camera_d00,lookUp));
+  vec3f camera_ddv
+    = cosFovy * normalize(cross(camera_ddu,camera_d00));
+  camera_d00 -= 0.5f * camera_ddu;
+  camera_d00 -= 0.5f * camera_ddv;
+
+  // ----------- set variables  ----------------------------
+  owlRayGenSet1ul   (rayGen,"fbPtr",        (uint64_t)fbPointer);
+  // owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
+  owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
+  owlRayGenSet3f    (rayGen,"camera.pos",   (const owl3f&)camera_pos);
+  owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
+  owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
+  owlRayGenSet3f    (rayGen,"camera.dir_dv",(const owl3f&)camera_ddv);
   owlBuildSBT(context);
 }
 
@@ -240,13 +259,7 @@ Viewer::Viewer()
 
 void Viewer::render()
 {
-  LOG("launching ...");
   owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
-  
-  // LOG("done with launch, writing picture ...");
-  // for host pinned mem it doesn't matter which device we query...
-  // const uint32_t *fb
-  //   = (const uint32_t*)owlBufferGetPointer(frameBuffer,0);
 }
 
 

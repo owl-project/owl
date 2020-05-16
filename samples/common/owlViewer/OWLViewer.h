@@ -78,9 +78,6 @@ namespace owl {
       /*! gets called whenever the viewer needs us to re-render out widget */
       virtual void render() {}
       
-      /*! gets called whenever glut has nothing else to do */
-      virtual void idle() {}
-
       /*! draw framebuffer using OpenGL */
       virtual void draw();
 
@@ -127,18 +124,6 @@ namespace owl {
       /*! this gets called when the user presses a 'special' key on
           the keyboard (cursor keys) ... */
       virtual void special(int key, const vec2i &/*where*/);
-
-      /*! idle callback - called whenever glut deems the window to be
-        idle. if this function return true (ie, "yes, we _are_ idle)
-        then we'll automatically do a usleep with the \see
-        idle_usleep_delay value number of usecs; alternatively, the
-        user can do "something" useful in this function (ie, update an
-        animation and reutrn 0, in which case we directly post a
-        redisplay without waiting */
-      virtual bool idleFunction()
-      { /* user to overwrite this */
-        return true;
-      }
 
       /*! set a new window aspect ratio for the camera, update the
         camera, and notify the app */
