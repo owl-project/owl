@@ -21,7 +21,12 @@ include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
 # for public OWL API:
 include_directories(${OWL_INCLUDES})
 
+
+
+
+# ------------------------------------------------------------------
 #cmdline-only samples, also used for 'make test'
+# ------------------------------------------------------------------
 add_subdirectory(cmdline)
 
 
@@ -39,5 +44,7 @@ if (OWL_HAVE_VIEWER)
 
   # advanced samples (these will try to open windows)
   add_subdirectory(advanced)
-  
+
+else()
+  message(WARNING "#owl.cmake: could not build owlViewer library; skipping advanced samples")
 endif()

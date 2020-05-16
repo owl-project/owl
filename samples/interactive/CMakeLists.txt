@@ -14,15 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(configure_owl)
-
-# for STB image read/write
-include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
-# for public OWL API:
-include_directories(${OWL_INCLUDES})
-
-add_subdirectory(common/owlViewer)
-
 # ---------------------------------------------------------------------------
 # a more serious kind of example with model loader, viewer, simple
 # path tracer, etc

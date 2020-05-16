@@ -14,7 +14,7 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(configure_owl)
+include_directories(${OWL_VIEWER_INCLUDES})
 
 cuda_compile_and_embed(embedded_ptx_code devicePrograms.cu)
 

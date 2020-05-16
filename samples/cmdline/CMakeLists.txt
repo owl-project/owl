@@ -14,14 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(configure_owl)
-
-# for STB image read/write
-include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
-# for public OWL API:
-include_directories(${OWL_INCLUDES})
-
-
 # ---------------------------------------------------------------------------
 # the default "tutorial-style" samples that intoduce, step by step,
 # individual capabililies like creating a raygen (s00), creating a

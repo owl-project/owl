@@ -18,7 +18,11 @@
 
 set(OWL_HAVE_GLFW OFF)
 
+message("BEFORE configure_glfw : OpenGL_gl_LIBRARY =  ${OpenGL_gl_LIBRARY}")
+message("BEFORE configure_glfw : OPENGL_LIBRARIES =  ${OPENGL_LIBRARIES}")
+
 set(OpenGL_GL_PREFERENCE "GLVND")
+set(OpenGL_GL_PREFERENCE "GLVND" PARENT_SCOPE)
 find_package(OpenGL)
 
 message("configure_glfw : OpenGL_gl_LIBRARY =  ${OpenGL_gl_LIBRARY}")
@@ -32,8 +36,9 @@ if (OpenGL_FOUND)
     message("Found GLFW3 Package")
     include_directories(${glfw3_DIR})
     set(OWL_HAVE_GLFW ON)
-    set(OWL_GLFW_LIBRARIES glfw)
+    set(OWL_GLFW_LIBRARIES glfw ${OPENGL_LIBRARIES})
     set(OWL_GLFW_INCLUDES ${glfw3_INCLUDES})
+
   else()
     message("Found OpenGL, but did NOT find glfw3 in system - building glfw from source")
     add_subdirectory(${owl_dir}/samples/common/3rdParty/glfw)
@@ -41,3 +46,7 @@ if (OpenGL_FOUND)
     set(OWL_GLFW_LIBRARIES glfw ${OPENGL_LIBRARIES})
   endif()
 endif()
+
+message("configure_glfw: OWL_HAVE_GLFW ${OWL_HAVE_GLFW} ")
+set(OWL_HAVE_GLFW ${OWL_HAVE_GLFW} PARENT_SCOPE)
+

@@ -16,30 +16,56 @@
 
 include(configure_glfw)
 
-set(owl_viewer_sources
-  # add header files, so visual studio will properly show them as part of the solution
-  OWLViewer.h
-  Camera.h
-  InspectMode.h
-  FlyMode.h
-
-  # the actual source files
-  OWLViewer.cpp
-  Camera.cpp
-  InspectMode.cpp
-  FlyMode.cpp
-  )
-
-# this is doing the same using OptiX
-add_library(owl_viewer STATIC ${owl_viewer_sources})
+message("owlViewer/CMakeLists: OWL_HAVE_GLFW ${OWL_HAVE_GLFW} ")
+if (OWL_HAVE_GLFW)
   
-target_link_libraries(owl_viewer
-  ${OWL_GLFW_LIBRARIES}
-  ${OWL_LIBRARIES}
-  )
+  set(owl_viewer_sources
+    # add header files, so visual studio will properly show them as part of the solution
+    OWLViewer.h
+    Camera.h
+    InspectMode.h
+    FlyMode.h
 
-set(OWL_VIEWER_LIBRARIES
-  owl_viewer
-  ${OWL_GLFW_LIBRARIES}
-  ${OWL_LIBRARIES}
-  )
+    # the actual source files
+    OWLViewer.cpp
+    Camera.cpp
+    InspectMode.cpp
+    FlyMode.cpp
+    )
+
+  # this is doing the same using OptiX
+  add_library(owl_viewer STATIC ${owl_viewer_sources})
+  
+  target_link_libraries(owl_viewer
+    ${OWL_GLFW_LIBRARIES}
+    ${OWL_LIBRARIES}
+    )
+
+  set(OWL_VIEWER_LIBRARIES
+    owl_viewer
+    ${OWL_GLFW_LIBRARIES}
+    ${OWL_LIBRARIES}
+    )
+
+  set(OWL_HAVE_VIEWER ON)
+  set(OWL_VIEWER_INCLUDES
+    ${glfw3_DIR}
+    ${owl_dir}/samples/common/
+    )
+  set(OWL_VIEWER_LIBRARIES
+    owl_viewer
+    ${OWL_LIBRARIES}
+    ${OWL_GLFW_LIBRARIES}
+    glfw
+    )
+else()
+  set(OWL_HAVE_VIEWER OFF)
+endif()
+
+# export those to whoever included this:
+set(OWL_HAVE_VIEWER ${OWL_HAVE_VIEWER} PARENT_SCOPE)
+set(OWL_VIEWER_INCLUDES ${OWL_VIEWER_INCLUDES} PARENT_SCOPE)
+set(OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES} PARENT_SCOPE)
+
+message("#owlViewer: exporting OWL_VIEWER_INCLUDES ${OWL_VIEWER_INCLUDES}")
+message("#owlViewer: exporting OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES}")
