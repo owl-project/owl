@@ -53,15 +53,10 @@ namespace osc {
     void render();
 
     /*! resize frame buffer to given resolution */
-    void resize(const vec2i &newSize);
+    void resize(void *fbPointer, const vec2i &newSize);
 
-    /*! download the rendered color buffer */
-    void downloadPixels(uint32_t h_pixels[]);
-
-    /*! copy the pixels to the mapped GPU texture from GL.
-     * The resource should be mapped prior to calling this method.
-     * The texture should be RGBA8 format */
-    void copyGPUPixels(cudaGraphicsResource_t &texture);
+    // /*! download the rendered color buffer */
+    // void downloadPixels(uint32_t h_pixels[]);
 
     /*! set camera to render with */
     void setCamera(const Camera &camera);
@@ -129,7 +124,7 @@ namespace osc {
     OWLBuffer denoisedBuffer = nullptr;
     
     /* the actual final color buffer used for display, in rgba8 */
-    OWLBuffer fbFinal = nullptr;
+    // OWLBuffer fbFinal = nullptr;
 
     OWLBuffer    denoiserScratch = nullptr;
     OWLBuffer    denoiserState = nullptr;

@@ -191,6 +191,8 @@ namespace owl {
       _moved_ to the given position */
     void OWLViewer::mouseMotion(const vec2i &newMousePosition)
     {
+      PING; PRINT(lastMousePosition);
+      PRINT(leftButton.isPressed);
       if (lastMousePosition != vec2i(-1)) {
         if (leftButton.isPressed)   mouseDragLeft  (newMousePosition,newMousePosition-lastMousePosition);
         if (centerButton.isPressed) mouseDragCenter(newMousePosition,newMousePosition-lastMousePosition);
@@ -201,6 +203,7 @@ namespace owl {
 
     void OWLViewer::mouseDragLeft  (const vec2i &where, const vec2i &delta)
     {
+      PING; PRINT(cameraManipulator); PRINT(delta);
       if (cameraManipulator) cameraManipulator->mouseDragLeft(where,delta);
     }
 
@@ -315,6 +318,7 @@ namespace owl {
   /*! callback for pressing _or_ releasing a mouse button*/
   static void glfwindow_mouseButton_cb(GLFWwindow *window, int button, int action, int mods) 
   {
+    PING;
     OWLViewer *gw = static_cast<OWLViewer*>(glfwGetWindowUserPointer(window));
     assert(gw);
     // double x, y;
@@ -324,16 +328,21 @@ namespace owl {
   
     void OWLViewer::mouseButton(int button, int action, int mods) 
     {
+      PING;
+      PRINT(action);
+      PRINT(mods);
       const bool pressed = (action == GLFW_PRESS);
+      PRINT(pressed);
+      PRINT(button);
       switch(button) {
       case GLFW_MOUSE_BUTTON_LEFT:
-        isPressed.leftButton = pressed;
+        leftButton.isPressed = pressed;
         break;
       case GLFW_MOUSE_BUTTON_MIDDLE:
-        isPressed.middleButton = pressed;
+        centerButton.isPressed = pressed;
         break;
       case GLFW_MOUSE_BUTTON_RIGHT:
-        isPressed.rightButton = pressed;
+        rightButton.isPressed = pressed;
         break;
       }
       lastMousePos = getMousePos();

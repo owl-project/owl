@@ -55,7 +55,7 @@ namespace osc {
       
       { "frame.frameID", OWL_INT,    OWL_OFFSETOF(LaunchParams,frame.frameID)},
       { "frame.fbColor",OWL_BUFPTR,OWL_OFFSETOF(LaunchParams,frame.fbColor)},
-      { "frame.fbFinal",OWL_BUFPTR,OWL_OFFSETOF(LaunchParams,frame.fbFinal)},
+      { "frame.fbFinal",OWL_RAW_POINTER,OWL_OFFSETOF(LaunchParams,frame.fbFinal)},
       { "frame.fbSize",OWL_INT2,OWL_OFFSETOF(LaunchParams,frame.fbSize)},
 
       // light settings:
@@ -279,6 +279,7 @@ namespace osc {
     const vec3f vertical
       = cosFovy * normalize(cross(horizontal,
                                   direction));
+
     owlLaunchParamsSet3f(launchParams,"camera.position",(const owl3f&)position);
     owlLaunchParamsSet3f(launchParams,"camera.direction",(const owl3f&)direction);
     owlLaunchParamsSet3f(launchParams,"camera.vertical",(const owl3f&)vertical);
@@ -286,47 +287,21 @@ namespace osc {
   }
   
   /*! resize frame buffer to given resolution */
-  void SampleRenderer::resize(const vec2i &newSize)
+  void SampleRenderer::resize(void *fbPointer, const vec2i &newSize)
   {
     if (fbColor) {
       owlBufferDestroy(fbColor);
-      owlBufferDestroy(fbFinal);
     }
 
     this->fbSize = newSize;
     fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
-    fbFinal = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
 
     owlLaunchParamsSetBuffer(launchParams,"frame.fbColor",fbColor);
-    owlLaunchParamsSetBuffer(launchParams,"frame.fbFinal",fbFinal);
+    owlLaunchParamsSet1ul(launchParams,"frame.fbFinal",(uint64_t)fbPointer);
     owlLaunchParamsSet2i(launchParams,"frame.fbSize",(const owl2i&)fbSize);
 
     // and re-set the camera, since aspect may have changed
     setCamera(lastSetCamera);
   }
   
-  /*! download the rendered color buffer */
-  void SampleRenderer::downloadPixels(uint32_t h_pixels[])
-  {
-    // this unnecessarily slows down the rendering; it would be just
-    // as well to directly use the owlBufferGetPointer() in the draw
-    // call - but for the sake of compatibility with the original
-    // samples let's just do it this way:
-    memcpy(h_pixels,owlBufferGetPointer(fbFinal,0),fbSize.x*fbSize.y*sizeof(int));
-  }
-
-  void SampleRenderer::copyGPUPixels(cudaGraphicsResource_t &texture)
-  {
-    cudaArray_t array;
-    cudaGraphicsSubResourceGetMappedArray(&array, texture, 0, 0);
-    cudaMemcpy2DToArray(array,
-        0,
-        0,
-        reinterpret_cast<const void *>(owlBufferGetPointer(fbFinal, 0)),
-        fbSize.x * sizeof(uint32_t),
-        fbSize.x * sizeof(uint32_t),
-        fbSize.y,
-        cudaMemcpyDeviceToDevice);
-  }
-
 } // ::osc

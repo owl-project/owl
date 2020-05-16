@@ -57,8 +57,8 @@ namespace osc {
     virtual void resize(const vec2i &newSize) 
     {
       OWLViewer::resize(newSize);
-      fbSize = newSize;
-      sample.resize(newSize);
+      // fbSize = newSize;
+      sample.resize(fbPointer,newSize);
     }
 
     virtual void key(int key, int mods)
@@ -85,11 +85,11 @@ namespace osc {
       }
     }
     
-    vec2i                 fbSize;
-    GLuint                fbTexture {0};
-    cudaGraphicsResource_t cuDisplayTexture;
+    // vec2i                 fbSize;
+    // GLuint                fbTexture {0};
+    // cudaGraphicsResource_t cuDisplayTexture;
     SampleRenderer        sample;
-    std::vector<uint32_t> pixels;
+    // std::vector<uint32_t> pixels;
   };
   
   

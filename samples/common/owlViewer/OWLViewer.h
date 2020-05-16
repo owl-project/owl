@@ -220,9 +220,9 @@ namespace owl {
 
       /*! the glfw window handle */
       GLFWwindow *handle { nullptr };
-      struct {
-        bool leftButton { false }, middleButton { false }, rightButton { false };
-      } isPressed;
+      // struct {
+      //   bool leftButton { false }, middleButton { false }, rightButton { false };
+      // } isPressed;
       vec2i lastMousePos = { -1,-1 };
     };
 
