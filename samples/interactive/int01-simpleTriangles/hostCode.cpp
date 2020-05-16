@@ -80,14 +80,29 @@ struct Viewer : public owl::viewer::OWLViewer
   
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
-
-  OWLRayGen rayGen;
+  
+      /*! window notifies us that we got resized. We HAVE to override
+          this to know our actual render dimensions, and get pointer
+          to the device frame buffer that the viewer cated for us */     
+  void resize(const vec2i &newSize) override;
+  
+  OWLRayGen rayGen   { 0 };
+  OWLContext context { 0 };
 };
+
+/*! window notifies us that we got resized */     
+void Viewer::resize(const vec2i &newSize)
+{
+  OWLViewer::resize(newSize);
+  
+  owlRayGenSet1ul(rayGen,"fbPtr",        (uint64_t)fbPointer);
+  owlBuildSBT(context);
+}
 
 Viewer::Viewer()
 {
   // create a context on the first device:
-  OWLContext context = owlContextCreate(nullptr,1);
+  context = owlContextCreate(nullptr,1);
   OWLModule module = owlModuleCreate(context,ptxCode);
   
   // ##################################################################
@@ -222,7 +237,6 @@ Viewer::Viewer()
   owlBuildPipeline(context);
   owlBuildSBT(context);
 }
-
 
 void Viewer::render()
 {

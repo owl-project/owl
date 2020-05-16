@@ -206,12 +206,24 @@ namespace owl {
       void updateCamera();
 
       void showAndRun();
+      
+      void mouseButton(int button, int action, int mods);
+      
     private:
       friend struct CameraManipulator;
       friend struct CameraInspectMode;
       friend struct CameraFlyMode;
 
     protected:
+
+      inline vec2i getMousePos() const
+      {
+        double x,y;
+        glfwGetCursorPos(handle,&x,&y);
+        return vec2i((int)x, (int)y);
+      }
+    
+      
       vec2i    fbSize { 0 };
 
       GLuint   fbTexture  {0};
@@ -220,6 +232,13 @@ namespace owl {
       
       /*! the full camera state we are manipulating */
       Camera camera;
+
+      /*! the glfw window handle */
+      GLFWwindow *handle { nullptr };
+      struct {
+        bool leftButton { false }, middleButton { false }, rightButton { false };
+      } isPressed;
+      vec2i lastMousePos = { -1,-1 };
     };
 
   } // ::owl::viewer

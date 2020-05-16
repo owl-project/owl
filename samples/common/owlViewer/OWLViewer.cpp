@@ -68,17 +68,15 @@ namespace owl {
     // ==================================================================
     // actual viewerwidget class
     // ==================================================================
-    // OWLViewer::OWLViewer(GlutWindow::SP window)
-    //   : window(window),
-    //     windowSize(window->getSize())
-    // {
-    // }
 
     void OWLViewer::resize(const vec2i &newSize)
     {
+      PING;
       if (fbPointer)
         cudaFree(fbPointer);
+      PING;
       cudaMallocManaged(&fbPointer,newSize.x*newSize.y*sizeof(uint32_t));
+      PING;
       
       fbSize = newSize;
       if (fbTexture == 0) {
@@ -87,12 +85,16 @@ namespace owl {
         cudaGraphicsUnregisterResource(cuDisplayTexture);
       }
       
+      PING;
       glBindTexture(GL_TEXTURE_2D, fbTexture);
+      PING;
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSize.x, newSize.y, 0, GL_RGBA,
                    GL_UNSIGNED_BYTE, nullptr);
       
       // We need to re-register when resizing the texture
+      PING;
       cudaGraphicsGLRegisterImage(&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
+      PING;
     }
 
     
@@ -101,12 +103,16 @@ namespace owl {
       is */
     void OWLViewer::draw()
     {
+      PING;
       cudaGraphicsMapResources(1, &cuDisplayTexture);
 
       cudaArray_t array;
+      PING;
       cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0);
+      PING;
       {
         // sample.copyGPUPixels(cuDisplayTexture);
+      PING;
         cudaMemcpy2DToArray(array,
                             0,
                             0,
@@ -116,6 +122,7 @@ namespace owl {
                             fbSize.y,
                             cudaMemcpyDeviceToDevice);
       }
+      PING;
       cudaGraphicsUnmapResources(1, &cuDisplayTexture);
       
       glDisable(GL_LIGHTING);
@@ -137,6 +144,7 @@ namespace owl {
       glLoadIdentity();
       glOrtho(0.f, (float)fbSize.x, 0.f, (float)fbSize.y, -1.f, 1.f);
 
+      PING;
       glBegin(GL_QUADS);
       {
         glTexCoord2f(0.f, 0.f);
@@ -258,19 +266,116 @@ namespace owl {
     }
 
 
+  static void glfw_error_callback(int error, const char* description)
+  {
+    fprintf(stderr, "Error: %s\n", description);
+  }
+  
 
 
     OWLViewer::OWLViewer(const std::string &title)
-                         // const vec3f &cameraInitFrom,
-                         // const vec3f &cameraInitAt,
-                         // const vec3f &cameraInitUp,
-                         // const float worldScale)
     {
+      glfwSetErrorCallback(glfw_error_callback);
+      // glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
+      
+      if (!glfwInit())
+        exit(EXIT_FAILURE);
+      
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+      glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+      
+      handle = glfwCreateWindow(1200, 800, title.c_str(), NULL, NULL);
+      if (!handle) {
+        glfwTerminate();
+        exit(EXIT_FAILURE);
+      }
+      
+      glfwSetWindowUserPointer(handle, this);
+      glfwMakeContextCurrent(handle);
+      glfwSwapInterval( 1 );
     }
-    
+
+
+  /*! callback for a window resizing event */
+  static void glfwindow_reshape_cb(GLFWwindow* window, int width, int height )
+  {
+    OWLViewer *gw = static_cast<OWLViewer*>(glfwGetWindowUserPointer(window));
+    assert(gw);
+    gw->resize(vec2i(width,height));
+  // assert(OWLViewer::current);
+  //   OWLViewer::current->resize(vec2i(width,height));
+  }
+
+  /*! callback for a key press */
+  static void glfwindow_key_cb(GLFWwindow *window, int key, int scancode, int action, int mods) 
+  {
+    OWLViewer *gw = static_cast<OWLViewer*>(glfwGetWindowUserPointer(window));
+    assert(gw);
+    if (action == GLFW_PRESS) {
+      gw->key(key,mods);
+    }
+  }
+
+  /*! callback for _moving_ the mouse to a new position */
+  static void glfwindow_mouseMotion_cb(GLFWwindow *window, double x, double y) 
+  {
+    OWLViewer *gw = static_cast<OWLViewer*>(glfwGetWindowUserPointer(window));
+    assert(gw);
+    gw->mouseMotion(vec2i((int)x, (int)y));
+  }
+
+  /*! callback for pressing _or_ releasing a mouse button*/
+  static void glfwindow_mouseButton_cb(GLFWwindow *window, int button, int action, int mods) 
+  {
+    OWLViewer *gw = static_cast<OWLViewer*>(glfwGetWindowUserPointer(window));
+    assert(gw);
+    // double x, y;
+    // glfwGetCursorPos(window,&x,&y);
+    gw->mouseButton(button,action,mods);
+  }
+  
+    void OWLViewer::mouseButton(int button, int action, int mods) 
+    {
+      const bool pressed = (action == GLFW_PRESS);
+      switch(button) {
+      case GLFW_MOUSE_BUTTON_LEFT:
+        isPressed.leftButton = pressed;
+        break;
+      case GLFW_MOUSE_BUTTON_MIDDLE:
+        isPressed.middleButton = pressed;
+        break;
+      case GLFW_MOUSE_BUTTON_RIGHT:
+        isPressed.rightButton = pressed;
+        break;
+      }
+      lastMousePos = getMousePos();
+    }
+
+
     void OWLViewer::showAndRun()
     {
-      PING;exit(0);
+      int width, height;
+      glfwGetFramebufferSize(handle, &width, &height);
+      PING; PRINT(vec2i(width,height));
+      resize(vec2i(width,height));
+
+      // glfwSetWindowUserPointer(window, OWLViewer::current);
+      glfwSetFramebufferSizeCallback(handle, glfwindow_reshape_cb);
+      glfwSetMouseButtonCallback(handle, glfwindow_mouseButton_cb);
+      glfwSetKeyCallback(handle, glfwindow_key_cb);
+      glfwSetCursorPosCallback(handle, glfwindow_mouseMotion_cb);
+    
+      while (!glfwWindowShouldClose(handle)) {
+        PING;
+        render();
+        PING;
+        draw();
+        PING;
+        
+        glfwSwapBuffers(handle);
+        glfwPollEvents();
+      }
     }
     
   } // ::owl::viewer
