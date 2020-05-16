@@ -21,14 +21,20 @@ include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
 # for public OWL API:
 include_directories(${OWL_INCLUDES})
 
+add_subdirectory(common/owlViewer)
+
 # ---------------------------------------------------------------------------
 # a more serious kind of example with model loader, viewer, simple
 # path tracer, etc
 # ---------------------------------------------------------------------------
-add_subdirectory(common/owlViewer)
 if (OWL_HAVE_VIEWER)
-  include_directories(${OWL_VIEWER_INCLUDES})
-  add_subdirectory(advanced/optix7course)
+  
+  file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "adv??-*")
+  
+  foreach(sample ${samples})
+    add_subdirectory(${sample})
+  endforeach()
+  
 endif()
 
 

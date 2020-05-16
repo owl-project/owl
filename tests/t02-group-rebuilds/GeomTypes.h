@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "../../samples/s05-rtow/Materials.h"
+#include "../../samples/cmdline/s05-rtow/Materials.h"
 
 namespace owl {
   

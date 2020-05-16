@@ -22,14 +22,14 @@ set(owl_viewer_sources
   Camera.h
   InspectMode.h
   FlyMode.h
-  GLFWindow.h
 
   # the actual source files
   OWLViewer.cpp
   Camera.cpp
   InspectMode.cpp
   FlyMode.cpp
-)
+  )
+
 # this is doing the same using OptiX
 add_library(owl_viewer STATIC ${owl_viewer_sources})
   

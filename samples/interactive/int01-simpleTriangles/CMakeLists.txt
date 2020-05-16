@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019-2020 Ingo Wald                                            #
+# Copyright 2019 Ingo Wald                                                 #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,18 +14,17 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(configure_owl)
-
-# for STB image read/write
-include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
-# for public OWL API:
-include_directories(${OWL_INCLUDES})
-
-# ---------------------------------------------------------------------------
-# a more serious kind of example with model loader, viewer, simple
-# path tracer, etc
-# ---------------------------------------------------------------------------
-  include_directories(${OWL_VIEWER_INCLUDES})
-  add_subdirectory(optix7course)
+include_directories(${PROJECT_SOURCE_DIR}/owl)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(sample01-simpleTriangles
+  hostCode.cpp
+  ${ptxCode}
+  )
+target_link_libraries(sample01-simpleTriangles
+  ${OWL_LIBRARIES}
+  )
+add_test(sample01-simpleTriangles ${CMAKE_BINARY_DIR}/sample01-simpleTriangles)
 
 
