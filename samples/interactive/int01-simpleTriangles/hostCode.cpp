@@ -69,10 +69,23 @@ const vec3f lookAt(0.f,0.f,0.f);
 const vec3f lookUp(0.f,1.f,0.f);
 const float cosFovy = 0.66f;
 
-int main(int ac, char **av)
-{
-  LOG("owl::ng example '" << av[0] << "' starting up");
 
+
+
+
+
+struct Viewer : public owl::viewer::OWLViewer
+{
+  Viewer();
+  
+  /*! gets called whenever the viewer needs us to re-render out widget */
+  void render() override;
+
+  OWLRayGen rayGen;
+};
+
+Viewer::Viewer()
+{
   // create a context on the first device:
   OWLContext context = owlContextCreate(nullptr,1);
   OWLModule module = owlModuleCreate(context,ptxCode);
@@ -110,8 +123,8 @@ int main(int ac, char **av)
     = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_VERTICES,vertices);
   OWLBuffer indexBuffer
     = owlDeviceBufferCreate(context,OWL_INT3,NUM_INDICES,indices);
-  OWLBuffer frameBuffer
-    = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
+  // OWLBuffer frameBuffer
+  //   = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
 
   OWLGeom trianglesGeom
     = owlGeomCreate(context,trianglesGeomType);
@@ -162,7 +175,8 @@ int main(int ac, char **av)
   // set up ray gen program
   // -------------------------------------------------------
   OWLVarDecl rayGenVars[] = {
-    { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
+    { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(RayGenData,fbPtr)},
+    // { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
     { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
     { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
     { "camera.pos",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.pos)},
@@ -173,7 +187,7 @@ int main(int ac, char **av)
   };
 
   // ----------- create object  ----------------------------
-  OWLRayGen rayGen
+  rayGen
     = owlRayGenCreate(context,module,"simpleRayGen",
                       sizeof(RayGenData),
                       rayGenVars,-1);
@@ -191,7 +205,8 @@ int main(int ac, char **av)
   camera_d00 -= 0.5f * camera_ddv;
 
   // ----------- set variables  ----------------------------
-  owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
+  owlRayGenSet1ul(rayGen,"fbPtr",        (uint64_t)fbPointer);
+  // owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
   owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
   owlRayGenSetGroup (rayGen,"world",        world);
   owlRayGenSet3f    (rayGen,"camera.pos",   (const owl3f&)camera_pos);
@@ -206,29 +221,29 @@ int main(int ac, char **av)
   owlBuildPrograms(context);
   owlBuildPipeline(context);
   owlBuildSBT(context);
+}
+
+
+void Viewer::render()
+{
+  LOG("launching ...");
+  owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
+  
+  // LOG("done with launch, writing picture ...");
+  // for host pinned mem it doesn't matter which device we query...
+  // const uint32_t *fb
+  //   = (const uint32_t*)owlBufferGetPointer(frameBuffer,0);
+}
+
+
+int main(int ac, char **av)
+{
+  LOG("owl::ng example '" << av[0] << "' starting up");
+
+  Viewer viewer;
 
   // ##################################################################
   // now that everything is ready: launch it ....
   // ##################################################################
-  
-  LOG("launching ...");
-  owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
-  
-  LOG("done with launch, writing picture ...");
-  // for host pinned mem it doesn't matter which device we query...
-  const uint32_t *fb
-    = (const uint32_t*)owlBufferGetPointer(frameBuffer,0);
-  assert(fb);
-  stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
-                 fb,fbSize.x*sizeof(uint32_t));
-  LOG_OK("written rendered frame buffer to file "<<outFileName);
-
-  // ##################################################################
-  // and finally, clean up
-  // ##################################################################
-  
-  LOG("destroying devicegroup ...");
-  owlContextDestroy(context);
-  
-  LOG_OK("seems all went OK; app is done, this should be the last output ...");
+  viewer.showAndRun();
 }
