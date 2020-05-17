@@ -17,6 +17,10 @@
 #pragma once
 
 #include "GLFW/glfw3.h"
+#ifdef WIN32
+#include <windows.h>
+#include <gl/GL.h>
+#endif
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include "Camera.h"

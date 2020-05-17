@@ -17,6 +17,10 @@
 #pragma once
 
 #include <owl/owl.h>
+#ifdef WIN32
+#include <windows.h>
+#include <gl/GL.h>
+#endif
 #include <cuda_gl_interop.h>
 // our own classes, partly shared between host and device
 #include "CUDABuffer.h"
