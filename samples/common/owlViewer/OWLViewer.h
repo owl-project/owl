@@ -53,7 +53,8 @@ namespace owl {
       including some virtual mouse and frame buffer */
     struct OWLViewer {
 
-      OWLViewer(const std::string &title = "OWL Sample Viewer"
+      OWLViewer(const std::string &title = "OWL Sample Viewer",
+                const vec2i &initWindowSize=vec2i(1200,800)
                 // ,
                 // const vec3f &cameraInitFrom = vec3f(0,0,-1),
                 // const vec3f &cameraInitAt   = vec3f(0,0,0),

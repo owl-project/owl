@@ -101,9 +101,10 @@ namespace owl {
   struct RayGenData
   {
     uint32_t *fbPtr;
+    float4   *accumBuffer;
     vec2i  fbSize;
     OptixTraversableHandle world;
-  
+    int    accumID;
     struct {
       vec3f origin;
       vec3f lower_left_corner;

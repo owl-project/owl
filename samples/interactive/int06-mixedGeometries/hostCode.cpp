@@ -194,10 +194,11 @@ struct Viewer : public owl::viewer::OWLViewer
     updates the camera. gets called AFTER all values have been updated */
   void cameraChanged() override;
   
-  bool sbtDirty = true;
   OWLRayGen  rayGen  { 0 };
   OWLContext context { 0 };
   OWLGroup   world   { 0 };
+  OWLBuffer  accumBuffer { 0 };
+  int        accumID     { 0 };
 };
 
 
@@ -226,22 +227,21 @@ void Viewer::cameraChanged()
   const vec3f horizontal = 2.0f*half_width*focusDist*u;
   const vec3f vertical = 2.0f*half_height*focusDist*v;
 
+  accumID = 0;
+  
   // ----------- set variables  ----------------------------
   owlRayGenSetGroup (rayGen,"world",        world);
   owlRayGenSet3f    (rayGen,"camera.org",   (const owl3f&)origin);
   owlRayGenSet3f    (rayGen,"camera.llc",   (const owl3f&)lower_left_corner);
   owlRayGenSet3f    (rayGen,"camera.horiz", (const owl3f&)horizontal);
   owlRayGenSet3f    (rayGen,"camera.vert",  (const owl3f&)vertical);
-
-  sbtDirty = true;
 }
 
 void Viewer::render()
 {
-  if (sbtDirty) {
-    owlBuildSBT(context);
-    sbtDirty = false;
-  }
+  owlRayGenSet1i(rayGen,"accumID",accumID);
+  accumID++;
+  owlBuildSBT(context);
   owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
 }
 
@@ -252,12 +252,21 @@ void Viewer::resize(const vec2i &newSize)
   OWLViewer::resize(newSize);
   cameraChanged();
   
+  if (accumBuffer)
+    owlBufferResize(accumBuffer,newSize.x*newSize.y*sizeof(float4));
+  else
+    accumBuffer = owlDeviceBufferCreate(context,OWL_FLOAT4,
+                                        newSize.x*newSize.y,nullptr);
+  
+  owlRayGenSetBuffer(rayGen,"accumBuffer",  accumBuffer);
   owlRayGenSet1ul   (rayGen,"fbPtr",        (uint64_t)fbPointer);
   owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
 
 }
 
 Viewer::Viewer()
+  : OWLViewer("RTOW on OWL (mixed geometries)",
+              init_fbSize)
 {
   // ##################################################################
   // init owl
@@ -564,6 +573,8 @@ Viewer::Viewer()
   // -------------------------------------------------------
   OWLVarDecl rayGenVars[] = {
     { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(RayGenData,fbPtr)},
+    { "accumBuffer",   OWL_BUFPTR, OWL_OFFSETOF(RayGenData,accumBuffer)},
+    { "accumID",       OWL_INT,    OWL_OFFSETOF(RayGenData,accumID)},
     { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
     { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
     { "camera.org",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.origin)},
