@@ -27,7 +27,10 @@
 
 namespace owl {
   namespace viewer {
-    
+
+    inline float toRadian(float deg) { return deg * float(M_PI/180.f); }
+    inline float toDegrees(float rad) { return rad / float(M_PI/180.f); }
+
     struct OWLViewer;
 
     /*! the entire state for someting that can 'control' a camera -
@@ -48,6 +51,7 @@ namespace owl {
       {
         return position - poiDistance * frame.vz;
       }
+      float getCosFovy() const { return cosf(toRadian(fovyInDegrees)); }
       vec3f getFrom() const;
       vec3f getAt()   const;
       vec3f getUp()   const;

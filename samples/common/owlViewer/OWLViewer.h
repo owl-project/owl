@@ -194,6 +194,9 @@ namespace owl {
       
       void mouseButton(int button, int action, int mods);
       
+      /*! the full camera state we are manipulating */
+      Camera camera;
+
       inline vec2i getMousePos() const
       {
         double x,y;
@@ -215,9 +218,6 @@ namespace owl {
       cudaGraphicsResource_t cuDisplayTexture { 0 };
       uint32_t *fbPointer { nullptr };
       
-      /*! the full camera state we are manipulating */
-      Camera camera;
-
       /*! the glfw window handle */
       GLFWwindow *handle { nullptr };
       // struct {

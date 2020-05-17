@@ -548,7 +548,7 @@ Viewer::Viewer()
   // set up ray gen program
   // -------------------------------------------------------
   OWLVarDecl rayGenVars[] = {
-    { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
+    { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(RayGenData,fbPtr)},
     { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
     { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
     { "camera.org",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.origin)},
@@ -593,6 +593,7 @@ int main(int ac, char **av)
   LOG_OK(" num metal spheres     : " << metalSpheres.size());
 
   Viewer viewer;
+  viewer.enableFlyMode();
   viewer.showAndRun();
   
   LOG("destroying devicegroup ...");

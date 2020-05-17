@@ -59,11 +59,11 @@ vec3i indices[NUM_INDICES] =
     { 4,0,2 }, { 4,2,6 }
   };
 
-const vec2i fbSize(800,600);
-const vec3f lookFrom(-4.f,-3.f,-2.f);
-const vec3f lookAt(0.f,0.f,0.f);
-const vec3f lookUp(0.f,1.f,0.f);
-const float cosFovy = 0.66f;
+// const vec2i fbSize(800,600);
+const vec3f init_lookFrom(-4.f,-3.f,-2.f);
+const vec3f init_lookAt(0.f,0.f,0.f);
+const vec3f init_lookUp(0.f,1.f,0.f);
+const float init_cosFovy = 0.66f;
 
 
 
@@ -81,7 +81,12 @@ struct Viewer : public owl::viewer::OWLViewer
           this to know our actual render dimensions, and get pointer
           to the device frame buffer that the viewer cated for us */     
   void resize(const vec2i &newSize) override;
-  
+
+  /*! this function gets called whenever any camera manipulator
+    updates the camera. gets called AFTER all values have been updated */
+  void cameraChanged() override;
+
+  bool sbtDirty = true;
   OWLRayGen rayGen   { 0 };
   OWLContext context { 0 };
 };
@@ -90,8 +95,16 @@ struct Viewer : public owl::viewer::OWLViewer
 void Viewer::resize(const vec2i &newSize)
 {
   OWLViewer::resize(newSize);
+  cameraChanged();
+}
 
-
+/*! window notifies us that the camera has changed */
+void Viewer::cameraChanged()
+{
+  const vec3f lookFrom = camera.getFrom();
+  const vec3f lookAt = camera.getAt();
+  const vec3f lookUp = camera.getUp();
+  const float cosFovy = camera.getCosFovy();
   // ----------- compute variable values  ------------------
   vec3f camera_pos = lookFrom;
   vec3f camera_d00
@@ -112,7 +125,7 @@ void Viewer::resize(const vec2i &newSize)
   owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
   owlRayGenSet3f    (rayGen,"camera.dir_dv",(const owl3f&)camera_ddv);
-  owlBuildSBT(context);
+  sbtDirty = true;
 }
 
 Viewer::Viewer()
@@ -222,28 +235,8 @@ Viewer::Viewer()
     = owlRayGenCreate(context,module,"simpleRayGen",
                       sizeof(RayGenData),
                       rayGenVars,-1);
-
-  // ----------- compute variable values  ------------------
-  vec3f camera_pos = lookFrom;
-  vec3f camera_d00
-    = normalize(lookAt-lookFrom);
-  float aspect = fbSize.x / float(fbSize.y);
-  vec3f camera_ddu
-    = cosFovy * aspect * normalize(cross(camera_d00,lookUp));
-  vec3f camera_ddv
-    = cosFovy * normalize(cross(camera_ddu,camera_d00));
-  camera_d00 -= 0.5f * camera_ddu;
-  camera_d00 -= 0.5f * camera_ddv;
-
-  // ----------- set variables  ----------------------------
-  owlRayGenSet1ul(rayGen,"fbPtr",        (uint64_t)fbPointer);
-  // owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
-  owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
+  /* camera and frame buffer get set in resiez() and cameraChanged() */
   owlRayGenSetGroup (rayGen,"world",        world);
-  owlRayGenSet3f    (rayGen,"camera.pos",   (const owl3f&)camera_pos);
-  owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
-  owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
-  owlRayGenSet3f    (rayGen,"camera.dir_dv",(const owl3f&)camera_ddv);
   
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -256,6 +249,10 @@ Viewer::Viewer()
 
 void Viewer::render()
 {
+  if (sbtDirty) {
+    owlBuildSBT(context);
+    sbtDirty = false;
+  }
   owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
 }
 
@@ -265,6 +262,12 @@ int main(int ac, char **av)
   LOG("owl::ng example '" << av[0] << "' starting up");
 
   Viewer viewer;
+  viewer.camera.setOrientation(init_lookFrom,
+                               init_lookAt,
+                               init_lookUp,
+                               owl::viewer::toDegrees(acosf(init_cosFovy)));
+  viewer.enableFlyMode();
+  viewer.enableInspectMode(owl::box3f(vec3f(-1.f),vec3f(+1.f)));
 
   // ##################################################################
   // now that everything is ready: launch it ....

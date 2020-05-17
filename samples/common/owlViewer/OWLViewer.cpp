@@ -156,7 +156,6 @@ namespace owl {
       // camera.digestInto(simpleCamera);
       // if (isActive)
       camera.lastModified = getCurrentTime();
-      cameraChanged();
     }
 
     void OWLViewer::enableInspectMode(RotateMode rm,
@@ -168,8 +167,8 @@ namespace owl {
         = std::make_shared<CameraInspectMode>
         (this,validPoiRange,minPoiDist,maxPoiDist,
          rm==POI? CameraInspectMode::POI: CameraInspectMode::Arcball);
-      if (!cameraManipulator)
-        cameraManipulator = inspectModeManipulator;
+      // if (!cameraManipulator)
+      cameraManipulator = inspectModeManipulator;
     }
 
     void OWLViewer::enableInspectMode(const box3f &validPoiRange,
@@ -183,8 +182,8 @@ namespace owl {
     {
       flyModeManipulator
         = std::make_shared<CameraFlyMode>(this);
-      if (!cameraManipulator)
-        cameraManipulator = flyModeManipulator;
+      // if (!cameraManipulator)
+      cameraManipulator = flyModeManipulator;
     }
 
     /*! this gets called when the window determines that the mouse got
@@ -368,6 +367,11 @@ namespace owl {
       glfwSetCursorPosCallback(handle, glfwindow_mouseMotion_cb);
     
       while (!glfwWindowShouldClose(handle)) {
+        static double lastCameraUpdate = -1.f;
+        if (camera.lastModified != lastCameraUpdate) {
+          cameraChanged();
+          lastCameraUpdate = camera.lastModified;
+        }
         render();
         draw();
         
