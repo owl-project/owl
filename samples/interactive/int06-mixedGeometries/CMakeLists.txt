@@ -14,16 +14,21 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+include_directories(${PROJECT_SOURCE_DIR}/owl)
+
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(int01-simpleTriangles
+
+add_executable(int06-rtow-mixedGeometries
   hostCode.cpp
   ${ptxCode}
   )
-target_link_libraries(int01-simpleTriangles
-  ${OWL_LIBRARIES}
+
+target_link_libraries(int06-rtow-mixedGeometries
   ${OWL_VIEWER_LIBRARIES}
   )
+
+
 
 

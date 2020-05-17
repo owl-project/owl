@@ -22,6 +22,8 @@ if (OWL_HAVE_VIEWER)
   
   file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "int??-*")
   
+  include_directories(${OWL_VIEWER_INCLUDES})
+  
   foreach(sample ${samples})
     add_subdirectory(${sample})
   endforeach()

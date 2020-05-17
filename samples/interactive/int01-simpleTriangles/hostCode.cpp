@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -21,10 +21,7 @@
 #include "owl/owl.h"
 // our device-side data structures
 #include "deviceCode.h"
-// external helper stuff for image output
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb/stb_image_write.h"
-
+// viewer base class, for window and user interaction
 #include "owlViewer/OWLViewer.h"
 
 #define LOG(message)                                            \

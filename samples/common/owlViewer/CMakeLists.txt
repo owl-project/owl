@@ -16,7 +16,6 @@
 
 include(configure_glfw)
 
-message("owlViewer/CMakeLists: OWL_HAVE_GLFW ${OWL_HAVE_GLFW} ")
 if (OWL_HAVE_GLFW)
   
   set(owl_viewer_sources
@@ -67,5 +66,3 @@ set(OWL_HAVE_VIEWER ${OWL_HAVE_VIEWER} PARENT_SCOPE)
 set(OWL_VIEWER_INCLUDES ${OWL_VIEWER_INCLUDES} PARENT_SCOPE)
 set(OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES} PARENT_SCOPE)
 
-message("#owlViewer: exporting OWL_VIEWER_INCLUDES ${OWL_VIEWER_INCLUDES}")
-message("#owlViewer: exporting OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES}")
