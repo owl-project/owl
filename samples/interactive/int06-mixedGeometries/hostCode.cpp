@@ -38,12 +38,11 @@
 
 extern "C" char ptxCode[];
 
-const char *outFileName = "s06-rtow-mixedGeometries.png";
-const vec2i fbSize(1600,800);
-const vec3f lookFrom(13, 2, 3);
-const vec3f lookAt(0, 0, 0);
-const vec3f lookUp(0.f,1.f,0.f);
-const float fovy = 20.f;
+const vec2i init_fbSize(1600,800);
+const vec3f init_lookFrom(13, 2, 3);
+const vec3f init_lookAt(0, 0, 0);
+const vec3f init_lookUp(0.f,1.f,0.f);
+const float init_fovy = 20.f;
 
 std::vector<DielectricSphere> dielectricSpheres;
 std::vector<LambertianSphere> lambertianSpheres;
@@ -190,26 +189,27 @@ struct Viewer : public owl::viewer::OWLViewer
           this to know our actual render dimensions, and get pointer
           to the device frame buffer that the viewer cated for us */     
   void resize(const vec2i &newSize) override;
+
+  /*! this function gets called whenever any camera manipulator
+    updates the camera. gets called AFTER all values have been updated */
+  void cameraChanged() override;
   
+  bool sbtDirty = true;
   OWLRayGen  rayGen  { 0 };
   OWLContext context { 0 };
   OWLGroup   world   { 0 };
 };
 
 
-void Viewer::render()
+/*! window notifies us that the camera has changed */
+void Viewer::cameraChanged()
 {
-  owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
-}
-
-
-/*! window notifies us that we got resized */     
-void Viewer::resize(const vec2i &newSize)
-{
-  OWLViewer::resize(newSize);
-
+  const vec3f lookFrom = camera.getFrom();
+  const vec3f lookAt = camera.getAt();
+  const vec3f lookUp = camera.getUp();
+  const float cosFovy = camera.getCosFovy();
+  const float vfov = owl::viewer::toDegrees(acosf(cosFovy));
   // ........... compute variable values  ..................
-  const float vfov = fovy;
   const vec3f vup = lookUp;
   const float aspect = fbSize.x / float(fbSize.y);
   const float theta = vfov * ((float)M_PI) / 180.0f;
@@ -227,14 +227,33 @@ void Viewer::resize(const vec2i &newSize)
   const vec3f vertical = 2.0f*half_height*focusDist*v;
 
   // ----------- set variables  ----------------------------
-  owlRayGenSet1ul   (rayGen,"fbPtr",        (uint64_t)fbPointer);
-  owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
   owlRayGenSetGroup (rayGen,"world",        world);
   owlRayGenSet3f    (rayGen,"camera.org",   (const owl3f&)origin);
   owlRayGenSet3f    (rayGen,"camera.llc",   (const owl3f&)lower_left_corner);
   owlRayGenSet3f    (rayGen,"camera.horiz", (const owl3f&)horizontal);
   owlRayGenSet3f    (rayGen,"camera.vert",  (const owl3f&)vertical);
-  owlBuildSBT(context);
+
+  sbtDirty = true;
+}
+
+void Viewer::render()
+{
+  if (sbtDirty) {
+    owlBuildSBT(context);
+    sbtDirty = false;
+  }
+  owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
+}
+
+
+/*! window notifies us that we got resized */     
+void Viewer::resize(const vec2i &newSize)
+{
+  OWLViewer::resize(newSize);
+  cameraChanged();
+  
+  owlRayGenSet1ul   (rayGen,"fbPtr",        (uint64_t)fbPointer);
+  owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
 
 }
 
@@ -407,8 +426,6 @@ Viewer::Viewer()
 
 
 
-
-
   // ====================== BOXES ======================
   
   // ----------- metal -----------
@@ -486,8 +503,6 @@ Viewer::Viewer()
   owlGeomSetBuffer(dielectricBoxesGeom,"vertex",dielectricVerticesBuffer);
   owlGeomSetBuffer(dielectricBoxesGeom,"index",dielectricIndicesBuffer);
   
-
-
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
   // ##################################################################
@@ -559,12 +574,10 @@ Viewer::Viewer()
   };
 
   // ........... create object  ............................
-    rayGen
+  rayGen
     = owlRayGenCreate(context,module,"rayGen",
                       sizeof(RayGenData),
                       rayGenVars,-1);
-
-
   
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -593,7 +606,13 @@ int main(int ac, char **av)
   LOG_OK(" num metal spheres     : " << metalSpheres.size());
 
   Viewer viewer;
+  viewer.camera.setOrientation(init_lookFrom,
+                               init_lookAt,
+                               init_lookUp,
+                               init_fovy);
   viewer.enableFlyMode();
+  viewer.enableInspectMode(/* the big sphere in the middle: */
+                           owl::box3f(vec3f(-1,0,-1),vec3f(1,2,1)));
   viewer.showAndRun();
   
   LOG("destroying devicegroup ...");

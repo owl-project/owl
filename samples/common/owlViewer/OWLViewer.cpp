@@ -357,6 +357,7 @@ namespace owl {
     {
       int width, height;
       glfwGetFramebufferSize(handle, &width, &height);
+      // PRINT(vec2i(width,height));
       resize(vec2i(width,height));
 
       // glfwSetWindowUserPointer(window, OWLViewer::current);
