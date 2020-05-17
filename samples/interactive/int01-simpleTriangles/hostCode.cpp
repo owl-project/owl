@@ -60,7 +60,7 @@ vec3i indices[NUM_INDICES] =
   };
 
 // const vec2i fbSize(800,600);
-const vec3f init_lookFrom(-4.f,-3.f,-2.f);
+const vec3f init_lookFrom(-4.f,+3.f,-2.f);
 const vec3f init_lookAt(0.f,0.f,0.f);
 const vec3f init_lookUp(0.f,1.f,0.f);
 const float init_cosFovy = 0.66f;
