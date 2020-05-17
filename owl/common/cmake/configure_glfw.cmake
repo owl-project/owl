@@ -34,7 +34,7 @@ if (OpenGL_FOUND)
 
   else()
     message("#owl.cmake: found OpenGL, but did NOT find glfw3 in system - building glfw from source")
-    add_subdirectory(${owl_dir}/samples/common/3rdParty/glfw)
+    add_subdirectory(${owl_dir}/samples/common/3rdParty/glfw source_dir)
     set(OWL_GLFW_INCLUDES ${owl_dir}/samples/common/3rdParty/glfw)
     set(OWL_GLFW_LIBRARIES glfw ${OPENGL_LIBRARIES})
   endif()

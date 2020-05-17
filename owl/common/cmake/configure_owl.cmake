@@ -20,9 +20,10 @@
 #
 # OWL_LIBRARIES - list of libraries to link against when building owl programs
 
-if (NOT WIN32)
-  include(configure_tbb)
-endif()
+# n8vm: Commenting this out for now...
+# if (NOT WIN32)
+include(configure_tbb)
+# endif()
 
 set(OWL_INCLUDES
   # owl needs cuda:
