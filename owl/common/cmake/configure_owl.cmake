@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018-2019 Ingo Wald                                            #
+# Copyright 2018-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -20,10 +20,9 @@
 #
 # OWL_LIBRARIES - list of libraries to link against when building owl programs
 
-# n8vm: Commenting this out for now...
-# if (NOT WIN32)
-include(configure_tbb)
-# endif()
+if (OWL_USE_TBB)
+  include(configure_tbb)
+endif()
 
 set(OWL_INCLUDES
   # owl needs cuda:
