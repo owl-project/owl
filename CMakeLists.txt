@@ -19,6 +19,7 @@ project(Optix-OWL VERSION 0.7.4)
 
 OPTION(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
 OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
+OPTION(OWL_USE_TBB "Use TBB to parallelize computation?" ON)
 
 cmake_minimum_required(VERSION 2.8)
 # iw, 1/3/20: yes, i know this is 'old' cmake style, but on CentOS7
