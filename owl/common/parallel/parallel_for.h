@@ -21,10 +21,12 @@
 #include <mutex>
 // tbb
 #if OWL_HAVE_TBB
+#ifndef OWL_DISABLE_TBB
 #include <tbb/parallel_for.h>
 #include <tbb/task_arena.h>
 #include <tbb/task_scheduler_init.h>
 #define OWL_HAVE_PARALLEL_FOR 1
+#endif
 #endif
 
 namespace owl {
@@ -58,7 +60,9 @@ namespace owl {
       }
     }
 #else
+#ifndef OWL_DISABLE_TBB
 # pragma message("warning: TBB not available, will replace all parallel_for's with serial_for's")
+#endif
     template<typename INDEX_T, typename TASK_T>
     inline void parallel_for(INDEX_T nTasks, TASK_T&& taskFunction, size_t blockSize=1)
     { serial_for(nTasks,taskFunction); }

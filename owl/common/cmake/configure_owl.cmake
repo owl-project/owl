@@ -20,7 +20,7 @@
 #
 # OWL_LIBRARIES - list of libraries to link against when building owl programs
 
-if (NOT WIN32)
+if (OWL_USE_TBB)
   include(configure_tbb)
 endif()
 
