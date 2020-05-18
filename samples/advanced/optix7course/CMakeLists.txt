@@ -30,11 +30,6 @@ add_executable(adv_optix7course
   Model.cpp
   main.cpp
   )
-#add_subdirectory(glfWindow)
-
-find_package(OpenGL)
-message("optix 7 course : OPENGL_gl_LIBRARY =  ${OPENGL_gl_LIBRARY}")
-message("optix 7 course : OWL_VIEWER_LIBRARIES = ${OWL_VIEWER_LIBRARIES}")
 
 target_link_libraries(adv_optix7course
   toneMap
