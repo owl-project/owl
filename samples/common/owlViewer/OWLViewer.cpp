@@ -22,15 +22,30 @@
 namespace owl {
   namespace viewer {
 
+    void initGLFW()
+    {
+      static bool alreadyInitialized = false;
+      if (alreadyInitialized) return;
+      if (!glfwInit())
+        exit(EXIT_FAILURE);
+      std::cout << "#owl.viewer: glfw initialized" << std::endl;
+      alreadyInitialized = true;
+    }
+    
     vec2i OWLViewer::getScreenSize()
     {
+      initGLFW();
       int numModes = 0;
+      auto monitor = glfwGetPrimaryMonitor();
+      PING;
+      PRINT(monitor);
+      if (!monitor) 
+        throw std::runtime_error("could not query monitor...");
       const GLFWvidmode *modes
-        = glfwGetVideoModes(glfwGetPrimaryMonitor(), &numModes);
+        = glfwGetVideoModes(monitor, &numModes);
       vec2i size(0,0);
-      for (int i=0; i<numModes; i++) {
+      for (int i=0; i<numModes; i++) 
         size = max(size,vec2i(modes[i].width,modes[i].height));
-      }
       return size;
     }
  
@@ -278,9 +293,8 @@ namespace owl {
     {
       glfwSetErrorCallback(glfw_error_callback);
       // glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
-      
-      if (!glfwInit())
-        exit(EXIT_FAILURE);
+
+      initGLFW();
       
       glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
       glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
