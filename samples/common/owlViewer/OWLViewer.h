@@ -169,6 +169,8 @@ namespace owl {
 
       /*! return currently active window size */
       vec2i getWindowSize() const { return fbSize; }
+      static vec2i getScreenSize();
+      
       Camera &getCamera() { return camera; }
       
       const SimpleCamera getSimplifiedCamera() const

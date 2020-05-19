@@ -22,6 +22,13 @@
 namespace owl {
   namespace viewer {
 
+    vec2i OWLViewer::getScreenSize()
+    {
+      GLFWvidmode return_struct;
+      glfwGetDesktopMode( &return_struct );
+      // int height = return_struct.Height;
+      return vec2i(return_struct.Width,return_struct.Height);
+    }
 
     float computeStableEpsilon(float f)
     {
