@@ -14,12 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-if (OWL_USE_TBB)
-include("common/cmake/configure_tbb.cmake")
-else()
-add_definitions(-DOWL_DISABLE_TBB=1)
-endif()
-
 # owl-common library (math stuff, utils, etc; mostly header-only)
 add_subdirectory(common)
 

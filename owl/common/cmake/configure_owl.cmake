@@ -20,6 +20,7 @@
 #
 # OWL_LIBRARIES - list of libraries to link against when building owl programs
 
+message("configure owl : OWL_USE_TBB = ${OWL_USE_TBB}")
 if (OWL_USE_TBB)
   include(configure_tbb)
 endif()
@@ -40,3 +41,6 @@ set(OWL_LIBRARIES
 if (TBB_FOUND)
   set(OWL_LIBRARIES ${OWL_LIBRARIES} ${TBB_LIBRARIES})
 endif()
+
+set(OWL_INCLUDES ${OWL_INCLUDES} PARENT_SCOPE)
+set(OWL_LIBRARIES ${OWL_LIBRARIES} PARENT_SCOPE)

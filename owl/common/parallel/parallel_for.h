@@ -19,14 +19,16 @@
 #include <owl/common/owl-common.h>
 // std
 #include <mutex>
+
+#ifdef OWL_DISABLE_TBB
+# undef OWL_HAVE_TBB
+#endif
+
 // tbb
 #if OWL_HAVE_TBB
-#ifndef OWL_DISABLE_TBB
 #include <tbb/parallel_for.h>
 #include <tbb/task_arena.h>
-// #include <tbb/task_scheduler_init.h>
 #define OWL_HAVE_PARALLEL_FOR 1
-#endif
 #endif
 
 namespace owl {
