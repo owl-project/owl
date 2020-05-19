@@ -76,3 +76,14 @@ if (OWL_BUILD_ADVANCED_TESTS)
   add_subdirectory(tests)
 endif()
 
+# ------------------------------------------------------------------
+# check if this is included as a submodule, and if so, export some
+# variables to the parent
+# ------------------------------------------------------------------
+if (NOT (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_HOME_DIRECTORY}))
+  message("#owl.cmake: exporting OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES}")
+  set(OWL_INCLUDES ${OWL_INCLUDES} PARENT_SCOPE)
+  set(OWL_VIEWER_INCLUDES ${OWL_VIEWER_INCLUDES} PARENT_SCOPE)
+  set(OWL_LIBRARIES ${OWL_LIBRARIES} PARENT_SCOPE)
+  set(OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES} PARENT_SCOPE)
+endif()

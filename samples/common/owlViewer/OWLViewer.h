@@ -52,10 +52,23 @@ namespace owl {
       } lens;
     };
     
+    /*! snaps a given vector to one of the three coordinate axis;
+      useful for pbrt models in which the upvector sometimes isn't
+      axis-aligend */
+    inline vec3f getUpVector(const vec3f &v)
+    {
+      int dim = arg_max(abs(v));
+      vec3f up(0);
+      up[dim] = v[dim] < 0.f ? -1.f : 1.f;
+      return up;
+    }
+
     // ------------------------------------------------------------------
     /*! a helper widget that opens and manages a viewer window,
       including some virtual mouse and frame buffer */
     struct OWLViewer {
+
+      static inline vec3f getUpVector(const vec3f &v) { return owl::viewer::getUpVector(v); }
 
       OWLViewer(const std::string &title = "OWL Sample Viewer",
                 const vec2i &initWindowSize=vec2i(1200,800)
@@ -66,17 +79,6 @@ namespace owl {
                 // const float worldScale      = 1.f
                 );
       
-      /*! snaps a given vector to one of the three coordinate axis;
-          useful for pbrt models in which the upvector sometimes isn't
-          axis-aligend */
-      static inline vec3f getUpVector(const vec3f &v)
-      {
-        int dim = arg_max(abs(v));
-        vec3f up(0);
-        up[dim] = v[dim] < 0.f ? -1.f : 1.f;
-        return up;
-      }
-
       /*! window notifies us that we got resized */     
       virtual void resize(const vec2i &newSize);
       
@@ -167,7 +169,8 @@ namespace owl {
 
       /*! return currently active window size */
       vec2i getWindowSize() const { return fbSize; }
-
+      Camera &getCamera() { return camera; }
+      
       const SimpleCamera getSimplifiedCamera() const
       {
         return SimpleCamera(camera);

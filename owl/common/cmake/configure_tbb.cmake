@@ -18,6 +18,7 @@
 
 find_package(TBB)
 if (TBB_FOUND)
+  message("owl.cmake: found TBB, enabling OWL_HAVE_TBB=1 macro")
   include_directories(${TBB_INCLUDE_DIR})
   add_definitions(-DOWL_HAVE_TBB=1)
 endif()

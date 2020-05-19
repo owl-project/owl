@@ -22,3 +22,9 @@ add_subdirectory(ll)
 
 # node graph layer API
 add_subdirectory(api)
+
+# -------------------------------------------------------
+# export those back to our parent:
+# -------------------------------------------------------
+set(OWL_INCLUDES ${OWL_INCLUDES} PARENT_SCOPE)
+set(OWL_LIBRARIES ${OWL_LIBRARIES} PARENT_SCOPE)
