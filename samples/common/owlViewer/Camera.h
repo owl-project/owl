@@ -51,6 +51,7 @@ namespace owl {
       {
         return position - poiDistance * frame.vz;
       }
+      float getFovyInDegrees() const { return fovyInDegrees; }
       float getCosFovy() const { return cosf(toRadian(fovyInDegrees)); }
       vec3f getFrom() const;
       vec3f getAt()   const;
