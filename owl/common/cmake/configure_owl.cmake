@@ -20,7 +20,6 @@
 #
 # OWL_LIBRARIES - list of libraries to link against when building owl programs
 
-message("configure owl : OWL_USE_TBB = ${OWL_USE_TBB}")
 if (OWL_USE_TBB)
   include(configure_tbb)
 endif()

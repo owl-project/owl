@@ -14,6 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+add_definitions(${OWL_CXX_FLAGS})
+
 # owl-common library (math stuff, utils, etc; mostly header-only)
 add_subdirectory(common)
 
