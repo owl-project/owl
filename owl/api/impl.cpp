@@ -498,6 +498,34 @@ namespace owl {
     return (OWLBuffer)context->createHandle(buffer);
   }
 
+/*! create new texture of given format and dimensions - for now, we
+  only do "wrap" textures, and eithe rbilinear or nearest filter;
+  once we allow for doing things like texture borders we'll have to
+  change this api */
+  OWL_API OWLTexture
+  owlTexture2DCreate(OWLContext context,
+                     OWLTexelFormat texelFormat,
+                     /*! number of texels in x dimension */
+                     uint32_t size_x,
+                     /*! number of texels in y dimension */
+                     uint32_t size_y,
+                     const void *texels,
+                     OWLTextureFilterMode filterMode,
+                     /*! number of bytes between one line of texels and
+                       the next; '0' means 'size_x * sizeof(texel)' */
+                     uint32_t linePitchInBytes
+                     )
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    Texture::SP  texture  = context->deviceTextureCreate(type,count,init);
+    assert(texture);
+    return (OWLTexture)context->createHandle(texture);
+  }
+
+  
   /*! creates a buffer that uses CUDA host pinned memory; that memory is
     pinned on the host and accessive to all devices in the deviec
     group */
