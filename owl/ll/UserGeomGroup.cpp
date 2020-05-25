@@ -106,11 +106,9 @@ namespace owl {
         
         uint32_t numPrims = (uint32_t)ug->numPrims;
         sumPrims += numPrims;
-        if (sumPrims > maxPrimsPerGAS) {
-          PRINT(numPrims);
-          PRINT(maxPrimsPerGAS);
-          throw std::runtime_error("user geom group exceeded number of allowed prims");
-        }
+        if (sumPrims > maxPrimsPerGAS) 
+          throw std::runtime_error("number of prim in user geom group exceeds "
+                                   "OptiX's MAX_PRIMITIVES_PER_GAS limit");
         // size of each thread block during bounds function call
         vec3i blockDims(32,32,1);
         uint32_t threadsPerBlock = blockDims.x*blockDims.y*blockDims.z;
@@ -342,7 +340,7 @@ namespace owl {
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
 
-      // set children - todo: move to separate (api?) function(s)!?
+      // set children - todo: move to separate (API?) function(s)!?
       if (geomIDs) {
         for (int childID=0;childID<childCount;childID++) {
           int geomID = geomIDs[childID];

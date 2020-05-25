@@ -19,7 +19,7 @@
 #include "tiny_obj_loader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "owl/common/3rdParty/stb/stb_image.h"
+#include "stb/stb_image.h"
 
 //std
 #include <set>

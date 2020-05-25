@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018-2019 Ingo Wald                                            #
+# Copyright 2018-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -15,9 +15,10 @@
 # ======================================================================== #
 
 #find_package(TBB REQUIRED)
+
 find_package(TBB)
 if (TBB_FOUND)
+  message("owl.cmake: found TBB, enabling OWL_HAVE_TBB=1 macro")
   include_directories(${TBB_INCLUDE_DIR})
   add_definitions(-DOWL_HAVE_TBB=1)
 endif()
-

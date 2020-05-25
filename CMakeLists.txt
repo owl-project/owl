@@ -14,8 +14,14 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-cmake_policy(SET CMP0048 NEW)
-project(Optix-OWL VERSION 0.7.1)
+if (POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif()
+project(Optix-OWL VERSION 0.7.4)
+
+#OPTION(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
+OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
+OPTION(OWL_USE_TBB "Use TBB to parallelize computation?" ON)
 
 cmake_minimum_required(VERSION 2.8)
 # iw, 1/3/20: yes, i know this is 'old' cmake style, but on CentOS7
@@ -44,23 +50,40 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/common/cmake/")
 
 include(configure_cuda)
 include(configure_optix)
+include(configure_owl)
 include(configure_build_type)
 
-enable_testing()
+include_directories(${OWL_INCLUDES})
 
 # ------------------------------------------------------------------
-# owl library itself, noth ll and node graph layer, and including
-# owl-common
+# owl library itself, including owl-common
 # ------------------------------------------------------------------
 add_subdirectory(owl)
 
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
-add_subdirectory(samples)
+#if (OWL_BUILD_SAMPLES)
+  enable_testing()
+  add_subdirectory(samples)
+#endif()
 
 # ------------------------------------------------------------------
 # some basic testing
 # ------------------------------------------------------------------
-add_subdirectory(tests)
+if (OWL_BUILD_ADVANCED_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
 
+# ------------------------------------------------------------------
+# check if this is included as a submodule, and if so, export some
+# variables to the parent
+# ------------------------------------------------------------------
+if (NOT (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_HOME_DIRECTORY}))
+  message("#owl.cmake: exporting OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES}")
+  set(OWL_INCLUDES ${OWL_INCLUDES} PARENT_SCOPE)
+  set(OWL_VIEWER_INCLUDES ${OWL_VIEWER_INCLUDES} PARENT_SCOPE)
+  set(OWL_LIBRARIES ${OWL_LIBRARIES} PARENT_SCOPE)
+  set(OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES} PARENT_SCOPE)
+endif()

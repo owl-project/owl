@@ -14,7 +14,7 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-if (POLICY CMD0077)
+if (POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
 

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -32,6 +32,10 @@
 namespace owl {
   namespace ll {
 
+    // ##################################################################
+    // HostPinnedMemory
+    // ##################################################################
+
     HostPinnedMemory::HostPinnedMemory(size_t amount)
     {
       alloc(amount);
@@ -55,11 +59,112 @@ namespace owl {
       pointer = nullptr;
     }
 
+
+    // ##################################################################
+    // ManagedMemoryMemory
+    // ##################################################################
+
+    ManagedMemory::ManagedMemory(DeviceGroup *devGroup,
+                                 size_t amount,
+                                 /*! data with which to populate this buffer; may
+                                   be null, but has to be of size 'amount' if
+                                   not */
+                                 const void *initData)
+      : devGroup(devGroup)
+    {
+      alloc(amount);
+      if (initData)
+        CUDA_CALL(Memcpy(pointer,initData,amount,
+                         cudaMemcpyDefault));
+      assert(pointer != nullptr);
+    }
+    
+    ManagedMemory::~ManagedMemory()
+    {
+      assert(pointer != nullptr);
+      free();
+    }
+
+    void ManagedMemory::alloc(size_t amount)
+    {
+      CUDA_CALL(MallocManaged((void**)&pointer, amount));
+      // CUDA_CALL(MemAdvise((void*)pointer, amount, cudaMemAdviseSetReadMostly, -1));
+      unsigned char *mem_end = (unsigned char *)pointer + amount;
+      size_t pageSize = 16*1024*1024;
+      int pageID = 0;
+      for (unsigned char *begin = (unsigned char *)pointer; begin < mem_end; begin += pageSize) {
+        unsigned char *end = std::min(begin+pageSize,mem_end);
+        int devID = pageID++ % devGroup->devices.size();
+        int cudaDevID = devGroup->devices[devID]->getCudaDeviceID();
+        int result = 0;
+        cudaDeviceGetAttribute (&result, cudaDevAttrConcurrentManagedAccess, cudaDevID);
+        if (result) {
+          CUDA_CALL(MemAdvise((void*)begin, end-begin, cudaMemAdviseSetPreferredLocation, cudaDevID));
+        }
+      }
+    }
+    
+    void ManagedMemory::free()
+    {
+      CUDA_CALL_NOTHROW(Free(pointer));
+      pointer = nullptr;
+    }
+
+
+
+
+    // ##################################################################
+    // Device Group
+    // ##################################################################
+
     DeviceGroup::DeviceGroup(const std::vector<Device *> &devices)
       : devices(devices)
     {
       assert(!devices.empty());
+      enablePeerAccess();
     }
+
+
+    void DeviceGroup::enablePeerAccess()
+    {
+      LOG("enabling peer access ('.'=self, '+'=can access other device)");
+      int restoreActiveDevice = -1;
+      cudaGetDevice(&restoreActiveDevice);
+      int deviceCount = devices.size();
+      LOG("found " << deviceCount << " CUDA capable devices");
+      for (int i=0;i<deviceCount;i++) {
+        LOG(" - device #" << i << " : " << devices[i]->getDeviceName());
+      }
+      LOG("enabling peer access:");
+      for (int i=0;i<deviceCount;i++) {
+        std::stringstream ss;
+        ss << " - device #" << i << " : ";
+        int cuda_i = devices[i]->getCudaDeviceID();
+        for (int j=0;j<deviceCount;j++) {
+          if (j == i) {
+            ss << " ."; 
+          } else {
+            int cuda_j = devices[j]->getCudaDeviceID();
+            int canAccessPeer = 0;
+            cudaError_t rc = cudaDeviceCanAccessPeer(&canAccessPeer, cuda_i,cuda_j);
+            if (rc != cudaSuccess)
+              throw std::runtime_error("cuda error in cudaDeviceCanAccessPeer: "+std::to_string(rc));
+            if (!canAccessPeer)
+              throw std::runtime_error("could not enable peer access!?");
+            
+            cudaSetDevice(cuda_i);
+            rc = cudaDeviceEnablePeerAccess(cuda_j,0);
+            if (rc != cudaSuccess)
+              throw std::runtime_error("cuda error in cudaDeviceEnablePeerAccess: "+std::to_string(rc));
+            ss << " +";
+          }
+        }
+        LOG(ss.str()); 
+     }
+      cudaSetDevice(restoreActiveDevice);
+    }
+
+    
 
     DeviceGroup::~DeviceGroup()
     {
@@ -167,6 +272,15 @@ namespace owl {
     {
       for (auto device : devices)
         device->setGeomTypeClosestHit(geomTypeID,rayTypeID,moduleID,progName);
+    }
+    
+    void DeviceGroup::setGeomTypeAnyHit(int geomTypeID,
+                                            int rayTypeID,
+                                            int moduleID,
+                                            const char *progName)
+    {
+      for (auto device : devices)
+        device->setGeomTypeAnyHit(geomTypeID,rayTypeID,moduleID,progName);
     }
     
     void DeviceGroup::setGeomTypeIntersect(int geomTypeID,
@@ -314,6 +428,37 @@ namespace owl {
         device->hostPinnedBufferCreate(bufferID,elementCount,elementSize,pinned);
     }
 
+    void DeviceGroup::managedMemoryBufferCreate(int bufferID,
+                                                size_t elementCount,
+                                                size_t elementSize,
+                                                const void *initData)
+    {
+      ManagedMemory::SP mem
+        = std::make_shared<ManagedMemory>(this,elementCount*elementSize,initData);
+      for (auto device : devices) 
+        device->managedMemoryBufferCreate(bufferID,elementCount,elementSize,mem);
+    }
+
+    void DeviceGroup::graphicsBufferCreate(int bufferID,
+                                           size_t elementCount,
+                                           size_t elementSize,
+                                           cudaGraphicsResource_t resource)
+    {
+      for (auto device : devices)
+        device->graphicsBufferCreate(bufferID, elementCount, elementSize, resource);
+    }
+
+    void DeviceGroup::graphicsBufferMap(int bufferID)
+    {
+      for (auto device : devices)
+        device->graphicsBufferMap(bufferID);
+    }
+
+    void DeviceGroup::graphicsBufferUnmap(int bufferID)
+    {
+      for (auto device : devices)
+        device->graphicsBufferUnmap(bufferID);
+    }
       
     /*! Set a buffer of bounding boxes that this user geometry will
       use when building the accel structure. This is one of
@@ -338,9 +483,9 @@ namespace owl {
     
     void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
                                                    int bufferID,
-                                                   int count,
-                                                   int stride,
-                                                   int offset)
+                                                   size_t count,
+        size_t stride,
+        size_t offset)
     {
       for (auto device : devices) 
         device->trianglesGeomSetVertexBuffer(geomID,bufferID,count,stride,offset);
@@ -348,9 +493,9 @@ namespace owl {
     
     void DeviceGroup::trianglesGeomSetIndexBuffer(int geomID,
                                                   int bufferID,
-                                                  int count,
-                                                  int stride,
-                                                  int offset)
+        size_t count,
+        size_t stride,
+        size_t offset)
     {
       for (auto device : devices) {
         device->trianglesGeomSetIndexBuffer(geomID,bufferID,count,stride,offset);
@@ -477,18 +622,18 @@ namespace owl {
     /*! create a new instance group with given list of children */
     void DeviceGroup::instanceGroupCreate(/*! the group we are defining */
                                           int groupID,
+                                          size_t numChildren,
                                           /* list of children. list can be
                                              omitted by passing a nullptr, but if
                                              not null this must be a list of
                                              'childCount' valid group ID */
-                                          const int *childGroupIDs,
-                                          /*! number of children in this group */
-                                          size_t childCount)
+                                          const uint32_t *childGroupIDs,
+                                          const uint32_t *instIDs,
+                                          const affine3f *xfms)
     {
       for (auto device : devices)
-        device->instanceGroupCreate(groupID,
-                                    childGroupIDs,
-                                    childCount);
+        device->instanceGroupCreate(groupID,numChildren,
+                                    childGroupIDs,instIDs,xfms);
     }
 
     /*! returns the given device's buffer address on the specified

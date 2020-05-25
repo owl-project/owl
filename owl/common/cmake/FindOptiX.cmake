@@ -29,7 +29,11 @@
 # Locate the OptiX distribution.  Search relative to the SDK first, then look in the system.
 
 # Our initial guess will be within the SDK.
-SET(OptiX_INSTALL_DIR $ENV{OptiX_INSTALL_DIR})
+if (WIN32)
+  set(OptiX_INSTALL_DIR "c:/ProgramData/NVIDIA Corporation/OptiX SDK 7.0.0")
+else()
+  set(OptiX_INSTALL_DIR $ENV{OptiX_INSTALL_DIR})
+endif()
 #set(OptiX_INSTALL_DIR "${CMAKE_SOURCE_DIR}/../" CACHE PATH "Path to OptiX installed location.")
 
 # The distribution contains both 32 and 64 bit libraries.  Adjust the library
@@ -103,32 +107,32 @@ function(OptiX_add_imported_library name lib_location dll_lib dependent_libs)
   set(CMAKE_IMPORT_FILE_VERSION 1)
 
   # Create imported target
-  add_library(${name} SHARED IMPORTED)
+#  add_library(${name} SHARED IMPORTED)
 
   # Import target "optix" for configuration "Debug"
-  if(WIN32)
-    set_target_properties(${name} PROPERTIES
-      IMPORTED_IMPLIB "${lib_location}"
-      #IMPORTED_LINK_INTERFACE_LIBRARIES "glu32;opengl32"
-      IMPORTED_LOCATION "${dll_lib}"
-      IMPORTED_LINK_INTERFACE_LIBRARIES "${dependent_libs}"
-      )
-  elseif(UNIX)
-    set_target_properties(${name} PROPERTIES
-      #IMPORTED_LINK_INTERFACE_LIBRARIES "glu32;opengl32"
-      IMPORTED_LOCATION "${lib_location}"
-      # We don't have versioned filenames for now, and it may not even matter.
-      #IMPORTED_SONAME "${optix_soname}"
-      IMPORTED_LINK_INTERFACE_LIBRARIES "${dependent_libs}"
-      )
-  else()
-    # Unknown system, but at least try and provide the minimum required
-    # information.
-    set_target_properties(${name} PROPERTIES
-      IMPORTED_LOCATION "${lib_location}"
-      IMPORTED_LINK_INTERFACE_LIBRARIES "${dependent_libs}"
-      )
-  endif()
+  # if(WIN32)
+  #   set_target_properties(${name} PROPERTIES
+  #     IMPORTED_IMPLIB "${lib_location}"
+  #     #IMPORTED_LINK_INTERFACE_LIBRARIES "glu32;opengl32"
+  #     IMPORTED_LOCATION "${dll_lib}"
+  #     IMPORTED_LINK_INTERFACE_LIBRARIES "${dependent_libs}"
+  #     )
+  # elseif(UNIX)
+  #   set_target_properties(${name} PROPERTIES
+  #     #IMPORTED_LINK_INTERFACE_LIBRARIES "glu32;opengl32"
+  #     IMPORTED_LOCATION "${lib_location}"
+  #     # We don't have versioned filenames for now, and it may not even matter.
+  #     #IMPORTED_SONAME "${optix_soname}"
+  #     IMPORTED_LINK_INTERFACE_LIBRARIES "${dependent_libs}"
+  #     )
+  # else()
+  #   # Unknown system, but at least try and provide the minimum required
+  #   # information.
+  #   set_target_properties(${name} PROPERTIES
+  #     IMPORTED_LOCATION "${lib_location}"
+  #     IMPORTED_LINK_INTERFACE_LIBRARIES "${dependent_libs}"
+  #     )
+  # endif()
 
   # Commands beyond this point should not need to know the version.
   set(CMAKE_IMPORT_FILE_VERSION)

@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cuda.h>
+#include <driver_types.h>
 #include <optix.h>
 
 #include <sys/types.h>
@@ -115,11 +116,20 @@ typedef enum
     OWL_LONG2,
     OWL_LONG3,
     OWL_LONG4,
-   
+
     OWL_ULONG=140,
     OWL_ULONG2,
     OWL_ULONG3,
     OWL_ULONG4,
+
+    /*! just another name for a 64-bit data type - unlike
+        OWL_BUFFER_POINTER's (which gets translated from OWLBuffer's
+        to actual device-side poiners) these OWL_RAW_POINTER types get
+        copied binary without any translation. This is useful for
+        owl-cuda interaction (where the user already has device
+        pointers), but should not be used for logical buffers */
+    OWL_RAW_POINTER=OWL_ULONG,
+    
    
     OWL_BUFFER=1000,
     OWL_BUFFER_SIZE,
@@ -219,9 +229,25 @@ OWL_API void owlBuildPrograms(OWLContext context);
 OWL_API void owlBuildPipeline(OWLContext context);
 OWL_API void owlBuildSBT(OWLContext context);
 
+/*! returns number of devices available in the given context */
 OWL_API int32_t
 owlGetDeviceCount(OWLContext context);
 
+/*! creates a new device context with the gives list of devices. 
+
+  If requested device IDs list if null it implicitly refers to the
+  list "0,1,2,...."; if numDevices <= 0 it automatically refers to
+  "all devices you can find". Examples:
+
+  - owlContextCreate(nullptr,1) creates one device on the first GPU
+
+  - owlContextCreate(nullptr,0) creates a context across all GPUs in
+  the system
+
+  - int gpu=2;owlContextCreate(&gpu,1) will create a context on GPU #2
+  (where 2 refers to the CUDA device ordinal; from that point on, from
+  owl's standpoint (eg, during owlBufferGetPointer() this GPU will
+  from that point on be known as device #0 */
 OWL_API OWLContext
 owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
                  int numDevices OWL_IF_CPP(=0));
@@ -235,8 +261,12 @@ owlContextSetRayTypeCount(OWLContext context,
 
 /*! sets maximum instancing depth for the given context:
 
-  '0' means 'no instancing allowed, only bottom-level accels; 
-  
+  '0' means 'no instancing allowed, only bottom-level accels; Note
+  this mode isn't actually allowed in OWL right now, as the most
+  convenient way of realizing it is actually *slower* than simply
+  putting a single "dummy" instance (with just this one child, and a
+  identify transform) over each blas.
+
   '1' means 'at most one layer of instances' (ie, a two-level scene),
   where the 'root' world rays are traced against can be an instance
   group, but every child in that inscne group is a geometry group.
@@ -326,12 +356,52 @@ owlTrianglesGeomGroupCreate(OWLContext context,
                             OWLGeom   *initValues);
 
 // ------------------------------------------------------------------
-/*! create a new instance group with given number of children. The
-    child groups and their transforms can then be set via \see
-    owlInstanceGroupSetChild and \see owlInstanceGroupSetTransform */
+/*! create a new instance group with given number of instances. The
+    child groups and their instance IDs and/or transforms can either
+    be specified "in bulk" as part of this call, or can be set lateron
+    with inviidaul calls to \see owlInstanceGroupSetChild and \see
+    owlInstanceGroupSetTransform. Note however, that in the case of
+    having millions of instances in a group it will be *much* more
+    efficient to set them in bulk open creation, than in millions of
+    inidiviual API calls.
+
+    Either or all of initGroups, initTranforms, or initInstanceIDs may
+    be null, in which case the values used for the 'th child will be a
+    null group, a unit transform, and 'i', respectively.
+*/
 OWL_API OWLGroup
 owlInstanceGroupCreate(OWLContext context,
-                       size_t     numInstances);
+                       
+                       /*! number of instances in this group */
+                       size_t     numInstances,
+                       
+                       /*! the initial list of owl groups to use by
+                           the instances in this group; must be either
+                           null, or an array of the size
+                           'numInstnaces', the i'th instnace in this
+                           gorup will be an instance o the i'th
+                           element in this list */
+                       const OWLGroup *initGroups      OWL_IF_CPP(= nullptr),
+
+                       /*! instance IDs to use for the instance in
+                           this group; must be eithe rnull, or an
+                           array of size numInstnaces. If null, the
+                           i'th child of this instance group will use
+                           instanceID=i, otherwise, it will use the
+                           user-provided instnace ID from this
+                           list. Specifying an instanceID will affect
+                           what value 'optixGetInstanceID' will return
+                           in a CH program that refers to the given
+                           instance */
+                       const uint32_t *initInstanceIDs OWL_IF_CPP(= nullptr),
+                       
+                       /*! initial list of transforms that this
+                         instance group will use; must be either
+                           null, or an array of size numInstnaces, of
+                           the format specified */
+                       const float    *initTransforms  OWL_IF_CPP(= nullptr),
+                       OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL)
+                       );
 
 OWL_API void owlGroupBuildAccel(OWLGroup group);
 
@@ -342,18 +412,59 @@ owlGeomTypeCreate(OWLContext context,
                   OWLVarDecl *vars,
                   size_t      numVars);
 
+
+/*! creates a device buffer where every device has its own local copy
+  of the given buffer */
 OWL_API OWLBuffer
 owlDeviceBufferCreate(OWLContext  context,
                       OWLDataType type,
                       size_t      count,
                       const void *init);
+
+/*! creates a buffer that uses CUDA host pinned memory; that memory is
+  pinned on the host and accessive to all devices in the deviec
+  group */
 OWL_API OWLBuffer
 owlHostPinnedBufferCreate(OWLContext context,
                           OWLDataType type,
                           size_t      count);
 
+/*! creates a buffer that uses CUDA managed memory; that memory is
+  managed by CUDA (see CUDAs documentatoin on managed memory) and
+  accessive to all devices in the deviec group */
+OWL_API OWLBuffer
+owlManagedMemoryBufferCreate(OWLContext context,
+                             OWLDataType type,
+                             size_t      count,
+                             const void *init);
+
+/*! creates a buffer wrapping a CUDA graphics resource;
+  the resource must be created and registered by the user */
+OWL_API OWLBuffer
+owlGraphicsBufferCreate(OWLContext             context,
+                        OWLDataType            type,
+                        size_t                 count,
+                        cudaGraphicsResource_t resource);
+
+OWL_API void
+owlGraphicsBufferMap(OWLBuffer buffer);
+
+OWL_API void
+owlGraphicsBufferUnmap(OWLBuffer buffer);
+
+/*! returns the device pointer of the given pointer for the given
+    device ID. For host-pinned or managed memory buffers (where the
+    buffer is shared across all devices) this pointer should be the
+    same across all devices (and even be accessible on the host); for
+    device buffers each device *may* see this buffer under a different
+    address, and that address is not valid on the host. Note this
+    function is paricuarly useful for CUDA-interop; allowing to
+    cudaMemcpy to/from an owl buffer directly from CUDA code */
 OWL_API const void *
 owlBufferGetPointer(OWLBuffer buffer, int deviceID);
+
+OWL_API OptixTraversableHandle 
+owlGroupGetTraversable(OWLGroup group, int deviceID);
 
 OWL_API void 
 owlBufferResize(OWLBuffer buffer, size_t newItemCount);
@@ -383,9 +494,6 @@ owlParamsLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
 
 OWL_API CUstream
 owlParamsGetCudaStream(OWLLaunchParams params, int deviceID);
-
-// OWL_API OWLTriangles owlTrianglesCreate(OWLContext context,
-//                                         size_t varsStructSize);
 
 // ==================================================================
 // "Triangles" functions
@@ -422,6 +530,12 @@ owlGeomTypeSetClosestHit(OWLGeomType type,
                          int rayType,
                          OWLModule module,
                          const char *progName);
+
+OWL_API void
+owlGeomTypeSetAnyHit(OWLGeomType type,
+                     int rayType,
+                     OWLModule module,
+                     const char *progName);
 
 OWL_API void
 owlGeomTypeSetIntersectProg(OWLGeomType type,

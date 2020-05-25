@@ -14,7 +14,9 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// public owl node-graph api
+// Create and ray trace a solid cube made out of tiny spheres.
+
+// public owl node-graph API
 #include "owl/owl.h"
 // our device-side data structures
 #include "GeomTypes.h"
@@ -43,14 +45,15 @@ const float fovy = 20.f;
 
 std::vector<LambertianSphere> lambertianSpheres;
 
-inline float rnd()
-{
-  static std::mt19937 gen(0); //Standard mersenne_twister_engine seeded with rd()
-  static std::uniform_real_distribution<float> dis(0.f, 1.f);
-  return dis(gen);
-}
-
-inline vec3f rnd3f() { return vec3f(rnd(),rnd(),rnd()); }
+// Not needed by default, but here if you want to randomize positions at some point.
+//inline float rnd()
+//{
+//  static std::mt19937 gen(0); //Standard mersenne_twister_engine seeded with rd()
+//  static std::uniform_real_distribution<float> dis(0.f, 1.f);
+//  return dis(gen);
+//}
+//
+//inline vec3f rnd3f() { return vec3f(rnd(),rnd(),rnd()); }
 
 void createScene(int N)
 {
@@ -72,7 +75,7 @@ int main(int ac, char **av)
 
   LOG("ll example '" << av[0] << "' starting up");
 
-  int N = 600;
+  int N = 500;
   
   LOG("creating the scene ...");
   createScene(N);
@@ -97,7 +100,7 @@ int main(int ac, char **av)
   // ----------- lambertian -----------
   OWLVarDecl lambertianSpheresGeomVars[] = {
     { "prims",  OWL_BUFPTR, OWL_OFFSETOF(LambertianSpheresGeom,prims)},
-    { /* sentinal to mark end of list */ }
+    { /* sentinel to mark end of list */ }
   };
   OWLGeomType lambertianSpheresGeomType
     = owlGeomTypeCreate(context,
@@ -236,7 +239,7 @@ int main(int ac, char **av)
   owlBuildSBT(context);
 
   // ##################################################################
-  // now that everything is readly: launch it ....
+  // now that everything is ready: launch it ....
   // ##################################################################
   
   LOG("launching ...");
@@ -257,5 +260,5 @@ int main(int ac, char **av)
   LOG("destroying devicegroup ...");
   owlContextDestroy(context);
   
-  LOG_OK("seems all went ok; app is done, this should be the last output ...");
+  LOG_OK("seems all went OK; app is done, this should be the last output ...");
 }

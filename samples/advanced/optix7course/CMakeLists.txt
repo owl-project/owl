@@ -14,9 +14,7 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-find_package(OpenGL REQUIRED)
-
-include(configure_owl)
+include_directories(${OWL_VIEWER_INCLUDES})
 
 cuda_compile_and_embed(embedded_ptx_code devicePrograms.cu)
 
@@ -32,7 +30,6 @@ add_executable(adv_optix7course
   Model.cpp
   main.cpp
   )
-add_subdirectory(glfWindow)
 
 target_link_libraries(adv_optix7course
   toneMap
@@ -40,10 +37,6 @@ target_link_libraries(adv_optix7course
   ${optix_LIBRARY}
   ${CUDA_LIBRARIES}
   ${CUDA_CUDA_LIBRARY}
-  # glfw and opengl, for display
-#  owlViewerWidget
-  glfWindow
-  glfw
-  ${OPENGL_gl_LIBRARY}
-  ${OWL_LIBRARIES}
+  # owl viewer, and everything it requires
+  ${OWL_VIEWER_LIBRARIES}
   )

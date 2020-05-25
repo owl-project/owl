@@ -16,30 +16,43 @@
 
 include(configure_owl)
 
-include_directories(${PROJECT_SOURCE_DIR}/)
 # for STB image read/write
-include_directories(${PROJECT_SOURCE_DIR}/owl/common/3rdParty)
-# public API:
+include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
+# for public OWL API:
 include_directories(${OWL_INCLUDES})
 
-# ---------------------------------------------------------------------------
-# the default "tutorial-style" samples that intoduce, step by step,
-# individual capabililies like creating a raygen (s00), creating a
-# triangle mesh (s01), ... instancing (s08), etc.
-# ---------------------------------------------------------------------------
-file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
 
-foreach(sample ${samples})
-  add_subdirectory(${sample})
-endforeach()
+# ------------------------------------------------------------------
+#cmdline-only samples, also used for 'make test'
+# ------------------------------------------------------------------
+add_subdirectory(cmdline)
 
-# ---------------------------------------------------------------------------
-# a more serious kind of example with model loader, viewer, simple
-# path tracer, etc
-# ---------------------------------------------------------------------------
-option(BUILD_EX_OPTIX7COURSE "Build Siggraph 2018 Optix Course Version" OFF)
-if (BUILD_EX_OPTIX7COURSE)
-  add_subdirectory(advanced/optix7course)
+
+# ------------------------------------------------------------------
+# advanced sapmles and interactive samples require the interative
+# viewer widget. try building this, and include those only if tihs
+# worked (it may fail if liiraries like opengl, glfw, etc are missing)
+# ------------------------------------------------------------------
+add_subdirectory(common/owlViewer)
+
+if (OWL_HAVE_VIEWER)
+  
+  # interactive tutorial-style samples (these will try to open windows)
+  add_subdirectory(interactive)
+
+  # advanced samples (these will try to open windows)
+  add_subdirectory(advanced)
+
+else()
+  message(WARNING "#owl.cmake: could not build owlViewer library; skipping advanced samples")
 endif()
 
+
+
+# -------------------------------------------------------
+# export those back to our parent
+# -------------------------------------------------------
+set(OWL_VIEWER_INCLUDES  ${OWL_VIEWER_INCLUDES}  PARENT_SCOPE)
+set(OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES} PARENT_SCOPE)
+set(OWL_HAVE_TBB         ${OWL_HAVE_TBB}         PARENT_SCOPE)
 

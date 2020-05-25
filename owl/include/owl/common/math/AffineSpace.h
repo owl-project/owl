@@ -58,16 +58,20 @@ namespace owl {
       ////////////////////////////////////////////////////////////////////////////////
 
       // inline AffineSpaceT           ( ) = default;
-      inline AffineSpaceT           ( ) : l(one), p(zero) {}
+#ifdef __CUDA_ARCH__
+      inline __both__ AffineSpaceT           ( ) : l(OneTy()), p(ZeroTy()) {}
+#else
+      inline __both__ AffineSpaceT           ( ) : l(one), p(zero) {}
+#endif
 
-      inline AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
-      inline AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(zero); }
-      inline AffineSpaceT& operator=( const AffineSpaceT& other ) { l = other.l; p = other.p; return *this; }
+      inline __both__ AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
+      inline __both__ AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(ZeroTy()); }
+      inline __both__ AffineSpaceT& operator=( const AffineSpaceT& other ) { l = other.l; p = other.p; return *this; }
 
-      inline AffineSpaceT( const VectorT& vx, const VectorT& vy, const VectorT& vz, const VectorT& p ) : l(vx,vy,vz), p(p) {}
-      inline AffineSpaceT( const L& l, const VectorT& p ) : l(l), p(p) {}
+      inline __both__ AffineSpaceT( const VectorT& vx, const VectorT& vy, const VectorT& vz, const VectorT& p ) : l(vx,vy,vz), p(p) {}
+      inline __both__ AffineSpaceT( const L& l, const VectorT& p ) : l(l), p(p) {}
 
-      template<typename L1> inline AffineSpaceT( const AffineSpaceT<L1>& s ) : l(s.l), p(s.p) {}
+      template<typename L1> inline __both__ AffineSpaceT( const AffineSpaceT<L1>& s ) : l(s.l), p(s.p) {}
 
       ////////////////////////////////////////////////////////////////////////////////
       // Constants

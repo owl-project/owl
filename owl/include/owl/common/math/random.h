@@ -83,7 +83,8 @@ namespace owl {
         const uint32_t LCG_A = 1664525u;
         const uint32_t LCG_C = 1013904223u;
         state = (LCG_A * state + LCG_C);
-        return (state & 0x00FFFFFF) / (float) 0x01000000;
+        return ldexpf(float(state), -32);
+        // return (state & 0x00FFFFFF) / (float) 0x01000000;
       }
     
       uint32_t state;
@@ -111,7 +112,8 @@ namespace owl {
         const uint64_t c = 0xBULL;
         const uint64_t mask = 0xFFFFFFFFFFFFULL;
         state = a*state + c;
-        return float((state & mask) / float(mask+1ULL));
+        return float(state & mask) / float(mask+1ULL);
+        //return ldexpf(float(state & mask), -24);
       }
 
       uint64_t state;

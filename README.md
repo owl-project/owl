@@ -52,7 +52,8 @@ Directory Structure of the Project:
   - `owl/ll/`: *implementation* the low-level API layer
   - `owl/ng/`: *implementation* the node graph API
   - `owl/common/`: common helper classes
-  - `include/owl/owl.h`: header for the public, C-linkage host-side API 
+  - `include/owl/owl_host.h`: header for the public, C-linkage host-side API 
+  - `include/owl/owl_device.h`: header to be used on device side, for isec/CH/AH programs.
   - `include/owl/common`: C++ math/vector classes required for the device-side API
 
 - `samples/`: Samples/Tutorials/TestCases for OWL
@@ -60,7 +61,8 @@ Directory Structure of the Project:
   - `samples/advanced`: more advanced sample containing a full OBJ model viewer
      (based on the siggraph 2019 OptiX course)
 
-- `tests/`: Some internal test cases; only for CI/testing/debugging
+- `tests/`: Some internal test cases; only for CI/testing/debugging,
+  should usually not be of much interest to users of the API
 
 <!--- ------------------------------------------------------- -->
 Supported Platforms
@@ -95,7 +97,7 @@ Per-OS Instructions:
 - Windows
     - Requires: Visual Studio (both 2017 and 2019 work), OptiX 7.0, cmake
 	- Build: Use CMake-GUI to build Visual Studio project, then use VS to build
-		- Specifics: source code path is ```...Gitlab/owl```, binaries ```...Gitlab/owl/build```, and use ```x64``` after pushing the Configure button.
+		- Specifics: source code path is ```...Gitlab/owl```, binaries ```...Gitlab/owl/build```, and after pushing the Configure button choose ```x64``` for the optional platform.
 		- You may need to Configure twice.
 		- If you get "OptiX headers (optix.h and friends) not found." then define OptiX_INCLUDE manually in CMake-gui by setting it to ```C:/ProgramData/NVIDIA Corporation/OptiX SDK 7.0.0/include```
 
@@ -117,9 +119,46 @@ Per-OS Instructions:
 Latest Progress/Revision History
 ================================
 
-
 v0.7.x - Unifiction of ng and ll APIs into one single owl API
 ----------------------------------------------------------------------
+
+*v0.7.4*: major cleanups of "low-level" and "api" layer abstractions
+
+- 'll' and 'ng' layers mostly merged, at least from the API layer; led
+  to significant reduction in duplicate code.
+  
+- merged in PRs to enable TBB on windows, and to add cuda grphics resource buffer
+
+*v0.7.3*: performance "guiding"
+
+- OWL no longer allows for tracing directly into BLASes ... this is
+  highly discouraged in the driver, so better to just disallow it.
+
+*v0.7.3*: bug hotfix
+
+- hotfix for bug introduced when auto-freeing of device memory, which
+  accidentally freed instance BVH whiel still in use.
+  
+- various windows fixes; in particular removing tbb by default (windows only)
+
+*v0.7.2*: various feature extensions and bug fixes
+
+- lots of additional use in owl prime, m-owl-ana, distributed renderer, etc.
+
+- fixed memory leak in instance builder
+
+- added multi-device sample (`s07-rtow-multiGPU`), including
+  `samples/s07-rtow-multiGPU/README.md` with brief notes on how to do
+  multi-GPU in owl
+
+- added a lot more documentation to api functions (though much is still missing)
+
+- added ManagedMemory buffer type
+
+- added several sanity checks for group sizes, traversable graph
+  depth, etc (checking w/ optix limits before trying to build)
+
+- added AnyHit shader support
 
 *v0.7.1*: bugfix release.
 

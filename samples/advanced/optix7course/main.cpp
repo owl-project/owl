@@ -17,120 +17,84 @@
 #include "SampleRenderer.h"
 
 // our helper library for window handling
-#include "glfWindow/GLFWindow.h"
+#include "owlViewer/OWLViewer.h"
 #include <GL/gl.h>
 
 /*! \namespace osc - Optix Siggraph Course */
 namespace osc {
 
-  struct SampleWindow : public GLFCameraWindow
+  struct SampleWindow : public owl::viewer::OWLViewer
   {
     SampleWindow(const std::string &title,
                  const Model *model,
                  const Camera &camera,
                  const QuadLight &light,
                  const float worldScale)
-      : GLFCameraWindow(title,camera.from,camera.at,camera.up,worldScale),
+      : OWLViewer(title// ,camera.from,camera.at,camera.up,worldScale
+                  ),
         sample(model,light)
     {
+      this->camera.setOrientation(camera.from,
+                                  camera.at,
+                                  camera.up,
+                                  60.f);
+      this->setWorldScale(worldScale);
       sample.setCamera(camera);
     }
     
     virtual void render() override
     {
-      if (cameraFrame.modified) {
-        sample.setCamera(Camera{ cameraFrame.get_from(),
-                                 cameraFrame.get_at(),
-                                 cameraFrame.get_up() });
-        cameraFrame.modified = false;
+      if (camera.lastModified != 0) {
+        
+        sample.setCamera(Camera{ camera.getFrom(),
+                                 camera.getAt(),
+                                 camera.getUp() });
+        camera.lastModified = 0;
       }
       sample.render();
     }
     
-    virtual void draw() override
+    void resize(const vec2i &newSize) override
     {
-      sample.downloadPixels(pixels.data());
-      if (fbTexture == 0)
-        glGenTextures(1, &fbTexture);
-      
-      glBindTexture(GL_TEXTURE_2D, fbTexture);
-      GLenum texFormat = GL_RGBA;
-      GLenum texelType = GL_UNSIGNED_BYTE;
-      glTexImage2D(GL_TEXTURE_2D, 0, texFormat, fbSize.x, fbSize.y, 0, GL_RGBA,
-                   texelType, pixels.data());
-
-      glDisable(GL_LIGHTING);
-      glColor3f(1, 1, 1);
-
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-
-      glEnable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D, fbTexture);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      
-      glDisable(GL_DEPTH_TEST);
-
-      glViewport(0, 0, fbSize.x, fbSize.y);
-
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      glOrtho(0.f, (float)fbSize.x, 0.f, (float)fbSize.y, -1.f, 1.f);
-
-      glBegin(GL_QUADS);
-      {
-        glTexCoord2f(0.f, 0.f);
-        glVertex3f(0.f, 0.f, 0.f);
-      
-        glTexCoord2f(0.f, 1.f);
-        glVertex3f(0.f, (float)fbSize.y, 0.f);
-      
-        glTexCoord2f(1.f, 1.f);
-        glVertex3f((float)fbSize.x, (float)fbSize.y, 0.f);
-      
-        glTexCoord2f(1.f, 0.f);
-        glVertex3f((float)fbSize.x, 0.f, 0.f);
-      }
-      glEnd();
-    }
-    
-    virtual void resize(const vec2i &newSize) 
-    {
-      fbSize = newSize;
-      sample.resize(newSize);
-      pixels.resize(newSize.x*newSize.y);
+      OWLViewer::resize(newSize);
+      // fbSize = newSize;
+      sample.resize(fbPointer,newSize);
     }
 
-    virtual void key(int key, int mods)
+    void key(char key, const vec2i &where) override
     {
-      if (key == 'D' || key == ' ' || key == 'd') {
+      if (key == 'D' || key == ' ') {
         sample.denoiserOn = !sample.denoiserOn;
         std::cout << "denoising now " << (sample.denoiserOn?"ON":"OFF") << std::endl;
+        return;
       }
-      if (key == 'A' || key == 'a') {
+      if (key == 'A') {
         sample.accumulate = !sample.accumulate;
         std::cout << "accumulation/progressive refinement now " << (sample.accumulate?"ON":"OFF") << std::endl;
+        return;
       }
       if (key == ',') {
         sample.numPixelSamples
           = std::max(1,sample.numPixelSamples-1);
         std::cout << "num samples/pixel now "
                   << sample.numPixelSamples << std::endl;
+        return;
       }
       if (key == '.') {
         sample.numPixelSamples
           = std::max(1,sample.numPixelSamples+1);
         std::cout << "num samples/pixel now "
                   << sample.numPixelSamples << std::endl;
+        return;
       }
+      OWLViewer::key(key,where);
     }
     
-
-    vec2i                 fbSize;
-    GLuint                fbTexture {0};
+    // vec2i                 fbSize;
+    // GLuint                fbTexture {0};
+    // cudaGraphicsResource_t cuDisplayTexture;
     SampleRenderer        sample;
-    std::vector<uint32_t> pixels;
+    // std::vector<uint32_t> pixels;
   };
   
   
@@ -146,7 +110,8 @@ namespace osc {
 #else
       // on linux, common practice is to have ONE level of build dir
       // (say, <project>/build/)...
-      "../models/sponza.obj"
+      "./sponza.obj"
+      //      "../models/sponza.obj"
 #endif
       ;
     if (ac == 2)
@@ -172,11 +137,11 @@ namespace osc {
                                               model,camera,light,worldScale);
       window->enableFlyMode();
       
-      std::cout << "Press 'a' to enable/disable accumulation/progressive refinement" << std::endl;
-      std::cout << "Press ' ' to enable/disable denoising" << std::endl;
+      std::cout << "Press 'A' to enable/disable accumulation/progressive refinement" << std::endl;
+      std::cout << "Press 'D' to enable/disable denoising" << std::endl;
       std::cout << "Press ',' to reduce the number of paths/pixel" << std::endl;
       std::cout << "Press '.' to increase the number of paths/pixel" << std::endl;
-      window->run();
+      window->showAndRun();
       
     } catch (std::runtime_error& e) {
       std::cout << OWL_TERMINAL_RED << "FATAL ERROR: " << e.what()

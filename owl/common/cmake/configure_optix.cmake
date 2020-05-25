@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018 Ingo Wald                                                 #
+# Copyright 2018-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,12 +14,13 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-set(CMAKE_MODULE_PATH
-  "${CMAKE_CURRENT_SOURCE_DIR}/../cmake"
-  ${CMAKE_MODULE_PATH}
-  )
+#set(CMAKE_MODULE_PATH
+#  "${CMAKE_CURRENT_SOURCE_DIR}/../cmake"
+#  ${CMAKE_MODULE_PATH}
+#  )
 
-find_package(CUDA REQUIRED)
+include(configure_cuda)
+#find_package(CUDA REQUIRED)
 find_package(OptiX REQUIRED VERSION 7)
 
 include_directories(${CUDA_TOOLKIT_INCLUDE})
@@ -48,7 +49,7 @@ macro(cuda_compile_and_embed output_var cuda_file)
   if(${CMAKE_BUILD_TYPE} MATCHES "Release")
     cuda_compile_ptx(ptx_files
       ${cuda_file}
-      OPTIONS -O3 -DNDEBUG=1
+      OPTIONS -O3 -DNDEBUG=1 --use_fast_math
       )
   else()
     cuda_compile_ptx(ptx_files
@@ -66,9 +67,5 @@ macro(cuda_compile_and_embed output_var cuda_file)
     )
   set(${output_var} ${embedded_file})
 endmacro()
-
-include_directories(${OptiX_INCLUDE})
-
-#add_definitions(-D__CUDA_INCLUDE_COMPILER_INTERNAL_HEADERS__=1)
 
 

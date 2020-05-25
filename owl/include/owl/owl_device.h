@@ -148,35 +148,6 @@ namespace owl {
 
   template<typename RayType, typename PRD>
   inline __device__
-  void traceRayBLAS(OptixTraversableHandle traversable,
-                    int sbtOffset,
-                    const RayType &ray,
-                    PRD           &prd,
-                    uint32_t rayFlags = 0u)
-  {
-    unsigned int           p0 = 0;
-    unsigned int           p1 = 0;
-    owl::packPointer(&prd,p0,p1);
-
-    if (sbtOffset) printf("sbtoffset %i\n",sbtOffset);
-    
-    optixTrace(traversable,
-               (const float3&)ray.origin,
-               (const float3&)ray.direction,
-               ray.tmin,
-               ray.tmax,
-               ray.time,
-               (OptixVisibilityMask)-1,
-               /*rayFlags     */rayFlags,
-               /*SBToffset    */ray.rayType + ray.numRayTypes*sbtOffset,
-               /*SBTstride    */ray.numRayTypes,
-               /*missSBTIndex */ray.rayType,
-               p0,
-               p1);
-  }
-
-  template<typename RayType, typename PRD>
-  inline __device__
   void traceRay(OptixTraversableHandle traversable,
                 const RayType &ray,
                 PRD           &prd,
@@ -237,6 +208,10 @@ namespace owl {
 #define OPTIX_CLOSEST_HIT_PROGRAM(programName) \
   extern "C" __global__ \
   void __closesthit__##programName
+
+#define OPTIX_ANY_HIT_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __anyhit__##programName
 
 #define OPTIX_INTERSECT_PROGRAM(programName) \
   extern "C" __global__ \

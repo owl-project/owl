@@ -58,7 +58,7 @@ namespace owl {
       assert("check 'new' was successful" && group != nullptr);
       groups[groupID] = group;
 
-      // set children - todo: move to separate (api?) function(s)!?
+      // set children - todo: move to separate (API?) function(s)!?
       if (geomIDs) {
       for (int childID=0;childID<geomCount;childID++) {
         int geomID = geomIDs[childID];
@@ -91,6 +91,14 @@ namespace owl {
       context->pushActive();
       LOG("building triangles accel over "
           << children.size() << " geometries");
+
+      size_t sumPrims = 0;
+      uint32_t maxPrimsPerGAS = 0;
+      optixDeviceContextGetProperty
+        (context->optixContext,
+         OPTIX_DEVICE_PROPERTY_LIMIT_MAX_PRIMITIVES_PER_GAS,
+         &maxPrimsPerGAS,
+         sizeof(maxPrimsPerGAS));
       
       // ==================================================================
       // create triangle inputs
@@ -142,7 +150,15 @@ namespace owl {
         ta.indexStrideInBytes  = (uint32_t)tris->indexStride;
         ta.numIndexTriplets    = (uint32_t)tris->indexCount;
         ta.indexBuffer         = d_indices;
-      
+
+        // -------------------------------------------------------
+        // sanity check that we don't have too many prims
+        // -------------------------------------------------------
+        sumPrims += ta.numIndexTriplets;
+        if (sumPrims > maxPrimsPerGAS) 
+          throw std::runtime_error("number of prim in user geom group exceeds "
+                                   "OptiX's MAX_PRIMITIVES_PER_GAS limit");
+        
         // we always have exactly one SBT entry per shape (i.e., triangle
         // mesh), and no per-primitive materials:
         ta.flags                       = triangleInputFlags;

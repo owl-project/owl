@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -20,6 +20,7 @@
 #include "owl/ll/DeviceMemory.h"
 // for the hit group callback type, which is part of the API
 #include "owl/ll/DeviceGroup.h"
+#include "owl/ll/Buffers.h"
 
 namespace owl {
   namespace ll {
@@ -43,14 +44,7 @@ namespace owl {
 
     struct Context {
 
-      static int logging()
-      {
-#ifdef NDEBUG
-        return false;
-#else
-        return true;
-#endif
-      }
+      inline static bool logging() { return DeviceGroup::logging(); }
       
       Context(int owlDeviceID, int cudaDeviceID);
       ~Context();
@@ -201,67 +195,6 @@ namespace owl {
 
     typedef enum { TRIANGLES, USER } PrimType;
     
-    struct Buffer {
-      Buffer(const size_t elementCount,
-             const size_t elementSize)
-        : elementCount(elementCount),
-          elementSize(elementSize)
-      {
-        assert(elementSize > 0);
-      }
-      virtual ~Buffer()
-      {
-        assert(numTimesReferenced == 0);
-      }
-      inline void *get() const { return d_pointer; }
-      virtual void resize(Device *device, size_t newElementCount) = 0;
-      virtual void upload(Device *device, const void *hostPtr) = 0;
-      
-      size_t       elementCount;
-      size_t       elementSize;
-      void        *d_pointer = nullptr;
-      /*! only for error checking - we do NOT do reference counting
-        ourselves, but will use this to track erorrs like destroying
-        a geom/group that is still being refrerenced by a
-        group. Note we wil *NOT* automatically free a buffer if
-        refcount reaches zero - this is ONLY for sanity checking
-        during object deletion */
-      int numTimesReferenced = 0;
-    };
-
-    struct DeviceBuffer : public Buffer
-    {
-      DeviceBuffer(const size_t elementCount,
-                   const size_t elementSize)
-        : Buffer(elementCount, elementSize)
-      {
-        devMem.alloc(elementCount*elementSize);
-        d_pointer = devMem.get();
-      }
-      ~DeviceBuffer()
-      {
-        devMem.free();
-      }
-      void resize(Device *device, size_t newElementCount) override;
-      void upload(Device *device, const void *hostPtr) override;
-      DeviceMemory devMem;
-    };
-    
-    struct HostPinnedBuffer : public Buffer
-    {
-      HostPinnedBuffer(const size_t elementCount,
-                       const size_t elementSize,
-                       HostPinnedMemory::SP pinnedMem)
-        : Buffer(elementCount, elementSize),
-          pinnedMem(pinnedMem)
-      {
-        d_pointer = pinnedMem->pointer;
-      }
-      void resize(Device *device, size_t newElementCount) override;
-      void upload(Device *device, const void *hostPtr) override;
-      HostPinnedMemory::SP pinnedMem;
-    };
-      
     struct Geom {
       Geom(int geomID, int geomTypeID)
         : geomID(geomID), geomTypeID(geomTypeID)
@@ -342,7 +275,10 @@ namespace owl {
       virtual void buildAccel(Context *context) override;
       virtual int  getSBTOffset() const override { return 0; }
 
+      DeviceMemory optixInstanceBuffer;
+      DeviceMemory outputBuffer;
       std::vector<Group *>  children;
+      std::vector<uint32_t> instanceIDs;
       std::vector<affine3f> transforms;
     };
 
@@ -394,7 +330,12 @@ namespace owl {
       Device(int owlDeviceID, int cudaDeviceID);
       ~Device();
 
-
+      /*! helper function - return cuda name of this device */
+      std::string getDeviceName() const;
+      
+      /*! helper function - return cuda device ID of this device */
+      int getCudaDeviceID() const;
+      
       /*! set the maximum instancing depth that will be allowed; '0'
           means 'no instancing, only bottom level accels', '1' means
           'only one single level of instances' (i.e., instancegroups
@@ -453,6 +394,15 @@ namespace owl {
           must remain valid as long as this geom may ever get
           recompiled */
       void setGeomTypeClosestHit(int geomTypeID,
+                                 int rayTypeID,
+                                 int moduleID,
+                                 const char *progName);
+      
+      /*! set any hit program for given geometry type and ray
+          type. Note progName will *not* be copied, so the pointer
+          must remain valid as long as this geom may ever get
+          recompiled */
+      void setGeomTypeAnyHit(int geomTypeID,
                                  int rayTypeID,
                                  int moduleID,
                                  const char *progName);
@@ -568,13 +518,14 @@ namespace owl {
       /*! create a new instance group with given list of children */
       void instanceGroupCreate(/*! the group we are defining */
                                int groupID,
+                               size_t numChildren,
                                /* list of children. list can be
                                   omitted by passing a nullptr, but if
                                   not null this must be a list of
                                   'childCount' valid group ID */
-                               const int *childGroupIDs,
-                               /*! number of children in this group */
-                               size_t childCount);
+                               const uint32_t *childGroupIDs,
+                               const uint32_t *instIDs,
+                               const affine3f *xfms);
 
       /*! set given child's instance transform. groupID must be a
           valid instance group, childID must be wihtin
@@ -608,10 +559,26 @@ namespace owl {
                               size_t elementCount,
                               size_t elementSize,
                               const void *initData);
+
+      /*! create a managed memory buffer */
+      void managedMemoryBufferCreate(int bufferID,
+                                     size_t elementCount,
+                                     size_t elementSize,
+                                     ManagedMemory::SP managedMem);
+      
       void hostPinnedBufferCreate(int bufferID,
                                   size_t elementCount,
                                   size_t elementSize,
                                   HostPinnedMemory::SP pinnedMem);
+
+      void graphicsBufferCreate(int bufferID,
+                                size_t elementCount,
+                                size_t elementSize,
+                                cudaGraphicsResource_t resource);
+
+      void graphicsBufferMap(int bufferID);
+
+      void graphicsBufferUnmap(int bufferID);
 
       /*! Set a buffer of bounding boxes that this user geometry will
           use when building the accel structure. This is one of
@@ -624,14 +591,14 @@ namespace owl {
       
       void trianglesGeomSetVertexBuffer(int geomID,
                                         int32_t bufferID,
-		  size_t count,
-		  size_t stride,
-		  size_t offset);
+                                        size_t count,
+                                        size_t stride,
+                                        size_t offset);
       void trianglesGeomSetIndexBuffer(int geomID,
-		  int32_t bufferID,
-		  size_t count,
-		  size_t stride,
-		  size_t offset);
+                                       int32_t bufferID,
+                                       size_t count,
+                                       size_t stride,
+                                       size_t offset);
       
       void destroyGeom(size_t ID)
       {

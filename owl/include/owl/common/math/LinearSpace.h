@@ -53,10 +53,10 @@ namespace owl {
     
       /*! default matrix constructor */
       inline LinearSpace2           ( ) = default;
-      inline LinearSpace2           ( const LinearSpace2& other ) { vx = other.vx; vy = other.vy; }
-      inline LinearSpace2& operator=( const LinearSpace2& other ) { vx = other.vx; vy = other.vy; return *this; }
+      inline __both__ LinearSpace2           ( const LinearSpace2& other ) { vx = other.vx; vy = other.vy; }
+      inline __both__ LinearSpace2& operator=( const LinearSpace2& other ) { vx = other.vx; vy = other.vy; return *this; }
 
-      template<typename L1> inline LinearSpace2( const LinearSpace2<L1>& s ) : vx(s.vx), vy(s.vy) {}
+      template<typename L1> inline __both__ LinearSpace2( const LinearSpace2<L1>& s ) : vx(s.vx), vy(s.vy) {}
 
       /*! matrix construction from column vectors */
       inline __both__ LinearSpace2(const vector_t& vx, const vector_t& vy)
@@ -190,10 +190,10 @@ namespace owl {
 
       /*! default matrix constructor */
       // inline LinearSpace3           ( ) = default;
-      inline LinearSpace3()
-        : vx(one,zero,zero),
-        vy(zero,one,zero),
-        vz(zero,zero,one)
+      inline __both__ LinearSpace3()
+        : vx(OneTy(),ZeroTy(),ZeroTy()),
+        vy(ZeroTy(),OneTy(),ZeroTy()),
+        vz(ZeroTy(),ZeroTy(),OneTy())
         {}
         
       inline __both__ LinearSpace3           ( const LinearSpace3& other ) { vx = other.vx; vy = other.vy; vz = other.vz; }
@@ -242,8 +242,19 @@ namespace owl {
       /// Constants
       ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __CUDA_ARCH__
+      inline __both__ LinearSpace3( const ZeroTy & )
+        : vx(ZeroTy()), vy(ZeroTy()), vz(ZeroTy())
+        {}
+      inline __both__ LinearSpace3( const OneTy & )
+        : vx(OneTy(), ZeroTy(), ZeroTy()),
+        vy(ZeroTy(), OneTy(), ZeroTy()),
+        vz(ZeroTy(), ZeroTy(), OneTy())
+        {}
+#else
       inline __both__ LinearSpace3( ZeroTy ) : vx(zero), vy(zero), vz(zero) {}
       inline __both__ LinearSpace3( OneTy ) : vx(one, zero, zero), vy(zero, one, zero), vz(zero, zero, one) {}
+#endif
 
       /*! return matrix for scaling */
       static inline __both__ LinearSpace3 scale(const vector_t& s) {

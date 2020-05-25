@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018-2019 Ingo Wald                                            #
+# Copyright 2018-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -20,7 +20,8 @@
 #
 # OWL_LIBRARIES - list of libraries to link against when building owl programs
 
-if (NOT WIN32)
+message("configure owl : OWL_USE_TBB = ${OWL_USE_TBB}")
+if (OWL_USE_TBB)
   include(configure_tbb)
 endif()
 
@@ -38,5 +39,8 @@ set(OWL_LIBRARIES
   owl_static
   )
 if (TBB_FOUND)
-  set(OWL_LIBRARIES ${OWL_LIBRARIES} tbb)
+  set(OWL_LIBRARIES ${OWL_LIBRARIES} ${TBB_LIBRARIES})
 endif()
+
+#set(OWL_INCLUDES ${OWL_INCLUDES} PARENT_SCOPE)
+#set(OWL_LIBRARIES ${OWL_LIBRARIES} PARENT_SCOPE)

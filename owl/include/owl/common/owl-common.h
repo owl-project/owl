@@ -211,17 +211,17 @@ namespace owl {
       const double absVal = abs(val);
       char result[1000];
 
-      if      (absVal >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e18f,'E');
-      else if (absVal >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",val/1e15f,'P');
-      else if (absVal >= 1e+12f) osp_snprintf(result,1000,"%.1f%c",val/1e12f,'T');
-      else if (absVal >= 1e+09f) osp_snprintf(result,1000,"%.1f%c",val/1e09f,'G');
-      else if (absVal >= 1e+06f) osp_snprintf(result,1000,"%.1f%c",val/1e06f,'M');
-      else if (absVal >= 1e+03f) osp_snprintf(result,1000,"%.1f%c",val/1e03f,'k');
-      else if (absVal <= 1e-12f) osp_snprintf(result,1000,"%.1f%c",val*1e15f,'f');
-      else if (absVal <= 1e-09f) osp_snprintf(result,1000,"%.1f%c",val*1e12f,'p');
-      else if (absVal <= 1e-06f) osp_snprintf(result,1000,"%.1f%c",val*1e09f,'n');
-      else if (absVal <= 1e-03f) osp_snprintf(result,1000,"%.1f%c",val*1e06f,'u');
-      else if (absVal <= 1e-00f) osp_snprintf(result,1000,"%.1f%c",val*1e03f,'m');
+      if      (absVal >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",float(val/1e18f),'E');
+      else if (absVal >= 1e+15f) osp_snprintf(result,1000,"%.1f%c",float(val/1e15f),'P');
+      else if (absVal >= 1e+12f) osp_snprintf(result,1000,"%.1f%c",float(val/1e12f),'T');
+      else if (absVal >= 1e+09f) osp_snprintf(result,1000,"%.1f%c",float(val/1e09f),'G');
+      else if (absVal >= 1e+06f) osp_snprintf(result,1000,"%.1f%c",float(val/1e06f),'M');
+      else if (absVal >= 1e+03f) osp_snprintf(result,1000,"%.1f%c",float(val/1e03f),'k');
+      else if (absVal <= 1e-12f) osp_snprintf(result,1000,"%.1f%c",float(val*1e15f),'f');
+      else if (absVal <= 1e-09f) osp_snprintf(result,1000,"%.1f%c",float(val*1e12f),'p');
+      else if (absVal <= 1e-06f) osp_snprintf(result,1000,"%.1f%c",float(val*1e09f),'n');
+      else if (absVal <= 1e-03f) osp_snprintf(result,1000,"%.1f%c",float(val*1e06f),'u');
+      else if (absVal <= 1e-00f) osp_snprintf(result,1000,"%.1f%c",float(val*1e03f),'m');
       else osp_snprintf(result,1000,"%f",(float)val);
 
       return result;
@@ -250,7 +250,16 @@ namespace owl {
     {
 #ifdef _WIN32
       SYSTEMTIME tp; GetSystemTime(&tp);
-      return double(tp.wSecond) + double(tp.wMilliseconds) / 1E3;
+      /*
+         Please note: we are not handling the "leap year" issue.
+     */
+      size_t numSecsSince2020
+          = tp.wSecond
+          + (60ull) * tp.wMinute
+          + (60ull * 60ull) * tp.wHour
+          + (60ull * 60ul * 24ull) * tp.wDay
+          + (60ull * 60ul * 24ull * 365ull) * (tp.wYear - 2020);
+      return double(numSecsSince2020 + tp.wMilliseconds * 1e-3);
 #else
       struct timeval tp; gettimeofday(&tp,nullptr);
       return double(tp.tv_sec) + double(tp.tv_usec)/1E6;

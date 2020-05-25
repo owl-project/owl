@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -21,25 +21,25 @@
 extern inline OptixResult optixInit( void** handlePtr );
 
 #define LOG(message)                                            \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
   << message                                                    \
   << std::endl
 
 #define LOG_OK(message)                                 \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
   << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
   << message                                            \
   << std::endl
 
 #define CLOG_OK(message)                                \
-  if (Context::logging()) \
+  if (DeviceGroup::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << OWL_TERMINAL_DEFAULT << std::endl
@@ -160,6 +160,10 @@ namespace owl {
     {
       if (maxInstancingDepth == context->maxInstancingDepth)
         return;
+
+      if (maxInstancingDepth < 1)
+        throw std::runtime_error("a instancing depth of < 1 isnt' currently supported in OWL; pleaes see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
+
       assert("check pipeline isn't already created"
              && context->pipeline == nullptr);
       context->maxInstancingDepth = maxInstancingDepth;
@@ -195,7 +199,9 @@ namespace owl {
         break;
       case 1:
         pipelineCompileOptions.traversableGraphFlags
-          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
+          // | OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
+          ;
         break;
       default:
         pipelineCompileOptions.traversableGraphFlags
@@ -368,6 +374,35 @@ namespace owl {
       assert("check hitgroup isn't currently active" && hitGroup.pg == nullptr);
       hitGroup.closestHit.moduleID = moduleID;
       hitGroup.closestHit.progName = progName;
+    }
+    
+    /*! set any hit program for given geometry type and ray
+      type. Note progName will *not* be copied, so the pointer
+      must remain valid as long as this geom may ever get
+      recompiled */
+    void Device::setGeomTypeAnyHit(int geomTypeID,
+                                       int rayTypeID,
+                                       int moduleID,
+                                       const char *progName)
+    {
+      assert(geomTypeID >= 0);
+      assert(geomTypeID < geomTypes.size());
+      auto &geomType = geomTypes[geomTypeID];
+      
+      assert(rayTypeID >= 0);
+      assert(rayTypeID < context->numRayTypes);
+      assert(rayTypeID < geomType.perRayType.size());
+      auto &hitGroup = geomType.perRayType[rayTypeID];
+      
+      assert(moduleID >= -1);
+      assert(moduleID <  modules.size());
+      assert((moduleID == -1 && progName == nullptr)
+             ||
+             (moduleID >= 0  && progName != nullptr));
+
+      assert("check hitgroup isn't currently active" && hitGroup.pg == nullptr);
+      hitGroup.anyHit.moduleID = moduleID;
+      hitGroup.anyHit.progName = progName;
     }
     
     void Device::setRayGen(int programID,
@@ -815,6 +850,19 @@ namespace owl {
                                       log,&sizeof_log,
                                       &pipeline
                                       ));
+      
+      uint32_t maxAllowedByOptix = 0;
+      optixDeviceContextGetProperty
+        (optixContext,
+         OPTIX_DEVICE_PROPERTY_LIMIT_MAX_TRAVERSABLE_GRAPH_DEPTH,
+         &maxAllowedByOptix,
+         sizeof(maxAllowedByOptix));
+      if (uint32_t(maxInstancingDepth+1) > maxAllowedByOptix)
+        throw std::runtime_error
+          ("error when building pipeline: "
+           "attempting to set max instancing depth to "
+           "value that exceeds OptiX's MAX_TRAVERSABLE_GRAPH_DEPTH limit");
+      
       OPTIX_CHECK(optixPipelineSetStackSize
                   (pipeline,
                    /* [in] The pipeline to configure the stack size for */
@@ -869,6 +917,22 @@ namespace owl {
       STACK_POP_ACTIVE();
     }
     
+      /*! create a managed memory buffer */
+    void Device::managedMemoryBufferCreate(int bufferID,
+                                           size_t elementCount,
+                                           size_t elementSize,
+                                           ManagedMemory::SP managedMem)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID <  buffers.size());
+      assert("check buffer ID available" && buffers[bufferID] == nullptr);
+      context->pushActive();
+      Buffer *buffer = new ManagedMemoryBuffer(elementCount,elementSize,managedMem);
+      assert("check buffer properly created" && buffer != nullptr);
+      buffers[bufferID] = buffer;
+      context->popActive();
+    }
+      
     void Device::hostPinnedBufferCreate(int bufferID,
                                         size_t elementCount,
                                         size_t elementSize,
@@ -881,6 +945,43 @@ namespace owl {
       Buffer *buffer = new HostPinnedBuffer(elementCount,elementSize,pinnedMem);
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
+      context->popActive();
+    }
+
+    void Device::graphicsBufferCreate(int bufferID,
+                                      size_t elementCount,
+                                      size_t elementSize,
+                                      cudaGraphicsResource_t resource)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID < buffers.size());
+      assert("check buffer ID available" && buffers[bufferID] == nullptr);
+      context->pushActive();
+      Buffer *buffer = new GraphicsBuffer(elementCount, elementSize, resource);
+      assert("check buffer properly created" && buffer != nullptr);
+      buffers[bufferID] = buffer;
+      context->popActive();
+    }
+
+    void Device::graphicsBufferMap(int bufferID)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID < buffers.size());
+      context->pushActive();
+      GraphicsBuffer *buffer = dynamic_cast<GraphicsBuffer*>(buffers[bufferID]);
+      assert("check buffer properly casted" && buffer != nullptr);
+      buffer->map(this, context->stream);
+      context->popActive();
+    }
+
+    void Device::graphicsBufferUnmap(int bufferID)
+    {
+      assert("check valid buffer ID" && bufferID >= 0);
+      assert("check valid buffer ID" && bufferID < buffers.size());
+      context->pushActive();
+      GraphicsBuffer *buffer = dynamic_cast<GraphicsBuffer*>(buffers[bufferID]);
+      assert("check buffer properly casted" && buffer != nullptr);
+      buffer->unmap(this, context->stream);
       context->popActive();
     }
     
@@ -1028,7 +1129,7 @@ namespace owl {
     void Device::sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
                                   const void *callBackUserData)
     {
-      LOG("building sbt hit group records");
+      LOG("building SBT hit group records");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.hitGroupRecordsBuffer.alloced())
@@ -1114,7 +1215,7 @@ namespace owl {
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
       context->popActive();
-      LOG_OK("done building (and uploading) sbt hit group records");
+      LOG_OK("done building (and uploading) SBT hit group records");
     }
       
     void Device::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
@@ -1124,7 +1225,7 @@ namespace owl {
       ++numTimesCalled;
       
       if (numTimesCalled < 10)
-        LOG("building sbt ray gen records (only showing first 10 instances)");
+        LOG("building SBT ray gen records (only showing first 10 instances)");
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.rayGenRecordsBuffer.alloced())
@@ -1183,7 +1284,7 @@ namespace owl {
       sbt.rayGenRecordsBuffer.upload(rayGenRecords);
       context->popActive();
       if (numTimesCalled < 10)
-        LOG_OK("done building (and uploading) sbt ray gen records (only showing first 10 instances)");
+        LOG_OK("done building (and uploading) SBT ray gen records (only showing first 10 instances)");
     }
       
     void Device::sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgDataCB,
@@ -1191,9 +1292,9 @@ namespace owl {
     {
       if (missProgPGs.size() == 0) return;
       
-      LOG("building sbt miss prog records");
+      LOG("building SBT miss prog records");
       assert("check correct number of miss progs"
-             && missProgPGs.size() == context->numRayTypes);
+             && missProgPGs.size() >= context->numRayTypes);
       
       context->pushActive();
       // TODO: move this to explicit destroyhitgroups
@@ -1254,7 +1355,7 @@ namespace owl {
       sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
       sbt.missProgRecordsBuffer.upload(missProgRecords);
       context->popActive();
-      LOG_OK("done building (and uploading) sbt miss prog records");
+      LOG_OK("done building (and uploading) SBT miss prog records");
     }
 
     void Device::launch(int rgID, const vec2i &dims)
@@ -1282,7 +1383,7 @@ namespace owl {
         // writing in some (senseless) values to not trigger optix's
         // own sanity checks
 #ifndef NDEBUG
-        static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+        static WarnOnce warn("launching an optix pipeline that has neither miss nor hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
 #endif
         localSBT.missRecordBase
           = (CUdeviceptr)32;
@@ -1402,51 +1503,6 @@ namespace owl {
       buffers.resize(newCount);
     }
 
-    void HostPinnedBuffer::resize(Device *device, size_t newElementCount) 
-    {
-      if (device->context->owlDeviceID == 0) {
-      
-        device->context->pushActive();
-        
-        pinnedMem->free();
-        
-        this->elementCount = newElementCount;
-        pinnedMem->alloc(elementCount*elementSize);
-        
-        device->context->popActive();
-      }
-      
-      d_pointer = pinnedMem->get();
-    }
-    
-    void HostPinnedBuffer::upload(Device *device, const void *hostPtr) 
-    {
-      OWL_NOTIMPLEMENTED;
-    }
-    
-    void DeviceBuffer::resize(Device *device, size_t newElementCount) 
-    {
-      device->context->pushActive();
-
-      devMem.free();
-      
-      this->elementCount = newElementCount;
-      devMem.alloc(elementCount*elementSize);
-      d_pointer = devMem.get();
-      
-      device->context->popActive();
-    }
-    
-    void DeviceBuffer::upload(Device *device, const void *hostPtr) 
-    {
-      device->context->pushActive();
-      devMem.upload(hostPtr,"DeviceBuffer::upload");
-      device->context->popActive();
-    }
-
-
-
-    
     void Device::allocLaunchParams(size_t count)
     {
       if (count < launchParams.size())
@@ -1507,7 +1563,7 @@ namespace owl {
         // any rays). If the latter, let's "fake" a valid SBT by
         // writing in some (senseless) values to not trigger optix's
         // own sanity checks.
-        static WarnOnce warn("launching an optix pipeline that has neither miss not hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+        static WarnOnce warn("launching an optix pipeline that has neither miss nor hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
         localSBT.missRecordBase
           = (CUdeviceptr)32;
         localSBT.missRecordStrideInBytes
@@ -1557,6 +1613,19 @@ namespace owl {
       context->numRayTypes = (int)rayTypeCount;
     }
 
+      /*! helper function - return cuda name of this device */
+    std::string Device::getDeviceName() const
+    {
+      cudaDeviceProp prop;
+      cudaGetDeviceProperties(&prop, getCudaDeviceID());
+      return prop.name;
+    }
+    
+    /*! helper function - return cuda device ID of this device */
+    int Device::getCudaDeviceID() const
+    {
+      return context->cudaDeviceID;
+    }
 
   } // ::owl::ll
 } //::owl
