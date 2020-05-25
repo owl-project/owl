@@ -230,6 +230,7 @@ namespace osc {
         assert(mesh.diffuseTextureID < textureObjects.size());
         owlGeomSet1i(geom,"hasTexture",1);
 #if OWL_TEXTURES
+        owlGeomSetTexture(geom,"texture",textures[mesh.diffuseTextureID]);
 #else
         owlGeomSetRaw(geom,"texture",&textureObjects[mesh.diffuseTextureID]);
 #endif

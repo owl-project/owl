@@ -22,6 +22,7 @@ namespace owl {
 
   struct Buffer;
   struct Group;
+  struct Texture;
   
   struct Variable : public Object {
     typedef std::shared_ptr<Variable> SP;
@@ -32,6 +33,7 @@ namespace owl {
     
     virtual void set(const std::shared_ptr<Buffer> &value) { mismatchingType(); }
     virtual void set(const std::shared_ptr<Group>  &value) { mismatchingType(); }
+    virtual void set(const std::shared_ptr<Texture>  &value) { mismatchingType(); }
     
     virtual void setRaw(const void *ptr)    { mismatchingType(); }
 

@@ -43,7 +43,7 @@ namespace owl {
     void destroy();
 
     /*! one entry per device */
-    std::vector<cudaTextureObject_t> cudaTextureObject;
+    std::vector<cudaTextureObject_t> textureObjects;
       
     vec2i                size;
     uint32_t             linePitchInBytes;

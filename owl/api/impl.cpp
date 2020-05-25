@@ -1074,6 +1074,22 @@ namespace owl {
     setVariable((APIHandle *)_variable,group);
   }
 
+  // ----------- set<other> -----------
+  OWL_API void owlVariableSetTexture(OWLVariable _variable, OWLTexture _texture)
+  {
+    LOG_API_CALL();
+
+    APIHandle *handle = (APIHandle*)_texture;
+    Texture::SP texture
+      = handle
+      ? handle->get<Texture>()
+      : Texture::SP();
+    
+    assert(texture);
+
+    setVariable((APIHandle *)_variable,texture);
+  }
+
   OWL_API void owlVariableSetBuffer(OWLVariable _variable, OWLBuffer _buffer)
   {
     LOG_API_CALL();
