@@ -17,6 +17,7 @@
 #include "Context.h"
 #include "Module.h"
 #include "Geometry.h"
+#include "Texture.h"
 #include "owl/ll/Device.h"
 
 #define LOG(message)                            \
@@ -52,6 +53,7 @@ namespace owl {
   Context::Context(int32_t *requestedDeviceIDs,
                    int      numRequestedDevices)
     : buffers(this),
+      textures(this),
       groups(this),
       rayGenTypes(this),
       rayGens(this),
@@ -104,6 +106,20 @@ namespace owl {
     assert(buffer);
     return buffer;
   }
+
+  Texture::SP
+  Context::texture2DCreate(OWLTexelFormat texelFormat,
+                           OWLTextureFilterMode filterMode,
+                           const vec2i size,
+                           uint32_t linePitchInBytes,
+                           const void *texels)
+  {
+    Texture::SP texture
+      = std::make_shared<Texture>(this,size,linePitchInBytes,texelFormat,filterMode,texels);
+    assert(texture);
+    return texture;
+  }
+    
 
   Buffer::SP
       Context::graphicsBufferCreate(OWLDataType type,

@@ -503,7 +503,7 @@ namespace owl {
   once we allow for doing things like texture borders we'll have to
   change this api */
   OWL_API OWLTexture
-  owlTexture2DCreate(OWLContext context,
+  owlTexture2DCreate(OWLContext _context,
                      OWLTexelFormat texelFormat,
                      /*! number of texels in x dimension */
                      uint32_t size_x,
@@ -520,7 +520,12 @@ namespace owl {
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
-    Texture::SP  texture  = context->deviceTextureCreate(type,count,init);
+    Texture::SP  texture
+      = context->texture2DCreate(texelFormat,
+                                 filterMode,
+                                 vec2i(size_x,size_y),
+                                 linePitchInBytes,
+                                 texels);
     assert(texture);
     return (OWLTexture)context->createHandle(texture);
   }

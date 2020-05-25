@@ -91,6 +91,12 @@ namespace owl {
   }
 
   template<>
+  void ObjectRegistryT<Texture>::reallocContextIDs(int newMaxIDs)
+  {
+    /* nothing to do - textures not tracked by llo level */
+  }
+
+  template<>
   void ObjectRegistryT<Module>::reallocContextIDs(int newMaxIDs)
   {
     context->llo->allocModules(newMaxIDs);

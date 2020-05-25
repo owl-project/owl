@@ -35,6 +35,7 @@ set(OWL_NG_SOURCES
   RegisteredObject.cpp
   SBTObject.cpp
   Buffer.cpp
+  Texture.cpp
   Group.cpp
   ObjectRegistry.cpp
   Context.cpp

@@ -506,7 +506,9 @@ namespace owl {
         buffer handles that would get 'lost' have alreay been
         destroyed */
       void allocBuffers(size_t newCount);
-      
+
+      void allocTextures(size_t newCount);
+
       void trianglesGeomGroupCreate(int groupID,
                                     const int *geomIDs,
                                     size_t geomCount);
@@ -767,6 +769,7 @@ namespace owl {
       std::vector<Geom *>         geoms;
       std::vector<Group *>        groups;
       std::vector<Buffer *>       buffers;
+      // std::vector<cudaTextureObject_t> textureObjects;
       SBT                         sbt;
     };
     

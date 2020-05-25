@@ -23,8 +23,21 @@ namespace owl {
                    vec2i                size,
                    uint32_t             linePitchInBytes,
                    OWLTexelFormat       texelFormat,
-                   OWLTextureFilterMode filterMode
-            );
+                   OWLTextureFilterMode filterMode,
+                   const void *texels
+                   )
+    : RegisteredObject(context,context->textures)
+  {
+    PING;
+    std::cout << "NOT IMPLEMENTED" << std::endl;
+    exit(0);
+  }
 
+  Texture::~Texture()
+  {
+    PING;
+    std::cout << "NOT IMPLEMENTED" << std::endl;
+    exit(0);
+  }
   
 } // ::owl

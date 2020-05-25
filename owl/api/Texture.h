@@ -28,19 +28,23 @@ namespace owl {
             vec2i                size,
             uint32_t             linePitchInBytes,
             OWLTexelFormat       texelFormat,
-            OWLTextureFilterMode filterMode
+            OWLTextureFilterMode filterMode,
+            const void          *texels
             );
     
     /*! destructor - free device data, de-regsiter, and destruct */
     virtual ~Texture();
     
-    virtual std::string toString() const { return "Texture"; }
+    std::string toString() const override { return "Texture"; }
 
     /*! destroy whatever resouces this texture's ll-layer handle this
         may refer to; this will not destruct the current object
         itself, but should already release all its references */
     void destroy();
 
+    /*! one entry per device */
+    std::vector<cudaTextureObject_t> cudaTextureObject;
+      
     vec2i                size;
     uint32_t             linePitchInBytes;
     OWLTexelFormat       texelFormat;
