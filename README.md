@@ -119,6 +119,35 @@ Per-OS Instructions:
 Latest Progress/Revision History
 ================================
 
+v0.8.x - Revamped build system, owl viewer, and interactive samples
+----------------------------------------------------------------------
+
+*v0.8.0*: build system, glfw, and owl viewer
+
+- cmake build system now cleaner, and can use entire owl dir as
+  add_subdirectory in other projects; main owl variables
+  (OWL_INCLUDES, OWL_VIEWER_LIBRARIES, etc) now get exported to
+  whoever includes, thus allowing includee to use same build flags,
+  proper set of libraries an dincludes, etc.
+  
+- existing (glut-based) viewerWidget got replaced with glfw based
+  OWLViewer class. New class has cleaner setup code, and no longer
+  requires installing glut binaries for windows build
+  
+- build system picks up glfw where available, and otherwise builds
+  glfw from source (full glfw source in samples/3rdParty)
+
+- owlViewer now handles frame buffer resize and display internally (no
+  longer app's job to do that), and does so with cuda/gl resource
+  sharing using managed mem frame buffer. App still writes render() method,
+  but simply writes final pixels to viewer-handles frame buffer.
+  
+- added first two interactive samples, using owlViewer
+
+- changed samples/advaned/optixCourse to use owlViewer - glut now
+  completely eliminated from owl, and all samples use same viewer.
+
+
 v0.7.x - Unifiction of ng and ll APIs into one single owl API
 ----------------------------------------------------------------------
 

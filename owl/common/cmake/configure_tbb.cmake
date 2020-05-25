@@ -14,11 +14,12 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-#find_package(TBB REQUIRED)
-
 find_package(TBB)
+
+set(OWL_HAVE_TBB OFF)
 if (TBB_FOUND)
-  message("owl.cmake: found TBB, enabling OWL_HAVE_TBB=1 macro")
   include_directories(${TBB_INCLUDE_DIR})
-  add_definitions(-DOWL_HAVE_TBB=1)
+  #  add_definitions(-DOWL_HAVE_TBB=1)
+  set(OWL_CXX_FLAGS "${OWL_CXX_FLAGS} -DOWL_HAVE_TBB=1")
+  set(OWL_HAVE_TBB ON)
 endif()
