@@ -56,7 +56,7 @@ void addFace(const vec3f ll, const vec3f du, const vec3f dv)
       texCoords.push_back(vec2f(ix,iy));
     }
   indices.push_back(vec3i(idxll,idxll+1,idxll+3));
-  indices.push_back(vec3i(idxll+1,idxll+3,idxll+2));
+  indices.push_back(vec3i(idxll,idxll+3,idxll+2));
 }
 
 void addCube(const vec3f center,
@@ -168,9 +168,9 @@ Viewer::Viewer()
   LOG("building geometries ...");
 
   addCube(vec3f(0.f),
-          vec3f(1.f,0.f,0.f),
-          vec3f(0.f,1.f,0.f),
-          vec3f(0.f,0.f,1.f));
+          vec3f(2.f,0.f,0.f),
+          vec3f(0.f,2.f,0.f),
+          vec3f(0.f,0.f,2.f));
   
   // ------------------------------------------------------------------
   // triangle mesh
@@ -202,7 +202,9 @@ Viewer::Viewer()
   std::vector<vec4uc> texels;
   for (int iy=0;iy<texSize.y;iy++)
     for (int ix=0;ix<texSize.x;ix++) {
-      texels.push_back(vec4uc(((ix ^ iy)&1) ? 255 : 0));
+      texels.push_back(((ix ^ iy)&1) ?
+                       vec4uc(0,255,0,0) :
+                       vec4uc(255));
     }
   OWLTexture cbTexture
     = owlTexture2DCreate(context,
