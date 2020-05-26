@@ -61,7 +61,8 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
     +      uv.x      *self.texCoord[index.y]
     +           uv.y *self.texCoord[index.z];
   vec4f texColor = tex2D<float4>(self.texture,tc.x,tc.y);
-    
+
+  
   const vec3f rayDir = optixGetWorldRayDirection();
   prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*vec3f(texColor);
 }

@@ -44,7 +44,8 @@ namespace owl {
 
     /*! one entry per device */
     std::vector<cudaTextureObject_t> textureObjects;
-      
+    std::vector<cudaArray_t>         textureArrays;
+    
     vec2i                size;
     uint32_t             linePitchInBytes;
     OWLTexelFormat       texelFormat;

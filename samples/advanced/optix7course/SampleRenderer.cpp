@@ -227,11 +227,12 @@ namespace osc {
 
       owlGeomSet3f(geom,"color",(const owl3f &)mesh.diffuse);
       if (mesh.diffuseTextureID >= 0) {
-        assert(mesh.diffuseTextureID < textureObjects.size());
         owlGeomSet1i(geom,"hasTexture",1);
 #if OWL_TEXTURES
+        assert(mesh.diffuseTextureID < textures.size());
         owlGeomSetTexture(geom,"texture",textures[mesh.diffuseTextureID]);
 #else
+        assert(mesh.diffuseTextureID < textureObjects.size());
         owlGeomSetRaw(geom,"texture",&textureObjects[mesh.diffuseTextureID]);
 #endif
       } else {
