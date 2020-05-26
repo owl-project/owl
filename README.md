@@ -119,8 +119,19 @@ Per-OS Instructions:
 Latest Progress/Revision History
 ================================
 
-v0.8.x - Revamped build system, owl viewer, and interactive samples
+v0.8.x - Revamped build system, owl viewer, interative samples, and textures
 ----------------------------------------------------------------------
+
+*v0.8.1*: first light of textures
+
+- added basic infrastructure for textures: OWLTexture type,
+  OWLTextureFormat and OWLTextureFilterMode enums, OWL_TEXTURE
+  variable types, owlVariableSetTexture, owl<Type>SetTexture(),
+  etc. Textures currently only working for OWL_TEXEL_FORMAT_RGBA8 and
+  OWL_TEXTURE_FILETER_LINEAR.
+
+- added int10-texturedTriangles that opens a window with a
+  checkerboard-textured box.
 
 *v0.8.0*: build system, glfw, and owl viewer
 
