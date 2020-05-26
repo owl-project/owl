@@ -220,6 +220,7 @@ typedef enum
 /*! currently supported texture filter modes */
 typedef enum
   {
+   OWL_TEXTURE_NEAREST,
    OWL_TEXTURE_LINEAR
   }
   OWLTextureFilterMode;
