@@ -30,10 +30,11 @@ set(OWL_INCLUDES
   # owl needs optix:
   ${OptiX_INCLUDE}
   # public API
-  ${owl_dir}/owl/include
+  ${PROJECT_SOURCE_DIR}/owl/include
   # device API and common currently still include non-public header files
-  ${owl_dir}/
+  ${PROJECT_SOURCE_DIR}/
   )
+message("configure_owl: OWL_INCLUDES = ${OWL_INCLUDES}")
 set(OWL_LIBRARIES
   owl_static
   )
