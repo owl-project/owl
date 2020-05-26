@@ -145,6 +145,10 @@ typedef enum
         automatically during SBT creation */
     OWL_DEVICE=4000,
 
+    /*! texture(s) */
+    OWL_TEXTURE=5000,
+    OWL_TEXTURE_2D=OWL_TEXTURE,
+
     /*! at least for now, use that for buffers with user-defined types:
       type then is "OWL_USER_TYPE_BEGIN+sizeof(elementtype). Note
       that since we always _add_ the user type's size to this value
@@ -165,7 +169,8 @@ typedef enum
     OWL_GEOMETRY_TRIANGLES,
     // new naming, to be consistent with type OLWGeom (not OWLGeometry):
     OWL_GEOM_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
-    OWL_TRIANGLES=OWL_GEOMETRY_TRIANGLES
+    OWL_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
+    OWL_GEOMETRY_HAIR
   }
   OWLGeomKind;
 
@@ -204,6 +209,24 @@ typedef struct _OWLVarDecl {
   uint32_t    offset;
 } OWLVarDecl;
 
+
+/*! supported formats for texels in textures */
+typedef enum
+  {
+   OWL_TEXEL_FORMAT_RGBA8
+  }
+  OWLTexelFormat;
+
+/*! currently supported texture filter modes */
+typedef enum
+  {
+   OWL_TEXTURE_NEAREST,
+   OWL_TEXTURE_LINEAR
+  }
+  OWLTextureFilterMode;
+  
+
+
 // ------------------------------------------------------------------
 // device-objects - size of those _HAS_ to match the device-side
 // definition of these types
@@ -214,6 +237,7 @@ typedef struct _OWLDeviceBuffer2D { void *d_pointer; owl2i dims; } OWLDeviceBuff
 
 typedef struct _OWLContext       *OWLContext;
 typedef struct _OWLBuffer        *OWLBuffer;
+typedef struct _OWLTexture       *OWLTexture;
 typedef struct _OWLGeom          *OWLGeom;
 typedef struct _OWLGeomType      *OWLGeomType;
 typedef struct _OWLVariable      *OWLVariable;
@@ -413,6 +437,28 @@ owlGeomTypeCreate(OWLContext context,
                   size_t      numVars);
 
 
+/*! create new texture of given format and dimensions - for now, we
+  only do "wrap" textures, and eithe rbilinear or nearest filter;
+  once we allow for doing things like texture borders we'll have to
+  change this api */
+OWL_API OWLTexture
+owlTexture2DCreate(OWLContext context,
+                   OWLTexelFormat texelFormat,
+                   /*! number of texels in x dimension */
+                   uint32_t size_x,
+                   /*! number of texels in y dimension */
+                   uint32_t size_y,
+                   const void *texels,
+                   OWLTextureFilterMode filterMode OWL_IF_CPP(=OWL_TEXTURE_LINEAR),
+                   /*! number of bytes between one line of texels and
+                     the next; '0' means 'size_x * sizeof(texel)' */
+                   uint32_t linePitchInBytes       OWL_IF_CPP(=0)
+                   );
+
+/*! destroy the given texture; after this call any accesses to the given texture are invalid */
+OWL_API void
+owlTextureDestroy(OWLTexture texture);
+
 /*! creates a device buffer where every device has its own local copy
   of the given buffer */
 OWL_API OWLBuffer
@@ -589,6 +635,7 @@ owlLaunchParamsGetVariable(OWLLaunchParams object,
 // -------------------------------------------------------
 
 OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
+OWL_API void owlVariableSetTexture(OWLVariable variable, OWLTexture value);
 OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
 OWL_API void owlVariableSetRaw(OWLVariable variable, const void *valuePtr);
 #define _OWL_SET_HELPER(stype,abb)                      \
@@ -680,6 +727,16 @@ _OWL_SET_HELPER(float,f)
 #endif
 
 #define _OWL_SET_HELPERS(Type)                          \
+  /* texture, buffer, other */                            \
+  inline void owl##Type##SetTexture(OWL##Type object,     \
+                                  const char *varName,  \
+                                  OWLTexture v)           \
+  {                                                     \
+    OWLVariable var                                     \
+      = owl##Type##GetVariable(object,varName);         \
+    owlVariableSetTexture(var,v);                         \
+    owlVariableRelease(var);                            \
+  }                                                     \
   /* group, buffer, other */                            \
   inline void owl##Type##SetGroup(OWL##Type object,     \
                                   const char *varName,  \

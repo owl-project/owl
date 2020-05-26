@@ -91,19 +91,32 @@ namespace osc {
   {
     int numTextures = (int)model->textures.size();
 
+#if OWL_TEXTURES
+    textures.resize(numTextures);
+#else
     textureArrays.resize(numTextures);
     textureObjects.resize(numTextures);
-
+#endif
+    
     for (int textureID=0;textureID<numTextures;textureID++) {
       auto texture = model->textures[textureID];
-      
-      cudaResourceDesc res_desc = {};
-      
-      cudaChannelFormatDesc channel_desc;
+
       int32_t width  = texture->resolution.x;
       int32_t height = texture->resolution.y;
       int32_t numComponents = 4;
       int32_t pitch  = width*numComponents*sizeof(uint8_t);
+#if OWL_TEXTURES
+      this->textures[textureID]
+        = owlTexture2DCreate(context,
+                             OWL_TEXEL_FORMAT_RGBA8,
+                             width,
+                             height,
+                             texture->pixel,
+                             OWL_TEXTURE_LINEAR);
+#else
+      cudaResourceDesc res_desc = {};
+      
+      cudaChannelFormatDesc channel_desc;
       channel_desc = cudaCreateChannelDesc<uchar4>();
       
       cudaArray_t   &pixelArray = textureArrays[textureID];
@@ -137,6 +150,7 @@ namespace osc {
       cudaTextureObject_t cuda_tex = 0;
       CUDA_CHECK(CreateTextureObject(&cuda_tex, &res_desc, &tex_desc, nullptr));
       textureObjects[textureID] = cuda_tex;
+#endif
     }
   }
   
@@ -213,9 +227,14 @@ namespace osc {
 
       owlGeomSet3f(geom,"color",(const owl3f &)mesh.diffuse);
       if (mesh.diffuseTextureID >= 0) {
-        assert(mesh.diffuseTextureID < textureObjects.size());
         owlGeomSet1i(geom,"hasTexture",1);
+#if OWL_TEXTURES
+        assert(mesh.diffuseTextureID < textures.size());
+        owlGeomSetTexture(geom,"texture",textures[mesh.diffuseTextureID]);
+#else
+        assert(mesh.diffuseTextureID < textureObjects.size());
         owlGeomSetRaw(geom,"texture",&textureObjects[mesh.diffuseTextureID]);
+#endif
       } else {
         owlGeomSet1i(geom,"hasTexture",0);
       }

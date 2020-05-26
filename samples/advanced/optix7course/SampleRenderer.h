@@ -27,6 +27,8 @@
 #include "LaunchParams.h"
 #include "Model.h"
 
+#define OWL_TEXTURES 1
+
 /*! \namespace osc - Optix Siggraph Course */
 namespace osc {
 
@@ -153,8 +155,12 @@ namespace osc {
     OWLGroup world = nullptr;
 
     /*! @{ one texture object and pixel array per used texture */
+#if OWL_TEXTURES
+    std::vector<OWLTexture> textures;
+#else
     std::vector<cudaArray_t>         textureArrays;
     std::vector<cudaTextureObject_t> textureObjects;
+#endif
     /*! @} */
   };
 

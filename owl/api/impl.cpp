@@ -498,6 +498,39 @@ namespace owl {
     return (OWLBuffer)context->createHandle(buffer);
   }
 
+/*! create new texture of given format and dimensions - for now, we
+  only do "wrap" textures, and eithe rbilinear or nearest filter;
+  once we allow for doing things like texture borders we'll have to
+  change this api */
+  OWL_API OWLTexture
+  owlTexture2DCreate(OWLContext _context,
+                     OWLTexelFormat texelFormat,
+                     /*! number of texels in x dimension */
+                     uint32_t size_x,
+                     /*! number of texels in y dimension */
+                     uint32_t size_y,
+                     const void *texels,
+                     OWLTextureFilterMode filterMode,
+                     /*! number of bytes between one line of texels and
+                       the next; '0' means 'size_x * sizeof(texel)' */
+                     uint32_t linePitchInBytes
+                     )
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    Texture::SP  texture
+      = context->texture2DCreate(texelFormat,
+                                 filterMode,
+                                 vec2i(size_x,size_y),
+                                 linePitchInBytes,
+                                 texels);
+    assert(texture);
+    return (OWLTexture)context->createHandle(texture);
+  }
+
+  
   /*! creates a buffer that uses CUDA host pinned memory; that memory is
     pinned on the host and accessive to all devices in the deviec
     group */
@@ -1039,6 +1072,22 @@ namespace owl {
     assert(group);
 
     setVariable((APIHandle *)_variable,group);
+  }
+
+  // ----------- set<other> -----------
+  OWL_API void owlVariableSetTexture(OWLVariable _variable, OWLTexture _texture)
+  {
+    LOG_API_CALL();
+
+    APIHandle *handle = (APIHandle*)_texture;
+    Texture::SP texture
+      = handle
+      ? handle->get<Texture>()
+      : Texture::SP();
+    
+    assert(texture);
+
+    setVariable((APIHandle *)_variable,texture);
   }
 
   OWL_API void owlVariableSetBuffer(OWLVariable _variable, OWLBuffer _buffer)
