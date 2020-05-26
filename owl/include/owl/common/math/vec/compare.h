@@ -167,6 +167,10 @@ namespace owl {
     inline __both__ bool all(const vec_t<T,N> &a)
     { for (int i=0;i<N;++i) if (!a[i]) return false; return true; }
 
+    // template<typename T>
+    // inline __both__ bool any(const vec_t<T,3> &a)
+    // { return a[i] | b[i] | c[i]; }
+
     // ------------------------------------------------------------------
     // select
     // ------------------------------------------------------------------

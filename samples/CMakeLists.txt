@@ -14,13 +14,10 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(configure_owl)
-
 # for STB image read/write
 include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
 # for public OWL API:
 include_directories(${OWL_INCLUDES})
-
 
 # ------------------------------------------------------------------
 #cmdline-only samples, also used for 'make test'

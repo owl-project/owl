@@ -14,18 +14,16 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(configure_owl)
-
 # for STB image read/write
-include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
+#include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
 # for public OWL API:
-include_directories(${OWL_INCLUDES})
+#include_directories(${OWL_INCLUDES})
 
 # ---------------------------------------------------------------------------
 # a more serious kind of example with model loader, viewer, simple
 # path tracer, etc
 # ---------------------------------------------------------------------------
-  include_directories(${OWL_VIEWER_INCLUDES})
-  add_subdirectory(optix7course)
+#include_directories(${OWL_VIEWER_INCLUDES})
+add_subdirectory(optix7course)
 
 
