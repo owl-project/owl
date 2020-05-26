@@ -150,13 +150,14 @@ Viewer::Viewer()
     { "index",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,index)},
     { "vertex", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,vertex)},
     { "texCoord", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,texCoord)},
-    { "texture",  OWL_FLOAT3, OWL_OFFSETOF(TrianglesGeomData,texture)}
+    { "texture",  OWL_TEXTURE, OWL_OFFSETOF(TrianglesGeomData,texture)},
+    { nullptr }
   };
   OWLGeomType trianglesGeomType
     = owlGeomTypeCreate(context,
                         OWL_TRIANGLES,
                         sizeof(TrianglesGeomData),
-                        trianglesGeomVars,3);
+                        trianglesGeomVars,-1);
   owlGeomTypeSetClosestHit(trianglesGeomType,0,
                            module,"TriangleMesh");
 
@@ -194,17 +195,6 @@ Viewer::Viewer()
   owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
   owlGeomSetBuffer(trianglesGeom,"texCoord",texCoordsBuffer);
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
-  
-  // ------------------------------------------------------------------
-  // the group/accel for that mesh
-  // ------------------------------------------------------------------
-  OWLGroup trianglesGroup
-    = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
-  owlGroupBuildAccel(trianglesGroup);
-  OWLGroup world
-    = owlInstanceGroupCreate(context,1,&trianglesGroup);
-  owlGroupBuildAccel(world);
-
   // ------------------------------------------------------------------
   // create a 4x4 checkerboard texture
   // ------------------------------------------------------------------
@@ -221,6 +211,17 @@ Viewer::Viewer()
                          texels.data(),
                          OWL_TEXTURE_NEAREST);
   owlGeomSetTexture(trianglesGeom,"texture",cbTexture);
+  
+  // ------------------------------------------------------------------
+  // the group/accel for that mesh
+  // ------------------------------------------------------------------
+  OWLGroup trianglesGroup
+    = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
+  owlGroupBuildAccel(trianglesGroup);
+  OWLGroup world
+    = owlInstanceGroupCreate(context,1,&trianglesGroup);
+  owlGroupBuildAccel(world);
+
   
   // ##################################################################
   // set miss and raygen program required for SBT
