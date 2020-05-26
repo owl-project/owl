@@ -14,60 +14,16 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/)
-
-set(OWL_NG_SOURCES
-
-  ../include/owl/owl.h
-  ../common/cmake/configure_tbb.cmake
-  ../common/cmake/configure_owl.cmake
-  ../common/cmake/configure_optix.cmake
-  ../common/cmake/FindOptiX.cmake
-
-  impl.cpp
-  APIContext.h
-  APIContext.cpp
-  APIHandle.h
-  APIHandle.cpp
-  
-  Object.cpp
-  Module.cpp
-  RegisteredObject.cpp
-  SBTObject.cpp
-  Buffer.cpp
-  Texture.cpp
-  Group.cpp
-  ObjectRegistry.cpp
-  Context.cpp
-  RayGen.cpp
-  LaunchParams.cpp
-  MissProg.cpp
-  Geometry.cpp
-  Variable.cpp
-)
-
-add_library(owl
-${OWL_NG_SOURCES}
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
   )
-add_library(owl_static STATIC
-${OWL_NG_SOURCES}
+add_executable(int10-texturedTriangles
+  hostCode.cpp
+  ${ptxCode}
   )
-
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-
-target_link_libraries(owl
-  llowl_static
+target_link_libraries(int10-texturedTriangles
+  ${OWL_LIBRARIES}
+  ${OWL_VIEWER_LIBRARIES}
   )
-
-target_link_libraries(owl_static
-  llowl_static
-  )
-
-
-set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-
-
 
 

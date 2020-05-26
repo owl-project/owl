@@ -317,6 +317,7 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
         destroyed */
       void allocGroups(size_t newCount);
       void allocBuffers(size_t newCount);
+      // void allocTextures(size_t newCount);
       
       /*! resize the array of geom IDs. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all

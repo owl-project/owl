@@ -140,6 +140,36 @@ namespace owl {
     Group::SP group;
   };
   
+
+
+
+  struct TextureVariable : public Variable {
+    typedef std::shared_ptr<TextureVariable> SP;
+
+    TextureVariable(const OWLVarDecl *const varDecl)
+      : Variable(varDecl)
+    {}
+    void set(const Texture::SP &value) override
+    {
+      this->texture = value;
+    }
+
+    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    {
+      cudaTextureObject_t to = {};
+      if (texture) {
+        assert(texture->textureObjects.size() > deviceID);
+        to = texture->textureObjects[deviceID];
+      }
+      *(cudaTextureObject_t*)sbtEntry = to;
+    }
+    
+    Texture::SP texture;
+  };
+  
+
+
+
   Variable::SP Variable::createInstanceOf(const OWLVarDecl *decl)
   {
     assert(decl);
@@ -196,6 +226,8 @@ namespace owl {
 
     case OWL_GROUP:
       return std::make_shared<GroupVariable>(decl);
+    case OWL_TEXTURE:
+      return std::make_shared<TextureVariable>(decl);
     case OWL_BUFFER:
       return std::make_shared<BufferVariable>(decl);
     case OWL_BUFFER_POINTER:
