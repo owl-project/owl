@@ -103,9 +103,11 @@ ENDIF()
 
 SET(TBB_ROOT_PATH_LAST ${TBB_ROOT_PATH} CACHE INTERNAL "Last value of TBB_ROOT_PATH to detect changes")
 
-SET(TBB_ERROR_MESSAGE
-  "Threading Building Blocks (TBB) with minimum version ${TBB_VERSION_REQUIRED} not found.
-OWL uses TBB as default tasking system. Please make sure you have the TBB headers installed as well (the package is typically named 'libtbb-dev' or 'tbb-devel') and/or hint the location of TBB in TBB_ROOT_PATH. This error message means that TBB could not be found, and that a non-parallel scalar fall-back will be used")
+#SET(TBB_ERROR_MESSAGE
+#  "Threading Building Blocks (TBB) with minimum version ${TBB_VERSION_REQUIRED} not found.
+#OWL uses TBB as default tasking system. Please make sure you have the TBB headers installed as well (the package is typically named 'libtbb-dev' or 'tbb-devel') and/or hint the location of TBB in TBB_ROOT_PATH. This error message means that TBB could not be found, and that a non-parallel scalar fall-back will be used")
+
+SET(TBB_ERROR_MESSAGE "Error finding TBB")
 
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(TBB

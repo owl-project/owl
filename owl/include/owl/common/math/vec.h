@@ -400,8 +400,8 @@ namespace owl {
   using namespace owl::common;
 } // ::owl
 
-#include "vec/functors.h"
 // comparison operators
 #include "vec/compare.h"
+#include "vec/functors.h"
 #include "vec/rotate.h"
 
