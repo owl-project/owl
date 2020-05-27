@@ -122,6 +122,12 @@ Latest Progress/Revision History
 v0.8.x - Revamped build system, owl viewer, interative samples, and textures
 ----------------------------------------------------------------------
 
+*v0.8.2*: double types, interactive sapmle
+
+- added OWL_DOUBLE type for variables, and al owl3d, setVariable, etc
+
+- added int11-rotationCubes sample that has NxMxK roating textured cubes
+
 *v0.8.1*: first light of textures
 
 - added basic infrastructure for textures: OWLTexture type,

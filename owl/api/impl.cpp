@@ -1005,6 +1005,7 @@ namespace owl {
   _OWL_SET_HELPER(int64_t,l)
   _OWL_SET_HELPER(uint64_t,ul)
   _OWL_SET_HELPER(float,f)
+  _OWL_SET_HELPER(double,d)
 #undef _OWL_SET_HELPER
 
 #else
