@@ -81,7 +81,9 @@ namespace owl {
       
       /*! window notifies us that we got resized */     
       virtual void resize(const vec2i &newSize);
-      
+
+      void setTitle(const std::string &s);
+
       /*! gets called whenever the viewer needs us to re-render out widget */
       virtual void render() {}
       

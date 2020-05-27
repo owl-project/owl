@@ -287,7 +287,11 @@ namespace owl {
     }
   
 
-
+    void OWLViewer::setTitle(const std::string &s)
+    {
+      glfwSetWindowTitle(handle,s.c_str());
+    }
+    
     OWLViewer::OWLViewer(const std::string &title,
                          const vec2i &initWindowSize)
     {
