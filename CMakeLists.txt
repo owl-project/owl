@@ -81,7 +81,8 @@ endif()
 # variables to the parent
 # ------------------------------------------------------------------
 if (NOT (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_HOME_DIRECTORY}))
-  message("#owl.cmake: exporting OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES}")
+#  message("#owl.cmake: exporting OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES}")
+#  message("#owl.cmake: exporting OWL_INCLUDES ${OWL_INCLUDES}")
   set(OWL_INCLUDES ${OWL_INCLUDES} PARENT_SCOPE)
   set(OWL_VIEWER_INCLUDES ${OWL_VIEWER_INCLUDES} PARENT_SCOPE)
   set(OWL_LIBRARIES ${OWL_LIBRARIES} PARENT_SCOPE)

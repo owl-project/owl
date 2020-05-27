@@ -39,8 +39,6 @@ namespace owl {
       pitch = size.x*sizeof(vec4uc);
 
     assert(texels != nullptr);
-    PRINT(pitch);
-    PRINT(texels);
     
     for (auto device : context->llo->devices) {
       device->context->pushActive();
@@ -50,7 +48,6 @@ namespace owl {
       cudaChannelFormatDesc channel_desc;
       channel_desc = cudaCreateChannelDesc<uchar4>();
 
-      PRINT(size);
       cudaArray_t   pixelArray;
       CUDA_CALL(MallocArray(&pixelArray,
                              &channel_desc,
