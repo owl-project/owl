@@ -58,11 +58,7 @@ include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 include(configure_cuda)
 include(configure_optix)
 include(configure_owl)
-# n8, 5/28/20: this changes CMAKE_BUILD_TYPE for parent projects 
-# submoduling owl, subtly removing custom build types like 
-# RelWithDebugInfo, MinSizeRel, etc... arguably owl override parent 
-# project settings like these.
-# include(configure_build_type)
+include(configure_build_type)
 
 include_directories(${OWL_INCLUDES})
 
