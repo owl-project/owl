@@ -80,7 +80,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/common/cmake/")
 include(configure_cuda)
 include(configure_optix)
 include(configure_owl)
-include(configure_build_type)
+# n8, 5/28/20: this changes CMAKE_BUILD_TYPE for parent projects 
+# submoduling owl, subtly removing custom build types like 
+# RelWithDebugInfo, MinSizeRel, etc... arguably owl override parent 
+# project settings like these.
+# include(configure_build_type)
 
 include_directories(${OWL_INCLUDES})
 
