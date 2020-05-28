@@ -26,32 +26,17 @@ else()
   SET(OWL_IS_SUBPROJECT OFF)
 endif()
 
-if (NOT OWL_IS_SUBPROJECT)
-  OPTION(OWL_BUILD_SAMPLES "Build the Samples?" ON)
-  OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
-  if(NOT SET_UP_CONFIGURATIONS_DONE)
-    set(SET_UP_CONFIGURATIONS_DONE 1)
-
-    # No reason to set CMAKE_CONFIGURATION_TYPES if it's not a multiconfig generator
-    # Also no reason mess with CMAKE_BUILD_TYPE if it's a multiconfig generator.
-    if(CMAKE_CONFIGURATION_TYPES) # multiconfig generator?
-      set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE) 
-    else()
-      if(NOT CMAKE_BUILD_TYPE)
-	#            message("Defaulting to release build.")
-        set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
-      endif()
-      set_property(CACHE CMAKE_BUILD_TYPE PROPERTY HELPSTRING "Choose the type of build")
-      # set the valid options for cmake-gui drop-down list
-      set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
-    endif()
-  endif()
-  SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-  SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-  SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-endif()
-
-OPTION(OWL_USE_TBB "Use TBB to parallelize host-side code?" ON)
+# ------------------------------------------------------------------
+# first, include gdt project to do some general configuration stuff
+# (build modes, glut, optix, etc)
+# ------------------------------------------------------------------
+set(owl_dir ${PROJECT_SOURCE_DIR})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/common/cmake/")
+include(configure_owl)
+include(configure_tbb)
+# if not a subproject, set "Debug/Release flags and binary output dir
+# to <binaryDir>
+include(configure_build_type)
 
 # iw, 1/3/20: yes, i know this is 'old' cmake style, but on CentOS7
 # this is the only way that works, since the 'correct' way of setting
@@ -67,15 +52,8 @@ if (NOT WIN32)
   set (CUDA_PROPAGATE_HOST_FLAGS ON)
 endif()
 
-# ------------------------------------------------------------------
-# first, include gdt project to do some general configuration stuff
-# (build modes, glut, optix, etc)
-# ------------------------------------------------------------------
-set(owl_dir ${PROJECT_SOURCE_DIR})
-
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/common/cmake/")
 
 include(configure_cuda)
 include(configure_optix)
@@ -96,6 +74,7 @@ add_subdirectory(owl)
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
+OPTION(OWL_BUILD_SAMPLES "Build the Samples?" ON)
 if (OWL_BUILD_SAMPLES)
   enable_testing()
   add_subdirectory(samples)
@@ -104,9 +83,12 @@ endif()
 # ------------------------------------------------------------------
 # some basic testing
 # ------------------------------------------------------------------
-if (OWL_BUILD_ADVANCED_TESTS)
-  enable_testing()
-  add_subdirectory(tests)
+OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
+if (NOT OWL_IS_SUBPROJECT)
+  if (OWL_BUILD_ADVANCED_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+  endif()
 endif()
 
 # ------------------------------------------------------------------
