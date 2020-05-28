@@ -52,15 +52,13 @@ if (NOT WIN32)
   set (CUDA_PROPAGATE_HOST_FLAGS ON)
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-
-
 include(configure_cuda)
 include(configure_optix)
 include(configure_owl)
 include(configure_build_type)
 
 include_directories(${OWL_INCLUDES})
+add_definitions(${OWL_CXX_FLAGS})
 
 # ------------------------------------------------------------------
 # owl library itself, including owl-common
