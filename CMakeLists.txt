@@ -19,7 +19,7 @@ if (POLICY CMP0048)
 endif()
 project(Optix-OWL VERSION 0.8.1)
 
-#OPTION(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
+OPTION(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
 OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 OPTION(OWL_USE_TBB "Use TBB to parallelize computation?" ON)
 
@@ -63,10 +63,10 @@ add_subdirectory(owl)
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
-#if (OWL_BUILD_SAMPLES)
+if (OWL_BUILD_SAMPLES)
   enable_testing()
   add_subdirectory(samples)
-#endif()
+endif()
 
 # ------------------------------------------------------------------
 # some basic testing
