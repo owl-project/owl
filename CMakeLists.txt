@@ -56,6 +56,7 @@ include(configure_cuda)
 include(configure_optix)
 include(configure_owl)
 include(configure_build_type)
+include(configure_tbb)
 
 include_directories(${OWL_INCLUDES})
 add_definitions(${OWL_CXX_FLAGS})
