@@ -124,7 +124,6 @@ namespace owl {
     {
       context->pushActive();
       if (traversable) {
-        PING;
         bvhMemory.free();
         traversable = 0;
       }
@@ -165,17 +164,6 @@ namespace owl {
          OPTIX_DEVICE_PROPERTY_LIMIT_MAX_INSTANCES_PER_IAS,
          &maxInstsPerIAS,
          sizeof(maxInstsPerIAS));
-
-      // uint32_t maxInstanceID = 0;
-      // optixDeviceContextGetProperty
-      //   (context->optixContext,
-      //    OPTIX_DEVICE_PROPERTY_LIMIT_MAX_INSTANCE_ID,
-      //    &maxInstanceID,
-      //    sizeof(maxInstanceID));
-      // PRINT(maxInstanceID);
-      // exit(0);
-      
-
       
       if (children.size() > maxInstsPerIAS)
         throw std::runtime_error("number of children in instnace group exceeds "
@@ -222,7 +210,6 @@ namespace owl {
         
         oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
         oi.instanceId        = instanceIDs.empty()?childID:instanceIDs[childID];
-        // PRINT(oi.instanceId);
         oi.visibilityMask    = 255;
         oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
         oi.visibilityMask    = 255;
@@ -286,8 +273,6 @@ namespace owl {
       
       if (FULL_REBUILD)
         bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
-      PRINT(bvhMemory.size());
-      PRINT(tempSize);
       
       OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                   /* todo: stream */0,
