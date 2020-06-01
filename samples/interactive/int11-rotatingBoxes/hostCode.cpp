@@ -177,7 +177,9 @@ OWLGroup createBox(OWLContext context,
   // ------------------------------------------------------------------
   OWLGroup trianglesGroup
     = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
+
   owlGroupBuildAccel(trianglesGroup);
+  
   return trianglesGroup;
 }
 
@@ -366,7 +368,20 @@ void Viewer::render()
                                  (const float*)&boxTransforms[i],
                                  OWL_MATRIX_FORMAT_OWL);
   }
+
+  static double updateTime = 0.f;
+  updateTime -= getCurrentTime();
+  static int frameID = 0;
+  int thisFrameID = frameID++;
+#if 1
+  owlGroupRefitAccel(world);
+#else
   owlGroupBuildAccel(world);
+#endif
+  updateTime += getCurrentTime();
+  PRINT(updateTime/frameID);
+  
+  // owlGroupBuildAccel(world);
   owlBuildSBT(context);
   
   owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);

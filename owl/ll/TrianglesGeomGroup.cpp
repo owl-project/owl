@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -83,10 +83,23 @@ namespace owl {
       context->popActive();
     }
     
-    void TrianglesGeomGroup::buildAccel(Context *context) 
+    void TrianglesGeomGroup::buildAccel(Context *context)
+    {
+      buildOrRefit<true>(context);
+    }
+    void TrianglesGeomGroup::refitAccel(Context *context)
+    {
+      buildOrRefit<false>(context);
+    }
+    
+    template<bool FULL_REBUILD>
+    void TrianglesGeomGroup::buildOrRefit(Context *context) 
     {
       assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && bvhMemory.empty());
+      if (FULL_REBUILD)
+        assert("check does not yet exist on first build" && bvhMemory.empty());
+      else
+        assert("check DOES exist on refit" && !bvhMemory.empty());
       
       context->pushActive();
       LOG("building triangles accel over "
@@ -182,12 +195,17 @@ namespace owl {
       // ------------------------------------------------------------------
       OptixAccelBuildOptions accelOptions = {};
       accelOptions.buildFlags =
+        OPTIX_BUILD_FLAG_ALLOW_UPDATE
+        |
         OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
         |
         OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
 
       accelOptions.motionOptions.numKeys  = 1;
-      accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
+      if (FULL_REBUILD)
+        accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
+      else
+        accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
       
       OptixAccelBufferSizes blasBufferSizes;
       OPTIX_CHECK(optixAccelComputeMemoryUsage
@@ -206,7 +224,9 @@ namespace owl {
 
       // temp memory:
       DeviceMemory tempBuffer;
-      tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
+      tempBuffer.alloc(FULL_REBUILD
+                       ?blasBufferSizes.tempSizeInBytes
+                       :blasBufferSizes.tempUpdateSizeInBytes);
 
       // buffer for initial, uncompacted bvh
       DeviceMemory outputBuffer;
@@ -214,6 +234,7 @@ namespace owl {
 
       // single size-t buffer to store compacted size in
       DeviceMemory compactedSizeBuffer;
+      if (FULL_REBUILD)
       compactedSizeBuffer.alloc(sizeof(uint64_t));
       
       // ------------------------------------------------------------------
@@ -222,60 +243,77 @@ namespace owl {
       OptixAccelEmitDesc emitDesc;
       emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
       emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
-      
-      OPTIX_CHECK(optixAccelBuild(context->optixContext,
-                                  /* todo: stream */0,
-                                  &accelOptions,
-                                  // array of build inputs:
-                                  triangleInputs.data(),
-                                  (uint32_t)triangleInputs.size(),
-                                  // buffer of temp memory:
-                                  (CUdeviceptr)tempBuffer.get(),
-                                  tempBuffer.size(),
-                                  // where we store initial, uncomp bvh:
-                                  (CUdeviceptr)outputBuffer.get(),
-                                  outputBuffer.size(),
+
+      if (FULL_REBUILD) {
+        OPTIX_CHECK(optixAccelBuild(context->optixContext,
+                                    /* todo: stream */0,
+                                    &accelOptions,
+                                    // array of build inputs:
+                                    triangleInputs.data(),
+                                    (uint32_t)triangleInputs.size(),
+                                    // buffer of temp memory:
+                                    (CUdeviceptr)tempBuffer.get(),
+                                    tempBuffer.size(),
+                                    // where we store initial, uncomp bvh:
+                                    (CUdeviceptr)outputBuffer.get(),
+                                    outputBuffer.size(),
                                   /* the traversable we're building: */ 
-                                  &traversable,
-                                  /* we're also querying compacted size: */
-                                  &emitDesc,1u
-                                  ));
+                                    &traversable,
+                                    /* we're also querying compacted size: */
+                                    &emitDesc,1u
+                                    ));
+      } else {
+        OPTIX_CHECK(optixAccelBuild(context->optixContext,
+                                    /* todo: stream */0,
+                                    &accelOptions,
+                                    // array of build inputs:
+                                    triangleInputs.data(),
+                                    (uint32_t)triangleInputs.size(),
+                                    // buffer of temp memory:
+                                    (CUdeviceptr)tempBuffer.get(),
+                                    tempBuffer.size(),
+                                    // where we store initial, uncomp bvh:
+                                    (CUdeviceptr)bvhMemory.get(),
+                                    bvhMemory.size(),
+                                    /* the traversable we're building: */ 
+                                    &traversable,
+                                    /* we're also querying compacted size: */
+                                    nullptr,0
+                                    ));
+      }
       CUDA_SYNC_CHECK();
       
       // ==================================================================
       // perform compaction
       // ==================================================================
 
-      // download builder's compacted size from device
-      uint64_t compactedSize;
-      compactedSizeBuffer.download(&compactedSize);
-
       // alloc the buffer...
-      bvhMemory.alloc(compactedSize);
-      // ... and perform compaction
-      OPTIX_CALL(AccelCompact(context->optixContext,
-                              /*TODO: stream:*/0,
-                              // OPTIX_COPY_MODE_COMPACT,
-                              traversable,
-                              (CUdeviceptr)bvhMemory.get(),
-                              bvhMemory.size(),
-                              &traversable));
+      if (FULL_REBUILD) {
+        // download builder's compacted size from device
+        uint64_t compactedSize;
+        compactedSizeBuffer.download(&compactedSize);
+        
+        bvhMemory.alloc(compactedSize);
+        // ... and perform compaction
+        OPTIX_CALL(AccelCompact(context->optixContext,
+                                /*TODO: stream:*/0,
+                                // OPTIX_COPY_MODE_COMPACT,
+                                traversable,
+                                (CUdeviceptr)bvhMemory.get(),
+                                bvhMemory.size(),
+                                &traversable));
+      }
       CUDA_SYNC_CHECK();
 
-#if 0
-      std::vector<uint8_t> dumpBuffer(bvhMemory.size());
-      bvhMemory.download(dumpBuffer.data());
-      std::ofstream dump("/tmp/bvhMemory.bin",std::ios::binary);
-      dump.write((char*)dumpBuffer.data(),dumpBuffer.size());
-      PRINT(dumpBuffer.size());
-#endif
       
       // ==================================================================
       // aaaaaand .... clean up
       // ==================================================================
-      outputBuffer.free(); // << the UNcompacted, temporary output buffer
+      if (FULL_REBUILD)
+        outputBuffer.free(); // << the UNcompacted, temporary output buffer
       tempBuffer.free();
-      compactedSizeBuffer.free();
+      if (FULL_REBUILD)
+        compactedSizeBuffer.free();
       
       context->popActive();
 

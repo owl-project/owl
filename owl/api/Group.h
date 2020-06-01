@@ -30,6 +30,7 @@ namespace owl {
     {}
     virtual std::string toString() const { return "Group"; }
     virtual void buildAccel();
+    virtual void refitAccel();
 
     OptixTraversableHandle getTraversable(int deviceID);
   };
@@ -56,7 +57,14 @@ namespace owl {
     UserGeomGroup(Context *const context,
                    size_t numChildren);
     virtual std::string toString() const { return "UserGeomGroup"; }
-    virtual void buildAccel() override;
+
+    /*! build() and refit() share most of their code; this functoin
+        does all that code, with only minor specialization based on
+        build vs refit */
+    void buildOrRefit(bool FULL_REBUILD);
+    
+    void buildAccel() override;
+    void refitAccel() override;
   };
 
   struct InstanceGroup : public Group {

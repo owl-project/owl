@@ -437,6 +437,7 @@ owlInstanceGroupCreate(OWLContext context,
                        );
 
 OWL_API void owlGroupBuildAccel(OWLGroup group);
+OWL_API void owlGroupRefitAccel(OWLGroup group);
 
 OWL_API OWLGeomType
 owlGeomTypeCreate(OWLContext context,
