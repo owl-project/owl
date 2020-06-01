@@ -253,6 +253,8 @@ namespace owl {
 
       virtual void destroyAccel(Context *context) = 0;
       virtual void buildAccel(Context *context) = 0;
+      virtual void refitAccel(Context *context) = 0;
+      
       virtual int  getSBTOffset() const = 0;
       
       // std::vector<int>       elements;
@@ -271,8 +273,13 @@ namespace owl {
       {}
       virtual bool containsGeom() { return false; }
       
-      virtual void destroyAccel(Context *context) override;
-      virtual void buildAccel(Context *context) override;
+      template<bool fullRebuild>
+      void buildOrRefit(Context *context);
+
+      void destroyAccel(Context *context) override;
+      void buildAccel(Context *context) override;
+      void refitAccel(Context *context) override;
+      
       virtual int  getSBTOffset() const override { return 0; }
 
       DeviceMemory optixInstanceBuffer;
@@ -307,8 +314,12 @@ namespace owl {
       {}
       virtual PrimType primType() { return TRIANGLES; }
       
-      virtual void destroyAccel(Context *context) override;
-      virtual void buildAccel(Context *context) override;
+      template<bool fullRebuild>
+      void buildOrRefit(Context *context);
+      
+      void destroyAccel(Context *context) override;
+      void buildAccel(Context *context) override;
+      void refitAccel(Context *context) override;
     };
     struct UserGeomGroup : public GeomGroup {
       UserGeomGroup(size_t numChildren,
@@ -318,8 +329,12 @@ namespace owl {
       {}
       virtual PrimType primType() { return USER; }
       
-      virtual void destroyAccel(Context *context) override;
-      virtual void buildAccel(Context *context) override;
+      template<bool fullRebuild>
+      void buildOrRefit(Context *context);
+
+      void destroyAccel(Context *context) override;
+      void buildAccel(Context *context) override;
+      void refitAccel(Context *context) override;
     };
 
 
@@ -627,6 +642,7 @@ namespace owl {
       // ------------------------------------------------------------------
       // group related struff
       // ------------------------------------------------------------------
+      void groupRefitAccel(int groupID);
       void groupBuildAccel(int groupID);
       
       /*! return given group's current traversable. note this function

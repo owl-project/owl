@@ -1086,6 +1086,13 @@ namespace owl {
       group->buildAccel(context);
     }
 
+    void Device::groupRefitAccel(int groupID)
+    {
+      Group *group = checkGetGroup(groupID);
+      /* do NOT destroy */
+      group->refitAccel(context);
+    }
+
     /*! return given group's current traversable. note this function
       will *not* check if the group has alreadybeen built, if it
       has to be rebuilt, etc. */
