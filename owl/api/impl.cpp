@@ -60,7 +60,7 @@ namespace owl {
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->getContext();
     assert(context);
-    return context->llo->getStreamPointer(deviceID);
+    return context->llo->getStream(deviceID);
   }
 
   OWL_API OptixDeviceContext owlContextGetOptixContext(OWLContext _context, int deviceID)
@@ -69,7 +69,7 @@ namespace owl {
     assert(_context);
     APIContext::SP context = ((APIHandle *)_context)->getContext();
     assert(context);
-    return context->llo->getOptixContextPointer(deviceID);
+    return context->llo->getOptixContext(deviceID);
   }
 
   /*! set number of ray types to be used in this context; this should be

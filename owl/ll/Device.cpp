@@ -1041,14 +1041,14 @@ namespace owl {
       return (void*)checkGetBuffer(bufferID)->d_pointer;
     }
 
-    cudaStream_t *Device::getStreamPointer()
+    CUstream Device::getStream()
     {
-      return &context->stream;
+      return context->stream;
     }
 
-    OptixDeviceContext_t *Device::getOptixContextPointer()
+    OptixDeviceContext Device::getOptixContext()
     {
-      return &context->optixContext;
+      return context->optixContext;
     }
 
 

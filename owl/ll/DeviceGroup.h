@@ -423,8 +423,8 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
         device */
       void *bufferGetPointer(int bufferID, int devID);
 
-      cudaStream_t *getStreamPointer(int devID);
-      OptixDeviceContext_t *getOptixContextPointer(int devID);
+      CUstream getStream(int devID);
+      OptixDeviceContext getOptixContext(int devID);
       
       /*! return the cuda stream by the given launchparams object, on
         given device */

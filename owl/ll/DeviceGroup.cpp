@@ -643,14 +643,14 @@ namespace owl {
       return checkGetDevice(devID)->bufferGetPointer(bufferID);
     }
     
-    cudaStream_t *DeviceGroup::getStreamPointer(int devID)
+    CUstream DeviceGroup::getStream(int devID)
     {
-      return checkGetDevice(devID)->getStreamPointer();
+      return checkGetDevice(devID)->getStream();
     }
 
-    OptixDeviceContext_t *DeviceGroup::getOptixContextPointer(int devID)
+    OptixDeviceContext DeviceGroup::getOptixContext(int devID)
     {
-      return checkGetDevice(devID)->getStreamPointer();
+      return checkGetDevice(devID)->getOptixContext();
     }
 
     /*! return the cuda stream by the given launchparams object, on
