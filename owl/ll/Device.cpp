@@ -1041,11 +1041,13 @@ namespace owl {
       return (void*)checkGetBuffer(bufferID)->d_pointer;
     }
 
+    /* Returns the cuda stream associated with the current device. */
     CUstream Device::getStream()
     {
       return context->stream;
     }
 
+    /* Returns the optix context associated with the current device. */
     OptixDeviceContext Device::getOptixContext()
     {
       return context->optixContext;
