@@ -54,6 +54,7 @@ namespace owl {
     return (OWLContext)context->createHandle(context);
   }
 
+  /* return the cuda stream associated with the given device. */
   OWL_API CUstream owlContextGetStream(OWLContext _context, int deviceID)
   {
     LOG_API_CALL();
@@ -63,6 +64,7 @@ namespace owl {
     return context->llo->getStream(deviceID);
   }
 
+  /* return the optix context associated with the given device. */
   OWL_API OptixDeviceContext owlContextGetOptixContext(OWLContext _context, int deviceID)
   {
     LOG_API_CALL();
