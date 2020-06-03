@@ -1041,6 +1041,17 @@ namespace owl {
       return (void*)checkGetBuffer(bufferID)->d_pointer;
     }
 
+    cudaStream_t *Device::getStreamPointer()
+    {
+      return &context->stream;
+    }
+
+    OptixDeviceContext_t *Device::getOptixContextPointer()
+    {
+      return &context->optixContext;
+    }
+
+
     /*! return the cuda stream by the given launchparams object, on
       given device */
     CUstream Device::launchParamsGetStream(int lpID)

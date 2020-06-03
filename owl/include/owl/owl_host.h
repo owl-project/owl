@@ -289,6 +289,12 @@ owlSetMaxInstancingDepth(OWLContext context,
 OWL_API void
 owlContextDestroy(OWLContext context);
 
+OWL_API CUstream
+owlContextGetStream(OWLContext context, int deviceID);
+
+OWL_API OptixDeviceContext
+owlContextGetOptixContext(OWLContext context, int deviceID);
+
 OWL_API OWLModule
 owlModuleCreate(OWLContext  context,
                 const char *ptxCode);
