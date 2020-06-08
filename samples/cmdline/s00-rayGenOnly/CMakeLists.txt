@@ -14,7 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl)
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )

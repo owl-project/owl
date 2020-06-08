@@ -14,8 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/)
-
 set(OWL_NG_SOURCES
 
   ../include/owl/owl.h
@@ -35,6 +33,7 @@ set(OWL_NG_SOURCES
   RegisteredObject.cpp
   SBTObject.cpp
   Buffer.cpp
+  Texture.cpp
   Group.cpp
   ObjectRegistry.cpp
   Context.cpp

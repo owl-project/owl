@@ -18,6 +18,7 @@
 
 #include "ObjectRegistry.h"
 #include "Buffer.h"
+#include "Texture.h"
 #include "Group.h"
 #include "RayGen.h"
 #include "LaunchParams.h"
@@ -41,6 +42,7 @@ namespace owl {
     virtual ~Context();
 
     ObjectRegistryT<Buffer>       buffers;
+    ObjectRegistryT<Texture>      textures;
     ObjectRegistryT<Group>        groups;
     ObjectRegistryT<RayGenType>   rayGenTypes;
     ObjectRegistryT<RayGen>       rayGens;
@@ -106,6 +108,13 @@ namespace owl {
                        size_t count,
                        const void *init);
 
+    Texture::SP
+    texture2DCreate(OWLTexelFormat texelFormat,
+                    OWLTextureFilterMode filterMode,
+                    const vec2i size,
+                    uint32_t linePitchInBytes,
+                    const void *texels);
+    
     /*! creates a buffer that uses CUDA host pinned memory; that
       memory is pinned on the host and accessive to all devices in the
       device group */

@@ -17,7 +17,7 @@
 if (POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
 endif()
-project(Optix-OWL VERSION 0.8.0)
+project(Optix-OWL VERSION 0.8.1)
 
 OPTION(OWL_BUILD_SAMPLES "Build the Samples?" ON)
 OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)

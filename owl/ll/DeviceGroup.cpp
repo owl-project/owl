@@ -336,6 +336,12 @@ namespace owl {
         device->allocBuffers(newCount);
     }
       
+    // void DeviceGroup::allocTextures(size_t newCount)
+    // {
+    //   for (auto device : devices)
+    //     device->allocTextures(newCount);
+    // }
+      
     void DeviceGroup::allocGeoms(size_t newCount)
     {
       for (auto device : devices)

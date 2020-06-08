@@ -1504,6 +1504,7 @@ namespace owl {
                groups[idxWeWouldLose] == nullptr);
       groups.resize(newCount);
     }
+    
     /*! resize the array of buffer handles. this can be either a
       'grow' or a 'shrink', but 'shrink' is only allowed if all
       buffer handles that would get 'lost' have alreay been
@@ -1516,6 +1517,12 @@ namespace owl {
       buffers.resize(newCount);
     }
 
+    // void Device::allocTextures(size_t newCount)
+    // {
+    //   assert(newCount > textureObjects.size());
+    //   textureObjects.resize(newCount);
+    // }
+    
     void Device::allocLaunchParams(size_t count)
     {
       if (count < launchParams.size())

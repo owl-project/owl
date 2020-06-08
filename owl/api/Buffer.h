@@ -29,7 +29,7 @@ namespace owl {
     /*! destructor - free device data, de-regsiter, and destruct */
     virtual ~Buffer();
     
-    virtual std::string toString() const { return "Buffer"; }
+    std::string toString() const override { return "Buffer"; }
 
     const void *getPointer(int deviceID);
 
