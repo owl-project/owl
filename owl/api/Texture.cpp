@@ -87,7 +87,9 @@ namespace owl {
         filterMode == OWL_TEXTURE_NEAREST
         ? cudaFilterModePoint
         : cudaFilterModeLinear;
-      tex_desc.readMode            = cudaReadModeNormalizedFloat;
+      tex_desc.readMode            =
+        ((texelFormat == OWL_TEXEL_FORMAT_R8) || (texelFormat == OWL_TEXEL_FORMAT_RGBA8)) ?
+        cudaReadModeNormalizedFloat : cudaReadModeElementType;
       tex_desc.normalizedCoords    = 1;
       tex_desc.maxAnisotropy       = 1;
       tex_desc.maxMipmapLevelClamp = 99;
