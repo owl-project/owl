@@ -213,7 +213,10 @@ typedef struct _OWLVarDecl {
 /*! supported formats for texels in textures */
 typedef enum
   {
-   OWL_TEXEL_FORMAT_RGBA8
+   OWL_TEXEL_FORMAT_RGBA8,
+   OWL_TEXEL_FORMAT_RGBA32F,
+   OWL_TEXEL_FORMAT_R8,
+   OWL_TEXEL_FORMAT_R32F
   }
   OWLTexelFormat;
 

@@ -127,8 +127,9 @@ v0.8.x - Revamped build system, owl viewer, interative samples, and textures
 - added basic infrastructure for textures: OWLTexture type,
   OWLTextureFormat and OWLTextureFilterMode enums, OWL_TEXTURE
   variable types, owlVariableSetTexture, owl<Type>SetTexture(),
-  etc. Textures currently only working for OWL_TEXEL_FORMAT_RGBA8 and
-  OWL_TEXTURE_FILETER_LINEAR.
+  etc. Textures currently only working for OWL_TEXEL_FORMAT_RGBA8, 
+  OWL_TEXEL_FORMAT_RGBA32F, OWL_TEXEL_FORMAT_R8, OWL_TEXEL_FORMAT_R32F 
+  and with OWL_TEXTURE_FILTER_LINEAR.
 
 - added int10-texturedTriangles that opens a window with a
   checkerboard-textured box.
