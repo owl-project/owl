@@ -78,8 +78,8 @@ namespace owl {
       res_desc.res.array.array  = pixelArray;
       
       cudaTextureDesc tex_desc     = {};
-      tex_desc.addressMode[0]      = cudaAddressModeWrap;
-      tex_desc.addressMode[1]      = cudaAddressModeWrap;
+      tex_desc.addressMode[0]      = cudaAddressModeClamp;
+      tex_desc.addressMode[1]      = cudaAddressModeClamp;
       assert(filterMode == OWL_TEXTURE_NEAREST
              ||
              filterMode == OWL_TEXTURE_LINEAR);
