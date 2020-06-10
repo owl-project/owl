@@ -40,8 +40,15 @@ namespace owl {
       (texelFormat == OWL_TEXEL_FORMAT_R8) ||
       (texelFormat == OWL_TEXEL_FORMAT_R32F)
     );
-    if (pitch == 0)
-      pitch = size.x*sizeof(vec4uc);
+    if (pitch == 0) {
+      switch(texelFormat) {
+        case OWL_TEXEL_FORMAT_RGBA8:   pitch = size.x*sizeof(vec4uc); break;
+        case OWL_TEXEL_FORMAT_RGBA32F: pitch = size.x*sizeof(vec4); break;
+        case OWL_TEXEL_FORMAT_R8:      pitch = size.x*sizeof(uint8_t); break;
+        case OWL_TEXEL_FORMAT_R32F:    pitch = size.x*sizeof(float); break;
+        default: assert(false);
+      }  
+    }
 
     assert(texels != nullptr);
     PRINT(pitch);
@@ -78,8 +85,8 @@ namespace owl {
       res_desc.res.array.array  = pixelArray;
       
       cudaTextureDesc tex_desc     = {};
-      tex_desc.addressMode[0]      = cudaAddressModeWrap;
-      tex_desc.addressMode[1]      = cudaAddressModeWrap;
+      tex_desc.addressMode[0]      = cudaAddressModeClamp;
+      tex_desc.addressMode[1]      = cudaAddressModeClamp;
       assert(filterMode == OWL_TEXTURE_NEAREST
              ||
              filterMode == OWL_TEXTURE_LINEAR);
