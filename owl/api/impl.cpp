@@ -530,6 +530,15 @@ namespace owl {
     return (OWLTexture)context->createHandle(texture);
   }
 
+  OWL_API const cudaTextureObject_t *
+  owlTextureGetObject(OWLTexture _texture, int deviceID)
+  {
+    LOG_API_CALL();
+    assert(_texture);
+    Texture::SP texture = ((APIHandle *)_texture)->get<Texture>();
+    assert(texture);
+    return texture->getObject(deviceID);
+  }
   
   /*! creates a buffer that uses CUDA host pinned memory; that memory is
     pinned on the host and accessive to all devices in the deviec

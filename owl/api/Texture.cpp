@@ -95,6 +95,13 @@ namespace owl {
     }
   }
 
+  /* return the cuda texture object corresponding to the specified 
+       device ID*/
+  cudaTextureObject_t Texture::getObject(int deviceID)
+  {
+    return textureObjects[deviceID];
+  }
+
   Texture::~Texture()
   {
     PING;

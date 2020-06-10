@@ -37,6 +37,10 @@ namespace owl {
     
     std::string toString() const override { return "Texture"; }
 
+    /* return the cuda texture object corresponding to the specified 
+       device ID*/
+    cudaTextureObject_t getObject(int deviceID);
+
     /*! destroy whatever resouces this texture's ll-layer handle this
         may refer to; this will not destruct the current object
         itself, but should already release all its references */
