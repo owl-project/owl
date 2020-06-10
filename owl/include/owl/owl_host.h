@@ -468,7 +468,7 @@ owlTexture2DCreate(OWLContext context,
 
 /*! returns the device handle of the given texture for the given
     device ID. Useful for custom texture object arrays. */
-OWL_API const cudaTextureObject_t
+OWL_API const CUtexObject
 owlTextureGetObject(OWLTexture texture, int deviceID);
 
 /*! destroy the given texture; after this call any accesses to the given texture are invalid */
