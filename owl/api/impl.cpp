@@ -530,7 +530,7 @@ namespace owl {
     return (OWLTexture)context->createHandle(texture);
   }
 
-  OWL_API const cudaTextureObject_t
+  OWL_API const CUtexObject
   owlTextureGetObject(OWLTexture _texture, int deviceID)
   {
     LOG_API_CALL();
