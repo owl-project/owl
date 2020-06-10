@@ -40,8 +40,15 @@ namespace owl {
       (texelFormat == OWL_TEXEL_FORMAT_R8) ||
       (texelFormat == OWL_TEXEL_FORMAT_R32F)
     );
-    if (pitch == 0)
-      pitch = size.x*sizeof(vec4uc);
+    if (pitch == 0) {
+      switch(texelFormat) {
+        case OWL_TEXEL_FORMAT_RGBA8:   pitch = size.x*sizeof(vec4uc); break;
+        case OWL_TEXEL_FORMAT_RGBA32F: pitch = size.x*sizeof(vec4); break;
+        case OWL_TEXEL_FORMAT_R8:      pitch = size.x*sizeof(uint8_t); break;
+        case OWL_TEXEL_FORMAT_R32F:    pitch = size.x*sizeof(float); break;
+        default: assert(false);
+      }  
+    }
 
     assert(texels != nullptr);
     PRINT(pitch);
