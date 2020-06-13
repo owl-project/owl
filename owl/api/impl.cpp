@@ -150,6 +150,20 @@ namespace owl {
     rayGen->launch(vec2i(dims_x,dims_y),launchParams);
   }
 
+
+  /*! wait for the async launch to finish */
+  OWL_API void
+  owlLaunchSync(OWLLaunchParams _launchParams)
+  {
+    assert(_launchParams);
+    LaunchParams::SP launchParams
+      = ((APIHandle *)_launchParams)->get<LaunchParams>();
+    assert(launchParams);
+    launchParams->sync();
+  }
+  
+
+
   OWL_API void owlRayGenLaunch2D(OWLRayGen _rayGen,
                                  int dims_x, int dims_y)
   {

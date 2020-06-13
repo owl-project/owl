@@ -15,6 +15,7 @@
 // ======================================================================== //
 
 #include "LaunchParams.h"
+#include "../ll/Device.h"
 #include "Context.h"
 
 namespace owl {
@@ -42,5 +43,14 @@ namespace owl {
     return context->llo->launchParamsGetStream(this->ID,deviceID);
   }
 
+  void LaunchParams::sync()
+  {
+    for (auto device : context->llo->devices) {
+      device->context->pushActive();
+      cudaStreamSynchronize(context->llo->launchParamsGetStream(this->ID,device->context->owlDeviceID));
+      device->context->popActive();
+    }
+  }
+  
 } // ::owl
 

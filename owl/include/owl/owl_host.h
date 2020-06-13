@@ -127,6 +127,17 @@ typedef enum
     OWL_DOUBLE3,
     OWL_DOUBLE4,
     
+    OWL_CHAR=160,
+    OWL_CHAR2,
+    OWL_CHAR3,
+    OWL_CHAR4,
+
+    /*! unsigend 8-bit integer */
+    OWL_UCHAR=170,
+    OWL_UCHAR2,
+    OWL_UCHAR3,
+    OWL_UCHAR4,
+   
     /*! just another name for a 64-bit data type - unlike
         OWL_BUFFER_POINTER's (which gets translated from OWLBuffer's
         to actual device-side poiners) these OWL_RAW_POINTER types get
@@ -550,6 +561,10 @@ owlParamsLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
 
 OWL_API CUstream
 owlParamsGetCudaStream(OWLLaunchParams params, int deviceID);
+
+/*! wait for the async launch to finish */
+OWL_API void
+owlLaunchSync(OWLLaunchParams params);
 
 // ==================================================================
 // "Triangles" functions

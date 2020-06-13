@@ -81,17 +81,6 @@ void lloParamsLaunch2D(ll::DeviceGroup *llo,
                       [&](uint8_t *launchParamsToWrite, int deviceID){
                         lp->writeVariables(launchParamsToWrite,deviceID);
                       });
-                       // int32_t      rayGenID,
-                       // int32_t      Nx,
-                       // int32_t      Ny,
-                       // int32_t      launchParamsObjectID,
-                       // const Lambda &l)
-
-  // auto lambda = [&](uint8_t *launchParamsToWrite, int deviceID){
-    //                        lp->writeVariables(launchParamsToWrite,deviceID);
-    //               };
-    // context->llo->launch(this->ID,dims,lp->ID,
-    //                      ,(const void *)&lp);
   }
   
 } // ::owl
