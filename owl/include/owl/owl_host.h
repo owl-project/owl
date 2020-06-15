@@ -560,12 +560,10 @@ owlBufferUpload(OWLBuffer buffer, const void *hostPtr);
 OWL_API void
 owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
-/*! executes an optix lauch of given size, with given launch
-  program. Note this call is asynchronous, and may _not_ be
-  completed by the time this function returns. */
 OWL_API void
-owlParamsLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
-                  OWLLaunchParams launchParams);
+owlLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
+            OWLLaunchParams launchParams);
+
 
 OWL_API CUstream
 owlParamsGetCudaStream(OWLLaunchParams params, int deviceID);
@@ -845,7 +843,14 @@ owlInstanceGroupSetTransform(OWLGroup group,
   owlInstanceGroupSetTransform(group,childID,(const float *)xfm,
                                OWL_MATRIX_FORMAT_OWL);
 }
+
+#include "owl_deprecated.h"
 #endif
+
+
+
+
+
 
 
 

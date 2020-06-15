@@ -151,9 +151,10 @@ namespace owl {
     context->buildPipeline();
   }
   
-  OWL_API void owlParamsLaunch2D(OWLRayGen _rayGen,
-                                 int dims_x, int dims_y,
-                                 OWLLaunchParams _launchParams)
+  OWL_API void owlLaunch2D(OWLRayGen _rayGen,
+                           int dims_x,
+                           int dims_y,
+                           OWLLaunchParams _launchParams)
   {
     LOG_API_CALL();
 

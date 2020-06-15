@@ -269,7 +269,7 @@ namespace osc {
     owlLaunchParamsSet1i(launchParams,"numPixelSamples",numPixelSamples);
     frameID++;
 
-    owlParamsLaunch2D(rayGen,fbSize.x,fbSize.y,launchParams);
+    owlLaunch2D(rayGen,fbSize.x,fbSize.y,launchParams);
     
     // sync - make sure the frame is rendered before we download and
     // display (obviously, for a high-performance application you
