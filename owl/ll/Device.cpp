@@ -57,7 +57,7 @@ namespace owl {
 
     struct WarnOnce
     {
-      WarnOnce(const char *message)
+      explicit WarnOnce(const char *message)
       {
         std::cout << OWL_TERMINAL_RED
                   << "#owl.ll(warning): "
@@ -72,7 +72,7 @@ namespace owl {
                                void *)
     {
       if (level == 1 || level == 2)
-        fprintf( stderr, "[%2d][%12s]: %s\n", level, tag, message );
+        fprintf( stderr, "[%2d][%12s]: %s\n", (int)level, tag, message );
     }
 
     LaunchParams::LaunchParams(Context *context, size_t sizeOfData)
@@ -500,7 +500,6 @@ namespace owl {
     
     std::string killAllInternalOptixSymbolsFromPtxString(const char *orignalPtxCode)
     {
-      std::vector<std::string> lines;
       std::stringstream fixed;
 
       for (const char *s = orignalPtxCode; *s; ) {
@@ -1097,6 +1096,13 @@ namespace owl {
       Group *group = checkGetGroup(groupID);
       group->destroyAccel(context);
       group->buildAccel(context);
+    }
+
+    void Device::groupRefitAccel(int groupID)
+    {
+      Group *group = checkGetGroup(groupID);
+      /* do NOT destroy */
+      group->refitAccel(context);
     }
 
     /*! return given group's current traversable. note this function

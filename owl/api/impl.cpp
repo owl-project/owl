@@ -850,6 +850,19 @@ namespace owl {
     group->buildAccel();
   }  
 
+  OWL_API void owlGroupRefitAccel(OWLGroup _group)
+  {
+    LOG_API_CALL();
+    
+    assert(_group);
+
+    Group::SP group
+      = ((APIHandle *)_group)->get<Group>();
+    assert(group);
+    
+    group->refitAccel();
+  }  
+
   OWL_API void
   owlTrianglesSetIndices(OWLGeom   _triangles,
                          OWLBuffer _buffer,
@@ -1025,6 +1038,7 @@ namespace owl {
   _OWL_SET_HELPER(int64_t,l)
   _OWL_SET_HELPER(uint64_t,ul)
   _OWL_SET_HELPER(float,f)
+  _OWL_SET_HELPER(double,d)
 #undef _OWL_SET_HELPER
 
 #else

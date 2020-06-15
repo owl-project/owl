@@ -224,6 +224,15 @@ namespace owl {
     case OWL_FLOAT4:
       return std::make_shared<VariableT<vec4f>>(decl);
 
+    case OWL_DOUBLE:
+      return std::make_shared<VariableT<double>>(decl);
+    case OWL_DOUBLE2:
+      return std::make_shared<VariableT<vec2d>>(decl);
+    case OWL_DOUBLE3:
+      return std::make_shared<VariableT<vec3d>>(decl);
+    case OWL_DOUBLE4:
+      return std::make_shared<VariableT<vec4d>>(decl);
+
     case OWL_GROUP:
       return std::make_shared<GroupVariable>(decl);
     case OWL_TEXTURE:

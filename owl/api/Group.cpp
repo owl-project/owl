@@ -22,7 +22,13 @@ namespace owl {
   void Group::buildAccel()
   {
     // lloGroupAccelBuild(context->llo,this->ID);
-    context->llo->groupAccelBuild(this->ID);
+    context->llo->groupBuildAccel(this->ID);
+  }
+  
+  void Group::refitAccel()
+  {
+    // lloGroupAccelRefit(context->llo,this->ID);
+    context->llo->groupRefitAccel(this->ID);
   }
   
   OptixTraversableHandle Group::getTraversable(int deviceID)
@@ -31,7 +37,7 @@ namespace owl {
     return context->llo->groupGetTraversable(this->ID,deviceID);
   }
   
-  void UserGeomGroup::buildAccel()
+  void UserGeomGroup::buildOrRefit(bool FULL_REBUILD)
   {
     size_t maxVarSize = 0;
     for (auto child : geometries) {
@@ -49,9 +55,23 @@ namespace owl {
         assert(child);
         child->writeVariables(output,devID);
       });
-    context->llo->groupAccelBuild(this->ID);
+    if (FULL_REBUILD)
+      context->llo->groupBuildAccel(this->ID);
+    else
+      context->llo->groupRefitAccel(this->ID);
     // lloGroupAccelBuild(context->llo,this->ID);
   }
+  
+  void UserGeomGroup::buildAccel()
+  {
+    buildOrRefit(true);
+  }
+  void UserGeomGroup::refitAccel()
+  {
+    buildOrRefit(false);
+  }
+
+  
 
   void GeomGroup::setChild(int childID, Geom::SP child)
   {
