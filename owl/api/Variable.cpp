@@ -16,6 +16,7 @@
 
 #include "Variable.h"
 #include "Context.h"
+#include "owl/owl_device_buffer.h"
 
 namespace owl {
   
@@ -111,6 +112,20 @@ namespace owl {
     {}
     void set(const Buffer::SP &value) override { this->buffer = value; }
 
+    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    {
+      device::Buffer *devRep = (device::Buffer *)sbtEntry;
+      if (!buffer) {
+        devRep->data  = 0;
+        devRep->count = 0;
+        devRep->type  = OWL_INVALID_TYPE;
+      } else {
+        devRep->data  = (void *)buffer->getPointer(deviceID);
+        devRep->count = buffer->elementCount;
+        devRep->type  = buffer->type;
+      }
+    }
+    
     Buffer::SP buffer;
   };
   

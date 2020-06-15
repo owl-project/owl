@@ -119,11 +119,11 @@ namespace owl {
           if (hostHandles[i]) {
             Buffer::SP buffer = hostHandles[i]->as<Buffer>();
             
-            devRep[i].pointer = (void*)buffer->getPointer(devID);
+            devRep[i].data    = (void*)buffer->getPointer(devID);
             devRep[i].type    = buffer->type;
             devRep[i].count   = buffer->getElementCount();
           } else {
-            devRep[i].pointer = 0;
+            devRep[i].data    = 0;
             devRep[i].type    = OWL_INVALID_TYPE;
             devRep[i].count   = 0;
           }

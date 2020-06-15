@@ -16,18 +16,53 @@
 
 #pragma once
 
-#include "owl_host.h"
+#include <owl/owl.h>
+#include <owl/owl_device_buffer.h>
+#include <owl/common/math/vec.h>
+#include <cuda_runtime.h>
 
-namespace owl {
-  namespace device {
-    /*! a *device*-side buffer; ie, this is the type that OWL will
-        fill in on the devise side if a paramter (or buffer of) type
-        buffers is created on the host */
-    struct Buffer {
-      OWLDataType type;
-      size_t      count;
-      void       *data;
-    };
-    
-  }
-}
+using namespace owl;
+
+const int NUM_TEXTURE_SETS = 4;
+
+/* variables for the triangle mesh geometry */
+struct TrianglesGeomData
+{
+  /*! array/buffer of vertex indices */
+  vec4i *index;
+  /*! array/buffer of vertex positions */
+  vec3f *vertex;
+  /*! texture coordinates */
+  vec2f *texCoord;
+  /* texture object */
+  owl::device::Buffer textureSets;
+};
+
+struct Globals {
+  float time;
+};
+
+/* variables for the ray generation program */
+struct RayGenData
+{
+  uint32_t *fbPtr;
+  vec2i  fbSize;
+  OptixTraversableHandle world;
+
+  vec3f lightDir;
+  
+  struct {
+    vec3f pos;
+    vec3f dir_00;
+    vec3f dir_du;
+    vec3f dir_dv;
+  } camera;
+};
+
+/* variables for the miss program */
+struct MissProgData
+{
+  vec3f  color0;
+  vec3f  color1;
+};
+

@@ -116,6 +116,21 @@ v0.8.x - Revamped build system, owl viewer, interative samples, and textures
 - renamed: owlParamsLaunch2D -> owlLaunch2D (added to
   owl_deprecated.h, and also axed lloLaunch function for cleanups)
 
+- renamed owlLaunchParams<XYZ> -> owlParams<XYZ> (create, set, vetvariable etc)
+
+- added OWL_INVALID_TYPE
+
+- added owlXyzSetPointer()
+
+- variables can now have type OWL_BUFFER (not just BUFPTR), and will
+  write a owl::device::Buffer type (with size, type, and data members)
+  
+- device buffers can now be created over OWL_BUFFER and OWL_TEXTURE types
+
+- added int12-buffer-of-objects sample that shows/tests buffers of
+  buffers, and buffers of textures (by creating a buffer of buffers of
+  textures)
+
 *v0.8.2*: double types, interactive sample
 
 - added OWL_DOUBLE type for variables, and al owl3d, setVariable, etc
