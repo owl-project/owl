@@ -851,7 +851,6 @@ owlInstanceGroupSetTransform(OWLGroup group,
                                OWL_MATRIX_FORMAT_OWL);
 }
 
-#include "owl_deprecated.h"
 #endif
 
 
