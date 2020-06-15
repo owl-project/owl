@@ -48,7 +48,7 @@ extern inline OptixResult optixInit( void** handlePtr );
 // iw - the variants Context::pushActive/popActive are *not*
 // thread-safe (they store the value in the context, so for async
 // operations we need to store on the stack:
-#define STACK_PUSH_ACTIVE(context) int _savedActiveDeviceID=0; CUDA_CHECK(cudaGetDevice(&_savedActiveDeviceID)); context->setActive();
+#define STACK_PUSH_ACTIVE(context) int _savedActiveDeviceID=context->pushActive();
 #define STACK_POP_ACTIVE() CUDA_CHECK(cudaSetDevice(_savedActiveDeviceID));
 
 
@@ -514,7 +514,7 @@ namespace owl {
 
     void Modules::buildOptixHandles(Context *context)
     {
-      context->pushActive();
+      int oldActive = context->pushActive();
       
       assert(!modules.empty());
       LOG("building " << modules.size() << " modules");
@@ -585,7 +585,7 @@ namespace owl {
         }
         LOG_OK("created module #" << moduleID << " (both optix and cuda)");
       }
-      context->popActive();
+      context->popActive(oldActive);
     }
 
     void Modules::alloc(size_t count)
@@ -607,7 +607,7 @@ namespace owl {
 
     void Device::buildOptixPrograms()
     {
-      context->pushActive();
+      int oldActive = context->pushActive();
       OptixProgramGroupOptions pgOptions = {};
       OptixProgramGroupDesc    pgDesc    = {};
 
@@ -770,7 +770,7 @@ namespace owl {
           }
         }
       }
-      context->popActive();
+      context->popActive(oldActive);
     }
     
     void Device::destroyOptixPrograms()
@@ -886,10 +886,10 @@ namespace owl {
       assert("check valid buffer ID" && bufferID <  buffers.size());
       assert("check buffer to be destroyed actually exists"
              && buffers[bufferID] != nullptr);
-      context->pushActive();
+      int oldActive = context->pushActive();
       delete buffers[bufferID];
       buffers[bufferID] = nullptr;
-      context->popActive();
+      context->popActive(oldActive);
     }
     
     void Device::deviceBufferCreate(int bufferID,
@@ -925,11 +925,11 @@ namespace owl {
       assert("check valid buffer ID" && bufferID >= 0);
       assert("check valid buffer ID" && bufferID <  buffers.size());
       assert("check buffer ID available" && buffers[bufferID] == nullptr);
-      context->pushActive();
+      int oldActive = context->pushActive();
       Buffer *buffer = new ManagedMemoryBuffer(elementCount,elementSize,managedMem);
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
-      context->popActive();
+      context->popActive(oldActive);
     }
       
     void Device::hostPinnedBufferCreate(int bufferID,
@@ -940,11 +940,11 @@ namespace owl {
       assert("check valid buffer ID" && bufferID >= 0);
       assert("check valid buffer ID" && bufferID <  buffers.size());
       assert("check buffer ID available" && buffers[bufferID] == nullptr);
-      context->pushActive();
+      int oldActive = context->pushActive();
       Buffer *buffer = new HostPinnedBuffer(elementCount,elementSize,pinnedMem);
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
-      context->popActive();
+      context->popActive(oldActive);
     }
 
     void Device::graphicsBufferCreate(int bufferID,
@@ -955,33 +955,33 @@ namespace owl {
       assert("check valid buffer ID" && bufferID >= 0);
       assert("check valid buffer ID" && bufferID < buffers.size());
       assert("check buffer ID available" && buffers[bufferID] == nullptr);
-      context->pushActive();
+      int oldActive = context->pushActive();
       Buffer *buffer = new GraphicsBuffer(elementCount, elementSize, resource);
       assert("check buffer properly created" && buffer != nullptr);
       buffers[bufferID] = buffer;
-      context->popActive();
+      context->popActive(oldActive);
     }
 
     void Device::graphicsBufferMap(int bufferID)
     {
       assert("check valid buffer ID" && bufferID >= 0);
       assert("check valid buffer ID" && bufferID < buffers.size());
-      context->pushActive();
+      int oldActive = context->pushActive();
       GraphicsBuffer *buffer = dynamic_cast<GraphicsBuffer*>(buffers[bufferID]);
       assert("check buffer properly casted" && buffer != nullptr);
       buffer->map(this, context->stream);
-      context->popActive();
+      context->popActive(oldActive);
     }
 
     void Device::graphicsBufferUnmap(int bufferID)
     {
       assert("check valid buffer ID" && bufferID >= 0);
       assert("check valid buffer ID" && bufferID < buffers.size());
-      context->pushActive();
+      int oldActive = context->pushActive();
       GraphicsBuffer *buffer = dynamic_cast<GraphicsBuffer*>(buffers[bufferID]);
       assert("check buffer properly casted" && buffer != nullptr);
       buffer->unmap(this, context->stream);
-      context->popActive();
+      context->popActive(oldActive);
     }
     
     /*! Set a buffer of bounding boxes that this user geometry will
@@ -1068,7 +1068,9 @@ namespace owl {
     
     void Device::bufferUpload(int bufferID, const void *hostPtr)
     {
+      int oldActive = context->pushActive();
       checkGetBuffer(bufferID)->upload(this,hostPtr);
+      context->popActive(oldActive);
     }
 
     
@@ -1149,7 +1151,7 @@ namespace owl {
                                   const void *callBackUserData)
     {
       LOG("building SBT hit group records");
-      context->pushActive();
+      int oldActive = context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.hitGroupRecordsBuffer.alloced())
         sbt.hitGroupRecordsBuffer.free();
@@ -1233,7 +1235,7 @@ namespace owl {
       }
       sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
       sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
-      context->popActive();
+      context->popActive(oldActive);
       LOG_OK("done building (and uploading) SBT hit group records");
     }
       
@@ -1245,7 +1247,7 @@ namespace owl {
       
       if (numTimesCalled < 10)
         LOG("building SBT ray gen records (only showing first 10 instances)");
-      context->pushActive();
+      int oldActive = context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.rayGenRecordsBuffer.alloced())
         sbt.rayGenRecordsBuffer.free();
@@ -1301,7 +1303,7 @@ namespace owl {
       }
       sbt.rayGenRecordsBuffer.alloc(rayGenRecords.size());
       sbt.rayGenRecordsBuffer.upload(rayGenRecords);
-      context->popActive();
+      context->popActive(oldActive);
       if (numTimesCalled < 10)
         LOG_OK("done building (and uploading) SBT ray gen records (only showing first 10 instances)");
     }
@@ -1315,7 +1317,7 @@ namespace owl {
       assert("check correct number of miss progs"
              && missProgPGs.size() >= context->numRayTypes);
       
-      context->pushActive();
+      int oldActive = context->pushActive();
       // TODO: move this to explicit destroyhitgroups
       if (sbt.missProgRecordsBuffer.alloced())
         sbt.missProgRecordsBuffer.free();
@@ -1373,13 +1375,13 @@ namespace owl {
       }
       sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
       sbt.missProgRecordsBuffer.upload(missProgRecords);
-      context->popActive();
+      context->popActive(oldActive);
       LOG_OK("done building (and uploading) SBT miss prog records");
     }
 
     void Device::launch(int rgID, const vec2i &dims)
     {
-      context->pushActive();
+      int oldActive = context->pushActive();
       // LOG("launching ...");
       assert("check valid launch dims" && dims.x > 0);
       assert("check valid launch dims" && dims.y > 0);
@@ -1450,7 +1452,7 @@ namespace owl {
                         ));
 
       // cudaDeviceSynchronize();
-      context->popActive();
+      context->popActive(oldActive);
     }
     
 

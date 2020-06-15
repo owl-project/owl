@@ -40,6 +40,8 @@ struct TrianglesGeomData
 
 struct Globals {
   float time;
+  int deviceIndex;
+  int deviceCount;
 };
 
 /* variables for the ray generation program */

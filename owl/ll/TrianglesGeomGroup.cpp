@@ -75,12 +75,12 @@ namespace owl {
 
     void TrianglesGeomGroup::destroyAccel(Context *context) 
     {
-      context->pushActive();
+      int oldActive = context->pushActive();
       if (traversable) {
         bvhMemory.free();
         traversable = 0;
       }
-      context->popActive();
+      context->popActive(oldActive);
     }
     
     void TrianglesGeomGroup::buildAccel(Context *context)
@@ -101,7 +101,7 @@ namespace owl {
       else
         assert("check DOES exist on refit" && !bvhMemory.empty());
       
-      context->pushActive();
+      int oldActive = context->pushActive();
       LOG("building triangles accel over "
           << children.size() << " geometries");
 
@@ -315,7 +315,7 @@ namespace owl {
       if (FULL_REBUILD)
         compactedSizeBuffer.free();
       
-      context->popActive();
+      context->popActive(oldActive);
 
       LOG_OK("successfully build triangles geom group accel");
     }

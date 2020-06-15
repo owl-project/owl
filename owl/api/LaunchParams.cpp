@@ -46,9 +46,9 @@ namespace owl {
   void LaunchParams::sync()
   {
     for (auto device : context->llo->devices) {
-      device->context->pushActive();
+      int oldActive = device->context->pushActive();
       cudaStreamSynchronize(context->llo->launchParamsGetStream(this->ID,device->context->owlDeviceID));
-      device->context->popActive();
+      device->context->popActive(oldActive);
     }
   }
   

@@ -149,8 +149,13 @@ namespace owl {
             cudaError_t rc = cudaDeviceCanAccessPeer(&canAccessPeer, cuda_i,cuda_j);
             if (rc != cudaSuccess)
               throw std::runtime_error("cuda error in cudaDeviceCanAccessPeer: "+std::to_string(rc));
-            if (!canAccessPeer)
-              throw std::runtime_error("could not enable peer access!?");
+            if (!canAccessPeer) {
+              // huh. this can happen if you have differnt device
+              // types (in my case, a 2070 and a rtx 8000).
+              std::cerr << "cannot not enable peer access!? ... skipping..." << std::endl;
+              continue;
+              // throw std::runtime_error("could not enable peer access!?");
+            }
             
             cudaSetDevice(cuda_i);
             rc = cudaDeviceEnablePeerAccess(cuda_j,0);

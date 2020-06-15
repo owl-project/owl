@@ -49,18 +49,26 @@ namespace owl {
       Context(int owlDeviceID, int cudaDeviceID);
       ~Context();
       
-      void setActive() { CUDA_CHECK(cudaSetDevice(cudaDeviceID)); }
-      void pushActive()
+      // void setActive()
+      // {
+      //   PING; PRINT(cudaDeviceID);
+      //   CUDA_CHECK(cudaSetDevice(cudaDeviceID));
+      // }
+      int pushActive()
       {
-        assert("check we're not already pushed" && savedActiveDeviceID == -1);
+        int savedActiveDeviceID = -1;
         CUDA_CHECK(cudaGetDevice(&savedActiveDeviceID));
-        setActive();
+        PING; PRINT(savedActiveDeviceID);
+        // setActive();
+        CUDA_CHECK(cudaSetDevice(cudaDeviceID));
+        return savedActiveDeviceID;
       }
-      void popActive()
+      void popActive(int savedActiveDeviceID)
       {
-        assert("check we do have a saved device" && savedActiveDeviceID >= 0);
+        // assert("check we do have a saved device" && savedActiveDeviceID >= 0);
+        PING; PRINT(savedActiveDeviceID);
         CUDA_CHECK(cudaSetDevice(savedActiveDeviceID));
-        savedActiveDeviceID = -1;
+        // savedActiveDeviceID = -1;
       }
 
       void createPipeline(Device *device);
@@ -74,8 +82,6 @@ namespace owl {
       
       /* the cuda device ID that this logical device runs on */
       const int          cudaDeviceID;
-
-      int  savedActiveDeviceID = -1;
 
       OptixDeviceContext optixContext = nullptr;
       CUcontext          cudaContext  = nullptr;

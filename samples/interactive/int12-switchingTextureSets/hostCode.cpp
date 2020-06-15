@@ -268,7 +268,7 @@ void Viewer::cameraChanged()
 Viewer::Viewer()
 {
   // create a context on the first device:
-  context = owlContextCreate(nullptr,1);
+  context = owlContextCreate(nullptr,0);
   OWLModule module = owlModuleCreate(context,ptxCode);
   
   // ##################################################################
@@ -375,7 +375,9 @@ Viewer::Viewer()
   // set up launch params
   // -------------------------------------------------------
   OWLVarDecl lpVars[] = {
-    { "time",         OWL_FLOAT, OWL_OFFSETOF(Globals,time)},
+    { "time",         OWL_FLOAT,  OWL_OFFSETOF(Globals,time)},
+    { "deviceIndex",  OWL_DEVICE, OWL_OFFSETOF(Globals,deviceIndex)},
+    { "deviceCount",  OWL_INT,    OWL_OFFSETOF(Globals,deviceCount)},
     { nullptr /* sentinel to mark end of list */ }
   };
 
@@ -420,6 +422,7 @@ void Viewer::render()
 
   float t_rel = getCurrentTime() - t0;
   owlParamsSet1f(lp,"time",t_rel);
+  owlParamsSet1i(lp,"deviceCount",owlGetDeviceCount(context));
   owlLaunch2D(rayGen,fbSize.x,fbSize.y,lp);
   owlLaunchSync(lp);
 }

@@ -53,6 +53,11 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
   Hit &prd = owl::getPRD<Hit>();
 
+  int targetDeviceIndex
+    = (getLaunchIndex().x / 32) % optixLaunchParams.deviceCount;
+  if (targetDeviceIndex != optixLaunchParams.deviceIndex)
+    return;
+  
   const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
   
   const vec3f rayOrg = optixGetWorldRayOrigin();

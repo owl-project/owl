@@ -73,7 +73,7 @@ namespace owl {
                                            LLOWriteUserGeomBoundsDataCB cb,
                                            const void *cbData)
     {
-      context->pushActive();
+      int oldActive = context->pushActive();
       UserGeomGroup *ugg
         = checkGetUserGeomGroup(groupID);
       
@@ -152,17 +152,17 @@ namespace owl {
       }
       tempMem.free();
       cudaDeviceSynchronize();
-      context->popActive();
+      context->popActive(oldActive);
     }
 
     void UserGeomGroup::destroyAccel(Context *context) 
     {
-      context->pushActive();
+      int oldActive = context->pushActive();
       if (traversable) {
         bvhMemory.free();
         traversable = 0;
       }
-      context->popActive();
+      context->popActive(oldActive);
     }
     
     void UserGeomGroup::buildAccel(Context *context)
@@ -184,7 +184,7 @@ namespace owl {
       else
         assert("check DOES exist on first build " && !bvhMemory.empty());
       
-      context->pushActive();
+      int oldActive = context->pushActive();
       LOG("building user accel over "
           << children.size() << " geometries");
       // ==================================================================
@@ -322,7 +322,7 @@ namespace owl {
       // ==================================================================
 
       tempBuffer.free();
-      context->popActive();
+      context->popActive(oldActive);
 
       LOG_OK("successfully built user geom group accel");
 

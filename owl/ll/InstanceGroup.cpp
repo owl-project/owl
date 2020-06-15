@@ -122,12 +122,12 @@ namespace owl {
 
     void InstanceGroup::destroyAccel(Context *context) 
     {
-      context->pushActive();
+      int oldActive = context->pushActive();
       if (traversable) {
         bvhMemory.free();
         traversable = 0;
       }
-      context->popActive();
+      context->popActive(oldActive);
     }
     
     void InstanceGroup::buildAccel(Context *context)
@@ -151,7 +151,7 @@ namespace owl {
         assert("check does not yet exist" && !bvhMemory.empty());
       }
       
-      context->pushActive();
+      int oldActive = context->pushActive();
       LOG("building instance accel over "
           << children.size() << " groups");
 
@@ -299,7 +299,7 @@ namespace owl {
       // TODO: move those free's to the destructor, so we can delay the
       // frees until all objects are done
       tempBuffer.free();
-      context->popActive();
+      context->popActive(oldActive);
       
       LOG_OK("successfully built instance group accel");
     }

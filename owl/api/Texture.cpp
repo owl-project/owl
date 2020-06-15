@@ -41,7 +41,7 @@ namespace owl {
     assert(texels != nullptr);
     
     for (auto device : context->llo->devices) {
-      device->context->pushActive();
+      int oldActive = device->context->pushActive();
 
       cudaResourceDesc res_desc = {};
       
@@ -88,7 +88,7 @@ namespace owl {
 
       textureObjects.push_back(cuda_tex);
       
-      device->context->popActive();
+      device->context->popActive(oldActive);
     }
   }
 
