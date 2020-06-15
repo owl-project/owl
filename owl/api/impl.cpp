@@ -263,7 +263,7 @@ namespace owl {
   }
 
   OWL_API OWLVariable
-  owlLaunchParamsGetVariable(OWLLaunchParams _prog,
+  owlParamsGetVariable(OWLParams _prog,
                        const char *varName)
   {
     LOG_API_CALL();
@@ -326,11 +326,11 @@ namespace owl {
   }
 
 
-  OWL_API OWLLaunchParams
-  owlLaunchParamsCreate(OWLContext _context,
-                        size_t      sizeOfVarStruct,
-                        OWLVarDecl *vars,
-                        size_t      numVars)
+  OWL_API OWLParams
+  owlParamsCreate(OWLContext _context,
+                   size_t      sizeOfVarStruct,
+                   OWLVarDecl *vars,
+                   size_t      numVars)
   {
     LOG_API_CALL();
 

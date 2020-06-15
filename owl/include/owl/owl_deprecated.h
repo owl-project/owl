@@ -45,4 +45,15 @@ owlParamsLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
   owlLaunch2D(rayGen,dims_x,dims_y,lp);
 }
 
+inline OWLLaunchParams
+owlLaunchParamsCreate(OWLContext  context,
+                      size_t      sizeOfVarStruct,
+                      OWLVarDecl *vars,
+                      size_t      numVars)
+{
+  static owl::DeprecatedWarning deprecated("owlParamsLaunch2D","owlLaunch2D");
+  return owlParamsCreate(context,sizeOfVarStruct,vars,numVars);
+}
+
+
 
