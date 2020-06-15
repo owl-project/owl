@@ -20,6 +20,9 @@ endif()
 project(Optix-OWL VERSION 0.8.1)
 cmake_minimum_required(VERSION 2.8)
 
+OPTION(OWL_BUILD_SAMPLES "Build the Samples?" ON)
+OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
+OPTION(OWL_USE_TBB "Use TBB to parallelize computation?" ON)
 if (NOT (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_HOME_DIRECTORY}))
   SET(OWL_IS_SUBPROJECT ON)
 else()
@@ -69,7 +72,6 @@ add_subdirectory(owl)
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
-OPTION(OWL_BUILD_SAMPLES "Build the Samples?" ON)
 if (OWL_BUILD_SAMPLES)
   enable_testing()
   add_subdirectory(samples)
@@ -78,7 +80,6 @@ endif()
 # ------------------------------------------------------------------
 # some basic testing
 # ------------------------------------------------------------------
-OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 if (NOT OWL_IS_SUBPROJECT)
   if (OWL_BUILD_ADVANCED_TESTS)
     enable_testing()

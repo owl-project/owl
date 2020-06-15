@@ -54,6 +54,26 @@ namespace owl {
     return (OWLContext)context->createHandle(context);
   }
 
+  /* return the cuda stream associated with the given device. */
+  OWL_API CUstream owlContextGetStream(OWLContext _context, int deviceID)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->getContext();
+    assert(context);
+    return context->llo->getStream(deviceID);
+  }
+
+  /* return the optix context associated with the given device. */
+  OWL_API OptixDeviceContext owlContextGetOptixContext(OWLContext _context, int deviceID)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->getContext();
+    assert(context);
+    return context->llo->getOptixContext(deviceID);
+  }
+
   /*! set number of ray types to be used in this context; this should be
     done before any programs, pipelines, geometries, etc get
     created */
