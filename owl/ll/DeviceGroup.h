@@ -419,6 +419,7 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       
       void bufferResize(int bufferID, size_t newItemCount);
       void bufferUpload(int bufferID, const void *hostPtr);
+      void bufferUploadToSpecificDevice(int bufferID, int devID, const void *hostPtr);
       
       /*! returns the given device's buffer address on the specified
         device */

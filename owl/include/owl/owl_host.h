@@ -106,6 +106,8 @@ typedef enum
   
 typedef enum
   {
+   OWL_INVALID_TYPE = 0,
+   
    OWL_FLOAT=100,
    OWL_FLOAT2,
    OWL_FLOAT3,
@@ -154,9 +156,13 @@ typedef enum
      owl-cuda interaction (where the user already has device
      pointers), but should not be used for logical buffers */
    OWL_RAW_POINTER=OWL_ULONG,
-    
+
+
+   /* all types that are naively copyable should be below this value,
+      all that aren't should be above */
+   _OWL_BEGIN_NON_COPYABLE_TYPES = 1000,
    
-   OWL_BUFFER=1000,
+   OWL_BUFFER=_OWL_BEGIN_NON_COPYABLE_TYPES,
    OWL_BUFFER_SIZE,
    OWL_BUFFER_ID,
    OWL_BUFFER_POINTER,

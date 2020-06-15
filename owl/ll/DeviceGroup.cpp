@@ -628,6 +628,13 @@ namespace owl {
         device->bufferUpload(bufferID,hostPtr);
     }
       
+    void DeviceGroup::bufferUploadToSpecificDevice(int bufferID,
+                                                   int devID,
+                                                   const void *hostPtr)
+    {
+      devices[devID]->bufferUpload(bufferID,hostPtr);
+    }
+      
 
     void DeviceGroup::geomGroupSetChild(int groupID,
                                         int childNo,
@@ -662,7 +669,7 @@ namespace owl {
     {
       return checkGetDevice(devID)->bufferGetPointer(bufferID);
     }
-
+    
     /* return the cuda stream associated with the given device. */
     CUstream DeviceGroup::getStream(int devID)
     {
