@@ -97,6 +97,15 @@ typedef enum
 
 typedef enum
   {
+   OWL_SBT_HITGROUPS = 0x1,
+   OWL_SBT_GEOMS     = OWL_SBT_HITGROUPS,
+   OWL_SBT_RAYGENS   = 0x2,
+   OWL_SBT_MISSPROGS = 0x4,
+   OWL_SBT_ALL   = 0x7
+  } OWLBuildSBTFlags;
+  
+typedef enum
+  {
    OWL_FLOAT=100,
    OWL_FLOAT2,
    OWL_FLOAT3,
@@ -278,7 +287,8 @@ typedef struct _OWLLaunchParams  *OWLLaunchParams, *OWLParams, *OWLGlobals;
 
 OWL_API void owlBuildPrograms(OWLContext context);
 OWL_API void owlBuildPipeline(OWLContext context);
-OWL_API void owlBuildSBT(OWLContext context);
+OWL_API void owlBuildSBT(OWLContext context,
+                         OWLBuildSBTFlags flags OWL_IF_CPP(=OWL_SBT_ALL));
 
 /*! returns number of devices available in the given context */
 OWL_API int32_t

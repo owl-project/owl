@@ -121,14 +121,15 @@ namespace owl {
   }
   
   
-  OWL_API void owlBuildSBT(OWLContext _context)
+  OWL_API void owlBuildSBT(OWLContext _context,
+                           OWLBuildSBTFlags flags)
   {
     LOG_API_CALL();
     assert(_context);
     APIContext::SP context
       = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
-    context->buildSBT();
+    context->buildSBT(flags);
   }
 
   OWL_API void owlBuildPrograms(OWLContext _context)
