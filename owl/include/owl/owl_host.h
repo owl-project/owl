@@ -333,6 +333,14 @@ owlSetMaxInstancingDepth(OWLContext context,
 OWL_API void
 owlContextDestroy(OWLContext context);
 
+/* return the cuda stream associated with the given device. */
+OWL_API CUstream
+owlContextGetStream(OWLContext context, int deviceID);
+
+/* return the optix context associated with the given device. */
+OWL_API OptixDeviceContext
+owlContextGetOptixContext(OWLContext context, int deviceID);
+
 OWL_API OWLModule
 owlModuleCreate(OWLContext  context,
                 const char *ptxCode);

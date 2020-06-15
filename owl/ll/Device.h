@@ -199,7 +199,7 @@ namespace owl {
       Geom(int geomID, int geomTypeID)
         : geomID(geomID), geomTypeID(geomTypeID)
       {}
-      virtual PrimType primType() = 0;
+      virtual PrimType primType() const = 0;
       
       /*! only for error checking - we do NOT do reference counting
         ourselves, but will use this to track erorrs like destroying
@@ -216,7 +216,7 @@ namespace owl {
         : Geom(geomID,geomTypeID),
           numPrims(numPrims)
       {}
-      virtual PrimType primType() { return USER; }
+      PrimType primType() const override { return USER; }
       void setPrimCount(size_t numPrims)
       {
         assert("check size hasn't previously been set (changing not yet implemented...)"
@@ -237,7 +237,7 @@ namespace owl {
       TrianglesGeom(int geomID, int geomTypeID)
         : Geom(geomID, geomTypeID)
       {}
-      virtual PrimType primType() { return TRIANGLES; }
+      PrimType primType() const { return TRIANGLES; }
 
       void  *vertexPointer = nullptr;
       size_t vertexStride  = 0;
@@ -300,7 +300,6 @@ namespace owl {
       {}
       
       virtual bool containsGeom() { return true; }
-      virtual PrimType primType() = 0;
       virtual int  getSBTOffset() const override { return (int)sbtOffset; }
 
       std::vector<Geom *> children;
@@ -312,7 +311,6 @@ namespace owl {
         : GeomGroup(numChildren,
                     sbtOffset)
       {}
-      virtual PrimType primType() { return TRIANGLES; }
       
       template<bool fullRebuild>
       void buildOrRefit(Context *context);
@@ -327,7 +325,6 @@ namespace owl {
         : GeomGroup(numChildren,
                     sbtOffset)
       {}
-      virtual PrimType primType() { return USER; }
       
       template<bool fullRebuild>
       void buildOrRefit(Context *context);
@@ -564,6 +561,12 @@ namespace owl {
       
       /*! returns the given buffers device pointer */
       void *bufferGetPointer(int bufferID);
+      
+      /* return the cuda stream associated with the current device. */
+      CUstream getStream();
+      
+      /* return the optix context associated with the current device. */
+      OptixDeviceContext getOptixContext();
 
       /*! return the cuda stream by the given launchparams object, on
         given device */
@@ -619,7 +622,6 @@ namespace owl {
       
       void destroyGeom(size_t ID)
       {
-        assert("check for valid ID" && ID >= 0);
         assert("check for valid ID" && ID < geoms.size());
         assert("check still valid"  && geoms[ID] != nullptr);
         // set to null, which should automatically destroy
@@ -664,11 +666,11 @@ namespace owl {
       {
         assert("check valid launchParams ID" && launchParamsID >= 0);
         assert("check valid launchParams ID" && launchParamsID <  launchParams.size());
-        LaunchParams *launchParams = this->launchParams[launchParamsID];
-        assert("check valid launchParams" && launchParams != nullptr);
-        return launchParams;
+        LaunchParams *lp = this->launchParams[launchParamsID];
+        assert("check valid launchParams" && lp != nullptr);
+        return lp;
       }
-
+      
       GeomType *checkGetGeomType(int geomTypeID)
       {
         assert("check valid geomType ID" && geomTypeID >= 0);

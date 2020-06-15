@@ -71,8 +71,17 @@ namespace owl {
       template<typename OT>
         inline __both__ explicit vec_t(const vec_t<OT,1> &o) : v(o.v) {}
     
-      inline __both__ T &operator[](size_t dim) { return (&x)[dim]; }
-      inline __both__ const T &operator[](size_t dim) const { return (&x)[dim]; }
+      inline __both__ T &operator[](size_t dim) {
+        assert(dim == 0);
+        return x;
+        // return (&x)[dim];
+      }
+      inline __both__ const T &operator[](size_t dim) const
+      {
+        assert(dim == 0);
+        return x;
+        // return (&x)[dim];
+      }
 
       union {
         T v;
