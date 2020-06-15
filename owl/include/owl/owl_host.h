@@ -686,6 +686,7 @@ OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
 OWL_API void owlVariableSetTexture(OWLVariable variable, OWLTexture value);
 OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
 OWL_API void owlVariableSetRaw(OWLVariable variable, const void *valuePtr);
+OWL_API void owlVariableSetPointer(OWLVariable variable, const void *valuePtr);
 #define _OWL_SET_HELPER(stype,abb)                      \
   OWL_API void owlVariableSet1##abb(OWLVariable var,    \
                                     stype v);           \
@@ -803,6 +804,15 @@ _OWL_SET_HELPER(double,d)
     OWLVariable var                                             \
       = owl##Type##GetVariable(object,varName);                 \
     owlVariableSetRaw(var,v);                                   \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  inline void owl##Type##SetPointer(OWL##Type object,           \
+                                    const char *varName,        \
+                                    const void *v)              \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##Type##GetVariable(object,varName);                 \
+    owlVariableSetPointer(var,v);                               \
     owlVariableRelease(var);                                    \
   }                                                             \
   inline void owl##Type##SetBuffer(OWL##Type object,            \

@@ -1167,6 +1167,20 @@ namespace owl {
     variable->setRaw(valuePtr);
   }
 
+  OWL_API void owlVariableSetPointer(OWLVariable _variable, const void *valuePtr)
+  {
+    LOG_API_CALL();
+
+    APIHandle *handle = (APIHandle*)_variable;
+    assert(handle);
+
+    Variable::SP variable
+      = handle->get<Variable>();
+    assert(variable);
+
+    variable->set((uint64_t)valuePtr);
+  }
+
   // -------------------------------------------------------
   // group/hierarchy creation and setting
   // -------------------------------------------------------
