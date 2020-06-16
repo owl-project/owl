@@ -174,6 +174,11 @@ namespace owl {
       static vec2i getScreenSize();
       
       Camera &getCamera() { return camera; }
+
+      /*! helper function that dumps the current frame buffer in a png
+        file of given name */
+      void screenShot(const std::string &fileName);
+      
       
       const SimpleCamera getSimplifiedCamera() const
       {
