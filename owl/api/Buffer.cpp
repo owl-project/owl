@@ -23,11 +23,13 @@ namespace owl {
 
   Buffer::Buffer(Context *const context,
                  OWLDataType type,
-                 size_t dims)
+                 size_t elementCount)
     : RegisteredObject(context,context->buffers),
       type(type),
       elementCount(elementCount)
-  {}
+  {
+    assert(elementCount > 0);
+  }
 
   Buffer::~Buffer()
   {
@@ -88,7 +90,7 @@ namespace owl {
                              const void *initData)
     : Buffer(context,type,count)
   {
-    if (type < _OWL_BEGIN_NON_COPYABLE_TYPES) {
+    if (type >= _OWL_BEGIN_COPYABLE_TYPES) {
       context->llo->deviceBufferCreate(this->ID,
                                        count*sizeOf(type),1,
                                        initData);
