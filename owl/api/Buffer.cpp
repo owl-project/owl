@@ -122,8 +122,6 @@ namespace owl {
             Buffer::SP buffer = hostHandles[i]->as<Buffer>();
             
             devRep[i].data    = (void*)buffer->getPointer(devID);
-            PRINT(devID);
-            PRINT((int*)devRep[i].data);
             devRep[i].type    = buffer->type;
             devRep[i].count   = buffer->getElementCount();
           } else {
@@ -160,7 +158,6 @@ namespace owl {
           if (hostHandles[i]) {
             Texture::SP texture = hostHandles[i]->as<Texture>();
             devRep[i] = texture->textureObjects[devID];
-            // PRINT(devID); PRINT(devRep[i]);
           }
         context->llo->bufferUploadToSpecificDevice(this->ID,devID,devRep.data());
       }
