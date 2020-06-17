@@ -58,7 +58,7 @@ namespace owl {
       {
         int savedActiveDeviceID = -1;
         CUDA_CHECK(cudaGetDevice(&savedActiveDeviceID));
-        PING; PRINT(savedActiveDeviceID);
+        // PING; PRINT(savedActiveDeviceID);
         // setActive();
         CUDA_CHECK(cudaSetDevice(cudaDeviceID));
         return savedActiveDeviceID;
@@ -66,7 +66,7 @@ namespace owl {
       void popActive(int savedActiveDeviceID)
       {
         // assert("check we do have a saved device" && savedActiveDeviceID >= 0);
-        PING; PRINT(savedActiveDeviceID);
+        // PING; PRINT(savedActiveDeviceID);
         CUDA_CHECK(cudaSetDevice(savedActiveDeviceID));
         // savedActiveDeviceID = -1;
       }

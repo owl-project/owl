@@ -51,7 +51,7 @@ const vec3f init_lookAt(0.f,0.f,0.f);
 const vec3f init_lookUp(0.f,1.f,0.f);
 const float init_cosFovy = 0.66f;
 
-const vec3i numBoxes(3);
+const vec3i numBoxes(2,1,1);
 const float worldSize = 1;
 const vec3f boxSize   = (2*.4f*worldSize)/vec3f(numBoxes);
 const float animSpeed = 4.f;
