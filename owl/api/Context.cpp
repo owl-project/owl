@@ -270,8 +270,8 @@ namespace owl {
            int rgID) {
 
          // TODO: need the ID of the miss prog we're writing!
-         int rayGenID = 0;
-         assert(rayGens.size() == 1);
+         int rayGenID = rgID;
+         assert(rayGens.size() >= 1);
          
          const RayGen *rayGen = rayGens.getPtr(rayGenID);
          assert(rayGen);

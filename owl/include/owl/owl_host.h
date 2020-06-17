@@ -107,44 +107,68 @@ typedef enum
 typedef enum
   {
    OWL_INVALID_TYPE = 0,
+
+   OWL_BUFFER=10,
+   OWL_BUFFER_SIZE,
+   OWL_BUFFER_ID,
+   OWL_BUFFER_POINTER,
+   OWL_BUFPTR=OWL_BUFFER_POINTER,
+
+   OWL_GROUP=20,
+
+   /*! implicit variable of type integer that specifies the *index*
+     of the given device. this variable type is implicit in the
+     sense that it only gets _declared_ on the host, and gets set
+     automatically during SBT creation */
+   OWL_DEVICE=30,
+
+   /*! texture(s) */
+   OWL_TEXTURE=40,
+   OWL_TEXTURE_2D=OWL_TEXTURE,
+
+
+   /* all types that are naively copyable should be below this value,
+      all that aren't should be above */
+   _OWL_BEGIN_COPYABLE_TYPES = 1000,
    
-   OWL_FLOAT=100,
+   
+   OWL_FLOAT=1000,
    OWL_FLOAT2,
    OWL_FLOAT3,
    OWL_FLOAT4,
 
-   OWL_INT=110,
+   OWL_INT=1100,
    OWL_INT2,
    OWL_INT3,
    OWL_INT4,
    
-   OWL_UINT=120,
+   OWL_UINT=1200,
    OWL_UINT2,
    OWL_UINT3,
    OWL_UINT4,
    
-   OWL_LONG=130,
+   OWL_LONG=1300,
    OWL_LONG2,
    OWL_LONG3,
    OWL_LONG4,
 
-   OWL_ULONG=140,
+   OWL_ULONG=1400,
    OWL_ULONG2,
    OWL_ULONG3,
    OWL_ULONG4,
 
-   OWL_DOUBLE=150,
+   OWL_DOUBLE=1500,
    OWL_DOUBLE2,
    OWL_DOUBLE3,
    OWL_DOUBLE4,
     
-   OWL_CHAR=160,
+   OWL_CHAR=1600,
    OWL_CHAR2,
    OWL_CHAR3,
    OWL_CHAR4,
 
    /*! unsigend 8-bit integer */
-   OWL_UCHAR=170,
+   OWL_UCHAR=1700,
    OWL_UCHAR2,
    OWL_UCHAR3,
    OWL_UCHAR4,
@@ -158,27 +182,6 @@ typedef enum
    OWL_RAW_POINTER=OWL_ULONG,
 
 
-   /* all types that are naively copyable should be below this value,
-      all that aren't should be above */
-   _OWL_BEGIN_NON_COPYABLE_TYPES = 1000,
-   
-   OWL_BUFFER=_OWL_BEGIN_NON_COPYABLE_TYPES,
-   OWL_BUFFER_SIZE,
-   OWL_BUFFER_ID,
-   OWL_BUFFER_POINTER,
-   OWL_BUFPTR=OWL_BUFFER_POINTER,
-
-   OWL_GROUP=3000,
-
-   /*! implicit variable of type integer that specifies the *index*
-     of the given device. this variable type is implicit in the
-     sense that it only gets _declared_ on the host, and gets set
-     automatically during SBT creation */
-   OWL_DEVICE=4000,
-
-   /*! texture(s) */
-   OWL_TEXTURE=5000,
-   OWL_TEXTURE_2D=OWL_TEXTURE,
 
    /*! at least for now, use that for buffers with user-defined types:
      type then is "OWL_USER_TYPE_BEGIN+sizeof(elementtype). Note
