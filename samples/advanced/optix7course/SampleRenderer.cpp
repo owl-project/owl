@@ -71,7 +71,7 @@ namespace osc {
       { /* sentinel to mark end of list */ }
     };
     launchParams
-      = owlLaunchParamsCreate(context,sizeof(LaunchParams),
+      = owlParamsCreate(context,sizeof(LaunchParams),
                               launchParamsVars,-1);
 
     createTextures();
@@ -81,10 +81,10 @@ namespace osc {
     owlBuildPipeline(context);
     owlBuildSBT(context);
     
-    owlLaunchParamsSet3f(launchParams,"light.origin",(const owl3f&)light.origin);
-    owlLaunchParamsSet3f(launchParams,"light.du",(const owl3f&)light.du);
-    owlLaunchParamsSet3f(launchParams,"light.dv",(const owl3f&)light.dv);
-    owlLaunchParamsSet3f(launchParams,"light.power",(const owl3f&)light.power);
+    owlParamsSet3f(launchParams,"light.origin",(const owl3f&)light.origin);
+    owlParamsSet3f(launchParams,"light.du",(const owl3f&)light.du);
+    owlParamsSet3f(launchParams,"light.dv",(const owl3f&)light.dv);
+    owlParamsSet3f(launchParams,"light.power",(const owl3f&)light.power);
   }
 
   void SampleRenderer::createTextures()
@@ -252,7 +252,7 @@ namespace osc {
     world = owlTrianglesGeomGroupCreate(context,geoms.size(),geoms.data());
     owlGroupBuildAccel(world);
 #endif
-    owlLaunchParamsSetGroup(launchParams,"world",world);
+    owlParamsSetGroup(launchParams,"world",world);
   }
   
 
@@ -265,11 +265,11 @@ namespace osc {
 
     if (!accumulate)
       frameID = 0;
-    owlLaunchParamsSet1i(launchParams,"frame.frameID",frameID);
-    owlLaunchParamsSet1i(launchParams,"numPixelSamples",numPixelSamples);
+    owlParamsSet1i(launchParams,"frame.frameID",frameID);
+    owlParamsSet1i(launchParams,"numPixelSamples",numPixelSamples);
     frameID++;
 
-    owlParamsLaunch2D(rayGen,fbSize.x,fbSize.y,launchParams);
+    owlLaunch2D(rayGen,fbSize.x,fbSize.y,launchParams);
     
     // sync - make sure the frame is rendered before we download and
     // display (obviously, for a high-performance application you
@@ -284,7 +284,7 @@ namespace osc {
     lastSetCamera = camera;
     // reset accumulation
     frameID = 0;
-    owlLaunchParamsSet1i(launchParams,"frame.frameID",frameID);
+    owlParamsSet1i(launchParams,"frame.frameID",frameID);
     const vec3f position  = camera.from;
     const vec3f direction = normalize(camera.at-camera.from);
     
@@ -299,10 +299,10 @@ namespace osc {
       = cosFovy * normalize(cross(horizontal,
                                   direction));
 
-    owlLaunchParamsSet3f(launchParams,"camera.position",(const owl3f&)position);
-    owlLaunchParamsSet3f(launchParams,"camera.direction",(const owl3f&)direction);
-    owlLaunchParamsSet3f(launchParams,"camera.vertical",(const owl3f&)vertical);
-    owlLaunchParamsSet3f(launchParams,"camera.horizontal",(const owl3f&)horizontal);
+    owlParamsSet3f(launchParams,"camera.position",(const owl3f&)position);
+    owlParamsSet3f(launchParams,"camera.direction",(const owl3f&)direction);
+    owlParamsSet3f(launchParams,"camera.vertical",(const owl3f&)vertical);
+    owlParamsSet3f(launchParams,"camera.horizontal",(const owl3f&)horizontal);
   }
   
   /*! resize frame buffer to given resolution */
@@ -315,9 +315,9 @@ namespace osc {
     this->fbSize = newSize;
     fbColor = owlDeviceBufferCreate(context,OWL_FLOAT4,fbSize.x*fbSize.y,nullptr);
 
-    owlLaunchParamsSetBuffer(launchParams,"frame.fbColor",fbColor);
-    owlLaunchParamsSet1ul(launchParams,"frame.fbFinal",(uint64_t)fbPointer);
-    owlLaunchParamsSet2i(launchParams,"frame.fbSize",(const owl2i&)fbSize);
+    owlParamsSetBuffer(launchParams,"frame.fbColor",fbColor);
+    owlParamsSet1ul(launchParams,"frame.fbFinal",(uint64_t)fbPointer);
+    owlParamsSet2i(launchParams,"frame.fbSize",(const owl2i&)fbSize);
 
     // and re-set the camera, since aspect may have changed
     setCamera(lastSetCamera);

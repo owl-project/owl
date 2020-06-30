@@ -49,18 +49,26 @@ namespace owl {
       Context(int owlDeviceID, int cudaDeviceID);
       ~Context();
       
-      void setActive() { CUDA_CHECK(cudaSetDevice(cudaDeviceID)); }
-      void pushActive()
+      // void setActive()
+      // {
+      //   PING; PRINT(cudaDeviceID);
+      //   CUDA_CHECK(cudaSetDevice(cudaDeviceID));
+      // }
+      int pushActive()
       {
-        assert("check we're not already pushed" && savedActiveDeviceID == -1);
+        int savedActiveDeviceID = -1;
         CUDA_CHECK(cudaGetDevice(&savedActiveDeviceID));
-        setActive();
+        // PING; PRINT(savedActiveDeviceID);
+        // setActive();
+        CUDA_CHECK(cudaSetDevice(cudaDeviceID));
+        return savedActiveDeviceID;
       }
-      void popActive()
+      void popActive(int savedActiveDeviceID)
       {
-        assert("check we do have a saved device" && savedActiveDeviceID >= 0);
+        // assert("check we do have a saved device" && savedActiveDeviceID >= 0);
+        // PING; PRINT(savedActiveDeviceID);
         CUDA_CHECK(cudaSetDevice(savedActiveDeviceID));
-        savedActiveDeviceID = -1;
+        // savedActiveDeviceID = -1;
       }
 
       void createPipeline(Device *device);
@@ -74,8 +82,6 @@ namespace owl {
       
       /* the cuda device ID that this logical device runs on */
       const int          cudaDeviceID;
-
-      int  savedActiveDeviceID = -1;
 
       OptixDeviceContext optixContext = nullptr;
       CUcontext          cudaContext  = nullptr;
@@ -199,7 +205,7 @@ namespace owl {
       Geom(int geomID, int geomTypeID)
         : geomID(geomID), geomTypeID(geomTypeID)
       {}
-      virtual PrimType primType() = 0;
+      virtual PrimType primType() const = 0;
       
       /*! only for error checking - we do NOT do reference counting
         ourselves, but will use this to track erorrs like destroying
@@ -216,7 +222,7 @@ namespace owl {
         : Geom(geomID,geomTypeID),
           numPrims(numPrims)
       {}
-      virtual PrimType primType() { return USER; }
+      PrimType primType() const override { return USER; }
       void setPrimCount(size_t numPrims)
       {
         assert("check size hasn't previously been set (changing not yet implemented...)"
@@ -237,7 +243,7 @@ namespace owl {
       TrianglesGeom(int geomID, int geomTypeID)
         : Geom(geomID, geomTypeID)
       {}
-      virtual PrimType primType() { return TRIANGLES; }
+      PrimType primType() const { return TRIANGLES; }
 
       void  *vertexPointer = nullptr;
       size_t vertexStride  = 0;
@@ -253,6 +259,8 @@ namespace owl {
 
       virtual void destroyAccel(Context *context) = 0;
       virtual void buildAccel(Context *context) = 0;
+      virtual void refitAccel(Context *context) = 0;
+      
       virtual int  getSBTOffset() const = 0;
       
       // std::vector<int>       elements;
@@ -271,8 +279,13 @@ namespace owl {
       {}
       virtual bool containsGeom() { return false; }
       
-      virtual void destroyAccel(Context *context) override;
-      virtual void buildAccel(Context *context) override;
+      template<bool fullRebuild>
+      void buildOrRefit(Context *context);
+
+      void destroyAccel(Context *context) override;
+      void buildAccel(Context *context) override;
+      void refitAccel(Context *context) override;
+      
       virtual int  getSBTOffset() const override { return 0; }
 
       DeviceMemory optixInstanceBuffer;
@@ -293,7 +306,6 @@ namespace owl {
       {}
       
       virtual bool containsGeom() { return true; }
-      virtual PrimType primType() = 0;
       virtual int  getSBTOffset() const override { return (int)sbtOffset; }
 
       std::vector<Geom *> children;
@@ -305,10 +317,13 @@ namespace owl {
         : GeomGroup(numChildren,
                     sbtOffset)
       {}
-      virtual PrimType primType() { return TRIANGLES; }
       
-      virtual void destroyAccel(Context *context) override;
-      virtual void buildAccel(Context *context) override;
+      template<bool fullRebuild>
+      void buildOrRefit(Context *context);
+      
+      void destroyAccel(Context *context) override;
+      void buildAccel(Context *context) override;
+      void refitAccel(Context *context) override;
     };
     struct UserGeomGroup : public GeomGroup {
       UserGeomGroup(size_t numChildren,
@@ -316,10 +331,13 @@ namespace owl {
         : GeomGroup(numChildren,
                     sbtOffset)
       {}
-      virtual PrimType primType() { return USER; }
       
-      virtual void destroyAccel(Context *context) override;
-      virtual void buildAccel(Context *context) override;
+      template<bool fullRebuild>
+      void buildOrRefit(Context *context);
+
+      void destroyAccel(Context *context) override;
+      void buildAccel(Context *context) override;
+      void refitAccel(Context *context) override;
     };
 
 
@@ -610,7 +628,6 @@ namespace owl {
       
       void destroyGeom(size_t ID)
       {
-        assert("check for valid ID" && ID >= 0);
         assert("check for valid ID" && ID < geoms.size());
         assert("check still valid"  && geoms[ID] != nullptr);
         // set to null, which should automatically destroy
@@ -633,6 +650,7 @@ namespace owl {
       // ------------------------------------------------------------------
       // group related struff
       // ------------------------------------------------------------------
+      void groupRefitAccel(int groupID);
       void groupBuildAccel(int groupID);
       
       /*! return given group's current traversable. note this function
@@ -654,11 +672,11 @@ namespace owl {
       {
         assert("check valid launchParams ID" && launchParamsID >= 0);
         assert("check valid launchParams ID" && launchParamsID <  launchParams.size());
-        LaunchParams *launchParams = this->launchParams[launchParamsID];
-        assert("check valid launchParams" && launchParams != nullptr);
-        return launchParams;
+        LaunchParams *lp = this->launchParams[launchParamsID];
+        assert("check valid launchParams" && lp != nullptr);
+        return lp;
       }
-
+      
       GeomType *checkGetGeomType(int geomTypeID)
       {
         assert("check valid geomType ID" && geomTypeID >= 0);

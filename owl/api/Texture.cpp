@@ -51,11 +51,9 @@ namespace owl {
     }
 
     assert(texels != nullptr);
-    PRINT(pitch);
-    PRINT(texels);
     
     for (auto device : context->llo->devices) {
-      device->context->pushActive();
+      int oldActive = device->context->pushActive();
 
       cudaResourceDesc res_desc = {};
       
@@ -68,7 +66,6 @@ namespace owl {
         default: assert(false);
       }        
 
-      PRINT(size);
       cudaArray_t   pixelArray;
       CUDA_CALL(MallocArray(&pixelArray,
                              &channel_desc,
@@ -111,7 +108,7 @@ namespace owl {
 
       textureObjects.push_back(cuda_tex);
       
-      device->context->popActive();
+      device->context->popActive(oldActive);
     }
   }
 

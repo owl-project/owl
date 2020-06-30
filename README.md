@@ -75,7 +75,7 @@ General Requirements:
 
 Per-OS Instructions:
 
-- Ubuntu 18 & 19 (automatically tested on 18)
+- Ubuntu 18, 19, and 20 (automatically tested on 18, mostly developed on 20)
     - Requires: `sudo apt install cmake-curses-gui`
 	- Build:
 	```
@@ -101,19 +101,6 @@ Per-OS Instructions:
 		- You may need to Configure twice.
 		- If you get "OptiX headers (optix.h and friends) not found." then define OptiX_INCLUDE manually in CMake-gui by setting it to ```C:/ProgramData/NVIDIA Corporation/OptiX SDK 7.0.0/include```
 
-<!--- ------------------------------------------------------- -->
-(Main) TODOs:
-=============
-
-- more samples/test cases
-
-- add "Launch Params" functionality
-
-- add c-style API on top of ll layer 
-  - wrap `DeviceGroup*` into `LLOContext` type
-  - wrap every `DeviceGroup::xyz(...)` function into a `lloXyz(context,...)` c-linkage API function
-  - build into dll/so
-
 
 <!--- ------------------------------------------------------- -->
 Latest Progress/Revision History
@@ -121,6 +108,34 @@ Latest Progress/Revision History
 
 v0.8.x - Revamped build system, owl viewer, interative samples, and textures
 ----------------------------------------------------------------------
+
+*v0.8.3*: fixes, github issues, and naming
+
+- added OWL_CHAR and OWL_UCHAR types
+
+- renamed: owlParamsLaunch2D -> owlLaunch2D (added to
+  owl_deprecated.h, and also axed lloLaunch function for cleanups)
+
+- renamed owlLaunchParams<XYZ> -> owlParams<XYZ> (create, set, vetvariable etc)
+
+- added OWL_INVALID_TYPE
+
+- added owlXyzSetPointer()
+
+- variables can now have type OWL_BUFFER (not just BUFPTR), and will
+  write a owl::device::Buffer type (with size, type, and data members)
+  
+- device buffers can now be created over OWL_BUFFER and OWL_TEXTURE types
+
+- added int12-buffer-of-objects sample that shows/tests buffers of
+  buffers, and buffers of textures (by creating a buffer of buffers of
+  textures)
+
+*v0.8.2*: double types, interactive sample
+
+- added OWL_DOUBLE type for variables, and al owl3d, setVariable, etc
+
+- added int11-rotationCubes sample that has NxMxK roating textured cubes
 
 *v0.8.1*: first light of textures
 

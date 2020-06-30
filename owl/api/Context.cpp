@@ -234,9 +234,10 @@ namespace owl {
   }
 
 
-  void Context::buildSBT()
+  void Context::buildSBT(OWLBuildSBTFlags flags)
   {
     // ----------- build hitgroups -----------
+    if (flags & OWL_SBT_HITGROUPS)
     llo->sbtHitProgsBuild
       ([&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
          const Geom *geom = geoms.getPtr(geomID);
@@ -245,6 +246,7 @@ namespace owl {
        });
 
     // ----------- build miss prog(s) -----------
+    if (flags & OWL_SBT_MISSPROGS)
     llo->sbtMissProgsBuild
       ([&](uint8_t *output,
            int devID,
@@ -261,14 +263,15 @@ namespace owl {
        });
 
     // ----------- build raygens -----------
+    if (flags & OWL_SBT_RAYGENS)
     llo->sbtRayGensBuild
       ([&](uint8_t *output,
            int devID,
            int rgID) {
 
          // TODO: need the ID of the miss prog we're writing!
-         int rayGenID = 0;
-         assert(rayGens.size() == 1);
+         int rayGenID = rgID;
+         assert(rayGens.size() >= 1);
          
          const RayGen *rayGen = rayGens.getPtr(rayGenID);
          assert(rayGen);

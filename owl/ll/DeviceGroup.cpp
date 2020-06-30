@@ -149,8 +149,13 @@ namespace owl {
             cudaError_t rc = cudaDeviceCanAccessPeer(&canAccessPeer, cuda_i,cuda_j);
             if (rc != cudaSuccess)
               throw std::runtime_error("cuda error in cudaDeviceCanAccessPeer: "+std::to_string(rc));
-            if (!canAccessPeer)
-              throw std::runtime_error("could not enable peer access!?");
+            if (!canAccessPeer) {
+              // huh. this can happen if you have differnt device
+              // types (in my case, a 2070 and a rtx 8000).
+              std::cerr << "cannot not enable peer access!? ... skipping..." << std::endl;
+              continue;
+              // throw std::runtime_error("could not enable peer access!?");
+            }
             
             cudaSetDevice(cuda_i);
             rc = cudaDeviceEnablePeerAccess(cuda_j,0);
@@ -515,11 +520,25 @@ namespace owl {
           device->groupBuildAccel(groupID);
       } catch (std::exception &e) {
         std::cerr << OWL_TERMINAL_RED
-                  << "#owl.ll: Fatal error in owl::ll::groupBuildPrimitiveBounds():" << std::endl
+                  << "#owl.ll: Fatal error in owl::ll::groupBuildAccel():" << std::endl
                   << e.what()
                   << OWL_TERMINAL_DEFAULT << std::endl;
         throw e;
       }
+    }
+
+    void DeviceGroup::groupRefitAccel(int groupID)
+    {
+      // try {
+      for (auto device : devices) 
+        device->groupRefitAccel(groupID);
+      // } catch (std::exception &e) {
+      //   std::cerr << OWL_TERMINAL_RED
+      //             << "#owl.ll: Fatal error in owl::ll::groupRefitAccel():" << std::endl
+      //             << e.what()
+      //             << OWL_TERMINAL_DEFAULT << std::endl;
+      //   throw e;
+      // }
     }
 
     uint32_t DeviceGroup::groupGetSBTOffset(int groupID)
@@ -614,6 +633,13 @@ namespace owl {
         device->bufferUpload(bufferID,hostPtr);
     }
       
+    void DeviceGroup::bufferUploadToSpecificDevice(int bufferID,
+                                                   int devID,
+                                                   const void *hostPtr)
+    {
+      devices[devID]->bufferUpload(bufferID,hostPtr);
+    }
+      
 
     void DeviceGroup::geomGroupSetChild(int groupID,
                                         int childNo,
@@ -648,7 +674,7 @@ namespace owl {
     {
       return checkGetDevice(devID)->bufferGetPointer(bufferID);
     }
-
+    
     /* return the cuda stream associated with the given device. */
     CUstream DeviceGroup::getStream(int devID)
     {
