@@ -249,6 +249,8 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
         Note this value will have to be set *before* the pipeline
         gets created */
       void setMaxInstancingDepth(int maxInstancingDepth);
+
+      void enableMotionBlur();
       
       void allocModules(size_t count);
       void allocLaunchParams(size_t count);
@@ -446,16 +448,16 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       void userGeomSetPrimCount(int geomID,
                                 size_t numPrims);
 
-      void trianglesGeomSetVertexBuffer(int geomID,
-                                        int bufferID,
-          size_t count,
-          size_t stride,
-          size_t offset);
+      void trianglesGeomSetVertexBuffers(int geomID,
+                                         const std::vector<int32_t> &bufferIDs,
+                                         size_t count,
+                                         size_t stride,
+                                         size_t offset);
       void trianglesGeomSetIndexBuffer(int geomID,
                                        int bufferID,
-          size_t count,
-          size_t stride,
-          size_t offset);
+                                       size_t count,
+                                       size_t stride,
+                                       size_t offset);
       void groupBuildAccel(int groupID);
       void groupRefitAccel(int groupID);
       

@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019-2020 Ingo Wald                                            #
+# Copyright 2019 Ingo Wald                                                 #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,23 +14,17 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/owl)
+cuda_compile_and_embed(ptxCode
+  deviceCode.cu
+  )
+add_executable(sample09-motionBlurSimpleTriangles
+  hostCode.cpp
+  ${ptxCode}
+  )
+target_link_libraries(sample09-motionBlurSimpleTriangles
+  ${OWL_LIBRARIES}
+  )
+add_test(sample09-motionBlurSimpleTriangles ${CMAKE_BINARY_DIR}/sample09-motionBlurSimpleTriangles)
 
 
-add_definitions(${OWL_CXX_FLAGS})
-
-# owl-common library (math stuff, utils, etc; mostly header-only)
-add_subdirectory(common)
-
-# low-level interface
-add_subdirectory(ll)
-
-# node graph layer API
-add_subdirectory(api)
-
-# -------------------------------------------------------
-# export those back to our parent:
-# -------------------------------------------------------
-set(OWL_INCLUDES ${OWL_INCLUDES} PARENT_SCOPE)
-set(OWL_LIBRARIES ${OWL_LIBRARIES} PARENT_SCOPE)

@@ -208,20 +208,16 @@ namespace owl {
           = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
         break;
       }
-      pipelineCompileOptions.usesMotionBlur     = false;
+      pipelineCompileOptions.usesMotionBlur     = motionBlurEnabled;
       pipelineCompileOptions.numPayloadValues   = 2;
       pipelineCompileOptions.numAttributeValues = 2;
       pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
       pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
-      // pipelineCompileOptions.traversalDepth
-      //   = need_tri_level
-      //   ? OPTIX_TRAVERSAL_LEVEL_ANY
-      //   : OPTIX_TRAVERSAL_LEVEL_TWO;
       
       // ------------------------------------------------------------------
       // configure default pipeline link options
       // ------------------------------------------------------------------
-      pipelineLinkOptions.overrideUsesMotionBlur = false;
+      pipelineLinkOptions.overrideUsesMotionBlur = motionBlurEnabled;
       pipelineLinkOptions.maxTraceDepth          = 2;
       pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
       
@@ -1015,8 +1011,8 @@ namespace owl {
     }
     
 
-    void Device::trianglesGeomSetVertexBuffer(int geomID,
-                                              int bufferID,
+    void Device::trianglesGeomSetVertexBuffers(int geomID,
+                                               const std::vector<int32_t> &bufferIDs,
                                               size_t count,
                                               size_t stride,
                                               size_t offset)
@@ -1025,11 +1021,13 @@ namespace owl {
         = checkGetTrianglesGeom(geomID);
       assert("double-check valid geom" && triangles);
       
-      Buffer   *buffer
-        = checkGetBuffer(bufferID);
-      assert("double-check valid buffer" && buffer);
-
-      triangles->vertexPointer = addPointerOffset(buffer->get(),offset);
+      triangles->vertexPointers.resize(bufferIDs.size());
+      for (int i=0;i<bufferIDs.size();i++) {
+        Buffer   *buffer
+          = checkGetBuffer(bufferIDs[i]);
+        assert("double-check valid buffer" && buffer);
+        triangles->vertexPointers[i] = (CUdeviceptr)addPointerOffset(buffer->get(),offset);
+      }
       triangles->vertexStride  = stride;
       triangles->vertexCount   = count;
     }
@@ -1088,7 +1086,7 @@ namespace owl {
         = checkGetBuffer(bufferID);
       assert("double-check valid buffer" && buffer);
 
-      triangles->indexPointer = addPointerOffset(buffer->get(),offset);
+      triangles->indexPointer = (CUdeviceptr)addPointerOffset(buffer->get(),offset);
       triangles->indexCount   = count;
       triangles->indexStride  = stride;
     }

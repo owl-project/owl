@@ -58,7 +58,8 @@ namespace owl {
     size_t numRayTypes = 1;
 
     void setRayTypeCount(size_t rayTypeCount);
-
+    void enableMotionBlur();
+    
     /*! sets maximum instancing depth for the given context:
 
       '0' means 'no instancing allowed, only bottom-level accels; 

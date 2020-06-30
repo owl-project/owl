@@ -17,6 +17,7 @@
 #include "Context.h"
 #include "Module.h"
 #include "Geometry.h"
+#include "Triangles.h"
 #include "Texture.h"
 #include "owl/ll/Device.h"
 
@@ -325,7 +326,11 @@ namespace owl {
   void Context::setMaxInstancingDepth(int32_t maxInstanceDepth)
   {
     llo->setMaxInstancingDepth(maxInstanceDepth);
-    // lloSetMaxInstancingDepth(llo,maxInstanceDepth);
+  }
+
+  void Context::enableMotionBlur()
+  {
+    llo->enableMotionBlur();
   }
   
 } // ::owl

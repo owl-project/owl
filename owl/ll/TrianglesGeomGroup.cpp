@@ -112,57 +112,64 @@ namespace owl {
          OPTIX_DEVICE_PROPERTY_LIMIT_MAX_PRIMITIVES_PER_GAS,
          &maxPrimsPerGAS,
          sizeof(maxPrimsPerGAS));
+
+      assert(!children.empty());
+      TrianglesGeom *child0 = (TrianglesGeom *)children[0];
+      int numKeys = child0->vertexPointers.size();
+      assert(numKeys > 0);
+      const bool hasMotion = (numKeys > 1);
+      if (hasMotion) assert(context->motionBlurEnabled);
       
       // ==================================================================
       // create triangle inputs
       // ==================================================================
       //! the N build inputs that go into the builder
       std::vector<OptixBuildInput> triangleInputs(children.size());
-      /*! *arrays* of the vertex pointers - the buildinputs cointina
-       *pointers* to the pointers, so need a temp copy here */
-      std::vector<CUdeviceptr> vertexPointers(children.size());
-      std::vector<CUdeviceptr> indexPointers(children.size());
-
-      // for now we use the same flags for all geoms
-      uint32_t triangleInputFlags[1] = { 0 };
+      // /*! *arrays* of the vertex pointers - the buildinputs cointina
+      //  *pointers* to the pointers, so need a temp copy here */
+      // std::vector<CUdeviceptr> vertexPointers(children.size());
+      // std::vector<CUdeviceptr> indexPointers(children.size());
+ 
+      std::vector<uint32_t> triangleInputFlags(children.size());
       // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
 
       // now go over all children to set up the buildinputs
       for (int childID=0;childID<children.size();childID++) {
-        // the three fields we're setting:
-        CUdeviceptr     &d_vertices    = vertexPointers[childID];
-        CUdeviceptr     &d_indices     = indexPointers[childID];
-        OptixBuildInput &triangleInput = triangleInputs[childID];
-
-        // the child wer're setting them with (with sanity checks)
         Geom *geom = children[childID];
         assert("double-check geom isn't null" && geom != nullptr);
         assert("sanity check refcount" && geom->numTimesReferenced >= 0);
        
+        // the child wer're setting them with (with sanity checks)
         TrianglesGeom *tris = dynamic_cast<TrianglesGeom*>(geom);
+        if (tris->vertexPointers.size() != numKeys)
+          throw std::runtime_error("invalid combination of meshes with different motion keys in the same triangles geom group");
+        
+        // the three fields we're setting:
+        CUdeviceptr     *d_vertices    = tris->vertexPointers.data();
+        // CUdeviceptr     &d_indices     = indexPointers[childID];
+        OptixBuildInput &triangleInput = triangleInputs[childID];
+
         assert("double-check it's really triangles" && tris != nullptr);
         
-        // now fill in the values:
-        d_vertices = (CUdeviceptr )tris->vertexPointer;
-        if (d_vertices == 0)
+        if (d_vertices[0] == 0)
           OWL_EXCEPT("in TrianglesGeomGroup::buildAccel(): "
                      "triangles geom has null vertex array");
         assert("triangles geom has vertex array set" && d_vertices);
         
-        d_indices  = (CUdeviceptr )tris->indexPointer;
-        assert("triangles geom has index array set" && d_indices);
+        assert("triangles geom has index array set" && tris->indexPointer);
 
         triangleInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
         auto &ta = triangleInput.triangleArray;
         ta.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
         ta.vertexStrideInBytes = (uint32_t)tris->vertexStride;
         ta.numVertices         = (uint32_t)tris->vertexCount;
-        ta.vertexBuffers       = &d_vertices;
+        ta.vertexBuffers       = d_vertices;
+        PING; PRINT((int*)ta.vertexBuffers);
       
         ta.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
         ta.indexStrideInBytes  = (uint32_t)tris->indexStride;
         ta.numIndexTriplets    = (uint32_t)tris->indexCount;
-        ta.indexBuffer         = d_indices;
+        ta.indexBuffer         = tris->indexPointer;
 
         // -------------------------------------------------------
         // sanity check that we don't have too many prims
@@ -174,7 +181,8 @@ namespace owl {
         
         // we always have exactly one SBT entry per shape (i.e., triangle
         // mesh), and no per-primitive materials:
-        ta.flags                       = triangleInputFlags;
+        triangleInputFlags[childID]    = 0;
+        ta.flags                       = &triangleInputFlags[childID];
         // iw, jan 7, 2020: note this is not the "actual" number of
         // SBT entires we'll generate when we build the SBT, only the
         // number of per-ray-type 'groups' of SBT entities (i.e., before
@@ -201,7 +209,10 @@ namespace owl {
         |
         OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
 
-      accelOptions.motionOptions.numKeys  = 1;
+      accelOptions.motionOptions.numKeys   = numKeys;
+      accelOptions.motionOptions.flags     = 0;
+      accelOptions.motionOptions.timeBegin = 0.f;
+      accelOptions.motionOptions.timeEnd   = 1.f;
       if (FULL_REBUILD)
         accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
       else

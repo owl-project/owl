@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -52,17 +52,6 @@ namespace owl {
     virtual std::shared_ptr<Geom> createGeom() = 0;
   };
 
-  struct TrianglesGeomType : public GeomType {
-    typedef std::shared_ptr<TrianglesGeomType> SP;
-    
-    TrianglesGeomType(Context *const context,
-                      size_t varStructSize,
-                      const std::vector<OWLVarDecl> &varDecls);
-
-    virtual std::string toString() const { return "TriangleGeomType"; }
-    virtual std::shared_ptr<Geom> createGeom() override;
-  };
-
   struct UserGeomType : public GeomType {
     typedef std::shared_ptr<UserGeomType> SP;
     
@@ -91,23 +80,6 @@ namespace owl {
     virtual std::string toString() const { return "Geom"; }
     
     GeomType::SP geometryType;
-  };
-
-  struct TrianglesGeom : public Geom {
-    typedef std::shared_ptr<TrianglesGeom> SP;
-
-    TrianglesGeom(Context *const context,
-                  GeomType::SP geometryType);
-    
-    void setVertices(Buffer::SP vertices,
-                     size_t count,
-                     size_t stride,
-                     size_t offset);
-    void setIndices(Buffer::SP indices,
-                    size_t count,
-                    size_t stride,
-                    size_t offset);
-    virtual std::string toString() const { return "TrianglesGeom"; }
   };
 
   struct UserGeom : public Geom {

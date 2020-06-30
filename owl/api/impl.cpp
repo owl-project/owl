@@ -18,6 +18,7 @@
 #include "APIContext.h"
 #include "APIHandle.h"
 #include "owl/common/parallel/parallel_for.h"
+#include "api/Triangles.h"
 
 namespace owl {
 
@@ -120,6 +121,17 @@ namespace owl {
     context->setMaxInstancingDepth(maxInstanceDepth);
   }
   
+
+  OWL_API void
+  owlEnableMotionBlur(OWLContext _context)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context
+      = ((APIHandle *)_context)->get<APIContext>();
+    assert(context);
+    context->enableMotionBlur();
+  }
   
   OWL_API void owlBuildSBT(OWLContext _context,
                            OWLBuildSBTFlags flags)
@@ -850,7 +862,42 @@ namespace owl {
       = ((APIHandle *)_buffer)->get<Buffer>();
     assert(buffer);
 
-    triangles->setVertices(buffer,count,stride,offset);
+    triangles->setVertices({buffer},count,stride,offset);
+  }
+
+  OWL_API void
+  owlTrianglesSetMotionVertices(OWLGeom _triangles,
+                                /*! number of vertex arrays
+                                  passed here, the first
+                                  of those is for t=0,
+                                  thelast for t=1,
+                                  everything is linearly
+                                  interpolated
+                                  in-between */
+                                size_t    numKeys,
+                                OWLBuffer *vertexArrays,
+                                size_t count,
+                                size_t stride,
+                                size_t offset)
+  {
+    LOG_API_CALL();
+    
+    assert(_triangles);
+    assert(vertexArrays);
+
+    TrianglesGeom::SP triangles
+      = ((APIHandle *)_triangles)->get<TrianglesGeom>();
+    assert(triangles);
+
+    assert(numKeys >= 2);
+    std::vector<Buffer::SP> buffers;
+    for (int i=0;i<numKeys;i++) {
+      Buffer::SP buffer
+        = ((APIHandle *)vertexArrays[i])->get<Buffer>();
+      assert(buffer);
+      buffers.push_back(buffer);
+    }
+    triangles->setVertices(buffers,count,stride,offset);
   }
 
   OWL_API void owlGroupBuildAccel(OWLGroup _group)

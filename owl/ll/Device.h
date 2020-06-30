@@ -100,6 +100,8 @@ namespace owl {
           `setMaxInstancingDepth` */
       int maxInstancingDepth = 1;      
       int numRayTypes { 1 };
+      /*! by default motion blur is off, as it costs performacne */
+      bool motionBlurEnabled = 0;
     };
     
     struct Module {
@@ -245,10 +247,10 @@ namespace owl {
       {}
       PrimType primType() const { return TRIANGLES; }
 
-      void  *vertexPointer = nullptr;
+      std::vector<CUdeviceptr> vertexPointers;
       size_t vertexStride  = 0;
       size_t vertexCount   = 0;
-      void  *indexPointer  = nullptr;
+      CUdeviceptr indexPointer  = (CUdeviceptr)0;
       size_t indexStride   = 0;
       size_t indexCount    = 0;
     };
@@ -368,6 +370,8 @@ namespace owl {
           buildPrograms() and createPipeline(), so should be called
           *before* those functions get called */
       void setMaxInstancingDepth(int maxInstancingDepth);
+
+      void enableMotionBlur() { context->motionBlurEnabled = true; context->configurePipelineOptions(); };
 
       void createPipeline()
       {
@@ -615,11 +619,11 @@ namespace owl {
           given time. */
       void userGeomSetBoundsBuffer(int geomID, int bufferID);
       
-      void trianglesGeomSetVertexBuffer(int geomID,
-                                        int32_t bufferID,
-                                        size_t count,
-                                        size_t stride,
-                                        size_t offset);
+      void trianglesGeomSetVertexBuffers(int geomID,
+                                         const std::vector<int32_t> &bufferID,
+                                         size_t count,
+                                         size_t stride,
+                                         size_t offset);
       void trianglesGeomSetIndexBuffer(int geomID,
                                        int32_t bufferID,
                                        size_t count,

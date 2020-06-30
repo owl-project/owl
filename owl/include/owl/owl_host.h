@@ -322,6 +322,13 @@ OWL_API OWLContext
 owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
                  int numDevices OWL_IF_CPP(=0));
 
+/*! enable motion blur for this context. this _has_ to be called
+    before creating any geometries, groups, etc, and before the
+    pipeline gets compiled. Ie, it shold be called _right_ after
+    context creation */
+OWL_API void
+owlEnableMotionBlur(OWLContext _context);
+
 /*! set number of ray types to be used in this context; this should be
   done before any programs, pipelines, geometries, etc get
   created */
@@ -606,6 +613,19 @@ OWL_API void owlTrianglesSetVertices(OWLGeom triangles,
                                      size_t count,
                                      size_t stride,
                                      size_t offset);
+OWL_API void owlTrianglesSetMotionVertices(OWLGeom triangles,
+                                           /*! number of vertex arrays
+                                               passed here, the first
+                                               of those is for t=0,
+                                               thelast for t=1,
+                                               everything is linearly
+                                               interpolated
+                                               in-between */
+                                           size_t    numKeys,
+                                           OWLBuffer *vertexArrays,
+                                           size_t count,
+                                           size_t stride,
+                                           size_t offset);
 OWL_API void owlTrianglesSetIndices(OWLGeom triangles,
                                     OWLBuffer indices,
                                     size_t count,

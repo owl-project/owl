@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -40,16 +40,6 @@ namespace owl {
 
 
 
-
-
-  TrianglesGeomType::TrianglesGeomType(Context *const context,
-                                       size_t varStructSize,
-                                       const std::vector<OWLVarDecl> &varDecls)
-    : GeomType(context,varStructSize,varDecls)
-  {
-    /*! nothing special - all inherited */
-  }
-
   UserGeomType::UserGeomType(Context *const context,
                              size_t varStructSize,
                              const std::vector<OWLVarDecl> &varDecls)
@@ -57,13 +47,6 @@ namespace owl {
       intersectProg(context->numRayTypes)
   {
     /*! nothing special - all inherited */
-  }
-
-  TrianglesGeom::TrianglesGeom(Context *const context,
-                               GeomType::SP geometryType)
-    : Geom(context,geometryType)
-  {
-    context->llo->trianglesGeomCreate(this->ID,geometryType->ID);
   }
 
   UserGeom::UserGeom(Context *const context,
@@ -81,24 +64,6 @@ namespace owl {
 
 
 
-
-  void TrianglesGeom::setVertices(Buffer::SP vertices,
-                                  size_t count,
-                                  size_t stride,
-                                  size_t offset)
-  {
-    context->llo->trianglesGeomSetVertexBuffer(this->ID,
-                                    vertices->ID,count,stride,offset);
-  }
-  
-  void TrianglesGeom::setIndices(Buffer::SP indices,
-                                 size_t count,
-                                 size_t stride,
-                                 size_t offset)
-  {
-    context->llo->trianglesGeomSetIndexBuffer(this->ID,
-                                    indices->ID, count, stride, offset);
-  }
 
   void GeomType::setClosestHitProgram(int rayType,
                                       Module::SP module,

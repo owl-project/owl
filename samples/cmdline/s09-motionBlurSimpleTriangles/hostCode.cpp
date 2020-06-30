@@ -37,7 +37,7 @@
 extern "C" char ptxCode[];
 
 const int NUM_VERTICES = 8;
-vec3f vertices[NUM_VERTICES] =
+vec3f vertices0[NUM_VERTICES] =
   {
     { -1.f,-1.f,-1.f },
     { +1.f,-1.f,-1.f },
@@ -47,6 +47,18 @@ vec3f vertices[NUM_VERTICES] =
     { +1.f,-1.f,+1.f },
     { -1.f,+1.f,+1.f },
     { +1.f,+1.f,+1.f }
+  };
+
+vec3f vertices1[NUM_VERTICES] =
+  {
+    { +0.4f,+0.4f,+0.4f },
+    { +4.4f,+0.4f,+0.4f },
+    { +0.4f,+4.4f,+0.4f },
+    { +4.4f,+4.4f,+0.4f },
+    { +0.4f,+0.4f,+4.4f },
+    { +4.4f,+0.4f,+4.4f },
+    { +0.4f,+4.4f,+4.4f },
+    { +4.4f,+4.4f,+4.4f }
   };
 
 const int NUM_INDICES = 12;
@@ -60,7 +72,7 @@ vec3i indices[NUM_INDICES] =
     { 4,0,2 }, { 4,2,6 }
   };
 
-const char *outFileName = "s01-simpleTriangles.png";
+const char *outFileName = "s09-motionBlurSimpleTriangles.png";
 const vec2i fbSize(800,600);
 const vec3f lookFrom(-4.f,-3.f,-2.f);
 const vec3f lookAt(0.f,0.f,0.f);
@@ -73,6 +85,7 @@ int main(int ac, char **av)
 
   // create a context on the first device:
   OWLContext context = owlContextCreate(nullptr,1);
+  owlEnableMotionBlur(context);
   OWLModule module = owlModuleCreate(context,ptxCode);
   
   // ##################################################################
@@ -84,14 +97,16 @@ int main(int ac, char **av)
   // -------------------------------------------------------
   OWLVarDecl trianglesGeomVars[] = {
     { "index",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,index)},
-    { "vertex", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,vertex)},
-    { "color",  OWL_FLOAT3, OWL_OFFSETOF(TrianglesGeomData,color)}
+    { "vertex0", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,vertex0)},
+    { "vertex1", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,vertex1)},
+    { "color",  OWL_FLOAT3, OWL_OFFSETOF(TrianglesGeomData,color)},
+    { nullptr }
   };
   OWLGeomType trianglesGeomType
     = owlGeomTypeCreate(context,
                         OWL_TRIANGLES,
                         sizeof(TrianglesGeomData),
-                        trianglesGeomVars,3);
+                        trianglesGeomVars,-1);
   owlGeomTypeSetClosestHit(trianglesGeomType,0,
                            module,"TriangleMesh");
 
@@ -104,8 +119,10 @@ int main(int ac, char **av)
   // ------------------------------------------------------------------
   // triangle mesh
   // ------------------------------------------------------------------
-  OWLBuffer vertexBuffer
-    = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_VERTICES,vertices);
+  OWLBuffer vertexBuffer0
+    = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_VERTICES,vertices0);
+  OWLBuffer vertexBuffer1
+    = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_VERTICES,vertices1);
   OWLBuffer indexBuffer
     = owlDeviceBufferCreate(context,OWL_INT3,NUM_INDICES,indices);
   OWLBuffer frameBuffer
@@ -113,15 +130,20 @@ int main(int ac, char **av)
 
   OWLGeom trianglesGeom
     = owlGeomCreate(context,trianglesGeomType);
+
+  OWLBuffer vertexBuffersOverTime[2] = { vertexBuffer0, vertexBuffer1 };
   
-  owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
-                          NUM_VERTICES,sizeof(vec3f),0);
+  owlTrianglesSetMotionVertices(trianglesGeom,2,vertexBuffersOverTime,
+                                NUM_VERTICES,sizeof(vec3f),0);
   owlTrianglesSetIndices(trianglesGeom,indexBuffer,
                          NUM_INDICES,sizeof(vec3i),0);
   
-  owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
+  owlGeomSetBuffer(trianglesGeom,"vertex0",vertexBuffer0);
+  owlGeomSetBuffer(trianglesGeom,"vertex1",vertexBuffer0);
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
+  PING;
   owlGeomSet3f(trianglesGeom,"color",owl3f{0,1,0});
+  PING;
   
   // ------------------------------------------------------------------
   // the group/accel for that mesh

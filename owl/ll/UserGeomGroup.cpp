@@ -197,8 +197,7 @@ namespace owl {
       std::vector<CUdeviceptr> boundsPointers(children.size());
 
      // for now we use the same flags for all geoms
-      uint32_t userGeomInputFlags[1]
-        = { 0 };
+      std::vector<uint32_t> userGeomInputFlags(children.size());
       // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT };
 
       // now go over all children to set up the buildinputs
@@ -230,7 +229,8 @@ namespace owl {
       
         // we always have exactly one SBT entry per shape (i.e., triangle
         // mesh), and no per-primitive materials:
-        aa.flags                       = userGeomInputFlags;
+        userGeomInputFlags[childID]    = 0;
+        aa.flags                       = &userGeomInputFlags[childID];
         // iw, jan 7, 2020: note this is not the "actual" number of
         // SBT entires we'll generate when we build the SBT, only the
         // number of per-ray-type 'groups' of SBT enties (i.e., before

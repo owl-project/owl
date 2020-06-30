@@ -214,6 +214,12 @@ namespace owl {
         device->setMaxInstancingDepth(maxInstancingDepth);
     }
 
+    void DeviceGroup::enableMotionBlur()
+    {
+      for (auto device : devices)
+        device->enableMotionBlur();
+    }
+
     void DeviceGroup::setRayTypeCount(size_t rayTypeCount)
     {
       for (auto device : devices)
@@ -492,14 +498,14 @@ namespace owl {
         device->userGeomSetPrimCount(geomID,count);
     }
     
-    void DeviceGroup::trianglesGeomSetVertexBuffer(int geomID,
-                                                   int bufferID,
-                                                   size_t count,
-        size_t stride,
-        size_t offset)
+    void DeviceGroup::trianglesGeomSetVertexBuffers(int geomID,
+                                                    const std::vector<int32_t> &bufferIDs,
+                                                    size_t count,
+                                                    size_t stride,
+                                                    size_t offset)
     {
       for (auto device : devices) 
-        device->trianglesGeomSetVertexBuffer(geomID,bufferID,count,stride,offset);
+        device->trianglesGeomSetVertexBuffers(geomID,bufferIDs,count,stride,offset);
     }
     
     void DeviceGroup::trianglesGeomSetIndexBuffer(int geomID,

@@ -41,6 +41,7 @@ set(OWL_NG_SOURCES
   LaunchParams.cpp
   MissProg.cpp
   Geometry.cpp
+  Triangles.cpp
   Variable.cpp
 )
 
@@ -50,8 +51,6 @@ ${OWL_NG_SOURCES}
 add_library(owl_static STATIC
 ${OWL_NG_SOURCES}
   )
-
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
 target_link_libraries(owl
   llowl_static
