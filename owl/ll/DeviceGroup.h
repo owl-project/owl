@@ -260,6 +260,8 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       void createPipeline();
       void buildPrograms();
       
+      void setTransforms(int igID, int timeStep, const affine3f *xfms);
+      
       void allocGeomTypes(size_t count);
       void allocRayGens(size_t count);
       void allocMissProgs(size_t count);
@@ -371,15 +373,7 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
                                   omitted by passing a nullptr, but if
                                   not null this must be a list of
                                   'childCount' valid group ID */
-                               const uint32_t *childGroupIDs,
-                               const uint32_t *instIDs,
-                               const affine3f *xfms);
-      /*! set given child's instance transform. groupID must be a
-        valid instance group, childID must be wihtin
-        [0..numChildren) */
-      void instanceGroupSetTransform(int groupID,
-                                     int childNo,
-                                     const affine3f &xfm);
+                               const uint32_t *childGroupIDs);
       /*! set given child to {childGroupID+xfm}  */
       void instanceGroupSetChild(int groupID,
                                  int childNo,

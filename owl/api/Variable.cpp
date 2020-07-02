@@ -14,8 +14,9 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Variable.h"
-#include "Context.h"
+#include "api/Variable.h"
+#include "api/Context.h"
+#include "api/InstanceGroup.h"
 #include "owl/owl_device_buffer.h"
 
 namespace owl {

@@ -280,9 +280,14 @@ namespace owl {
         : children(numChildren)
       {}
       virtual bool containsGeom() { return false; }
-      
+
       template<bool fullRebuild>
-      void buildOrRefit(Context *context);
+      void buildOrRefit_staticInstances(Context *context);
+      template<bool fullRebuild>
+      void buildOrRefit_motionBlur(Context *context);
+      
+      // template<bool fullRebuild>
+      // void buildOrRefit(Context *context);
 
       void destroyAccel(Context *context) override;
       void buildAccel(Context *context) override;
@@ -291,10 +296,11 @@ namespace owl {
       virtual int  getSBTOffset() const override { return 0; }
 
       DeviceMemory optixInstanceBuffer;
+      DeviceMemory motionTransformsBuffer;
       DeviceMemory outputBuffer;
       std::vector<Group *>  children;
-      std::vector<uint32_t> instanceIDs;
-      std::vector<affine3f> transforms;
+      const uint32_t *instanceIDs;
+      const affine3f *transforms[2] = { nullptr, nullptr };
     };
 
     /*! \warning currently using std::vector of *geoms*, but will have
@@ -547,16 +553,8 @@ namespace owl {
                                   omitted by passing a nullptr, but if
                                   not null this must be a list of
                                   'childCount' valid group ID */
-                               const uint32_t *childGroupIDs,
-                               const uint32_t *instIDs,
-                               const affine3f *xfms);
+                               const uint32_t *childGroupIDs);
 
-      /*! set given child's instance transform. groupID must be a
-          valid instance group, childID must be wihtin
-          [0..numChildren) */
-      void instanceGroupSetTransform(int groupID,
-                                     int childNo,
-                                     const affine3f &xfm);
       /*! set given child to {childGroupID+xfm}  */
       void instanceGroupSetChild(int groupID,
                                  int childNo,
@@ -786,6 +784,7 @@ namespace owl {
                   const void *cbData);
 
       void setRayTypeCount(size_t rayTypeCount);
+      void setTransforms(int igID, int timeStep, const affine3f *xfms);
       
       Context                  *context;
       

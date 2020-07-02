@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2020 Ingo Wald                                            //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,10 +14,48 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include <owl/common/owl-common.h>
+#pragma once
 
-/* DO NOT DELETE. Thought this file is (intentionally) empty, cmake
-    requires it to be able to create the the visual studio solutoin
-    for all the header files and cmake config files in ht
-    e'owl-comomn' "library" */
+#include <owl/owl.h>
+#include <owl/common/math/vec.h>
+#include <cuda_runtime.h>
+
+using namespace owl;
+
+/* variables for the triangle mesh geometry */
+struct TrianglesGeomData
+{
+  /*! array/buffer of vertex indices */
+  vec3i *index;
+  /*! array/buffer of vertex positions */
+  vec3f *vertex;
+  /*! texture coordinates */
+  vec2f *texCoord;
+  /* texture object */
+  cudaTextureObject_t texture;
+};
+
+/* variables for the ray generation program */
+struct RayGenData
+{
+  uint32_t *fbPtr;
+  vec2i  fbSize;
+  OptixTraversableHandle world;
+
+  vec3f lightDir;
+  
+  struct {
+    vec3f pos;
+    vec3f dir_00;
+    vec3f dir_du;
+    vec3f dir_dv;
+  } camera;
+};
+
+/* variables for the miss program */
+struct MissProgData
+{
+  vec3f  color0;
+  vec3f  color1;
+};
 

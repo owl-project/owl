@@ -164,7 +164,6 @@ namespace owl {
         ta.vertexStrideInBytes = (uint32_t)tris->vertexStride;
         ta.numVertices         = (uint32_t)tris->vertexCount;
         ta.vertexBuffers       = d_vertices;
-        PING; PRINT((int*)ta.vertexBuffers);
       
         ta.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
         ta.indexStrideInBytes  = (uint32_t)tris->indexStride;

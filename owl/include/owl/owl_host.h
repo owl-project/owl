@@ -172,7 +172,7 @@ typedef enum
    OWL_UCHAR2,
    OWL_UCHAR3,
    OWL_UCHAR4,
-   
+
    /*! just another name for a 64-bit data type - unlike
      OWL_BUFFER_POINTER's (which gets translated from OWLBuffer's
      to actual device-side poiners) these OWL_RAW_POINTER types get
@@ -182,6 +182,8 @@ typedef enum
    OWL_RAW_POINTER=OWL_ULONG,
 
 
+   /* matrix formats */
+   OWL_AFFINE3F=1800,
 
    /*! at least for now, use that for buffers with user-defined types:
      type then is "OWL_USER_TYPE_BEGIN+sizeof(elementtype). Note
@@ -488,6 +490,8 @@ owlInstanceGroupCreate(OWLContext context,
                        OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL)
                        );
 
+
+
 OWL_API void owlGroupBuildAccel(OWLGroup group);
 OWL_API void owlGroupRefitAccel(OWLGroup group);
 
@@ -646,7 +650,27 @@ OWL_API void
 owlInstanceGroupSetTransform(OWLGroup group,
                              int whichChild,
                              const float *floats,
-                             OWLMatrixFormat matrixFormat);
+                             OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL));
+
+/*! this function allows to set up to N different arrays of trnsforms
+    for motion blur; the first such array is used as transforms for
+    t=0, the last one for t=1.  */
+OWL_API void
+owlInstanceGroupSetTransforms(OWLGroup group,
+                              /*! whether to set for t=0 or t=1 -
+                                  currently supporting only 0 or 1*/
+                              uint32_t timeStep,
+                              const float *floatsForThisStimeStep,
+                              OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL));
+
+/*! sets the list of IDs to use for the child instnaces. By default
+    the instance ID of child #i is simply i, but optix allows to
+    specify a user-defined instnace ID for each instance, which with
+    owl can be done through this array. Array size must match number
+    of instances in the specified group */
+OWL_API void
+owlInstanceGroupSetInstanceIDs(OWLGroup group,
+                               const uint32_t *instanceIDs);
 
 OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,

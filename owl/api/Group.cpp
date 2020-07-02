@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -90,35 +90,6 @@ namespace owl {
       geometries(numChildren)
   {}
   
-  InstanceGroup::InstanceGroup(Context *const context,
-                               size_t numChildren,
-                               Group::SP      *groups,
-                               const uint32_t *instIDs,
-                               const float    *xfms,
-                               OWLMatrixFormat matrixFormat)
-    : Group(context,context->groups),
-      children(numChildren)
-  {
-    std::vector<uint32_t> childIDs;
-    if (groups) {
-      childIDs.resize(numChildren);
-      for (int i=0;i<numChildren;i++) {
-        assert(groups[i]);
-        children[i] = groups[i];
-        childIDs[i] = groups[i]->ID;
-      }
-    }
-    
-    if (matrixFormat != OWL_MATRIX_FORMAT_OWL)
-      throw std::runtime_error("currently only supporting OWL_MATRIX_FORMAT_OWL");
-    const affine3f *affineXfms = (const affine3f *)xfms;
-    context->llo->instanceGroupCreate(this->ID,
-                                      numChildren,
-                                      groups?childIDs.data():(uint32_t*)nullptr,
-                                      instIDs,
-                                      affineXfms);
-  }
-  
   TrianglesGeomGroup::TrianglesGeomGroup(Context *const context,
                                  size_t numChildren)
     : GeomGroup(context,numChildren)
@@ -135,26 +106,4 @@ namespace owl {
                                       nullptr,numChildren);
   }
 
-    /*! set transformation matrix of given child */
-  void InstanceGroup::setTransform(int childID,
-                                   const affine3f &xfm)
-  {
-    assert(childID >= 0);
-    assert(childID < children.size());
-
-    context->llo->instanceGroupSetTransform(this->ID,
-                                            childID,
-                                            xfm);
-  }
-
-  void InstanceGroup::setChild(int childID, Group::SP child)
-  {
-    assert(childID >= 0);
-    assert(childID < children.size());
-    children[childID] = child;
-    context->llo->instanceGroupSetChild(this->ID,
-                                        childID,
-                                        child->ID);
-  }
-  
 } // ::owl

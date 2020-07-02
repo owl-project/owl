@@ -93,6 +93,9 @@ namespace owl {
       return 3*sizeof(float);
     case OWL_FLOAT4:
       return 4*sizeof(float);
+
+    case OWL_AFFINE3F:
+      return sizeof(affine3f);
       
     case OWL_BUFFER:
       //      return sizeof();

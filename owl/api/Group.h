@@ -67,27 +67,4 @@ namespace owl {
     void refitAccel() override;
   };
 
-  struct InstanceGroup : public Group {
-    typedef std::shared_ptr<InstanceGroup> SP;
-    
-    InstanceGroup(Context *const context,
-                  size_t numChildren,
-                  Group::SP      *groups,
-                  const uint32_t *instIDs,
-                  const float    *xfms,
-                  OWLMatrixFormat matrixFormat);
-
-    void setChild(int childID, Group::SP child);
-                  
-    /*! set transformation matrix of given child */
-    void setTransform(int childID, const affine3f &xfm);
-    
-    virtual std::string toString() const { return "InstanceGroup"; }
-
-    /*! the list of children - note we do have to keep them both in
-        the ll layer _and_ here for the refcounting to work; the
-        transforms are only stored once, on the ll layer */
-    std::vector<Group::SP> children;
-  };
-
 } // ::owl

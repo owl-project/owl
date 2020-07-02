@@ -19,6 +19,7 @@
 #include "APIHandle.h"
 #include "owl/common/parallel/parallel_for.h"
 #include "api/Triangles.h"
+#include "api/InstanceGroup.h"
 
 namespace owl {
 
@@ -505,12 +506,17 @@ namespace owl {
     InstanceGroup::SP  group
       = std::make_shared<InstanceGroup>
       (context.get(),numInstances,
-       __initGroups,initInstanceIDs,initTransforms,matrixFormat);
+       __initGroups);
     assert(group);
 
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     assert(_group);
 
+    if (initTransforms)
+      owlInstanceGroupSetTransforms(_group,0,initTransforms,matrixFormat);
+
+    if (initInstanceIDs)
+      owlInstanceGroupSetInstanceIDs(_group,initInstanceIDs);
     return _group;
   }
 
@@ -1249,6 +1255,40 @@ namespace owl {
     group->setChild(whichChild, child);
   }
 
+  /*! this function allows to set up to N different arrays of trnsforms
+    for motion blur; the first such array is used as transforms for
+    t=0, the last one for t=1.  */
+  OWL_API void
+  owlInstanceGroupSetTransforms(OWLGroup _group,
+                                uint32_t timeStep,
+                                const float *floatsForThisStimeStep,
+                                OWLMatrixFormat matrixFormat)
+  {
+    LOG_API_CALL();
+
+    assert(_group);
+    InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+    assert(group);
+
+    group->setTransforms(timeStep,floatsForThisStimeStep,matrixFormat);
+  }
+  
+  /*! this function allows to set up to N different arrays of trnsforms
+    for motion blur; the first such array is used as transforms for
+    t=0, the last one for t=1.  */
+  OWL_API void
+  owlInstanceGroupSetInstanceIDs(OWLGroup _group,
+                                 const uint32_t *instanceIDs)
+  {
+    LOG_API_CALL();
+
+    assert(_group);
+    InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+    assert(group);
+
+    group->setInstanceIDs(instanceIDs);
+  }
+  
   OWL_API void
   owlInstanceGroupSetTransform(OWLGroup _group,
                                int whichChild,

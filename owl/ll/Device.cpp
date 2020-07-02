@@ -1098,6 +1098,18 @@ namespace owl {
       group->buildAccel(context);
     }
 
+
+    void Device::setTransforms(int igID, int timeStep, const affine3f *transforms)
+    {
+      Group *group = checkGetGroup(igID);
+      assert(group);
+      
+      InstanceGroup *ig = dynamic_cast<InstanceGroup*>(group);
+      assert(ig);
+      assert(timeStep == 0 || timeStep == 1);
+      ig->transforms[timeStep] = transforms;
+    }
+    
     void Device::groupRefitAccel(int groupID)
     {
       Group *group = checkGetGroup(groupID);

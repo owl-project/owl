@@ -219,6 +219,13 @@ namespace owl {
       for (auto device : devices)
         device->enableMotionBlur();
     }
+    
+    void DeviceGroup::setTransforms(int igID, int timeStep,
+                                    const affine3f *xfms)
+    {
+      for (auto device : devices)
+        device->setTransforms(igID,timeStep,xfms);
+    }
 
     void DeviceGroup::setRayTypeCount(size_t rayTypeCount)
     {
@@ -602,20 +609,6 @@ namespace owl {
                                             cbData);
     }
 
-    
-    /*! set given child's instance transform. groupID must be a
-      valid instance group, childID must be wihtin
-      [0..numChildren) */
-    void DeviceGroup::instanceGroupSetTransform(int groupID,
-                                                int childNo,
-                                                const affine3f &xfm)
-    {
-      for (auto device : devices)
-        device->instanceGroupSetTransform(groupID,
-                                          childNo,
-                                          xfm);
-    }
-
     /*! set given child to {childGroupID+xfm}  */
     void DeviceGroup::instanceGroupSetChild(int groupID,
                                             int childNo,
@@ -665,13 +658,11 @@ namespace owl {
                                              omitted by passing a nullptr, but if
                                              not null this must be a list of
                                              'childCount' valid group ID */
-                                          const uint32_t *childGroupIDs,
-                                          const uint32_t *instIDs,
-                                          const affine3f *xfms)
+                                          const uint32_t *childGroupIDs)
     {
       for (auto device : devices)
         device->instanceGroupCreate(groupID,numChildren,
-                                    childGroupIDs,instIDs,xfms);
+                                    childGroupIDs);
     }
 
     /*! returns the given device's buffer address on the specified
