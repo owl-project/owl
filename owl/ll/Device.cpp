@@ -217,7 +217,7 @@ namespace owl {
       // ------------------------------------------------------------------
       // configure default pipeline link options
       // ------------------------------------------------------------------
-      pipelineLinkOptions.overrideUsesMotionBlur = motionBlurEnabled;
+      // pipelineLinkOptions.overrideUsesMotionBlur = motionBlurEnabled;
       pipelineLinkOptions.maxTraceDepth          = 2;
       pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
       

@@ -221,7 +221,7 @@ namespace owl {
         d_bounds = (CUdeviceptr)userGeom->d_boundsMemory;
         
         userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
-        auto &aa = userGeomInput.aabbArray;
+        auto &aa = userGeomInput.customPrimitiveArray;//aabbsArray;
         aa.aabbBuffers   = &d_bounds;
         aa.numPrimitives = (uint32_t)userGeom->numPrims;
         aa.strideInBytes = sizeof(box3f);
