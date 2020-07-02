@@ -319,6 +319,7 @@ namespace owl {
       // ==================================================================
       assert(transforms[1] != nullptr);
       std::vector<OptixMatrixMotionTransform> motionTransforms(children.size());
+      std::vector<box3f> motionAABBs(children.size());
       for (int childID=0;childID<children.size();childID++) {
         Group *child = children[childID];
         assert(child);
@@ -328,6 +329,7 @@ namespace owl {
         mt.motionOptions.timeBegin    = 0.0f;
         mt.motionOptions.timeEnd      = 1.0f;
         mt.motionOptions.flags        = OPTIX_MOTION_FLAG_NONE;
+        motionAABBs[childID] = box3f(vec3f(0.f),vec3f(1.f));
         for (int timeStep = 0; timeStep < 2; timeStep ++ ) {
           const affine3f xfm = transforms[timeStep][childID];
           mt.transform[timeStep][0*4+0]  = xfm.l.vx.x;
@@ -347,8 +349,9 @@ namespace owl {
         }
       }
       // and upload
-      motionTransformsBuffer.alloc(motionTransforms.size()*
-                                   sizeof(motionTransforms[0]));
+      if (!motionTransformsBuffer.alloced())
+        motionTransformsBuffer.alloc(motionTransforms.size()*
+                                     sizeof(motionTransforms[0]));
       motionTransformsBuffer.upload(motionTransforms.data(),"motionTransforms");
       
       // ==================================================================
@@ -399,13 +402,18 @@ namespace owl {
         oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
         oi.visibilityMask    = 255;
         assert(child->traversable);
-        oi.traversableHandle = child->traversable;
+        oi.traversableHandle = childMotionHandle; //child->traversable;
       }
 
-      optixInstanceBuffer.alloc(optixInstances.size()*
-                                sizeof(optixInstances[0]));
+      if (!optixInstanceBuffer.alloced())
+        optixInstanceBuffer.alloc(optixInstances.size()*
+                                  sizeof(optixInstances[0]));
       optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
-    
+
+
+      motionAABBsBuffer.alloc(motionAABBs.size()*sizeof(box3f));
+      motionAABBsBuffer.upload(motionAABBs.data(),"motionaabbs");
+      
       // ==================================================================
       // set up build input
       // ==================================================================
@@ -415,6 +423,9 @@ namespace owl {
         = (CUdeviceptr)optixInstanceBuffer.get();
       instanceInput.instanceArray.numInstances
         = (int)optixInstances.size();
+
+      instanceInput.instanceArray.aabbs        = motionAABBsBuffer.d_pointer;
+      instanceInput.instanceArray.numAabbs     = children.size();
       
       // ==================================================================
       // set up accel uptions
@@ -475,8 +486,10 @@ namespace owl {
                                   /* no compaction for instances: */
                                   nullptr,0u
                                   ));
-      
+
+      PING;
       CUDA_SYNC_CHECK();
+      PING;
     
       // ==================================================================
       // aaaaaand .... clean up

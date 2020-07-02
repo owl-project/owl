@@ -296,7 +296,11 @@ namespace owl {
       virtual int  getSBTOffset() const override { return 0; }
 
       DeviceMemory optixInstanceBuffer;
+
+      /*! if we use motion blur, this is used to store all the motoin transforms */
       DeviceMemory motionTransformsBuffer;
+      DeviceMemory motionAABBsBuffer;
+      
       DeviceMemory outputBuffer;
       std::vector<Group *>  children;
       const uint32_t *instanceIDs { nullptr };
