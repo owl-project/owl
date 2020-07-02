@@ -299,7 +299,7 @@ namespace owl {
       DeviceMemory motionTransformsBuffer;
       DeviceMemory outputBuffer;
       std::vector<Group *>  children;
-      const uint32_t *instanceIDs;
+      const uint32_t *instanceIDs { nullptr };
       const affine3f *transforms[2] = { nullptr, nullptr };
     };
 
