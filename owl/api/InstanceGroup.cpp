@@ -95,5 +95,17 @@ namespace owl {
                                         childID,
                                         child->ID);
   }
+
+  void InstanceGroup::buildAccel()
+  {
+    for (auto device : context->llo->devices)
+      device->groupBuildAccel(this->ID);
+  }
+  
+  void InstanceGroup::refitAccel()
+  {
+    for (auto device : context->llo->devices)
+      device->groupRefitAccel(this->ID);
+  }
   
 }

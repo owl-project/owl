@@ -16,42 +16,22 @@
 
 #pragma once
 
-#include "Group.h"
+#include "api/Group.h"
 
 namespace owl {
 
-  struct InstanceGroup : public Group {
-    typedef std::shared_ptr<InstanceGroup> SP;
+  struct UserGeomGroup : public GeomGroup {
+    UserGeomGroup(Context *const context,
+                   size_t numChildren);
+    virtual std::string toString() const { return "UserGeomGroup"; }
+
+    /*! build() and refit() share most of their code; this functoin
+        does all that code, with only minor specialization based on
+        build vs refit */
+    void buildOrRefit(bool FULL_REBUILD);
     
-    InstanceGroup(Context *const context,
-                  size_t numChildren,
-                  Group::SP      *groups);
-
-    void setChild(int childID, Group::SP child);
-                  
-    /*! set transformation matrix of given child */
-    void setTransform(int childID, const affine3f &xfm);
-
-    /*! set transformation matrix of given child */
-    void setTransforms(uint32_t timeStep,
-                       const float *floatsForThisStimeStep,
-                       OWLMatrixFormat matrixFormat);
-
-    void setInstanceIDs(/* must be an array of children.size() items */
-                        const uint32_t *instanceIDs);
-      
     void buildAccel() override;
     void refitAccel() override;
-    
-    virtual std::string toString() const { return "InstanceGroup"; }
-
-    /*! the list of children - note we do have to keep them both in
-        the ll layer _and_ here for the refcounting to work; the
-        transforms are only stored once, on the ll layer */
-    std::vector<Group::SP>  children;
-    /*! set of transform matrices for t=0 and t=1, respectively */
-    std::vector<affine3f>   transforms[2];
-    std::vector<uint32_t>   instanceIDs;
   };
 
 } // ::owl

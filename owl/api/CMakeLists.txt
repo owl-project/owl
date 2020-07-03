@@ -34,8 +34,12 @@ set(OWL_NG_SOURCES
   SBTObject.cpp
   Buffer.cpp
   Texture.cpp
+  
   Group.cpp
   InstanceGroup.cpp
+  TrianglesGeomGroup.cpp
+  UserGeomGroup.cpp
+  
   ObjectRegistry.cpp
   Context.cpp
   RayGen.cpp

@@ -526,33 +526,33 @@ namespace owl {
       }
     }
 
-    void DeviceGroup::groupBuildAccel(int groupID)
-    {
-      try {
-        for (auto device : devices) 
-          device->groupBuildAccel(groupID);
-      } catch (std::exception &e) {
-        std::cerr << OWL_TERMINAL_RED
-                  << "#owl.ll: Fatal error in owl::ll::groupBuildAccel():" << std::endl
-                  << e.what()
-                  << OWL_TERMINAL_DEFAULT << std::endl;
-        throw e;
-      }
-    }
+    // void DeviceGroup::groupBuildAccel(int groupID)
+    // {
+    //   try {
+    //     for (auto device : devices) 
+    //       device->groupBuildAccel(groupID);
+    //   } catch (std::exception &e) {
+    //     std::cerr << OWL_TERMINAL_RED
+    //               << "#owl.ll: Fatal error in owl::ll::groupBuildAccel():" << std::endl
+    //               << e.what()
+    //               << OWL_TERMINAL_DEFAULT << std::endl;
+    //     throw e;
+    //   }
+    // }
 
-    void DeviceGroup::groupRefitAccel(int groupID)
-    {
-      // try {
-      for (auto device : devices) 
-        device->groupRefitAccel(groupID);
-      // } catch (std::exception &e) {
-      //   std::cerr << OWL_TERMINAL_RED
-      //             << "#owl.ll: Fatal error in owl::ll::groupRefitAccel():" << std::endl
-      //             << e.what()
-      //             << OWL_TERMINAL_DEFAULT << std::endl;
-      //   throw e;
-      // }
-    }
+    // void DeviceGroup::groupRefitAccel(int groupID)
+    // {
+    //   // try {
+    //   for (auto device : devices) 
+    //     device->groupRefitAccel(groupID);
+    //   // } catch (std::exception &e) {
+    //   //   std::cerr << OWL_TERMINAL_RED
+    //   //             << "#owl.ll: Fatal error in owl::ll::groupRefitAccel():" << std::endl
+    //   //             << e.what()
+    //   //             << OWL_TERMINAL_DEFAULT << std::endl;
+    //   //   throw e;
+    //   // }
+    // }
 
     uint32_t DeviceGroup::groupGetSBTOffset(int groupID)
     {

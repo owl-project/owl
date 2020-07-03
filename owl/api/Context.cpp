@@ -19,6 +19,9 @@
 #include "Geometry.h"
 #include "Triangles.h"
 #include "Texture.h"
+#include "api/TrianglesGeomGroup.h"
+#include "api/UserGeomGroup.h"
+
 #include "owl/ll/Device.h"
 
 #define LOG(message)                            \

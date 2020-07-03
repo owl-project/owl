@@ -452,8 +452,8 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
                                        size_t count,
                                        size_t stride,
                                        size_t offset);
-      void groupBuildAccel(int groupID);
-      void groupRefitAccel(int groupID);
+      // void groupBuildAccel(int groupID);
+      // void groupRefitAccel(int groupID);
       
       OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
       uint32_t groupGetSBTOffset(int groupID);

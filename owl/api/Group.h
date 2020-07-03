@@ -29,13 +29,16 @@ namespace owl {
       : RegisteredObject(context,registry)
     {}
     virtual std::string toString() const { return "Group"; }
-    virtual void buildAccel();
-    virtual void refitAccel();
+    virtual void buildAccel() = 0;
+    virtual void refitAccel() = 0;
 
     OptixTraversableHandle getTraversable(int deviceID);
+
+    /*! bounding box for t=0 and t=1, respectively; for motion
+        blur. */
+    box3f bounds[2];
   };
 
-  
   struct GeomGroup : public Group {
     typedef std::shared_ptr<GeomGroup> SP;
 
@@ -45,26 +48,6 @@ namespace owl {
     
     virtual std::string toString() const { return "GeomGroup"; }
     std::vector<Geom::SP> geometries;
-  };
-
-  struct TrianglesGeomGroup : public GeomGroup {
-    TrianglesGeomGroup(Context *const context,
-                   size_t numChildren);
-    virtual std::string toString() const { return "TrianglesGeomGroup"; }
-  };
-
-  struct UserGeomGroup : public GeomGroup {
-    UserGeomGroup(Context *const context,
-                   size_t numChildren);
-    virtual std::string toString() const { return "UserGeomGroup"; }
-
-    /*! build() and refit() share most of their code; this functoin
-        does all that code, with only minor specialization based on
-        build vs refit */
-    void buildOrRefit(bool FULL_REBUILD);
-    
-    void buildAccel() override;
-    void refitAccel() override;
   };
 
 } // ::owl

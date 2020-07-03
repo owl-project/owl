@@ -14,44 +14,25 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Group.h"
+#include "TrianglesGeomGroup.h"
 #include "Context.h"
 
 namespace owl {
 
-  // void Group::buildAccel()
-  // {
-  //   // lloGroupAccelBuild(context->llo,this->ID);
-  //   context->llo->groupBuildAccel(this->ID);
-  // }
-  
-  // void Group::refitAccel()
-  // {
-  //   // lloGroupAccelRefit(context->llo,this->ID);
-  //   context->llo->groupRefitAccel(this->ID);
-  // }
-  
-  OptixTraversableHandle Group::getTraversable(int deviceID)
+  TrianglesGeomGroup::TrianglesGeomGroup(Context *const context,
+                                         size_t numChildren)
+    : GeomGroup(context,numChildren)
   {
-    // return lloGroupGetTraversable(context->llo,this->ID,deviceID);
-    return context->llo->groupGetTraversable(this->ID,deviceID);
-  }
-  
-  void GeomGroup::setChild(int childID, Geom::SP child)
-  {
-    assert(childID >= 0);
-    assert(childID < geometries.size());
-    geometries[childID] = child;
-    context->llo->geomGroupSetChild(this->ID,childID,child->ID);
-    // lloGeomGroupSetChild(context->llo,this->ID,childID,child->ID);
+    context->llo->trianglesGeomGroupCreate(this->ID,
+                                           nullptr,numChildren);
   }
 
-
-    
-  GeomGroup::GeomGroup(Context *const context,
-                       size_t numChildren)
-    : Group(context,context->groups),
-      geometries(numChildren)
-  {}
+  void TrianglesGeomGroup::buildAccel()
+  {
+  }
   
+  void TrianglesGeomGroup::refitAccel()
+  {
+  }
+
 } // ::owl
