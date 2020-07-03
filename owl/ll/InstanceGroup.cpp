@@ -108,6 +108,7 @@ namespace owl {
         buildOrRefit_staticInstances<true>(context);
       else
         buildOrRefit_motionBlur<true>(context);
+      CUDA_SYNC_CHECK();
     }
 
     void InstanceGroup::refitAccel(Context *context)
@@ -116,6 +117,7 @@ namespace owl {
         buildOrRefit_staticInstances<false>(context);
       else
         buildOrRefit_motionBlur<false>(context);
+      CUDA_SYNC_CHECK();
     }
 
     template<bool FULL_REBUILD>
@@ -153,11 +155,11 @@ namespace owl {
       OptixBuildInput              instanceInput  {};
       OptixAccelBuildOptions       accelOptions   {};
       //! the N build inputs that go into the builder
-      std::vector<OptixBuildInput> buildInputs(children.size());
+      // std::vector<OptixBuildInput> buildInputs(children.size());
       std::vector<OptixInstance>   optixInstances(children.size());
 
      // for now we use the same flags for all geoms
-      uint32_t instanceGroupInputFlags[1] = { 0 };
+      // uint32_t instanceGroupInputFlags[1] = { 0 };
       // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
 
       // now go over all children to set up the buildinputs
@@ -168,7 +170,7 @@ namespace owl {
         assert(transforms[1] == nullptr);
         const affine3f xfm = transforms[0][childID];
 
-        OptixInstance &oi    = optixInstances[childID];
+        OptixInstance oi = {};
         oi.transform[0*4+0]  = xfm.l.vx.x;
         oi.transform[0*4+1]  = xfm.l.vy.x;
         oi.transform[0*4+2]  = xfm.l.vz.x;
@@ -191,11 +193,14 @@ namespace owl {
         oi.visibilityMask    = 255;
         assert(child->traversable);
         oi.traversableHandle = child->traversable;
+
+        optixInstances[childID] = oi;
       }
 
       optixInstanceBuffer.alloc(optixInstances.size()*
                                 sizeof(optixInstances[0]));
       optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
+      CUDA_SYNC_CHECK();
     
       // ==================================================================
       // set up build input
@@ -231,6 +236,7 @@ namespace owl {
                                                1, // num build inputs
                                                &blasBufferSizes
                                                ));
+      CUDA_SYNC_CHECK();
     
       // ==================================================================
       // trigger the build ....
@@ -285,6 +291,18 @@ namespace owl {
 
 
 
+
+
+
+
+
+
+
+
+    
+
+
+
     template<bool FULL_REBUILD>
     void InstanceGroup::buildOrRefit_motionBlur(Context *context) 
     {
@@ -323,15 +341,17 @@ namespace owl {
       for (int childID=0;childID<children.size();childID++) {
         Group *child = children[childID];
         assert(child);
-        OptixMatrixMotionTransform &mt = motionTransforms[childID];
+        OptixMatrixMotionTransform mt;// = motionTransforms[childID];
         mt.child                      = child->traversable;//state.sphere_gas_handle;
+        PRINT((int*)mt.child);
         mt.motionOptions.numKeys      = 2;
-        mt.motionOptions.timeBegin    = 0.0f;
-        mt.motionOptions.timeEnd      = 1.0f;
+        mt.motionOptions.timeBegin    = 0.f;
+        mt.motionOptions.timeEnd      = 1.f;
         mt.motionOptions.flags        = OPTIX_MOTION_FLAG_NONE;
-        motionAABBs[childID] = box3f(vec3f(0.f),vec3f(1.f));
+
         for (int timeStep = 0; timeStep < 2; timeStep ++ ) {
           const affine3f xfm = transforms[timeStep][childID];
+          PRINT(childID); PRINT(timeStep); PRINT(xfm);
           mt.transform[timeStep][0*4+0]  = xfm.l.vx.x;
           mt.transform[timeStep][0*4+1]  = xfm.l.vy.x;
           mt.transform[timeStep][0*4+2]  = xfm.l.vz.x;
@@ -347,12 +367,20 @@ namespace owl {
           mt.transform[timeStep][2*4+2]  = xfm.l.vz.z;
           mt.transform[timeStep][2*4+3]  = xfm.p.z;
         }
+
+        motionTransforms[childID] = mt;
+        
+        motionAABBs[childID] = box3f(vec3f(-100000.f),vec3f(+100000.f));
       }
       // and upload
-      if (!motionTransformsBuffer.alloced())
-        motionTransformsBuffer.alloc(motionTransforms.size()*
-                                     sizeof(motionTransforms[0]));
+      motionTransformsBuffer.alloc(motionTransforms.size()*
+                                   sizeof(motionTransforms[0]));
       motionTransformsBuffer.upload(motionTransforms.data(),"motionTransforms");
+      
+      PRINT(motionAABBs.size());
+      motionAABBsBuffer.alloc(motionAABBs.size()*sizeof(box3f));
+      motionAABBsBuffer.upload(motionAABBs.data(),"motionaabbs");
+      CUDA_SYNC_CHECK();
       
       // ==================================================================
       // create instance build inputs
@@ -360,14 +388,20 @@ namespace owl {
       OptixBuildInput              instanceInput  {};
       OptixAccelBuildOptions       accelOptions   {};
       //! the N build inputs that go into the builder
-      std::vector<OptixBuildInput> buildInputs(children.size());
+      // std::vector<OptixBuildInput> buildInputs(children.size());
       std::vector<OptixInstance>   optixInstances(children.size());
 
      // for now we use the same flags for all geoms
-      uint32_t instanceGroupInputFlags[1] = { 0 };
+      // uint32_t instanceGroupInputFlags[1] = { 0 };
       // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
 
       // now go over all children to set up the buildinputs
+      PING;
+      PRINT((int*)this);
+      PRINT((int*)&motionTransformsBuffer);
+      PRINT((int*)motionTransformsBuffer.d_pointer);
+      PRINT((const int*)motionTransformsBuffer.get());
+      PING;
       for (int childID=0;childID<children.size();childID++) {
         Group *child = children[childID];
         assert(child);
@@ -376,11 +410,14 @@ namespace owl {
         OPTIX_CHECK(optixConvertPointerToTraversableHandle
                     (context->optixContext,
                      (CUdeviceptr)(((const uint8_t*)motionTransformsBuffer.get())
-                                   +childID*sizeof(motionTransforms[0])),
+                                   +childID*sizeof(motionTransforms[0])
+                                   ),
                      OPTIX_TRAVERSABLE_TYPE_MATRIX_MOTION_TRANSFORM,
                      &childMotionHandle));
+        PRINT((int*)childMotionHandle);
         
-        OptixInstance &oi    = optixInstances[childID];
+        // OptixInstance &oi    = optixInstances[childID];
+        OptixInstance oi    = {};
         oi.transform[0*4+0]  = 1.f;//xfm.l.vx.x;
         oi.transform[0*4+1]  = 0.f;//xfm.l.vy.x;
         oi.transform[0*4+2]  = 0.f;//xfm.l.vz.x;
@@ -397,50 +434,56 @@ namespace owl {
         oi.transform[2*4+3]  = 0.f;//xfm.p.z;
         
         oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
+        PING;
         oi.instanceId        = (instanceIDs==nullptr)?childID:instanceIDs[childID];
-        oi.visibilityMask    = 255;
         oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
-        oi.visibilityMask    = 255;
+        oi.visibilityMask    = 1; //255;
         assert(child->traversable);
         oi.traversableHandle = childMotionHandle; //child->traversable;
+        optixInstances[childID] = oi;
       }
 
-      if (!optixInstanceBuffer.alloced())
-        optixInstanceBuffer.alloc(optixInstances.size()*
-                                  sizeof(optixInstances[0]));
+      PRINT(optixInstances.size());
+      optixInstanceBuffer.alloc(optixInstances.size()*
+                                sizeof(optixInstances[0]));
       optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
+      CUDA_SYNC_CHECK();
 
-
-      motionAABBsBuffer.alloc(motionAABBs.size()*sizeof(box3f));
-      motionAABBsBuffer.upload(motionAABBs.data(),"motionaabbs");
-      
       // ==================================================================
       // set up build input
       // ==================================================================
       instanceInput.type
         = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
+      
       instanceInput.instanceArray.instances
-        = (CUdeviceptr)optixInstanceBuffer.get();
+        = optixInstanceBuffer.d_pointer;
       instanceInput.instanceArray.numInstances
         = (int)optixInstances.size();
 
-      instanceInput.instanceArray.aabbs        = motionAABBsBuffer.d_pointer;
-      instanceInput.instanceArray.numAabbs     = children.size();
+      instanceInput.instanceArray.aabbs
+        = motionAABBsBuffer.d_pointer;
+      instanceInput.instanceArray.numAabbs
+        = (int)motionAABBs.size();
       
       // ==================================================================
       // set up accel uptions
       // ==================================================================
+      accelOptions = {};
       accelOptions.buildFlags =
-        OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
-        |
-        OPTIX_BUILD_FLAG_ALLOW_UPDATE
+        OPTIX_BUILD_FLAG_NONE
+        // OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+        // |
+        // OPTIX_BUILD_FLAG_ALLOW_UPDATE
         ;
-      accelOptions.motionOptions.numKeys = 1;
+      // accelOptions.motionOptions.numKeys = 0;//1;
       if (FULL_REBUILD)
         accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
-      else
+      else {
+        throw std::runtime_error("no implemented");
         accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
+      }
       
+      CUDA_SYNC_CHECK();
       // ==================================================================
       // query build buffer sizes, and allocate those buffers
       // ==================================================================
@@ -469,6 +512,8 @@ namespace owl {
       
       if (FULL_REBUILD)
         bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      PRINT(blasBufferSizes.outputSizeInBytes);
+      PRINT(bvhMemory.size());
       
       OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                   /* todo: stream */0,

@@ -16,6 +16,9 @@
 
 #include "deviceCode.h"
 #include <optix_device.h>
+#include <owl/common/math/random.h>
+
+typedef owl::common::LCG<4> Random;
 
 struct Hit {
   bool  hadHit = false;
@@ -27,6 +30,8 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   const RayGenData &self = owl::getProgramData<RayGenData>();
   const vec2i pixelID = owl::getLaunchIndex();
 
+  Random rng(pixelID);
+  
   const vec2f screen = (vec2f(pixelID)+vec2f(.5f)) / vec2f(self.fbSize);
   owl::Ray ray;
   ray.origin    
@@ -35,21 +40,29 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     = normalize(self.camera.dir_00
                 + screen.u * self.camera.dir_du
                 + screen.v * self.camera.dir_dv);
+  ray.time = 0.5f;
 
-  Hit hit;
-  owl::traceRay(/*accel to trace against*/self.world,
-                /*the ray to trace*/ray,
-                /*prd*/hit);
-
+  vec3f avgColor = 0.f;
+  const int numSPP = 16;
+  for (int i=0;i<numSPP;i++) {
+    ray.time = rng();
+    Hit hit;
+    owl::traceRay(/*accel to trace against*/self.world,
+                  /*the ray to trace*/ray,
+                  /*prd*/hit);
+    avgColor += hit.col;
+  }
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
-    = owl::make_rgba(hit.col);
+    = owl::make_rgba(avgColor * (1.f/numSPP));
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
   Hit &prd = owl::getPRD<Hit>();
 
+  // printf("HIT\n");
+  
   const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
   
   const vec3f rayOrg = optixGetWorldRayOrigin();

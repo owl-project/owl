@@ -104,7 +104,7 @@ namespace owl {
       int oldActive = context->pushActive();
       LOG("building triangles accel over "
           << children.size() << " geometries");
-
+      PING;
       size_t sumPrims = 0;
       uint32_t maxPrimsPerGAS = 0;
       optixDeviceContextGetProperty
@@ -115,11 +115,14 @@ namespace owl {
 
       assert(!children.empty());
       TrianglesGeom *child0 = (TrianglesGeom *)children[0];
+      PRINT((int*)child0);
       int numKeys = child0->vertexPointers.size();
+      PRINT(numKeys);
       assert(numKeys > 0);
       const bool hasMotion = (numKeys > 1);
       if (hasMotion) assert(context->motionBlurEnabled);
       
+      PING;
       // ==================================================================
       // create triangle inputs
       // ==================================================================
@@ -134,6 +137,7 @@ namespace owl {
       // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
 
       // now go over all children to set up the buildinputs
+      PING;
       for (int childID=0;childID<children.size();childID++) {
         Geom *geom = children[childID];
         assert("double-check geom isn't null" && geom != nullptr);
@@ -193,6 +197,7 @@ namespace owl {
         ta.sbtIndexOffsetStrideInBytes = 0; 
       }
       
+      PING;
       // ==================================================================
       // BLAS setup: buildinputs set up, build the blas
       // ==================================================================
@@ -217,6 +222,7 @@ namespace owl {
       else
         accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
       
+      PING;
       OptixAccelBufferSizes blasBufferSizes;
       OPTIX_CHECK(optixAccelComputeMemoryUsage
                   (context->optixContext,
@@ -226,6 +232,7 @@ namespace owl {
                    &blasBufferSizes
                    ));
       
+      PING;
       // ------------------------------------------------------------------
       // ... and allocate buffers: temp buffer, initial (uncompacted)
       // BVH buffer, and a one-single-size_t buffer to store the
@@ -242,11 +249,13 @@ namespace owl {
       DeviceMemory outputBuffer;
       outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
 
+      PING;
       // single size-t buffer to store compacted size in
       DeviceMemory compactedSizeBuffer;
       if (FULL_REBUILD)
       compactedSizeBuffer.alloc(sizeof(uint64_t));
       
+      PING;
       // ------------------------------------------------------------------
       // now execute initial, uncompacted build
       // ------------------------------------------------------------------
@@ -254,6 +263,7 @@ namespace owl {
       emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
       emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
 
+      PING;
       if (FULL_REBUILD) {
         OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                     /* todo: stream */0,
@@ -273,6 +283,7 @@ namespace owl {
                                     &emitDesc,1u
                                     ));
       } else {
+        PING; PRINT(bvhMemory.get());
         OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                     /* todo: stream */0,
                                     &accelOptions,
@@ -292,6 +303,7 @@ namespace owl {
                                     ));
       }
       CUDA_SYNC_CHECK();
+      PING;
       
       // ==================================================================
       // perform compaction
@@ -314,6 +326,7 @@ namespace owl {
                                 &traversable));
       }
       CUDA_SYNC_CHECK();
+      PING;
 
       
       // ==================================================================
@@ -325,6 +338,7 @@ namespace owl {
       if (FULL_REBUILD)
         compactedSizeBuffer.free();
       
+      PING;
       context->popActive(oldActive);
 
       LOG_OK("successfully build triangles geom group accel");

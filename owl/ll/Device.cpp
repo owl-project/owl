@@ -182,6 +182,7 @@ namespace owl {
       moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
       moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_NONE;
 #else
+      PING;
       moduleCompileOptions.maxRegisterCount  = 100;
       moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
       moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
@@ -199,7 +200,9 @@ namespace owl {
         break;
       case 1:
         pipelineCompileOptions.traversableGraphFlags
-          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
+          = motionBlurEnabled
+          ? OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY
+          : OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
           // | OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
           ;
         break;

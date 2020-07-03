@@ -51,7 +51,7 @@ const vec3f init_lookAt(0.f,0.f,0.f);
 const vec3f init_lookUp(0.f,1.f,0.f);
 const float init_cosFovy = 0.66f;
 
-const vec3i numBoxes(2);
+const vec3i numBoxes(4);
 const float worldSize = 1;
 const vec3f boxSize   = (2*.4f*worldSize)/vec3f(numBoxes);
 
@@ -146,7 +146,7 @@ OWLGroup createBox(OWLContext context,
 
   OWLGeom trianglesGeom
     = owlGeomCreate(context,trianglesGeomType);
-  
+
   owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
                           mesh.vertices.size(),sizeof(vec3f),0);
   owlTrianglesSetIndices(trianglesGeom,indexBuffer,
@@ -186,7 +186,7 @@ OWLGroup createBox(OWLContext context,
     = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
 
   owlGroupBuildAccel(trianglesGroup);
-  
+
   return trianglesGroup;
 }
 
@@ -256,6 +256,7 @@ Viewer::Viewer()
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
+  owlEnableMotionBlur(context);
   OWLModule module = owlModuleCreate(context,ptxCode);
   
   // ##################################################################
@@ -355,7 +356,7 @@ Viewer::Viewer()
     { "camera.dir_00", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_00)},
     { "camera.dir_du", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_du)},
     { "camera.dir_dv", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_dv)},
-    { /* sentinel to mark end of list */ }
+    { nullptr/* sentinel to mark end of list */ }
   };
 
   // ----------- create object  ----------------------------
@@ -373,10 +374,15 @@ Viewer::Viewer()
   owlBuildPrograms(context);
   owlBuildPipeline(context);
   owlBuildSBT(context);
+  sbtDirty = true;
 }
 
 void Viewer::render()
 {
+  if (sbtDirty) {
+    owlBuildSBT(context);
+    sbtDirty = false;
+  }
   owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
 }
 
