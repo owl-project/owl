@@ -108,7 +108,6 @@ namespace owl {
         buildOrRefit_staticInstances<true>(context);
       else
         buildOrRefit_motionBlur<true>(context);
-      CUDA_SYNC_CHECK();
     }
 
     void InstanceGroup::refitAccel(Context *context)
@@ -117,7 +116,6 @@ namespace owl {
         buildOrRefit_staticInstances<false>(context);
       else
         buildOrRefit_motionBlur<false>(context);
-      CUDA_SYNC_CHECK();
     }
 
     template<bool FULL_REBUILD>
@@ -200,7 +198,6 @@ namespace owl {
       optixInstanceBuffer.alloc(optixInstances.size()*
                                 sizeof(optixInstances[0]));
       optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
-      CUDA_SYNC_CHECK();
     
       // ==================================================================
       // set up build input
@@ -236,7 +233,6 @@ namespace owl {
                                                1, // num build inputs
                                                &blasBufferSizes
                                                ));
-      CUDA_SYNC_CHECK();
     
       // ==================================================================
       // trigger the build ....
@@ -341,9 +337,8 @@ namespace owl {
       for (int childID=0;childID<children.size();childID++) {
         Group *child = children[childID];
         assert(child);
-        OptixMatrixMotionTransform mt;// = motionTransforms[childID];
-        mt.child                      = child->traversable;//state.sphere_gas_handle;
-        PRINT((int*)mt.child);
+        OptixMatrixMotionTransform mt = {};
+        mt.child                      = child->traversable;
         mt.motionOptions.numKeys      = 2;
         mt.motionOptions.timeBegin    = 0.f;
         mt.motionOptions.timeEnd      = 1.f;
@@ -351,7 +346,6 @@ namespace owl {
 
         for (int timeStep = 0; timeStep < 2; timeStep ++ ) {
           const affine3f xfm = transforms[timeStep][childID];
-          PRINT(childID); PRINT(timeStep); PRINT(xfm);
           mt.transform[timeStep][0*4+0]  = xfm.l.vx.x;
           mt.transform[timeStep][0*4+1]  = xfm.l.vy.x;
           mt.transform[timeStep][0*4+2]  = xfm.l.vz.x;
@@ -369,18 +363,16 @@ namespace owl {
         }
 
         motionTransforms[childID] = mt;
-        
-        motionAABBs[childID] = box3f(vec3f(-100000.f),vec3f(+100000.f));
+        std::cout <<" THIS IS WRONG:" << std::endl;
+        motionAABBs[childID] = box3f(vec3f(-100.f),vec3f(+100.f));
       }
       // and upload
       motionTransformsBuffer.alloc(motionTransforms.size()*
                                    sizeof(motionTransforms[0]));
       motionTransformsBuffer.upload(motionTransforms.data(),"motionTransforms");
       
-      PRINT(motionAABBs.size());
       motionAABBsBuffer.alloc(motionAABBs.size()*sizeof(box3f));
       motionAABBsBuffer.upload(motionAABBs.data(),"motionaabbs");
-      CUDA_SYNC_CHECK();
       
       // ==================================================================
       // create instance build inputs
@@ -396,12 +388,6 @@ namespace owl {
       // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
 
       // now go over all children to set up the buildinputs
-      PING;
-      PRINT((int*)this);
-      PRINT((int*)&motionTransformsBuffer);
-      PRINT((int*)motionTransformsBuffer.d_pointer);
-      PRINT((const int*)motionTransformsBuffer.get());
-      PING;
       for (int childID=0;childID<children.size();childID++) {
         Group *child = children[childID];
         assert(child);
@@ -414,7 +400,6 @@ namespace owl {
                                    ),
                      OPTIX_TRAVERSABLE_TYPE_MATRIX_MOTION_TRANSFORM,
                      &childMotionHandle));
-        PRINT((int*)childMotionHandle);
         
         // OptixInstance &oi    = optixInstances[childID];
         OptixInstance oi    = {};
@@ -434,7 +419,6 @@ namespace owl {
         oi.transform[2*4+3]  = 0.f;//xfm.p.z;
         
         oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
-        PING;
         oi.instanceId        = (instanceIDs==nullptr)?childID:instanceIDs[childID];
         oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
         oi.visibilityMask    = 1; //255;
@@ -443,11 +427,9 @@ namespace owl {
         optixInstances[childID] = oi;
       }
 
-      PRINT(optixInstances.size());
       optixInstanceBuffer.alloc(optixInstances.size()*
                                 sizeof(optixInstances[0]));
       optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
-      CUDA_SYNC_CHECK();
 
       // ==================================================================
       // set up build input
@@ -470,10 +452,9 @@ namespace owl {
       // ==================================================================
       accelOptions = {};
       accelOptions.buildFlags =
-        OPTIX_BUILD_FLAG_NONE
-        // OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
-        // |
-        // OPTIX_BUILD_FLAG_ALLOW_UPDATE
+        OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+        |
+        OPTIX_BUILD_FLAG_ALLOW_UPDATE
         ;
       // accelOptions.motionOptions.numKeys = 0;//1;
       if (FULL_REBUILD)
@@ -483,7 +464,6 @@ namespace owl {
         accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
       }
       
-      CUDA_SYNC_CHECK();
       // ==================================================================
       // query build buffer sizes, and allocate those buffers
       // ==================================================================
@@ -512,8 +492,6 @@ namespace owl {
       
       if (FULL_REBUILD)
         bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
-      PRINT(blasBufferSizes.outputSizeInBytes);
-      PRINT(bvhMemory.size());
       
       OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                   /* todo: stream */0,
@@ -532,9 +510,7 @@ namespace owl {
                                   nullptr,0u
                                   ));
 
-      PING;
       CUDA_SYNC_CHECK();
-      PING;
     
       // ==================================================================
       // aaaaaand .... clean up
