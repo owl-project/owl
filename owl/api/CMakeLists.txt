@@ -48,7 +48,7 @@ set(OWL_NG_SOURCES
   Variable.cpp
   
   Geometry.cpp
-  Triangles.cpp
+#  Triangles.cpp
   Triangles.cu
   UserGeom.cu
 )
