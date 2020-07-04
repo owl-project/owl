@@ -45,6 +45,7 @@ namespace owl {
           ObjectRegistry &registry)
       : RegisteredObject(context,registry)
     {}
+    virtual ~Group() {}
     virtual std::string toString() const { return "Group"; }
     virtual void buildAccel() = 0;
     virtual void refitAccel() = 0;
@@ -70,10 +71,13 @@ namespace owl {
     
     GeomGroup(Context *const context,
               size_t numChildren);
+    virtual ~GeomGroup();
+    
     void setChild(int childID, Geom::SP child);
     
     virtual std::string toString() const { return "GeomGroup"; }
     std::vector<Geom::SP> geometries;
+    const int sbtOffset;
   };
 
 } // ::owl

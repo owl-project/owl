@@ -197,8 +197,6 @@ namespace owl {
       DeviceMemory missProgRecordsBuffer;
 
       DeviceMemory launchParamsBuffer;
-      
-      RangeAllocator rangeAllocator;
     };
 
     typedef enum { TRIANGLES, USER } PrimType;

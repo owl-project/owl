@@ -56,10 +56,14 @@ namespace owl {
     ObjectRegistryT<Module>       modules;
     ObjectRegistryT<LaunchParamsType> launchParamTypes;
     ObjectRegistryT<LaunchParams>     launchParams;
+
+    ll::RangeAllocator sbtRangeAllocator;
     
     //! TODO: allow changing that via api ..
     size_t numRayTypes = 1;
     bool   motionBlurEnabled = false;
+    
+    void buildHitGroupsOn(ll::Device *device);
     
     void setRayTypeCount(size_t rayTypeCount);
     void enableMotionBlur();

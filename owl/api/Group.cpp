@@ -56,7 +56,14 @@ namespace owl {
   GeomGroup::GeomGroup(Context *const context,
                        size_t numChildren)
     : Group(context,context->groups),
-      geometries(numChildren)
-  {}
+      geometries(numChildren),
+      sbtOffset(context->sbtRangeAllocator.alloc(numChildren))
+  {
+  }
   
+  GeomGroup::~GeomGroup()
+  {
+    context->sbtRangeAllocator.release(sbtOffset,geometries.size());
+  }
+
 } // ::owl
