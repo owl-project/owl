@@ -21,6 +21,8 @@
 #include "Module.h"
 #include "Buffer.h"
 
+#include "ll/Device.h"
+
 namespace owl {
 
   struct Geom;
@@ -52,44 +54,32 @@ namespace owl {
     virtual std::shared_ptr<Geom> createGeom() = 0;
   };
 
-  struct UserGeomType : public GeomType {
-    typedef std::shared_ptr<UserGeomType> SP;
-    
-    UserGeomType(Context *const context,
-                 size_t varStructSize,
-                 const std::vector<OWLVarDecl> &varDecls);
-
-    virtual void setIntersectProg(int rayType,
-                                  Module::SP module,
-                                  const std::string &progName);
-    virtual void setBoundsProg(Module::SP module,
-                               const std::string &progName);
-    
-    virtual std::string toString() const { return "UserGeomType"; }
-    virtual std::shared_ptr<Geom> createGeom() override;
-
-    ProgramDesc boundsProg;
-    std::vector<ProgramDesc> intersectProg;
-  };
-  
   struct Geom : public SBTObject<GeomType> {
     typedef std::shared_ptr<Geom> SP;
 
+    /*! any device-specific data, such as optix handles, cuda device
+        pointers, etc */
+    struct DeviceData {
+      typedef std::shared_ptr<DeviceData> SP;
+
+      virtual ~DeviceData() {}
+      
+      template<typename T>
+      inline T *as() { return dynamic_cast<T*>(this); }
+    };
+    
     Geom(Context *const context,
              GeomType::SP geometryType);
     virtual std::string toString() const { return "Geom"; }
+
+    void createDeviceData(const std::vector<ll::Device *> &devices);
+
+    /*! creates the device-specific data for this group */
+    virtual DeviceData::SP createOnDevice(ll::Device *device) = 0;
+
+    std::vector<DeviceData::SP> deviceData;
     
     GeomType::SP geometryType;
   };
 
-  struct UserGeom : public Geom {
-    typedef std::shared_ptr<UserGeom> SP;
-
-    UserGeom(Context *const context,
-             GeomType::SP geometryType);
-
-    virtual std::string toString() const { return "UserGeom"; }
-    void setPrimCount(size_t count);
-  };
-  
 } // ::owl

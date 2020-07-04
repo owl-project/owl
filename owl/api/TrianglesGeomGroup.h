@@ -19,14 +19,34 @@
 #include "api/Group.h"
 
 namespace owl {
+  namespace ll {
+    struct Device;
+  };
 
   struct TrianglesGeomGroup : public GeomGroup {
+
+    // /*! any device-specific data, such as optix handles, cuda device
+    //     pointers, etc */
+    // struct DeviceSpecific : public GeomGroup::DeviceSpecific {
+    // };
+    
     TrianglesGeomGroup(Context *const context,
-                   size_t numChildren);
+                       size_t numChildren);
     virtual std::string toString() const { return "TrianglesGeomGroup"; }
 
     void buildAccel() override;
     void refitAccel() override;
+
+    /*! (re-)compute the Group::bounds[2] information for motion blur
+      - ie, our _parent_ node may need this */
+    void updateMotionBounds();
+
+    DeviceData &getDD(ll::Device *device)
+    { assert(!empty(deviceData)); return *deviceData[device->ID]; }
+    
+    /*! low-level accel structure builder for given device */
+    template<bool FULL_REBUILD>
+    void buildAccelOn(ll::Device *device);
   };
 
 } // ::owl

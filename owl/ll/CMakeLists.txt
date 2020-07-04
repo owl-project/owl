@@ -20,7 +20,7 @@ set(OWL_LL_SOURCES
   common.h
 
   ../include/owl/llowl.h
-  c-api.cpp
+#  c-api.cpp
 
   Buffers.h
   Buffers.cpp
@@ -28,7 +28,7 @@ set(OWL_LL_SOURCES
   Device.h
   Device.cpp
 
-  TrianglesGeomGroup.cpp
+#  TrianglesGeomGroup.cpp
   UserGeomGroup.cpp
   InstanceGroup.cpp
   

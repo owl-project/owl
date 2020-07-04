@@ -16,6 +16,7 @@
 
 #include "api/Triangles.h"
 #include "api/Context.h"
+#include "ll/Device.h"
 
 namespace owl {
   
@@ -32,22 +33,28 @@ namespace owl {
     : Geom(context,geometryType)
   {
     context->llo->trianglesGeomCreate(this->ID,geometryType->ID);
+    for (auto device : context->llo->devices)
+      llGeom.push_back((ll::TrianglesGeom*)device->checkGetGeom(this->ID));
   }
 
   /*! set the vertex array (if vector size is 1), or set/enable
     motion blur via multiple time steps, if vector size >= 0 */
-  void TrianglesGeom::setVertices(const std::vector<Buffer::SP> &vertices,
+  void TrianglesGeom::setVertices(const std::vector<Buffer::SP> &vertexArrays,
                                   /*! the number of vertices in each time step */
                                   size_t count,
                                   size_t stride,
                                   size_t offset)
   {
-    vertexBuffers = vertices;
-    std::vector<int32_t> vertexBufferIDs(vertices.size());
-    for (int i=0;i<vertices.size();i++)
-      vertexBufferIDs[i] = vertices[i]->ID;
-    context->llo->trianglesGeomSetVertexBuffers(this->ID,
-                                                vertexBufferIDs,count,stride,offset);
+    vertex.buffers = vertexArrays;
+    vertex.count   = count;
+    vertex.stride  = stride;
+    vertex.offset  = offset;
+    std::vector<int32_t> vertexBufferIDs(vertexArrays.size());
+    for (int i=0;i<vertexArrays.size();i++)
+      vertexBufferIDs[i] = vertexArrays[i]->ID;
+    for (auto device : context->llo->devices)
+      device->trianglesGeomSetVertexBuffers(this->ID,
+                                            vertexBufferIDs,count,stride,offset);
   }
   
   void TrianglesGeom::setIndices(Buffer::SP indices,
@@ -56,8 +63,9 @@ namespace owl {
                                  size_t offset)
   {
     indexBuffer = indices;
-    context->llo->trianglesGeomSetIndexBuffer(this->ID,
-                                    indices->ID, count, stride, offset);
+    for (auto device : context->llo->devices)
+      device->trianglesGeomSetIndexBuffer(this->ID,
+                                          indices->ID, count, stride, offset);
   }
 
 } //::owl

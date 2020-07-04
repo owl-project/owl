@@ -44,64 +44,41 @@
 namespace owl {
   namespace ll {
 
-    /*! set given child to {childGroupID+xfm}  */
-    void Device::instanceGroupSetChild(int groupID,
-                                       int childNo,
-                                       int childGroupID)
-    {
-      InstanceGroup *ig = checkGetInstanceGroup(groupID);
-      Group *newChild = checkGetGroup(childGroupID);
-      Group *oldChild = ig->children[childNo];
-      if (oldChild)
-        oldChild->numTimesReferenced--;
-      ig->children[childNo] = newChild;
-      newChild->numTimesReferenced++;
-    }
+    // /*! set given child to {childGroupID+xfm}  */
+    // void Device::instanceGroupSetChild(int groupID,
+    //                                    int childNo,
+    //                                    int childGroupID)
+    // {
+    //   InstanceGroup *ig = checkGetInstanceGroup(groupID);
+    //   Group *newChild = checkGetGroup(childGroupID);
+    //   Group *oldChild = ig->children[childNo];
+    //   ig->children[childNo] = newChild;
+    // }
 
-    void Device::instanceGroupCreate(/*! the group we are defining */
-                                     int groupID,
-                                     size_t childCount,
-                                     /* list of children. list can be
-                                        omitted by passing a nullptr, but if
-                                        not null this must be a list of
-                                        'childCount' valid group ID */
-                                     const uint32_t *childGroupIDs)
-    {
-      assert("check for valid ID" && groupID >= 0);
-      assert("check for valid ID" && groupID < groups.size());
-      assert("check group ID is available" && groups[groupID] == nullptr);
+    // void Device::instanceGroupCreate(/*! the group we are defining */
+    //                                  int groupID)
+    // {
+    //   assert("check for valid ID" && groupID >= 0);
+    //   assert("check for valid ID" && groupID < groups.size());
+    //   assert("check group ID is available" && groups[groupID] == nullptr);
         
-      InstanceGroup *group
-        = new InstanceGroup(childCount);
-      assert("check 'new' was successful" && group != nullptr);
-      groups[groupID] = group;
+    //   InstanceGroup *group
+    //     = new InstanceGroup;
+    //   assert("check 'new' was successful" && group != nullptr);
+    //   groups[groupID] = group;
+    // }
 
-      owl::parallel_for
-        (childCount,[&](size_t childID){
-          if (childGroupIDs) {
-            int childGroupID = childGroupIDs[childID];
-            assert("check geom child child group ID is valid"
-                   && childGroupID >= 0);
-            assert("check geom child child group ID is valid"
-                   && childGroupID <  groups.size());
-            Group *childGroup = groups[childGroupID];
-            assert("check referened child groups is valid" && childGroup != nullptr);
-            childGroup->numTimesReferenced++;
-            group->children[childID] = childGroup;
-          }
-        },8*1024);
-    }
+    // void InstanceGroup::destroyAccel(Context *context) 
+    // {
+    //   int oldActive = context->pushActive();
+    //   if (traversable) {
+    //     bvhMemory.free();
+    //     traversable = 0;
+    //   }
+    //   context->popActive(oldActive);
+    // }
 
-    void InstanceGroup::destroyAccel(Context *context) 
-    {
-      int oldActive = context->pushActive();
-      if (traversable) {
-        bvhMemory.free();
-        traversable = 0;
-      }
-      context->popActive(oldActive);
-    }
-    
+#if 0
     void InstanceGroup::buildAccel(Context *context)
     {
       if (transforms[1] == nullptr)
@@ -362,6 +339,10 @@ namespace owl {
           mt.transform[timeStep][2*4+3]  = xfm.p.z;
         }
 
+        PING;
+        PRINT(child->bounds[0]);
+        PRINT(child->bounds[1]);
+        
         motionTransforms[childID] = mt;
         std::cout <<" THIS IS WRONG:" << std::endl;
         motionAABBs[childID] = box3f(vec3f(-100.f),vec3f(+100.f));
@@ -522,6 +503,7 @@ namespace owl {
       
       LOG_OK("successfully built instance group accel");
     }
+#endif
     
 
   } // ::owl::ll

@@ -207,15 +207,8 @@ namespace owl {
       Geom(int geomID, int geomTypeID)
         : geomID(geomID), geomTypeID(geomTypeID)
       {}
-      virtual PrimType primType() const = 0;
+      // virtual PrimType primType() const = 0;
       
-      /*! only for error checking - we do NOT do reference counting
-        ourselves, but will use this to track erorrs like destroying
-        a geom/group that is still being refrerenced by a
-        group. Note we wil *NOT* automatically free a buffer if
-        refcount reaches zero - this is ONLY for sanity checking
-        during object deletion */
-      int numTimesReferenced = 0;
       const int geomID;
       const int geomTypeID;
     };
@@ -224,60 +217,47 @@ namespace owl {
         : Geom(geomID,geomTypeID),
           numPrims(numPrims)
       {}
-      PrimType primType() const override { return USER; }
-      void setPrimCount(size_t numPrims)
-      {
-        assert("check size hasn't previously been set (changing not yet implemented...)"
-               && this->numPrims == 0);
-        this->numPrims = numPrims;
-      }
+      // PrimType primType() const override { return USER; }
+      // void setPrimCount(size_t numPrims)
+      // {
+      //   assert("check size hasn't previously been set (changing not yet implemented...)"
+      //          && this->numPrims == 0);
+      //   this->numPrims = numPrims;
+      // }
       
-      /*! the pointer to the device-side bounds array. Note this
-          pointer _can_ be the same as 'boundsBuffer' (if *we* manage
-          that memory), but in the case of user-supplied bounds buffer
-          it is also possible that boundsBuffer is not allocated, and
-          d_boundsArray points to the user-supplied buffer */
-      void        *d_boundsMemory = nullptr;
       DeviceMemory internalBufferForBoundsProgram;
       size_t       numPrims      = 0;
     };
-    struct TrianglesGeom : public Geom {
-      TrianglesGeom(int geomID, int geomTypeID)
-        : Geom(geomID, geomTypeID)
-      {}
-      PrimType primType() const { return TRIANGLES; }
+    // struct TrianglesGeom : public Geom {
+    //   TrianglesGeom(int geomID, int geomTypeID)
+    //     : Geom(geomID, geomTypeID)
+    //   {}
+    //   // PrimType primType() const { return TRIANGLES; }
 
-      std::vector<CUdeviceptr> vertexPointers;
-      size_t vertexStride  = 0;
-      size_t vertexCount   = 0;
-      CUdeviceptr indexPointer  = (CUdeviceptr)0;
-      size_t indexStride   = 0;
-      size_t indexCount    = 0;
-    };
+    //   // std::vector<CUdeviceptr> vertexPointers;
+    //   // // size_t vertexStride  = 0;
+    //   // // size_t vertexCount   = 0;
+    //   // CUdeviceptr indexPointer  = (CUdeviceptr)0;
+    //   // size_t indexStride   = 0;
+    //   // size_t indexCount    = 0;
+    // };
     
     struct Group {
       virtual bool containsGeom() = 0;
       inline  bool containsInstances() { return !containsGeom(); }
 
-      virtual void destroyAccel(Context *context) = 0;
-      virtual void buildAccel(Context *context) = 0;
-      virtual void refitAccel(Context *context) = 0;
+      void destroyAccel(Context *context);
+      // virtual void buildAccel(Context *context) = 0;
+      // virtual void refitAccel(Context *context) = 0;
       
       virtual int  getSBTOffset() const = 0;
       
       // std::vector<int>       elements;
       OptixTraversableHandle traversable = 0;
       DeviceMemory           bvhMemory;
-
-      /*! only for error checking - we do NOT do reference counting
-        ourselves, but will use this to track erorrs like destroying
-        a geom/group that is still being refrerenced by a
-        group. */
-      int numTimesReferenced = 0;
     };
     struct InstanceGroup : public Group {
-      InstanceGroup(size_t numChildren)
-        : children(numChildren)
+      InstanceGroup()
       {}
       virtual bool containsGeom() { return false; }
 
@@ -289,9 +269,9 @@ namespace owl {
       // template<bool fullRebuild>
       // void buildOrRefit(Context *context);
 
-      void destroyAccel(Context *context) override;
-      void buildAccel(Context *context) override;
-      void refitAccel(Context *context) override;
+      // void destroyAccel(Context *context) override;
+      // void buildAccel(Context *context) override;
+      // void refitAccel(Context *context) override;
       
       virtual int  getSBTOffset() const override { return 0; }
 
@@ -302,55 +282,55 @@ namespace owl {
       DeviceMemory motionAABBsBuffer;
       
       DeviceMemory outputBuffer;
-      std::vector<Group *>  children;
-      const uint32_t *instanceIDs { nullptr };
-      const affine3f *transforms[2] = { nullptr, nullptr };
+      // std::vector<Group *>  children;
+      // const uint32_t *instanceIDs { nullptr };
+      // const affine3f *transforms[2] = { nullptr, nullptr };
     };
 
     /*! \warning currently using std::vector of *geoms*, but will have
         to eventually use geom *IDs* if we want(?) to allow side
         effects when changing geometries */
-    struct GeomGroup : public Group {
-      GeomGroup(size_t numChildren,
-                size_t sbtOffset)
-        : children(numChildren),
-          sbtOffset(sbtOffset)
-      {}
+    // struct GeomGroup : public Group {
+    //   GeomGroup(size_t numChildren,
+    //             size_t sbtOffset)
+    //     : children(numChildren),
+    //       sbtOffset(sbtOffset)
+    //   {}
       
-      virtual bool containsGeom() { return true; }
-      virtual int  getSBTOffset() const override { return (int)sbtOffset; }
+    //   virtual bool containsGeom() { return true; }
+    //   virtual int  getSBTOffset() const override { return (int)sbtOffset; }
 
-      std::vector<Geom *> children;
-      const size_t sbtOffset;
-    };
-    struct TrianglesGeomGroup : public GeomGroup {
-      TrianglesGeomGroup(size_t numChildren,
-                         size_t sbtOffset)
-        : GeomGroup(numChildren,
-                    sbtOffset)
-      {}
+    //   std::vector<Geom *> children;
+    //   const size_t sbtOffset;
+    // };
+    // struct TrianglesGeomGroup : public GeomGroup {
+    //   TrianglesGeomGroup(size_t numChildren,
+    //                      size_t sbtOffset)
+    //     : GeomGroup(numChildren,
+    //                 sbtOffset)
+    //   {}
       
-      template<bool fullRebuild>
-      void buildOrRefit(Context *context);
+    //   // template<bool fullRebuild>
+    //   // void buildOrRefit(Context *context);
       
-      void destroyAccel(Context *context) override;
-      void buildAccel(Context *context) override;
-      void refitAccel(Context *context) override;
-    };
-    struct UserGeomGroup : public GeomGroup {
-      UserGeomGroup(size_t numChildren,
-                    size_t sbtOffset)
-        : GeomGroup(numChildren,
-                    sbtOffset)
-      {}
+    //   // void destroyAccel(Context *context) override;
+    //   // void buildAccel(Context *context) override;
+    //   // void refitAccel(Context *context) override;
+    // };
+    // struct UserGeomGroup : public GeomGroup {
+    //   UserGeomGroup(size_t numChildren,
+    //                 size_t sbtOffset)
+    //     : GeomGroup(numChildren,
+    //                 sbtOffset)
+    //   {}
       
-      template<bool fullRebuild>
-      void buildOrRefit(Context *context);
+    //   // template<bool fullRebuild>
+    //   // void buildOrRefit(Context *context);
 
-      void destroyAccel(Context *context) override;
-      void buildAccel(Context *context) override;
-      void refitAccel(Context *context) override;
-    };
+    //   // void destroyAccel(Context *context) override;
+    //   // void buildAccel(Context *context) override;
+    //   // void refitAccel(Context *context) override;
+    // };
 
 
     struct Device {
@@ -503,35 +483,35 @@ namespace owl {
         geoms.resize(newCount);
       }
 
-      void userGeomCreate(int geomID,
-                          /*! the "logical" hit group ID:
-                            will always count 0,1,2... evne
-                            if we are using multiple ray
-                            types; the actual hit group
-                            used when building the SBT will
-                            then be 'geomTypeID *
-                            numRayTypes) */
-                          int geomTypeID,
-                          size_t numPrims);
+      // void userGeomCreate(int geomID,
+      //                     /*! the "logical" hit group ID:
+      //                       will always count 0,1,2... evne
+      //                       if we are using multiple ray
+      //                       types; the actual hit group
+      //                       used when building the SBT will
+      //                       then be 'geomTypeID *
+      //                       numRayTypes) */
+      //                     int geomTypeID,
+      //                     size_t numPrims);
 
-      void userGeomSetPrimCount(int geomID,
-                                size_t numPrims);
+      // void userGeomSetPrimCount(int geomID,
+      //                           size_t numPrims);
 
-      void trianglesGeomCreate(int geomID,
-                               /*! the "logical" hit group ID:
-                                 will always count 0,1,2... evne
-                                 if we are using multiple ray
-                                 types; the actual hit group
-                                 used when building the SBT will
-                                 then be 'geomTypeID *
-                                 numRayTypes) */
-                               int geomTypeID);
+      // void trianglesGeomCreate(int geomID,
+      //                          /*! the "logical" hit group ID:
+      //                            will always count 0,1,2... evne
+      //                            if we are using multiple ray
+      //                            types; the actual hit group
+      //                            used when building the SBT will
+      //                            then be 'geomTypeID *
+      //                            numRayTypes) */
+      //                          int geomTypeID);
 
       /*! resize the array of geom IDs. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed */
-      void allocGroups(size_t newCount);
+      // void allocGroups(size_t newCount);
 
       /*! resize the array of buffer handles. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
@@ -541,31 +521,25 @@ namespace owl {
 
       void allocTextures(size_t newCount);
 
-      void trianglesGeomGroupCreate(int groupID,
-                                    const int *geomIDs,
-                                    size_t geomCount);
+      // void trianglesGeomGroupCreate(int groupID,
+      //                               const int *geomIDs,
+      //                               size_t geomCount);
 
-      void userGeomGroupCreate(int groupID,
-                               const int *geomIDs,
-                               size_t geomCount);
+      // void userGeomGroupCreate(int groupID,
+      //                          const int *geomIDs,
+      //                          size_t geomCount);
 
-      /*! create a new instance group with given list of children */
-      void instanceGroupCreate(/*! the group we are defining */
-                               int groupID,
-                               size_t numChildren,
-                               /* list of children. list can be
-                                  omitted by passing a nullptr, but if
-                                  not null this must be a list of
-                                  'childCount' valid group ID */
-                               const uint32_t *childGroupIDs);
+      // /*! create a new instance group with given list of children */
+      // void instanceGroupCreate(/*! the group we are defining */
+      //                          int groupID);
 
       /*! set given child to {childGroupID+xfm}  */
-      void instanceGroupSetChild(int groupID,
-                                 int childNo,
-                                 int childGroupID);
-      void geomGroupSetChild(int groupID,
-                             int childNo,
-                             int childID);
+      // void instanceGroupSetChild(int groupID,
+      //                            int childNo,
+      //                            int childGroupID);
+      // void geomGroupSetChild(int groupID,
+      //                        int childNo,
+      //                        int childID);
 
       /*! destroy the given buffer, and release all host and/or device
           memory associated with it */
@@ -612,25 +586,16 @@ namespace owl {
 
       void graphicsBufferUnmap(int bufferID);
 
-      /*! Set a buffer of bounding boxes that this user geometry will
-          use when building the accel structure. This is one of
-          multiple ways of specifying the bounding boxes for a user
-          geometry (the other two being a) setting the geometry type's
-          boundsFunc, or b) setting a host-callback fr computing the
-          bounds). Only one of the three methods can be set at any
-          given time. */
-      void userGeomSetBoundsBuffer(int geomID, int bufferID);
-      
-      void trianglesGeomSetVertexBuffers(int geomID,
-                                         const std::vector<int32_t> &bufferID,
-                                         size_t count,
-                                         size_t stride,
-                                         size_t offset);
-      void trianglesGeomSetIndexBuffer(int geomID,
-                                       int32_t bufferID,
-                                       size_t count,
-                                       size_t stride,
-                                       size_t offset);
+      // void trianglesGeomSetVertexBuffers(int geomID,
+      //                                    const std::vector<int32_t> &bufferID,
+      //                                    size_t count,
+      //                                    size_t stride,
+      //                                    size_t offset);
+      // void trianglesGeomSetIndexBuffer(int geomID,
+      //                                  int32_t bufferID,
+      //                                  size_t count,
+      //                                  size_t stride,
+      //                                  size_t offset);
       
       void destroyGeom(size_t ID)
       {
@@ -656,8 +621,8 @@ namespace owl {
       // ------------------------------------------------------------------
       // group related struff
       // ------------------------------------------------------------------
-      void groupRefitAccel(int groupID);
-      void groupBuildAccel(int groupID);
+      // void groupRefitAccel(int groupID);
+      // void groupBuildAccel(int groupID);
       
       /*! return given group's current traversable. note this function
         will *not* check if the group has alreadybeen built, if it
@@ -692,46 +657,46 @@ namespace owl {
         return geomType;
       }
 
-      // accessor helpers:
-      Group *checkGetGroup(int groupID)
-      {
-        assert("check valid group ID" && groupID >= 0);
-        assert("check valid group ID" && groupID <  groups.size());
-        Group *group = groups[groupID];
-        assert("check valid group" && group != nullptr);
-        return group;
-      }
+      // // accessor helpers:
+      // Group *checkGetGroup(int groupID)
+      // {
+      //   assert("check valid group ID" && groupID >= 0);
+      //   assert("check valid group ID" && groupID <  groups.size());
+      //   Group *group = groups[groupID];
+      //   assert("check valid group" && group != nullptr);
+      //   return group;
+      // }
 
-      // accessor helpers:
-      GeomGroup *checkGetGeomGroup(int groupID)
-      {
-        Group *group = checkGetGroup(groupID);
-        assert("check valid group" && group != nullptr);
-        GeomGroup *gg = dynamic_cast<GeomGroup*>(group);
-        assert("check group is a geom group" && gg != nullptr);
-        return gg;
-      }
-      // accessor helpers:
-      UserGeomGroup *checkGetUserGeomGroup(int groupID)
-      {
-        Group *group = checkGetGroup(groupID);
-        assert("check valid group" && group != nullptr);
-        UserGeomGroup *ugg = dynamic_cast<UserGeomGroup*>(group);
-        if (!ugg)
-          OWL_EXCEPT("group is not a user geometry group");
-        assert("check group is a user geom group" && ugg != nullptr);
-        return ugg;
-      }
-      // accessor helpers:
-      InstanceGroup *checkGetInstanceGroup(int groupID)
-      {
-        Group *group = checkGetGroup(groupID);
-        InstanceGroup *ig = dynamic_cast<InstanceGroup*>(group);
-        if (!ig)
-          OWL_EXCEPT("group is not a instance group");
-        assert("check group is a user geom group" && ig != nullptr);
-        return ig;
-      }
+      // // accessor helpers:
+      // GeomGroup *checkGetGeomGroup(int groupID)
+      // {
+      //   Group *group = checkGetGroup(groupID);
+      //   assert("check valid group" && group != nullptr);
+      //   GeomGroup *gg = dynamic_cast<GeomGroup*>(group);
+      //   assert("check group is a geom group" && gg != nullptr);
+      //   return gg;
+      // }
+      // // accessor helpers:
+      // UserGeomGroup *checkGetUserGeomGroup(int groupID)
+      // {
+      //   Group *group = checkGetGroup(groupID);
+      //   assert("check valid group" && group != nullptr);
+      //   UserGeomGroup *ugg = dynamic_cast<UserGeomGroup*>(group);
+      //   if (!ugg)
+      //     OWL_EXCEPT("group is not a user geometry group");
+      //   assert("check group is a user geom group" && ugg != nullptr);
+      //   return ugg;
+      // }
+      // // accessor helpers:
+      // InstanceGroup *checkGetInstanceGroup(int groupID)
+      // {
+      //   Group *group = checkGetGroup(groupID);
+      //   InstanceGroup *ig = dynamic_cast<InstanceGroup*>(group);
+      //   if (!ig)
+      //     OWL_EXCEPT("group is not a instance group");
+      //   assert("check group is a user geom group" && ig != nullptr);
+      //   return ig;
+      // }
       
       Buffer *checkGetBuffer(int bufferID)
       {
@@ -742,27 +707,27 @@ namespace owl {
         return buffer;
       }
 
-      // accessor helpers:
-      TrianglesGeom *checkGetTrianglesGeom(int geomID)
-      {
-        Geom *geom = checkGetGeom(geomID);
-        assert(geom);
-        TrianglesGeom *asTriangles
-          = dynamic_cast<TrianglesGeom*>(geom);
-        assert("check geom is triangle geom" && asTriangles != nullptr);
-        return asTriangles;
-      }
+      // // accessor helpers:
+      // TrianglesGeom *checkGetTrianglesGeom(int geomID)
+      // {
+      //   Geom *geom = checkGetGeom(geomID);
+      //   assert(geom);
+      //   TrianglesGeom *asTriangles
+      //     = dynamic_cast<TrianglesGeom*>(geom);
+      //   assert("check geom is triangle geom" && asTriangles != nullptr);
+      //   return asTriangles;
+      // }
 
       // accessor helpers:
-      UserGeom *checkGetUserGeom(int geomID)
-      {
-        Geom *geom = checkGetGeom(geomID);
-        assert(geom);
-        UserGeom *asUser
-          = dynamic_cast<UserGeom*>(geom);
-        assert("check geom is triangle geom" && asUser != nullptr);
-        return asUser;
-      }
+      // UserGeom *checkGetUserGeom(int geomID)
+      // {
+      //   Geom *geom = checkGetGeom(geomID);
+      //   assert(geom);
+      //   UserGeom *asUser
+      //     = dynamic_cast<UserGeom*>(geom);
+      //   assert("check geom is triangle geom" && asUser != nullptr);
+      //   return asUser;
+      // }
 
       /*! only valid for a user geometry group - (re-)builds the
           primitive bounds array required for building the
@@ -772,8 +737,8 @@ namespace owl {
                                      size_t maxGeomDataSize,
                                      LLOWriteUserGeomBoundsDataCB cb,
                                      const void *cbData);
-      void sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
-                            const void *callBackUserData);
+      // void sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
+      //                       const void *callBackUserData);
       void sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
                            const void *callBackUserData);
       void sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgDataCB,
@@ -788,9 +753,12 @@ namespace owl {
                   const void *cbData);
 
       void setRayTypeCount(size_t rayTypeCount);
-      void setTransforms(int igID, int timeStep, const affine3f *xfms);
+      // void setTransforms(int igID, int timeStep, const affine3f *xfms);
       
       Context                  *context;
+
+      int pushActive() { return context->pushActive(); }
+      void popActive(int old) { context->popActive(old); }
       
       Modules                     modules;
       std::vector<GeomType>       geomTypes;
@@ -798,10 +766,12 @@ namespace owl {
       std::vector<MissProgPG>     missProgPGs;
       std::vector<LaunchParams *> launchParams;
       std::vector<Geom *>         geoms;
-      std::vector<Group *>        groups;
+      // std::vector<Group *>        groups;
       std::vector<Buffer *>       buffers;
       // std::vector<cudaTextureObject_t> textureObjects;
       SBT                         sbt;
+
+      const int ID;
     };
     
   } // ::owl::ll

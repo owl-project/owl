@@ -42,7 +42,11 @@ namespace owl {
       
     void buildAccel() override;
     void refitAccel() override;
+
+    /*! creates the device-specific data for this group */
+    DeviceData::SP createOn(ll::Device *device) override;
     
+
     virtual std::string toString() const { return "InstanceGroup"; }
 
     /*! the list of children - note we do have to keep them both in

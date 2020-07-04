@@ -73,6 +73,9 @@ namespace owl {
                                            LLOWriteUserGeomBoundsDataCB cb,
                                            const void *cbData)
     {
+#if 1
+      throw std::runtime_error("not implemented");
+#else
       int oldActive = context->pushActive();
       UserGeomGroup *ugg
         = checkGetUserGeomGroup(groupID);
@@ -94,7 +97,7 @@ namespace owl {
         assert(child);
         UserGeom *ug = (UserGeom *)child;
         ug->internalBufferForBoundsProgram.alloc(ug->numPrims*sizeof(box3f));
-        ug->d_boundsMemory = ug->internalBufferForBoundsProgram.get();
+        // = ug->internalBufferForBoundsProgram.get();
         
         if (childID < 10)
           LOG("calling user geom callback to set up user geometry bounds call data");
@@ -126,7 +129,7 @@ namespace owl {
         tempMem.upload(userGeomData);
         
         void  *d_geomData = tempMem.get();//nullptr;
-        vec3f *d_boundsArray = (vec3f*)ug->d_boundsMemory;
+        vec3f *d_boundsArray = (vec3f*)ug->internalBufferForBoundsProgram.get();
         void  *args[] = {
           &d_geomData,
           &d_boundsArray,
@@ -153,18 +156,20 @@ namespace owl {
       tempMem.free();
       cudaDeviceSynchronize();
       context->popActive(oldActive);
+#endif
     }
 
-    void UserGeomGroup::destroyAccel(Context *context) 
-    {
-      int oldActive = context->pushActive();
-      if (traversable) {
-        bvhMemory.free();
-        traversable = 0;
-      }
-      context->popActive(oldActive);
-    }
-    
+    // void UserGeomGroup::destroyAccel(Context *context) 
+    // {
+    //   int oldActive = context->pushActive();
+    //   if (traversable) {
+    //     bvhMemory.free();
+    //     traversable = 0;
+    //   }
+    //   context->popActive(oldActive);
+    // }
+
+#if 0
     void UserGeomGroup::buildAccel(Context *context)
     {
       buildOrRefit<true>(context);
@@ -210,15 +215,13 @@ namespace owl {
         // the child wer're setting them with (with sanity checks)
         Geom *geom = children[childID];
         assert("double-check geom isn't null" && geom != nullptr);
-        assert("sanity check refcount" && geom->numTimesReferenced >= 0);
        
         UserGeom *userGeom = dynamic_cast<UserGeom*>(geom);
         assert("double-check it's really user"
                && userGeom != nullptr);
-        assert("user geom has valid bounds buffer *or* user-supplied bounds"
-               && (userGeom->internalBufferForBoundsProgram.alloced()
-                   || userGeom->d_boundsMemory));
-        d_bounds = (CUdeviceptr)userGeom->d_boundsMemory;
+        assert("user geom has valid bounds buffer"
+               && userGeom->internalBufferForBoundsProgram.alloced());
+        d_bounds = (CUdeviceptr)userGeom->internalBufferForBoundsProgram.get();
         
         userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
         auto &aa = userGeomInput.customPrimitiveArray;//aabbsArray;
@@ -373,12 +376,11 @@ namespace owl {
           Geom *geom = geoms[geomID];
           assert("check geom indexed child geom valid" && geom != nullptr);
           assert("check geom is valid type" && geom->primType() == USER);
-          geom->numTimesReferenced++;
           group->children[childID] = geom;
         }
       }
     }
-
+#endif
     // template<>
     // void UserGeomGroup::buildOrRefit<true>(Context *context);
     // template<>

@@ -40,31 +40,6 @@ namespace owl {
 
 
 
-  UserGeomType::UserGeomType(Context *const context,
-                             size_t varStructSize,
-                             const std::vector<OWLVarDecl> &varDecls)
-    : GeomType(context,varStructSize,varDecls),
-      intersectProg(context->numRayTypes)
-  {
-    /*! nothing special - all inherited */
-  }
-
-  UserGeom::UserGeom(Context *const context,
-                     GeomType::SP geometryType)
-    : Geom(context,geometryType)
-  {
-    int numPrims = 0;
-    context->llo->userGeomCreate(this->ID,geometryType->ID,numPrims);
-  }
-
-  void UserGeom::setPrimCount(size_t count)
-  {
-    context->llo->userGeomSetPrimCount(this->ID,count);
-  }
-
-
-
-
   void GeomType::setClosestHitProgram(int rayType,
                                       Module::SP module,
                                       const std::string &progName)
@@ -99,37 +74,5 @@ namespace owl {
                           anyHit[rayType].progName.c_str());
   }
 
-
-  void UserGeomType::setIntersectProg(int rayType,
-                                      Module::SP module,
-                                      const std::string &progName)
-  {
-    assert(rayType < intersectProg.size());
-    intersectProg[rayType].progName = progName;
-    intersectProg[rayType].module   = module;
-    context->llo->setGeomTypeIntersect(this->ID,
-                         rayType,module->ID,
-                         // warning: this 'this' here is importat, since
-                         // *we* manage the lifetime of this string, and
-                         // the one on the constructor list will go out of
-                          // scope after this function
-                         intersectProg[rayType].progName.c_str());
-  }
-
-  void UserGeomType::setBoundsProg(Module::SP module,
-                                   const std::string &progName)
-  {
-    this->boundsProg.progName = progName;
-    this->boundsProg.module   = module;
-    context->llo->setGeomTypeBoundsProgDevice(this->ID,
-                                module->ID,
-                                // warning: this 'this' here is importat, since
-                                // *we* manage the lifetime of this string, and
-                                // the one on the constructor list will go out of
-                                // scope after this function
-                                this->boundsProg.progName.c_str(),
-                                varStructSize
-                                );
-  }
 
 } //::owl

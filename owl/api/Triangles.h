@@ -42,8 +42,23 @@ namespace owl {
       these with the vertex arrays, index array, etc, specified in
       this Geom */
   struct TrianglesGeom : public Geom {
+
+    /*! any device-specific data, such as optix handles, cuda device
+        pointers, etc */
+    struct DeviceData : public Geom::DeviceData {
+      std::vector<CUdeviceptr> vertexPointers;
+      CUdeviceptr indexPointer  = (CUdeviceptr)0;
+    };
+    
     typedef std::shared_ptr<TrianglesGeom> SP;
 
+    inline DeviceData &getDD(ll::Device *device)
+    {
+      assert(device->ID < deviceData.size()); 
+      return *deviceData[device->ID]->as<TrianglesGeom::DeviceData>();
+    }
+                        
+                                
     TrianglesGeom(Context *const context,
                   GeomType::SP geometryType);
 
@@ -55,6 +70,9 @@ namespace owl {
                      size_t stride,
                      size_t offset);
 
+    /*! call a cuda kernel that computes the bounds of the vertex buffers */
+    void computeBounds(box3f bounds[2]);
+
     /*! set the index buffer; this remains one buffer even if motion blur is enabled. */
     void setIndices(Buffer::SP indices,
                     size_t count,
@@ -64,8 +82,18 @@ namespace owl {
     /*! pretty-print */
     std::string toString() const override { return "TrianglesGeom"; }
 
-    Buffer::SP indexBuffer;
-    std::vector<Buffer::SP> vertexBuffers;
+    struct {
+      size_t count  = 0;
+      size_t stride = 0;
+      size_t offset = 0;
+      Buffer::SP buffer;
+    } index;
+    struct {
+      size_t count  = 0;
+      size_t stride = 0;
+      size_t offset = 0;
+      std::vector<Buffer::SP> buffers;
+    } vertex;
   };
 
 } // ::owl

@@ -260,7 +260,7 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       void createPipeline();
       void buildPrograms();
       
-      void setTransforms(int igID, int timeStep, const affine3f *xfms);
+      // void setTransforms(int igID, int timeStep, const affine3f *xfms);
       
       void allocGeomTypes(size_t count);
       void allocRayGens(size_t count);
@@ -319,7 +319,7 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed */
-      void allocGroups(size_t newCount);
+      // void allocGroups(size_t newCount);
       void allocBuffers(size_t newCount);
       // void allocTextures(size_t newCount);
       
@@ -359,28 +359,28 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
         \todo geomIDs may be null, in which case child geomeries may
         be set using geomGroupSetChild()
       */
-      void trianglesGeomGroupCreate(int groupID,
-                                    const int *geomIDs,
-                                    size_t geomCount);
-      void userGeomGroupCreate(int groupID,
-                               const int *geomIDs,
-                               size_t geomCount);
-      /*! create a new instance group with given list of children */
-      void instanceGroupCreate(/*! the group we are defining */
-                               int groupID,
-                               size_t numChildren,
-                               /* list of children. list can be
-                                  omitted by passing a nullptr, but if
-                                  not null this must be a list of
-                                  'childCount' valid group ID */
-                               const uint32_t *childGroupIDs);
+      // void trianglesGeomGroupCreate(int groupID,
+      //                               const int *geomIDs,
+      //                               size_t geomCount);
+      // void userGeomGroupCreate(int groupID,
+      //                          const int *geomIDs,
+      //                          size_t geomCount);
+      // /*! create a new instance group with given list of children */
+      // void instanceGroupCreate(/*! the group we are defining */
+      //                          int groupID,
+      //                          size_t numChildren,
+      //                          /* list of children. list can be
+      //                             omitted by passing a nullptr, but if
+      //                             not null this must be a list of
+      //                             'childCount' valid group ID */
+      //                          const uint32_t *childGroupIDs);
       /*! set given child to {childGroupID+xfm}  */
-      void instanceGroupSetChild(int groupID,
-                                 int childNo,
-                                 int childGroupID);
-      void geomGroupSetChild(int groupID,
-                             int childNo,
-                             int childID);
+      // void instanceGroupSetChild(int groupID,
+      //                            int childNo,
+      //                            int childGroupID);
+      // void geomGroupSetChild(int groupID,
+      //                        int childNo,
+      //                        int childID);
 
       /*! destroy the given buffer, and release all host and/or device
         memory associated with it */
@@ -431,27 +431,19 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
         given device */
       cudaStream_t launchParamsGetStream(int launchParamsID, int devID);
       
-      /*! Set a buffer of bounding boxes that this user geometry will
-        use when building the accel structure. This is one of
-        multiple ways of specifying the bounding boxes for a user
-        geometry (the other two being a) setting the geometry type's
-        boundsFunc, or b) setting a host-callback fr computing the
-        bounds). Only one of the three methods can be set at any
-        given time. */
-      void userGeomSetBoundsBuffer(int geomID, int bufferID);
-      void userGeomSetPrimCount(int geomID,
-                                size_t numPrims);
+      // void userGeomSetPrimCount(int geomID,
+      //                           size_t numPrims);
 
-      void trianglesGeomSetVertexBuffers(int geomID,
-                                         const std::vector<int32_t> &bufferIDs,
-                                         size_t count,
-                                         size_t stride,
-                                         size_t offset);
-      void trianglesGeomSetIndexBuffer(int geomID,
-                                       int bufferID,
-                                       size_t count,
-                                       size_t stride,
-                                       size_t offset);
+      // void trianglesGeomSetVertexBuffers(int geomID,
+      //                                    const std::vector<int32_t> &bufferIDs,
+      //                                    size_t count,
+      //                                    size_t stride,
+      //                                    size_t offset);
+      // void trianglesGeomSetIndexBuffer(int geomID,
+      //                                  int bufferID,
+      //                                  size_t count,
+      //                                  size_t stride,
+      //                                  size_t offset);
       // void groupBuildAccel(int groupID);
       // void groupRefitAccel(int groupID);
       
@@ -463,8 +455,8 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
                                      size_t maxGeomDataSize,
                                      LLOWriteUserGeomBoundsDataCB cb,
                                      const void *cbData);
-      void sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
-                            const void *callBackData);
+      // void sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
+      //                       const void *callBackData);
       void sbtRayGensBuild(LLOWriteRayGenDataCB WriteRayGenDataCB,
                            const void *callBackData);
       void sbtMissProgsBuild(LLOWriteMissProgDataCB WriteMissProgDataCB,

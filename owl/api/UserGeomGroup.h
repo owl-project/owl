@@ -17,10 +17,15 @@
 #pragma once
 
 #include "api/Group.h"
+#include "api/UserGeom.h"
 
 namespace owl {
 
   struct UserGeomGroup : public GeomGroup {
+
+    // struct DeviceSpecific : public GeomGroup::DeviceSpecific {
+    // };
+
     UserGeomGroup(Context *const context,
                    size_t numChildren);
     virtual std::string toString() const { return "UserGeomGroup"; }
@@ -32,6 +37,9 @@ namespace owl {
     
     void buildAccel() override;
     void refitAccel() override;
+
+    DeviceData &getDD(ll::Device *device)
+    { assert(!empty(deviceData)); return *deviceData[device->ID]; }
   };
 
 } // ::owl

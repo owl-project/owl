@@ -18,11 +18,28 @@
 
 #include "RegisteredObject.h"
 #include "Geometry.h"
+#include "ll/DeviceMemory.h"
+#include "ll/Device.h"
 
 namespace owl {
 
+  using ll::DeviceMemory;
+  
+  /*! any sort of group */
   struct Group : public RegisteredObject {
     typedef std::shared_ptr<Group> SP;
+    
+    /*! any device-specific data, such as optix handles, cuda device
+        pointers, etc */
+    struct DeviceData {
+      typedef std::shared_ptr<DeviceData> SP;
+      
+      OptixTraversableHandle traversable = 0;
+      DeviceMemory           bvhMemory;
+    };
+
+    /*! creates the device-specific data for this group */
+    virtual DeviceData::SP createOn(ll::Device *device) = 0;
     
     Group(Context *const context,
           ObjectRegistry &registry)
@@ -32,16 +49,25 @@ namespace owl {
     virtual void buildAccel() = 0;
     virtual void refitAccel() = 0;
 
-    OptixTraversableHandle getTraversable(int deviceID);
+    OptixTraversableHandle getTraversable(int deviceID)
+    { return deviceData[deviceID]->traversable; }
+    
+    void createDeviceData(const std::vector<ll::Device *> &devices);
 
     /*! bounding box for t=0 and t=1, respectively; for motion
         blur. */
     box3f bounds[2];
+    std::vector<DeviceData::SP> deviceData;
   };
 
+  /*! a group containing geometries */
   struct GeomGroup : public Group {
     typedef std::shared_ptr<GeomGroup> SP;
 
+    // /*! any device-specific data, such as optix handles, cuda device
+    //     pointers, etc */
+    
+    
     GeomGroup(Context *const context,
               size_t numChildren);
     void setChild(int childID, Geom::SP child);

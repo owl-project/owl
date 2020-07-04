@@ -45,15 +45,18 @@ set(OWL_NG_SOURCES
   RayGen.cpp
   LaunchParams.cpp
   MissProg.cpp
+  Variable.cpp
+  
   Geometry.cpp
   Triangles.cpp
-  Variable.cpp
+  Triangles.cu
+  UserGeom.cu
 )
 
-add_library(owl
+cuda_add_library(owl
 ${OWL_NG_SOURCES}
   )
-add_library(owl_static STATIC
+cuda_add_library(owl_static STATIC
 ${OWL_NG_SOURCES}
   )
 

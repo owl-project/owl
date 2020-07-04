@@ -19,6 +19,7 @@
 #include "APIHandle.h"
 #include "owl/common/parallel/parallel_for.h"
 #include "api/Triangles.h"
+#include "api/UserGeom.h"
 #include "api/InstanceGroup.h"
 
 namespace owl {
@@ -410,7 +411,8 @@ namespace owl {
     assert(context);
     GeomGroup::SP  group = context->trianglesGeomGroupCreate(numGeometries);
     assert(group);
-
+    group->createDeviceData(context->llo->devices);
+    
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     if (initValues) {
       for (int i = 0; i < numGeometries; i++) {
@@ -434,6 +436,7 @@ namespace owl {
     APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
     GeomGroup::SP  group = context->userGeomGroupCreate(numGeometries);
+    group->createDeviceData(context->llo->devices);
     assert(group);
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
@@ -490,6 +493,14 @@ namespace owl {
     std::vector<Group::SP> initGroups;
     Group::SP *__initGroups = nullptr;
     
+    InstanceGroup::SP  group
+      = std::make_shared<InstanceGroup>
+      (context.get(),numInstances,
+       __initGroups);
+    assert(group);
+    group->createDeviceData(context->llo->devices);
+
+
     if (_initGroups) {
       initGroups.resize(numInstances);
       parallel_for
@@ -503,12 +514,6 @@ namespace owl {
       __initGroups = initGroups.data();
     }
     
-    InstanceGroup::SP  group
-      = std::make_shared<InstanceGroup>
-      (context.get(),numInstances,
-       __initGroups);
-    assert(group);
-
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     assert(_group);
 

@@ -17,7 +17,8 @@
 #include "Context.h"
 #include "Module.h"
 #include "Geometry.h"
-#include "Triangles.h"
+#include "api/Triangles.h"
+#include "api/UserGeom.h"
 #include "Texture.h"
 #include "api/TrianglesGeomGroup.h"
 #include "api/UserGeomGroup.h"
@@ -333,6 +334,8 @@ namespace owl {
 
   void Context::enableMotionBlur()
   {
+    motionBlurEnabled = true;
+    // todo: axe this
     llo->enableMotionBlur();
   }
   

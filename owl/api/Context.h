@@ -33,6 +33,9 @@ namespace owl {
   struct Context : public Object {
     typedef std::shared_ptr<Context> SP;
 
+    /*! returns whether logging is enabled */
+    inline static bool logging() { return ll::DeviceGroup::logging(); }
+    
     static Context::SP create(int32_t *requestedDeviceIDs,
                               int      numRequestedDevices);
 
@@ -56,7 +59,8 @@ namespace owl {
     
     //! TODO: allow changing that via api ..
     size_t numRayTypes = 1;
-
+    bool   motionBlurEnabled = false;
+    
     void setRayTypeCount(size_t rayTypeCount);
     void enableMotionBlur();
     

@@ -14,49 +14,45 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Group.h"
-#include "Context.h"
+#pragma once
+
+#include "Geometry.h"
 
 namespace owl {
 
-  // void Group::buildAccel()
-  // {
-  //   // lloGroupAccelBuild(context->llo,this->ID);
-  //   context->llo->groupBuildAccel(this->ID);
-  // }
-  
-  // void Group::refitAccel()
-  // {
-  //   // lloGroupAccelRefit(context->llo,this->ID);
-  //   context->llo->groupRefitAccel(this->ID);
-  // }
-  
-  void Group::createDeviceData(const std::vector<ll::Device *> &devices)
-  {
-    for (auto device : devices)
-      deviceData.push_back(createOn(device));
-  }
-  // OptixTraversableHandle Group::getTraversable(int deviceID)
-  // {
-  //   // return lloGroupGetTraversable(context->llo,this->ID,deviceID);
-  //   return context->llo->groupGetTraversable(this->ID,deviceID);
-  // }
-  
-  void GeomGroup::setChild(int childID, Geom::SP child)
-  {
-    assert(childID >= 0);
-    assert(childID < geometries.size());
-    geometries[childID] = child;
-    // context->llo->geomGroupSetChild(this->ID,childID,child->ID);
-    // lloGeomGroupSetChild(context->llo,this->ID,childID,child->ID);
-  }
-
-
+  struct UserGeomType : public GeomType {
+    typedef std::shared_ptr<UserGeomType> SP;
     
-  GeomGroup::GeomGroup(Context *const context,
-                       size_t numChildren)
-    : Group(context,context->groups),
-      geometries(numChildren)
-  {}
+    UserGeomType(Context *const context,
+                 size_t varStructSize,
+                 const std::vector<OWLVarDecl> &varDecls);
+
+    virtual void setIntersectProg(int rayType,
+                                  Module::SP module,
+                                  const std::string &progName);
+    virtual void setBoundsProg(Module::SP module,
+                               const std::string &progName);
+    
+    virtual std::string toString() const { return "UserGeomType"; }
+    virtual std::shared_ptr<Geom> createGeom() override;
+
+    ProgramDesc boundsProg;
+    std::vector<ProgramDesc> intersectProg;
+  };
+  
+  struct UserGeom : public Geom {
+    typedef std::shared_ptr<UserGeom> SP;
+
+    UserGeom(Context *const context,
+             GeomType::SP geometryType);
+
+    virtual std::string toString() const { return "UserGeom"; }
+    void setPrimCount(size_t count);
+    
+    /*! call a cuda kernel that computes the bounds of the vertex buffers */
+    void computeBounds(box3f bounds[2]);
+
+    size_t primCount = 0;
+  };
   
 } // ::owl

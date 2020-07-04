@@ -36,12 +36,12 @@ namespace owl {
       }
     }
 
-    context->llo->instanceGroupCreate(this->ID,
-                                      numChildren,
-                                      groups?childIDs.data():(uint32_t*)nullptr);
+    // context->llo->instanceGroupCreate(this->ID,
+    //                                   numChildren,
+    //                                   groups?childIDs.data():(uint32_t*)nullptr);
 
     transforms[0].resize(children.size());
-    context->llo->setTransforms(this->ID,0,transforms[0].data());
+    // context->llo->setTransforms(this->ID,0,transforms[0].data());
   }
   
   
@@ -53,7 +53,7 @@ namespace owl {
     assert(childID < children.size());
 
     transforms[0][childID] = xfm;
-    context->llo->setTransforms(this->ID,0,transforms[0].data());
+    // context->llo->setTransforms(this->ID,0,transforms[0].data());
   }
 
   void InstanceGroup::setTransforms(uint32_t timeStep,
@@ -68,20 +68,20 @@ namespace owl {
     default:
       throw std::runtime_error("used matrix format not yet implmeneted for InstanceGroup::setTransforms");
     };
-    context->llo->setTransforms(this->ID,
-                                timeStep,
-                                (const affine3f *)transforms[timeStep].data());
+    // context->llo->setTransforms(this->ID,
+    //                             timeStep,
+    //                             (const affine3f *)transforms[timeStep].data());
   }
 
   void InstanceGroup::setInstanceIDs(/* must be an array of children.size() items */
                                      const uint32_t *_instanceIDs)
   {
-    if (instanceIDs.empty()) {
-      for (auto device : context->llo->devices) {
-        ll::InstanceGroup *ig = (ll::InstanceGroup *)device->checkGetGroup(this->ID);
-        ig->instanceIDs = instanceIDs.data();
-      }
-    }
+    // if (instanceIDs.empty()) {
+    //   for (auto device : context->llo->devices) {
+    //     ll::InstanceGroup *ig = (ll::InstanceGroup *)device->checkGetGroup(this->ID);
+    //     ig->instanceIDs = instanceIDs.data();
+    //   }
+    // }
     std::copy(_instanceIDs,_instanceIDs+instanceIDs.size(),instanceIDs.data());
   }
   
@@ -91,21 +91,23 @@ namespace owl {
     assert(childID >= 0);
     assert(childID < children.size());
     children[childID] = child;
-    context->llo->instanceGroupSetChild(this->ID,
-                                        childID,
-                                        child->ID);
+    // context->llo->instanceGroupSetChild(this->ID,
+    //                                     childID,
+    //                                     child->ID);
   }
 
   void InstanceGroup::buildAccel()
   {
-    for (auto device : context->llo->devices)
-      device->groupBuildAccel(this->ID);
+    throw std::runtime_error("not yet ported");
+    // for (auto device : context->llo->devices)
+    //   device->groupBuildAccel(this->ID);
   }
   
   void InstanceGroup::refitAccel()
   {
-    for (auto device : context->llo->devices)
-      device->groupRefitAccel(this->ID);
+    throw std::runtime_error("not yet ported");
+    // for (auto device : context->llo->devices)
+    //   device->groupRefitAccel(this->ID);
   }
   
 }

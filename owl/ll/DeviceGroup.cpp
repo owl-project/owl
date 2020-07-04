@@ -220,12 +220,12 @@ namespace owl {
         device->enableMotionBlur();
     }
     
-    void DeviceGroup::setTransforms(int igID, int timeStep,
-                                    const affine3f *xfms)
-    {
-      for (auto device : devices)
-        device->setTransforms(igID,timeStep,xfms);
-    }
+    // void DeviceGroup::setTransforms(int igID, int timeStep,
+    //                                 const affine3f *xfms)
+    // {
+    //   for (auto device : devices)
+    //     device->setTransforms(igID,timeStep,xfms);
+    // }
 
     void DeviceGroup::setRayTypeCount(size_t rayTypeCount)
     {
@@ -342,11 +342,11 @@ namespace owl {
       'grow' or a 'shrink', but 'shrink' is only allowed if all
       geoms that would get 'lost' have alreay been
       destroyed */
-    void DeviceGroup::allocGroups(size_t newCount)
-    {
-      for (auto device : devices)
-        device->allocGroups(newCount);
-    }
+    // void DeviceGroup::allocGroups(size_t newCount)
+    // {
+    //   for (auto device : devices)
+    //     device->allocGroups(newCount);
+    // }
       
     void DeviceGroup::allocBuffers(size_t newCount)
     {
@@ -366,52 +366,52 @@ namespace owl {
         device->allocGeoms(newCount);
     }
 
-    void DeviceGroup::userGeomCreate(int geomID,
-                                     /*! the "logical" hit group ID:
-                                       will always count 0,1,2... evne
-                                       if we are using multiple ray
-                                       types; the actual hit group
-                                       used when building the SBT will
-                                       then be 'logicalHitGroupID *
-                                       rayTypeCount) */
-                                     int logicalHitGroupID,
-                                     size_t numPrims)
-    {
-      for (auto device : devices)
-        device->userGeomCreate(geomID,logicalHitGroupID,numPrims);
-    }
+    // void DeviceGroup::userGeomCreate(int geomID,
+    //                                  /*! the "logical" hit group ID:
+    //                                    will always count 0,1,2... evne
+    //                                    if we are using multiple ray
+    //                                    types; the actual hit group
+    //                                    used when building the SBT will
+    //                                    then be 'logicalHitGroupID *
+    //                                    rayTypeCount) */
+    //                                  int logicalHitGroupID,
+    //                                  size_t numPrims)
+    // {
+    //   for (auto device : devices)
+    //     device->userGeomCreate(geomID,logicalHitGroupID,numPrims);
+    // }
       
-    void DeviceGroup::trianglesGeomCreate(int geomID,
-                                          /*! the "logical" hit group ID:
-                                            will always count 0,1,2... evne
-                                            if we are using multiple ray
-                                            types; the actual hit group
-                                            used when building the SBT will
-                                            then be 'logicalHitGroupID *
-                                            rayTypeCount) */
-                                          int logicalHitGroupID)
-    {
-      for (auto device : devices)
-        device->trianglesGeomCreate(geomID,logicalHitGroupID);
-    }
+    // void DeviceGroup::trianglesGeomCreate(int geomID,
+    //                                       /*! the "logical" hit group ID:
+    //                                         will always count 0,1,2... evne
+    //                                         if we are using multiple ray
+    //                                         types; the actual hit group
+    //                                         used when building the SBT will
+    //                                         then be 'logicalHitGroupID *
+    //                                         rayTypeCount) */
+    //                                       int logicalHitGroupID)
+    // {
+    //   for (auto device : devices)
+    //     device->trianglesGeomCreate(geomID,logicalHitGroupID);
+    // }
 
-    void DeviceGroup::trianglesGeomGroupCreate(int groupID,
-                                               const int *geomIDs,
-                                               size_t geomCount)
-    {
-      for (auto device : devices) {
-        device->trianglesGeomGroupCreate(groupID,geomIDs,geomCount);
-      }
-    }
+    // void DeviceGroup::trianglesGeomGroupCreate(int groupID,
+    //                                            const int *geomIDs,
+    //                                            size_t geomCount)
+    // {
+    //   for (auto device : devices) {
+    //     device->trianglesGeomGroupCreate(groupID,geomIDs,geomCount);
+    //   }
+    // }
 
-    void DeviceGroup::userGeomGroupCreate(int groupID,
-                                          const int *geomIDs,
-                                          size_t geomCount)
-    {
-      for (auto device : devices) {
-        device->userGeomGroupCreate(groupID,geomIDs,geomCount);
-      }
-    }
+    // void DeviceGroup::userGeomGroupCreate(int groupID,
+    //                                       const int *geomIDs,
+    //                                       size_t geomCount)
+    // {
+    //   for (auto device : devices) {
+    //     device->userGeomGroupCreate(groupID,geomIDs,geomCount);
+    //   }
+    // }
 
     void DeviceGroup::buildPrograms()
     {
@@ -484,47 +484,47 @@ namespace owl {
         device->graphicsBufferUnmap(bufferID);
     }
       
-    /*! Set a buffer of bounding boxes that this user geometry will
-      use when building the accel structure. This is one of
-      multiple ways of specifying the bounding boxes for a user
-      geometry (the other two being a) setting the geometry type's
-      boundsFunc, or b) setting a host-callback fr computing the
-      bounds). Only one of the three methods can be set at any
-      given time. */
-    void DeviceGroup::userGeomSetBoundsBuffer(int geomID,
-                                              int bufferID)
-    {
-      for (auto device : devices) 
-        device->userGeomSetBoundsBuffer(geomID,bufferID);
-    }
+    // /*! Set a buffer of bounding boxes that this user geometry will
+    //   use when building the accel structure. This is one of
+    //   multiple ways of specifying the bounding boxes for a user
+    //   geometry (the other two being a) setting the geometry type's
+    //   boundsFunc, or b) setting a host-callback fr computing the
+    //   bounds). Only one of the three methods can be set at any
+    //   given time. */
+    // void DeviceGroup::userGeomSetBoundsBuffer(int geomID,
+    //                                           int bufferID)
+    // {
+    //   for (auto device : devices) 
+    //     device->userGeomSetBoundsBuffer(geomID,bufferID);
+    // }
     
-    void DeviceGroup::userGeomSetPrimCount(int geomID,
-                                           size_t count)
-    {
-      for (auto device : devices) 
-        device->userGeomSetPrimCount(geomID,count);
-    }
+    // void DeviceGroup::userGeomSetPrimCount(int geomID,
+    //                                        size_t count)
+    // {
+    //   for (auto device : devices) 
+    //     device->userGeomSetPrimCount(geomID,count);
+    // }
     
-    void DeviceGroup::trianglesGeomSetVertexBuffers(int geomID,
-                                                    const std::vector<int32_t> &bufferIDs,
-                                                    size_t count,
-                                                    size_t stride,
-                                                    size_t offset)
-    {
-      for (auto device : devices) 
-        device->trianglesGeomSetVertexBuffers(geomID,bufferIDs,count,stride,offset);
-    }
+    // void DeviceGroup::trianglesGeomSetVertexBuffers(int geomID,
+    //                                                 const std::vector<int32_t> &bufferIDs,
+    //                                                 size_t count,
+    //                                                 size_t stride,
+    //                                                 size_t offset)
+    // {
+    //   for (auto device : devices) 
+    //     device->trianglesGeomSetVertexBuffers(geomID,bufferIDs,count,stride,offset);
+    // }
     
-    void DeviceGroup::trianglesGeomSetIndexBuffer(int geomID,
-                                                  int bufferID,
-        size_t count,
-        size_t stride,
-        size_t offset)
-    {
-      for (auto device : devices) {
-        device->trianglesGeomSetIndexBuffer(geomID,bufferID,count,stride,offset);
-      }
-    }
+    // void DeviceGroup::trianglesGeomSetIndexBuffer(int geomID,
+    //                                               int bufferID,
+    //     size_t count,
+    //     size_t stride,
+    //     size_t offset)
+    // {
+    //   for (auto device : devices) {
+    //     device->trianglesGeomSetIndexBuffer(geomID,bufferID,count,stride,offset);
+    //   }
+    // }
 
     // void DeviceGroup::groupBuildAccel(int groupID)
     // {
@@ -564,13 +564,13 @@ namespace owl {
       return checkGetDevice(deviceID)->groupGetTraversable(groupID);
     }
 
-    void DeviceGroup::sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
-                                       const void *callBackData)
-    {
-      for (auto device : devices) 
-        device->sbtHitProgsBuild(writeHitProgDataCB,
-                                 callBackData);
-    }
+    // void DeviceGroup::sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
+    //                                    const void *callBackData)
+    // {
+    //   for (auto device : devices) 
+    //     device->sbtHitProgsBuild(writeHitProgDataCB,
+    //                              callBackData);
+    // }
 
     void DeviceGroup::geomTypeCreate(int geomTypeID,
                                      size_t programDataSize)
@@ -609,16 +609,16 @@ namespace owl {
                                             cbData);
     }
 
-    /*! set given child to {childGroupID+xfm}  */
-    void DeviceGroup::instanceGroupSetChild(int groupID,
-                                            int childNo,
-                                            int childGroupID)
-    {
-      for (auto device : devices)
-        device->instanceGroupSetChild(groupID,
-                                      childNo,
-                                      childGroupID);
-    }
+    // /*! set given child to {childGroupID+xfm}  */
+    // void DeviceGroup::instanceGroupSetChild(int groupID,
+    //                                         int childNo,
+    //                                         int childGroupID)
+    // {
+    //   for (auto device : devices)
+    //     device->instanceGroupSetChild(groupID,
+    //                                   childNo,
+    //                                   childGroupID);
+    // }
 
     void DeviceGroup::bufferResize(int bufferID, size_t newItemCount)
     {
@@ -640,30 +640,30 @@ namespace owl {
     }
       
 
-    void DeviceGroup::geomGroupSetChild(int groupID,
-                                        int childNo,
-                                        int childID)
-    {
-      for (auto device : devices)
-        device->geomGroupSetChild(groupID,
-                                  childNo,
-                                  childID);
-    }
+    // void DeviceGroup::geomGroupSetChild(int groupID,
+    //                                     int childNo,
+    //                                     int childID)
+    // {
+    //   for (auto device : devices)
+    //     device->geomGroupSetChild(groupID,
+    //                               childNo,
+    //                               childID);
+    // }
 
     /*! create a new instance group with given list of children */
-    void DeviceGroup::instanceGroupCreate(/*! the group we are defining */
-                                          int groupID,
-                                          size_t numChildren,
-                                          /* list of children. list can be
-                                             omitted by passing a nullptr, but if
-                                             not null this must be a list of
-                                             'childCount' valid group ID */
-                                          const uint32_t *childGroupIDs)
-    {
-      for (auto device : devices)
-        device->instanceGroupCreate(groupID,numChildren,
-                                    childGroupIDs);
-    }
+    // void DeviceGroup::instanceGroupCreate(/*! the group we are defining */
+    //                                       int groupID,
+    //                                       size_t numChildren,
+    //                                       /* list of children. list can be
+    //                                          omitted by passing a nullptr, but if
+    //                                          not null this must be a list of
+    //                                          'childCount' valid group ID */
+    //                                       const uint32_t *childGroupIDs)
+    // {
+    //   for (auto device : devices)
+    //     device->instanceGroupCreate(groupID,numChildren,
+    //                                 childGroupIDs);
+    // }
 
     /*! returns the given device's buffer address on the specified
         device */

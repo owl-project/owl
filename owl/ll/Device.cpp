@@ -16,6 +16,7 @@
 
 #include "Device.h"
 #include <optix_function_table_definition.h>
+#include "api/Group.h"
 
 // to make C99 compilers happy:
 extern inline OptixResult optixInit( void** handlePtr );
@@ -73,6 +74,16 @@ namespace owl {
     {
       if (level == 1 || level == 2)
         fprintf( stderr, "[%2d][%12s]: %s\n", (int)level, tag, message );
+    }
+
+    void Group::destroyAccel(Context *context) 
+    {
+      int oldActive = context->pushActive();
+      if (traversable) {
+        bvhMemory.free();
+        traversable = 0;
+      }
+      context->popActive(oldActive);
     }
 
     LaunchParams::LaunchParams(Context *context, size_t sizeOfData)
@@ -240,7 +251,7 @@ namespace owl {
     /*! Construct a new owl device on given cuda device. Throws an
       exception if for any reason that cannot be done */
     Device::Device(int owlDeviceID, int cudaDeviceID)
-      : context(new Context(owlDeviceID,cudaDeviceID))
+      : context(new Context(owlDeviceID,cudaDeviceID)), ID(owlDeviceID)
     {
       LOG_OK("successfully created owl device #" << owlDeviceID
              << " on CUDA device #" << cudaDeviceID);
@@ -983,57 +994,57 @@ namespace owl {
       context->popActive(oldActive);
     }
     
-    /*! Set a buffer of bounding boxes that this user geometry will
-      use when building the accel structure. This is one of
-      multiple ways of specifying the bounding boxes for a user
-      geometry (the other two being a) setting the geometry type's
-      boundsFunc, or b) setting a host-callback fr computing the
-      bounds). Only one of the three methods can be set at any
-      given time. */
-    void Device::userGeomSetBoundsBuffer(int geomID,
-                                         int bufferID)
-    {
-      UserGeom *user
-        = checkGetUserGeom(geomID);
-      assert("double-check valid geom" && user);
+    // /*! Set a buffer of bounding boxes that this user geometry will
+    //   use when building the accel structure. This is one of
+    //   multiple ways of specifying the bounding boxes for a user
+    //   geometry (the other two being a) setting the geometry type's
+    //   boundsFunc, or b) setting a host-callback fr computing the
+    //   bounds). Only one of the three methods can be set at any
+    //   given time. */
+    // void Device::userGeomSetBoundsBuffer(int geomID,
+    //                                      int bufferID)
+    // {
+    //   UserGeom *user
+    //     = checkGetUseGeom(geomID);
+    //   assert("double-check valid geom" && user);
       
-      Buffer   *buffer
-        = checkGetBuffer(bufferID);
-      assert("double-check valid buffer" && buffer);
-      size_t offset = 0; // don't support offset/stride yet
-      user->d_boundsMemory = addPointerOffset(buffer->get(),offset);
-    }
+    //   Buffer   *buffer
+    //     = checkGetBuffer(bufferID);
+    //   assert("double-check valid buffer" && buffer);
+    //   size_t offset = 0; // don't support offset/stride yet
+    //   user->d_boundsMemory = addPointerOffset(buffer->get(),offset);
+    // }
     
-    void Device::userGeomSetPrimCount(int geomID,
-                                      size_t count)
-    {
-      UserGeom *user
-        = checkGetUserGeom(geomID);
-      assert("double-check valid geom" && user);
-      user->setPrimCount(count);
-    }
+    // void Device::userGeomSetPrimCount(int geomID,
+    //                                   size_t count)
+    // {
+    //   UserGeom *user
+    //     = checkGetUserGeom(geomID);
+    //   assert("double-check valid geom" && user);
+    //   user->setPrimCount(count);
+    // }
     
 
-    void Device::trianglesGeomSetVertexBuffers(int geomID,
-                                               const std::vector<int32_t> &bufferIDs,
-                                              size_t count,
-                                              size_t stride,
-                                              size_t offset)
-    {
-      TrianglesGeom *triangles
-        = checkGetTrianglesGeom(geomID);
-      assert("double-check valid geom" && triangles);
+    // void Device::trianglesGeomSetVertexBuffers(int geomID,
+    //                                            const std::vector<int32_t> &bufferIDs,
+    //                                           size_t count,
+    //                                           size_t stride,
+    //                                           size_t offset)
+    // {
+    //   TrianglesGeom *triangles
+    //     = checkGetTrianglesGeom(geomID);
+    //   assert("double-check valid geom" && triangles);
       
-      triangles->vertexPointers.resize(bufferIDs.size());
-      for (int i=0;i<bufferIDs.size();i++) {
-        Buffer   *buffer
-          = checkGetBuffer(bufferIDs[i]);
-        assert("double-check valid buffer" && buffer);
-        triangles->vertexPointers[i] = (CUdeviceptr)addPointerOffset(buffer->get(),offset);
-      }
-      triangles->vertexStride  = stride;
-      triangles->vertexCount   = count;
-    }
+    //   triangles->vertexPointers.resize(bufferIDs.size());
+    //   for (int i=0;i<bufferIDs.size();i++) {
+    //     Buffer   *buffer
+    //       = checkGetBuffer(bufferIDs[i]);
+    //     assert("double-check valid buffer" && buffer);
+    //     triangles->vertexPointers[i] = (CUdeviceptr)addPointerOffset(buffer->get(),offset);
+    //   }
+    //   triangles->vertexStride  = stride;
+    //   triangles->vertexCount   = count;
+    // }
 
     /*! returns the given buffers device pointer */
     void *Device::bufferGetPointer(int bufferID)
@@ -1075,64 +1086,64 @@ namespace owl {
     }
 
     
-    void Device::trianglesGeomSetIndexBuffer(int geomID,
-                                             int bufferID,
-                                             size_t count,
-                                             size_t stride,
-                                             size_t offset)
-    {
-      TrianglesGeom *triangles
-        = checkGetTrianglesGeom(geomID);
-      assert("double-check valid geom" && triangles);
+    // void Device::trianglesGeomSetIndexBuffer(int geomID,
+    //                                          int bufferID,
+    //                                          size_t count,
+    //                                          size_t stride,
+    //                                          size_t offset)
+    // {
+    //   TrianglesGeom *triangles
+    //     = checkGetTrianglesGeom(geomID);
+    //   assert("double-check valid geom" && triangles);
       
-      Buffer   *buffer
-        = checkGetBuffer(bufferID);
-      assert("double-check valid buffer" && buffer);
+    //   Buffer   *buffer
+    //     = checkGetBuffer(bufferID);
+    //   assert("double-check valid buffer" && buffer);
 
-      triangles->indexPointer = (CUdeviceptr)addPointerOffset(buffer->get(),offset);
-      triangles->indexCount   = count;
-      triangles->indexStride  = stride;
-    }
+    //   triangles->indexPointer = (CUdeviceptr)addPointerOffset(buffer->get(),offset);
+    //   triangles->indexCount   = count;
+    //   triangles->indexStride  = stride;
+    // }
     
-    void Device::groupBuildAccel(int groupID)
-    {
-      Group *group = checkGetGroup(groupID);
-      group->destroyAccel(context);
-      group->buildAccel(context);
-    }
+    // void Device::groupBuildAccel(int groupID)
+    // {
+    //   Group *group = checkGetGroup(groupID);
+    //   group->destroyAccel(context);
+    //   group->buildAccel(context);
+    // }
 
 
-    void Device::setTransforms(int igID, int timeStep, const affine3f *transforms)
-    {
-      Group *group = checkGetGroup(igID);
-      assert(group);
+    // void Device::setTransforms(int igID, int timeStep, const affine3f *transforms)
+    // {
+    //   Group *group = checkGetGroup(igID);
+    //   assert(group);
       
-      InstanceGroup *ig = dynamic_cast<InstanceGroup*>(group);
-      assert(ig);
-      assert(timeStep == 0 || timeStep == 1);
-      ig->transforms[timeStep] = transforms;
-    }
+    //   InstanceGroup *ig = dynamic_cast<InstanceGroup*>(group);
+    //   assert(ig);
+    //   assert(timeStep == 0 || timeStep == 1);
+    //   ig->transforms[timeStep] = transforms;
+    // }
     
-    void Device::groupRefitAccel(int groupID)
-    {
-      Group *group = checkGetGroup(groupID);
-      /* do NOT destroy */
-      group->refitAccel(context);
-    }
+    // void Device::groupRefitAccel(int groupID)
+    // {
+    //   Group *group = checkGetGroup(groupID);
+    //   /* do NOT destroy */
+    //   group->refitAccel(context);
+    // }
 
     /*! return given group's current traversable. note this function
       will *not* check if the group has alreadybeen built, if it
       has to be rebuilt, etc. */
-    OptixTraversableHandle Device::groupGetTraversable(int groupID)
-    {
-      return checkGetGroup(groupID)->traversable;
-    }
+    // OptixTraversableHandle Device::groupGetTraversable(int groupID)
+    // {
+    //   return checkGetGroup(groupID)->traversable;
+    // }
 
-    uint32_t Device::groupGetSBTOffset(int groupID)
-    {
-      Group *group = checkGetGroup(groupID);
-      return group->getSBTOffset();
-    }
+    // uint32_t Device::groupGetSBTOffset(int groupID)
+    // {
+    //   Group *group = checkGetGroup(groupID);
+    //   return group->getSBTOffset();
+    // }
     
     
 
@@ -1143,24 +1154,25 @@ namespace owl {
 
 
 
-    /*! set given child to {childGroupID+xfm}  */
-    void Device::geomGroupSetChild(int groupID,
-                                   int childNo,
-                                   int childID)
-    {
-      GeomGroup *gg       = checkGetGeomGroup(groupID);
-      Geom      *newChild = checkGetGeom(childID);
-      Geom      *oldChild = gg->children[childNo];
-      if (oldChild)
-        oldChild->numTimesReferenced--;
-      gg->children[childNo] = newChild;
-      newChild->numTimesReferenced++;
-    }
+    // /*! set given child to {childGroupID+xfm}  */
+    // void Device::geomGroupSetChild(int groupID,
+    //                                int childNo,
+    //                                int childID)
+    // {
+    //   GeomGroup *gg       = checkGetGeomGroup(groupID);
+    //   Geom      *newChild = checkGetGeom(childID);
+    //   Geom      *oldChild = gg->children[childNo];
+    //   // if (oldChild)
+    //   //   oldChild->numTimesReferenced--;
+    //   gg->children[childNo] = newChild;
+    //   newChild->numTimesReferenced++;
+    // }
 
 
 
-
-    void Device::sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
+#if 0
+    void Device::sbtHitProgsBuild(std::vector<owl::Group::SP> &groups,
+                                  LLOWriteHitProgDataCB writeHitProgDataCB,
                                   const void *callBackUserData)
     {
       LOG("building SBT hit group records");
@@ -1251,7 +1263,8 @@ namespace owl {
       context->popActive(oldActive);
       LOG_OK("done building (and uploading) SBT hit group records");
     }
-      
+#endif
+    
     void Device::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
                                  const void *callBackUserData)
     {
@@ -1471,60 +1484,60 @@ namespace owl {
 
 
 
-    void Device::userGeomCreate(int geomID,
-                                /*! the "logical" hit group ID:
-                                  will always count 0,1,2... evne
-                                  if we are using multiple ray
-                                  types; the actual hit group
-                                  used when building the SBT will
-                                  then be 'geomTypeID *
-                                  numRayTypes) */
-                                int geomTypeID,
-                                size_t numPrims)
-    {
-      assert("check ID is valid" && geomID >= 0);
-      assert("check ID is valid" && geomID < geoms.size());
-      assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
+    // void Device::userGeomCreate(int geomID,
+    //                             /*! the "logical" hit group ID:
+    //                               will always count 0,1,2... evne
+    //                               if we are using multiple ray
+    //                               types; the actual hit group
+    //                               used when building the SBT will
+    //                               then be 'geomTypeID *
+    //                               numRayTypes) */
+    //                             int geomTypeID,
+    //                             size_t numPrims)
+    // {
+    //   assert("check ID is valid" && geomID >= 0);
+    //   assert("check ID is valid" && geomID < geoms.size());
+    //   assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
 
-      assert("check valid hit group ID" && geomTypeID >= 0);
-      assert("check valid hit group ID" && geomTypeID <  geomTypes.size());
+    //   assert("check valid hit group ID" && geomTypeID >= 0);
+    //   assert("check valid hit group ID" && geomTypeID <  geomTypes.size());
         
-      geoms[geomID] = new UserGeom(geomID,geomTypeID,numPrims);
-      assert("check 'new' was successful" && geoms[geomID] != nullptr);
-    }
+    //   geoms[geomID] = new UserGeom(geomID,geomTypeID,numPrims);
+    //   assert("check 'new' was successful" && geoms[geomID] != nullptr);
+    // }
     
-    void Device::trianglesGeomCreate(int geomID,
-                                     /*! the "logical" hit group ID:
-                                       will always count 0,1,2... evne
-                                       if we are using multiple ray
-                                       types; the actual hit group
-                                       used when building the SBT will
-                                       then be 'geomTypeID *
-                                       numRayTypes) */
-                                     int geomTypeID)
-    {
-      assert("check ID is valid" && geomID >= 0);
-      assert("check ID is valid" && geomID < geoms.size());
-      assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
+    // void Device::trianglesGeomCreate(int geomID,
+    //                                  /*! the "logical" hit group ID:
+    //                                    will always count 0,1,2... evne
+    //                                    if we are using multiple ray
+    //                                    types; the actual hit group
+    //                                    used when building the SBT will
+    //                                    then be 'geomTypeID *
+    //                                    numRayTypes) */
+    //                                  int geomTypeID)
+    // {
+    //   assert("check ID is valid" && geomID >= 0);
+    //   assert("check ID is valid" && geomID < geoms.size());
+    //   assert("check given ID isn't still in use" && geoms[geomID] == nullptr);
 
-      assert("check valid hit group ID" && geomTypeID >= 0);
-      assert("check valid hit group ID" && geomTypeID < geomTypes.size());
+    //   assert("check valid hit group ID" && geomTypeID >= 0);
+    //   assert("check valid hit group ID" && geomTypeID < geomTypes.size());
         
-      geoms[geomID] = new TrianglesGeom(geomID,geomTypeID);
-      assert("check 'new' was successful" && geoms[geomID] != nullptr);
-    }
+    //   geoms[geomID] = new TrianglesGeom(geomID,geomTypeID);
+    //   assert("check 'new' was successful" && geoms[geomID] != nullptr);
+    // }
 
     /*! resize the array of geom IDs. this can be either a
       'grow' or a 'shrink', but 'shrink' is only allowed if all
       geoms that would get 'lost' have alreay been
       destroyed */
-    void Device::allocGroups(size_t newCount)
-    {
-      for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
-        assert("alloc would lose a geom that was not properly destroyed" &&
-               groups[idxWeWouldLose] == nullptr);
-      groups.resize(newCount);
-    }
+    // void Device::allocGroups(size_t newCount)
+    // {
+    //   for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)groups.size();idxWeWouldLose++)
+    //     assert("alloc would lose a geom that was not properly destroyed" &&
+    //            groups[idxWeWouldLose] == nullptr);
+    //   groups.resize(newCount);
+    // }
     
     /*! resize the array of buffer handles. this can be either a
       'grow' or a 'shrink', but 'shrink' is only allowed if all
