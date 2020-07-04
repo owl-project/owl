@@ -145,7 +145,12 @@ namespace owl {
       d_bounds = (CUdeviceptr)ugDD.internalBufferForBoundsProgram.get();
         
       userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
-      auto &aa = userGeomInput.customPrimitiveArray;//aabbsArray;
+#if OPTIX_VERSION >= 70100
+  auto &aa = userGeomInput.customPrimitiveArray;//aabbsArray;
+#else
+  auto &aa = userGeomInput.aabbArray; //aabbBuffers;
+  // auto &aa = userGeomInput.aabbsArray;
+#endif
       aa.aabbBuffers   = &d_bounds;
       aa.numPrimitives = (uint32_t)child->primCount;
       aa.strideInBytes = sizeof(box3f);
