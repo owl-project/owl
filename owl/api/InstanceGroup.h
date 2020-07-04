@@ -66,6 +66,8 @@ namespace owl {
     
     template<bool FULL_REBUILD>
     void staticBuildOn(ll::Device *device);
+    template<bool FULL_REBUILD>
+    void motionBlurBuildOn(ll::Device *device);
 
     virtual std::string toString() const { return "InstanceGroup"; }
 
