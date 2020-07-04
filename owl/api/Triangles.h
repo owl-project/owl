@@ -43,6 +43,8 @@ namespace owl {
       this Geom */
   struct TrianglesGeom : public Geom {
 
+    typedef std::shared_ptr<TrianglesGeom> SP;
+
     /*! any device-specific data, such as optix handles, cuda device
         pointers, etc */
     struct DeviceData : public Geom::DeviceData {
@@ -50,8 +52,7 @@ namespace owl {
       CUdeviceptr indexPointer  = (CUdeviceptr)0;
     };
     
-    typedef std::shared_ptr<TrianglesGeom> SP;
-
+    
     inline DeviceData &getDD(ll::Device *device)
     {
       assert(device->ID < deviceData.size()); 

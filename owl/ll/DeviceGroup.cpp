@@ -360,11 +360,11 @@ namespace owl {
     //     device->allocTextures(newCount);
     // }
       
-    void DeviceGroup::allocGeoms(size_t newCount)
-    {
-      for (auto device : devices)
-        device->allocGeoms(newCount);
-    }
+    // void DeviceGroup::allocGeoms(size_t newCount)
+    // {
+    //   for (auto device : devices)
+    //     device->allocGeoms(newCount);
+    // }
 
     // void DeviceGroup::userGeomCreate(int geomID,
     //                                  /*! the "logical" hit group ID:

@@ -327,7 +327,7 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed */
-      void allocGeoms(size_t newCount);
+      // void allocGeoms(size_t newCount);
 
       void trianglesGeomCreate(int geomID,
                                /*! the "logical" hit group ID:

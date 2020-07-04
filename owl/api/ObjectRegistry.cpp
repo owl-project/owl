@@ -105,7 +105,7 @@ namespace owl {
   template<>
   void ObjectRegistryT<Geom>::reallocContextIDs(int newMaxIDs)
   {
-    context->llo->allocGeoms(newMaxIDs);
+    // context->llo->allocGeoms(newMaxIDs);
   }
 
   template<>
@@ -153,7 +153,7 @@ namespace owl {
   template<>
   void ObjectRegistryT<Group>::reallocContextIDs(int newMaxIDs)
   {
-    context->llo->allocGroups(newMaxIDs);
+    // context->llo->allocGroups(newMaxIDs);
   }
 
 } // ::owl

@@ -29,7 +29,7 @@ set(OWL_LL_SOURCES
   Device.cpp
 
 #  TrianglesGeomGroup.cpp
-  UserGeomGroup.cpp
+#  UserGeomGroup.cpp
   InstanceGroup.cpp
   
   DeviceGroup.h

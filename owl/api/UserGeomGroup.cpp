@@ -17,32 +17,48 @@
 #include "api/UserGeomGroup.h"
 #include "api/Context.h"
 #include "ll/Device.h"
+#include <fstream>
+
+#define LOG(message)                                            \
+  if (Context::logging())                                   \
+    std::cout << "#owl.ll(" << device->ID << "): "    \
+              << message                                        \
+              << std::endl
+
+#define LOG_OK(message)                                         \
+  if (Context::logging())                                       \
+    std::cout << OWL_TERMINAL_GREEN                             \
+              << "#owl.ll(" << device->ID << "): "    \
+              << message << OWL_TERMINAL_DEFAULT << std::endl
+
+#define CLOG(message)                                   \
+  if (Context::logging())                               \
+    std::cout << "#owl.ll(" << device->ID << "): "     \
+              << message                                \
+              << std::endl
+
+#define CLOG_OK(message)                                        \
+  if (Context::logging())                                       \
+    std::cout << OWL_TERMINAL_GREEN                             \
+              << "#owl.ll(" << device->ID << "): "             \
+              << message << OWL_TERMINAL_DEFAULT << std::endl
+
 
 namespace owl {
   
   void UserGeomGroup::buildOrRefit(bool FULL_REBUILD)
   {
-    size_t maxVarSize = 0;
     for (auto child : geometries) {
-      assert(child);
-      assert(child->type);
-      maxVarSize = std::max(maxVarSize,child->type->varStructSize);
+      UserGeom::SP userGeom = child->as<UserGeom>();
+      assert(userGeom);
+      userGeom->executeBoundsProgOnPrimitives();
     }
-
-    // TODO: do this only if there's no explicit bounds buffer set
-    context->llo->groupBuildPrimitiveBounds
-      (this->ID,maxVarSize,
-       [&](uint8_t *output, int devID, int geomID, int childID) {
-        assert(childID >= 0 && childID < geometries.size());
-        Geom::SP child = geometries[childID];
-        assert(child);
-        child->writeVariables(output,devID);
-      });
+    
     for (auto device : context->llo->devices)
       if (FULL_REBUILD)
-        device->groupBuildAccel(this->ID);
+        buildAccelOn<true>(device);
       else
-        device->groupRefitAccel(this->ID);
+        buildAccelOn<false>(device);
   }
   
   void UserGeomGroup::buildAccel()
@@ -56,11 +72,194 @@ namespace owl {
   }
 
   UserGeomGroup::UserGeomGroup(Context *const context,
-                                 size_t numChildren)
+                               size_t numChildren)
     : GeomGroup(context,numChildren)
   {
-    context->llo->userGeomGroupCreate(this->ID,
-                                      nullptr,numChildren);
   }
 
+  /*! low-level accel structure builder for given device */
+  template<bool FULL_REBUILD>
+  void UserGeomGroup::buildAccelOn(ll::Device *device)
+  {
+    DeviceData &dd = getDD(device);
+    auto optixContext = device->context->optixContext;
+    
+    assert("check does not yet exist" && dd.traversable == 0);
+    if (FULL_REBUILD)
+      assert("check does not yet exist on first build " && dd.bvhMemory.empty());
+    else
+      assert("check DOES exist on first build " && !dd.bvhMemory.empty());
+      
+    int oldActive = device->pushActive();
+    LOG("building user accel over "
+        << geometries.size() << " geometries");
+    // ==================================================================
+    // create triangle inputs
+    // ==================================================================
+    //! the N build inputs that go into the builder
+    std::vector<OptixBuildInput> userGeomInputs(geometries.size());
+    /*! *arrays* of the vertex pointers - the buildinputs cointina
+     *pointers* to the pointers, so need a temp copy here */
+    std::vector<CUdeviceptr> boundsPointers(geometries.size());
+
+    // for now we use the same flags for all geoms
+    std::vector<uint32_t> userGeomInputFlags(geometries.size());
+    // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT };
+
+    // now go over all geometries to set up the buildinputs
+    for (int childID=0;childID<geometries.size();childID++) {
+      // the three fields we're setting:
+
+      UserGeom::SP child = geometries[childID]->as<UserGeom>();
+      assert(child);
+      
+      UserGeom::DeviceData &ugDD = child->getDD(device);
+      
+      CUdeviceptr     &d_bounds = boundsPointers[childID];
+      OptixBuildInput &userGeomInput = userGeomInputs[childID];
+
+      // the child wer're setting them with (with sanity checks)
+      // Geom *geom = geometries[childID];
+      // assert("double-check geom isn't null" && geom != nullptr);
+       
+      // UserGeom *userGeom = dynamic_cast<UserGeom*>(geom);
+      // assert("double-check it's really user"
+      //        && userGeom != nullptr);
+      assert("user geom has valid bounds buffer"
+             && ugDD.internalBufferForBoundsProgram.alloced());
+      d_bounds = (CUdeviceptr)ugDD.internalBufferForBoundsProgram.get();
+        
+      userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
+      auto &aa = userGeomInput.customPrimitiveArray;//aabbsArray;
+      aa.aabbBuffers   = &d_bounds;
+      aa.numPrimitives = (uint32_t)child->primCount;
+      aa.strideInBytes = sizeof(box3f);
+      aa.primitiveIndexOffset = 0;
+      
+      // we always have exactly one SBT entry per shape (i.e., triangle
+      // mesh), and no per-primitive materials:
+      userGeomInputFlags[childID]    = 0;
+      aa.flags                       = &userGeomInputFlags[childID];
+      // iw, jan 7, 2020: note this is not the "actual" number of
+      // SBT entires we'll generate when we build the SBT, only the
+      // number of per-ray-type 'groups' of SBT enties (i.e., before
+      // scaling by the SBT_STRIDE that gets passed to
+      // optixTrace. So, for the build input this value remains *1*).
+      aa.numSbtRecords               = 1; //context->numRayTypes;
+      aa.sbtIndexOffsetBuffer        = 0; 
+      aa.sbtIndexOffsetSizeInBytes   = 0; 
+      aa.sbtIndexOffsetStrideInBytes = 0; 
+    }
+
+    // ==================================================================
+    // BLAS setup: buildinputs set up, build the blas
+    // ==================================================================
+      
+    // ------------------------------------------------------------------
+    // first: compute temp memory for bvh
+    // ------------------------------------------------------------------
+    OptixAccelBuildOptions accelOptions = {};
+    accelOptions.buildFlags             =
+      // OPTIX_BUILD_FLAG_PREFER_FAST_BUILD
+      OPTIX_BUILD_FLAG_ALLOW_UPDATE
+      |
+      OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+      ;
+    accelOptions.motionOptions.numKeys  = 1;
+    if (FULL_REBUILD)
+      accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
+    else
+      accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
+      
+    OptixAccelBufferSizes blasBufferSizes;
+    OPTIX_CHECK(optixAccelComputeMemoryUsage
+                (optixContext,
+                 &accelOptions,
+                 userGeomInputs.data(),
+                 (uint32_t)userGeomInputs.size(),
+                 &blasBufferSizes
+                 ));
+      
+    // ------------------------------------------------------------------
+    // ... and allocate buffers: temp buffer, initial (uncompacted)
+    // BVH buffer, and a one-single-size_t buffer to store the
+    // compacted size in
+    // ------------------------------------------------------------------
+      
+    // temp memory:
+    DeviceMemory tempBuffer;
+    tempBuffer.alloc
+      (FULL_REBUILD
+       ? blasBufferSizes.tempSizeInBytes
+       : blasBufferSizes.tempUpdateSizeInBytes);
+
+    if (FULL_REBUILD)
+      // alloc only on first rebuild
+      dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+    OPTIX_CHECK(optixAccelBuild(optixContext,
+                                /* todo: stream */0,
+                                &accelOptions,
+                                // array of build inputs:
+                                userGeomInputs.data(),
+                                (uint32_t)userGeomInputs.size(),
+                                // buffer of temp memory:
+                                (CUdeviceptr)tempBuffer.get(),
+                                tempBuffer.size(),
+                                // where we store initial, uncomp bvh:
+                                (CUdeviceptr)dd.bvhMemory.get(),
+                                dd.bvhMemory.size(),
+                                /* the dd.traversable we're building: */ 
+                                &dd.traversable,
+                                /* we're also querying compacted size: */
+                                nullptr,0u
+                                ));
+      
+    CUDA_SYNC_CHECK();
+
+#if 0
+    // for debugging only - dumps the BVH to disk
+    std::vector<uint8_t> dumpBuffer(outputBuffer.size());
+    outputBuffer.download(dumpBuffer.data());
+    std::ofstream dump("/tmp/outputBuffer.bin",std::ios::binary);
+    dump.write((char*)dumpBuffer.data(),dumpBuffer.size());
+    PRINT(dumpBuffer.size());
+    exit(0);
+#endif
+      
+    // ==================================================================
+    // finish - clean up
+    // ==================================================================
+
+    tempBuffer.free();
+    device->popActive(oldActive);
+
+    LOG_OK("successfully built user geom group accel");
+
+    size_t sumPrims = 0;
+    size_t sumBoundsMem = 0;
+    for (int childID=0;childID<geometries.size();childID++) {
+      UserGeom::SP child = geometries[childID]->as<UserGeom>();
+      assert(child);
+      
+      sumPrims += child->primCount;
+      
+      UserGeom::DeviceData &ugDD = child->getDD(device);
+      
+      sumBoundsMem += ugDD.internalBufferForBoundsProgram.sizeInBytes;
+      if (ugDD.internalBufferForBoundsProgram.alloced())
+        ugDD.internalBufferForBoundsProgram.free();
+    }
+    // dbgPrintBVHSizes(/*numItems*/
+    //                  sumPrims,
+    //                  /*boundsArraySize*/
+    //                  sumBoundsMem,
+    //                  /*tempMemSize*/
+    //                  blasBufferSizes.tempSizeInBytes,
+    //                  /*initialBVHSize*/
+    //                  blasBufferSizes.outputSizeInBytes,
+    //                  /*finalBVHSize*/
+    //                  0
+    //                  );
+  }
+    
 } // ::owl

@@ -203,31 +203,31 @@ namespace owl {
 
     typedef enum { TRIANGLES, USER } PrimType;
     
-    struct Geom {
-      Geom(int geomID, int geomTypeID)
-        : geomID(geomID), geomTypeID(geomTypeID)
-      {}
-      // virtual PrimType primType() const = 0;
+    // struct Geom {
+    //   Geom(int geomID, int geomTypeID)
+    //     : geomID(geomID), geomTypeID(geomTypeID)
+    //   {}
+    //   // virtual PrimType primType() const = 0;
       
-      const int geomID;
-      const int geomTypeID;
-    };
-    struct UserGeom : public Geom {
-      UserGeom(int geomID, int geomTypeID, size_t numPrims)
-        : Geom(geomID,geomTypeID),
-          numPrims(numPrims)
-      {}
-      // PrimType primType() const override { return USER; }
-      // void setPrimCount(size_t numPrims)
-      // {
-      //   assert("check size hasn't previously been set (changing not yet implemented...)"
-      //          && this->numPrims == 0);
-      //   this->numPrims = numPrims;
-      // }
+    //   const int geomID;
+    //   const int geomTypeID;
+    // };
+    // struct UserGeom : public Geom {
+    //   UserGeom(int geomID, int geomTypeID, size_t numPrims)
+    //     : Geom(geomID,geomTypeID),
+    //       numPrims(numPrims)
+    //   {}
+    //   // PrimType primType() const override { return USER; }
+    //   // void setPrimCount(size_t numPrims)
+    //   // {
+    //   //   assert("check size hasn't previously been set (changing not yet implemented...)"
+    //   //          && this->numPrims == 0);
+    //   //   this->numPrims = numPrims;
+    //   // }
       
-      DeviceMemory internalBufferForBoundsProgram;
-      size_t       numPrims      = 0;
-    };
+    //   DeviceMemory internalBufferForBoundsProgram;
+    //   size_t       numPrims      = 0;
+    // };
     // struct TrianglesGeom : public Geom {
     //   TrianglesGeom(int geomID, int geomTypeID)
     //     : Geom(geomID, geomTypeID)
@@ -475,13 +475,13 @@ namespace owl {
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         geoms that would get 'lost' have alreay been
         destroyed. */
-      void allocGeoms(size_t newCount)
-      {
-        for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)geoms.size();idxWeWouldLose++)
-          assert("alloc would lose a geom that was not properly destroyed" &&
-                 geoms[idxWeWouldLose] == nullptr);
-        geoms.resize(newCount);
-      }
+      // void allocGeoms(size_t newCount)
+      // {
+      //   for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)geoms.size();idxWeWouldLose++)
+      //     assert("alloc would lose a geom that was not properly destroyed" &&
+      //            geoms[idxWeWouldLose] == nullptr);
+      //   geoms.resize(newCount);
+      // }
 
       // void userGeomCreate(int geomID,
       //                     /*! the "logical" hit group ID:
@@ -597,13 +597,13 @@ namespace owl {
       //                                  size_t stride,
       //                                  size_t offset);
       
-      void destroyGeom(size_t ID)
-      {
-        assert("check for valid ID" && ID < geoms.size());
-        assert("check still valid"  && geoms[ID] != nullptr);
-        // set to null, which should automatically destroy
-        geoms[ID] = nullptr;
-      }
+      // void destroyGeom(size_t ID)
+      // {
+      //   assert("check for valid ID" && ID < geoms.size());
+      //   assert("check still valid"  && geoms[ID] != nullptr);
+      //   // set to null, which should automatically destroy
+      //   geoms[ID] = nullptr;
+      // }
 
       /*! for each valid program group, use optix to compile/build the
         actual program to an optix-usable form (i.e., this builds the
@@ -630,15 +630,15 @@ namespace owl {
       OptixTraversableHandle groupGetTraversable(int groupID);
       uint32_t groupGetSBTOffset(int groupID);
       
-      // accessor helpers:
-      Geom *checkGetGeom(int geomID)
-      {
-        assert("check valid geom ID" && geomID >= 0);
-        assert("check valid geom ID" && geomID <  geoms.size());
-        Geom *geom = geoms[geomID];
-        assert("check valid geom" && geom != nullptr);
-        return geom;
-      }
+      // // accessor helpers:
+      // Geom *checkGetGeom(int geomID)
+      // {
+      //   assert("check valid geom ID" && geomID >= 0);
+      //   assert("check valid geom ID" && geomID <  geoms.size());
+      //   Geom *geom = geoms[geomID];
+      //   assert("check valid geom" && geom != nullptr);
+      //   return geom;
+      // }
       LaunchParams *checkGetLaunchParams(int launchParamsID)
       {
         assert("check valid launchParams ID" && launchParamsID >= 0);
@@ -765,7 +765,7 @@ namespace owl {
       std::vector<RayGenPG>       rayGenPGs;
       std::vector<MissProgPG>     missProgPGs;
       std::vector<LaunchParams *> launchParams;
-      std::vector<Geom *>         geoms;
+      // std::vector<Geom *>         geoms;
       // std::vector<Group *>        groups;
       std::vector<Buffer *>       buffers;
       // std::vector<cudaTextureObject_t> textureObjects;

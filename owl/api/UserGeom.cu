@@ -71,25 +71,29 @@ namespace owl {
     int numThreads = 1024;
     int numBlocks = (primCount + numThreads - 1) / numThreads;
 
-    int oldActive = context->llo->devices[0]->pushActive();
-      
+    ll::Device *device = context->llo->devices[0];
+    int oldActive = device->pushActive();
+
     ll::DeviceMemory d_bounds;
     d_bounds.alloc(sizeof(box3f));
     bounds[0] = bounds[1] = box3f();
     d_bounds.upload(bounds);
 
-    ll::UserGeom *ug =
-      (ll::UserGeom *)context->llo->devices[0]->checkGetGeom(this->ID);
+    DeviceData &dd = getDD(device);
+    // ll::UserGeom *ug =
+    //   (ll::UserGeom *)context->llo->devices[0]->checkGetGeom(this->ID);
     
     computeBoundsOfPrimBounds<<<numBlocks,numThreads>>>
       (((box3f*)d_bounds.get())+0,
-       (box3f *)ug->internalBufferForBoundsProgram.get(),
+       (box3f *)dd.internalBufferForBoundsProgram.get(),
        primCount);
     CUDA_SYNC_CHECK();
     d_bounds.download(&bounds[0]);
     d_bounds.free();
     CUDA_SYNC_CHECK();
     bounds[1] = bounds[0];
+
+    device->popActive(oldActive);
   }
 
   UserGeomType::UserGeomType(Context *const context,

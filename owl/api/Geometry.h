@@ -22,9 +22,12 @@
 #include "Buffer.h"
 
 #include "ll/Device.h"
+#include "ll/DeviceMemory.h"
 
 namespace owl {
 
+  using ll::DeviceMemory;
+  
   struct Geom;
 
   struct ProgramDesc {
@@ -67,7 +70,7 @@ namespace owl {
       template<typename T>
       inline T *as() { return dynamic_cast<T*>(this); }
     };
-    
+
     Geom(Context *const context,
              GeomType::SP geometryType);
     virtual std::string toString() const { return "Geom"; }
