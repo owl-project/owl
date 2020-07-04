@@ -45,6 +45,8 @@
 
 
 namespace owl {
+
+
   
   InstanceGroup::InstanceGroup(Context *const context,
                                size_t numChildren,
@@ -401,7 +403,15 @@ namespace owl {
         
         motionTransforms[childID] = mt;
         std::cout <<" THIS IS WRONG:" << std::endl;
+
+#if 1
+        motionAABBs[childID]
+          = xfmBounds(transforms[0][childID],child->bounds[0]);
+        motionAABBs[childID].extend(xfmBounds(transforms[1][childID],child->bounds[1]));
+        PRINT(motionAABBs[childID]);
+#else
         motionAABBs[childID] = box3f(vec3f(-100.f),vec3f(+100.f));
+#endif
       }
       // and upload
       dd.motionTransformsBuffer.alloc(motionTransforms.size()*
