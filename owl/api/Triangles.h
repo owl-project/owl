@@ -52,7 +52,11 @@ namespace owl {
       CUdeviceptr indexPointer  = (CUdeviceptr)0;
     };
     
-    
+    /*! creates the device-specific data for this group */
+    Geom::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+
+
     inline DeviceData &getDD(ll::Device *device)
     {
       assert(device->ID < deviceData.size()); 

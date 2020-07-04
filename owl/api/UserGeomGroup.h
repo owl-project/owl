@@ -44,6 +44,10 @@ namespace owl {
     /*! low-level accel structure builder for given device */
     template<bool FULL_REBUILD>
     void buildAccelOn(ll::Device *device);
+
+    /*! creates the device-specific data for this group */
+    Group::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
     
   };
 

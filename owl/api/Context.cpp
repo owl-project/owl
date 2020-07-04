@@ -241,6 +241,9 @@ namespace owl {
 
   void Context::buildSBT(OWLBuildSBTFlags flags)
   {
+#if 1
+    throw std::runtime_error("todo: build sbt hit progs");
+#else
     // ----------- build hitgroups -----------
     if (flags & OWL_SBT_HITGROUPS)
     llo->sbtHitProgsBuild
@@ -249,7 +252,8 @@ namespace owl {
          assert(geom);
          geom->writeVariables(output,devID);
        });
-
+#endif
+    
     // ----------- build miss prog(s) -----------
     if (flags & OWL_SBT_MISSPROGS)
     llo->sbtMissProgsBuild

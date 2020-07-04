@@ -55,6 +55,11 @@ namespace owl {
       return *deviceData[device->ID]->as<UserGeom::DeviceData>();
     }
                         
+    /*! creates the device-specific data for this group */
+    Geom::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+
+
 
     UserGeom(Context *const context,
              GeomType::SP geometryType);

@@ -44,6 +44,10 @@ namespace owl {
     DeviceData &getDD(ll::Device *device)
     { assert(!empty(deviceData)); return *deviceData[device->ID]; }
     
+    /*! creates the device-specific data for this group */
+    Group::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+    
     /*! low-level accel structure builder for given device */
     template<bool FULL_REBUILD>
     void buildAccelOn(ll::Device *device);

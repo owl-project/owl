@@ -78,7 +78,7 @@ namespace owl {
     void createDeviceData(const std::vector<ll::Device *> &devices);
 
     /*! creates the device-specific data for this group */
-    virtual DeviceData::SP createOnDevice(ll::Device *device) = 0;
+    virtual DeviceData::SP createOn(ll::Device *device) = 0;
 
     std::vector<DeviceData::SP> deviceData;
     

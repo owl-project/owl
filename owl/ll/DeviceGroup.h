@@ -480,18 +480,18 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       }
       
       
-      template<typename Lambda>
-      void sbtHitProgsBuild(const Lambda &l)
-      {
-        this->sbtHitProgsBuild([](uint8_t *output,
-                                  int devID,
-                                  int geomID,
-                                  int childID,
-                                  const void *cbData) {
-                                 const Lambda *lambda = (const Lambda *)cbData;
-                                 (*lambda)(output,devID,geomID,childID);
-                               },(const void *)&l);
-      }
+      // template<typename Lambda>
+      // void sbtHitProgsBuild(const Lambda &l)
+      // {
+      //   this->sbtHitProgsBuild([](uint8_t *output,
+      //                             int devID,
+      //                             int geomID,
+      //                             int childID,
+      //                             const void *cbData) {
+      //                            const Lambda *lambda = (const Lambda *)cbData;
+      //                            (*lambda)(output,devID,geomID,childID);
+      //                          },(const void *)&l);
+      // }
 
       template<typename Lambda>
       void sbtRayGensBuild(const Lambda &l)

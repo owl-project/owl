@@ -32,9 +32,9 @@ namespace owl {
                                GeomType::SP geometryType)
     : Geom(context,geometryType)
   {
-    context->llo->trianglesGeomCreate(this->ID,geometryType->ID);
-    for (auto device : context->llo->devices)
-      llGeom.push_back((ll::TrianglesGeom*)device->checkGetGeom(this->ID));
+    // context->llo->trianglesGeomCreate(this->ID,geometryType->ID);
+    // for (auto device : context->llo->devices)
+    //   llGeom.push_back((ll::TrianglesGeom*)device->checkGetGeom(this->ID));
   }
 
   /*! set the vertex array (if vector size is 1), or set/enable
@@ -52,9 +52,9 @@ namespace owl {
     std::vector<int32_t> vertexBufferIDs(vertexArrays.size());
     for (int i=0;i<vertexArrays.size();i++)
       vertexBufferIDs[i] = vertexArrays[i]->ID;
-    for (auto device : context->llo->devices)
-      device->trianglesGeomSetVertexBuffers(this->ID,
-                                            vertexBufferIDs,count,stride,offset);
+    // for (auto device : context->llo->devices)
+    //   device->trianglesGeomSetVertexBuffers(this->ID,
+    //                                         vertexBufferIDs,count,stride,offset);
   }
   
   void TrianglesGeom::setIndices(Buffer::SP indices,
@@ -62,10 +62,13 @@ namespace owl {
                                  size_t stride,
                                  size_t offset)
   {
-    indexBuffer = indices;
-    for (auto device : context->llo->devices)
-      device->trianglesGeomSetIndexBuffer(this->ID,
-                                          indices->ID, count, stride, offset);
+    index.buffer = indices;
+    index.count  = count;
+    index.stride = stride;
+    index.offset = offset;
+    // for (auto device : context->llo->devices)
+    //   device->trianglesGeomSetIndexBuffer(this->ID,
+    //                                       indices->ID, count, stride, offset);
   }
 
 } //::owl
