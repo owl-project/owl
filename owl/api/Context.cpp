@@ -227,6 +227,7 @@ namespace owl {
     GeomType::SP self
       = std::dynamic_pointer_cast<GeomType>(shared_from_this());
     assert(self);
+
     return std::make_shared<UserGeom>(context,self);
   }
 

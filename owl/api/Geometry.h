@@ -75,7 +75,8 @@ namespace owl {
          GeomType::SP geomType);
     virtual std::string toString() const { return "Geom"; }
 
-    void createDeviceData(const std::vector<ll::Device *> &devices);
+    void createDeviceData(const std::vector<ll::Device *> &devices)
+    { for (auto device : devices) deviceData.push_back(createOn(device)); }
 
     /*! creates the device-specific data for this group */
     virtual DeviceData::SP createOn(ll::Device *device) = 0;

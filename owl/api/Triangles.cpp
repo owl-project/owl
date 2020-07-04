@@ -66,7 +66,8 @@ namespace owl {
     index.count  = count;
     index.stride = stride;
     index.offset = offset;
-    // for (auto device : context->llo->devices)
+    // for (auto device : context->llo->devices) {
+    // }
     //   device->trianglesGeomSetIndexBuffer(this->ID,
     //                                       indices->ID, count, stride, offset);
   }

@@ -765,6 +765,8 @@ namespace owl {
     Geom::SP geometry
       = geometryType->createGeom();
     assert(geometry);
+    geometry->createDeviceData(context->llo->devices);
+
 
     return (OWLGeom)context->createHandle(geometry);
   }
