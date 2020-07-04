@@ -73,7 +73,7 @@ namespace owl {
     LOG("context ramping up - creating low-level devicegroup");
     // ll = ll::DeviceGroup::create();
     llo = ll::DeviceGroup::create(requestedDeviceIDs,
-                              numRequestedDevices);
+                                  numRequestedDevices);
     LOG_OK("device group created");
   }
   
@@ -127,9 +127,9 @@ namespace owl {
     
 
   Buffer::SP
-      Context::graphicsBufferCreate(OWLDataType type,
-                                    size_t count,
-                                    cudaGraphicsResource_t resource)
+  Context::graphicsBufferCreate(OWLDataType type,
+                                size_t count,
+                                cudaGraphicsResource_t resource)
   {
     Buffer::SP buffer
       = std::make_shared<GraphicsBuffer>(this, type, count, resource);
@@ -242,106 +242,104 @@ namespace owl {
   void Context::buildHitGroupsOn(ll::Device *device)
   {
     LOG("building SBT hit group records");
-      int oldActive = device->pushActive();
-      // TODO: move this to explicit destroyhitgroups
-      if (device->sbt.hitGroupRecordsBuffer.alloced())
-        device->sbt.hitGroupRecordsBuffer.free();
+    int oldActive = device->pushActive();
+    // TODO: move this to explicit destroyhitgroups
+    if (device->sbt.hitGroupRecordsBuffer.alloced())
+      device->sbt.hitGroupRecordsBuffer.free();
 
-      size_t maxHitProgDataSize = 0;
-      for (int i=0;i<geoms.size();i++) {
-        Geom *geom = (Geom *)geoms.getPtr(i);
-        if (!geom) continue;
+    size_t maxHitProgDataSize = 0;
+    for (int i=0;i<geoms.size();i++) {
+      Geom *geom = (Geom *)geoms.getPtr(i);
+      if (!geom) continue;
         
-        assert(geom->geomType);
-        maxHitProgDataSize = std::max(maxHitProgDataSize,geom->geomType->varStructSize);
-      }
-      // for (int geomID=0;geomID<geoms.size();geomID++) {
-      //   Geom *geom = geoms[geomID];
-      //   if (!geom) continue;
-      //   GeomType &gt = geomTypes[geom->geomTypeID];
-      //   maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
-      // }
-      PING; PRINT(maxHitProgDataSize);
+      assert(geom->geomType);
+      maxHitProgDataSize = std::max(maxHitProgDataSize,geom->geomType->varStructSize);
+    }
+    // for (int geomID=0;geomID<geoms.size();geomID++) {
+    //   Geom *geom = geoms[geomID];
+    //   if (!geom) continue;
+    //   GeomType &gt = geomTypes[geom->geomTypeID];
+    //   maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
+    // }
+    PING; PRINT(maxHitProgDataSize);
       
-      // if (maxHitProgDataSize == size_t(-1))
-      //   throw std::runtime_error("in sbtHitProgsBuild: at least on geometry uses a type for which geomTypeCreate has not been called");
-      // assert("make sure all geoms had their program size set"
-      //        && maxHitProgDataSize != (size_t)-1);
-      size_t numHitGroupEntries = sbtRangeAllocator.maxAllocedID;
-      PRINT(numHitGroupEntries);
-      size_t numHitGroupRecords = numHitGroupEntries*numRayTypes;
-      size_t hitGroupRecordSize
-        = OPTIX_SBT_RECORD_HEADER_SIZE
-        + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
-      assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
-      device->sbt.hitGroupRecordSize = hitGroupRecordSize;
-      device->sbt.hitGroupRecordCount = numHitGroupRecords;
+    // if (maxHitProgDataSize == size_t(-1))
+    //   throw std::runtime_error("in sbtHitProgsBuild: at least on geometry uses a type for which geomTypeCreate has not been called");
+    // assert("make sure all geoms had their program size set"
+    //        && maxHitProgDataSize != (size_t)-1);
+    size_t numHitGroupEntries = sbtRangeAllocator.maxAllocedID;
+    PRINT(numHitGroupEntries);
+    size_t numHitGroupRecords = numHitGroupEntries*numRayTypes;
+    size_t hitGroupRecordSize
+      = OPTIX_SBT_RECORD_HEADER_SIZE
+      + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
+    assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
+    device->sbt.hitGroupRecordSize = hitGroupRecordSize;
+    device->sbt.hitGroupRecordCount = numHitGroupRecords;
 
-      size_t totalHitGroupRecordsArraySize
-        = numHitGroupRecords * hitGroupRecordSize;
-      std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
+    size_t totalHitGroupRecordsArraySize
+      = numHitGroupRecords * hitGroupRecordSize;
+    std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
 
-      // ------------------------------------------------------------------
-      // now, write all records (only on the host so far): we need to
-      // write one record per geometry, per ray type
-      // ------------------------------------------------------------------
-      for (int groupID=0;groupID<groups.size();groupID++) {
-        Group *group = groups.getPtr(groupID);
-        if (!group) continue;
-        GeomGroup *gg = dynamic_cast<GeomGroup *>(group);
-        if (!gg) continue;
+    // ------------------------------------------------------------------
+    // now, write all records (only on the host so far): we need to
+    // write one record per geometry, per ray type
+    // ------------------------------------------------------------------
+    for (int groupID=0;groupID<groups.size();groupID++) {
+      Group *group = groups.getPtr(groupID);
+      if (!group) continue;
+      GeomGroup *gg = dynamic_cast<GeomGroup *>(group);
+      if (!gg) continue;
         
-        const int sbtOffset = (int)gg->sbtOffset;
-        for (int childID=0;childID<gg->geometries.size();childID++) {
-          Geom::SP geom = gg->geometries[childID];
-          if (!geom) continue;
+      const int sbtOffset = (int)gg->sbtOffset;
+      for (int childID=0;childID<gg->geometries.size();childID++) {
+        Geom::SP geom = gg->geometries[childID];
+        if (!geom) continue;
           
-          // const int geomID    = geom->ID;
-          for (int rayTypeID=0;rayTypeID<numRayTypes;rayTypeID++) {
-            // ------------------------------------------------------------------
-            // compute pointer to entire record:
-            // ------------------------------------------------------------------
-            const int recordID
-              = (sbtOffset+childID)*numRayTypes + rayTypeID;
-            assert(recordID < numHitGroupRecords);
-            uint8_t *const sbtRecord
-              = hitGroupRecords.data() + recordID*hitGroupRecordSize;
+        // const int geomID    = geom->ID;
+        for (int rayTypeID=0;rayTypeID<numRayTypes;rayTypeID++) {
+          // ------------------------------------------------------------------
+          // compute pointer to entire record:
+          // ------------------------------------------------------------------
+          const int recordID
+            = (sbtOffset+childID)*numRayTypes + rayTypeID;
+          assert(recordID < numHitGroupRecords);
+          uint8_t *const sbtRecord
+            = hitGroupRecords.data() + recordID*hitGroupRecordSize;
 
-            // ------------------------------------------------------------------
-            // pack record header with the corresponding hit group:
-            // ------------------------------------------------------------------
-            // first, compute pointer to record:
-            char    *const sbtRecordHeader = (char *)sbtRecord;
-            // then, get gemetry we want to write (to find its hit group ID)...
-            // const Geom *const geom = checkGetGeom(geomID);
-            // ... find the PG that goes into the record header...
-            auto &geomType = device->geomTypes[geom->geomType->ID];
-            const ll::HitGroupPG &hgPG
-              = geomType.perRayType[rayTypeID];
-            // ... and tell optix to write that into the record
-            OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
+          // ------------------------------------------------------------------
+          // pack record header with the corresponding hit group:
+          // ------------------------------------------------------------------
+          // first, compute pointer to record:
+          char    *const sbtRecordHeader = (char *)sbtRecord;
+          // then, get gemetry we want to write (to find its hit group ID)...
+          // const Geom *const geom = checkGetGeom(geomID);
+          // ... find the PG that goes into the record header...
+          auto &geomType = device->geomTypes[geom->geomType->ID];
+          const ll::HitGroupPG &hgPG
+            = geomType.perRayType[rayTypeID];
+          // ... and tell optix to write that into the record
+          OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
           
-            // ------------------------------------------------------------------
-            // finally, let the user fill in the record's payload using
-            // the callback
-            // ------------------------------------------------------------------
-            uint8_t *const sbtRecordData
-              = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
-            geom->writeVariables(sbtRecordData,device->ID);
-            // writeHitProgDataCB(sbtRecordData,
-            //                    context->owlDeviceID,
-            //                    geomID,
-            //                    rayTypeID,
-            //                    callBackUserData);
-          }
+          // ------------------------------------------------------------------
+          // finally, let the user fill in the record's payload using
+          // the callback
+          // ------------------------------------------------------------------
+          uint8_t *const sbtRecordData
+            = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
+          geom->writeVariables(sbtRecordData,device->ID);
+          // writeHitProgDataCB(sbtRecordData,
+          //                    context->owlDeviceID,
+          //                    geomID,
+          //                    rayTypeID,
+          //                    callBackUserData);
         }
       }
-      device->sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
-      device->sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
-      device->popActive(oldActive);
-      LOG_OK("done building (and uploading) SBT hit group records");
-
-      throw std::runtime_error("todo: build sbt hit progs");
+    }
+    device->sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
+    device->sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
+    device->popActive(oldActive);
+    LOG_OK("done building (and uploading) SBT hit group records");
   }
   
   void Context::buildSBT(OWLBuildSBTFlags flags)
@@ -353,46 +351,46 @@ namespace owl {
 #else
     // ----------- build hitgroups -----------
     if (flags & OWL_SBT_HITGROUPS)
-    llo->sbtHitProgsBuild
-      ([&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
-         const Geom *geom = geoms.getPtr(geomID);
-         assert(geom);
-         geom->writeVariables(output,devID);
-       });
+      llo->sbtHitProgsBuild
+        ([&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
+          const Geom *geom = geoms.getPtr(geomID);
+          assert(geom);
+          geom->writeVariables(output,devID);
+        });
 #endif
     
     // ----------- build miss prog(s) -----------
     if (flags & OWL_SBT_MISSPROGS)
-    llo->sbtMissProgsBuild
-      ([&](uint8_t *output,
-           int devID,
-           int rayTypeID) {
-         // TODO: eventually, we want to be able to 'assign' miss progs
-         // to different ray types, in which case we ahve to be able to
-         // look up wich miss prog is used for a given ray types - for
-         // now, we assume miss progs are created in exactly the right
-         // order ...
-         int missProgID = rayTypeID;
-         const MissProg *missProg = missProgs.getPtr(missProgID);
-         assert(missProg);
-         missProg->writeVariables(output,devID);
-       });
+      llo->sbtMissProgsBuild
+        ([&](uint8_t *output,
+             int devID,
+             int rayTypeID) {
+          // TODO: eventually, we want to be able to 'assign' miss progs
+          // to different ray types, in which case we ahve to be able to
+          // look up wich miss prog is used for a given ray types - for
+          // now, we assume miss progs are created in exactly the right
+          // order ...
+          int missProgID = rayTypeID;
+          const MissProg *missProg = missProgs.getPtr(missProgID);
+          assert(missProg);
+          missProg->writeVariables(output,devID);
+        });
 
     // ----------- build raygens -----------
     if (flags & OWL_SBT_RAYGENS)
-    llo->sbtRayGensBuild
-      ([&](uint8_t *output,
-           int devID,
-           int rgID) {
+      llo->sbtRayGensBuild
+        ([&](uint8_t *output,
+             int devID,
+             int rgID) {
 
-         // TODO: need the ID of the miss prog we're writing!
-         int rayGenID = rgID;
-         assert(rayGens.size() >= 1);
+          // TODO: need the ID of the miss prog we're writing!
+          int rayGenID = rgID;
+          assert(rayGens.size() >= 1);
          
-         const RayGen *rayGen = rayGens.getPtr(rayGenID);
-         assert(rayGen);
-         rayGen->writeVariables(output,devID);
-       });
+          const RayGen *rayGen = rayGens.getPtr(rayGenID);
+          assert(rayGen);
+          rayGen->writeVariables(output,devID);
+        });
   
   }
 
