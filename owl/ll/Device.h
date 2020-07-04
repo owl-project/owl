@@ -627,8 +627,8 @@ namespace owl {
       /*! return given group's current traversable. note this function
         will *not* check if the group has alreadybeen built, if it
         has to be rebuilt, etc. */
-      OptixTraversableHandle groupGetTraversable(int groupID);
-      uint32_t groupGetSBTOffset(int groupID);
+      // OptixTraversableHandle groupGetTraversable(int groupID);
+      // uint32_t groupGetSBTOffset(int groupID);
       
       // // accessor helpers:
       // Geom *checkGetGeom(int geomID)
@@ -733,10 +733,10 @@ namespace owl {
           primitive bounds array required for building the
           acceleration structure by executing the device-side bounding
           box program */
-      void groupBuildPrimitiveBounds(int groupID,
-                                     size_t maxGeomDataSize,
-                                     LLOWriteUserGeomBoundsDataCB cb,
-                                     const void *cbData);
+      // void groupBuildPrimitiveBounds(int groupID,
+      //                                size_t maxGeomDataSize,
+      //                                LLOWriteUserGeomBoundsDataCB cb,
+      //                                const void *cbData);
       // void sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
       //                       const void *callBackUserData);
       void sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,

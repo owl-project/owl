@@ -554,15 +554,15 @@ namespace owl {
     //   // }
     // }
 
-    uint32_t DeviceGroup::groupGetSBTOffset(int groupID)
-    {
-      return devices[0]->groupGetSBTOffset(groupID);
-    }
+    // uint32_t DeviceGroup::groupGetSBTOffset(int groupID)
+    // {
+    //   return devices[0]->groupGetSBTOffset(groupID);
+    // }
 
-    OptixTraversableHandle DeviceGroup::groupGetTraversable(int groupID, int deviceID)
-    {
-      return checkGetDevice(deviceID)->groupGetTraversable(groupID);
-    }
+    // OptixTraversableHandle DeviceGroup::groupGetTraversable(int groupID, int deviceID)
+    // {
+    //   return checkGetDevice(deviceID)->groupGetTraversable(groupID);
+    // }
 
     // void DeviceGroup::sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
     //                                    const void *callBackData)
@@ -597,17 +597,17 @@ namespace owl {
                                   callBackData);
     }
 
-    void DeviceGroup::groupBuildPrimitiveBounds(int groupID,
-                                                size_t maxGeomDataSize,
-                                                LLOWriteUserGeomBoundsDataCB cb,
-                                                const void *cbData)
-    {
-        for (auto device : devices) 
-          device->groupBuildPrimitiveBounds(groupID,
-                                            maxGeomDataSize,
-                                            cb,
-                                            cbData);
-    }
+    // void DeviceGroup::groupBuildPrimitiveBounds(int groupID,
+    //                                             size_t maxGeomDataSize,
+    //                                             LLOWriteUserGeomBoundsDataCB cb,
+    //                                             const void *cbData)
+    // {
+    //     for (auto device : devices) 
+    //       device->groupBuildPrimitiveBounds(groupID,
+    //                                         maxGeomDataSize,
+    //                                         cb,
+    //                                         cbData);
+    // }
 
     // /*! set given child to {childGroupID+xfm}  */
     // void DeviceGroup::instanceGroupSetChild(int groupID,

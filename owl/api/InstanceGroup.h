@@ -44,7 +44,9 @@ namespace owl {
     void refitAccel() override;
 
     /*! creates the device-specific data for this group */
-    DeviceData::SP createOn(ll::Device *device) override;
+    Group::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+    
     
 
     virtual std::string toString() const { return "InstanceGroup"; }

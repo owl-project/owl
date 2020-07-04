@@ -147,7 +147,7 @@ namespace owl {
     {
       const OptixTraversableHandle value
         = group
-        ? group->context->llo->groupGetTraversable(group->ID,deviceID)
+        ? group->getTraversable(deviceID)//context->llo->groupGetTraversable(group->ID,deviceID)
         : 0;
       *(OptixTraversableHandle*)sbtEntry = value;
     }

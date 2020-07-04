@@ -48,9 +48,9 @@ namespace owl {
     virtual std::string toString() const { return "Group"; }
     virtual void buildAccel() = 0;
     virtual void refitAccel() = 0;
-
+    
     OptixTraversableHandle getTraversable(int deviceID)
-    { return deviceData[deviceID]->traversable; }
+    { assert(deviceID < deviceData.size()); return deviceData[deviceID]->traversable; }
     
     void createDeviceData(const std::vector<ll::Device *> &devices);
 

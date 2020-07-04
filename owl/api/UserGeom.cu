@@ -109,8 +109,8 @@ namespace owl {
                      GeomType::SP geometryType)
     : Geom(context,geometryType)
   {
-    int numPrims = 0;
-    context->llo->userGeomCreate(this->ID,geometryType->ID,numPrims);
+    // int numPrims = 0;
+    // context->llo->userGeomCreate(this->ID,geometryType->ID,numPrims);
   }
 
   void UserGeom::setPrimCount(size_t count)
@@ -150,4 +150,71 @@ namespace owl {
                                 );
   }
 
+
+  /*! run the bounding box program for all primitives within this geometry */
+  void UserGeom::executeBoundsProgOnPrimitives(ll::Device *device)
+  {
+    int oldActive = device->pushActive();
+      
+    std::vector<uint8_t> userGeomData(geomType->varStructSize);
+    DeviceMemory tempMem;
+    tempMem.alloc(geomType->varStructSize);
+    
+    // for (int childID=0;childID<ugg->children.size();childID++) {
+    //   UserGeom::SP child = geometry[childID]->as<UserGeom>();
+    // assert(child);
+    UserGeom::DeviceData &ugDD = getDD(device);
+    ugDD.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
+      // = ug->internalBufferForBoundsProgram.get();
+
+      writeVariables(userGeomData.data(),device->ID);
+      // cb(userGeomData.data(),context->owlDeviceID,
+      //    ug->geomID,childID,cbData); 
+        
+      // size of each thread block during bounds function call
+      vec3i blockDims(32,32,1);
+      uint32_t threadsPerBlock = blockDims.x*blockDims.y*blockDims.z;
+        
+      uint32_t numBlocks = owl::common::divRoundUp((uint32_t)primCount,threadsPerBlock);
+      uint32_t numBlocks_x
+        = 1+uint32_t(powf((float)numBlocks,1.f/3.f));
+      uint32_t numBlocks_y
+        = 1+uint32_t(sqrtf((float)(numBlocks/numBlocks_x)));
+      uint32_t numBlocks_z
+        = owl::common::divRoundUp(numBlocks,numBlocks_x*numBlocks_y);
+        
+      vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
+        
+      tempMem.upload(userGeomData);
+        
+      void  *d_geomData = tempMem.get();//nullptr;
+      vec3f *d_boundsArray = (vec3f*)ugDD.internalBufferForBoundsProgram.get();
+      void  *args[] = {
+        &d_geomData,
+        &d_boundsArray,
+        (void *)&primCount
+      };
+        
+      ll::GeomType *gt = device->checkGetGeomType(geomType->ID);//ug->geomTypeID);
+      CUstream stream = device->context->stream;
+      if (!gt->boundsFuncKernel)
+        throw std::runtime_error("bounds kernel set, but not yet compiled - did you forget to call BuildPrograms() before (User)GroupAccelBuild()!?");
+        
+      CUresult rc
+        = cuLaunchKernel(gt->boundsFuncKernel,
+                         gridDims.x,gridDims.y,gridDims.z,
+                         blockDims.x,blockDims.y,blockDims.z,
+                         0, stream, args, 0);
+      if (rc) {
+        const char *errName = 0;
+        cuGetErrorName(rc,&errName);
+        PRINT(errName);
+        exit(0);
+      }
+    // }
+    tempMem.free();
+    cudaDeviceSynchronize();
+    device->popActive(oldActive);
+  }
+  
 } // ::owl

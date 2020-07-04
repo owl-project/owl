@@ -72,7 +72,7 @@ namespace owl {
     };
 
     Geom(Context *const context,
-             GeomType::SP geometryType);
+         GeomType::SP geomType);
     virtual std::string toString() const { return "Geom"; }
 
     void createDeviceData(const std::vector<ll::Device *> &devices);
@@ -82,7 +82,7 @@ namespace owl {
 
     std::vector<DeviceData::SP> deviceData;
     
-    GeomType::SP geometryType;
+    GeomType::SP geomType;
   };
 
 } // ::owl

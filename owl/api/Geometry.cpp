@@ -33,7 +33,7 @@ namespace owl {
   
   Geom::Geom(Context *const context,
              GeomType::SP geomType)
-    : SBTObject(context,context->geoms,geomType)
+    : SBTObject(context,context->geoms,geomType), geomType(geomType)
   {
     assert(geomType);
   }

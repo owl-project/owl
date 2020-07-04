@@ -329,26 +329,26 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
         destroyed */
       // void allocGeoms(size_t newCount);
 
-      void trianglesGeomCreate(int geomID,
-                               /*! the "logical" hit group ID:
-                                 will always count 0,1,2... evne
-                                 if we are using multiple ray
-                                 types; the actual hit group
-                                 used when building the SBT will
-                                 then be 'geomTypeID *
-                                 rayTypeCount) */
-                               int geomTypeID);
+      // void trianglesGeomCreate(int geomID,
+      //                          /*! the "logical" hit group ID:
+      //                            will always count 0,1,2... evne
+      //                            if we are using multiple ray
+      //                            types; the actual hit group
+      //                            used when building the SBT will
+      //                            then be 'geomTypeID *
+      //                            rayTypeCount) */
+      //                          int geomTypeID);
       
-      void userGeomCreate(int geomID,
-                          /*! the "logical" hit group ID:
-                            will always count 0,1,2... evne
-                            if we are using multiple ray
-                            types; the actual hit group
-                            used when building the SBT will
-                            then be 'geomTypeID *
-                            rayTypeCount) */
-                          int geomTypeID,
-                          size_t numPrims);
+      // void userGeomCreate(int geomID,
+      //                     /*! the "logical" hit group ID:
+      //                       will always count 0,1,2... evne
+      //                       if we are using multiple ray
+      //                       types; the actual hit group
+      //                       used when building the SBT will
+      //                       then be 'geomTypeID *
+      //                       rayTypeCount) */
+      //                     int geomTypeID,
+      //                     size_t numPrims);
 
       /*! create a new group object (with an associated BVH) over
         triangle geometries. All geomIDs in this group must be
@@ -447,14 +447,14 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       // void groupBuildAccel(int groupID);
       // void groupRefitAccel(int groupID);
       
-      OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
-      uint32_t groupGetSBTOffset(int groupID);
+      // OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
+      // uint32_t groupGetSBTOffset(int groupID);
 
 
-      void groupBuildPrimitiveBounds(int groupID,
-                                     size_t maxGeomDataSize,
-                                     LLOWriteUserGeomBoundsDataCB cb,
-                                     const void *cbData);
+      // void groupBuildPrimitiveBounds(int groupID,
+      //                                size_t maxGeomDataSize,
+      //                                LLOWriteUserGeomBoundsDataCB cb,
+      //                                const void *cbData);
       // void sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
       //                       const void *callBackData);
       void sbtRayGensBuild(LLOWriteRayGenDataCB WriteRayGenDataCB,
@@ -462,22 +462,22 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       void sbtMissProgsBuild(LLOWriteMissProgDataCB WriteMissProgDataCB,
                              const void *callBackData);
       
-      template<typename Lambda>
-      void groupBuildPrimitiveBounds(int groupID,
-                                     size_t maxGeomDataSize,
-                                     const Lambda &l)
-      {
-        groupBuildPrimitiveBounds
-          (groupID,maxGeomDataSize,
-           [](uint8_t *output,
-              int devID,
-              int geomID,
-              int childID,
-              const void *cbData) {
-            const Lambda *lambda = (const Lambda *)cbData;
-            (*lambda)(output,devID,geomID,childID);
-          },(const void *)&l);
-      }
+      // template<typename Lambda>
+      // void groupBuildPrimitiveBounds(int groupID,
+      //                                size_t maxGeomDataSize,
+      //                                const Lambda &l)
+      // {
+      //   groupBuildPrimitiveBounds
+      //     (groupID,maxGeomDataSize,
+      //      [](uint8_t *output,
+      //         int devID,
+      //         int geomID,
+      //         int childID,
+      //         const void *cbData) {
+      //       const Lambda *lambda = (const Lambda *)cbData;
+      //       (*lambda)(output,devID,geomID,childID);
+      //     },(const void *)&l);
+      // }
       
       
       // template<typename Lambda>

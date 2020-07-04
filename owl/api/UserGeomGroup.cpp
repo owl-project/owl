@@ -51,7 +51,8 @@ namespace owl {
     for (auto child : geometries) {
       UserGeom::SP userGeom = child->as<UserGeom>();
       assert(userGeom);
-      userGeom->executeBoundsProgOnPrimitives();
+      for (auto device : context->llo->devices)
+        userGeom->executeBoundsProgOnPrimitives(device);
     }
     
     for (auto device : context->llo->devices)
@@ -93,6 +94,15 @@ namespace owl {
     int oldActive = device->pushActive();
     LOG("building user accel over "
         << geometries.size() << " geometries");
+
+    size_t sumPrims = 0;
+    uint32_t maxPrimsPerGAS = 0;
+    optixDeviceContextGetProperty
+      (device->context->optixContext,
+       OPTIX_DEVICE_PROPERTY_LIMIT_MAX_PRIMITIVES_PER_GAS,
+       &maxPrimsPerGAS,
+       sizeof(maxPrimsPerGAS));
+    
     // ==================================================================
     // create triangle inputs
     // ==================================================================
@@ -112,7 +122,12 @@ namespace owl {
 
       UserGeom::SP child = geometries[childID]->as<UserGeom>();
       assert(child);
-      
+
+      sumPrims += child->primCount;
+      if (sumPrims > maxPrimsPerGAS) 
+        throw std::runtime_error("number of prim in user geom group exceeds "
+                                 "OptiX's MAX_PRIMITIVES_PER_GAS limit");
+
       UserGeom::DeviceData &ugDD = child->getDD(device);
       
       CUdeviceptr     &d_bounds = boundsPointers[childID];
@@ -235,13 +250,13 @@ namespace owl {
 
     LOG_OK("successfully built user geom group accel");
 
-    size_t sumPrims = 0;
+    // size_t sumPrims = 0;
     size_t sumBoundsMem = 0;
     for (int childID=0;childID<geometries.size();childID++) {
       UserGeom::SP child = geometries[childID]->as<UserGeom>();
       assert(child);
       
-      sumPrims += child->primCount;
+      // sumPrims += child->primCount;
       
       UserGeom::DeviceData &ugDD = child->getDD(device);
       
