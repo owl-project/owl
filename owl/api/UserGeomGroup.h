@@ -39,7 +39,7 @@ namespace owl {
     void refitAccel() override;
 
     DeviceData &getDD(ll::Device *device)
-    { assert(!empty(deviceData)); return *deviceData[device->ID]; }
+    { assert(device->ID < deviceData.size()); return *deviceData[device->ID]; }
 
     /*! low-level accel structure builder for given device */
     template<bool FULL_REBUILD>

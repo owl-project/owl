@@ -95,11 +95,13 @@ namespace owl {
   template<bool FULL_REBUILD>
   void TrianglesGeomGroup::buildAccelOn(ll::Device *device) 
   {
-    assert("check does not yet exist" && ll->traversable == 0);
+    DeviceData &dd = getDD(device);
+
+    assert("check does not yet exist" && dd.traversable == 0);
     if (FULL_REBUILD)
-      assert("check does not yet exist on first build" && ll->bvhMemory.empty());
+      assert("check does not yet exist on first build" && dd.bvhMemory.empty());
     else
-      assert("check DOES exist on refit" && !ll->bvhMemory.empty());
+      assert("check DOES exist on refit" && !dd.bvhMemory.empty());
       
     int oldActive = device->pushActive();
     LOG("building triangles accel over "
@@ -113,7 +115,6 @@ namespace owl {
        &maxPrimsPerGAS,
        sizeof(maxPrimsPerGAS));
 
-    DeviceData &dd = getDD(device);
     assert(!geometries.empty());
     TrianglesGeom::SP child0 = geometries[0]->as<TrianglesGeom>();
     assert(child0);

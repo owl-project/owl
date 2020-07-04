@@ -42,7 +42,7 @@ namespace owl {
     void updateMotionBounds();
 
     DeviceData &getDD(ll::Device *device)
-    { assert(!empty(deviceData)); return *deviceData[device->ID]; }
+    { assert(device->ID < deviceData.size()); return *deviceData[device->ID]; }
     
     /*! creates the device-specific data for this group */
     Group::DeviceData::SP createOn(ll::Device *device) override
