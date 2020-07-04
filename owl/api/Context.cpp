@@ -274,6 +274,8 @@ namespace owl {
     size_t hitGroupRecordSize
       = OPTIX_SBT_RECORD_HEADER_SIZE
       + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
+    PRINT(hitGroupRecordSize);
+    
     assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
     device->sbt.hitGroupRecordSize = hitGroupRecordSize;
     device->sbt.hitGroupRecordCount = numHitGroupRecords;
@@ -293,6 +295,7 @@ namespace owl {
       if (!gg) continue;
         
       const int sbtOffset = (int)gg->sbtOffset;
+      PING; PRINT(groupID); PRINT(sbtOffset);
       for (int childID=0;childID<gg->geometries.size();childID++) {
         Geom::SP geom = gg->geometries[childID];
         if (!geom) continue;
@@ -329,6 +332,9 @@ namespace owl {
           uint8_t *const sbtRecordData
             = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
           geom->writeVariables(sbtRecordData,device->ID);
+
+          std::cout << " writing geom " << geom->toString()
+                    << " raytype " << rayTypeID << " to offset " << recordID*hitGroupRecordSize << std::endl;
           // writeHitProgDataCB(sbtRecordData,
           //                    context->owlDeviceID,
           //                    geomID,
@@ -339,6 +345,7 @@ namespace owl {
     }
     device->sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
     device->sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
+    PING; PRINT((void *)device->sbt.hitGroupRecordsBuffer.get());
     device->popActive(oldActive);
     LOG_OK("done building (and uploading) SBT hit group records");
   }

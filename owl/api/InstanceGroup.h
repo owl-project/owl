@@ -23,6 +23,20 @@ namespace owl {
   struct InstanceGroup : public Group {
     typedef std::shared_ptr<InstanceGroup> SP;
     
+    /*! any device-specific data, such as optix handles, cuda device
+        pointers, etc */
+    struct DeviceData : public Group::DeviceData {
+      typedef std::shared_ptr<DeviceData> SP;
+      
+      DeviceMemory optixInstanceBuffer;
+
+      /*! if we use motion blur, this is used to store all the motoin transforms */
+      DeviceMemory motionTransformsBuffer;
+      DeviceMemory motionAABBsBuffer;
+      DeviceMemory outputBuffer;
+    };
+
+
     InstanceGroup(Context *const context,
                   size_t numChildren,
                   Group::SP      *groups);
@@ -48,7 +62,7 @@ namespace owl {
     { return std::make_shared<DeviceData>(); }
     
     DeviceData &getDD(ll::Device *device)
-    { assert(device->ID < deviceData.size()); return *deviceData[device->ID]; }
+    { assert(device->ID < deviceData.size()); return *deviceData[device->ID]->as<InstanceGroup::DeviceData>(); }
     
     template<bool FULL_REBUILD>
     void staticBuildOn(ll::Device *device);

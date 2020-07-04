@@ -144,7 +144,7 @@ namespace owl {
     for (int childID=0;childID<geometries.size();childID++) {
        
       // the child wer're setting them with (with sanity checks)
-      TrianglesGeom::SP tris = geometries[0]->as<TrianglesGeom>();
+      TrianglesGeom::SP tris = geometries[childID]->as<TrianglesGeom>();
       assert(tris);
       
       if (tris->vertex.buffers.size() != numKeys)
@@ -177,6 +177,7 @@ namespace owl {
       // sanity check that we don't have too many prims
       // -------------------------------------------------------
       sumPrims += ta.numIndexTriplets;
+      PRINT(ta.numIndexTriplets);
       // we always have exactly one SBT entry per shape (i.e., triangle
       // mesh), and no per-primitive materials:
       triangleInputFlags[childID]    = 0;

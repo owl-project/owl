@@ -1420,6 +1420,7 @@ namespace owl {
         = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
                                         rgID * sbt.rayGenRecordSize);
 
+      PING;
       if (!sbt.missProgRecordsBuffer.alloced() &&
           !sbt.hitGroupRecordsBuffer.alloced()) {
         // apparently this program does not have any hit records *or*
@@ -1432,6 +1433,7 @@ namespace owl {
 #ifndef NDEBUG
         static WarnOnce warn("launching an optix pipeline that has neither miss nor hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
 #endif
+      PING;
         localSBT.missRecordBase
           = (CUdeviceptr)32;
         localSBT.missRecordStrideInBytes
@@ -1446,6 +1448,7 @@ namespace owl {
         localSBT.hitgroupRecordCount
           = 1;
       } else {
+        PING;
         assert("check miss records built" && sbt.missProgRecordCount != 0);
         localSBT.missRecordBase
           = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
@@ -1468,6 +1471,11 @@ namespace owl {
         sbt.launchParamsBuffer.alloc(8);
       }
 
+      PRINT((int*)localSBT.hitgroupRecordBase);
+      PRINT((int*)sbt.launchParamsBuffer.get());
+      PRINT(sbt.hitGroupRecordSize);
+      PRINT(sbt.hitGroupRecordCount);
+      
       // launchParamsBuffer.upload((void *)device_launchParams);
       OPTIX_CALL(Launch(context->pipeline,
                         context->stream,

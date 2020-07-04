@@ -269,6 +269,10 @@ namespace owl {
       if (ugDD.internalBufferForBoundsProgram.alloced())
         ugDD.internalBufferForBoundsProgram.free();
     }
+
+
+    CUDA_SYNC_CHECK();
+
     // dbgPrintBVHSizes(/*numItems*/
     //                  sumPrims,
     //                  /*boundsArraySize*/

@@ -59,6 +59,7 @@ namespace owl {
       geometries(numChildren),
       sbtOffset(context->sbtRangeAllocator.alloc(numChildren))
   {
+    PING; PRINT(sbtOffset);
   }
   
   GeomGroup::~GeomGroup()

@@ -220,16 +220,17 @@ namespace owl {
       oi.instanceId        = (instanceIDs.empty())?childID:instanceIDs[childID];
       oi.visibilityMask    = 255;
       oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
+      PRINT(oi.sbtOffset);
       oi.visibilityMask    = 255;
       oi.traversableHandle = child->getTraversable(device);
-
+      assert(oi.traversableHandle);
+      
       optixInstances[childID] = oi;
     }
 
-    DeviceMemory optixInstanceBuffer;
-    optixInstanceBuffer.alloc(optixInstances.size()*
-                              sizeof(optixInstances[0]));
-    optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
+    dd.optixInstanceBuffer.alloc(optixInstances.size()*
+                                 sizeof(optixInstances[0]));
+    dd.optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
     
     // ==================================================================
     // set up build input
@@ -237,7 +238,7 @@ namespace owl {
     instanceInput.type
       = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
     instanceInput.instanceArray.instances
-      = (CUdeviceptr)optixInstanceBuffer.get();
+      = (CUdeviceptr)dd.optixInstanceBuffer.get();
     instanceInput.instanceArray.numInstances
       = (int)optixInstances.size();
       

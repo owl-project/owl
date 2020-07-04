@@ -35,6 +35,11 @@ namespace owl {
         pointers, etc */
     struct DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
+
+      virtual ~DeviceData() {}
+      
+      template<typename T>
+      inline T *as() { return dynamic_cast<T*>(this); }
       
       OptixTraversableHandle traversable = 0;
       DeviceMemory           bvhMemory;
