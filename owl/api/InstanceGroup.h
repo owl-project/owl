@@ -47,10 +47,16 @@ namespace owl {
     Group::DeviceData::SP createOn(ll::Device *device) override
     { return std::make_shared<DeviceData>(); }
     
+    DeviceData &getDD(ll::Device *device)
+    { assert(device->ID < deviceData.size()); return *deviceData[device->ID]; }
     
+    template<bool FULL_REBUILD>
+    void staticBuildOn(ll::Device *device);
 
     virtual std::string toString() const { return "InstanceGroup"; }
 
+    int getSBTOffset() const override { return 0; }
+    
     /*! the list of children - note we do have to keep them both in
         the ll layer _and_ here for the refcounting to work; the
         transforms are only stored once, on the ll layer */

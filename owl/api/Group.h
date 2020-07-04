@@ -28,6 +28,8 @@ namespace owl {
   /*! any sort of group */
   struct Group : public RegisteredObject {
     typedef std::shared_ptr<Group> SP;
+
+    virtual int getSBTOffset() const = 0;
     
     /*! any device-specific data, such as optix handles, cuda device
         pointers, etc */
@@ -50,8 +52,10 @@ namespace owl {
     virtual void buildAccel() = 0;
     virtual void refitAccel() = 0;
     
-    OptixTraversableHandle getTraversable(int deviceID)
+    OptixTraversableHandle getTraversable(int deviceID) const
     { assert(deviceID < deviceData.size()); return deviceData[deviceID]->traversable; }
+    OptixTraversableHandle getTraversable(const ll::Device *device) const
+    { return getTraversable(device->ID); }
     
     void createDeviceData(const std::vector<ll::Device *> &devices);
 
@@ -75,6 +79,8 @@ namespace owl {
     
     void setChild(int childID, Geom::SP child);
     
+    int getSBTOffset() const override { return sbtOffset; }
+
     virtual std::string toString() const { return "GeomGroup"; }
     std::vector<Geom::SP> geometries;
     const int sbtOffset;

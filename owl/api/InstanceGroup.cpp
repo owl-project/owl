@@ -17,6 +17,32 @@
 #include "InstanceGroup.h"
 #include "Context.h"
 #include "ll/Device.h"
+#include <fstream>
+
+#define LOG(message)                                    \
+  if (Context::logging())                               \
+    std::cout << "#owl.ll(" << device->ID << "): "      \
+              << message                                \
+              << std::endl
+
+#define LOG_OK(message)                                         \
+  if (Context::logging())                                       \
+    std::cout << OWL_TERMINAL_GREEN                             \
+              << "#owl.ll(" << device->ID << "): "              \
+              << message << OWL_TERMINAL_DEFAULT << std::endl
+
+#define CLOG(message)                                   \
+  if (Context::logging())                               \
+    std::cout << "#owl.ll(" << device->ID << "): "      \
+              << message                                \
+              << std::endl
+
+#define CLOG_OK(message)                                        \
+  if (Context::logging())                                       \
+    std::cout << OWL_TERMINAL_GREEN                             \
+              << "#owl.ll(" << device->ID << "): "              \
+              << message << OWL_TERMINAL_DEFAULT << std::endl
+
 
 namespace owl {
   
@@ -88,6 +114,8 @@ namespace owl {
   
   void InstanceGroup::setChild(int childID, Group::SP child)
   {
+    PING; PRINT(childID); PRINT(child);
+    
     assert(childID >= 0);
     assert(childID < children.size());
     children[childID] = child;
@@ -98,7 +126,10 @@ namespace owl {
 
   void InstanceGroup::buildAccel()
   {
-    throw std::runtime_error("not yet ported");
+    for (auto device : context->llo->devices)
+      staticBuildOn<true>(device);
+    
+    // throw std::runtime_error("not yet ported");
     // for (auto device : context->llo->devices)
     //   device->groupBuildAccel(this->ID);
   }
@@ -109,5 +140,190 @@ namespace owl {
     // for (auto device : context->llo->devices)
     //   device->groupRefitAccel(this->ID);
   }
+
+
+
+
+
+  template<bool FULL_REBUILD>
+  void InstanceGroup::staticBuildOn(ll::Device *device) 
+  {
+    DeviceData &dd = getDD(device);
+    auto optixContext = device->context->optixContext;
+    
+    if (FULL_REBUILD) {
+      assert("check does not yet exist" && dd.traversable == 0);
+      assert("check does not yet exist" && dd.bvhMemory.empty());
+    } else {
+      assert("check does not yet exist" && dd.traversable != 0);
+      assert("check does not yet exist" && !dd.bvhMemory.empty());
+    }
+      
+    int oldActive = device->pushActive();
+    LOG("building instance accel over "
+        << children.size() << " groups");
+
+    // ==================================================================
+    // sanity check that that many instances are actualy allowed by optix:
+    // ==================================================================
+    uint32_t maxInstsPerIAS = 0;
+    optixDeviceContextGetProperty
+      (optixContext,
+       OPTIX_DEVICE_PROPERTY_LIMIT_MAX_INSTANCES_PER_IAS,
+       &maxInstsPerIAS,
+       sizeof(maxInstsPerIAS));
+      
+    if (children.size() > maxInstsPerIAS)
+      throw std::runtime_error("number of children in instance group exceeds "
+                               "OptiX's MAX_INSTANCES_PER_IAS limit");
+      
+    // ==================================================================
+    // create instance build inputs
+    // ==================================================================
+    OptixBuildInput              instanceInput  {};
+    OptixAccelBuildOptions       accelOptions   {};
+    //! the N build inputs that go into the builder
+    // std::vector<OptixBuildInput> buildInputs(children.size());
+    std::vector<OptixInstance>   optixInstances(children.size());
+
+    // for now we use the same flags for all geoms
+    // uint32_t instanceGroupInputFlags[1] = { 0 };
+    // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
+
+    // now go over all children to set up the buildinputs
+    for (int childID=0;childID<children.size();childID++) {
+      PRINT(childID);
+      PRINT(children[childID]);
+      Group::SP child = children[childID];
+      assert(child);
+
+      assert(transforms[1].empty());
+      const affine3f xfm = transforms[0][childID];
+
+      OptixInstance oi = {};
+      oi.transform[0*4+0]  = xfm.l.vx.x;
+      oi.transform[0*4+1]  = xfm.l.vy.x;
+      oi.transform[0*4+2]  = xfm.l.vz.x;
+      oi.transform[0*4+3]  = xfm.p.x;
+        
+      oi.transform[1*4+0]  = xfm.l.vx.y;
+      oi.transform[1*4+1]  = xfm.l.vy.y;
+      oi.transform[1*4+2]  = xfm.l.vz.y;
+      oi.transform[1*4+3]  = xfm.p.y;
+        
+      oi.transform[2*4+0]  = xfm.l.vx.z;
+      oi.transform[2*4+1]  = xfm.l.vy.z;
+      oi.transform[2*4+2]  = xfm.l.vz.z;
+      oi.transform[2*4+3]  = xfm.p.z;
+        
+      oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
+      oi.instanceId        = (instanceIDs.empty())?childID:instanceIDs[childID];
+      oi.visibilityMask    = 255;
+      oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
+      oi.visibilityMask    = 255;
+      oi.traversableHandle = child->getTraversable(device);
+
+      optixInstances[childID] = oi;
+    }
+
+    DeviceMemory optixInstanceBuffer;
+    optixInstanceBuffer.alloc(optixInstances.size()*
+                              sizeof(optixInstances[0]));
+    optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
+    
+    // ==================================================================
+    // set up build input
+    // ==================================================================
+    instanceInput.type
+      = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
+    instanceInput.instanceArray.instances
+      = (CUdeviceptr)optixInstanceBuffer.get();
+    instanceInput.instanceArray.numInstances
+      = (int)optixInstances.size();
+      
+    // ==================================================================
+    // set up accel uptions
+    // ==================================================================
+    accelOptions.buildFlags =
+      OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+      |
+      OPTIX_BUILD_FLAG_ALLOW_UPDATE
+      ;
+    accelOptions.motionOptions.numKeys = 1;
+    if (FULL_REBUILD)
+      accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
+    else
+      accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
+      
+    // ==================================================================
+    // query build buffer sizes, and allocate those buffers
+    // ==================================================================
+    OptixAccelBufferSizes blasBufferSizes;
+    OPTIX_CHECK(optixAccelComputeMemoryUsage(optixContext,
+                                             &accelOptions,
+                                             &instanceInput,
+                                             1, // num build inputs
+                                             &blasBufferSizes
+                                             ));
+    
+    // ==================================================================
+    // trigger the build ....
+    // ==================================================================
+    const size_t tempSize
+      = FULL_REBUILD
+      ? blasBufferSizes.tempSizeInBytes
+      : blasBufferSizes.tempUpdateSizeInBytes;
+    LOG("starting to build/refit "
+        << prettyNumber(optixInstances.size()) << " instances, "
+        << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
+        << prettyNumber(tempSize) << "B in temp data");
+      
+    DeviceMemory tempBuffer;
+    tempBuffer.alloc(tempSize);
+      
+    if (FULL_REBUILD)
+      dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      
+    OPTIX_CHECK(optixAccelBuild(optixContext,
+                                /* todo: stream */0,
+                                &accelOptions,
+                                // array of build inputs:
+                                &instanceInput,1,
+                                // buffer of temp memory:
+                                (CUdeviceptr)tempBuffer.get(),
+                                tempBuffer.size(),
+                                // where we store initial, uncomp bvh:
+                                (CUdeviceptr)dd.bvhMemory.get(),
+                                dd.bvhMemory.size(),
+                                /* the traversable we're building: */ 
+                                &dd.traversable,
+                                /* no compaction for instances: */
+                                nullptr,0u
+                                ));
+      
+    CUDA_SYNC_CHECK();
+    
+    // ==================================================================
+    // aaaaaand .... clean up
+    // ==================================================================
+    // TODO: move those free's to the destructor, so we can delay the
+    // frees until all objects are done
+    tempBuffer.free();
+    device->popActive(oldActive);
+      
+    LOG_OK("successfully built instance group accel");
+  }
+    
+
+
+
+
+
+
+
+
+
+
+
   
 }

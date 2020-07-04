@@ -414,10 +414,12 @@ namespace owl {
     group->createDeviceData(context->llo->devices);
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
+    PING;
     if (initValues) {
       for (int i = 0; i < numGeometries; i++) {
         //owlGeomGroupSetChild(_group, i, initValues[i]);
         Geom::SP child = ((APIHandle *)initValues[i])->get<TrianglesGeom>();
+        PRINT(child);
         assert(child);
         group->setChild(i, child);
       }
@@ -500,20 +502,19 @@ namespace owl {
     assert(group);
     group->createDeviceData(context->llo->devices);
 
+    PING;
+    PRINT(numInstances);
 
-    if (_initGroups) {
-      initGroups.resize(numInstances);
-      parallel_for
-        (numInstances,[&](size_t childID) {
-          OWLGroup child = _initGroups[childID];
-          initGroups[childID]  
-            = child
-            ? ((APIHandle *)child)->get<Group>()
-            : Group::SP();
-        },16*1024);
-      __initGroups = initGroups.data();
-    }
-    
+    if (_initGroups)
+      for (int childID=0;childID<numInstances;childID++) {
+        OWLGroup _child = _initGroups[childID];
+        if (!_child) continue;
+        
+        Group::SP child = ((APIHandle *)_child)->get<Group>();
+        assert(child);
+        group->setChild(childID,child);
+      }
+
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     assert(_group);
 
