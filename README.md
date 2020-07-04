@@ -69,8 +69,8 @@ Supported Platforms
 ===================
 
 General Requirements:
-- OptiX 7 SDK
-- CUDA 10 (preferably 10.2, but 10.1 is tested, too)
+- OptiX 7 SDK (versoin 7.0 or 7.1, will work with either)
+- CUDA verion 10 or 11
 - a C++-11 capable compiler (regular gcc on CentOS and Linux should do, VS on Windows)
 
 Per-OS Instructions:
@@ -105,6 +105,36 @@ Per-OS Instructions:
 <!--- ------------------------------------------------------- -->
 Latest Progress/Revision History
 ================================
+
+v0.9.x - Elimination of LL layer, and support for motion blur
+----------------------------------------------------------------------
+
+*v0.9.0*: initial motion blur, and inital elimination of ll layer
+
+- Major code re-org: eliminated most of ll layer, includign most of
+  ll::Device and virutally all of ll::DeviceGroup; in new design
+  Device will only contain device context, and all object-specific
+  stuff will live in the respective api::Group, api::Geom etc
+  classes. Device-specific data for a given object is handled by this
+  object itself. 
+  
+- initial support for motion blur on triangle meshes, by specifying
+  two vertex arrays
+  
+- initial support of motion blur on instances, by specifyign two sets
+  of transforms. 
+  
+- new api fct owlMotionBlurEnable() to enable support for motion blur.
+
+- groups and geoms now have methods to compute their world-space
+  bounding boxes, as required for instance motion blur. These will get
+  called/evaluated/used only hwne motion blur is enabled.
+
+- moved some files from .cpp to .cu; to allow calling device kernels
+  for computing bboxes.
+  
+- initial support for optix 7.1; code will automatically detect
+  version and compile to proper version where they differ.
 
 v0.8.x - Revamped build system, owl viewer, interative samples, and textures
 ----------------------------------------------------------------------
