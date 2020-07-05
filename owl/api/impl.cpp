@@ -57,24 +57,26 @@ namespace owl {
     return (OWLContext)context->createHandle(context);
   }
 
+  inline APIContext::SP checkGet(OWLContext _context)
+  {
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->getContext();
+    assert(context);
+    return context;
+  }
+
   /* return the cuda stream associated with the given device. */
   OWL_API CUstream owlContextGetStream(OWLContext _context, int deviceID)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context = ((APIHandle *)_context)->getContext();
-    assert(context);
-    return context->llo->getStream(deviceID);
+    return checkGet(_context)->getDevice(deviceID)->getStream();
   }
 
   /* return the optix context associated with the given device. */
   OWL_API OptixDeviceContext owlContextGetOptixContext(OWLContext _context, int deviceID)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context = ((APIHandle *)_context)->getContext();
-    assert(context);
-    return context->llo->getOptixContext(deviceID);
+    return checkGet(_context)->getDevice(deviceID)->getOptixContext();
   }
 
   /*! set number of ray types to be used in this context; this should be
@@ -85,11 +87,7 @@ namespace owl {
                             size_t numRayTypes)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
-    context->setRayTypeCount(numRayTypes);
+    checkGet(_context)->setRayTypeCount(numRayTypes);
   }
 
 
@@ -116,11 +114,7 @@ namespace owl {
                            int32_t maxInstanceDepth)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
-    context->setMaxInstancingDepth(maxInstanceDepth);
+    checkGet(_context)->setMaxInstancingDepth(maxInstanceDepth);
   }
   
 
@@ -128,41 +122,26 @@ namespace owl {
   owlEnableMotionBlur(OWLContext _context)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
-    context->enableMotionBlur();
+    checkGet(_context)->enableMotionBlur();
   }
   
   OWL_API void owlBuildSBT(OWLContext _context,
                            OWLBuildSBTFlags flags)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
-    context->buildSBT(flags);
+checkGet(_context)->buildSBT(flags);
   }
 
   OWL_API void owlBuildPrograms(OWLContext _context)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
-    context->buildPrograms();
+    checkGet(_context)->buildPrograms();
   }
   
   OWL_API void owlBuildPipeline(OWLContext _context)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
+    APIContext::SP context = checkGet(_context);
     context->buildPipeline();
   }
   
@@ -218,10 +197,7 @@ namespace owl {
   {
     LOG_API_CALL();
 
-    assert(_context);
-    APIContext::SP context = ((APIHandle *)_context)->getContext();
-    assert(context);
-    return (int32_t)context->llo->getDeviceCount();
+    return (int32_t)checkGet(_context)->getDevices().size();
   }
     
 
@@ -317,11 +293,7 @@ namespace owl {
                   size_t      numVars)
   {
     LOG_API_CALL();
-
-    assert(_context);
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
+    APIContext::SP context = checkGet(_context);
     
     assert(_module);
     Module::SP module
@@ -348,14 +320,10 @@ namespace owl {
                    size_t      numVars)
   {
     LOG_API_CALL();
+    APIContext::SP context = checkGet(_context);
 
-    assert(_context);
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
-    
     LaunchParamsType::SP  launchParamsType
-      = context->createLaunchParamsType(sizeOfVarStruct,
+      = checkGet(_context)->createLaunchParamsType(sizeOfVarStruct,
                                         checkAndPackVariables(vars,numVars));
     assert(launchParamsType);
     
@@ -377,27 +345,22 @@ namespace owl {
   {
     LOG_API_CALL();
 
-    assert(_context);
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
-    
     assert(_module);
     Module::SP module
       = ((APIHandle *)_module)->get<Module>();
     assert(module);
     
     MissProgType::SP  missProgType
-      = context->createMissProgType(module,programName,
+      = checkGet(_context)->createMissProgType(module,programName,
                                   sizeOfVarStruct,
                                   checkAndPackVariables(vars,numVars));
     assert(missProgType);
     
     MissProg::SP  missProg
-      = context->createMissProg(missProgType);
+      = checkGet(_context)->createMissProg(missProgType);
     assert(missProg);
 
-    return (OWLMissProg)context->createHandle(missProg);
+    return (OWLMissProg)checkGet(_context)->createHandle(missProg);
   }
 
   OWL_API OWLGroup
@@ -406,12 +369,10 @@ namespace owl {
                               OWLGeom *initValues)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
+    APIContext::SP context = checkGet(_context);
     GeomGroup::SP  group = context->trianglesGeomGroupCreate(numGeometries);
     assert(group);
-    group->createDeviceData(context->llo->devices);
+    group->createDeviceData(context->getDevices());
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     PING;
@@ -434,11 +395,10 @@ namespace owl {
                          OWLGeom *initValues)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
-    GeomGroup::SP  group = context->userGeomGroupCreate(numGeometries);
-    group->createDeviceData(context->llo->devices);
+    APIContext::SP context = checkGet(_context);
+    GeomGroup::SP  group
+      = context->userGeomGroupCreate(numGeometries);
+    group->createDeviceData(context->getDevices());
     assert(group);
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
@@ -488,19 +448,16 @@ namespace owl {
                          OWLMatrixFormat matrixFormat=OWL_MATRIX_FORMAT_OWL)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
-    
     std::vector<Group::SP> initGroups;
     Group::SP *__initGroups = nullptr;
     
+    APIContext::SP context = checkGet(_context);
     InstanceGroup::SP  group
       = std::make_shared<InstanceGroup>
       (context.get(),numInstances,
        __initGroups);
     assert(group);
-    group->createDeviceData(context->llo->devices);
+    group->createDeviceData(context->getDevices());
 
     PING;
     PRINT(numInstances);
@@ -534,10 +491,7 @@ namespace owl {
   OWL_API void owlContextDestroy(OWLContext _context)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
-    
+    APIContext::SP context = checkGet(_context);
     context->releaseAll();
   }
 
@@ -550,9 +504,7 @@ namespace owl {
                         const void *init)
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
+    APIContext::SP context = checkGet(_context);
     Buffer::SP  buffer  = context->deviceBufferCreate(type,count,init);
     assert(buffer);
     return (OWLBuffer)context->createHandle(buffer);
@@ -577,9 +529,7 @@ namespace owl {
                      )
   {
     LOG_API_CALL();
-    assert(_context);
-    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
+    APIContext::SP context = checkGet(_context);
     Texture::SP  texture
       = context->texture2DCreate(texelFormat,
                                  filterMode,
@@ -753,11 +703,7 @@ namespace owl {
                 OWLGeomType _geometryType)
   {
     assert(_geometryType);
-    assert(_context);
-
-    APIContext::SP context
-      = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
+    APIContext::SP context = checkGet(_context);
 
     GeomType::SP geometryType
       = ((APIHandle *)_geometryType)->get<GeomType>();
@@ -766,7 +712,7 @@ namespace owl {
     Geom::SP geometry
       = geometryType->createGeom();
     assert(geometry);
-    geometry->createDeviceData(context->llo->devices);
+    geometry->createDeviceData(context->getDevices());
 
 
     return (OWLGeom)context->createHandle(geometry);
@@ -789,11 +735,9 @@ namespace owl {
                                     const char *ptxCode)
   {
     LOG_API_CALL();
-    assert(_context);
     assert(ptxCode);
-    
-    APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
-    assert(context);
+
+    APIContext::SP context = checkGet(_context);
     Module::SP  module  = context->createModule(ptxCode);
     assert(module);
     return (OWLModule)context->createHandle(module);
@@ -991,9 +935,9 @@ namespace owl {
 
   OWL_API void
   owlGeomTypeSetAnyHit(OWLGeomType _geometryType,
-                           int             rayType,
-                           OWLModule       _module,
-                           const char     *progName)
+                       int             rayType,
+                       OWLModule       _module,
+                       const char     *progName)
   {
     LOG_API_CALL();
     
@@ -1014,9 +958,9 @@ namespace owl {
 
   OWL_API void
   owlGeomTypeSetIntersectProg(OWLGeomType _geometryType,
-                           int             rayType,
-                           OWLModule       _module,
-                           const char     *progName)
+                              int             rayType,
+                              OWLModule       _module,
+                              const char     *progName)
   {
     LOG_API_CALL();
     

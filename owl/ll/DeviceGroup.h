@@ -422,11 +422,11 @@ void lloSbtMissProgsBuild(LLOContext llo,
       //   device */
       // void *bufferGetPointer(int bufferID, int devID);
 
-      /* return the cuda stream associated with the given device. */
-      CUstream getStream(int devID);
+      // /* return the cuda stream associated with the given device. */
+      // CUstream getStream(int devID);
 
       /* return the optix context associated with the given device. */
-      OptixDeviceContext getOptixContext(int devID);
+      // OptixDeviceContext getOptixContext(int devID);
       
       /*! return the cuda stream by the given launchparams object, on
         given device */

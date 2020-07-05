@@ -62,6 +62,14 @@ namespace owl {
     //! TODO: allow changing that via api ..
     size_t numRayTypes = 1;
     bool   motionBlurEnabled = false;
+
+    /*! access list of all devices */
+    const std::vector<ll::Device *> &getDevices() const { return llo->devices; }
+
+    /*! return device with given linear (owl-)ID; throws an error if
+        that is a invalid ID */
+    ll::Device *getDevice(uint32_t deviceID) const
+    { assert(deviceID < llo->devices.size()); return llo->devices[deviceID]; }
     
     void buildHitGroupsOn(ll::Device *device);
     

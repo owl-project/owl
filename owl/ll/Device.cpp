@@ -943,16 +943,16 @@ namespace owl {
     // }
 
     /* Returns the cuda stream associated with the current device. */
-    CUstream Device::getStream()
-    {
-      return context->stream;
-    }
+    // CUstream Device::getStream()
+    // {
+    //   return context->stream;
+    // }
 
-    /* Returns the optix context associated with the current device. */
-    OptixDeviceContext Device::getOptixContext()
-    {
-      return context->optixContext;
-    }
+    // /* Returns the optix context associated with the current device. */
+    // OptixDeviceContext Device::getOptixContext()
+    // {
+    //   return context->optixContext;
+    // }
 
 
     /*! return the cuda stream by the given launchparams object, on

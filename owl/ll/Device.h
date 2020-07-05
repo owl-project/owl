@@ -547,10 +547,12 @@ namespace owl {
       // void *bufferGetPointer(int bufferID);
       
       /* return the cuda stream associated with the current device. */
-      CUstream getStream();
+      CUstream getStream() const
+      { return context->stream; }
       
-      /* return the optix context associated with the current device. */
-      OptixDeviceContext getOptixContext();
+      // /* return the optix context associated with the current device. */
+      OptixDeviceContext getOptixContext() const
+      { return context->optixContext; }
 
       /*! return the cuda stream by the given launchparams object, on
         given device */

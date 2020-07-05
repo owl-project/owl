@@ -514,16 +514,16 @@ namespace owl {
     // }
     
     /* return the cuda stream associated with the given device. */
-    CUstream DeviceGroup::getStream(int devID)
-    {
-      return checkGetDevice(devID)->getStream();
-    }
+    // CUstream DeviceGroup::getStream(int devID)
+    // {
+    //   return checkGetDevice(devID)->getStream();
+    // }
 
-    /* return the optix context associated with the given device. */
-    OptixDeviceContext DeviceGroup::getOptixContext(int devID)
-    {
-      return checkGetDevice(devID)->getOptixContext();
-    }
+    // /* return the optix context associated with the given device. */
+    // OptixDeviceContext DeviceGroup::getOptixContext(int devID)
+    // {
+    //   return checkGetDevice(devID)->getOptixContext();
+    // }
 
     /*! return the cuda stream by the given launchparams object, on
       given device */
