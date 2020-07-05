@@ -16,6 +16,8 @@
 
 set(OWL_NG_SOURCES
 
+  Buffer.cpp
+
   ../include/owl/owl.h
   ../common/cmake/configure_tbb.cmake
   ../common/cmake/configure_owl.cmake
@@ -32,7 +34,6 @@ set(OWL_NG_SOURCES
   Module.cpp
   RegisteredObject.cpp
   SBTObject.cpp
-  Buffer.cpp
   Texture.cpp
   
   Group.cpp

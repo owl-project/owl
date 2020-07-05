@@ -158,65 +158,66 @@ void lloSbtMissProgsBuild(LLOContext llo,
      (const void *)&l);
 }
 
-/*! C++-only wrapper of callback method with lambda function */
-template<typename Lambda>
-void lloGroupBuildPrimitiveBounds(LLOContext llo,
-                                  uint32_t groupID,
-                                  size_t sizeOfData,
-                                  const Lambda &l)
-{
-  lloGroupBuildPrimitiveBounds
-    (llo,groupID,sizeOfData,
-     [](uint8_t *output,
-        int devID,
-        int geomID,
-        int childID, 
-        const void *cbData)
-     {
-       const Lambda *lambda = (const Lambda *)cbData;
-       (*lambda)(output,devID,geomID,childID);
-     },
-     (const void *)&l);
-}
+// /*! C++-only wrapper of callback method with lambda function */
+// template<typename Lambda>
+// void lloGroupBuildPrimitiveBounds(LLOContext llo,
+//                                   uint32_t groupID,
+//                                   size_t sizeOfData,
+//                                   const Lambda &l)
+// {
+//   lloGroupBuildPrimitiveBounds
+//     (llo,groupID,sizeOfData,
+//      [](uint8_t *output,
+//         int devID,
+//         int geomID,
+//         int childID, 
+//         const void *cbData)
+//      {
+//        const Lambda *lambda = (const Lambda *)cbData;
+//        (*lambda)(output,devID,geomID,childID);
+//      },
+//      (const void *)&l);
+// }
 
-    /*! class that maintains the cuda host pinned memoery handle for a
-        group of HostPinnedBuffer's (host pinned memory is shared
-        across all devices) */
-    struct HostPinnedMemory
-    {
-      typedef std::shared_ptr<HostPinnedMemory> SP;
-      HostPinnedMemory(size_t amount);
-      ~HostPinnedMemory();
 
-      void free();
-      void alloc(size_t newSizeInBytes);
-      void *get() const { return pointer; }
+    // /*! class that maintains the cuda host pinned memoery handle for a
+    //     group of HostPinnedBuffer's (host pinned memory is shared
+    //     across all devices) */
+    // struct HostPinnedMemory
+    // {
+    //   typedef std::shared_ptr<HostPinnedMemory> SP;
+    //   HostPinnedMemory(size_t amount);
+    //   ~HostPinnedMemory();
+
+    //   void free();
+    //   void alloc(size_t newSizeInBytes);
+    //   void *get() const { return pointer; }
       
-      void *pointer = nullptr;
-    };
+    //   void *pointer = nullptr;
+    // };
 
-    /*! class that maintains the cuda managed memoery address for a
-        group of ManagedMemoryBuffer's (managed memory is allocated
-        only once on the group level, and then shared across all
-        devices) */
-    struct ManagedMemory
-    {
-      typedef std::shared_ptr<ManagedMemory> SP;
-      ManagedMemory(DeviceGroup *devGroup,
-                    size_t amount,
-                    /*! data with which to populate this buffer; may
-                        be null, but has to be of size 'amount' if
-                        not */
-                    const void *initData);
-      ~ManagedMemory();
+    // /*! class that maintains the cuda managed memoery address for a
+    //     group of ManagedMemoryBuffer's (managed memory is allocated
+    //     only once on the group level, and then shared across all
+    //     devices) */
+    // struct ManagedMemory
+    // {
+    //   typedef std::shared_ptr<ManagedMemory> SP;
+    //   ManagedMemory(DeviceGroup *devGroup,
+    //                 size_t amount,
+    //                 /*! data with which to populate this buffer; may
+    //                     be null, but has to be of size 'amount' if
+    //                     not */
+    //                 const void *initData);
+    //   ~ManagedMemory();
 
-      void free();
-      void alloc(size_t newSizeInBytes);
-      void *get() const { return pointer; }
+    //   void free();
+    //   void alloc(size_t newSizeInBytes);
+    //   void *get() const { return pointer; }
       
-      void *pointer = nullptr;
-      DeviceGroup *devGroup;
-    };
+    //   void *pointer = nullptr;
+    //   DeviceGroup *devGroup;
+    // };
 
     struct Device;
     
@@ -320,7 +321,7 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
         geoms that would get 'lost' have alreay been
         destroyed */
       // void allocGroups(size_t newCount);
-      void allocBuffers(size_t newCount);
+      // void allocBuffers(size_t newCount);
       // void allocTextures(size_t newCount);
       
       /*! resize the array of geom IDs. this can be either a
@@ -382,44 +383,44 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       //                        int childNo,
       //                        int childID);
 
-      /*! destroy the given buffer, and release all host and/or device
-        memory associated with it */
-      void bufferDestroy(int bufferID);
+      // /*! destroy the given buffer, and release all host and/or device
+      //   memory associated with it */
+      // void bufferDestroy(int bufferID);
       
-      /*! create a new device buffer - this buffer type will be
-        allocated on each device */
-      void deviceBufferCreate(int bufferID,
-                              size_t elementCount,
-                              size_t elementSize,
-                              const void *initData);
+      // /*! create a new device buffer - this buffer type will be
+      //   allocated on each device */
+      // void deviceBufferCreate(int bufferID,
+      //                         size_t elementCount,
+      //                         size_t elementSize,
+      //                         const void *initData);
       
-      /*! create a host-pinned memory buffer */
-      void hostPinnedBufferCreate(int bufferID,
-                                  size_t elementCount,
-                                  size_t elementSize);
+      // /*! create a host-pinned memory buffer */
+      // void hostPinnedBufferCreate(int bufferID,
+      //                             size_t elementCount,
+      //                             size_t elementSize);
 
-      /*! create a managed memory buffer */
-      void managedMemoryBufferCreate(int bufferID,
-                                     size_t elementCount,
-                                     size_t elementSize,
-                                     const void *initData);
+      // /*! create a managed memory buffer */
+      // void managedMemoryBufferCreate(int bufferID,
+      //                                size_t elementCount,
+      //                                size_t elementSize,
+      //                                const void *initData);
 
-      void graphicsBufferCreate(int bufferID,
-                                size_t elementCount,
-                                size_t elementSize,
-                                cudaGraphicsResource_t resource);
+      // void graphicsBufferCreate(int bufferID,
+      //                           size_t elementCount,
+      //                           size_t elementSize,
+      //                           cudaGraphicsResource_t resource);
 
-      void graphicsBufferMap(int bufferID);
+      // void graphicsBufferMap(int bufferID);
 
-      void graphicsBufferUnmap(int bufferID);
+      // void graphicsBufferUnmap(int bufferID);
       
-      void bufferResize(int bufferID, size_t newItemCount);
-      void bufferUpload(int bufferID, const void *hostPtr);
-      void bufferUploadToSpecificDevice(int bufferID, int devID, const void *hostPtr);
+      // void bufferResize(int bufferID, size_t newItemCount);
+      // void bufferUpload(int bufferID, const void *hostPtr);
+      // void bufferUploadToSpecificDevice(int bufferID, int devID, const void *hostPtr);
       
-      /*! returns the given device's buffer address on the specified
-        device */
-      void *bufferGetPointer(int bufferID, int devID);
+      // /*! returns the given device's buffer address on the specified
+      //   device */
+      // void *bufferGetPointer(int bufferID, int devID);
 
       /* return the cuda stream associated with the given device. */
       CUstream getStream(int devID);

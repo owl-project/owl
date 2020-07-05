@@ -31,88 +31,6 @@
 
 namespace owl {
   namespace ll {
-
-    // ##################################################################
-    // HostPinnedMemory
-    // ##################################################################
-
-    HostPinnedMemory::HostPinnedMemory(size_t amount)
-    {
-      alloc(amount);
-      assert(pointer != nullptr);
-    }
-    
-    HostPinnedMemory::~HostPinnedMemory()
-    {
-      assert(pointer != nullptr);
-      free();
-    }
-
-    void HostPinnedMemory::alloc(size_t amount)
-    {
-      CUDA_CALL(MallocHost((void**)&pointer, amount));
-    }
-
-    void HostPinnedMemory::free()
-    {
-      CUDA_CALL_NOTHROW(FreeHost(pointer));
-      pointer = nullptr;
-    }
-
-
-    // ##################################################################
-    // ManagedMemoryMemory
-    // ##################################################################
-
-    ManagedMemory::ManagedMemory(DeviceGroup *devGroup,
-                                 size_t amount,
-                                 /*! data with which to populate this buffer; may
-                                   be null, but has to be of size 'amount' if
-                                   not */
-                                 const void *initData)
-      : devGroup(devGroup)
-    {
-      alloc(amount);
-      if (initData)
-        CUDA_CALL(Memcpy(pointer,initData,amount,
-                         cudaMemcpyDefault));
-      assert(pointer != nullptr);
-    }
-    
-    ManagedMemory::~ManagedMemory()
-    {
-      assert(pointer != nullptr);
-      free();
-    }
-
-    void ManagedMemory::alloc(size_t amount)
-    {
-      CUDA_CALL(MallocManaged((void**)&pointer, amount));
-      // CUDA_CALL(MemAdvise((void*)pointer, amount, cudaMemAdviseSetReadMostly, -1));
-      unsigned char *mem_end = (unsigned char *)pointer + amount;
-      size_t pageSize = 16*1024*1024;
-      int pageID = 0;
-      for (unsigned char *begin = (unsigned char *)pointer; begin < mem_end; begin += pageSize) {
-        unsigned char *end = std::min(begin+pageSize,mem_end);
-        int devID = pageID++ % devGroup->devices.size();
-        int cudaDevID = devGroup->devices[devID]->getCudaDeviceID();
-        int result = 0;
-        cudaDeviceGetAttribute (&result, cudaDevAttrConcurrentManagedAccess, cudaDevID);
-        if (result) {
-          CUDA_CALL(MemAdvise((void*)begin, end-begin, cudaMemAdviseSetPreferredLocation, cudaDevID));
-        }
-      }
-    }
-    
-    void ManagedMemory::free()
-    {
-      CUDA_CALL_NOTHROW(Free(pointer));
-      pointer = nullptr;
-    }
-
-
-
-
     // ##################################################################
     // Device Group
     // ##################################################################
@@ -348,11 +266,11 @@ namespace owl {
     //     device->allocGroups(newCount);
     // }
       
-    void DeviceGroup::allocBuffers(size_t newCount)
-    {
-      for (auto device : devices)
-        device->allocBuffers(newCount);
-    }
+    // void DeviceGroup::allocBuffers(size_t newCount)
+    // {
+    //   for (auto device : devices)
+    //     device->allocBuffers(newCount);
+    // }
       
     // void DeviceGroup::allocTextures(size_t newCount)
     // {
@@ -427,63 +345,6 @@ namespace owl {
       LOG_OK("optix pipeline created");
     }
 
-    void DeviceGroup::bufferDestroy(int bufferID)
-    {
-      for (auto device : devices) 
-        device->bufferDestroy(bufferID);
-    }
-
-    void DeviceGroup::deviceBufferCreate(int bufferID,
-                                         size_t elementCount,
-                                         size_t elementSize,
-                                         const void *initData)
-    {
-      for (auto device : devices) 
-        device->deviceBufferCreate(bufferID,elementCount,elementSize,initData);
-    }
-
-    void DeviceGroup::hostPinnedBufferCreate(int bufferID,
-                                             size_t elementCount,
-                                             size_t elementSize)
-    {
-      HostPinnedMemory::SP pinned
-        = std::make_shared<HostPinnedMemory>(elementCount*elementSize);
-      for (auto device : devices) 
-        device->hostPinnedBufferCreate(bufferID,elementCount,elementSize,pinned);
-    }
-
-    void DeviceGroup::managedMemoryBufferCreate(int bufferID,
-                                                size_t elementCount,
-                                                size_t elementSize,
-                                                const void *initData)
-    {
-      ManagedMemory::SP mem
-        = std::make_shared<ManagedMemory>(this,elementCount*elementSize,initData);
-      for (auto device : devices) 
-        device->managedMemoryBufferCreate(bufferID,elementCount,elementSize,mem);
-    }
-
-    void DeviceGroup::graphicsBufferCreate(int bufferID,
-                                           size_t elementCount,
-                                           size_t elementSize,
-                                           cudaGraphicsResource_t resource)
-    {
-      for (auto device : devices)
-        device->graphicsBufferCreate(bufferID, elementCount, elementSize, resource);
-    }
-
-    void DeviceGroup::graphicsBufferMap(int bufferID)
-    {
-      for (auto device : devices)
-        device->graphicsBufferMap(bufferID);
-    }
-
-    void DeviceGroup::graphicsBufferUnmap(int bufferID)
-    {
-      for (auto device : devices)
-        device->graphicsBufferUnmap(bufferID);
-    }
-      
     // /*! Set a buffer of bounding boxes that this user geometry will
     //   use when building the accel structure. This is one of
     //   multiple ways of specifying the bounding boxes for a user
@@ -620,26 +481,6 @@ namespace owl {
     //                                   childGroupID);
     // }
 
-    void DeviceGroup::bufferResize(int bufferID, size_t newItemCount)
-    {
-      for (auto device : devices)
-        device->bufferResize(bufferID,newItemCount);
-    }
-    
-    void DeviceGroup::bufferUpload(int bufferID, const void *hostPtr)
-    {
-      for (auto device : devices)
-        device->bufferUpload(bufferID,hostPtr);
-    }
-      
-    void DeviceGroup::bufferUploadToSpecificDevice(int bufferID,
-                                                   int devID,
-                                                   const void *hostPtr)
-    {
-      devices[devID]->bufferUpload(bufferID,hostPtr);
-    }
-      
-
     // void DeviceGroup::geomGroupSetChild(int groupID,
     //                                     int childNo,
     //                                     int childID)
@@ -667,10 +508,10 @@ namespace owl {
 
     /*! returns the given device's buffer address on the specified
         device */
-    void *DeviceGroup::bufferGetPointer(int bufferID, int devID)
-    {
-      return checkGetDevice(devID)->bufferGetPointer(bufferID);
-    }
+    // void *DeviceGroup::bufferGetPointer(int bufferID, int devID)
+    // {
+    //   return checkGetDevice(devID)->bufferGetPointer(bufferID);
+    // }
     
     /* return the cuda stream associated with the given device. */
     CUstream DeviceGroup::getStream(int devID)

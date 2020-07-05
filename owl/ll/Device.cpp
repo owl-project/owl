@@ -76,15 +76,15 @@ namespace owl {
         fprintf( stderr, "[%2d][%12s]: %s\n", (int)level, tag, message );
     }
 
-    void Group::destroyAccel(Context *context) 
-    {
-      int oldActive = context->pushActive();
-      if (traversable) {
-        bvhMemory.free();
-        traversable = 0;
-      }
-      context->popActive(oldActive);
-    }
+    // void Group::destroyAccel(Context *context) 
+    // {
+    //   int oldActive = context->pushActive();
+    //   if (traversable) {
+    //     bvhMemory.free();
+    //     traversable = 0;
+    //   }
+    //   context->popActive(oldActive);
+    // }
 
     LaunchParams::LaunchParams(Context *context, size_t sizeOfData)
       : dataSize(sizeOfData)
@@ -890,110 +890,6 @@ namespace owl {
     }
       
 
-    void Device::bufferDestroy(int bufferID)
-    {
-      assert("check valid buffer ID" && bufferID >= 0);
-      assert("check valid buffer ID" && bufferID <  buffers.size());
-      assert("check buffer to be destroyed actually exists"
-             && buffers[bufferID] != nullptr);
-      int oldActive = context->pushActive();
-      delete buffers[bufferID];
-      buffers[bufferID] = nullptr;
-      context->popActive(oldActive);
-    }
-    
-    void Device::deviceBufferCreate(int bufferID,
-                                    size_t elementCount,
-                                    size_t elementSize,
-                                    const void *initData)
-    {
-      assert("check valid buffer ID" && bufferID >= 0);
-      assert("check valid buffer ID" && bufferID <  buffers.size());
-      assert("check buffer ID available" && buffers[bufferID] == nullptr);
-      STACK_PUSH_ACTIVE(context);
-      // context->pushActive();
-      DeviceBuffer *buffer = new DeviceBuffer(elementCount,elementSize);
-      if (initData) {
-        buffer->devMem.upload(initData,"createDeviceBuffer: uploading initData");
-        // LOG("uploading " << elementCount
-        //     << " items of size " << elementSize
-        //     << " from host ptr " << initData
-        //     << " to device ptr " << buffer->devMem.get());
-      }
-      assert("check buffer properly created" && buffer != nullptr);
-      buffers[bufferID] = buffer;
-      // context->popActive();
-      STACK_POP_ACTIVE();
-    }
-    
-      /*! create a managed memory buffer */
-    void Device::managedMemoryBufferCreate(int bufferID,
-                                           size_t elementCount,
-                                           size_t elementSize,
-                                           ManagedMemory::SP managedMem)
-    {
-      assert("check valid buffer ID" && bufferID >= 0);
-      assert("check valid buffer ID" && bufferID <  buffers.size());
-      assert("check buffer ID available" && buffers[bufferID] == nullptr);
-      int oldActive = context->pushActive();
-      Buffer *buffer = new ManagedMemoryBuffer(elementCount,elementSize,managedMem);
-      assert("check buffer properly created" && buffer != nullptr);
-      buffers[bufferID] = buffer;
-      context->popActive(oldActive);
-    }
-      
-    void Device::hostPinnedBufferCreate(int bufferID,
-                                        size_t elementCount,
-                                        size_t elementSize,
-                                        HostPinnedMemory::SP pinnedMem)
-    {
-      assert("check valid buffer ID" && bufferID >= 0);
-      assert("check valid buffer ID" && bufferID <  buffers.size());
-      assert("check buffer ID available" && buffers[bufferID] == nullptr);
-      int oldActive = context->pushActive();
-      Buffer *buffer = new HostPinnedBuffer(elementCount,elementSize,pinnedMem);
-      assert("check buffer properly created" && buffer != nullptr);
-      buffers[bufferID] = buffer;
-      context->popActive(oldActive);
-    }
-
-    void Device::graphicsBufferCreate(int bufferID,
-                                      size_t elementCount,
-                                      size_t elementSize,
-                                      cudaGraphicsResource_t resource)
-    {
-      assert("check valid buffer ID" && bufferID >= 0);
-      assert("check valid buffer ID" && bufferID < buffers.size());
-      assert("check buffer ID available" && buffers[bufferID] == nullptr);
-      int oldActive = context->pushActive();
-      Buffer *buffer = new GraphicsBuffer(elementCount, elementSize, resource);
-      assert("check buffer properly created" && buffer != nullptr);
-      buffers[bufferID] = buffer;
-      context->popActive(oldActive);
-    }
-
-    void Device::graphicsBufferMap(int bufferID)
-    {
-      assert("check valid buffer ID" && bufferID >= 0);
-      assert("check valid buffer ID" && bufferID < buffers.size());
-      int oldActive = context->pushActive();
-      GraphicsBuffer *buffer = dynamic_cast<GraphicsBuffer*>(buffers[bufferID]);
-      assert("check buffer properly casted" && buffer != nullptr);
-      buffer->map(this, context->stream);
-      context->popActive(oldActive);
-    }
-
-    void Device::graphicsBufferUnmap(int bufferID)
-    {
-      assert("check valid buffer ID" && bufferID >= 0);
-      assert("check valid buffer ID" && bufferID < buffers.size());
-      int oldActive = context->pushActive();
-      GraphicsBuffer *buffer = dynamic_cast<GraphicsBuffer*>(buffers[bufferID]);
-      assert("check buffer properly casted" && buffer != nullptr);
-      buffer->unmap(this, context->stream);
-      context->popActive(oldActive);
-    }
-    
     // /*! Set a buffer of bounding boxes that this user geometry will
     //   use when building the accel structure. This is one of
     //   multiple ways of specifying the bounding boxes for a user
@@ -1046,12 +942,6 @@ namespace owl {
     //   triangles->vertexCount   = count;
     // }
 
-    /*! returns the given buffers device pointer */
-    void *Device::bufferGetPointer(int bufferID)
-    {
-      return (void*)checkGetBuffer(bufferID)->d_pointer;
-    }
-
     /* Returns the cuda stream associated with the current device. */
     CUstream Device::getStream()
     {
@@ -1072,20 +962,6 @@ namespace owl {
       return checkGetLaunchParams(lpID)->stream;
     }
    
-      
-    void Device::bufferResize(int bufferID, size_t newItemCount)
-    {
-      checkGetBuffer(bufferID)->resize(this,newItemCount);
-    }
-    
-    void Device::bufferUpload(int bufferID, const void *hostPtr)
-    {
-      int oldActive = context->pushActive();
-      checkGetBuffer(bufferID)->upload(this,hostPtr);
-      context->popActive(oldActive);
-    }
-
-    
     // void Device::trianglesGeomSetIndexBuffer(int geomID,
     //                                          int bufferID,
     //                                          size_t count,
@@ -1146,124 +1022,6 @@ namespace owl {
     // }
     
     
-
-    
-
-
-
-
-
-
-    // /*! set given child to {childGroupID+xfm}  */
-    // void Device::geomGroupSetChild(int groupID,
-    //                                int childNo,
-    //                                int childID)
-    // {
-    //   GeomGroup *gg       = checkGetGeomGroup(groupID);
-    //   Geom      *newChild = checkGetGeom(childID);
-    //   Geom      *oldChild = gg->children[childNo];
-    //   // if (oldChild)
-    //   //   oldChild->numTimesReferenced--;
-    //   gg->children[childNo] = newChild;
-    //   newChild->numTimesReferenced++;
-    // }
-
-
-
-#if 0
-    void Device::sbtHitProgsBuild(std::vector<owl::Group::SP> &groups,
-                                  LLOWriteHitProgDataCB writeHitProgDataCB,
-                                  const void *callBackUserData)
-    {
-      LOG("building SBT hit group records");
-      int oldActive = context->pushActive();
-      // TODO: move this to explicit destroyhitgroups
-      if (sbt.hitGroupRecordsBuffer.alloced())
-        sbt.hitGroupRecordsBuffer.free();
-
-      size_t maxHitProgDataSize = 0;
-      for (int geomID=0;geomID<geoms.size();geomID++) {
-        Geom *geom = geoms[geomID];
-        if (!geom) continue;
-        GeomType &gt = geomTypes[geom->geomTypeID];
-        maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
-      }
-      
-      if (maxHitProgDataSize == size_t(-1))
-        throw std::runtime_error("in sbtHitProgsBuild: at least on geometry uses a type for which geomTypeCreate has not been called");
-      assert("make sure all geoms had their program size set"
-             && maxHitProgDataSize != (size_t)-1);
-      size_t numHitGroupEntries = sbt.rangeAllocator.maxAllocedID;
-      size_t numHitGroupRecords = numHitGroupEntries*context->numRayTypes;
-      size_t hitGroupRecordSize
-        = OPTIX_SBT_RECORD_HEADER_SIZE
-        + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
-      assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
-      sbt.hitGroupRecordSize = hitGroupRecordSize;
-      sbt.hitGroupRecordCount = numHitGroupRecords;
-
-      size_t totalHitGroupRecordsArraySize
-        = numHitGroupRecords * hitGroupRecordSize;
-      std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
-
-      // ------------------------------------------------------------------
-      // now, write all records (only on the host so far): we need to
-      // write one record per geometry, per ray type
-      // ------------------------------------------------------------------
-      for (auto group : groups) {
-        if (!group) continue;
-        if (!group->containsGeom()) continue;
-        GeomGroup *gg = (GeomGroup *)group;
-        const int sbtOffset = (int)gg->sbtOffset;
-        for (int childID=0;childID<gg->children.size();childID++) {
-          Geom *geom = gg->children[childID];
-          if (!geom) continue;
-          
-          const int geomID    = geom->geomID;
-          for (int rayTypeID=0;rayTypeID<context->numRayTypes;rayTypeID++) {
-            // ------------------------------------------------------------------
-            // compute pointer to entire record:
-            // ------------------------------------------------------------------
-            const int recordID
-              = (sbtOffset+childID)*context->numRayTypes + rayTypeID;
-            assert(recordID < numHitGroupRecords);
-            uint8_t *const sbtRecord
-              = hitGroupRecords.data() + recordID*hitGroupRecordSize;
-
-            // ------------------------------------------------------------------
-            // pack record header with the corresponding hit group:
-            // ------------------------------------------------------------------
-            // first, compute pointer to record:
-            char    *const sbtRecordHeader = (char *)sbtRecord;
-            // then, get gemetry we want to write (to find its hit group ID)...
-            const Geom *const geom = checkGetGeom(geomID);
-            // ... find the PG that goes into the record header...
-            auto &geomType = geomTypes[geom->geomTypeID];
-            const HitGroupPG &hgPG
-              = geomType.perRayType[rayTypeID];
-            // ... and tell optix to write that into the record
-            OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
-          
-            // ------------------------------------------------------------------
-            // finally, let the user fill in the record's payload using
-            // the callback
-            // ------------------------------------------------------------------
-            uint8_t *const sbtRecordData
-              = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
-            writeHitProgDataCB(sbtRecordData,
-                               context->owlDeviceID,
-                               geomID,
-                               rayTypeID,
-                               callBackUserData);
-          }
-        }
-      }
-      sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
-      sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
-      context->popActive(oldActive);
-      LOG_OK("done building (and uploading) SBT hit group records");
-    }
-#endif
     
     void Device::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
                                  const void *callBackUserData)
@@ -1551,13 +1309,13 @@ namespace owl {
       'grow' or a 'shrink', but 'shrink' is only allowed if all
       buffer handles that would get 'lost' have alreay been
       destroyed */
-    void Device::allocBuffers(size_t newCount)
-    {
-      for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
-        assert("alloc would lose a geom that was not properly destroyed" &&
-               buffers[idxWeWouldLose] == nullptr);
-      buffers.resize(newCount);
-    }
+    // void Device::allocBuffers(size_t newCount)
+    // {
+    //   for (int idxWeWouldLose=(int)newCount;idxWeWouldLose<(int)buffers.size();idxWeWouldLose++)
+    //     assert("alloc would lose a geom that was not properly destroyed" &&
+    //            buffers[idxWeWouldLose] == nullptr);
+    //   buffers.resize(newCount);
+    // }
 
     // void Device::allocTextures(size_t newCount)
     // {

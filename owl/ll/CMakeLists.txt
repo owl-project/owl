@@ -22,8 +22,8 @@ set(OWL_LL_SOURCES
   ../include/owl/llowl.h
 #  c-api.cpp
 
-  Buffers.h
-  Buffers.cpp
+#  Buffers.h
+#  Buffers.cpp
   
   Device.h
   Device.cpp

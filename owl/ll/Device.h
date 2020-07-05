@@ -20,7 +20,7 @@
 #include "owl/ll/DeviceMemory.h"
 // for the hit group callback type, which is part of the API
 #include "owl/ll/DeviceGroup.h"
-#include "owl/ll/Buffers.h"
+// #include "owl/ll/Buffers.h"
 
 namespace owl {
   namespace ll {
@@ -240,50 +240,50 @@ namespace owl {
     //   // size_t indexCount    = 0;
     // };
     
-    struct Group {
-      virtual bool containsGeom() = 0;
-      inline  bool containsInstances() { return !containsGeom(); }
+    // struct Group {
+    //   virtual bool containsGeom() = 0;
+    //   inline  bool containsInstances() { return !containsGeom(); }
 
-      void destroyAccel(Context *context);
-      // virtual void buildAccel(Context *context) = 0;
-      // virtual void refitAccel(Context *context) = 0;
+    //   void destroyAccel(Context *context);
+    //   // virtual void buildAccel(Context *context) = 0;
+    //   // virtual void refitAccel(Context *context) = 0;
       
-      virtual int  getSBTOffset() const = 0;
+    //   virtual int  getSBTOffset() const = 0;
       
-      // std::vector<int>       elements;
-      OptixTraversableHandle traversable = 0;
-      DeviceMemory           bvhMemory;
-    };
-    struct InstanceGroup : public Group {
-      InstanceGroup()
-      {}
-      virtual bool containsGeom() { return false; }
+    //   // std::vector<int>       elements;
+    //   OptixTraversableHandle traversable = 0;
+    //   DeviceMemory           bvhMemory;
+    // };
+    // struct InstanceGroup : public Group {
+    //   InstanceGroup()
+    //   {}
+    //   virtual bool containsGeom() { return false; }
 
-      template<bool fullRebuild>
-      void buildOrRefit_staticInstances(Context *context);
-      template<bool fullRebuild>
-      void buildOrRefit_motionBlur(Context *context);
+    //   template<bool fullRebuild>
+    //   void buildOrRefit_staticInstances(Context *context);
+    //   template<bool fullRebuild>
+    //   void buildOrRefit_motionBlur(Context *context);
       
-      // template<bool fullRebuild>
-      // void buildOrRefit(Context *context);
+    //   // template<bool fullRebuild>
+    //   // void buildOrRefit(Context *context);
 
-      // void destroyAccel(Context *context) override;
-      // void buildAccel(Context *context) override;
-      // void refitAccel(Context *context) override;
+    //   // void destroyAccel(Context *context) override;
+    //   // void buildAccel(Context *context) override;
+    //   // void refitAccel(Context *context) override;
       
-      virtual int  getSBTOffset() const override { return 0; }
+    //   virtual int  getSBTOffset() const override { return 0; }
 
-      DeviceMemory optixInstanceBuffer;
+    //   DeviceMemory optixInstanceBuffer;
 
-      /*! if we use motion blur, this is used to store all the motoin transforms */
-      DeviceMemory motionTransformsBuffer;
-      DeviceMemory motionAABBsBuffer;
+    //   /*! if we use motion blur, this is used to store all the motoin transforms */
+    //   DeviceMemory motionTransformsBuffer;
+    //   DeviceMemory motionAABBsBuffer;
       
-      DeviceMemory outputBuffer;
-      // std::vector<Group *>  children;
-      // const uint32_t *instanceIDs { nullptr };
-      // const affine3f *transforms[2] = { nullptr, nullptr };
-    };
+    //   DeviceMemory outputBuffer;
+    //   // std::vector<Group *>  children;
+    //   // const uint32_t *instanceIDs { nullptr };
+    //   // const affine3f *transforms[2] = { nullptr, nullptr };
+    // };
 
     /*! \warning currently using std::vector of *geoms*, but will have
         to eventually use geom *IDs* if we want(?) to allow side
@@ -515,9 +515,9 @@ namespace owl {
         'grow' or a 'shrink', but 'shrink' is only allowed if all
         buffer handles that would get 'lost' have alreay been
         destroyed */
-      void allocBuffers(size_t newCount);
+      // void allocBuffers(size_t newCount);
 
-      void allocTextures(size_t newCount);
+      // void allocTextures(size_t newCount);
 
       // void trianglesGeomGroupCreate(int groupID,
       //                               const int *geomIDs,
@@ -541,10 +541,10 @@ namespace owl {
 
       /*! destroy the given buffer, and release all host and/or device
           memory associated with it */
-      void bufferDestroy(int bufferID);
+      // void bufferDestroy(int bufferID);
       
-      /*! returns the given buffers device pointer */
-      void *bufferGetPointer(int bufferID);
+      // /*! returns the given buffers device pointer */
+      // void *bufferGetPointer(int bufferID);
       
       /* return the cuda stream associated with the current device. */
       CUstream getStream();
@@ -556,33 +556,33 @@ namespace owl {
         given device */
       cudaStream_t launchParamsGetStream(int lpID);
       
-      void bufferResize(int bufferID, size_t newItemCount);
-      void bufferUpload(int bufferID, const void *hostPtr);
+      // void bufferResize(int bufferID, size_t newItemCount);
+      // void bufferUpload(int bufferID, const void *hostPtr);
       
-      void deviceBufferCreate(int bufferID,
-                              size_t elementCount,
-                              size_t elementSize,
-                              const void *initData);
+      // void deviceBufferCreate(int bufferID,
+      //                         size_t elementCount,
+      //                         size_t elementSize,
+      //                         const void *initData);
 
-      /*! create a managed memory buffer */
-      void managedMemoryBufferCreate(int bufferID,
-                                     size_t elementCount,
-                                     size_t elementSize,
-                                     ManagedMemory::SP managedMem);
+      // /*! create a managed memory buffer */
+      // void managedMemoryBufferCreate(int bufferID,
+      //                                size_t elementCount,
+      //                                size_t elementSize,
+      //                                ManagedMemory::SP managedMem);
       
-      void hostPinnedBufferCreate(int bufferID,
-                                  size_t elementCount,
-                                  size_t elementSize,
-                                  HostPinnedMemory::SP pinnedMem);
+      // void hostPinnedBufferCreate(int bufferID,
+      //                             size_t elementCount,
+      //                             size_t elementSize,
+      //                             HostPinnedMemory::SP pinnedMem);
 
-      void graphicsBufferCreate(int bufferID,
-                                size_t elementCount,
-                                size_t elementSize,
-                                cudaGraphicsResource_t resource);
+      // void graphicsBufferCreate(int bufferID,
+      //                           size_t elementCount,
+      //                           size_t elementSize,
+      //                           cudaGraphicsResource_t resource);
 
-      void graphicsBufferMap(int bufferID);
+      // void graphicsBufferMap(int bufferID);
 
-      void graphicsBufferUnmap(int bufferID);
+      // void graphicsBufferUnmap(int bufferID);
 
       // void trianglesGeomSetVertexBuffers(int geomID,
       //                                    const std::vector<int32_t> &bufferID,
@@ -696,14 +696,14 @@ namespace owl {
       //   return ig;
       // }
       
-      Buffer *checkGetBuffer(int bufferID)
-      {
-        assert("check valid buffer ID" && bufferID >= 0);
-        assert("check valid buffer ID" && bufferID <  buffers.size());
-        Buffer *buffer = buffers[bufferID];
-        assert("check valid buffer" && buffer != nullptr);
-        return buffer;
-      }
+      // Buffer *checkGetBuffer(int bufferID)
+      // {
+      //   assert("check valid buffer ID" && bufferID >= 0);
+      //   assert("check valid buffer ID" && bufferID <  buffers.size());
+      //   Buffer *buffer = buffers[bufferID];
+      //   assert("check valid buffer" && buffer != nullptr);
+      //   return buffer;
+      // }
 
       // // accessor helpers:
       // TrianglesGeom *checkGetTrianglesGeom(int geomID)
@@ -765,7 +765,7 @@ namespace owl {
       std::vector<LaunchParams *> launchParams;
       // std::vector<Geom *>         geoms;
       // std::vector<Group *>        groups;
-      std::vector<Buffer *>       buffers;
+      // std::vector<Buffer *>       buffers;
       // std::vector<cudaTextureObject_t> textureObjects;
       SBT                         sbt;
 

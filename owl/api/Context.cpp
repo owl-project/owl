@@ -83,8 +83,10 @@ namespace owl {
   Buffer::SP Context::hostPinnedBufferCreate(OWLDataType type,
                                              size_t count)
   {
-    Buffer::SP buffer = std::make_shared<HostPinnedBuffer>(this,type,count);
+    Buffer::SP buffer = std::make_shared<HostPinnedBuffer>(this,type);
     assert(buffer);
+    buffer->createDeviceData(llo->devices);
+    buffer->resize(count);
     return buffer;
   }
 
@@ -97,8 +99,12 @@ namespace owl {
                                      const void *init)
   {
     Buffer::SP buffer
-      = std::make_shared<ManagedMemoryBuffer>(this,type,count,init);
+      = std::make_shared<ManagedMemoryBuffer>(this,type);
     assert(buffer);
+    buffer->createDeviceData(llo->devices);
+    buffer->resize(count);
+    if (init)
+      buffer->upload(init);
     return buffer;
   }
   
@@ -107,8 +113,12 @@ namespace owl {
                                          const void *init)
   {
     Buffer::SP buffer
-      = std::make_shared<DeviceBuffer>(this,type,count,init);
+      = std::make_shared<DeviceBuffer>(this,type);
     assert(buffer);
+    buffer->createDeviceData(llo->devices);
+    buffer->resize(count);
+    if (init)
+      buffer->upload(init);
     return buffer;
   }
 
@@ -132,8 +142,12 @@ namespace owl {
                                 cudaGraphicsResource_t resource)
   {
     Buffer::SP buffer
-      = std::make_shared<GraphicsBuffer>(this, type, count, resource);
+      = std::make_shared<GraphicsBuffer>(this, type, resource);
+    
     assert(buffer);
+    buffer->createDeviceData(llo->devices);
+    buffer->resize(count);
+
     return buffer;
   }
 

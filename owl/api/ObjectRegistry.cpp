@@ -87,7 +87,7 @@ namespace owl {
   template<>
   void ObjectRegistryT<Buffer>::reallocContextIDs(int newMaxIDs)
   {
-    context->llo->allocBuffers(newMaxIDs);
+    // context->llo->allocBuffers(newMaxIDs);
   }
 
   template<>
