@@ -25,11 +25,6 @@ namespace owl {
 
   struct TrianglesGeomGroup : public GeomGroup {
 
-    // /*! any device-specific data, such as optix handles, cuda device
-    //     pointers, etc */
-    // struct DeviceSpecific : public GeomGroup::DeviceSpecific {
-    // };
-    
     TrianglesGeomGroup(Context *const context,
                        size_t numChildren);
     virtual std::string toString() const { return "TrianglesGeomGroup"; }
@@ -41,13 +36,6 @@ namespace owl {
       - ie, our _parent_ node may need this */
     void updateMotionBounds();
 
-    DeviceData &getDD(ll::Device *device)
-    { assert(device->ID < deviceData.size()); return *deviceData[device->ID]; }
-    
-    /*! creates the device-specific data for this group */
-    Group::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(); }
-    
     /*! low-level accel structure builder for given device */
     template<bool FULL_REBUILD>
     void buildAccelOn(ll::Device *device);

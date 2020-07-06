@@ -1,4 +1,4 @@
-// ======================================================================== //
+/ ======================================================================== //
 // Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
@@ -24,7 +24,7 @@
 
 namespace owl {
   namespace ll {
-    struct ProgramGroups;
+    // struct ProgramGroups;
     struct Device;
     
     /*! allocator that allows for allocating ranges of STB indices as
@@ -96,91 +96,85 @@ namespace owl {
       OptixModuleCompileOptions   moduleCompileOptions   = {};
       OptixPipeline               pipeline               = nullptr;
 
-      /*! maximum depth instancing tree as specified by
-          `setMaxInstancingDepth` */
-      int maxInstancingDepth = 1;      
-      int numRayTypes { 1 };
-      /*! by default motion blur is off, as it costs performacne */
-      bool motionBlurEnabled = 0;
     };
     
-    struct Module {
-      /*! for all *optix* programs we can directly buidl the PTX code
-          into a module using optixbuildmodule - this is the result of
-          that operation */
-      OptixModule module = nullptr;
+    // struct Module {
+    //   /*! for all *optix* programs we can directly buidl the PTX code
+    //       into a module using optixbuildmodule - this is the result of
+    //       that operation */
+    //   OptixModule module = nullptr;
       
-      /*! for the *bounds* function we have to build a *separate*
-          module because this one is built outside of optix, and thus
-          does not have the internal _optix_xyz() symbols in it */
-      CUmodule    boundsModule = 0;
+    //   /*! for the *bounds* function we have to build a *separate*
+    //       module because this one is built outside of optix, and thus
+    //       does not have the internal _optix_xyz() symbols in it */
+    //   CUmodule    boundsModule = 0;
       
-      const char *ptxCode;
-      void create(Context *context);
-    };
-    struct Modules {
-      ~Modules() {
-        assert(noActiveHandles());
-      }
-      bool noActiveHandles() {
-        for (auto &module : modules) if (module.module != nullptr) return false;
-        return true;
-      }
-      size_t size() const { return modules.size(); }
-      void alloc(size_t size);
-      /*! will destroy the *optix handles*, but will *not* clear the
-        modules vector itself */
-      void destroyOptixHandles(Context *context);
-      void buildOptixHandles(Context *context);
-      void set(size_t slot, const char *ptxCode);
-      Module *get(int moduleID) { return moduleID < 0?nullptr:&modules[moduleID]; }
-      std::vector<Module> modules;
-    };
+    //   const char *ptxCode;
+    //   void create(Context *context);
+    // };
+    // struct Modules {
+    //   ~Modules() {
+    //     assert(noActiveHandles());
+    //   }
+    //   bool noActiveHandles() {
+    //     for (auto &module : modules) if (module.module != nullptr) return false;
+    //     return true;
+    //   }
+    //   size_t size() const { return modules.size(); }
+    //   void alloc(size_t size);
+    //   /*! will destroy the *optix handles*, but will *not* clear the
+    //     modules vector itself */
+    //   void destroyOptixHandles(Context *context);
+    //   void buildOptixHandles(Context *context);
+    //   void set(size_t slot, const char *ptxCode);
+    //   Module *get(int moduleID) { return moduleID < 0?nullptr:&modules[moduleID]; }
+    //   std::vector<Module> modules;
+    // };
     
-    struct ProgramGroup {
-      OptixProgramGroup         pg        = nullptr;
-    };
-    struct Program {
-      const char *progName = nullptr;
-      int         moduleID = -1;
-      size_t      dataSize = 0;
-    };
-    struct LaunchParams {
-      LaunchParams(Context *context, size_t sizeOfData);
+    // struct ProgramGroup {
+    //   OptixProgramGroup         pg        = nullptr;
+    // };
+    // struct Program {
+    //   const char *progName = nullptr;
+    //   int         moduleID = -1;
+    //   size_t      dataSize = 0;
+    // };
+    // struct LaunchParams {
+    //   LaunchParams(Context *context, size_t sizeOfData);
       
-      const size_t         dataSize;
+    //   const size_t         dataSize;
       
-      /*! host-size memory for the launch paramters - we have a
-          host-side copy, too, so we can leave the launch2D call
-          without having to first wait for the cudaMemcpy to
-          complete */
-      std::vector<uint8_t> hostMemory;
+    //   /*! host-size memory for the launch paramters - we have a
+    //       host-side copy, too, so we can leave the launch2D call
+    //       without having to first wait for the cudaMemcpy to
+    //       complete */
+    //   std::vector<uint8_t> hostMemory;
       
-      /*! the cuda device memory we copy the launch params to */
-      DeviceMemory         deviceMemory;
+    //   /*! the cuda device memory we copy the launch params to */
+    //   DeviceMemory         deviceMemory;
       
-      /*! a cuda stream we can use for the async upload and the
-          following async launch */
-      cudaStream_t         stream = nullptr;
-    };
-    struct RayGenPG : public ProgramGroup {
-      Program program;
-    };
-    struct MissProgPG : public ProgramGroup {
-      Program program;
-    };
-    struct HitGroupPG : public ProgramGroup {
-      Program anyHit;
-      Program closestHit;
-      Program intersect;
-    };
-    struct GeomType {
-      std::vector<HitGroupPG> perRayType;
-      Program boundsProg;
-      size_t  boundsProgDataSize = 0; // do we still need this!?
-      size_t  hitProgDataSize = (size_t)-1;
-      CUfunction boundsFuncKernel;
-    };
+    //   /*! a cuda stream we can use for the async upload and the
+    //       following async launch */
+    //   cudaStream_t         stream = nullptr;
+    // };
+    // struct RayGenPG : public ProgramGroup {
+    //   Program program;
+    // };
+    // struct MissProgPG : public ProgramGroup {
+    //   Program program;
+    // };
+    // struct HitGroupPG : public ProgramGroup {
+    //   Program anyHit;
+    //   Program closestHit;
+    //   Program intersect;
+    // };
+    // struct GeomType {
+    //   std::vector<HitGroupPG> perRayType;
+    //   Program boundsProg;
+    //   size_t  boundsProgDataSize = 0; // do we still need this!?
+    //   size_t  hitProgDataSize = (size_t)-1;
+    //   CUfunction boundsFuncKernel;
+    // };
     
     
     struct SBT {
@@ -371,22 +365,22 @@ namespace owl {
         context->destroyPipeline();
       }
 
-      void buildModules()
-      {
-        // modules shouldn't be rebuilt while a pipeline is still using them(?)
-        assert(context->pipeline == nullptr);
-        modules.destroyOptixHandles(context);
-        modules.buildOptixHandles(context);
-      }
+      // void buildModules()
+      // {
+      //   // modules shouldn't be rebuilt while a pipeline is still using them(?)
+      //   assert(context->pipeline == nullptr);
+      //   modules.destroyOptixHandles(context);
+      //   modules.buildOptixHandles(context);
+      // }
 
-      /*! (re-)builds all optix programs, with current pipeline settings */
-      void buildPrograms()
-      {
-        // programs shouldn't be rebuilt while a pipeline is still using them(?)
-        assert(context->pipeline == nullptr);
-        destroyOptixPrograms();
-        buildOptixPrograms();
-      }
+      // /*! (re-)builds all optix programs, with current pipeline settings */
+      // void buildPrograms()
+      // {
+      //   // programs shouldn't be rebuilt while a pipeline is still using them(?)
+      //   assert(context->pipeline == nullptr);
+      //   destroyOptixPrograms();
+      //   buildOptixPrograms();
+      // }
 
       /*! Set bounding box program for given geometry type, using a
           bounding box program to be called on the device. Note that
@@ -394,80 +388,80 @@ namespace owl {
           programs are not 'per ray type', but exist only once per
           geometry type. Obviously only allowed for user geometry
           typed. */
-      void setGeomTypeBoundsProgDevice(int geomTypeID,
-                                       int moduleID,
-                                       const char *progName,
-                                       size_t geomDataSize);
+      // void setGeomTypeBoundsProgDevice(int geomTypeID,
+      //                                  int moduleID,
+      //                                  const char *progName,
+      //                                  size_t geomDataSize);
       
       /*! set closest hit program for given geometry type and ray
           type. Note progName will *not* be copied, so the pointer
           must remain valid as long as this geom may ever get
           recompiled */
-      void setGeomTypeClosestHit(int geomTypeID,
-                                 int rayTypeID,
-                                 int moduleID,
-                                 const char *progName);
+      // void setGeomTypeClosestHit(int geomTypeID,
+      //                            int rayTypeID,
+      //                            int moduleID,
+      //                            const char *progName);
       
-      /*! set any hit program for given geometry type and ray
-          type. Note progName will *not* be copied, so the pointer
-          must remain valid as long as this geom may ever get
-          recompiled */
-      void setGeomTypeAnyHit(int geomTypeID,
-                                 int rayTypeID,
-                                 int moduleID,
-                                 const char *progName);
+      // /*! set any hit program for given geometry type and ray
+      //     type. Note progName will *not* be copied, so the pointer
+      //     must remain valid as long as this geom may ever get
+      //     recompiled */
+      // void setGeomTypeAnyHit(int geomTypeID,
+      //                            int rayTypeID,
+      //                            int moduleID,
+      //                            const char *progName);
       
-      /*! set intersect program for given geometry type and ray type
-        (only allowed for user geometry types). Note progName will
-        *not* be copied, so the pointer must remain valid as long as
-        this geom may ever get recompiled */
-      void setGeomTypeIntersect(int geomTypeID,
-                                int rayTypeID,
-                                int moduleID,
-                                const char *progName);
+      // /*! set intersect program for given geometry type and ray type
+      //   (only allowed for user geometry types). Note progName will
+      //   *not* be copied, so the pointer must remain valid as long as
+      //   this geom may ever get recompiled */
+      // void setGeomTypeIntersect(int geomTypeID,
+      //                           int rayTypeID,
+      //                           int moduleID,
+      //                           const char *progName);
       
-      void setRayGen(int pgID,
-                     int moduleID,
-                     const char *progName,
-                     /*! size of that program's SBT data */
-                     size_t missProgDataSize);
+      // void setRayGen(int pgID,
+      //                int moduleID,
+      //                const char *progName,
+      //                /*! size of that program's SBT data */
+      //                size_t missProgDataSize);
       
-      /*! specifies which miss program to run for a given miss prog
-          ID */
-      void setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
-                       int programID,
-                       /*! ID of the module the program will be bound
-                           in, in [0..numAllocedModules) */
-                       int moduleID,
-                       /*! name of the program. Note we do not NOT
-                           create a copy of this string, so the string
-                           has to remain valid for the duration of the
-                           program */
-                       const char *progName,
-                       /*! size of that program's SBT data */
-                       size_t missProgDataSize);
+      // /*! specifies which miss program to run for a given miss prog
+      //     ID */
+      // void setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+      //                  int programID,
+      //                  /*! ID of the module the program will be bound
+      //                      in, in [0..numAllocedModules) */
+      //                  int moduleID,
+      //                  /*! name of the program. Note we do not NOT
+      //                      create a copy of this string, so the string
+      //                      has to remain valid for the duration of the
+      //                      program */
+      //                  const char *progName,
+      //                  /*! size of that program's SBT data */
+      //                  size_t missProgDataSize);
       
-      void allocModules(size_t count)
-      { modules.alloc(count); }
+      // void allocModules(size_t count)
+      // { modules.alloc(count); }
 
-      void allocLaunchParams(size_t count);
+      // // void allocLaunchParams(size_t count);
       
-      /*! each geom will always use "numRayTypes" successive hit
-        groups (one per ray type), so this must be a multiple of the
-        number of ray types to be used */
-      void allocGeomTypes(size_t count);
+      // /*! each geom will always use "numRayTypes" successive hit
+      //   groups (one per ray type), so this must be a multiple of the
+      //   number of ray types to be used */
+      // void allocGeomTypes(size_t count);
 
-      void geomTypeCreate(int geomTypeID,
-                          size_t programDataSize);
-      void launchParamsCreate(int launchParamsID,
-                              size_t sizeOfData);
+      // void geomTypeCreate(int geomTypeID,
+      //                     size_t programDataSize);
+      // // void launchParamsCreate(int launchParamsID,
+      // //                         size_t sizeOfData);
         
-      void allocRayGens(size_t count);
+      // // void allocRayGens(size_t count);
 
-      /*! each geom will always use "numRayTypes" successive hit
-        groups (one per ray type), so this must be a multiple of the
-        number of ray types to be used */
-      void allocMissProgs(size_t count);
+      // /*! each geom will always use "numRayTypes" successive hit
+      //   groups (one per ray type), so this must be a multiple of the
+      //   number of ray types to be used */
+      // void allocMissProgs(size_t count);
 
       /*! Resize the array of geom IDs. This can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
@@ -554,9 +548,9 @@ namespace owl {
       OptixDeviceContext getOptixContext() const
       { return context->optixContext; }
 
-      /*! return the cuda stream by the given launchparams object, on
-        given device */
-      cudaStream_t launchParamsGetStream(int lpID);
+      // /*! return the cuda stream by the given launchparams object, on
+      //   given device */
+      // cudaStream_t launchParamsGetStream(int lpID);
       
       // void bufferResize(int bufferID, size_t newItemCount);
       // void bufferUpload(int bufferID, const void *hostPtr);
@@ -639,23 +633,23 @@ namespace owl {
       //   assert("check valid geom" && geom != nullptr);
       //   return geom;
       // }
-      LaunchParams *checkGetLaunchParams(int launchParamsID)
-      {
-        assert("check valid launchParams ID" && launchParamsID >= 0);
-        assert("check valid launchParams ID" && launchParamsID <  launchParams.size());
-        LaunchParams *lp = this->launchParams[launchParamsID];
-        assert("check valid launchParams" && lp != nullptr);
-        return lp;
-      }
+      // LaunchParams *checkGetLaunchParams(int launchParamsID)
+      // {
+      //   assert("check valid launchParams ID" && launchParamsID >= 0);
+      //   assert("check valid launchParams ID" && launchParamsID <  launchParams.size());
+      //   LaunchParams *lp = this->launchParams[launchParamsID];
+      //   assert("check valid launchParams" && lp != nullptr);
+      //   return lp;
+      // }
       
-      GeomType *checkGetGeomType(int geomTypeID)
-      {
-        assert("check valid geomType ID" && geomTypeID >= 0);
-        assert("check valid geomType ID" && geomTypeID <  geomTypes.size());
-        GeomType *geomType = &geomTypes[geomTypeID];
-        assert("check valid geomType" && geomType != nullptr);
-        return geomType;
-      }
+      // GeomType *checkGetGeomType(int geomTypeID)
+      // {
+      //   assert("check valid geomType ID" && geomTypeID >= 0);
+      //   assert("check valid geomType ID" && geomTypeID <  geomTypes.size());
+      //   GeomType *geomType = &geomTypes[geomTypeID];
+      //   assert("check valid geomType" && geomType != nullptr);
+      //   return geomType;
+      // }
 
       // // accessor helpers:
       // Group *checkGetGroup(int groupID)
@@ -739,20 +733,20 @@ namespace owl {
       //                                const void *cbData);
       // void sbtHitProgsBuild(LLOWriteHitProgDataCB writeHitProgDataCB,
       //                       const void *callBackUserData);
-      void sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
-                           const void *callBackUserData);
-      void sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgDataCB,
-                             const void *callBackUserData);
+      // void sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
+      //                      const void *callBackUserData);
+      // void sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgDataCB,
+      //                        const void *callBackUserData);
 
-      void launch(int rgID, const vec2i &dims);
+      // void launch(int rgID, const vec2i &dims);
 
-      void launch(int rgID,
-                  const vec2i &dims,
-                  int32_t launchParamsID,
-                  LLOWriteLaunchParamsCB writeLaunchParamsCB,
-                  const void *cbData);
+      // void launch(int rgID,
+      //             const vec2i &dims,
+      //             int32_t launchParamsID,
+      //             LLOWriteLaunchParamsCB writeLaunchParamsCB,
+      //             const void *cbData);
 
-      void setRayTypeCount(size_t rayTypeCount);
+      // void setRayTypeCount(size_t rayTypeCount);
       // void setTransforms(int igID, int timeStep, const affine3f *xfms);
       
       Context                  *context;
@@ -760,11 +754,11 @@ namespace owl {
       int pushActive() { return context->pushActive(); }
       void popActive(int old) { context->popActive(old); }
       
-      Modules                     modules;
-      std::vector<GeomType>       geomTypes;
-      std::vector<RayGenPG>       rayGenPGs;
-      std::vector<MissProgPG>     missProgPGs;
-      std::vector<LaunchParams *> launchParams;
+      // Modules                     modules;
+      // std::vector<GeomType>       geomTypes;
+      // std::vector<RayGenPG>       rayGenPGs;
+      // std::vector<MissProgPG>     missProgPGs;
+      // std::vector<LaunchParams *> launchParams;
       // std::vector<Geom *>         geoms;
       // std::vector<Group *>        groups;
       // std::vector<Buffer *>       buffers;

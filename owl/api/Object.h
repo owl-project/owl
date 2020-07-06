@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -19,9 +19,14 @@
 #include "owl/owl.h"
 #include "owl/ll/common.h"
 #include "owl/ll/DeviceGroup.h"
+#include "owl/ll/Device.h"
+#include "owl/ll/DeviceMemory.h"
 
 namespace owl {
 
+  using ll::Device;
+  using ll::DeviceMemory;
+  
   std::string typeToString(OWLDataType type);
   size_t      sizeOf(OWLDataType type);
 

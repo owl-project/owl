@@ -58,9 +58,10 @@ namespace owl {
     ObjectRegistryT<LaunchParams>     launchParams;
 
     ll::RangeAllocator sbtRangeAllocator;
-    
+
     //! TODO: allow changing that via api ..
     size_t numRayTypes = 1;
+    std::vector<MissProg::SP> missProgPerRayType;
     bool   motionBlurEnabled = false;
 
     /*! access list of all devices */
@@ -100,6 +101,12 @@ namespace owl {
     void buildSBT(OWLBuildSBTFlags flags);
     void buildPipeline();
     void buildPrograms();
+    void destroyPrograms();
+    void buildModules();
+
+    void buildPrograms(Device *device);
+    void destroyPrograms(Device *device);
+
     
     GeomGroup::SP
     trianglesGeomGroupCreate(size_t numChildren);
@@ -173,6 +180,13 @@ namespace owl {
     
     Module::SP createModule(const std::string &ptxCode);
 
+    /*! maximum depth instancing tree as specified by
+      `setMaxInstancingDepth` */
+    int maxInstancingDepth = 1;      
+    int numRayTypes { 1 };
+    /*! by default motion blur is off, as it costs performacne */
+    bool motionBlurEnabled = 0;
+    
     owl::ll::DeviceGroup *llo;
   };
 

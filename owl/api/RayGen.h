@@ -39,13 +39,40 @@ namespace owl {
   struct RayGen : public SBTObject<RayGenType> {
     typedef std::shared_ptr<RayGen> SP;
     
+    struct DeviceData : public RegisteredObject::DeviceData {
+      DeviceData(size_t  dataSize,
+                 Device *device);
+      
+      /*! host-size memory for the ray gen program's SBT data, for the
+          given device (this is for 'writeVariables' to write into
+          when building the sbt */
+      std::vector<uint8_t> hostMemory;
+      
+      /*! device side copy of 'hostMemory' - this is the pointer that
+          will go into the actual SBT */
+      DeviceMemory         deviceMemory;
+      const size_t         rayGenRecordSize;
+    };
+      
     RayGen(Context *const context,
            RayGenType::SP type);
     
     virtual std::string toString() const { return "RayGen"; }
 
     void launch(const vec2i &dims);
-    void launch(const vec2i &dims, const LaunchParams::SP &launchParams);
+    
+    void launchAsync(const vec2i &dims, const LaunchParams::SP &launchParams);
+
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(type->varStructSize,device); }
+
+    DeviceData &getDD(int deviceID) const
+    {
+      assert(deviceID < deviceData.size());
+      return *deviceData[deviceID]->as<DeviceData>();
+    }
+    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
   };
 
 } // ::owl

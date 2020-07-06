@@ -38,50 +38,63 @@ namespace owl {
   struct GeomType : public SBTObjectType {
     typedef std::shared_ptr<GeomType> SP;
     
+    /*! any device-specific data, such as optix handles, cuda device
+        pointers, etc */
+    struct DeviceData : public RegisteredObject::DeviceData {
+      typedef std::shared_ptr<DeviceData> SP;
+
+      virtual void writeSBTHeader(uint8_t *const sbtRecord,
+                                  Device *device,
+                                  int rayTypeID);
+
+      /*! for hit progs these may be multiple entires; for miss and
+          raygens this will be exactly one */
+      std::vector<OptixProgramGroup> chPGs;
+      std::vector<OptixProgramGroup> ahPGs;
+    };
+
+    
     GeomType(Context *const context,
              size_t varStructSize,
              const std::vector<OWLVarDecl> &varDecls);
     
     virtual std::string toString() const { return "GeomType"; }
+
+    DeviceData &getDD(int deviceID) const
+    {
+      assert(deviceID < deviceData.size());
+      return *deviceData[deviceID]->as<DeviceData>();
+    }
+    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+    
+    
+    virtual std::shared_ptr<Geom> createGeom() = 0;
+    
+    virtual void setAnyHitProgram(int rayType,
+                                  Module::SP module,
+                                  const std::string &progName);
     virtual void setClosestHitProgram(int rayType,
                                       Module::SP module,
                                       const std::string &progName);
 
-    std::vector<ProgramDesc> closestHit;
-    
-    virtual void setAnyHitProgram(int rayType,
-                                      Module::SP module,
-                                      const std::string &progName);
-
     std::vector<ProgramDesc> anyHit;
-    virtual std::shared_ptr<Geom> createGeom() = 0;
+    std::vector<ProgramDesc> closestHit;
+
   };
 
   struct Geom : public SBTObject<GeomType> {
     typedef std::shared_ptr<Geom> SP;
 
-    /*! any device-specific data, such as optix handles, cuda device
-        pointers, etc */
-    struct DeviceData {
-      typedef std::shared_ptr<DeviceData> SP;
-
-      virtual ~DeviceData() {}
-      
-      template<typename T>
-      inline T *as() { return dynamic_cast<T*>(this); }
-    };
-
     Geom(Context *const context,
          GeomType::SP geomType);
     virtual std::string toString() const { return "Geom"; }
 
-    void createDeviceData(const std::vector<ll::Device *> &devices)
-    { for (auto device : devices) deviceData.push_back(createOn(device)); }
-
-    /*! creates the device-specific data for this group */
-    virtual DeviceData::SP createOn(ll::Device *device) = 0;
-
-    std::vector<DeviceData::SP> deviceData;
+    void writeSBTRecord(uint8_t *const sbtRecord,
+                        Device *device,
+                        int rayTypeID);
     
     GeomType::SP geomType;
   };

@@ -253,7 +253,6 @@ namespace owl {
     return std::make_shared<TrianglesGeom>(context,self);
   }
 
-
   void Context::buildHitGroupsOn(ll::Device *device)
   {
     LOG("building SBT hit group records");
@@ -325,30 +324,34 @@ namespace owl {
           uint8_t *const sbtRecord
             = hitGroupRecords.data() + recordID*hitGroupRecordSize;
 
-          // ------------------------------------------------------------------
-          // pack record header with the corresponding hit group:
-          // ------------------------------------------------------------------
-          // first, compute pointer to record:
-          char    *const sbtRecordHeader = (char *)sbtRecord;
-          // then, get gemetry we want to write (to find its hit group ID)...
-          // const Geom *const geom = checkGetGeom(geomID);
-          // ... find the PG that goes into the record header...
-          auto &geomType = device->geomTypes[geom->geomType->ID];
-          const ll::HitGroupPG &hgPG
-            = geomType.perRayType[rayTypeID];
-          // ... and tell optix to write that into the record
-          OPTIX_CALL(SbtRecordPackHeader(hgPG.pg,sbtRecordHeader));
+          geom->writeSBTRecord(sbtRecord,device,rayTypeID);
           
-          // ------------------------------------------------------------------
-          // finally, let the user fill in the record's payload using
-          // the callback
-          // ------------------------------------------------------------------
-          uint8_t *const sbtRecordData
-            = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
-          geom->writeVariables(sbtRecordData,device->ID);
+          // // ------------------------------------------------------------------
+          // // pack record header with the corresponding hit group:
+          // // ------------------------------------------------------------------
+          // // first, compute pointer to record:
+          // char    *const sbtRecordHeader = (char *)sbtRecord;
+          // // then, get gemetry we want to write (to find its hit group ID)...
+          // // const Geom *const geom = checkGetGeom(geomID);
+          // // ... find the PG that goes into the record header...
+          
+          // // auto geomType = geom->type;//device->geomTypes[geom->geomType->ID];
+          // GeomType::DeviceData &gt = geom->type->getDD(device);
+          // // const ll::HitGroupPG &hgPG
+          // //   = geomType.perRayType[rayTypeID];
+          // // ... and tell optix to write that into the record
+          // OPTIX_CALL(SbtRecordPackHeader(gt.getPG(rayTypeID),sbtRecordHeader));
+          
+          // // ------------------------------------------------------------------
+          // // finally, let the user fill in the record's payload using
+          // // the callback
+          // // ------------------------------------------------------------------
+          // uint8_t *const sbtRecordData
+          //   = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
+          // geom->writeVariables(sbtRecordData,device->ID);
 
-          std::cout << " writing geom " << geom->toString()
-                    << " raytype " << rayTypeID << " to offset " << recordID*hitGroupRecordSize << std::endl;
+          // std::cout << " writing geom " << geom->toString()
+          //           << " raytype " << rayTypeID << " to offset " << recordID*hitGroupRecordSize << std::endl;
           // writeHitProgDataCB(sbtRecordData,
           //                    context->owlDeviceID,
           //                    geomID,
@@ -418,18 +421,16 @@ namespace owl {
 
   void Context::buildPipeline()
   {
+    throw std::runtime_error("not implemented");
     // lloCreatePipeline(llo);
-    llo->createPipeline();
+    // llo->createPipeline();
   }
 
-  void Context::buildPrograms()
+  void Context::buildModules()
   {
-    // lloBuildModules(llo);
-    // lloBuildPrograms(llo);
-    llo->buildModules();
-    llo->buildPrograms();
+    throw std::runtime_error("not implemented");
   }
-
+  
   void Context::setRayTypeCount(size_t rayTypeCount)
   {
     /* TODO; sanity checking that this is a useful value, and that
@@ -437,7 +438,7 @@ namespace owl {
     this->numRayTypes = rayTypeCount;
       
     // lloSetRayTypeCount(llo,rayTypeCount);
-    llo->setRayTypeCount(rayTypeCount);
+    // llo->setRayTypeCount(rayTypeCount);
   }
 
   /*! sets maximum instancing depth for the given context:
@@ -460,14 +461,244 @@ namespace owl {
     instances) */
   void Context::setMaxInstancingDepth(int32_t maxInstanceDepth)
   {
-    llo->setMaxInstancingDepth(maxInstanceDepth);
+    maxInstanceDepth = maxInstanceDepth;
   }
 
   void Context::enableMotionBlur()
   {
     motionBlurEnabled = true;
-    // todo: axe this
-    llo->enableMotionBlur();
+    // // todo: axe this
+    // llo->enableMotionBlur();
+  }
+
+
+
+
+
+  void Context::buildPrograms()
+  {
+    buildModules();
+    for (auto device : getDevices())
+      buildPrograms(device);
+  }
+
+  void Context::destroyPrograms()
+  {
+    for (auto device : getDevices())
+      destroyPrograms(device);
+  }
+
+
+  // void Context::buildPrograms(Device *device)
+  // {
+  //   buildMissPrograms(device);
+  //   buildRayGenPrograms(device);
+  //   buildBoundsPrograms(device);
+  //   buildIsecPrograms(device);
+  //   buildCHPrograms(device);
+  //   buildAHPrograms(device);
+  // }
+
+  
+  void Context::buildOptixPrograms(Device *device)
+  {
+    int oldActive = context->pushActive();
+    OptixProgramGroupOptions pgOptions = {};
+    OptixProgramGroupDesc    pgDesc    = {};
+
+    // ------------------------------------------------------------------
+    // rayGen programs
+    // ------------------------------------------------------------------
+    for (int pgID=0;pgID<rayGenPGs.size();pgID++) {
+      RayGenPG &pg     = rayGenPGs[pgID];
+      Module   *module = modules.get(pg.program.moduleID);
+      pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
+      std::string annotatedProgName
+        = pg.program.progName
+        ? std::string("__raygen__")+pg.program.progName
+        : "";
+      if (module) {
+        assert(module->module != nullptr);
+        assert(pg.program.progName != nullptr);
+        pgDesc.raygen.module            = module->module;
+        pgDesc.raygen.entryFunctionName = annotatedProgName.c_str();
+      } else {
+        pgDesc.raygen.module            = nullptr;
+        pgDesc.raygen.entryFunctionName = nullptr;
+      }
+      char log[2048];
+      size_t sizeof_log = sizeof( log );
+      OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
+                                          &pgDesc,
+                                          1,
+                                          &pgOptions,
+                                          log,&sizeof_log,
+                                          &pg.pg
+                                          ));
+    }
+      
+    // ------------------------------------------------------------------
+    // miss programs
+    // ------------------------------------------------------------------
+    for (int pgID=0;pgID<missProgPGs.size();pgID++) {
+      MissProgPG &pg     = missProgPGs[pgID];
+      Module *module = modules.get(pg.program.moduleID);
+      pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_MISS;
+      std::string annotatedProgName
+        = pg.program.progName
+        ? std::string("__miss__")+pg.program.progName
+        : "";
+      if (module) {
+        assert(module->module != nullptr);
+        assert(pg.program.progName != nullptr);
+        pgDesc.miss.module            = module->module;
+        pgDesc.miss.entryFunctionName = annotatedProgName.c_str();
+      } else {
+        pgDesc.miss.module            = nullptr;
+        pgDesc.miss.entryFunctionName = nullptr;
+      }
+      char log[2048];
+      size_t sizeof_log = sizeof( log );
+      OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
+                                          &pgDesc,
+                                          1,
+                                          &pgOptions,
+                                          log,&sizeof_log,
+                                          &pg.pg
+                                          ));
+    }
+      
+    // ------------------------------------------------------------------
+    // hitGroup programs
+    // ------------------------------------------------------------------
+    for (int geomTypeID=0;geomTypeID<geomTypes.size();geomTypeID++) {
+      auto &geomType = geomTypes[geomTypeID];
+      for (auto &pg : geomType.perRayType) {
+        assert("check program group not already active" && pg.pg == nullptr);
+        pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
+
+        // ----------- closest hit -----------
+        Module *moduleCH = modules.get(pg.closestHit.moduleID);
+        std::string annotatedProgNameCH
+          = pg.closestHit.progName
+          ? std::string("__closesthit__")+pg.closestHit.progName
+          : "";
+        if (moduleCH) {
+          assert(moduleCH->module != nullptr);
+          assert(pg.closestHit.progName != nullptr);
+          pgDesc.hitgroup.moduleCH            = moduleCH->module;
+          pgDesc.hitgroup.entryFunctionNameCH = annotatedProgNameCH.c_str();
+        } else {
+          pgDesc.hitgroup.moduleCH            = nullptr;
+          pgDesc.hitgroup.entryFunctionNameCH = nullptr;
+        }
+        // ----------- any hit -----------
+        Module *moduleAH = modules.get(pg.anyHit.moduleID);
+        std::string annotatedProgNameAH
+          = pg.anyHit.progName
+          ? std::string("__anyhit__")+pg.anyHit.progName
+          : "";
+        if (moduleAH) {
+          assert(moduleAH->module != nullptr);
+          assert(pg.anyHit.progName != nullptr);
+          pgDesc.hitgroup.moduleAH            = moduleAH->module;
+          pgDesc.hitgroup.entryFunctionNameAH = annotatedProgNameAH.c_str();
+        } else {
+          pgDesc.hitgroup.moduleAH            = nullptr;
+          pgDesc.hitgroup.entryFunctionNameAH = nullptr;
+        }
+        // ----------- intersect -----------
+        Module *moduleIS = modules.get(pg.intersect.moduleID);
+        std::string annotatedProgNameIS
+          = pg.intersect.progName
+          ? std::string("__intersection__")+pg.intersect.progName
+          : "";
+        if (moduleIS) {
+          assert(moduleIS->module != nullptr);
+          assert(pg.intersect.progName != nullptr);
+          pgDesc.hitgroup.moduleIS            = moduleIS->module;
+          pgDesc.hitgroup.entryFunctionNameIS = annotatedProgNameIS.c_str();
+        } else {
+          pgDesc.hitgroup.moduleIS            = nullptr;
+          pgDesc.hitgroup.entryFunctionNameIS = nullptr;
+        }
+        char log[2048];
+        size_t sizeof_log = sizeof( log );
+        OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
+                                            &pgDesc,
+                                            1,
+                                            &pgOptions,
+                                            log,&sizeof_log,
+                                            &pg.pg
+                                            ));
+      }
+
+      // ----------- bounds -----------
+      if (geomType.boundsProg.moduleID >= 0 &&
+          geomType.boundsProg.progName != nullptr) {
+        LOG("building bounds function ....");
+        Module *module = modules.get(geomType.boundsProg.moduleID);
+        assert(module);
+        assert(module->boundsModule);
+
+        const std::string annotatedProgName
+          = std::string("__boundsFuncKernel__")
+          + geomType.boundsProg.progName;
+          
+        CUresult rc = cuModuleGetFunction(&geomType.boundsFuncKernel,
+                                          module->boundsModule,
+                                          annotatedProgName.c_str());
+        switch(rc) {
+        case CUDA_SUCCESS:
+          /* all OK, nothing to do */
+          LOG_OK("found bounds function " << annotatedProgName << " ... perfect!");
+          break;
+        case CUDA_ERROR_NOT_FOUND:
+          throw std::runtime_error("in "+std::string(__PRETTY_FUNCTION__)
+                                   +": could not find OPTIX_BOUNDS_PROGRAM("
+                                   +geomType.boundsProg.progName+")");
+        default:
+          const char *errName = 0;
+          cuGetErrorName(rc,&errName);
+          PRINT(errName);
+          exit(0);
+        }
+      }
+    }
+    context->popActive(oldActive);
+  }
+    
+  void Context::destroyPrograms(Device *device)
+  {
+    for (auto type : rayGenTypes.objects)
+      type->destroyProgramGroups(device);
+    for (auto type : geomTypes.objects)
+      type->destroyProgramGroups(device);
+    for (auto type : missProgTypes.objects)
+      type->destroyProgramGroups(device);
+    
+    // int oldActive = device->pushActive();
+    
+    // // ---------------------- rayGen ----------------------
+    // // for (auto &pg : rayGenPGs) {
+    // //   if (pg.pg) optixProgramGroupDestroy(pg.pg);
+    // //   pg.pg = nullptr;
+    // // }
+    // for (auto rg : rayGens.objects) rg->destroyProgramGroups(device);
+    
+    // // ---------------------- hitGroup ----------------------
+    // for (auto &geomType : geomTypes) 
+    //   for (auto &pg : geomType.perRayType) {
+    //     if (pg.pg) optixProgramGroupDestroy(pg.pg);
+    //     pg.pg = nullptr;
+    //   }
+    // // ---------------------- miss ----------------------
+    // for (auto &pg : missProgPGs) {
+    //   if (pg.pg) optixProgramGroupDestroy(pg.pg);
+    //   pg.pg = nullptr;
+    // }
+
+    // device->popActive(oldActive);
   }
   
 } // ::owl

@@ -33,7 +33,7 @@ namespace owl {
     
     /*! any device-specific data, such as optix handles, cuda device
         pointers, etc */
-    struct DeviceData {
+    struct DeviceData : public RegisteredObject::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
       virtual ~DeviceData() {}
@@ -45,9 +45,6 @@ namespace owl {
       DeviceMemory           bvhMemory;
     };
 
-    /*! creates the device-specific data for this group */
-    virtual DeviceData::SP createOn(ll::Device *device) = 0;
-    
     Group(Context *const context,
           ObjectRegistry &registry)
       : RegisteredObject(context,registry)
@@ -57,17 +54,25 @@ namespace owl {
     virtual void buildAccel() = 0;
     virtual void refitAccel() = 0;
     
+    DeviceData &getDD(int deviceID) const
+    {
+      assert(deviceID < deviceData.size());
+      return *deviceData[deviceID]->as<DeviceData>();
+    }
+    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
+
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+    
     OptixTraversableHandle getTraversable(int deviceID) const
-    { assert(deviceID < deviceData.size()); return deviceData[deviceID]->traversable; }
+    { return getDD(deviceID).traversable; }
     OptixTraversableHandle getTraversable(const ll::Device *device) const
     { return getTraversable(device->ID); }
     
-    void createDeviceData(const std::vector<ll::Device *> &devices);
-
     /*! bounding box for t=0 and t=1, respectively; for motion
         blur. */
     box3f bounds[2];
-    std::vector<DeviceData::SP> deviceData;
   };
 
   /*! a group containing geometries */

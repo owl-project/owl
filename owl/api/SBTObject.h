@@ -39,13 +39,15 @@ namespace owl {
                          size_t offset);
 
     std::vector<Variable::SP> instantiateVariables();
-    
+
     /*! the total size of the variables struct */
     const size_t         varStructSize;
 
     /*! the high-level semantic description of variables in the
         variables struct */
     const std::vector<OWLVarDecl> varDecls;
+
+    // std::vector<DeviceData::SP> deviceData;
   };
 
 

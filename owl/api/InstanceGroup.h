@@ -58,7 +58,7 @@ namespace owl {
     void refitAccel() override;
 
     /*! creates the device-specific data for this group */
-    Group::DeviceData::SP createOn(ll::Device *device) override
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
     { return std::make_shared<DeviceData>(); }
     
     DeviceData &getDD(ll::Device *device)

@@ -162,7 +162,7 @@ checkGet(_context)->buildSBT(flags);
       = ((APIHandle *)_launchParams)->get<LaunchParams>();
     assert(launchParams);
 
-    rayGen->launch(vec2i(dims_x,dims_y),launchParams);
+    rayGen->launchAsync(vec2i(dims_x,dims_y),launchParams);
   }
 
 
@@ -231,7 +231,7 @@ checkGet(_context)->buildSBT(flags);
   
   OWL_API OWLVariable
   owlGeomGetVariable(OWLGeom _geom,
-                         const char *varName)
+                     const char *varName)
   {
     LOG_API_CALL();
     return getVariableHelper<Geom>((APIHandle*)_geom,varName);
@@ -247,7 +247,7 @@ checkGet(_context)->buildSBT(flags);
 
   OWL_API OWLVariable
   owlMissProgGetVariable(OWLMissProg _prog,
-                       const char *varName)
+                         const char *varName)
   {
     LOG_API_CALL();
     return getVariableHelper<MissProg>((APIHandle*)_prog,varName);
@@ -315,16 +315,16 @@ checkGet(_context)->buildSBT(flags);
 
   OWL_API OWLParams
   owlParamsCreate(OWLContext _context,
-                   size_t      sizeOfVarStruct,
-                   OWLVarDecl *vars,
-                   size_t      numVars)
+                  size_t      sizeOfVarStruct,
+                  OWLVarDecl *vars,
+                  size_t      numVars)
   {
     LOG_API_CALL();
     APIContext::SP context = checkGet(_context);
 
     LaunchParamsType::SP  launchParamsType
       = checkGet(_context)->createLaunchParamsType(sizeOfVarStruct,
-                                        checkAndPackVariables(vars,numVars));
+                                                   checkAndPackVariables(vars,numVars));
     assert(launchParamsType);
     
     LaunchParams::SP  launchParams
@@ -352,8 +352,8 @@ checkGet(_context)->buildSBT(flags);
     
     MissProgType::SP  missProgType
       = checkGet(_context)->createMissProgType(module,programName,
-                                  sizeOfVarStruct,
-                                  checkAndPackVariables(vars,numVars));
+                                               sizeOfVarStruct,
+                                               checkAndPackVariables(vars,numVars));
     assert(missProgType);
     
     MissProg::SP  missProg

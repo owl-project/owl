@@ -35,7 +35,7 @@ namespace owl {
     inline size_t size()  const { return objects.size(); }
     inline bool   empty() const { return objects.empty(); }
 
-    virtual void reallocContextIDs(int newMaxIDs) = 0;
+    // virtual void reallocContextIDs(int newMaxIDs) = 0;
     
     void forget(RegisteredObject *object);
     void track(RegisteredObject *object);
@@ -70,7 +70,7 @@ namespace owl {
       : context(context)
     {};
       
-    void reallocContextIDs(int newMaxIDs) override;
+    // void reallocContextIDs(int newMaxIDs) override;
     
     inline T *getPtr(int ID)
     { return (T*)ObjectRegistry::getPtr(ID); }

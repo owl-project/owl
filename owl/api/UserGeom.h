@@ -22,7 +22,23 @@ namespace owl {
 
   struct UserGeomType : public GeomType {
     typedef std::shared_ptr<UserGeomType> SP;
-    
+
+    /*! any device-specific data, such as optix handles, cuda device
+        pointers, etc */
+    struct DeviceData : public GeomType::DeviceData {
+      typedef std::shared_ptr<DeviceData> SP;
+
+      void writeSBTHeader(uint8_t *const sbtRecord,
+                          Device *device,
+                          int rayTypeID) override;
+      
+      /*! for hit progs these may be multiple entires; for miss and
+          raygens this will be exactly one */
+      std::vector<OptixProgramGroup> isecPGs;
+      CUfunction boundsFuncKernel;
+    };
+
+
     UserGeomType(Context *const context,
                  size_t varStructSize,
                  const std::vector<OWLVarDecl> &varDecls);
@@ -36,6 +52,19 @@ namespace owl {
     virtual std::string toString() const { return "UserGeomType"; }
     virtual std::shared_ptr<Geom> createGeom() override;
 
+    DeviceData &getDD(int deviceID) const
+    {
+      assert(deviceID < deviceData.size());
+      return *deviceData[deviceID]->as<DeviceData>();
+    }
+    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
+    
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+    
+
+    
     ProgramDesc boundsProg;
     std::vector<ProgramDesc> intersectProg;
   };
@@ -48,18 +77,24 @@ namespace owl {
     struct DeviceData : public Geom::DeviceData {
       DeviceMemory internalBufferForBoundsProgram;
     };
-    
+    /*! creates the device-specific data for this group */
+    Geom::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+
     inline DeviceData &getDD(ll::Device *device)
     {
       assert(device->ID < deviceData.size()); 
       return *deviceData[device->ID]->as<UserGeom::DeviceData>();
     }
                         
-    /*! creates the device-specific data for this group */
-    Geom::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(); }
-
-
+    UserGeomType::DeviceData &getTypeDD(int deviceID) const
+    {
+      return (UserGeomType::DeviceData &)type->getDD(deviceID);
+    }
+    UserGeomType::DeviceData &getTypeDD(Device *device) const
+    {
+      return (UserGeomType::DeviceData &)type->getDD(device);
+    }
 
     UserGeom(Context *const context,
              GeomType::SP geometryType);

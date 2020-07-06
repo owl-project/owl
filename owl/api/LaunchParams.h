@@ -35,12 +35,52 @@ namespace owl {
       write them when requested */
   struct LaunchParams : public SBTObject<LaunchParamsType> {
     typedef std::shared_ptr<LaunchParams> SP;
+
+    struct DeviceData : public RegisteredObject::DeviceData {
+      DeviceData(size_t  dataSize,
+                 Device *device);
+      
+      OptixShaderBindingTable sbt;
+
+      const size_t         dataSize;
+      
+      /*! host-size memory for the launch paramters - we have a
+          host-side copy, too, so we can leave the launch2D call
+          without having to first wait for the cudaMemcpy to
+          complete */
+      std::vector<uint8_t> hostMemory;
+      
+      /*! the cuda device memory we copy the launch params to */
+      DeviceMemory         deviceMemory;
+      
+      /*! a cuda stream we can use for the async upload and the
+          following async launch */
+      cudaStream_t         stream = nullptr;
+
+      /*! the optix device this will run on */
+      Device *const device;
+    };
+
     
     LaunchParams(Context *const context,
            LaunchParamsType::SP type);
 
     CUstream getCudaStream(int deviceID);
 
+
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(type->varStructSize,device); }
+
+    DeviceData &getDD(int deviceID) const
+    {
+      assert(deviceID < deviceData.size());
+      return *deviceData[deviceID]->as<DeviceData>();
+    }
+    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
+      
+
+    
     /*! wait for this launch to complete */
     void sync();
     

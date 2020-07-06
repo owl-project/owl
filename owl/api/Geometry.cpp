@@ -48,13 +48,13 @@ namespace owl {
       
     closestHit[rayType].progName = progName;
     closestHit[rayType].module   = module;
-    context->llo->setGeomTypeClosestHit(this->ID,
-                          rayType,module->ID,
-                          // warning: this 'this' here is importat, since
-                          // *we* manage the lifetime of this string, and
-                          // the one on the constructor list will go out of
-                          // scope after this function
-                          closestHit[rayType].progName.c_str());
+    // context->llo->setGeomTypeClosestHit(this->ID,
+    //                       rayType,module->ID,
+    //                       // warning: this 'this' here is importat, since
+    //                       // *we* manage the lifetime of this string, and
+    //                       // the one on the constructor list will go out of
+    //                       // scope after this function
+    //                       closestHit[rayType].progName.c_str());
   }
 
   void GeomType::setAnyHitProgram(int rayType,
@@ -65,14 +65,47 @@ namespace owl {
       
     anyHit[rayType].progName = progName;
     anyHit[rayType].module   = module;
-    context->llo->setGeomTypeAnyHit(this->ID,
-                          rayType,module->ID,
-                          // warning: this 'this' here is importat, since
-                          // *we* manage the lifetime of this string, and
-                          // the one on the constructor list will go out of
-                          // scope after this function
-                          anyHit[rayType].progName.c_str());
+    // context->llo->setGeomTypeAnyHit(this->ID,
+    //                       rayType,module->ID,
+    //                       // warning: this 'this' here is importat, since
+    //                       // *we* manage the lifetime of this string, and
+    //                       // the one on the constructor list will go out of
+    //                       // scope after this function
+    //                       anyHit[rayType].progName.c_str());
   }
 
+          
+  void GeomType::writeSBTHeader(uint8_t *const sbtRecord,
+                                Device *device,
+                                int rayTypeID)
+  {
+    // // auto geomType = geom->type;//device->geomTypes[geom->geomType->ID];
+    // GeomType::DeviceData &gt = geom->type->getDD(device);
+    // // const ll::HitGroupPG &hgPG
+    // //   = geomType.perRayType[rayTypeID];
+    // // ... and tell optix to write that into the record
+    // OPTIX_CALL(SbtRecordPackHeader(gt.getPG(rayTypeID),sbtRecordHeader));
+    throw std::runtime_error("not implemented");
+  }
+
+  void Geom::writeSBTRecord(uint8_t *const sbtRecord,
+                            Device *device,
+                            int rayTypeID)
+  {
+    // first, compute pointer to record:
+    uint8_t *const sbtRecordHeader = sbtRecord;
+    uint8_t *const sbtRecordData   = sbtRecord+OPTIX_SBT_RECORD_HEADER_SIZE;
+
+    // ------------------------------------------------------------------
+    // pack record header with the corresponding hit group:
+    // ------------------------------------------------------------------
+    geomType->getDD(device).writeSBTHeader(sbtRecordHeader,
+                                           device,rayTypeID);
+    
+    // ------------------------------------------------------------------
+    // then, write the data for that record
+    // ------------------------------------------------------------------
+    writeVariables(sbtRecordData,device->ID);
+  }  
 
 } //::owl

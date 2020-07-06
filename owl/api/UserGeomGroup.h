@@ -23,9 +23,6 @@ namespace owl {
 
   struct UserGeomGroup : public GeomGroup {
 
-    // struct DeviceSpecific : public GeomGroup::DeviceSpecific {
-    // };
-
     UserGeomGroup(Context *const context,
                    size_t numChildren);
     virtual std::string toString() const { return "UserGeomGroup"; }
@@ -38,17 +35,10 @@ namespace owl {
     void buildAccel() override;
     void refitAccel() override;
 
-    DeviceData &getDD(ll::Device *device)
-    { assert(device->ID < deviceData.size()); return *deviceData[device->ID]; }
-
     /*! low-level accel structure builder for given device */
     template<bool FULL_REBUILD>
     void buildAccelOn(ll::Device *device);
 
-    /*! creates the device-specific data for this group */
-    Group::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(); }
-    
   };
 
 } // ::owl

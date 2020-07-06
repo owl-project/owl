@@ -35,15 +35,9 @@ namespace owl {
   }
 
   /*! creates the device-specific data for this group */
-  Buffer::DeviceData::SP Buffer::createOn(ll::Device *device)
+  RegisteredObject::DeviceData::SP Buffer::createOn(ll::Device *device)
   {
     return std::make_shared<Buffer::DeviceData>();
-  }
-
-  void Buffer::createDeviceData(const std::vector<ll::Device *> &devices)
-  {
-    for (auto device : devices)
-      deviceData.push_back(createOn(device));
   }
 
   Buffer::~Buffer()
@@ -71,9 +65,9 @@ namespace owl {
     elementCount = newElementCount;
     if (newElementCount > 0)
       CUDA_CALL(MallocHost((void**)&cudaHostPinnedMem, sizeInBytes()));
-    
-    for (auto dd : deviceData)
-      dd->d_pointer = cudaHostPinnedMem;
+
+    for (int i=0;i<deviceData.size();i++)
+      getDD(i).d_pointer = cudaHostPinnedMem;
   }
   
   void HostPinnedBuffer::upload(const void *sourcePtr)
@@ -161,8 +155,8 @@ namespace owl {
         }
     }
     
-    for (auto dd : deviceData)
-      dd->d_pointer = cudaManagedMem;
+    for (int i=0;i<deviceData.size();i++)
+      getDD(i).d_pointer = cudaManagedMem;
   }
   
   void ManagedMemoryBuffer::upload(const void *hostPtr)
@@ -190,7 +184,7 @@ namespace owl {
   }
 
   /*! creates the device-specific data for this group */
-  Buffer::DeviceData::SP DeviceBuffer::createOn(ll::Device *device)
+RegisteredObject::DeviceData::SP DeviceBuffer::createOn(ll::Device *device)
   {
     if (type >= _OWL_BEGIN_COPYABLE_TYPES)
       return std::make_shared<DeviceBuffer::DeviceDataForCopyableData>(this,device);
@@ -469,7 +463,7 @@ namespace owl {
 
   void GraphicsBuffer::map(int deviceID, CUstream stream)
   {
-    DeviceData &dd = *deviceData[deviceID];
+    DeviceData &dd = getDD(deviceID);
     // void GraphicsBuffer::map(Device *device, CUstream stream)
     // {
     CUDA_CHECK(cudaGraphicsMapResources(1, &resource, stream));
@@ -483,7 +477,7 @@ namespace owl {
 
   void GraphicsBuffer::unmap(int deviceID, CUstream stream)
   {
-    DeviceData &dd = *deviceData[deviceID];
+    DeviceData &dd = getDD(deviceID);
     CUDA_CHECK(cudaGraphicsUnmapResources(1, &resource, stream));
     dd.d_pointer = nullptr;
   }

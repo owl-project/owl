@@ -70,13 +70,8 @@ namespace owl {
 
     /*! any device-specific data, such as optix handles, cuda device
         pointers, etc */
-    struct DeviceData {
+    struct DeviceData : public RegisteredObject::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
-
-      virtual ~DeviceData() {}
-      
-      template<typename T>
-      inline T *as() { return dynamic_cast<T*>(this); }
 
       void *d_pointer { 0 };
     };
@@ -94,18 +89,23 @@ namespace owl {
 
     const void *getPointer(const ll::Device *device) const
     { return getPointer(device->ID); }
-    
+
+    Buffer::DeviceData &getDD(int deviceID) const
+    {
+      assert(deviceID < deviceData.size());
+      return *deviceData[deviceID]->as<Buffer::DeviceData>();
+    }
+      
     const void *getPointer(int deviceID) const
-    { assert(deviceID < deviceData.size()); return deviceData[deviceID]->d_pointer; }
+    { return getDD(deviceID).d_pointer; }
         
     size_t getElementCount() const;
-    void createDeviceData(const std::vector<ll::Device *> &devices);
     
     virtual void resize(size_t newElementCount) = 0;
     virtual void upload(const void *hostPtr) = 0;
     virtual void upload(const int deviceID, const void *hostPtr) = 0;
     /*! creates the device-specific data for this group */
-    virtual Buffer::DeviceData::SP createOn(ll::Device *device);
+    virtual RegisteredObject::DeviceData::SP createOn(ll::Device *device);
 
     /*! destroy whatever resouces this buffer's ll-layer handle this
         may refer to; this will not destruct the current object
@@ -116,8 +116,6 @@ namespace owl {
     
     const OWLDataType type;
     size_t      elementCount { 0 };
-    
-    std::vector<DeviceData::SP> deviceData;
   };
 
   struct DeviceBuffer : public Buffer {
@@ -197,7 +195,7 @@ namespace owl {
     void upload(const void *hostPtr) override;
     void upload(const int deviceID, const void *hostPtr) override;
     /*! creates the device-specific data for this group */
-    Buffer::DeviceData::SP createOn(ll::Device *device) override;
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override;
   };
   
   struct HostPinnedBuffer : public Buffer {

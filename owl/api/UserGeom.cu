@@ -123,15 +123,16 @@ namespace owl {
                                       const std::string &progName)
   {
     assert(rayType < intersectProg.size());
+
     intersectProg[rayType].progName = progName;
     intersectProg[rayType].module   = module;
-    context->llo->setGeomTypeIntersect(this->ID,
-                         rayType,module->ID,
-                         // warning: this 'this' here is importat, since
-                         // *we* manage the lifetime of this string, and
-                         // the one on the constructor list will go out of
-                          // scope after this function
-                         intersectProg[rayType].progName.c_str());
+    // context->llo->setGeomTypeIntersect(this->ID,
+    //                      rayType,module->ID,
+    //                      // warning: this 'this' here is importat, since
+    //                      // *we* manage the lifetime of this string, and
+    //                      // the one on the constructor list will go out of
+    //                       // scope after this function
+    //                      intersectProg[rayType].progName.c_str());
   }
 
   void UserGeomType::setBoundsProg(Module::SP module,
@@ -139,15 +140,15 @@ namespace owl {
   {
     this->boundsProg.progName = progName;
     this->boundsProg.module   = module;
-    context->llo->setGeomTypeBoundsProgDevice(this->ID,
-                                module->ID,
-                                // warning: this 'this' here is importat, since
-                                // *we* manage the lifetime of this string, and
-                                // the one on the constructor list will go out of
-                                // scope after this function
-                                this->boundsProg.progName.c_str(),
-                                varStructSize
-                                );
+    // context->llo->setGeomTypeBoundsProgDevice(this->ID,
+    //                             module->ID,
+    //                             // warning: this 'this' here is importat, since
+    //                             // *we* manage the lifetime of this string, and
+    //                             // the one on the constructor list will go out of
+    //                             // scope after this function
+    //                             this->boundsProg.progName.c_str(),
+    //                             varStructSize
+    //                             );
   }
 
 
@@ -195,13 +196,14 @@ namespace owl {
         (void *)&primCount
       };
         
-      ll::GeomType *gt = device->checkGetGeomType(geomType->ID);//ug->geomTypeID);
+      // ll::GeomType *gt = device->checkGetGeomType(geomType->ID);//ug->geomTypeID);
       CUstream stream = device->context->stream;
-      if (!gt->boundsFuncKernel)
+      UserGeomType::DeviceData &typeDD = getTypeDD(device);
+      if (!typeDD.boundsFuncKernel)
         throw std::runtime_error("bounds kernel set, but not yet compiled - did you forget to call BuildPrograms() before (User)GroupAccelBuild()!?");
         
       CUresult rc
-        = cuLaunchKernel(gt->boundsFuncKernel,
+        = cuLaunchKernel(typeDD.boundsFuncKernel,
                          gridDims.x,gridDims.y,gridDims.z,
                          blockDims.x,blockDims.y,blockDims.z,
                          0, stream, args, 0);
@@ -217,4 +219,17 @@ namespace owl {
     device->popActive(oldActive);
   }
   
+  void UserGeomType::DeviceData::writeSBTHeader(uint8_t *const sbtRecord,
+                                                Device *device,
+                                                int rayTypeID)
+  {
+    // // auto geomType = geom->type;//device->geomTypes[geom->geomType->ID];
+    // GeomType::DeviceData &gt = geom->type->getDD(device);
+    // // const ll::HitGroupPG &hgPG
+    // //   = geomType.perRayType[rayTypeID];
+    // // ... and tell optix to write that into the record
+    // OPTIX_CALL(SbtRecordPackHeader(gt.getPG(rayTypeID),sbtRecordHeader));
+    throw std::runtime_error("not implemented");
+  }
+
 } // ::owl

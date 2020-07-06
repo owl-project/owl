@@ -42,10 +42,10 @@ namespace owl {
                                   int childID,
                                   const void *cbUserData);
     
-  typedef void
-  (*LLOWriteLaunchParamsCB)(uint8_t *userGeomDataToWrite,
-                            int deviceID,
-                            const void *cbUserData);
+  // typedef void
+  // (*LLOWriteLaunchParamsCB)(uint8_t *userGeomDataToWrite,
+  //                           int deviceID,
+  //                           const void *cbUserData);
     
   /*! callback with which the app can specify what data is to be
     written into the SBT for a given geometry, ray type, and
@@ -249,28 +249,28 @@ void lloSbtMissProgsBuild(LLOContext llo,
 
         Note this value will have to be set *before* the pipeline
         gets created */
-      void setMaxInstancingDepth(int maxInstancingDepth);
+      // void setMaxInstancingDepth(int maxInstancingDepth);
 
-      void enableMotionBlur();
+      // void enableMotionBlur();
       
-      void allocModules(size_t count);
-      void allocLaunchParams(size_t count);
+      // void allocModules(size_t count);
+      // // void allocLaunchParams(size_t count);
 
-      void moduleCreate(int moduleID, const char *ptxCode);
-      void buildModules();
-      void createPipeline();
-      void buildPrograms();
+      // void moduleCreate(int moduleID, const char *ptxCode);
+      // void buildModules();
+      // void createPipeline();
+      // void buildPrograms();
       
-      // void setTransforms(int igID, int timeStep, const affine3f *xfms);
+      // // void setTransforms(int igID, int timeStep, const affine3f *xfms);
       
-      void allocGeomTypes(size_t count);
-      void allocRayGens(size_t count);
-      void allocMissProgs(size_t count);
+      // void allocGeomTypes(size_t count);
+      // // void allocRayGens(size_t count);
+      // void allocMissProgs(size_t count);
 
-      void geomTypeCreate(int geomTypeID,
-                          size_t programDataSize);
-      void launchParamsCreate(int launchParamsID,
-                              size_t sizeOfData);
+      // void geomTypeCreate(int geomTypeID,
+      //                     size_t programDataSize);
+      // void launchParamsCreate(int launchParamsID,
+      //                         size_t sizeOfData);
                           
       /*! Set bounding box program for given geometry type, using a
         bounding box program to be called on the device. Note that
@@ -278,43 +278,43 @@ void lloSbtMissProgsBuild(LLOContext llo,
         programs are not 'per ray type', but exist only once per
         geometry type. Obviously only allowed for user geometry
         typed. */
-      void setGeomTypeBoundsProgDevice(int geomTypeID,
-                                       int moduleID,
-                                       const char *progName,
-                                       size_t geomDataSize);
-      void setGeomTypeProgramSize(int pgID,
-                                  size_t );
-      void setGeomTypeClosestHit(int pgID,
-                                 int rayTypeID,
-                                 int moduleID,
-                                 const char *progName);
-      void setGeomTypeAnyHit(int pgID,
-                                 int rayTypeID,
-                                 int moduleID,
-                                 const char *progName);
-      void setGeomTypeIntersect(int pgID,
-                                int rayTypeID,
-                                int moduleID,
-                                const char *progName);
-      void setRayGen(int pgID,
-                     int moduleID,
-                     const char *progName,
-                     size_t programDataSize);
+      // void setGeomTypeBoundsProgDevice(int geomTypeID,
+      //                                  int moduleID,
+      //                                  const char *progName,
+      //                                  size_t geomDataSize);
+      // void setGeomTypeProgramSize(int pgID,
+      //                             size_t );
+      // void setGeomTypeClosestHit(int pgID,
+      //                            int rayTypeID,
+      //                            int moduleID,
+      //                            const char *progName);
+      // void setGeomTypeAnyHit(int pgID,
+      //                            int rayTypeID,
+      //                            int moduleID,
+      //                            const char *progName);
+      // void setGeomTypeIntersect(int pgID,
+      //                           int rayTypeID,
+      //                           int moduleID,
+      //                           const char *progName);
+      // void setRayGen(int pgID,
+      //                int moduleID,
+      //                const char *progName,
+      //                size_t programDataSize);
 
-      /*! specifies which miss program to run for a given miss prog
-        ID */
-      void setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
-                       int programID,
-                       /*! ID of the module the program will be bound
-                         in, in [0..numAllocedModules) */
-                       int moduleID,
-                       /*! name of the program. Note we do not NOT
-                         create a copy of this string, so the string
-                         has to remain valid for the duration of the
-                         program */
-                       const char *progName,
-                       /*! size of that miss program's SBT data */
-                       size_t missProgDataSize);
+      // /*! specifies which miss program to run for a given miss prog
+      //   ID */
+      // void setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+      //                  int programID,
+      //                  /*! ID of the module the program will be bound
+      //                    in, in [0..numAllocedModules) */
+      //                  int moduleID,
+      //                  /*! name of the program. Note we do not NOT
+      //                    create a copy of this string, so the string
+      //                    has to remain valid for the duration of the
+      //                    program */
+      //                  const char *progName,
+      //                  /*! size of that miss program's SBT data */
+      //                  size_t missProgDataSize);
       
       /*! resize the array of geom IDs. this can be either a
         'grow' or a 'shrink', but 'shrink' is only allowed if all
@@ -430,7 +430,7 @@ void lloSbtMissProgsBuild(LLOContext llo,
       
       /*! return the cuda stream by the given launchparams object, on
         given device */
-      cudaStream_t launchParamsGetStream(int launchParamsID, int devID);
+      // cudaStream_t launchParamsGetStream(int launchParamsID, int devID);
       
       // void userGeomSetPrimCount(int geomID,
       //                           size_t numPrims);
@@ -516,17 +516,17 @@ void lloSbtMissProgsBuild(LLOContext llo,
                                 },(const void *)&l);
       }
 
-      size_t getDeviceCount() const { return devices.size(); }
-      void setRayTypeCount(size_t rayTypeCount);
+      // size_t getDeviceCount() const { return devices.size(); }
+      // void setRayTypeCount(size_t rayTypeCount);
       
       void launch(int rgID,
                   const vec2i &dims);
 
-      void launch(int rgID,
-                  const vec2i &dims,
-                  int32_t launchParamsID,
-                  LLOWriteLaunchParamsCB writeLaunchParamsCB,
-                  const void *cbData);
+      // void launch(int rgID,
+      //             const vec2i &dims,
+      //             int32_t launchParamsID,
+      //             LLOWriteLaunchParamsCB writeLaunchParamsCB,
+      //             const void *cbData);
       
       /* create an instance of this object that has properly
          initialized devices for given cuda device IDs. */

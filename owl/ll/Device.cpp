@@ -86,15 +86,15 @@ namespace owl {
     //   context->popActive(oldActive);
     // }
 
-    LaunchParams::LaunchParams(Context *context, size_t sizeOfData)
-      : dataSize(sizeOfData)
-    {
-      STACK_PUSH_ACTIVE(context);
-      CUDA_CHECK(cudaStreamCreate(&stream));
-      deviceMemory.alloc(dataSize);
-      hostMemory.resize(dataSize);
-      STACK_POP_ACTIVE();
-    }
+    // LaunchParams::LaunchParams(Context *context, size_t sizeOfData)
+    //   : dataSize(sizeOfData)
+    // {
+    //   STACK_PUSH_ACTIVE(context);
+    //   CUDA_CHECK(cudaStreamCreate(&stream));
+    //   deviceMemory.alloc(dataSize);
+    //   hostMemory.resize(dataSize);
+    //   STACK_POP_ACTIVE();
+    // }
 
     int RangeAllocator::alloc(size_t size)
     {
@@ -263,7 +263,7 @@ namespace owl {
       
       destroyPipeline();
       
-      modules.destroyOptixHandles(context);
+      // modules.destroyOptixHandles(context);
       const int owlDeviceID = context->owlDeviceID;
 
       LOG("deleting context");
@@ -286,6 +286,7 @@ namespace owl {
     }
 
 
+#if 0
     void Device::geomTypeCreate(int geomTypeID,
                                 size_t programDataSize)
     {
@@ -356,6 +357,7 @@ namespace owl {
       hitGroup.intersect.moduleID = moduleID;
       hitGroup.intersect.progName = progName;
     }
+
     
     /*! set closest hit program for given geometry type and ray
       type. Note progName will *not* be copied, so the pointer
@@ -414,7 +416,7 @@ namespace owl {
       hitGroup.anyHit.moduleID = moduleID;
       hitGroup.anyHit.progName = progName;
     }
-    
+
     void Device::setRayGen(int programID,
                            int moduleID,
                            const char *progName,
@@ -462,7 +464,9 @@ namespace owl {
       missProgPGs[programID].program.progName = progName;
       missProgPGs[programID].program.dataSize = missProgDataSize;
     }
-    
+#endif
+
+#if 0
     /*! will destroy the *optix handles*, but will *not* clear the
       modules vector itself */
     void Modules::destroyOptixHandles(Context *context)
@@ -474,7 +478,8 @@ namespace owl {
         }
       }
     }
-
+#endif
+    
     std::string getNextLine(const char *&s)
     {
       std::stringstream line;
@@ -522,6 +527,7 @@ namespace owl {
       return fixed.str();
     }
 
+#if 0
     void Modules::buildOptixHandles(Context *context)
     {
       int oldActive = context->pushActive();
@@ -597,235 +603,48 @@ namespace owl {
       }
       context->popActive(oldActive);
     }
-
-    void Modules::alloc(size_t count)
-    {
-      modules.resize(count);
-    }
-
-    void Modules::set(size_t slot,
-                      const char *ptxCode)
-    {
-      assert(!modules.empty());
-      
-      assert(slot >= 0);
-      assert(slot < modules.size());
-
-      assert(!modules[slot].module);
-      modules[slot].ptxCode = ptxCode;
-    }
-
-    void Device::buildOptixPrograms()
-    {
-      int oldActive = context->pushActive();
-      OptixProgramGroupOptions pgOptions = {};
-      OptixProgramGroupDesc    pgDesc    = {};
-
-      // ------------------------------------------------------------------
-      // rayGen programs
-      // ------------------------------------------------------------------
-      for (int pgID=0;pgID<rayGenPGs.size();pgID++) {
-        RayGenPG &pg     = rayGenPGs[pgID];
-        Module   *module = modules.get(pg.program.moduleID);
-        pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
-        std::string annotatedProgName
-          = pg.program.progName
-          ? std::string("__raygen__")+pg.program.progName
-          : "";
-        if (module) {
-          assert(module->module != nullptr);
-          assert(pg.program.progName != nullptr);
-          pgDesc.raygen.module            = module->module;
-          pgDesc.raygen.entryFunctionName = annotatedProgName.c_str();
-        } else {
-          pgDesc.raygen.module            = nullptr;
-          pgDesc.raygen.entryFunctionName = nullptr;
-        }
-        char log[2048];
-        size_t sizeof_log = sizeof( log );
-        OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
-                                            &pgDesc,
-                                            1,
-                                            &pgOptions,
-                                            log,&sizeof_log,
-                                            &pg.pg
-                                            ));
-      }
-      
-      // ------------------------------------------------------------------
-      // miss programs
-      // ------------------------------------------------------------------
-      for (int pgID=0;pgID<missProgPGs.size();pgID++) {
-        MissProgPG &pg     = missProgPGs[pgID];
-        Module *module = modules.get(pg.program.moduleID);
-        pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_MISS;
-        std::string annotatedProgName
-          = pg.program.progName
-          ? std::string("__miss__")+pg.program.progName
-          : "";
-        if (module) {
-          assert(module->module != nullptr);
-          assert(pg.program.progName != nullptr);
-          pgDesc.miss.module            = module->module;
-          pgDesc.miss.entryFunctionName = annotatedProgName.c_str();
-        } else {
-          pgDesc.miss.module            = nullptr;
-          pgDesc.miss.entryFunctionName = nullptr;
-        }
-        char log[2048];
-        size_t sizeof_log = sizeof( log );
-        OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
-                                            &pgDesc,
-                                            1,
-                                            &pgOptions,
-                                            log,&sizeof_log,
-                                            &pg.pg
-                                            ));
-      }
-      
-      // ------------------------------------------------------------------
-      // hitGroup programs
-      // ------------------------------------------------------------------
-      for (int geomTypeID=0;geomTypeID<geomTypes.size();geomTypeID++) {
-        auto &geomType = geomTypes[geomTypeID];
-        for (auto &pg : geomType.perRayType) {
-          assert("check program group not already active" && pg.pg == nullptr);
-          pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
-
-          // ----------- closest hit -----------
-          Module *moduleCH = modules.get(pg.closestHit.moduleID);
-          std::string annotatedProgNameCH
-            = pg.closestHit.progName
-            ? std::string("__closesthit__")+pg.closestHit.progName
-            : "";
-          if (moduleCH) {
-            assert(moduleCH->module != nullptr);
-            assert(pg.closestHit.progName != nullptr);
-            pgDesc.hitgroup.moduleCH            = moduleCH->module;
-            pgDesc.hitgroup.entryFunctionNameCH = annotatedProgNameCH.c_str();
-          } else {
-            pgDesc.hitgroup.moduleCH            = nullptr;
-            pgDesc.hitgroup.entryFunctionNameCH = nullptr;
-          }
-          // ----------- any hit -----------
-          Module *moduleAH = modules.get(pg.anyHit.moduleID);
-          std::string annotatedProgNameAH
-            = pg.anyHit.progName
-            ? std::string("__anyhit__")+pg.anyHit.progName
-            : "";
-          if (moduleAH) {
-            assert(moduleAH->module != nullptr);
-            assert(pg.anyHit.progName != nullptr);
-            pgDesc.hitgroup.moduleAH            = moduleAH->module;
-            pgDesc.hitgroup.entryFunctionNameAH = annotatedProgNameAH.c_str();
-          } else {
-            pgDesc.hitgroup.moduleAH            = nullptr;
-            pgDesc.hitgroup.entryFunctionNameAH = nullptr;
-          }
-          // ----------- intersect -----------
-          Module *moduleIS = modules.get(pg.intersect.moduleID);
-          std::string annotatedProgNameIS
-            = pg.intersect.progName
-            ? std::string("__intersection__")+pg.intersect.progName
-            : "";
-          if (moduleIS) {
-            assert(moduleIS->module != nullptr);
-            assert(pg.intersect.progName != nullptr);
-            pgDesc.hitgroup.moduleIS            = moduleIS->module;
-            pgDesc.hitgroup.entryFunctionNameIS = annotatedProgNameIS.c_str();
-          } else {
-            pgDesc.hitgroup.moduleIS            = nullptr;
-            pgDesc.hitgroup.entryFunctionNameIS = nullptr;
-          }
-          char log[2048];
-          size_t sizeof_log = sizeof( log );
-          OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
-                                              &pgDesc,
-                                              1,
-                                              &pgOptions,
-                                              log,&sizeof_log,
-                                              &pg.pg
-                                              ));
-        }
-
-        // ----------- bounds -----------
-        if (geomType.boundsProg.moduleID >= 0 &&
-            geomType.boundsProg.progName != nullptr) {
-          LOG("building bounds function ....");
-          Module *module = modules.get(geomType.boundsProg.moduleID);
-          assert(module);
-          assert(module->boundsModule);
-
-          const std::string annotatedProgName
-            = std::string("__boundsFuncKernel__")
-            + geomType.boundsProg.progName;
-          
-          CUresult rc = cuModuleGetFunction(&geomType.boundsFuncKernel,
-                                            module->boundsModule,
-                                            annotatedProgName.c_str());
-          switch(rc) {
-          case CUDA_SUCCESS:
-            /* all OK, nothing to do */
-            LOG_OK("found bounds function " << annotatedProgName << " ... perfect!");
-            break;
-          case CUDA_ERROR_NOT_FOUND:
-            throw std::runtime_error("in "+std::string(__PRETTY_FUNCTION__)
-                                     +": could not find OPTIX_BOUNDS_PROGRAM("
-                                     +geomType.boundsProg.progName+")");
-          default:
-            const char *errName = 0;
-            cuGetErrorName(rc,&errName);
-            PRINT(errName);
-            exit(0);
-          }
-        }
-      }
-      context->popActive(oldActive);
-    }
+#endif
     
-    void Device::destroyOptixPrograms()
-    {
-      // ---------------------- rayGen ----------------------
-      for (auto &pg : rayGenPGs) {
-        if (pg.pg) optixProgramGroupDestroy(pg.pg);
-        pg.pg = nullptr;
-      }
-      // ---------------------- hitGroup ----------------------
-      for (auto &geomType : geomTypes) 
-        for (auto &pg : geomType.perRayType) {
-          if (pg.pg) optixProgramGroupDestroy(pg.pg);
-          pg.pg = nullptr;
-        }
-      // ---------------------- miss ----------------------
-      for (auto &pg : missProgPGs) {
-        if (pg.pg) optixProgramGroupDestroy(pg.pg);
-        pg.pg = nullptr;
-      }
-    }
+    // void Modules::alloc(size_t count)
+    // {
+    //   modules.resize(count);
+    // }
 
-    void Device::allocGeomTypes(size_t count)
-    {
-      geomTypes.resize(count);
-      for (auto &gt : geomTypes) {
-        if (gt.perRayType.empty())
-          gt.perRayType.resize(context->numRayTypes);
-        assert(gt.perRayType.size() == context->numRayTypes);
-      }
-    }
-    
-    void Device::allocRayGens(size_t count)
-    {
-      // assert(rayGenPGs.empty());
-      rayGenPGs.resize(count);
-    }
-    
-    void Device::allocMissProgs(size_t count)
-    {
-      // assert(missProgPGs.empty());
-      missProgPGs.resize(count);
-    }
+    // void Modules::set(size_t slot,
+    //                   const char *ptxCode)
+    // {
+    //   assert(!modules.empty());
       
+    //   assert(slot >= 0);
+    //   assert(slot < modules.size());
 
+    //   assert(!modules[slot].module);
+    //   modules[slot].ptxCode = ptxCode;
+    // }
+
+    // void Device::allocGeomTypes(size_t count)
+    // {
+    //   geomTypes.resize(count);
+    //   for (auto &gt : geomTypes) {
+    //     if (gt.perRayType.empty())
+    //       gt.perRayType.resize(context->numRayTypes);
+    //     assert(gt.perRayType.size() == context->numRayTypes);
+    //   }
+    // }
+    
+    // void Device::allocRayGens(size_t count)
+    // {
+    //   // assert(rayGenPGs.empty());
+    //   rayGenPGs.resize(count);
+    // }
+    
+    // void Device::allocMissProgs(size_t count)
+    // {
+    //   // assert(missProgPGs.empty());
+    //   missProgPGs.resize(count);
+    // }
+      
+#if 0
     void Context::createPipeline(Device *device)
     {
       if (pipeline != nullptr)
@@ -888,7 +707,7 @@ namespace owl {
                       passed to trace. */
                    ));
     }
-      
+#endif      
 
     // /*! Set a buffer of bounding boxes that this user geometry will
     //   use when building the accel structure. This is one of
@@ -957,10 +776,10 @@ namespace owl {
 
     /*! return the cuda stream by the given launchparams object, on
       given device */
-    CUstream Device::launchParamsGetStream(int lpID)
-    {
-      return checkGetLaunchParams(lpID)->stream;
-    }
+    // CUstream Device::launchParamsGetStream(int lpID)
+    // {
+    //   return checkGetLaunchParams(lpID)->stream;
+    // }
    
     // void Device::trianglesGeomSetIndexBuffer(int geomID,
     //                                          int bufferID,
@@ -1022,7 +841,7 @@ namespace owl {
     // }
     
     
-    
+#if 0    
     void Device::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenDataCB,
                                  const void *callBackUserData)
     {
@@ -1091,7 +910,9 @@ namespace owl {
       if (numTimesCalled < 10)
         LOG_OK("done building (and uploading) SBT ray gen records (only showing first 10 instances)");
     }
-      
+#endif
+    
+#if 0
     void Device::sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgDataCB,
                                    const void *callBackUserData)
     {
@@ -1246,7 +1067,7 @@ namespace owl {
       // cudaDeviceSynchronize();
       context->popActive(oldActive);
     }
-    
+#endif    
 
 
 
@@ -1323,115 +1144,115 @@ namespace owl {
     //   textureObjects.resize(newCount);
     // }
     
-    void Device::allocLaunchParams(size_t count)
-    {
-      if (count < launchParams.size())
-        // to prevent unobserved memory hole that a simple
-        // shrink-without-clean-deletion would cause, force an
-        // error:
-        throw std::runtime_error("shrinking launch params not yet implemented");
-      launchParams.resize(count);
-    }
+    // void Device::allocLaunchParams(size_t count)
+    // {
+    //   if (count < launchParams.size())
+    //     // to prevent unobserved memory hole that a simple
+    //     // shrink-without-clean-deletion would cause, force an
+    //     // error:
+    //     throw std::runtime_error("shrinking launch params not yet implemented");
+    //   launchParams.resize(count);
+    // }
     
-    void Device::launchParamsCreate(int launchParamsID,
-                                    size_t sizeOfData)
-    {
-      assert(launchParamsID >= 0
-             && "sanity check launch param ID already allocated");
-      assert(launchParamsID < launchParams.size()
-             && "sanity check launch param ID already allocated");
-      assert(launchParams[launchParamsID] == nullptr
-             && "re-defining launch param types not yet implemented");
-      LaunchParams *lp = new LaunchParams(context,sizeOfData);
-      launchParams[launchParamsID] = lp;
-    }
+    // void Device::launchParamsCreate(int launchParamsID,
+    //                                 size_t sizeOfData)
+    // {
+    //   assert(launchParamsID >= 0
+    //          && "sanity check launch param ID already allocated");
+    //   assert(launchParamsID < launchParams.size()
+    //          && "sanity check launch param ID already allocated");
+    //   assert(launchParams[launchParamsID] == nullptr
+    //          && "re-defining launch param types not yet implemented");
+    //   LaunchParams *lp = new LaunchParams(context,sizeOfData);
+    //   launchParams[launchParamsID] = lp;
+    // }
 
-    /*! launch *with* launch params */
-    void Device::launch(int rgID,
-                        const vec2i &dims,
-                        int32_t launchParamsID,
-                        LLOWriteLaunchParamsCB writeLaunchParamsCB,
-                        const void *cbData)
-    {
-      STACK_PUSH_ACTIVE(context);
-      LaunchParams *lp
-        = checkGetLaunchParams(launchParamsID);
+    // /*! launch *with* launch params */
+    // void Device::launch(int rgID,
+    //                     const vec2i &dims,
+    //                     int32_t launchParamsID,
+    //                     LLOWriteLaunchParamsCB writeLaunchParamsCB,
+    //                     const void *cbData)
+    // {
+    //   STACK_PUSH_ACTIVE(context);
+    //   LaunchParams *lp
+    //     = checkGetLaunchParams(launchParamsID);
       
-      // call the callback to generate the host-side copy of the
-      // launch params struct
-      writeLaunchParamsCB(lp->hostMemory.data(),context->owlDeviceID,cbData);
+    //   // call the callback to generate the host-side copy of the
+    //   // launch params struct
+    //   writeLaunchParamsCB(lp->hostMemory.data(),context->owlDeviceID,cbData);
       
-      lp->deviceMemory.uploadAsync(lp->hostMemory.data(),
-                                   lp->stream);
-      assert("check valid launch dims" && dims.x > 0);
-      assert("check valid launch dims" && dims.y > 0);
-      assert("check valid ray gen program ID" && rgID >= 0);
-      assert("check valid ray gen program ID" && rgID <  rayGenPGs.size());
+    //   lp->deviceMemory.uploadAsync(lp->hostMemory.data(),
+    //                                lp->stream);
+    //   assert("check valid launch dims" && dims.x > 0);
+    //   assert("check valid launch dims" && dims.y > 0);
+    //   assert("check valid ray gen program ID" && rgID >= 0);
+    //   assert("check valid ray gen program ID" && rgID <  rayGenPGs.size());
 
-      assert("check raygen records built" && sbt.rayGenRecordCount != 0);
-      OptixShaderBindingTable localSBT = {};
-      localSBT.raygenRecord
-        = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
-                                        rgID * sbt.rayGenRecordSize);
+    //   assert("check raygen records built" && sbt.rayGenRecordCount != 0);
+    //   OptixShaderBindingTable localSBT = {};
+    //   localSBT.raygenRecord
+    //     = (CUdeviceptr)addPointerOffset(sbt.rayGenRecordsBuffer.get(),
+    //                                     rgID * sbt.rayGenRecordSize);
 
-      if (!sbt.missProgRecordsBuffer.alloced() &&
-          !sbt.hitGroupRecordsBuffer.alloced()) {
-        // Apparently this program does not have any hit records *or*
-        // miss records, which means either something's horribly wrong
-        // in the app, or this is more cuda-style "raygen-only" launch
-        // (i.e., a launch of a raygen program that doesn't actually trace
-        // any rays). If the latter, let's "fake" a valid SBT by
-        // writing in some (senseless) values to not trigger optix's
-        // own sanity checks.
-        static WarnOnce warn("launching an optix pipeline that has neither miss nor hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
-        localSBT.missRecordBase
-          = (CUdeviceptr)32;
-        localSBT.missRecordStrideInBytes
-          = (uint32_t)32;
-        localSBT.missRecordCount
-          = 1;
+    //   if (!sbt.missProgRecordsBuffer.alloced() &&
+    //       !sbt.hitGroupRecordsBuffer.alloced()) {
+    //     // Apparently this program does not have any hit records *or*
+    //     // miss records, which means either something's horribly wrong
+    //     // in the app, or this is more cuda-style "raygen-only" launch
+    //     // (i.e., a launch of a raygen program that doesn't actually trace
+    //     // any rays). If the latter, let's "fake" a valid SBT by
+    //     // writing in some (senseless) values to not trigger optix's
+    //     // own sanity checks.
+    //     static WarnOnce warn("launching an optix pipeline that has neither miss nor hitgroup programs set. This may be OK if you *only* have a raygen program, but is usually a sign of a bug - please double-check");
+    //     localSBT.missRecordBase
+    //       = (CUdeviceptr)32;
+    //     localSBT.missRecordStrideInBytes
+    //       = (uint32_t)32;
+    //     localSBT.missRecordCount
+    //       = 1;
 
-        localSBT.hitgroupRecordBase
-          = (CUdeviceptr)32;
-        localSBT.hitgroupRecordStrideInBytes
-          = (uint32_t)32;
-        localSBT.hitgroupRecordCount
-          = 1;
-      } else {
-        assert("check miss records built" && sbt.missProgRecordCount != 0);
-        localSBT.missRecordBase
-          = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
-        localSBT.missRecordStrideInBytes
-          = (uint32_t)sbt.missProgRecordSize;
-        localSBT.missRecordCount
-          = (uint32_t)sbt.missProgRecordCount;
+    //     localSBT.hitgroupRecordBase
+    //       = (CUdeviceptr)32;
+    //     localSBT.hitgroupRecordStrideInBytes
+    //       = (uint32_t)32;
+    //     localSBT.hitgroupRecordCount
+    //       = 1;
+    //   } else {
+    //     assert("check miss records built" && sbt.missProgRecordCount != 0);
+    //     localSBT.missRecordBase
+    //       = (CUdeviceptr)sbt.missProgRecordsBuffer.get();
+    //     localSBT.missRecordStrideInBytes
+    //       = (uint32_t)sbt.missProgRecordSize;
+    //     localSBT.missRecordCount
+    //       = (uint32_t)sbt.missProgRecordCount;
 
-        assert("check hit records built" && sbt.hitGroupRecordCount != 0);
-        localSBT.hitgroupRecordBase
-          = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
-        localSBT.hitgroupRecordStrideInBytes
-          = (uint32_t)sbt.hitGroupRecordSize;
-        localSBT.hitgroupRecordCount
-          = (uint32_t)sbt.hitGroupRecordCount;
-      }
+    //     assert("check hit records built" && sbt.hitGroupRecordCount != 0);
+    //     localSBT.hitgroupRecordBase
+    //       = (CUdeviceptr)sbt.hitGroupRecordsBuffer.get();
+    //     localSBT.hitgroupRecordStrideInBytes
+    //       = (uint32_t)sbt.hitGroupRecordSize;
+    //     localSBT.hitgroupRecordCount
+    //       = (uint32_t)sbt.hitGroupRecordCount;
+    //   }
 
-      OPTIX_CALL(Launch(context->pipeline,
-                        lp->stream,
-                        (CUdeviceptr)lp->deviceMemory.get(),
-                        lp->deviceMemory.sizeInBytes,
-                        &localSBT,
-                        dims.x,dims.y,1
-                        ));
-      STACK_POP_ACTIVE();
-    }
+    //   OPTIX_CALL(Launch(context->pipeline,
+    //                     lp->stream,
+    //                     (CUdeviceptr)lp->deviceMemory.get(),
+    //                     lp->deviceMemory.sizeInBytes,
+    //                     &localSBT,
+    //                     dims.x,dims.y,1
+    //                     ));
+    //   STACK_POP_ACTIVE();
+    // }
     
 
-    void Device::setRayTypeCount(size_t rayTypeCount)
-    {
-      // TODO: sanity check values, and that nothing has been created
-      // yet
-      context->numRayTypes = (int)rayTypeCount;
-    }
+    // void Device::setRayTypeCount(size_t rayTypeCount)
+    // {
+    //   // TODO: sanity check values, and that nothing has been created
+    //   // yet
+    //   context->numRayTypes = (int)rayTypeCount;
+    // }
 
       /*! helper function - return cuda name of this device */
     std::string Device::getDeviceName() const

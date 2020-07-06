@@ -31,11 +31,11 @@ namespace owl {
   //   context->llo->groupRefitAccel(this->ID);
   // }
   
-  void Group::createDeviceData(const std::vector<ll::Device *> &devices)
-  {
-    for (auto device : devices)
-      deviceData.push_back(createOn(device));
-  }
+  // void Group::createDeviceData(const std::vector<ll::Device *> &devices)
+  // {
+  //   for (auto device : devices)
+  //     deviceData.push_back(createOn(device));
+  // }
   // OptixTraversableHandle Group::getTraversable(int deviceID)
   // {
   //   // return lloGroupGetTraversable(context->llo,this->ID,deviceID);

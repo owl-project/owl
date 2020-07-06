@@ -101,14 +101,14 @@ namespace owl {
 
     /*! accessor helpers that first checks the validity of the given
       device ID, then returns the given device */
-    Device *DeviceGroup::checkGetDevice(int deviceID)
-    {
-      assert("check valid device ID" && deviceID >= 0);
-      assert("check valid device ID" && deviceID <  devices.size());
-      Device *device = devices[deviceID];
-      assert("check valid device" && device != nullptr);
-      return device;
-    }
+    // Device *DeviceGroup::checkGetDevice(int deviceID)
+    // {
+    //   assert("check valid device ID" && deviceID >= 0);
+    //   assert("check valid device ID" && deviceID <  devices.size());
+    //   Device *device = devices[deviceID];
+    //   assert("check valid device" && device != nullptr);
+    //   return device;
+    // }
 
 
     
@@ -126,17 +126,17 @@ namespace owl {
 
       Note this value will have to be set *before* the pipeline
       gets created */
-    void DeviceGroup::setMaxInstancingDepth(int maxInstancingDepth)
-    {
-      for (auto device : devices)
-        device->setMaxInstancingDepth(maxInstancingDepth);
-    }
+    // void DeviceGroup::setMaxInstancingDepth(int maxInstancingDepth)
+    // {
+    //   for (auto device : devices)
+    //     device->setMaxInstancingDepth(maxInstancingDepth);
+    // }
 
-    void DeviceGroup::enableMotionBlur()
-    {
-      for (auto device : devices)
-        device->enableMotionBlur();
-    }
+    // void DeviceGroup::enableMotionBlur()
+    // {
+    //   for (auto device : devices)
+    //     device->enableMotionBlur();
+    // }
     
     // void DeviceGroup::setTransforms(int igID, int timeStep,
     //                                 const affine3f *xfms)
@@ -145,116 +145,116 @@ namespace owl {
     //     device->setTransforms(igID,timeStep,xfms);
     // }
 
-    void DeviceGroup::setRayTypeCount(size_t rayTypeCount)
-    {
-      for (auto device : devices)
-        device->setRayTypeCount(rayTypeCount);
-    }
+    // void DeviceGroup::setRayTypeCount(size_t rayTypeCount)
+    // {
+    //   for (auto device : devices)
+    //     device->setRayTypeCount(rayTypeCount);
+    // }
 
 
-    void DeviceGroup::allocModules(size_t count)
-    { for (auto device : devices) device->allocModules(count); }
+    // void DeviceGroup::allocModules(size_t count)
+    // { for (auto device : devices) device->allocModules(count); }
 
-    void DeviceGroup::allocLaunchParams(size_t count)
-    { for (auto device : devices) device->allocLaunchParams(count); }
+    // // void DeviceGroup::allocLaunchParams(size_t count)
+    // // { for (auto device : devices) device->allocLaunchParams(count); }
     
-    void DeviceGroup::moduleCreate(int moduleID, const char *ptxCode)
-    { for (auto device : devices) device->modules.set(moduleID,ptxCode); }
+    // void DeviceGroup::moduleCreate(int moduleID, const char *ptxCode)
+    // { for (auto device : devices) device->modules.set(moduleID,ptxCode); }
 
-    void DeviceGroup::launchParamsCreate(int launchParamsID, size_t sizeOfVars)
-    {
-      for (auto device : devices)
-        device->launchParamsCreate(launchParamsID,sizeOfVars);
-    }
+    // void DeviceGroup::launchParamsCreate(int launchParamsID, size_t sizeOfVars)
+    // {
+    //   for (auto device : devices)
+    //     device->launchParamsCreate(launchParamsID,sizeOfVars);
+    // }
 
     
-    void DeviceGroup::buildModules()
-    {
-      for (auto device : devices)
-        device->buildModules();
-      LOG_OK("module(s) successfully (re-)built");
-    }
+    // void DeviceGroup::buildModules()
+    // {
+    //   for (auto device : devices)
+    //     device->buildModules();
+    //   LOG_OK("module(s) successfully (re-)built");
+    // }
     
-    void DeviceGroup::allocGeomTypes(size_t count)
-    { for (auto device : devices) device->allocGeomTypes(count); }
+    // void DeviceGroup::allocGeomTypes(size_t count)
+    // { for (auto device : devices) device->allocGeomTypes(count); }
     
-    void DeviceGroup::allocRayGens(size_t count)
-    { for (auto device : devices) device->allocRayGens(count); }
+    // // void DeviceGroup::allocRayGens(size_t count)
+    // // { for (auto device : devices) device->allocRayGens(count); }
     
-    void DeviceGroup::allocMissProgs(size_t count)
-    { for (auto device : devices) device->allocMissProgs(count); }
+    // void DeviceGroup::allocMissProgs(size_t count)
+    // { for (auto device : devices) device->allocMissProgs(count); }
 
-    /*! Set bounding box program for given geometry type, using a
-      bounding box program to be called on the device. Note that
-      unlike other programs (intersect, closesthit, anyhit) these
-      programs are not 'per ray type', but exist only once per
-      geometry type. Obviously only allowed for user geometry
-      typed. */
-    void DeviceGroup::setGeomTypeBoundsProgDevice(int geomTypeID,
-                                                  int moduleID,
-                                                  const char *progName,
-                                                  size_t geomDataSize)
-    {
-      for (auto device : devices)
-        device->setGeomTypeBoundsProgDevice(geomTypeID,moduleID,progName,
-                                            geomDataSize);
-    }
+    // /*! Set bounding box program for given geometry type, using a
+    //   bounding box program to be called on the device. Note that
+    //   unlike other programs (intersect, closesthit, anyhit) these
+    //   programs are not 'per ray type', but exist only once per
+    //   geometry type. Obviously only allowed for user geometry
+    //   typed. */
+    // void DeviceGroup::setGeomTypeBoundsProgDevice(int geomTypeID,
+    //                                               int moduleID,
+    //                                               const char *progName,
+    //                                               size_t geomDataSize)
+    // {
+    //   for (auto device : devices)
+    //     device->setGeomTypeBoundsProgDevice(geomTypeID,moduleID,progName,
+    //                                         geomDataSize);
+    // }
     
       
-    void DeviceGroup::setGeomTypeClosestHit(int geomTypeID,
-                                            int rayTypeID,
-                                            int moduleID,
-                                            const char *progName)
-    {
-      for (auto device : devices)
-        device->setGeomTypeClosestHit(geomTypeID,rayTypeID,moduleID,progName);
-    }
+    // void DeviceGroup::setGeomTypeClosestHit(int geomTypeID,
+    //                                         int rayTypeID,
+    //                                         int moduleID,
+    //                                         const char *progName)
+    // {
+    //   for (auto device : devices)
+    //     device->setGeomTypeClosestHit(geomTypeID,rayTypeID,moduleID,progName);
+    // }
     
-    void DeviceGroup::setGeomTypeAnyHit(int geomTypeID,
-                                            int rayTypeID,
-                                            int moduleID,
-                                            const char *progName)
-    {
-      for (auto device : devices)
-        device->setGeomTypeAnyHit(geomTypeID,rayTypeID,moduleID,progName);
-    }
+    // void DeviceGroup::setGeomTypeAnyHit(int geomTypeID,
+    //                                         int rayTypeID,
+    //                                         int moduleID,
+    //                                         const char *progName)
+    // {
+    //   for (auto device : devices)
+    //     device->setGeomTypeAnyHit(geomTypeID,rayTypeID,moduleID,progName);
+    // }
     
-    void DeviceGroup::setGeomTypeIntersect(int geomTypeID,
-                                            int rayTypeID,
-                                            int moduleID,
-                                            const char *progName)
-    {
-      for (auto device : devices)
-        device->setGeomTypeIntersect(geomTypeID,rayTypeID,moduleID,progName);
-    }
+    // void DeviceGroup::setGeomTypeIntersect(int geomTypeID,
+    //                                         int rayTypeID,
+    //                                         int moduleID,
+    //                                         const char *progName)
+    // {
+    //   for (auto device : devices)
+    //     device->setGeomTypeIntersect(geomTypeID,rayTypeID,moduleID,progName);
+    // }
     
-    void DeviceGroup::setRayGen(int pgID,
-                                int moduleID,
-                                const char *progName,
-                                size_t programDataSize)
-    {
-      for (auto device : devices)
-        device->setRayGen(pgID,moduleID,progName,programDataSize);
-    }
+    // void DeviceGroup::setRayGen(int pgID,
+    //                             int moduleID,
+    //                             const char *progName,
+    //                             size_t programDataSize)
+    // {
+    //   for (auto device : devices)
+    //     device->setRayGen(pgID,moduleID,progName,programDataSize);
+    // }
     
-    /*! specifies which miss program to run for a given miss prog
-      ID */
-    void DeviceGroup::setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
-                                  int programID,
-                                  /*! ID of the module the program will be bound
-                                    in, in [0..numAllocedModules) */
-                                  int moduleID,
-                                  /*! name of the program. Note we do not NOT
-                                    create a copy of this string, so the string
-                                    has to remain valid for the duration of the
-                                    program */
-                                  const char *progName,
-                                  /*! size of that miss program's SBT data */
-                                  size_t missProgDataSize)
-    {
-      for (auto device : devices)
-        device->setMissProg(programID,moduleID,progName,missProgDataSize);
-    }
+    // /*! specifies which miss program to run for a given miss prog
+    //   ID */
+    // void DeviceGroup::setMissProg(/*! miss program ID, in [0..numAllocatedMissProgs) */
+    //                               int programID,
+    //                               /*! ID of the module the program will be bound
+    //                                 in, in [0..numAllocedModules) */
+    //                               int moduleID,
+    //                               /*! name of the program. Note we do not NOT
+    //                                 create a copy of this string, so the string
+    //                                 has to remain valid for the duration of the
+    //                                 program */
+    //                               const char *progName,
+    //                               /*! size of that miss program's SBT data */
+    //                               size_t missProgDataSize)
+    // {
+    //   for (auto device : devices)
+    //     device->setMissProg(programID,moduleID,progName,missProgDataSize);
+    // }
 
     /*! resize the array of geom IDs. this can be either a
       'grow' or a 'shrink', but 'shrink' is only allowed if all
@@ -331,19 +331,19 @@ namespace owl {
     //   }
     // }
 
-    void DeviceGroup::buildPrograms()
-    {
-      for (auto device : devices)
-        device->buildPrograms();
-      LOG_OK("device programs (re-)built");
-    }
+    // void DeviceGroup::buildPrograms()
+    // {
+    //   for (auto device : devices)
+    //     device->buildPrograms();
+    //   LOG_OK("device programs (re-)built");
+    // }
     
-    void DeviceGroup::createPipeline()
-    {
-      for (auto device : devices)
-        device->createPipeline();
-      LOG_OK("optix pipeline created");
-    }
+    // void DeviceGroup::createPipeline()
+    // {
+    //   for (auto device : devices)
+    //     device->createPipeline();
+    //   LOG_OK("optix pipeline created");
+    // }
 
     // /*! Set a buffer of bounding boxes that this user geometry will
     //   use when building the accel structure. This is one of
@@ -433,30 +433,30 @@ namespace owl {
     //                              callBackData);
     // }
 
-    void DeviceGroup::geomTypeCreate(int geomTypeID,
-                                     size_t programDataSize)
-    {
-      for (auto device : devices) 
-        device->geomTypeCreate(geomTypeID,
-                               programDataSize);
-    }
+    // void DeviceGroup::geomTypeCreate(int geomTypeID,
+    //                                  size_t programDataSize)
+    // {
+    //   for (auto device : devices) 
+    //     device->geomTypeCreate(geomTypeID,
+    //                            programDataSize);
+    // }
                           
 
-    void DeviceGroup::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenCB,
-                                      const void *callBackData)
-    {
-      for (auto device : devices) 
-        device->sbtRayGensBuild(writeRayGenCB,
-                                callBackData);
-    }
+    // void DeviceGroup::sbtRayGensBuild(LLOWriteRayGenDataCB writeRayGenCB,
+    //                                   const void *callBackData)
+    // {
+    //   for (auto device : devices) 
+    //     device->sbtRayGensBuild(writeRayGenCB,
+    //                             callBackData);
+    // }
     
-    void DeviceGroup::sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgCB,
-                                        const void *callBackData)
-    {
-      for (auto device : devices) 
-        device->sbtMissProgsBuild(writeMissProgCB,
-                                  callBackData);
-    }
+    // void DeviceGroup::sbtMissProgsBuild(LLOWriteMissProgDataCB writeMissProgCB,
+    //                                     const void *callBackData)
+    // {
+    //   for (auto device : devices) 
+    //     device->sbtMissProgsBuild(writeMissProgCB,
+    //                               callBackData);
+    // }
 
     // void DeviceGroup::groupBuildPrimitiveBounds(int groupID,
     //                                             size_t maxGeomDataSize,
@@ -527,31 +527,31 @@ namespace owl {
 
     /*! return the cuda stream by the given launchparams object, on
       given device */
-    CUstream DeviceGroup::launchParamsGetStream(int launchParamsID, int devID)
-    {
-      return checkGetDevice(devID)->launchParamsGetStream(launchParamsID);
-    }
+    // CUstream DeviceGroup::launchParamsGetStream(int launchParamsID, int devID)
+    // {
+    //   return checkGetDevice(devID)->launchParamsGetStream(launchParamsID);
+    // }
     
       
-    void DeviceGroup::launch(int rgID, const vec2i &dims)
-    {
-      for (auto device : devices) device->launch(rgID,dims);
-      CUDA_SYNC_CHECK();
-    }
+    // void DeviceGroup::launch(int rgID, const vec2i &dims)
+    // {
+    //   for (auto device : devices) device->launch(rgID,dims);
+    //   CUDA_SYNC_CHECK();
+    // }
     
-    void DeviceGroup::launch(int rgID,
-                             const vec2i &dims,
-                             int32_t launchParamsID,
-                             LLOWriteLaunchParamsCB writeLaunchParamsCB,
-                             const void *cbData)
-    {
-      for (auto device : devices)
-        device->launch(rgID,dims,
-                       launchParamsID,
-                       writeLaunchParamsCB,
-                       cbData);
-      // CUDA_SYNC_CHECK();
-    }
+    // void DeviceGroup::launch(int rgID,
+    //                          const vec2i &dims,
+    //                          int32_t launchParamsID,
+    //                          LLOWriteLaunchParamsCB writeLaunchParamsCB,
+    //                          const void *cbData)
+    // {
+    //   for (auto device : devices)
+    //     device->launch(rgID,dims,
+    //                    launchParamsID,
+    //                    writeLaunchParamsCB,
+    //                    cbData);
+    //   // CUDA_SYNC_CHECK();
+    // }
     
     /* create an instance of this object that has properly
        initialized devices */
