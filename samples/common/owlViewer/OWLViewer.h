@@ -94,6 +94,7 @@ namespace owl {
         vec2i posLastSeen      { -1 };
         bool  shiftWhenPressed { false };
         bool  ctrlWhenPressed  { false };
+        bool  altWhenPressed   { false };
       };
 
       ButtonState leftButton;

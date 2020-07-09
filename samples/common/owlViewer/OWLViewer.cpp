@@ -365,18 +365,30 @@ namespace owl {
     void OWLViewer::mouseButton(int button, int action, int mods) 
     {
       const bool pressed = (action == GLFW_PRESS);
+      lastMousePos = getMousePos();
       switch(button) {
       case GLFW_MOUSE_BUTTON_LEFT:
-        leftButton.isPressed = pressed;
+        leftButton.isPressed        = pressed;
+        leftButton.shiftWhenPressed = (mods & GLFW_MOD_SHIFT  );
+        leftButton.ctrlWhenPressed  = (mods & GLFW_MOD_CONTROL);
+        leftButton.altWhenPressed   = (mods & GLFW_MOD_ALT    );
+        mouseButtonLeft(lastMousePos, pressed);
         break;
       case GLFW_MOUSE_BUTTON_MIDDLE:
         centerButton.isPressed = pressed;
+        centerButton.shiftWhenPressed = (mods & GLFW_MOD_SHIFT  );
+        centerButton.ctrlWhenPressed  = (mods & GLFW_MOD_CONTROL);
+        centerButton.altWhenPressed   = (mods & GLFW_MOD_ALT    );
+        mouseButtonCenter(lastMousePos, pressed);
         break;
       case GLFW_MOUSE_BUTTON_RIGHT:
         rightButton.isPressed = pressed;
+        rightButton.shiftWhenPressed = (mods & GLFW_MOD_SHIFT  );
+        rightButton.ctrlWhenPressed  = (mods & GLFW_MOD_CONTROL);
+        rightButton.altWhenPressed   = (mods & GLFW_MOD_ALT    );
+        mouseButtonRight(lastMousePos, pressed);
         break;
       }
-      lastMousePos = getMousePos();
     }
 
 
