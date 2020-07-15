@@ -253,7 +253,7 @@ namespace owl {
     return std::make_shared<TrianglesGeom>(context,self);
   }
 
-  void Context::buildHitGroupsOn(ll::Device *device)
+  void Context::buildHitGroupRecordsOn(ll::Device *device)
   {
     LOG("building SBT hit group records");
     int oldActive = device->pushActive();
@@ -367,55 +367,128 @@ namespace owl {
     LOG_OK("done building (and uploading) SBT hit group records");
   }
   
+
+  void Context::buildMissProgRecordsOn(ll::Device *device)
+  {
+    LOG("building SBT miss group records");
+    int oldActive = device->pushActive();
+
+    size_t maxMissProgDataSize = 0;
+    for (int i=0;i<geoms.size();i++) {
+      MissProg *missProg = (MissProg *)missProgs.getPtr(i);
+      if (!missProg) continue;
+        
+      assert(missProg->type);
+      maxMissProgDataSize = std::max(maxMissProgDataSize,missProg->type->varStructSize);
+    }
+    PING; PRINT(maxMissProgDataSize);
+    size_t numMissProgRecords = missProgs.size();
+    assert(numMissProgRecords == numRayTypes);
+    
+    size_t missProgRecordSize
+      = OPTIX_SBT_RECORD_HEADER_SIZE
+      + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxMissProgDataSize);
+    PRINT(missProgRecordSize);
+    
+    assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
+    device->sbt.missProgRecordSize  = missProgRecordSize;
+    device->sbt.missProgRecordCount = numMissProgRecords;
+
+    size_t totalMissProgRecordsArraySize
+      = numMissProgRecords * missProgRecordSize;
+    std::vector<uint8_t> missProgRecords(totalMissProgRecordsArraySize);
+
+    // ------------------------------------------------------------------
+    // now, write all records (only on the host so far): we need to
+    // write one record per geometry, per ray type
+    // ------------------------------------------------------------------
+    for (int recordID=0;recordID<missProgs.size();recordID++) {
+      MissProg *miss = missProgs.getPtr(recordID);
+      if (!miss) continue;
+        
+      uint8_t *const sbtRecord
+        = missProgRecords.data() + recordID*missProgRecordSize;
+      miss->writeSBTRecord(sbtRecord,device);
+    }
+    device->sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
+    device->sbt.missProgRecordsBuffer.upload(missProgRecords);
+    device->popActive(oldActive);
+    LOG_OK("done building (and uploading) SBT miss group records");
+  }
+
+
+  void Context::buildRayGenRecordsOn(ll::Device *device)
+  {
+    LOG("building SBT rayGen prog records");
+    int oldActive = device->pushActive();
+
+    for (int rgID=0;rgID<rayGens.size();rgID++) {
+      auto rg = rayGens.getPtr(rgID);
+      assert(rg);
+      auto &dd = rg->getDD(device);
+      
+      std::vector<uint8_t> hostMem(dd.rayGenRecordSize);
+      rg->writeSBTRecord(hostMem.data(),device);
+      dd.sbtRecordBuffer.upload(hostMem);
+    }
+    device->popActive(oldActive);
+  }
+  
+
+
   void Context::buildSBT(OWLBuildSBTFlags flags)
   {
-#if 1
+// #if 1
     if (flags & OWL_SBT_HITGROUPS)
       for (auto device : llo->devices)
-        buildHitGroupsOn(device);
-#else
-    // ----------- build hitgroups -----------
-    if (flags & OWL_SBT_HITGROUPS)
-      llo->sbtHitProgsBuild
-        ([&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
-          const Geom *geom = geoms.getPtr(geomID);
-          assert(geom);
-          geom->writeVariables(output,devID);
-        });
-#endif
+        buildHitGroupRecordsOn(device);
+// #else
+//     // ----------- build hitgroups -----------
+//     if (flags & OWL_SBT_HITGROUPS)
+//       llo->sbtHitProgsBuild
+//         ([&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
+//           const Geom *geom = geoms.getPtr(geomID);
+//           assert(geom);
+//           geom->writeVariables(output,devID);
+//         });
+// #endif
     
     // ----------- build miss prog(s) -----------
     if (flags & OWL_SBT_MISSPROGS)
-      llo->sbtMissProgsBuild
-        ([&](uint8_t *output,
-             int devID,
-             int rayTypeID) {
-          // TODO: eventually, we want to be able to 'assign' miss progs
-          // to different ray types, in which case we ahve to be able to
-          // look up wich miss prog is used for a given ray types - for
-          // now, we assume miss progs are created in exactly the right
-          // order ...
-          int missProgID = rayTypeID;
-          const MissProg *missProg = missProgs.getPtr(missProgID);
-          assert(missProg);
-          missProg->writeVariables(output,devID);
-        });
+      for (auto device : llo->devices)
+        buildMissProgRecordsOn(device);
+      // llo->sbtMissProgsBuild
+      //   ([&](uint8_t *output,
+      //        int devID,
+      //        int rayTypeID) {
+      //     // TODO: eventually, we want to be able to 'assign' miss progs
+      //     // to different ray types, in which case we ahve to be able to
+      //     // look up wich miss prog is used for a given ray types - for
+      //     // now, we assume miss progs are created in exactly the right
+      //     // order ...
+      //     int missProgID = rayTypeID;
+      //     const MissProg *missProg = missProgs.getPtr(missProgID);
+      //     assert(missProg);
+      //     missProg->writeVariables(output,devID);
+      //   });
 
     // ----------- build raygens -----------
     if (flags & OWL_SBT_RAYGENS)
-      llo->sbtRayGensBuild
-        ([&](uint8_t *output,
-             int devID,
-             int rgID) {
+      for (auto device : llo->devices)
+        buildRayGenRecordsOn(device);
+      // llo->sbtRayGensBuild
+      //   ([&](uint8_t *output,
+      //        int devID,
+      //        int rgID) {
 
-          // TODO: need the ID of the miss prog we're writing!
-          int rayGenID = rgID;
-          assert(rayGens.size() >= 1);
+      //     // TODO: need the ID of the miss prog we're writing!
+      //     int rayGenID = rgID;
+      //     assert(rayGens.size() >= 1);
          
-          const RayGen *rayGen = rayGens.getPtr(rayGenID);
-          assert(rayGen);
-          rayGen->writeVariables(output,devID);
-        });
+      //     const RayGen *rayGen = rayGens.getPtr(rayGenID);
+      //     assert(rayGen);
+      //     rayGen->writeVariables(output,devID);
+      //   });
   
   }
 
@@ -462,6 +535,16 @@ namespace owl {
   void Context::setMaxInstancingDepth(int32_t maxInstanceDepth)
   {
     maxInstanceDepth = maxInstanceDepth;
+    
+    if (maxInstancingDepth < 1)
+      throw std::runtime_error("a instancing depth of < 1 isnt' currently supported in OWL; pleaes see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
+    
+    for (auto device : llo->devices) {
+      assert("check pipeline isn't already created"
+             && device->context->pipeline == nullptr);
+      // device->context->maxInstancingDepth = maxInstancingDepth;
+      device->context->configurePipelineOptions(this);
+    } 
   }
 
   void Context::enableMotionBlur()
@@ -471,35 +554,77 @@ namespace owl {
     // llo->enableMotionBlur();
   }
 
-
-
-
-
   void Context::buildPrograms()
   {
     buildModules();
-    for (auto device : getDevices())
-      buildPrograms(device);
+    
+    for (auto device : getDevices()) {
+      const int oldActive = device->pushActive();
+      auto &dd = getDD(device);
+      dd.buildPrograms();
+      device->popActive(oldActive);
+    }
+  }
+
+  void Context::DeviceData::destroyPrograms()
+  {
+    const int oldActive = device->pushActive();
+    for (auto pg : allActivePrograms)
+      optixProgramGroupDestroy(pg);
+    allActivePrograms.clear();
+    device->popActive(oldActive);
   }
 
   void Context::destroyPrograms()
   {
-    for (auto device : getDevices())
-      destroyPrograms(device);
+    for (auto device : getDevices()) 
+      getDD(device).destroyPrograms();
   }
 
-
-  // void Context::buildPrograms(Device *device)
-  // {
-  //   buildMissPrograms(device);
-  //   buildRayGenPrograms(device);
-  //   buildBoundsPrograms(device);
-  //   buildIsecPrograms(device);
-  //   buildCHPrograms(device);
-  //   buildAHPrograms(device);
-  // }
-
+  void Context::DeviceData::buildMissPrograms()
+  {
+    throw std::runtime_error("not implemented");
+  }
   
+  void Context::DeviceData::buildRayGenPrograms()
+  {
+    throw std::runtime_error("not implemented");
+  }
+  
+  void Context::DeviceData::buildIsecPrograms()
+  {
+    throw std::runtime_error("not implemented");
+  }
+  
+  void Context::DeviceData::buildBoundsPrograms()
+  {
+    throw std::runtime_error("not implemented");
+  }
+  
+  void Context::DeviceData::buildAnyHitPrograms()
+  {
+    throw std::runtime_error("not implemented");
+  }
+  
+  void Context::DeviceData::buildClosestHitPrograms()
+  {
+    throw std::runtime_error("not implemented");
+  }
+  
+  void Context::DeviceData::buildPrograms()
+  {
+    int oldActive = device->pushActive();
+    destroyPrograms();
+    buildMissPrograms();
+    buildRayGenPrograms();
+    buildBoundsPrograms();
+    buildIsecPrograms();
+    buildClosestHitPrograms();
+    buildAnyHitPrograms();
+    device->popActive(oldActive);
+  }
+
+#if 0
   void Context::buildOptixPrograms(Device *device)
   {
     int oldActive = context->pushActive();
@@ -667,38 +792,39 @@ namespace owl {
     }
     context->popActive(oldActive);
   }
+#endif
+  
+  // void Context::destroyPrograms(Device *device)
+  // {
+  //   for (auto type : rayGenTypes.objects)
+  //     type->destroyProgramGroups(device);
+  //   for (auto type : geomTypes.objects)
+  //     type->destroyProgramGroups(device);
+  //   for (auto type : missProgTypes.objects)
+  //     type->destroyProgramGroups(device);
     
-  void Context::destroyPrograms(Device *device)
-  {
-    for (auto type : rayGenTypes.objects)
-      type->destroyProgramGroups(device);
-    for (auto type : geomTypes.objects)
-      type->destroyProgramGroups(device);
-    for (auto type : missProgTypes.objects)
-      type->destroyProgramGroups(device);
+  //   // int oldActive = device->pushActive();
     
-    // int oldActive = device->pushActive();
+  //   // // ---------------------- rayGen ----------------------
+  //   // // for (auto &pg : rayGenPGs) {
+  //   // //   if (pg.pg) optixProgramGroupDestroy(pg.pg);
+  //   // //   pg.pg = nullptr;
+  //   // // }
+  //   // for (auto rg : rayGens.objects) rg->destroyProgramGroups(device);
     
-    // // ---------------------- rayGen ----------------------
-    // // for (auto &pg : rayGenPGs) {
-    // //   if (pg.pg) optixProgramGroupDestroy(pg.pg);
-    // //   pg.pg = nullptr;
-    // // }
-    // for (auto rg : rayGens.objects) rg->destroyProgramGroups(device);
-    
-    // // ---------------------- hitGroup ----------------------
-    // for (auto &geomType : geomTypes) 
-    //   for (auto &pg : geomType.perRayType) {
-    //     if (pg.pg) optixProgramGroupDestroy(pg.pg);
-    //     pg.pg = nullptr;
-    //   }
-    // // ---------------------- miss ----------------------
-    // for (auto &pg : missProgPGs) {
-    //   if (pg.pg) optixProgramGroupDestroy(pg.pg);
-    //   pg.pg = nullptr;
-    // }
+  //   // // ---------------------- hitGroup ----------------------
+  //   // for (auto &geomType : geomTypes) 
+  //   //   for (auto &pg : geomType.perRayType) {
+  //   //     if (pg.pg) optixProgramGroupDestroy(pg.pg);
+  //   //     pg.pg = nullptr;
+  //   //   }
+  //   // // ---------------------- miss ----------------------
+  //   // for (auto &pg : missProgPGs) {
+  //   //   if (pg.pg) optixProgramGroupDestroy(pg.pg);
+  //   //   pg.pg = nullptr;
+  //   // }
 
-    // device->popActive(oldActive);
-  }
+  //   // device->popActive(oldActive);
+  // }
   
 } // ::owl

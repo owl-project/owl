@@ -1,4 +1,4 @@
-/ ======================================================================== //
+// ======================================================================== //
 // Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
@@ -23,6 +23,8 @@
 // #include "owl/ll/Buffers.h"
 
 namespace owl {
+  struct Context;
+  
   namespace ll {
     // struct ProgramGroups;
     struct Device;
@@ -89,13 +91,12 @@ namespace owl {
 
       /*! sets the pipelineCompileOptions etc based on
           maxConfiguredInstanceDepth */
-      void configurePipelineOptions();
+      void configurePipelineOptions(owl::Context *apiContext);
       
       OptixPipelineCompileOptions pipelineCompileOptions = {};
       OptixPipelineLinkOptions    pipelineLinkOptions    = {};
       OptixModuleCompileOptions   moduleCompileOptions   = {};
       OptixPipeline               pipeline               = nullptr;
-
     };
     
     // struct Module {
@@ -353,7 +354,7 @@ namespace owl {
           *before* those functions get called */
       void setMaxInstancingDepth(int maxInstancingDepth);
 
-      void enableMotionBlur() { context->motionBlurEnabled = true; context->configurePipelineOptions(); };
+      // void enableMotionBlur() { context->motionBlurEnabled = true; context->configurePipelineOptions(); };
 
       void createPipeline()
       {

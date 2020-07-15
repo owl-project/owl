@@ -29,6 +29,23 @@ namespace owl {
                size_t varStructSize,
                const std::vector<OWLVarDecl> &varDecls);
 
+    /*! for miss progs there's exactly one programgroup pre object */
+    struct DeviceData : public RegisteredObject::DeviceData {
+      typedef std::shared_ptr<DeviceData> SP;
+
+      OptixProgramGroup pg;
+    };
+
+    DeviceData &getDD(int deviceID) const
+    {
+      assert(deviceID < deviceData.size());
+      return *deviceData[deviceID]->as<DeviceData>();
+    }
+    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+    
     virtual std::string toString() const { return "MissProgType"; }
     
     Module::SP module;
@@ -40,6 +57,9 @@ namespace owl {
     
     MissProg(Context *const context,
            MissProgType::SP type);
+    
+    void writeSBTRecord(uint8_t *const sbtRecord,
+                        Device *device);
     
     virtual std::string toString() const { return "MissProg"; }
   };

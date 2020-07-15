@@ -39,10 +39,10 @@ namespace owl {
     assert(type.get());
     assert(type->module);
     assert(type->progName != "");
-    context->llo->setRayGen(this->ID,
-                    type->module->ID,
-                    type->progName.c_str(),
-                    type->varStructSize);
+    // context->llo->setRayGen(this->ID,
+    //                 type->module->ID,
+    //                 type->progName.c_str(),
+    //                 type->varStructSize);
   }
 
   // void RayGen::launch(const vec2i &dims)
@@ -77,10 +77,32 @@ namespace owl {
   {
       
     int oldActive = device->pushActive();
-    deviceMemory.alloc(rayGenRecordSize);
-    hostMemory.resize(rayGenRecordSize);
+    sbtRecordBuffer.alloc(rayGenRecordSize);
     device->popActive(oldActive);
   }
+
+
+  void RayGen::writeSBTRecord(uint8_t *const sbtRecord,
+                              Device *device)
+  {
+    auto &dd = type->getDD(device);
+    
+    // first, compute pointer to record:
+    uint8_t *const sbtRecordHeader = sbtRecord;
+    uint8_t *const sbtRecordData   = sbtRecord+OPTIX_SBT_RECORD_HEADER_SIZE;
+
+    // ------------------------------------------------------------------
+    // pack record header with the corresponding hit group:
+    // ------------------------------------------------------------------
+    OPTIX_CALL(SbtRecordPackHeader(dd.pg,sbtRecordHeader));
+    
+    // ------------------------------------------------------------------
+    // then, write the data for that record
+    // ------------------------------------------------------------------
+    writeVariables(sbtRecordData,device->ID);
+  }  
+
+
 
   
   void RayGen::launchAsync(const vec2i &dims,
@@ -108,7 +130,7 @@ namespace owl {
       // set raygen part of SBT 
       // -------------------------------------------------------
       sbt.raygenRecord
-        = (CUdeviceptr)rgDD.deviceMemory.d_pointer;
+        = (CUdeviceptr)rgDD.sbtRecordBuffer.d_pointer;
       assert(sbt.raygenRecord);
       // sbt.raygenRecordSize
       //   = rgDD.deviceMemory.size();

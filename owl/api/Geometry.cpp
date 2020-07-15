@@ -27,8 +27,8 @@ namespace owl {
       closestHit(context->numRayTypes),
       anyHit(context->numRayTypes)
   {
-    context->llo->geomTypeCreate(this->ID,
-                                 varStructSize);
+    // context->llo->geomTypeCreate(this->ID,
+    //                              varStructSize);
   }
   
   Geom::Geom(Context *const context,
@@ -75,9 +75,9 @@ namespace owl {
   }
 
           
-  void GeomType::writeSBTHeader(uint8_t *const sbtRecord,
-                                Device *device,
-                                int rayTypeID)
+  void GeomType::DeviceData::writeSBTHeader(uint8_t *const sbtRecord,
+                                            Device *device,
+                                            int rayTypeID)
   {
     // // auto geomType = geom->type;//device->geomTypes[geom->geomType->ID];
     // GeomType::DeviceData &gt = geom->type->getDD(device);

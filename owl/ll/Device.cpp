@@ -17,6 +17,7 @@
 #include "Device.h"
 #include <optix_function_table_definition.h>
 #include "api/Group.h"
+#include "api/Context.h"
 
 // to make C99 compilers happy:
 extern inline OptixResult optixInit( void** handlePtr );
@@ -164,26 +165,26 @@ namespace owl {
       OPTIX_CHECK(optixDeviceContextSetLogCallback
                   (optixContext,context_log_cb,this,4));
 
-      configurePipelineOptions();
+      // configurePipelineOptions();
     }
 
-    void Device::setMaxInstancingDepth(int maxInstancingDepth)
-    {
-      if (maxInstancingDepth == context->maxInstancingDepth)
-        return;
+    // void Device::setMaxInstancingDepth(int maxInstancingDepth)
+    // {
+    //   if (maxInstancingDepth == context->maxInstancingDepth)
+    //     return;
 
-      if (maxInstancingDepth < 1)
-        throw std::runtime_error("a instancing depth of < 1 isnt' currently supported in OWL; pleaes see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
+    //   if (maxInstancingDepth < 1)
+    //     throw std::runtime_error("a instancing depth of < 1 isnt' currently supported in OWL; pleaes see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
 
-      assert("check pipeline isn't already created"
-             && context->pipeline == nullptr);
-      context->maxInstancingDepth = maxInstancingDepth;
-      context->configurePipelineOptions();
-    }
+    //   assert("check pipeline isn't already created"
+    //          && context->pipeline == nullptr);
+    //   context->maxInstancingDepth = maxInstancingDepth;
+    //   context->configurePipelineOptions();
+    // }
 
     /*! sets the pipelineCompileOptions etc. based on
       maxConfiguredInstanceDepth */
-    void Context::configurePipelineOptions()
+    void Context::configurePipelineOptions(owl::Context *apiContext)
     {
       // ------------------------------------------------------------------
       // configure default module compile options
@@ -203,15 +204,15 @@ namespace owl {
       // configure default pipeline compile options
       // ------------------------------------------------------------------
       pipelineCompileOptions = {};
-      assert(maxInstancingDepth >= 0);
-      switch (maxInstancingDepth) {
+      assert(apiContext->maxInstancingDepth >= 0);
+      switch (apiContext->maxInstancingDepth) {
       case 0:
         pipelineCompileOptions.traversableGraphFlags
           = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS;
         break;
       case 1:
         pipelineCompileOptions.traversableGraphFlags
-          = motionBlurEnabled
+          = apiContext->motionBlurEnabled
           ? OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY
           : OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
           // | OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
@@ -222,7 +223,7 @@ namespace owl {
           = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
         break;
       }
-      pipelineCompileOptions.usesMotionBlur     = motionBlurEnabled;
+      pipelineCompileOptions.usesMotionBlur     = apiContext->motionBlurEnabled;
       pipelineCompileOptions.numPayloadValues   = 2;
       pipelineCompileOptions.numAttributeValues = 2;
       pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;

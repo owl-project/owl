@@ -29,6 +29,12 @@ namespace owl {
     /*! any device-specific data, such as optix handles, cuda device
         pointers, etc */
     struct DeviceData : public RegisteredObject::DeviceData {
+
+      virtual ~DeviceData() { assert(module == nullptr); }
+      
+      void build(Module *parent, Device *device);
+      void destroy(Device *device);
+      
       /*! for all *optix* programs we can directly buidl the PTX code
         into a module using optixbuildmodule - this is the result of
         that operation */

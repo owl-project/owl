@@ -33,11 +33,34 @@ namespace owl {
                      MissProgType::SP type) 
     : SBTObject(context,context->missProgs,type)
   {
-    context->llo->setMissProg(this->ID,
-                              type->module->ID,
-                              type->progName.c_str(),
-                              type->varStructSize);
+    // context->llo->setMissProg(this->ID,
+    //                           type->module->ID,
+    //                           type->progName.c_str(),
+    //                           type->varStructSize);
   }
+
+
+  void MissProg::writeSBTRecord(uint8_t *const sbtRecord,
+                                Device *device)
+  {
+    auto &dd = type->getDD(device);
+    
+    // first, compute pointer to record:
+    uint8_t *const sbtRecordHeader = sbtRecord;
+    uint8_t *const sbtRecordData   = sbtRecord+OPTIX_SBT_RECORD_HEADER_SIZE;
+
+    // ------------------------------------------------------------------
+    // pack record header with the corresponding hit group:
+    // ------------------------------------------------------------------
+    OPTIX_CALL(SbtRecordPackHeader(dd.pg,sbtRecordHeader));
+    
+    // ------------------------------------------------------------------
+    // then, write the data for that record
+    // ------------------------------------------------------------------
+    writeVariables(sbtRecordData,device->ID);
+  }  
+
+
   
 } // ::owl
 

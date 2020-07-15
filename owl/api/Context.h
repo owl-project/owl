@@ -33,6 +33,38 @@ namespace owl {
   struct Context : public Object {
     typedef std::shared_ptr<Context> SP;
 
+    /*! for miss progs there's exactly one programgroup pre object */
+    struct DeviceData : public RegisteredObject::DeviceData {
+      typedef std::shared_ptr<DeviceData> SP;
+      
+      DeviceData(Context *parent,
+                 ll::Device *device)
+        : parent(parent), device(device) {}
+      
+      void buildPrograms();
+      void buildMissPrograms();
+      void buildRayGenPrograms();
+      void buildIsecPrograms();
+      void buildBoundsPrograms();
+      void buildAnyHitPrograms();
+      void buildClosestHitPrograms();
+      void destroyPrograms();
+      
+      std::vector<OptixProgramGroup> allActivePrograms;
+      ll::Device *const device;
+      Context    *const parent;
+    };
+
+    DeviceData &getDD(int deviceID) const
+    {
+      assert(deviceID < deviceData.size());
+      return *deviceData[deviceID]->as<DeviceData>();
+    }
+    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(this,device); }
+
     /*! returns whether logging is enabled */
     inline static bool logging() { return ll::DeviceGroup::logging(); }
     
@@ -59,10 +91,7 @@ namespace owl {
 
     ll::RangeAllocator sbtRangeAllocator;
 
-    //! TODO: allow changing that via api ..
-    size_t numRayTypes = 1;
     std::vector<MissProg::SP> missProgPerRayType;
-    bool   motionBlurEnabled = false;
 
     /*! access list of all devices */
     const std::vector<ll::Device *> &getDevices() const { return llo->devices; }
@@ -71,8 +100,13 @@ namespace owl {
         that is a invalid ID */
     ll::Device *getDevice(uint32_t deviceID) const
     { assert(deviceID < llo->devices.size()); return llo->devices[deviceID]; }
-    
-    void buildHitGroupsOn(ll::Device *device);
+
+    /*! part of the SBT creation - builds the hit group array */
+    void buildHitGroupRecordsOn(ll::Device *device);
+    /*! part of the SBT creation - builds the raygen array */
+    void buildRayGenRecordsOn(ll::Device *device);
+    /*! part of the SBT creation - builds the miss group array */
+    void buildMissProgRecordsOn(ll::Device *device);
     
     void setRayTypeCount(size_t rayTypeCount);
     void enableMotionBlur();
@@ -104,8 +138,12 @@ namespace owl {
     void destroyPrograms();
     void buildModules();
 
-    void buildPrograms(Device *device);
-    void destroyPrograms(Device *device);
+    void buildMissPrograms(Device *device);
+    void buildRayGenPrograms(Device *device);
+    void buildIsecPrograms(Device *device);
+    void buildBoundsPrograms(Device *device);
+    void buildAnyHitPrograms(Device *device);
+    void buildClosestHitPrograms(Device *device);
 
     
     GeomGroup::SP
@@ -185,7 +223,7 @@ namespace owl {
     int maxInstancingDepth = 1;      
     int numRayTypes { 1 };
     /*! by default motion blur is off, as it costs performacne */
-    bool motionBlurEnabled = 0;
+    bool motionBlurEnabled = false;
     
     owl::ll::DeviceGroup *llo;
   };

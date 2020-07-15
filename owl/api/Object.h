@@ -36,10 +36,32 @@ namespace owl {
   struct Object : public std::enable_shared_from_this<Object> {
     typedef std::shared_ptr<Object> SP;
 
+    /*! any device-specific data, such as optix handles, cuda device
+        pointers, etc */
+    struct DeviceData {
+      typedef std::shared_ptr<DeviceData> SP;
+
+      virtual ~DeviceData() {}
+      
+      template<typename T>
+      inline T *as() { return dynamic_cast<T*>(this); }
+    };
+
     Object();
 
     /*! pretty-printer, for debugging */
     virtual std::string toString() const { return "Object"; }
+
+    /*! creates the device-specific data for this group */
+    virtual DeviceData::SP createOn(ll::Device *device)
+    { return std::make_shared<DeviceData>(); }
+
+    void createDeviceData(const std::vector<ll::Device *> &devices)
+    {
+      assert(deviceData.empty());
+      for (auto device : devices)
+        deviceData.push_back(createOn(device));
+    }
 
     template<typename T>
     inline std::shared_ptr<T> as() 
@@ -52,6 +74,8 @@ namespace owl {
     const size_t uniqueID;
 
     static std::atomic<uint64_t> nextAvailableID;
+
+    std::vector<DeviceData::SP> deviceData;
   };
 
   

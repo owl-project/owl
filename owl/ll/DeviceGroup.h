@@ -105,58 +105,58 @@ namespace owl {
                            during sbtMissProgsBuildd() */
                          const void *callBackUserData);
     
-/*! C++-only wrapper of callback method with lambda function */
-template<typename Lambda>
-void lloSbtRayGensBuild(LLOContext llo,
-                        const Lambda &l)
-{
-  lloSbtRayGensBuild
-    (llo,
-     [](uint8_t *output,
-        int devID, int rgID, 
-        const void *cbData)
-     {
-       const Lambda *lambda = (const Lambda *)cbData;
-       (*lambda)(output,devID,rgID);
-     },
-     (const void *)&l);
-}
+// /*! C++-only wrapper of callback method with lambda function */
+// template<typename Lambda>
+// void lloSbtRayGensBuild(LLOContext llo,
+//                         const Lambda &l)
+// {
+//   lloSbtRayGensBuild
+//     (llo,
+//      [](uint8_t *output,
+//         int devID, int rgID, 
+//         const void *cbData)
+//      {
+//        const Lambda *lambda = (const Lambda *)cbData;
+//        (*lambda)(output,devID,rgID);
+//      },
+//      (const void *)&l);
+// }
 
-/*! C++-only wrapper of callback method with lambda function */
-template<typename Lambda>
-void lloSbtHitProgsBuild(LLOContext llo,
-                         const Lambda &l)
-{
-  lloSbtHitProgsBuild
-    (llo,
-     [](uint8_t *output,
-        int devID,
-        int geomID,
-        int rayTypeID,
-        const void *cbData)
-     {
-       const Lambda *lambda = (const Lambda *)cbData;
-       (*lambda)(output,devID,geomID,rayTypeID);
-     },
-     (const void *)&l);
-}
+// /*! C++-only wrapper of callback method with lambda function */
+// template<typename Lambda>
+// void lloSbtHitProgsBuild(LLOContext llo,
+//                          const Lambda &l)
+// {
+//   lloSbtHitProgsBuild
+//     (llo,
+//      [](uint8_t *output,
+//         int devID,
+//         int geomID,
+//         int rayTypeID,
+//         const void *cbData)
+//      {
+//        const Lambda *lambda = (const Lambda *)cbData;
+//        (*lambda)(output,devID,geomID,rayTypeID);
+//      },
+//      (const void *)&l);
+// }
 
-/*! C++-only wrapper of callback method with lambda function */
-template<typename Lambda>
-void lloSbtMissProgsBuild(LLOContext llo,
-                          const Lambda &l)
-{
-  lloSbtMissProgsBuild
-    (llo,
-     [](uint8_t *output,
-        int devID, int rgID, 
-        const void *cbData)
-     {
-       const Lambda *lambda = (const Lambda *)cbData;
-       (*lambda)(output,devID,rgID);
-     },
-     (const void *)&l);
-}
+// /*! C++-only wrapper of callback method with lambda function */
+// template<typename Lambda>
+// void lloSbtMissProgsBuild(LLOContext llo,
+//                           const Lambda &l)
+// {
+//   lloSbtMissProgsBuild
+//     (llo,
+//      [](uint8_t *output,
+//         int devID, int rgID, 
+//         const void *cbData)
+//      {
+//        const Lambda *lambda = (const Lambda *)cbData;
+//        (*lambda)(output,devID,rgID);
+//      },
+//      (const void *)&l);
+// }
 
 // /*! C++-only wrapper of callback method with lambda function */
 // template<typename Lambda>

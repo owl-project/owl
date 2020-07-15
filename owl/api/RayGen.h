@@ -32,6 +32,23 @@ namespace owl {
 
     virtual std::string toString() const { return "RayGenType"; }
     
+    /*! for miss progs there's exactly one programgroup pre object */
+    struct DeviceData : public RegisteredObject::DeviceData {
+      typedef std::shared_ptr<DeviceData> SP;
+
+      OptixProgramGroup pg;
+    };
+
+    DeviceData &getDD(int deviceID) const
+    {
+      assert(deviceID < deviceData.size());
+      return *deviceData[deviceID]->as<DeviceData>();
+    }
+    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+    
     Module::SP        module;
     const std::string progName;
   };
@@ -43,14 +60,9 @@ namespace owl {
       DeviceData(size_t  dataSize,
                  Device *device);
       
-      /*! host-size memory for the ray gen program's SBT data, for the
-          given device (this is for 'writeVariables' to write into
-          when building the sbt */
-      std::vector<uint8_t> hostMemory;
-      
       /*! device side copy of 'hostMemory' - this is the pointer that
           will go into the actual SBT */
-      DeviceMemory         deviceMemory;
+      DeviceMemory         sbtRecordBuffer;
       const size_t         rayGenRecordSize;
     };
       
@@ -62,6 +74,9 @@ namespace owl {
     void launch(const vec2i &dims);
     
     void launchAsync(const vec2i &dims, const LaunchParams::SP &launchParams);
+    
+    void writeSBTRecord(uint8_t *const sbtRecord,
+                        Device *device);
 
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(ll::Device *device) override

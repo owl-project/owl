@@ -29,36 +29,12 @@ namespace owl {
       itself in the given registry when it gets created/destroyed */
   struct RegisteredObject : public ContextObject {
 
-    /*! any device-specific data, such as optix handles, cuda device
-        pointers, etc */
-    struct DeviceData {
-      typedef std::shared_ptr<DeviceData> SP;
-
-      virtual ~DeviceData() {}
-      
-      template<typename T>
-      inline T *as() { return dynamic_cast<T*>(this); }
-    };
-
     RegisteredObject(Context *const context,
                      ObjectRegistry &registry);
     ~RegisteredObject();
 
-    /*! creates the device-specific data for this group */
-    virtual DeviceData::SP createOn(ll::Device *device)
-    { return std::make_shared<DeviceData>(); }
-
-    void createDeviceData(const std::vector<ll::Device *> &devices)
-    {
-      assert(deviceData.empty());
-      for (auto device : devices)
-        deviceData.push_back(createOn(device));
-    }
-
     int             ID;
     ObjectRegistry &registry;
-    
-    std::vector<DeviceData::SP> deviceData;
   };
 
 } // ::owl
