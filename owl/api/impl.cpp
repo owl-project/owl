@@ -189,7 +189,7 @@ checkGet(_context)->buildSBT(flags);
 
   /*! wait for the async launch to finish */
   OWL_API void
-  owlLaunchSync(OWLLaunchParams _launchParams)
+  owlAyncLaunch2D(OWLLaunchParams _launchParams)
   {
     assert(_launchParams);
     LaunchParams::SP launchParams

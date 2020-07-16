@@ -597,12 +597,18 @@ owlBufferUpload(OWLBuffer buffer, const void *hostPtr);
 OWL_API void
 owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
+/*! perform a raygen launch with lauch parameters, in a *synchronous*
+    way; it, by the time this function returns the launch is completed */
 OWL_API void
 owlLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
             OWLParams params);
+
+/*! perform a raygen launch with lauch parameters, in a *A*synchronous
+    way; it, this will only launch, but *NOT* wait for completion (see
+    owlLaunchSync) */
 OWL_API void
-owlLaunch2DSync(OWLRayGen rayGen, int dims_x, int dims_y,
-                OWLParams params);
+owlAsyncLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
+                 OWLParams params);
 
 
 OWL_API CUstream

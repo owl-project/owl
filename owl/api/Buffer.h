@@ -49,6 +49,7 @@ namespace owl {
 
     Buffer::DeviceData &getDD(const DeviceContext::SP &device) const
     {
+      assert(device);
       assert(device->ID < deviceData.size());
       return *deviceData[device->ID]->as<Buffer::DeviceData>();
     }
@@ -56,7 +57,7 @@ namespace owl {
     // const void *getPointer(int deviceID) const
     // { std::cout << "deprecated - kill this" << std::endl; return getDD(deviceID).d_pointer; }
     const void *getPointer(const DeviceContext::SP &device) const
-    { return getDD(device).d_pointer; }
+    { assert(device); return getDD(device).d_pointer; }
         
     size_t getElementCount() const;
     

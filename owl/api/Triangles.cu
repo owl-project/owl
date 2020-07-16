@@ -76,7 +76,8 @@ namespace owl {
     int numThreads = 1024;
     int numBlocks = (vertex.count + numThreads - 1) / numThreads;
 
-    DeviceContext::SP device = context->getDevices()[0];
+    DeviceContext::SP device = context->getDevice(0);
+    assert(device);
     SetActiveGPU forLifeTime(device);
       
     DeviceMemory d_bounds;
@@ -85,12 +86,12 @@ namespace owl {
     d_bounds.upload(bounds);
     computeBoundsOfVertices<<<numBlocks,numThreads>>>
       (((box3f*)d_bounds.get())+0,
-       vertex.buffers[0]->getPointer(0),
+       vertex.buffers[0]->getPointer(device),
        vertex.count,vertex.stride,vertex.offset);
     if (vertex.buffers.size() == 2)
       computeBoundsOfVertices<<<numBlocks,numThreads>>>
         (((box3f*)d_bounds.get())+1,
-         vertex.buffers[1]->getPointer(0),
+         vertex.buffers[1]->getPointer(device),
          vertex.count,vertex.stride,vertex.offset);
     CUDA_SYNC_CHECK();
     d_bounds.download(&bounds[0]);
