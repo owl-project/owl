@@ -23,25 +23,25 @@
 extern inline OptixResult optixInit( void** handlePtr );
 
 #define LOG(message)                                            \
-  if (DeviceGroup::logging()) \
+  if (owl::Context::logging())                             \
   std::cout << "#owl.ll(" << context->owlDeviceID << "): "      \
   << message                                                    \
   << std::endl
 
 #define LOG_OK(message)                                 \
-  if (DeviceGroup::logging()) \
+  if (owl::Context::logging())                          \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << context->owlDeviceID << "): "        \
   << message << OWL_TERMINAL_DEFAULT << std::endl
 
 #define CLOG(message)                                   \
-  if (DeviceGroup::logging()) \
+  if (owl::Context::logging()) \
   std::cout << "#owl.ll(" << owlDeviceID << "): "       \
   << message                                            \
   << std::endl
 
 #define CLOG_OK(message)                                \
-  if (DeviceGroup::logging()) \
+  if (owl::Context::logging()) \
   std::cout << OWL_TERMINAL_GREEN                       \
   << "#owl.ll(" << owlDeviceID << "): "                 \
   << message << OWL_TERMINAL_DEFAULT << std::endl
@@ -483,52 +483,52 @@ namespace owl {
     }
 #endif
     
-    std::string getNextLine(const char *&s)
-    {
-      std::stringstream line;
-      while (*s) {
-        char c = *s++;
-        line << c;
-        if (c == '\n') break;
-      }
-      return line.str();
-    }
+//     std::string getNextLine(const char *&s)
+//     {
+//       std::stringstream line;
+//       while (*s) {
+//         char c = *s++;
+//         line << c;
+//         if (c == '\n') break;
+//       }
+//       return line.str();
+//     }
     
-    inline bool ptxContainsInvalidOptixInternalCall(const std::string &line)
-    {
-      static const char *optix_internal_symbols[] = {
-#if 1
-        " _optix_",
-#else
-        " _optix_get_sbt",
-        " _optix_trace",
-        " _optix_get_world_ray_direction",
-        " _optix_get_launch_index",
-        " _optix_read_primitive",
-        " _optix_get_payload",
-#endif
-        nullptr
-      };
-      for (const char **testSym = optix_internal_symbols; *testSym; ++testSym) {
-        if (line.find(*testSym) != line.npos)
-          return true;
-      }
-      return false;
-    }
+//     inline bool ptxContainsInvalidOptixInternalCall(const std::string &line)
+//     {
+//       static const char *optix_internal_symbols[] = {
+// #if 1
+//         " _optix_",
+// #else
+//         " _optix_get_sbt",
+//         " _optix_trace",
+//         " _optix_get_world_ray_direction",
+//         " _optix_get_launch_index",
+//         " _optix_read_primitive",
+//         " _optix_get_payload",
+// #endif
+//         nullptr
+//       };
+//       for (const char **testSym = optix_internal_symbols; *testSym; ++testSym) {
+//         if (line.find(*testSym) != line.npos)
+//           return true;
+//       }
+//       return false;
+//     }
     
-    std::string killAllInternalOptixSymbolsFromPtxString(const char *orignalPtxCode)
-    {
-      std::stringstream fixed;
+//     std::string killAllInternalOptixSymbolsFromPtxString(const char *orignalPtxCode)
+//     {
+//       std::stringstream fixed;
 
-      for (const char *s = orignalPtxCode; *s; ) {
-        std::string line = getNextLine(s);
-        if (ptxContainsInvalidOptixInternalCall(line))
-          fixed << "//dropped: " << line;
-        else
-          fixed << line;
-      }
-      return fixed.str();
-    }
+//       for (const char *s = orignalPtxCode; *s; ) {
+//         std::string line = getNextLine(s);
+//         if (ptxContainsInvalidOptixInternalCall(line))
+//           fixed << "//dropped: " << line;
+//         else
+//           fixed << line;
+//       }
+//       return fixed.str();
+//     }
 
 #if 0
     void Modules::buildOptixHandles(Context *context)

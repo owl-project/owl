@@ -32,7 +32,7 @@ namespace owl {
 
 
 #define LOG(message)                            \
-  if (ll::DeviceGroup::logging())                   \
+  if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_LIGHT_BLUE                \
       << "#owl.ng: "                            \
@@ -40,7 +40,7 @@ namespace owl {
       << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  if (ll::DeviceGroup::logging())                   \
+  if (Context::logging())                   \
     std::cout                                   \
       << OWL_TERMINAL_BLUE                      \
       << "#owl.ng: "                            \

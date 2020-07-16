@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -18,7 +18,7 @@
 #include "Context.h"
 
 #define LOG(message)                            \
-  if (ll::Context::logging())                   \
+  if (Context::logging())                   \
     std::cout                                   \
       << OWL_TERMINAL_LIGHT_BLUE                \
       << "#owl.ng: "                            \
@@ -26,7 +26,7 @@
       << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  if (ll::Context::logging())                   \
+  if (Context::logging())                   \
     std::cout                                   \
       << OWL_TERMINAL_BLUE                      \
       << "#owl.ng: "                            \

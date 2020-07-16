@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -26,7 +26,7 @@
 #include "owl/ll/Device.h"
 
 #define LOG(message)                            \
-  if (ll::Context::logging())                   \
+  if (Context::logging())                   \
     std::cout                                   \
       << OWL_TERMINAL_LIGHT_BLUE                \
       << "#owl.ng: "                            \
@@ -34,7 +34,7 @@
       << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  if (ll::Context::logging())                   \
+  if (Context::logging())                   \
     std::cout                                   \
       << OWL_TERMINAL_BLUE                      \
       << "#owl.ng: "                            \
@@ -77,12 +77,64 @@ namespace owl {
     createDeviceData(getDevices());
     LOG_OK("device group created");
 
-
+    enablePeerAccess();
+    
     LaunchParamsType::SP emptyLPType
       = createLaunchParamsType(0,{});
     dummyLaunchParams = createLaunchParams(emptyLPType);
   }
   
+
+  void Context::enablePeerAccess()
+  {
+    LOG("enabling peer access ('.'=self, '+'=can access other device)");
+    auto &devices = getDevices();
+
+    int deviceCount = devices.size();
+    LOG("found " << deviceCount << " CUDA capable devices");
+    for (auto device : devices) 
+      LOG(" - device #" << device->ID << " : " << device->getDeviceName());
+    LOG("enabling peer access:");
+    
+    for (auto device : devices) {
+      std::stringstream ss;
+      const int oldActive = device->pushActive();
+      // int restoreActiveDevice = -1;
+      // cudaGetDevice(&restoreActiveDevice);
+      // for (int i=0;i<deviceCount;i++) {
+      ss << " - device #" << device->ID << " : ";
+      int cuda_i = device->getCudaDeviceID();
+      int i = device->ID;
+      for (int j=0;j<deviceCount;j++) {
+        if (j == i) {
+          ss << " ."; 
+        } else {
+          int cuda_j = devices[j]->getCudaDeviceID();
+          int canAccessPeer = 0;
+          cudaError_t rc = cudaDeviceCanAccessPeer(&canAccessPeer, cuda_i,cuda_j);
+          if (rc != cudaSuccess)
+            throw std::runtime_error("cuda error in cudaDeviceCanAccessPeer: "+std::to_string(rc));
+          if (!canAccessPeer) {
+            // huh. this can happen if you have differnt device
+            // types (in my case, a 2070 and a rtx 8000).
+            std::cerr << "cannot not enable peer access!? ... skipping..." << std::endl;
+            continue;
+            // throw std::runtime_error("could not enable peer access!?");
+          }
+          
+          rc = cudaDeviceEnablePeerAccess(cuda_j,0);
+          if (rc != cudaSuccess)
+            throw std::runtime_error("cuda error in cudaDeviceEnablePeerAccess: "+std::to_string(rc));
+          ss << " +";
+        }
+      }
+      LOG(ss.str()); 
+      device->popActive(oldActive);//    cudaSetDevice(restoreActiveDevice);
+    }
+  }
+
+
+
   /*! creates a buffer that uses CUDA host pinned memory; that
     memory is pinned on the host and accessive to all devices in the
     device group */

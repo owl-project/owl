@@ -34,7 +34,7 @@ namespace owl {
     typedef std::shared_ptr<Context> SP;
 
     /*! for miss progs there's exactly one programgroup pre object */
-    struct DeviceData : public RegisteredObject::DeviceData {
+    struct DeviceData : public Object::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
       
       DeviceData(Context *parent,
@@ -69,7 +69,15 @@ namespace owl {
     { return std::make_shared<DeviceData>(this,device); }
 
     /*! returns whether logging is enabled */
-    inline static bool logging() { return ll::DeviceGroup::logging(); }
+    inline static bool logging()
+    {
+#ifdef NDEBUG
+      return false;
+#else
+      return true;
+#endif
+    }
+      
     
     static Context::SP create(int32_t *requestedDeviceIDs,
                               int      numRequestedDevices);
@@ -232,8 +240,10 @@ namespace owl {
     bool motionBlurEnabled = false;
 
     LaunchParams::SP dummyLaunchParams;
-    
+
     owl::ll::DeviceGroup *llo;
+  private:
+    void enablePeerAccess();
   };
 
 } // ::owl

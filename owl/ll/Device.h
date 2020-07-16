@@ -26,11 +26,8 @@ namespace owl {
   struct Context;
   
   namespace ll {
-    // struct ProgramGroups;
     struct Device;
     
-    /*! allocator that allows for allocating ranges of STB indices as
-      required for adding groups of geometries to the SBT */
     struct RangeAllocator {
       int alloc(size_t size);
       void release(size_t begin, size_t size);
@@ -46,8 +43,6 @@ namespace owl {
 
     struct Context {
 
-      inline static bool logging() { return DeviceGroup::logging(); }
-      
       Context(int owlDeviceID, int cudaDeviceID);
       ~Context();
       
@@ -73,8 +68,8 @@ namespace owl {
         // savedActiveDeviceID = -1;
       }
 
-      void createPipeline(Device *device);
-      void destroyPipeline();
+      // void createPipeline(Device *device);
+      // void destroyPipeline();
 
       
       /*! linear ID (0,1,2,...) of how *we* number devices (i.e.,
