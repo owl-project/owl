@@ -145,7 +145,7 @@ checkGet(_context)->buildSBT(flags);
     context->buildPipeline();
   }
   
-  OWL_API void owlLaunch2DAsync(OWLRayGen _rayGen,
+  OWL_API void owlAsyncLaunch2D(OWLRayGen _rayGen,
                                 int dims_x,
                                 int dims_y,
                                 OWLLaunchParams _launchParams)
@@ -189,7 +189,7 @@ checkGet(_context)->buildSBT(flags);
 
   /*! wait for the async launch to finish */
   OWL_API void
-  owlAyncLaunch2D(OWLLaunchParams _launchParams)
+  owlLaunchSync(OWLLaunchParams _launchParams)
   {
     assert(_launchParams);
     LaunchParams::SP launchParams
