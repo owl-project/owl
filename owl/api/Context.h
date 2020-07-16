@@ -138,8 +138,11 @@ namespace owl {
     void buildSBT(OWLBuildSBTFlags flags);
     void buildPipeline();
     void buildPrograms();
+    /*! clearly destroy _pptix_ handles of all active programs */
     void destroyPrograms();
     void buildModules();
+    /*! clearly destroy _pptix_ handles of all active modules */
+    void destroyModules();
 
     // void buildMissPrograms(Device *device);
     // void buildRayGenPrograms(Device *device);

@@ -45,6 +45,15 @@ namespace owl {
     //                 type->varStructSize);
   }
 
+  RayGen::~RayGen()
+  {
+    for (auto device : context->getDevices()) {
+      const int oldActive = device->pushActive();
+      getDD(device).sbtRecordBuffer.free();
+      device->popActive(oldActive);
+    }
+  }
+
   // void RayGen::launch(const vec2i &dims)
   // {
   //   context->llo->launch(this->ID,dims);
@@ -79,6 +88,7 @@ namespace owl {
   {
       
     int oldActive = device->pushActive();
+    PING; PRINT(rayGenRecordSize);
     sbtRecordBuffer.alloc(rayGenRecordSize);
     device->popActive(oldActive);
   }

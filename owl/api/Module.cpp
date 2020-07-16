@@ -91,7 +91,6 @@ namespace owl {
 
   Module::~Module()
   {
-    PING;
     for (auto device : context->getDevices())
       getDD(device).destroy(device);
   }
@@ -146,6 +145,7 @@ namespace owl {
                             (void*)log,
                             (void*)sizeof(log)
     };
+    
     rc = cuModuleLoadDataEx(&boundsModule, (void *)fixedPtxCode.c_str(),
                             3, options, optionValues);
     if (rc != CUDA_SUCCESS) {
@@ -162,9 +162,9 @@ namespace owl {
   void Module::DeviceData::destroy(Device *device)
   {
     const int oldActive = device->pushActive();
-    
-    assert(module);
-    optixModuleDestroy(module);
+
+    if (module)
+      optixModuleDestroy(module);
     module = 0;
 
     device->popActive(oldActive);

@@ -50,6 +50,9 @@ namespace owl {
                                   const std::string &progName);
     virtual void setBoundsProg(Module::SP module,
                                const std::string &progName);
+
+    /*! build the CUDA bounds program kernel (if bounds prog is set) */
+    void buildBoundsProg();
     
     virtual std::string toString() const { return "UserGeomType"; }
     virtual std::shared_ptr<Geom> createGeom() override;
@@ -64,8 +67,6 @@ namespace owl {
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
     { return std::make_shared<DeviceData>(); }
-    
-
     
     ProgramDesc boundsProg;
     std::vector<ProgramDesc> intersectProg;

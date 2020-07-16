@@ -23,6 +23,18 @@
 
 namespace owl {
 
+#define LOG(message)                                            \
+  if (Context::logging())                                   \
+    std::cout << "#owl.ll(" << device->ID << "): "    \
+              << message                                        \
+              << std::endl
+
+#define LOG_OK(message)                                         \
+  if (Context::logging())                                       \
+    std::cout << OWL_TERMINAL_GREEN                             \
+              << "#owl.ll(" << device->ID << "): "    \
+              << message << OWL_TERMINAL_DEFAULT << std::endl
+
   __device__ static float atomicMax(float* address, float val)
   {
     int* address_as_i = (int*) address;
@@ -237,4 +249,47 @@ namespace owl {
     }
   }
   
+  /*! build the CUDA bounds program kernel (if bounds prog is set) */
+  void UserGeomType::buildBoundsProg()
+  {
+    PING;
+    if (!boundsProg.module) return;
+    Module::SP module = boundsProg.module;
+    assert(module);
+
+    for (auto device : context->getDevices()) {
+      LOG("building bounds function ....");
+      const int oldActive = device->pushActive();
+      auto &typeDD = getDD(device);
+      auto &moduleDD = module->getDD(device);
+      
+      assert(moduleDD.boundsModule);
+
+      const std::string annotatedProgName
+        = std::string("__boundsFuncKernel__")
+        + boundsProg.progName;
+    
+      CUresult rc = cuModuleGetFunction(&typeDD.boundsFuncKernel,
+                                        moduleDD.boundsModule,
+                                        annotatedProgName.c_str());
+      device->popActive(oldActive);
+      
+      switch(rc) {
+      case CUDA_SUCCESS:
+        /* all OK, nothing to do */
+        LOG_OK("found bounds function " << annotatedProgName << " ... perfect!");
+        break;
+      case CUDA_ERROR_NOT_FOUND:
+        throw std::runtime_error("in "+std::string(__PRETTY_FUNCTION__)
+                                 +": could not find OPTIX_BOUNDS_PROGRAM("
+                                 +boundsProg.progName+")");
+      default:
+        const char *errName = 0;
+        cuGetErrorName(rc,&errName);
+        PRINT(errName);
+        exit(0);
+      }
+    }
+  }
+
 } // ::owl

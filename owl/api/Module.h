@@ -38,7 +38,7 @@ namespace owl {
       /*! for all *optix* programs we can directly buidl the PTX code
         into a module using optixbuildmodule - this is the result of
         that operation */
-      OptixModule module = nullptr;
+      OptixModule module = 0;
       
       /*! for the *bounds* function we have to build a *separate*
         module because this one is built outside of optix, and thus

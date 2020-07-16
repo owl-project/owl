@@ -68,6 +68,7 @@ namespace owl {
       
     RayGen(Context *const context,
            RayGenType::SP type);
+    virtual ~RayGen();
     
     virtual std::string toString() const { return "RayGen"; }
 

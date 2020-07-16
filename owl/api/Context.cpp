@@ -416,7 +416,7 @@ namespace owl {
     int oldActive = device->pushActive();
 
     size_t maxMissProgDataSize = 0;
-    for (int i=0;i<geoms.size();i++) {
+    for (int i=0;i<missProgs.size();i++) {
       MissProg *missProg = (MissProg *)missProgs.getPtr(i);
       if (!missProg) continue;
         
@@ -587,7 +587,10 @@ namespace owl {
         ("error when building pipeline: "
          "attempting to set max instancing depth to "
          "value that exceeds OptiX's MAX_TRAVERSABLE_GRAPH_DEPTH limit");
-      
+
+    PRINT(parent->maxInstancingDepth);
+    PRINT(maxAllowedByOptix);
+    
     OPTIX_CHECK(optixPipelineSetStackSize
                 (device->context->pipeline,
                  /* [in] The pipeline to configure the stack size for */
@@ -609,6 +612,7 @@ namespace owl {
 
   void Context::buildModules()
   {
+    destroyModules();
     for (auto device : getDevices()) {
       device->context->configurePipelineOptions(this);
       for (int moduleID=0;moduleID<modules.size();moduleID++) {
@@ -650,7 +654,7 @@ namespace owl {
     instances) */
   void Context::setMaxInstancingDepth(int32_t maxInstanceDepth)
   {
-    maxInstanceDepth = maxInstanceDepth;
+    this->maxInstancingDepth = maxInstanceDepth;
     
     if (maxInstancingDepth < 1)
       throw std::runtime_error("a instancing depth of < 1 isnt' currently supported in OWL; pleaes see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
@@ -682,6 +686,17 @@ namespace owl {
     }
   }
 
+
+  void Context::destroyModules()
+  {
+    for (int moduleID=0;moduleID<modules.size();moduleID++) {
+      Module *module = modules.getPtr(moduleID);
+      if (module)
+        for (auto device : getDevices())
+          module->getDD(device).destroy(device);
+    }
+  }
+    
   void Context::DeviceData::destroyPrograms()
   {
     const int oldActive = device->pushActive();
@@ -791,6 +806,11 @@ namespace owl {
       if (!geomType)
         continue;
 
+      UserGeomType::SP userGeomType
+        = geomType->as<UserGeomType>();
+      if (userGeomType)
+        userGeomType->buildBoundsProg();
+                          
       auto &dd = geomType->getDD(device);
       dd.hgPGs.clear();
       dd.hgPGs.resize(numRayTypes);
