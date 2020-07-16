@@ -38,7 +38,7 @@ namespace owl {
       void build();
       void destroy();
 
-      Module *parent;
+      Module *const parent;
       
       /*! for all *optix* programs we can directly buidl the PTX code
         into a module using optixbuildmodule - this is the result of

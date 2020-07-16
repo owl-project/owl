@@ -145,6 +145,26 @@ checkGet(_context)->buildSBT(flags);
     context->buildPipeline();
   }
   
+  OWL_API void owlLaunch2DAsync(OWLRayGen _rayGen,
+                                int dims_x,
+                                int dims_y,
+                                OWLLaunchParams _launchParams)
+  {
+    LOG_API_CALL();
+
+    assert(_rayGen);
+    RayGen::SP rayGen
+      = ((APIHandle *)_rayGen)->get<RayGen>();
+    assert(rayGen);
+
+    assert(_launchParams);
+    LaunchParams::SP launchParams
+      = ((APIHandle *)_launchParams)->get<LaunchParams>();
+    assert(launchParams);
+
+    rayGen->launchAsync(vec2i(dims_x,dims_y),launchParams);
+  }
+
   OWL_API void owlLaunch2D(OWLRayGen _rayGen,
                            int dims_x,
                            int dims_y,
@@ -163,6 +183,7 @@ checkGet(_context)->buildSBT(flags);
     assert(launchParams);
 
     rayGen->launchAsync(vec2i(dims_x,dims_y),launchParams);
+    launchParams->sync();
   }
 
 
@@ -638,7 +659,7 @@ checkGet(_context)->buildSBT(flags);
     assert(_lp);
     LaunchParams::SP lp = ((APIHandle *)_lp)->get<LaunchParams>();
     assert(lp);
-    return lp->getCudaStream(deviceID);
+    return lp->getCudaStream(lp->context->getDevice(deviceID));
   }
 
   OWL_API void 

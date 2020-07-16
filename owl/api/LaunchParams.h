@@ -59,19 +59,19 @@ namespace owl {
 
     
     LaunchParams(Context *const context,
-           LaunchParamsType::SP type);
-
-    CUstream getCudaStream(int deviceID);
+                 LaunchParamsType::SP type);
+    
+    CUstream getCudaStream(const DeviceContext::SP &device);
 
 
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
     { return std::make_shared<DeviceData>(device,type->varStructSize); }
 
-    DeviceData &getDD(int deviceID) const
+    DeviceData &getDD(const DeviceContext::SP &device) const
     {
-      assert(deviceID < deviceData.size());
-      return *deviceData[deviceID]->as<DeviceData>();
+      assert(device->ID < deviceData.size());
+      return *deviceData[device->ID]->as<DeviceData>();
     }
       
 

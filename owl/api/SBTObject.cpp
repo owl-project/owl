@@ -64,11 +64,11 @@ namespace owl {
     translating per-device data (buffers, traversable) while doing
     so */
   void SBTObjectBase::writeVariables(uint8_t *sbtEntryBase,
-                                     int deviceID) const
+                                     const DeviceContext::SP &device) const
   {
     for (auto var : variables) {
       auto decl = var->varDecl;
-      var->writeToSBT(sbtEntryBase + decl->offset,deviceID);
+      var->writeToSBT(sbtEntryBase + decl->offset,device);
     }
   }
   

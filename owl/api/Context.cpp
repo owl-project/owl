@@ -52,10 +52,12 @@ namespace owl {
       cudaDeviceID(device->cudaDeviceID)
   {}
 
+#endif
+
   Context::~Context()
   {
+    devices.clear();
   }
-#endif
   
   Context::SP Context::create(int32_t *requestedDeviceIDs,
                               int      numRequestedDevices)
@@ -79,7 +81,8 @@ namespace owl {
       geomTypes(this),
       geoms(this),
       modules(this),
-      devices(createDeviceContexts(requestedDeviceIDs,
+      devices(createDeviceContexts(this,
+                                   requestedDeviceIDs,
                                    numRequestedDevices))
   {
     LOG("context ramping up - creating low-level devicegroup");
@@ -592,7 +595,7 @@ namespace owl {
     // device->popActive(oldActive);
   }
   
-
+  
 
   void Context::buildSBT(OWLBuildSBTFlags flags)
   {
@@ -662,12 +665,12 @@ namespace owl {
   {
     destroyModules();
     for (auto device : getDevices()) {
-      device->configurePipelineOptions(this);
+      device->configurePipelineOptions();
       for (int moduleID=0;moduleID<modules.size();moduleID++) {
         Module *module = modules.getPtr(moduleID);
         if (!module) continue;
         
-        module->getDD(device).build(module,device);
+        module->getDD(device).build();
       }
     }
   }
@@ -711,7 +714,7 @@ namespace owl {
       assert("check pipeline isn't already created"
              && device->pipeline == nullptr);
       // device->maxInstancingDepth = maxInstancingDepth;
-      device->configurePipelineOptions(this);
+      device->configurePipelineOptions();
     } 
   }
 
@@ -728,8 +731,7 @@ namespace owl {
     
     for (auto device : getDevices()) {
       SetActiveGPU forLifeTime(device);
-      auto &dd = getDD(device);
-      dd.buildPrograms();
+      device->buildPrograms();
     }
   }
 
@@ -740,207 +742,14 @@ namespace owl {
       Module *module = modules.getPtr(moduleID);
       if (module)
         for (auto device : getDevices())
-          module->getDD(device).destroy(device);
+          module->getDD(device).destroy();
     }
   }
     
-  void Context::DeviceData::destroyPrograms()
-  {
-    SetActiveGPU forLifeTime(device);
-    for (auto pg : allActivePrograms)
-      optixProgramGroupDestroy(pg);
-    allActivePrograms.clear();
-  }
-
   void Context::destroyPrograms()
   {
     for (auto device : getDevices()) 
-      getDD(device).destroyPrograms();
+      device->destroyPrograms();
   }
 
-  void Context::DeviceData::buildMissPrograms()
-  {
-    // ------------------------------------------------------------------
-    // miss programs
-    // ------------------------------------------------------------------
-    for (int progID=0;progID<parent->missProgTypes.size();progID++) {
-      OptixProgramGroupOptions pgOptions = {};
-      OptixProgramGroupDesc    pgDesc    = {};
-      
-      MissProgType *prog = parent->missProgTypes.getPtr(progID);
-      if (!prog) continue;
-      auto &dd = prog->getDD(device);
-      assert(dd.pg == 0);
-
-      Module::SP module = prog->module;
-      assert(module);
-      
-      pgDesc.kind = OPTIX_PROGRAM_GROUP_KIND_MISS;
-      OptixModule optixModule = module->getDD(device).module;
-      assert(optixModule);
-      
-      const std::string annotatedProgName
-        = std::string("__miss__")+prog->progName;
-      pgDesc.miss.module            = optixModule;
-      pgDesc.miss.entryFunctionName = annotatedProgName.c_str();
-      
-      char log[2048];
-      size_t sizeof_log = sizeof( log );
-      OPTIX_CHECK(optixProgramGroupCreate(device->optixContext,
-                                          &pgDesc,
-                                          1,
-                                          &pgOptions,
-                                          log,&sizeof_log,
-                                          &dd.pg
-                                          ));
-      assert(dd.pg);
-      allActivePrograms.push_back(dd.pg);
-    }
-  }
-  
-  void Context::DeviceData::buildRayGenPrograms()
-  {
-    // ------------------------------------------------------------------
-    // rayGen programs
-    // ------------------------------------------------------------------
-
-    for (int pgID=0;pgID<parent->rayGenTypes.size();pgID++) {
-      OptixProgramGroupOptions pgOptions = {};
-      OptixProgramGroupDesc    pgDesc    = {};
-      
-      RayGenType *prog = parent->rayGenTypes.getPtr(pgID);
-      if (!prog) continue;
-      
-      auto &dd = prog->getDD(device);
-      assert(dd.pg == 0);
-      
-      Module::SP module = prog->module;
-      assert(module);
-      
-      OptixModule optixModule = module->getDD(device).module;
-      assert(optixModule);
-      
-      pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
-      const std::string annotatedProgName
-        = std::string("__raygen__")+prog->progName;
-      pgDesc.raygen.module            = optixModule;
-      pgDesc.raygen.entryFunctionName = annotatedProgName.c_str();
-      
-      char log[2048];
-      size_t sizeof_log = sizeof( log );
-      OPTIX_CHECK(optixProgramGroupCreate(device->optixContext,
-                                          &pgDesc,
-                                          1,
-                                          &pgOptions,
-                                          log,&sizeof_log,
-                                          &dd.pg
-                                          ));
-      assert(dd.pg);
-      allActivePrograms.push_back(dd.pg);
-    }
-  }
-  
-  void Context::DeviceData::buildHitGroupPrograms()
-  {
-    const int numRayTypes = parent->numRayTypes;
-    
-    // ------------------------------------------------------------------
-    // geometry type programs -> what goes into hit groups
-    // ------------------------------------------------------------------
-    for (int geomTypeID=0;geomTypeID<parent->geomTypes.size();geomTypeID++) {
-      GeomType::SP geomType = parent->geomTypes.getSP(geomTypeID);
-      if (!geomType)
-        continue;
-
-      UserGeomType::SP userGeomType
-        = geomType->as<UserGeomType>();
-      if (userGeomType)
-        userGeomType->buildBoundsProg();
-                          
-      auto &dd = geomType->getDD(device);
-      dd.hgPGs.clear();
-      dd.hgPGs.resize(numRayTypes);
-      
-      for (int rt=0;rt<numRayTypes;rt++) {
-        
-        OptixProgramGroupOptions pgOptions = {};
-        OptixProgramGroupDesc    pgDesc    = {};
-        
-        pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
-        // ----------- default init closesthit -----------
-        pgDesc.hitgroup.moduleCH            = nullptr;
-        pgDesc.hitgroup.entryFunctionNameCH = nullptr;
-        // ----------- default init anyhit -----------
-        pgDesc.hitgroup.moduleAH            = nullptr;
-        pgDesc.hitgroup.entryFunctionNameAH = nullptr;
-        // ----------- default init intersect -----------
-        pgDesc.hitgroup.moduleIS            = nullptr;
-        pgDesc.hitgroup.entryFunctionNameIS = nullptr;
-        
-        // now let the type fill in what it has
-        dd.fillPGDesc(pgDesc,geomType.get(),device,rt);
-        
-        char log[2048];
-        size_t sizeof_log = sizeof( log );
-        OptixProgramGroup &pg = dd.hgPGs[rt];
-        OPTIX_CHECK(optixProgramGroupCreate(device->optixContext,
-                                            &pgDesc,
-                                            1,
-                                            &pgOptions,
-                                            log,&sizeof_log,
-                                            &pg
-                                            ));
-        allActivePrograms.push_back(pg);
-      }
-    }
-  }
-  
-  // void Context::DeviceData::buildBoundsPrograms()
-  // {
-  //   throw std::runtime_error("not implemented");
-  // }
-  
-  void Context::DeviceData::buildPrograms()
-  {
-    SetActiveGPU forLifeTime(device);
-    destroyPrograms();
-    buildMissPrograms();
-    buildRayGenPrograms();
-    buildHitGroupPrograms();
-  }
-
-  
-  // void Context::destroyPrograms(Device *device)
-  // {
-  //   for (auto type : rayGenTypes.objects)
-  //     type->destroyProgramGroups(device);
-  //   for (auto type : geomTypes.objects)
-  //     type->destroyProgramGroups(device);
-  //   for (auto type : missProgTypes.objects)
-  //     type->destroyProgramGroups(device);
-    
-  //   // int oldActive = device->pushActive();
-    
-  //   // // ---------------------- rayGen ----------------------
-  //   // // for (auto &pg : rayGenPGs) {
-  //   // //   if (pg.pg) optixProgramGroupDestroy(pg.pg);
-  //   // //   pg.pg = nullptr;
-  //   // // }
-  //   // for (auto rg : rayGens.objects) rg->destroyProgramGroups(device);
-    
-  //   // // ---------------------- hitGroup ----------------------
-  //   // for (auto &geomType : geomTypes) 
-  //   //   for (auto &pg : geomType.perRayType) {
-  //   //     if (pg.pg) optixProgramGroupDestroy(pg.pg);
-  //   //     pg.pg = nullptr;
-  //   //   }
-  //   // // ---------------------- miss ----------------------
-  //   // for (auto &pg : missProgPGs) {
-  //   //   if (pg.pg) optixProgramGroupDestroy(pg.pg);
-  //   //   pg.pg = nullptr;
-  //   // }
-
-  //   // device->popActive(oldActive);
-  // }
-  
 } // ::owl

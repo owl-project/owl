@@ -181,7 +181,7 @@ namespace owl {
     dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
       // = ug->internalBufferForBoundsProgram.get();
 
-    writeVariables(userGeomData.data(),device->ID);
+    writeVariables(userGeomData.data(),device);
     // cb(userGeomData.data(),context->owlDeviceID,
     //    ug->geomID,childID,cbData); 
         

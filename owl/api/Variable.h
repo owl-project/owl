@@ -71,7 +71,7 @@ namespace owl {
     
     void mismatchingType() { throw std::runtime_error("trying to set variable to value of wrong type"); }
 
-    virtual void writeToSBT(uint8_t *sbtEntry, int deviceID) const;
+    virtual void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const;
     
     static Variable::SP createInstanceOf(const OWLVarDecl *decl);
     

@@ -600,6 +600,9 @@ owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 OWL_API void
 owlLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
             OWLParams params);
+OWL_API void
+owlLaunch2DSync(OWLRayGen rayGen, int dims_x, int dims_y,
+                OWLParams params);
 
 
 OWL_API CUstream

@@ -57,7 +57,7 @@ namespace owl {
   struct Context;
 
   /*! optix and cuda context for a single, specific GPU */
-  struct DeviceContext {
+  struct DeviceContext : public std::enable_shared_from_this<DeviceContext>  {
     typedef std::shared_ptr<DeviceContext> SP;
     
     DeviceContext(Context *parent,
@@ -68,11 +68,17 @@ namespace owl {
     void buildMissPrograms();
     void buildRayGenPrograms();
     void buildHitGroupPrograms();
+
+    void destroyPrograms();
+    void destroyMissPrograms();
+    void destroyRayGenPrograms();
+    void destroyHitGroupPrograms();
+
+
     // void buildIsecPrograms();
     // // void buildBoundsPrograms();
     // void buildAnyHitPrograms();
     // void buildClosestHitPrograms();
-    void destroyPrograms();
     void destroyPipeline();
     void buildPipeline();
       
@@ -112,7 +118,8 @@ namespace owl {
     Context    *const parent;
   };
 
-  std::vector<DeviceContext::SP> createDeviceContexts(int32_t *requestedDeviceIDs,
+  std::vector<DeviceContext::SP> createDeviceContexts(Context *parent,
+                                                      int32_t *requestedDeviceIDs,
                                                       int      numRequestedDevices);
 
   /*! helper class that will set the active cuda device (to the device
@@ -120,7 +127,12 @@ namespace owl {
       the lifetime of this class, and resets it to whatever it was
       after class dies */
   struct SetActiveGPU {
-    SetActiveGPU(DeviceContext::SP device)
+    SetActiveGPU(const DeviceContext::SP &device)
+    {
+      CUDA_CHECK(cudaGetDevice(&savedActiveDeviceID));
+      CUDA_CHECK(cudaSetDevice(device->cudaDeviceID));
+    }
+    SetActiveGPU(const DeviceContext *device)
     {
       CUDA_CHECK(cudaGetDevice(&savedActiveDeviceID));
       CUDA_CHECK(cudaSetDevice(device->cudaDeviceID));

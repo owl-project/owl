@@ -40,13 +40,13 @@ namespace owl {
         : RegisteredObject::DeviceData(device)
       {};
       
-      OptixProgramGroup pg;
+      OptixProgramGroup pg = 0;
     };
 
-    DeviceData &getDD(int deviceID) const
+    DeviceData &getDD(const DeviceContext::SP &device) const
     {
-      assert(deviceID < deviceData.size());
-      return *deviceData[deviceID]->as<DeviceData>();
+      assert(device->ID < deviceData.size());
+      return *deviceData[device->ID]->as<DeviceData>();
     }
     // DeviceData &getDD(const int deviceID) const { return getDD(device->ID); }
     /*! creates the device-specific data for this group */
@@ -61,7 +61,7 @@ namespace owl {
     typedef std::shared_ptr<RayGen> SP;
     
     struct DeviceData : public RegisteredObject::DeviceData {
-      DeviceData(const DeviceContext::SP &device, size_t  dataSize);
+      DeviceData(const DeviceContext::SP &device, size_t dataSize);
       
       /*! device side copy of 'hostMemory' - this is the pointer that
           will go into the actual SBT */

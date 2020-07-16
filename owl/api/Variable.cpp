@@ -21,7 +21,7 @@
 
 namespace owl {
   
-  void Variable::writeToSBT(uint8_t *sbtEntry, int deviceID) const
+  void Variable::writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const
   {
     throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
                              +": not yet implemented for type "
@@ -40,7 +40,7 @@ namespace owl {
       memcpy(data.data(),ptr,data.size());
     }
 
-    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
     {
       memcpy(sbtEntry,data.data(),data.size());
     }
@@ -58,7 +58,7 @@ namespace owl {
     
     void set(const T &value) override { this->value = value; }
 
-    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
     {
       *(T*)sbtEntry = value;
     }
@@ -74,11 +74,11 @@ namespace owl {
     {}
     void set(const Buffer::SP &value) override { this->buffer = value; }
 
-    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
     {
       const void *value
         = buffer
-        ? buffer->getPointer(deviceID)
+        ? buffer->getPointer(device)
         : nullptr;
       *(const void**)sbtEntry = value;
     }
@@ -97,9 +97,9 @@ namespace owl {
       throw std::runtime_error("cannot _set_ a device index variable; it is purely implicit");
     }
 
-    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
     {
-      *(int*)sbtEntry = deviceID;
+      *(int*)sbtEntry = device->ID;
     }
     
     Buffer::SP buffer;
@@ -113,7 +113,7 @@ namespace owl {
     {}
     void set(const Buffer::SP &value) override { this->buffer = value; }
 
-    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
     {
       device::Buffer *devRep = (device::Buffer *)sbtEntry;
       if (!buffer) {
@@ -121,7 +121,7 @@ namespace owl {
         devRep->count = 0;
         devRep->type  = OWL_INVALID_TYPE;
       } else {
-        devRep->data  = (void *)buffer->getPointer(deviceID);
+        devRep->data  = (void *)buffer->getPointer(device);
         devRep->count = buffer->elementCount;
         devRep->type  = buffer->type;
       }
@@ -143,11 +143,11 @@ namespace owl {
       this->group = value;
     }
 
-    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
     {
       const OptixTraversableHandle value
         = group
-        ? group->getTraversable(deviceID)//context->llo->groupGetTraversable(group->ID,deviceID)
+        ? group->getTraversable(device)//context->llo->groupGetTraversable(group->ID,deviceID)
         : 0;
       *(OptixTraversableHandle*)sbtEntry = value;
     }
@@ -170,12 +170,12 @@ namespace owl {
       this->texture = value;
     }
 
-    void writeToSBT(uint8_t *sbtEntry, int deviceID) const override
+    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
     {
       cudaTextureObject_t to = {};
       if (texture) {
-        assert(texture->textureObjects.size() > deviceID);
-        to = texture->textureObjects[deviceID];
+        assert(device->ID < texture->textureObjects.size());
+        to = texture->textureObjects[device->ID];
       }
       *(cudaTextureObject_t*)sbtEntry = to;
     }

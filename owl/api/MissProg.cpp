@@ -41,8 +41,7 @@ namespace owl {
 
 
   void MissProg::writeSBTRecord(uint8_t *const sbtRecord,
-                                Context::DeviceData &ctx
-                                )
+                                const DeviceContext::SP &device)
   {
     auto &dd = type->getDD(device);
     
@@ -58,7 +57,7 @@ namespace owl {
     // ------------------------------------------------------------------
     // then, write the data for that record
     // ------------------------------------------------------------------
-    writeVariables(sbtRecordData,ctx.deviceID);
+    writeVariables(sbtRecordData,device);
   }  
 
 

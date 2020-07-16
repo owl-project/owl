@@ -48,9 +48,8 @@ namespace owl {
   RayGen::~RayGen()
   {
     for (auto device : context->getDevices()) {
-      const int oldActive = device->pushActive();
+      SetActiveGPU forLifeTime(device);
       getDD(device).sbtRecordBuffer.free();
-      device->popActive(oldActive);
     }
   }
 
@@ -81,21 +80,21 @@ namespace owl {
   }
 
 
-  RayGen::DeviceData::DeviceData(size_t  dataSize,
-                                 Device *device)
-    : rayGenRecordSize(OPTIX_SBT_RECORD_HEADER_SIZE
+  RayGen::DeviceData::DeviceData(const DeviceContext::SP &device,
+                                 size_t dataSize)
+    : RegisteredObject::DeviceData(device),
+      rayGenRecordSize(OPTIX_SBT_RECORD_HEADER_SIZE
                        + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(dataSize))
   {
-      
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
+    
     PING; PRINT(rayGenRecordSize);
     sbtRecordBuffer.alloc(rayGenRecordSize);
-    device->popActive(oldActive);
   }
 
 
   void RayGen::writeSBTRecord(uint8_t *const sbtRecord,
-                              Device *device)
+                              const DeviceContext::SP &device)
   {
     auto &dd = type->getDD(device);
     
@@ -111,7 +110,7 @@ namespace owl {
     // ------------------------------------------------------------------
     // then, write the data for that record
     // ------------------------------------------------------------------
-    writeVariables(sbtRecordData,device->ID);
+    writeVariables(sbtRecordData,device);
   }  
 
 
@@ -125,19 +124,22 @@ namespace owl {
       
     assert(!deviceData.empty());
     for (int deviceID=0;deviceID<(int)deviceData.size();deviceID++) {
-      Device *device = context->getDevice(deviceID);
-      int oldActive = device->pushActive();
+      DeviceContext::SP device = context->getDevice(deviceID);
+      SetActiveGPU forLifeTime(device);
       
       RayGen::DeviceData &rgDD
-        = getDD(deviceID);
+        = getDD(device);
       LaunchParams::DeviceData &lpDD
-        = lp->getDD(deviceID);
+        = lp->getDD(device);
       
-      lp->writeVariables(lpDD.hostMemory.data(),deviceID);
+      lp->writeVariables(lpDD.hostMemory.data(),device);
       lpDD.deviceMemory.uploadAsync(lpDD.hostMemory.data(),lpDD.stream);
 
       auto &sbt = lpDD.sbt;
 
+      sbt.exceptionRecord = 0;
+      sbt.callablesRecordBase = 0;
+      
       // -------------------------------------------------------
       // set raygen part of SBT 
       // -------------------------------------------------------
@@ -170,7 +172,7 @@ namespace owl {
       sbt.hitgroupRecordCount
         = (uint32_t)device->sbt.hitGroupRecordCount;
       
-      OPTIX_CALL(Launch(device->context->pipeline,
+      OPTIX_CALL(Launch(device->pipeline,
                         lpDD.stream,
                         (CUdeviceptr)lpDD.deviceMemory.get(),
                         lpDD.deviceMemory.sizeInBytes,
@@ -178,7 +180,6 @@ namespace owl {
                         dims.x,dims.y,1
                         ));
       
-      device->popActive(oldActive);
     }
   }
 

@@ -52,6 +52,8 @@ set(OWL_NG_SOURCES
 #  Triangles.cpp
   Triangles.cu
   UserGeom.cu
+
+  DeviceContext.cpp
 )
 
 cuda_add_library(owl
@@ -61,13 +63,17 @@ cuda_add_library(owl_static STATIC
 ${OWL_NG_SOURCES}
   )
 
-#target_link_libraries(owl
+target_link_libraries(owl
 #  llowl_static
-#  )
+   ${CUDA_LIBRARIES}
+   ${CUDA_CUDA_LIBRARY}
+  )
 
-#target_link_libraries(owl_static
+target_link_libraries(owl_static
 #  llowl_static
-#  )
+   ${CUDA_LIBRARIES}
+   ${CUDA_CUDA_LIBRARY}
+  )
 
 
 set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)

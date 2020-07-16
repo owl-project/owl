@@ -90,7 +90,7 @@ namespace owl {
   // }
 
   void Geom::writeSBTRecord(uint8_t *const sbtRecord,
-                            Device *device,
+                            const DeviceContext::SP &device,
                             int rayTypeID)
   {
     // first, compute pointer to record:
@@ -107,7 +107,7 @@ namespace owl {
     // ------------------------------------------------------------------
     // then, write the data for that record
     // ------------------------------------------------------------------
-    writeVariables(sbtRecordData,device->ID);
+    writeVariables(sbtRecordData,device);
   }  
 
 
@@ -116,7 +116,6 @@ namespace owl {
   
   void GeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
                                         GeomType *parent,
-                                        Device *device,
                                         int rt)
   {
     // ----------- closest hit -----------

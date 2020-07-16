@@ -86,7 +86,7 @@ namespace owl {
       translating per-device data (buffers, traversable) while doing
       so */
     void writeVariables(uint8_t *sbtEntry,
-                        int deviceID) const;
+                        const DeviceContext::SP &device) const;
     
     /*! the actual variable *values* */
     const std::vector<Variable::SP> variables;

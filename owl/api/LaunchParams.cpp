@@ -36,29 +36,29 @@ namespace owl {
     assert(type.get());
   }
 
-  LaunchParams::DeviceData::DeviceData(size_t  dataSize,
-                                       Device *device)
-    : device(device),
-      dataSize(dataSize)
+  LaunchParams::DeviceData::DeviceData(const DeviceContext::SP &device,
+                                       size_t  dataSize)
+    : RegisteredObject::DeviceData(device),
+      dataSize(dataSize),
+      sbt({})
   {
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
+    
     CUDA_CHECK(cudaStreamCreate(&stream));
     deviceMemory.alloc(dataSize);
     hostMemory.resize(dataSize);
-    device->popActive(oldActive);
   }
 
-  CUstream LaunchParams::getCudaStream(int deviceID)
+  CUstream LaunchParams::getCudaStream(const DeviceContext::SP &device)
   {
-    return getDD(deviceID).stream;
+    return getDD(device).stream;
   }
 
   void LaunchParams::sync()
   {
-    for (auto device : context->llo->devices) {
-      int oldActive = device->context->pushActive();
-      cudaStreamSynchronize(getCudaStream(device->ID));
-      device->context->popActive(oldActive);
+    for (auto device : context->getDevices()) {
+      SetActiveGPU forLifeTime(device);
+      cudaStreamSynchronize(getCudaStream(device));
     }
   }
 

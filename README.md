@@ -135,6 +135,8 @@ v0.9.x - Elimination of LL layer, and support for motion blur
   
 - initial support for optix 7.1; code will automatically detect
   version and compile to proper version where they differ.
+  
+- owlLaunch2D now synchronous, async version explicitly owlLaunhc2DAsync
 
 v0.8.x - Revamped build system, owl viewer, interative samples, and textures
 ----------------------------------------------------------------------

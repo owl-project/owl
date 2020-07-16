@@ -37,13 +37,13 @@ namespace owl {
         : RegisteredObject::DeviceData(device)
       {};
 
-      OptixProgramGroup pg;
+      OptixProgramGroup pg = 0;
     };
 
-    DeviceData &getDD(int deviceID) const
+    DeviceData &getDD(const DeviceContext::SP &device) const
     {
-      assert(deviceID < deviceData.size());
-      return *deviceData[deviceID]->as<DeviceData>();
+      assert(device->ID < deviceData.size());
+      return *deviceData[device->ID]->as<DeviceData>();
     }
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
