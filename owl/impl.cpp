@@ -18,9 +18,9 @@
 #include "APIContext.h"
 #include "APIHandle.h"
 #include "owl/common/parallel/parallel_for.h"
-#include "api/Triangles.h"
-#include "api/UserGeom.h"
-#include "api/InstanceGroup.h"
+#include "Triangles.h"
+#include "UserGeom.h"
+#include "InstanceGroup.h"
 
 namespace owl {
 

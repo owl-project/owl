@@ -25,11 +25,81 @@ cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_definitions(${OWL_CXX_FLAGS})
 
-# owl-common library (math stuff, utils, etc; mostly header-only)
-add_subdirectory(common)
 
-# node graph layer API
-add_subdirectory(api)
+set(INTERFACE_POSITION_INDEPENDENT_CODE ON)
+
+set(CUDA_SEPARABLE_COMPILATION ON)
+set(CUDA_VERBOSE_BUILD ON)
+set(CUDA_NVCC_FLAGS --compiler-options -fPIC)
+
+include_directories(${PROJECT_SOURCE_DIR}/)
+include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+
+cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+
+set(OWL_SOURCES
+
+  Buffer.cpp
+
+  include/owl/owl.h
+  cmake/configure_tbb.cmake
+  cmake/configure_owl.cmake
+  cmake/configure_optix.cmake
+  cmake/FindOptiX.cmake
+
+  impl.cpp
+  APIContext.h
+  APIContext.cpp
+  APIHandle.h
+  APIHandle.cpp
+  
+  Object.cpp
+  Module.cpp
+  RegisteredObject.cpp
+  SBTObject.cpp
+  Texture.cpp
+  
+  Group.cpp
+  InstanceGroup.cpp
+  TrianglesGeomGroup.cpp
+  UserGeomGroup.cpp
+  
+  ObjectRegistry.cpp
+  Context.cpp
+  RayGen.cpp
+  LaunchParams.cpp
+  MissProg.cpp
+  Variable.cpp
+  
+  Geometry.cpp
+  Triangles.cu
+  UserGeom.cu
+
+  DeviceContext.cpp
+)
+
+cuda_add_library(owl
+  ${OWL_SOURCES}
+  )
+cuda_add_library(owl_static
+  ${OWL_SOURCES}
+  STATIC
+  )
+
+target_link_libraries(owl
+   ${CUDA_LIBRARIES}
+   ${CUDA_CUDA_LIBRARY}
+  )
+
+target_link_libraries(owl_static
+   ${CUDA_LIBRARIES}
+   ${CUDA_CUDA_LIBRARY}
+  )
+
+
+#set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
+#target_compile_options(owl_static PRIVATE -fPIC)
 
 # -------------------------------------------------------
 # export those back to our parent:

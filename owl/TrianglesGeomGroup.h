@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019 Ingo Wald                                                 //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,29 +16,29 @@
 
 #pragma once
 
-#include "api/Group.h"
-#include "api/UserGeom.h"
+#include "Group.h"
 
 namespace owl {
+  namespace ll {
+    struct Device;
+  };
 
-  struct UserGeomGroup : public GeomGroup {
+  struct TrianglesGeomGroup : public GeomGroup {
 
-    UserGeomGroup(Context *const context,
-                   size_t numChildren);
-    virtual std::string toString() const { return "UserGeomGroup"; }
+    TrianglesGeomGroup(Context *const context,
+                       size_t numChildren);
+    virtual std::string toString() const { return "TrianglesGeomGroup"; }
 
-    /*! build() and refit() share most of their code; this functoin
-        does all that code, with only minor specialization based on
-        build vs refit */
-    void buildOrRefit(bool FULL_REBUILD);
-    
     void buildAccel() override;
     void refitAccel() override;
+
+    /*! (re-)compute the Group::bounds[2] information for motion blur
+      - ie, our _parent_ node may need this */
+    void updateMotionBounds();
 
     /*! low-level accel structure builder for given device */
     template<bool FULL_REBUILD>
     void buildAccelOn(const DeviceContext::SP &device);
-
   };
 
 } // ::owl

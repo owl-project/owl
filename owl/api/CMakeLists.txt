@@ -30,10 +30,10 @@ set(OWL_SOURCES
   Buffer.cpp
 
   ../include/owl/owl.h
-  ../common/cmake/configure_tbb.cmake
-  ../common/cmake/configure_owl.cmake
-  ../common/cmake/configure_optix.cmake
-  ../common/cmake/FindOptiX.cmake
+  ../cmake/configure_tbb.cmake
+  ../cmake/configure_owl.cmake
+  ../cmake/configure_optix.cmake
+  ../cmake/FindOptiX.cmake
 
   impl.cpp
   APIContext.h

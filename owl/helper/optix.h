@@ -16,9 +16,7 @@
 
 #pragma once
 
-#include "owl/api/helper/cuda.h"
-
-// #define OPTIX_COMPATIBILITY 7
+#include "owl/helper/cuda.h"
 
 #ifdef _WIN32
 #pragma warning( push )

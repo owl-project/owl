@@ -14,37 +14,34 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#pragma once
+#include "owl/Context.h"
+#include <mutex>
 
-#include "owl/ll/helper/optix.h"
-#include <owl/owl.h>
+namespace owl {
 
-// namespace owl {
-//   namespace ll {
+  struct APIHandle;
+  
+  struct APIContext : public Context {
+    typedef std::shared_ptr<APIContext> SP;
 
-//     // typedef int32_t id_t;
-
-//     // struct DeviceGroup;
-//     // typedef DeviceGroup *LLOContext;
+    APIContext(int32_t *requestedDeviceIDs,
+               int      numRequestedDevices)
+      : Context(requestedDeviceIDs,
+                numRequestedDevices)
+    {}
     
+    APIHandle *createHandle(Object::SP object);
 
-//     struct Device;
+    void track(APIHandle *object);
     
-//     struct DeviceGroup {
-      
-//       DeviceGroup(const std::vector<Device *> &devices);
-//       ~DeviceGroup();
+    void forget(APIHandle *object);
 
-//       /* create an instance of this object that has properly
-//          initialized devices for given cuda device IDs. */
-//       static DeviceGroup *create(const int *deviceIDs  = nullptr,
-//                                  size_t     numDevices = 0);
-      
-//       // /*! helper function that enables peer access across all devices */
-//       // void enablePeerAccess();
-
-//       const std::vector<Device *> devices;
-//     };
-
-//   } // ::owl::ll
-// } //::owl
+    /*! delete - and thereby, release - all handles that we still
+      own. */
+    void releaseAll();
+    std::set<APIHandle *> activeHandles;
+    
+    std::mutex monitor;
+  };
+  
+} // ::owl  

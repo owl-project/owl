@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,9 +14,10 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "api/Variable.h"
-#include "api/Context.h"
-#include "api/InstanceGroup.h"
+#include "Variable.h"
+#include "Context.h"
+#include "InstanceGroup.h"
+// device buffer representation that we'll write for Buffer variables
 #include "owl/owl_device_buffer.h"
 
 namespace owl {

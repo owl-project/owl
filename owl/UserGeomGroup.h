@@ -14,34 +14,31 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "owl/api/Context.h"
-#include <mutex>
+#pragma once
+
+#include "Group.h"
+#include "UserGeom.h"
 
 namespace owl {
 
-  struct APIHandle;
-  
-  struct APIContext : public Context {
-    typedef std::shared_ptr<APIContext> SP;
+  struct UserGeomGroup : public GeomGroup {
 
-    APIContext(int32_t *requestedDeviceIDs,
-               int      numRequestedDevices)
-      : Context(requestedDeviceIDs,
-                numRequestedDevices)
-    {}
-    
-    APIHandle *createHandle(Object::SP object);
+    UserGeomGroup(Context *const context,
+                   size_t numChildren);
+    virtual std::string toString() const { return "UserGeomGroup"; }
 
-    void track(APIHandle *object);
+    /*! build() and refit() share most of their code; this functoin
+        does all that code, with only minor specialization based on
+        build vs refit */
+    void buildOrRefit(bool FULL_REBUILD);
     
-    void forget(APIHandle *object);
+    void buildAccel() override;
+    void refitAccel() override;
 
-    /*! delete - and thereby, release - all handles that we still
-      own. */
-    void releaseAll();
-    std::set<APIHandle *> activeHandles;
-    
-    std::mutex monitor;
+    /*! low-level accel structure builder for given device */
+    template<bool FULL_REBUILD>
+    void buildAccelOn(const DeviceContext::SP &device);
+
   };
-  
-} // ::owl  
+
+} // ::owl

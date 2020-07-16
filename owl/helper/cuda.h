@@ -16,8 +16,7 @@
 
 #pragma once
 
-#include "owl/api/common.h"
-
+#include "owl/common.h"
 #include <cuda_runtime.h>
 
 #define CUDA_CHECK( call )                                              \

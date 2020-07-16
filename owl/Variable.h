@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -23,7 +23,21 @@ namespace owl {
   struct Buffer;
   struct Group;
   struct Texture;
-  
+
+  /*! "Variable"s are associated with objects, and hold user-supplied
+      data of a given type. The purpose of this is to allow owl to
+      internally populate device-side Shader Binding Table (SBT)
+      entries based on host-side supplied parameters - ie, if sets a
+      Group, Buffer, etc, parameter on the host, then we will
+      automatically translate that to the respecitve device data (in
+      these examples a OptiXTraversablaHandle, or device pointer) when
+      we write it into the SBT.
+
+      To add some type-safety into OWL we create, for each paramter
+      that the user declares for an object, a matching (templated)
+      variable type; if the user then tries to set a variable of a
+      different type than declared we'll throw a 'mismatchingType'
+      expception */
   struct Variable : public Object {
     typedef std::shared_ptr<Variable> SP;
 
@@ -31,9 +45,9 @@ namespace owl {
       : varDecl(varDecl)
     { assert(varDecl); }
     
-    virtual void set(const std::shared_ptr<Buffer> &value) { mismatchingType(); }
-    virtual void set(const std::shared_ptr<Group>  &value) { mismatchingType(); }
-    virtual void set(const std::shared_ptr<Texture>  &value) { mismatchingType(); }
+    virtual void set(const std::shared_ptr<Buffer>  &value) { mismatchingType(); }
+    virtual void set(const std::shared_ptr<Group>   &value) { mismatchingType(); }
+    virtual void set(const std::shared_ptr<Texture> &value) { mismatchingType(); }
     
     virtual void setRaw(const void *ptr)    { mismatchingType(); }
 

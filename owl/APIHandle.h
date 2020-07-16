@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "owl/api/Context.h"
+#include "owl/Context.h"
 
 namespace owl {
   
