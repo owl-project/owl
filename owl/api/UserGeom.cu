@@ -237,18 +237,4 @@ namespace owl {
     }
   }
   
-  void UserGeomType::DeviceData::writeSBTHeader(uint8_t *const sbtRecord,
-                                                Device *device,
-                                                int rayTypeID)
-  {
-    // // auto geomType = geom->type;//device->geomTypes[geom->geomType->ID];
-    // GeomType::DeviceData &gt = geom->type->getDD(device);
-    // // const ll::HitGroupPG &hgPG
-    // //   = geomType.perRayType[rayTypeID];
-    // // ... and tell optix to write that into the record
-    // OPTIX_CALL(SbtRecordPackHeader(gt.getPG(rayTypeID),sbtRecordHeader));
-    throw std::runtime_error("not implemented");
-  }
-
-  
 } // ::owl

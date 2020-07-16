@@ -75,18 +75,19 @@ namespace owl {
   }
 
           
-  void GeomType::DeviceData::writeSBTHeader(uint8_t *const sbtRecord,
-                                            Device *device,
-                                            int rayTypeID)
-  {
-    // // auto geomType = geom->type;//device->geomTypes[geom->geomType->ID];
-    // GeomType::DeviceData &gt = geom->type->getDD(device);
-    // // const ll::HitGroupPG &hgPG
-    // //   = geomType.perRayType[rayTypeID];
-    // // ... and tell optix to write that into the record
-    // OPTIX_CALL(SbtRecordPackHeader(gt.getPG(rayTypeID),sbtRecordHeader));
-    throw std::runtime_error("not implemented");
-  }
+  // void GeomType::DeviceData::writeSBTHeader(uint8_t *const sbtRecord,
+  //                                           Device *device,
+  //                                           int rayTypeID)
+  // {
+    
+  //   // // auto geomType = geom->type;//device->geomTypes[geom->geomType->ID];
+  //   // GeomType::DeviceData &gt = geom->type->getDD(device);
+  //   // // const ll::HitGroupPG &hgPG
+  //   // //   = geomType.perRayType[rayTypeID];
+  //   // // ... and tell optix to write that into the record
+  //   // OPTIX_CALL(SbtRecordPackHeader(gt.getPG(rayTypeID),sbtRecordHeader));
+  //   // throw std::runtime_error("not implemented");
+  // }
 
   void Geom::writeSBTRecord(uint8_t *const sbtRecord,
                             Device *device,
@@ -99,8 +100,9 @@ namespace owl {
     // ------------------------------------------------------------------
     // pack record header with the corresponding hit group:
     // ------------------------------------------------------------------
-    geomType->getDD(device).writeSBTHeader(sbtRecordHeader,
-                                           device,rayTypeID);
+    auto &dd = geomType->getDD(device);
+    assert(rayTypeID < dd.hgPGs.size());
+    OPTIX_CALL(SbtRecordPackHeader(dd.hgPGs[rayTypeID],sbtRecordHeader));
     
     // ------------------------------------------------------------------
     // then, write the data for that record

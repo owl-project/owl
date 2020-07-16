@@ -28,9 +28,9 @@ namespace owl {
     struct DeviceData : public GeomType::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
-      void writeSBTHeader(uint8_t *const sbtRecord,
-                          Device *device,
-                          int rayTypeID) override;
+      // void writeSBTHeader(uint8_t *const sbtRecord,
+      //                     Device *device,
+      //                     int rayTypeID) override;
       
       void fillPGDesc(OptixProgramGroupDesc &pgDesc,
                       GeomType *gt,

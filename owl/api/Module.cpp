@@ -89,6 +89,13 @@ namespace owl {
     //                            this->ptxCode.c_str());
   }
 
+  Module::~Module()
+  {
+    PING;
+    for (auto device : context->getDevices())
+      getDD(device).destroy(device);
+  }
+  
   void Module::DeviceData::build(Module *parent, Device *device)
   {
     assert(module == 0);

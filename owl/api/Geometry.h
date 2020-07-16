@@ -51,10 +51,10 @@ namespace owl {
                               Device *device,
                               int rayType);
       
-      virtual void writeSBTHeader(uint8_t *const sbtRecord,
-                                  Device *device,
-                                  int rayTypeID);
-
+      // void writeSBTHeader(uint8_t *const sbtRecord,
+      //                     Device *device,
+      //                     int rayTypeID);
+      
       /*! hit group program groups, per ray type */
       std::vector<OptixProgramGroup> hgPGs;
     };

@@ -48,6 +48,8 @@ namespace owl {
 
     
     Module(Context *context, const std::string &ptxCode);
+    
+    virtual ~Module();
     // Module(const std::string &ptxCode,
     //        ll::id_t llID)
     //   : ptxCode(ptxCode),
