@@ -39,7 +39,7 @@ namespace owl {
     struct DeviceData : public RegisteredObject::DeviceData {
       DeviceData(const DeviceContext::SP &device, size_t  dataSize);
       
-      OptixShaderBindingTable sbt;
+      OptixShaderBindingTable sbt = {};
 
       const size_t         dataSize;
       
@@ -70,7 +70,8 @@ namespace owl {
 
     DeviceData &getDD(const DeviceContext::SP &device) const
     {
-      assert(device->ID < deviceData.size());
+      assert(device);
+      assert(device->ID >= 0 && device->ID < deviceData.size());
       return *deviceData[device->ID]->as<DeviceData>();
     }
       

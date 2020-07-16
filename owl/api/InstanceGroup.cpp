@@ -159,14 +159,16 @@ namespace owl {
   {
     DeviceData &dd = getDD(device);
     auto optixContext = device->optixContext;
-    
-    if (FULL_REBUILD) {
-      assert("check does not yet exist" && dd.traversable == 0);
-      assert("check does not yet exist" && dd.bvhMemory.empty());
-    } else {
-      assert("check does not yet exist" && dd.traversable != 0);
-      assert("check does not yet exist" && !dd.bvhMemory.empty());
-    }
+
+    PING;
+    PRINT(int(FULL_REBUILD));
+    // if (FULL_REBUILD) {
+    //   assert("check does not yet exist" && dd.traversable == 0);
+    //   assert("check does not yet exist" && dd.bvhMemory.empty());
+    // } else {
+    //   assert("check does not yet exist" && dd.traversable != 0);
+    //   assert("check does not yet exist" && !dd.bvhMemory.empty());
+    // }
       
     SetActiveGPU forLifeTime(device);
     LOG("building instance accel over "

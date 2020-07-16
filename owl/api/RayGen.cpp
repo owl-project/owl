@@ -137,9 +137,6 @@ namespace owl {
 
       auto &sbt = lpDD.sbt;
 
-      sbt.exceptionRecord = 0;
-      sbt.callablesRecordBase = 0;
-      
       // -------------------------------------------------------
       // set raygen part of SBT 
       // -------------------------------------------------------
@@ -179,10 +176,8 @@ namespace owl {
                         &lpDD.sbt,
                         dims.x,dims.y,1
                         ));
-      
     }
   }
 
-  
 } // ::owl
 
