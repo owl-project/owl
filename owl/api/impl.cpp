@@ -171,19 +171,20 @@ checkGet(_context)->buildSBT(flags);
                            OWLLaunchParams _launchParams)
   {
     LOG_API_CALL();
+    owlAsyncLaunch2D(_rayGen,dims_x,dims_y,_launchParams);
+    owlLaunchSync(_launchParams);
+    // assert(_rayGen);
+    // RayGen::SP rayGen
+    //   = ((APIHandle *)_rayGen)->get<RayGen>();
+    // assert(rayGen);
 
-    assert(_rayGen);
-    RayGen::SP rayGen
-      = ((APIHandle *)_rayGen)->get<RayGen>();
-    assert(rayGen);
+    // assert(_launchParams);
+    // LaunchParams::SP launchParams
+    //   = ((APIHandle *)_launchParams)->get<LaunchParams>();
+    // assert(launchParams);
 
-    assert(_launchParams);
-    LaunchParams::SP launchParams
-      = ((APIHandle *)_launchParams)->get<LaunchParams>();
-    assert(launchParams);
-
-    rayGen->launchAsync(vec2i(dims_x,dims_y),launchParams);
-    launchParams->sync();
+    // rayGen->launchAsync(vec2i(dims_x,dims_y),launchParams);
+    // launchParams->sync();
   }
 
 
