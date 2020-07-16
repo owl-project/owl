@@ -140,7 +140,7 @@ namespace owl {
       DeviceData &dd = getDD(device);
       dd.vertexPointers.clear();
       for (auto va : vertexArrays)
-        dd.vertexPointers.push_back((CUdeviceptr)va->getPointer(device->ID));
+        dd.vertexPointers.push_back((CUdeviceptr)va->getPointer(device));
     }
   }
   
@@ -157,7 +157,7 @@ namespace owl {
     
     for (auto device : context->getDevices()) {
       DeviceData &dd = getDD(device);
-      dd.indexPointer = (CUdeviceptr)indices->getPointer(device->ID);
+      dd.indexPointer = (CUdeviceptr)indices->getPointer(device);
     }
     // }
     //   device->trianglesGeomSetIndexBuffer(this->ID,

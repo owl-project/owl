@@ -76,7 +76,7 @@ namespace owl {
   OWL_API OptixDeviceContext owlContextGetOptixContext(OWLContext _context, int deviceID)
   {
     LOG_API_CALL();
-    return checkGet(_context)->getDevice(deviceID)->getOptixContext();
+    return checkGet(_context)->getDevice(deviceID)->optixContext;
   }
 
   /*! set number of ray types to be used in this context; this should be
@@ -618,7 +618,7 @@ checkGet(_context)->buildSBT(flags);
     assert(_buffer);
     Buffer::SP buffer = ((APIHandle *)_buffer)->get<Buffer>();
     assert(buffer);
-    return buffer->getPointer(deviceID);
+    return buffer->getPointer(buffer->context->getDevice(deviceID));
   }
 
   OWL_API OptixTraversableHandle 
@@ -628,7 +628,7 @@ checkGet(_context)->buildSBT(flags);
     assert(_group);
     Group::SP group = ((APIHandle *)_group)->get<Group>();
     assert(group);
-    return group->getTraversable(deviceID);
+    return group->getTraversable(group->context->getDevice(deviceID));
   }
 
   OWL_API CUstream

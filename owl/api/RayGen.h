@@ -79,7 +79,7 @@ namespace owl {
     
     void launchAsync(const vec2i &dims, const LaunchParams::SP &launchParams);
     
-    void writeSBTRecord(uint8_t *const sbtRecord, int devicID);
+    void writeSBTRecord(uint8_t *const sbtRecord, const DeviceContext::SP &device);
 
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override

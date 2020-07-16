@@ -46,17 +46,17 @@ namespace owl {
     
     std::string toString() const override { return "Buffer"; }
 
-    const void *getPointer(const DeviceContext::SP &device) const
-    { return getPointer(device->ID); }
 
-    Buffer::DeviceData &getDD(int deviceID) const
+    Buffer::DeviceData &getDD(const DeviceContext::SP &device) const
     {
-      assert(deviceID < deviceData.size());
-      return *deviceData[deviceID]->as<Buffer::DeviceData>();
+      assert(device->ID < deviceData.size());
+      return *deviceData[device->ID]->as<Buffer::DeviceData>();
     }
       
-    const void *getPointer(int deviceID) const
-    { return getDD(deviceID).d_pointer; }
+    // const void *getPointer(int deviceID) const
+    // { std::cout << "deprecated - kill this" << std::endl; return getDD(deviceID).d_pointer; }
+    const void *getPointer(const DeviceContext::SP &device) const
+    { return getDD(device).d_pointer; }
         
     size_t getElementCount() const;
     
@@ -103,7 +103,7 @@ namespace owl {
           for the upload to complete, so an explicit cuda sync has to
           be done to ensure no race conditiosn will occur */
       virtual void uploadAsync(const void *hostDataPtr) = 0;
-      
+
       DeviceContext::SP const device;
       DeviceBuffer *const parent;
     };
@@ -152,6 +152,12 @@ namespace owl {
     /*! pretty-printer, for debugging */
     std::string toString() const override { return "DeviceBuffer"; }
 
+    DeviceData &getDD(const DeviceContext::SP &device) const
+    {
+      assert(device->ID < deviceData.size());
+      return *deviceData[device->ID]->as<DeviceData>();
+    }
+      
     void resize(size_t newElementCount) override;
     void upload(const void *hostPtr) override;
     void upload(const int deviceID, const void *hostPtr) override;
@@ -217,8 +223,8 @@ namespace owl {
                    // size_t count,
                    cudaGraphicsResource_t resource);
 
-    void map(int deviceID=0, CUstream stream=0);
-    void unmap(int deviceID=0, CUstream stream=0);
+    void map(const int deviceID=0, CUstream stream=0);
+    void unmap(const int deviceID=0, CUstream stream=0);
 
     void resize(size_t newElementCount) override;
     void upload(const void *hostPtr) override;

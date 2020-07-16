@@ -43,6 +43,7 @@
 
 namespace owl {
 
+  #if 0
   Context::DeviceData::DeviceData(Context *parent,
                                   ll::Device *device)
     : parent(parent),
@@ -54,6 +55,7 @@ namespace owl {
   Context::~Context()
   {
   }
+#endif
   
   Context::SP Context::create(int32_t *requestedDeviceIDs,
                               int      numRequestedDevices)
@@ -76,13 +78,15 @@ namespace owl {
       missProgs(this),
       geomTypes(this),
       geoms(this),
-      modules(this)
+      modules(this),
+      devices(createDeviceContexts(requestedDeviceIDs,
+                                   numRequestedDevices))
   {
     LOG("context ramping up - creating low-level devicegroup");
     // ll = ll::DeviceGroup::create();
-    llo = ll::DeviceGroup::create(requestedDeviceIDs,
-                                  numRequestedDevices);
-    createDeviceData(getDevices());
+    // ll::DeviceGroup::create(requestedDeviceIDs,
+    //                               numRequestedDevices);
+    // createDeviceData(getDevices());
     LOG_OK("device group created");
 
     enablePeerAccess();
@@ -106,7 +110,7 @@ namespace owl {
     
     for (auto device : devices) {
       std::stringstream ss;
-      const int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
       // int restoreActiveDevice = -1;
       // cudaGetDevice(&restoreActiveDevice);
       // for (int i=0;i<deviceCount;i++) {
@@ -137,7 +141,7 @@ namespace owl {
         }
       }
       LOG(ss.str()); 
-      device->popActive(oldActive);//    cudaSetDevice(restoreActiveDevice);
+      // device->popActive(oldActive);//    cudaSetDevice(restoreActiveDevice);
     }
   }
 
@@ -151,7 +155,7 @@ namespace owl {
   {
     Buffer::SP buffer = std::make_shared<HostPinnedBuffer>(this,type);
     assert(buffer);
-    buffer->createDeviceData(llo->devices);
+    buffer->createDeviceData(getDevices());
     buffer->resize(count);
     return buffer;
   }
@@ -167,7 +171,7 @@ namespace owl {
     Buffer::SP buffer
       = std::make_shared<ManagedMemoryBuffer>(this,type);
     assert(buffer);
-    buffer->createDeviceData(llo->devices);
+    buffer->createDeviceData(getDevices());
     buffer->resize(count);
     if (init)
       buffer->upload(init);
@@ -181,7 +185,7 @@ namespace owl {
     Buffer::SP buffer
       = std::make_shared<DeviceBuffer>(this,type);
     assert(buffer);
-    buffer->createDeviceData(llo->devices);
+    buffer->createDeviceData(getDevices());
     buffer->resize(count);
     if (init)
       buffer->upload(init);
@@ -348,10 +352,10 @@ namespace owl {
     return geom;
   }
 
-  void Context::buildHitGroupRecordsOn(ll::Device *device)
+  void Context::buildHitGroupRecordsOn(const DeviceContext::SP &device)
   {
     LOG("building SBT hit group records");
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
     // TODO: move this to explicit destroyhitgroups
     if (device->sbt.hitGroupRecordsBuffer.alloced())
       device->sbt.hitGroupRecordsBuffer.free();
@@ -458,16 +462,16 @@ namespace owl {
     device->sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
     device->sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
     PING; PRINT((void *)device->sbt.hitGroupRecordsBuffer.get());
-    device->popActive(oldActive);
+    // device->popActive(oldActive);
     LOG_OK("done building (and uploading) SBT hit group records");
   }
   
 
-  void Context::buildMissProgRecordsOn(ll::Device *device)
+  void Context::buildMissProgRecordsOn(const DeviceContext::SP &device)
   {
 #if 1
     LOG("building SBT miss group records");
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
     
     size_t numMissProgRecords = numRayTypes;
     size_t maxMissProgDataSize = 0;
@@ -511,7 +515,7 @@ namespace owl {
     }
     device->sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
     device->sbt.missProgRecordsBuffer.upload(missProgRecords);
-    device->popActive(oldActive);
+    // device->popActive(oldActive);
     LOG_OK("done building (and uploading) SBT miss group records");
 #else
     LOG("building SBT miss group records");
@@ -522,7 +526,7 @@ namespace owl {
       return;
     }
     
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
 
     size_t maxMissProgDataSize = 0;
     for (int i=0;i<missProgs.size();i++) {
@@ -565,16 +569,16 @@ namespace owl {
     }
     device->sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
     device->sbt.missProgRecordsBuffer.upload(missProgRecords);
-    device->popActive(oldActive);
+    // device->popActive(oldActive);
     LOG_OK("done building (and uploading) SBT miss group records");
 #endif
   }
 
 
-  void Context::buildRayGenRecordsOn(ll::Device *device)
+  void Context::buildRayGenRecordsOn(const DeviceContext::SP &device)
   {
     LOG("building SBT rayGen prog records");
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
 
     for (int rgID=0;rgID<rayGens.size();rgID++) {
       auto rg = rayGens.getPtr(rgID);
@@ -585,7 +589,7 @@ namespace owl {
       rg->writeSBTRecord(hostMem.data(),device);
       dd.sbtRecordBuffer.upload(hostMem);
     }
-    device->popActive(oldActive);
+    // device->popActive(oldActive);
   }
   
 
@@ -594,7 +598,7 @@ namespace owl {
   {
 // #if 1
     if (flags & OWL_SBT_HITGROUPS)
-      for (auto device : llo->devices)
+      for (auto device : getDevices())
         buildHitGroupRecordsOn(device);
 // #else
 //     // ----------- build hitgroups -----------
@@ -609,7 +613,7 @@ namespace owl {
     
     // ----------- build miss prog(s) -----------
     if (flags & OWL_SBT_MISSPROGS)
-      for (auto device : llo->devices)
+      for (auto device : getDevices())
         buildMissProgRecordsOn(device);
       // llo->sbtMissProgsBuild
       //   ([&](uint8_t *output,
@@ -628,7 +632,7 @@ namespace owl {
 
     // ----------- build raygens -----------
     if (flags & OWL_SBT_RAYGENS)
-      for (auto device : llo->devices)
+      for (auto device : getDevices())
         buildRayGenRecordsOn(device);
       // llo->sbtRayGensBuild
       //   ([&](uint8_t *output,
@@ -649,82 +653,16 @@ namespace owl {
   void Context::buildPipeline()
   {
     for (auto device : getDevices()) {
-      getDD(device).destroyPipeline();
-      getDD(device).buildPipeline();
+      device->destroyPipeline();
+      device->buildPipeline();
     }
-  }
-
-  void Context::DeviceData::destroyPipeline()
-  {
-    if (!device->context->pipeline) return;
-    
-    const int oldActive = device->pushActive();
-    
-    OPTIX_CHECK(optixPipelineDestroy(device->context->pipeline));
-    device->context->pipeline = 0;
-    
-    device->popActive(oldActive);
-  }
-  
-  void Context::DeviceData::buildPipeline()
-  {
-    const int oldActive = device->pushActive();
-    
-    auto &allPGs = allActivePrograms;
-    if (allPGs.empty())
-      throw std::runtime_error("trying to create a pipeline w/ 0 programs!?");
-      
-    char log[2048];
-    size_t sizeof_log = sizeof( log );
-
-    OPTIX_CHECK(optixPipelineCreate(device->context->optixContext,
-                                    &device->context->pipelineCompileOptions,
-                                    &device->context->pipelineLinkOptions,
-                                    allPGs.data(),
-                                    (uint32_t)allPGs.size(),
-                                    log,&sizeof_log,
-                                    &device->context->pipeline
-                                    ));
-      
-    uint32_t maxAllowedByOptix = 0;
-    optixDeviceContextGetProperty
-      (device->context->optixContext,
-       OPTIX_DEVICE_PROPERTY_LIMIT_MAX_TRAVERSABLE_GRAPH_DEPTH,
-       &maxAllowedByOptix,
-       sizeof(maxAllowedByOptix));
-    if (uint32_t(parent->maxInstancingDepth+1) > maxAllowedByOptix)
-      throw std::runtime_error
-        ("error when building pipeline: "
-         "attempting to set max instancing depth to "
-         "value that exceeds OptiX's MAX_TRAVERSABLE_GRAPH_DEPTH limit");
-
-    PRINT(parent->maxInstancingDepth);
-    PRINT(maxAllowedByOptix);
-    
-    OPTIX_CHECK(optixPipelineSetStackSize
-                (device->context->pipeline,
-                 /* [in] The pipeline to configure the stack size for */
-                 2*1024,
-                 /* [in] The direct stack size requirement for
-                    direct callables invoked from IS or AH. */
-                 2*1024,
-                 /* [in] The direct stack size requirement for
-                    direct callables invoked from RG, MS, or CH.  */
-                 2*1024,
-                 /* [in] The continuation stack requirement. */
-                 int(parent->maxInstancingDepth+1)
-                 /* [in] The maximum depth of a traversable graph
-                    passed to trace. */
-                 ));
-
-    device->popActive(oldActive);
   }
 
   void Context::buildModules()
   {
     destroyModules();
     for (auto device : getDevices()) {
-      device->context->configurePipelineOptions(this);
+      device->configurePipelineOptions(this);
       for (int moduleID=0;moduleID<modules.size();moduleID++) {
         Module *module = modules.getPtr(moduleID);
         if (!module) continue;
@@ -769,11 +707,11 @@ namespace owl {
     if (maxInstancingDepth < 1)
       throw std::runtime_error("a instancing depth of < 1 isnt' currently supported in OWL; pleaes see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
     
-    for (auto device : llo->devices) {
+    for (auto device : getDevices()) {
       assert("check pipeline isn't already created"
-             && device->context->pipeline == nullptr);
-      // device->context->maxInstancingDepth = maxInstancingDepth;
-      device->context->configurePipelineOptions(this);
+             && device->pipeline == nullptr);
+      // device->maxInstancingDepth = maxInstancingDepth;
+      device->configurePipelineOptions(this);
     } 
   }
 
@@ -789,10 +727,9 @@ namespace owl {
     buildModules();
     
     for (auto device : getDevices()) {
-      const int oldActive = device->pushActive();
+      SetActiveGPU forLifeTime(device);
       auto &dd = getDD(device);
       dd.buildPrograms();
-      device->popActive(oldActive);
     }
   }
 
@@ -809,11 +746,10 @@ namespace owl {
     
   void Context::DeviceData::destroyPrograms()
   {
-    const int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
     for (auto pg : allActivePrograms)
       optixProgramGroupDestroy(pg);
     allActivePrograms.clear();
-    device->popActive(oldActive);
   }
 
   void Context::destroyPrograms()
@@ -850,7 +786,7 @@ namespace owl {
       
       char log[2048];
       size_t sizeof_log = sizeof( log );
-      OPTIX_CHECK(optixProgramGroupCreate(device->context->optixContext,
+      OPTIX_CHECK(optixProgramGroupCreate(device->optixContext,
                                           &pgDesc,
                                           1,
                                           &pgOptions,
@@ -892,7 +828,7 @@ namespace owl {
       
       char log[2048];
       size_t sizeof_log = sizeof( log );
-      OPTIX_CHECK(optixProgramGroupCreate(device->context->optixContext,
+      OPTIX_CHECK(optixProgramGroupCreate(device->optixContext,
                                           &pgDesc,
                                           1,
                                           &pgOptions,
@@ -947,7 +883,7 @@ namespace owl {
         char log[2048];
         size_t sizeof_log = sizeof( log );
         OptixProgramGroup &pg = dd.hgPGs[rt];
-        OPTIX_CHECK(optixProgramGroupCreate(device->context->optixContext,
+        OPTIX_CHECK(optixProgramGroupCreate(device->optixContext,
                                             &pgDesc,
                                             1,
                                             &pgOptions,
@@ -966,183 +902,13 @@ namespace owl {
   
   void Context::DeviceData::buildPrograms()
   {
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
     destroyPrograms();
     buildMissPrograms();
     buildRayGenPrograms();
     buildHitGroupPrograms();
-    device->popActive(oldActive);
   }
 
-#if 0
-  void Context::buildOptixPrograms(Device *device)
-  {
-    int oldActive = context->pushActive();
-    OptixProgramGroupOptions pgOptions = {};
-    OptixProgramGroupDesc    pgDesc    = {};
-
-    // ------------------------------------------------------------------
-    // rayGen programs
-    // ------------------------------------------------------------------
-    for (int pgID=0;pgID<rayGenPGs.size();pgID++) {
-      RayGenPG &pg     = rayGenPGs[pgID];
-      Module   *module = modules.get(pg.program.moduleID);
-      pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
-      std::string annotatedProgName
-        = pg.program.progName
-        ? std::string("__raygen__")+pg.program.progName
-        : "";
-      if (module) {
-        assert(module->module != nullptr);
-        assert(pg.program.progName != nullptr);
-        pgDesc.raygen.module            = module->module;
-        pgDesc.raygen.entryFunctionName = annotatedProgName.c_str();
-      } else {
-        pgDesc.raygen.module            = nullptr;
-        pgDesc.raygen.entryFunctionName = nullptr;
-      }
-      char log[2048];
-      size_t sizeof_log = sizeof( log );
-      OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
-                                          &pgDesc,
-                                          1,
-                                          &pgOptions,
-                                          log,&sizeof_log,
-                                          &pg.pg
-                                          ));
-    }
-      
-    // ------------------------------------------------------------------
-    // miss programs
-    // ------------------------------------------------------------------
-    for (int pgID=0;pgID<missProgPGs.size();pgID++) {
-      MissProgPG &pg     = missProgPGs[pgID];
-      Module *module = modules.get(pg.program.moduleID);
-      pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_MISS;
-      std::string annotatedProgName
-        = pg.program.progName
-        ? std::string("__miss__")+pg.program.progName
-        : "";
-      if (module) {
-        assert(module->module != nullptr);
-        assert(pg.program.progName != nullptr);
-        pgDesc.miss.module            = module->module;
-        pgDesc.miss.entryFunctionName = annotatedProgName.c_str();
-      } else {
-        pgDesc.miss.module            = nullptr;
-        pgDesc.miss.entryFunctionName = nullptr;
-      }
-      char log[2048];
-      size_t sizeof_log = sizeof( log );
-      OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
-                                          &pgDesc,
-                                          1,
-                                          &pgOptions,
-                                          log,&sizeof_log,
-                                          &pg.pg
-                                          ));
-    }
-      
-    // ------------------------------------------------------------------
-    // hitGroup programs
-    // ------------------------------------------------------------------
-    for (int geomTypeID=0;geomTypeID<geomTypes.size();geomTypeID++) {
-      auto &geomType = geomTypes[geomTypeID];
-      for (auto &pg : geomType.perRayType) {
-        assert("check program group not already active" && pg.pg == nullptr);
-        pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
-
-        // ----------- closest hit -----------
-        Module *moduleCH = modules.get(pg.closestHit.moduleID);
-        std::string annotatedProgNameCH
-          = pg.closestHit.progName
-          ? std::string("__closesthit__")+pg.closestHit.progName
-          : "";
-        if (moduleCH) {
-          assert(moduleCH->module != nullptr);
-          assert(pg.closestHit.progName != nullptr);
-          pgDesc.hitgroup.moduleCH            = moduleCH->module;
-          pgDesc.hitgroup.entryFunctionNameCH = annotatedProgNameCH.c_str();
-        } else {
-          pgDesc.hitgroup.moduleCH            = nullptr;
-          pgDesc.hitgroup.entryFunctionNameCH = nullptr;
-        }
-        // ----------- any hit -----------
-        Module *moduleAH = modules.get(pg.anyHit.moduleID);
-        std::string annotatedProgNameAH
-          = pg.anyHit.progName
-          ? std::string("__anyhit__")+pg.anyHit.progName
-          : "";
-        if (moduleAH) {
-          assert(moduleAH->module != nullptr);
-          assert(pg.anyHit.progName != nullptr);
-          pgDesc.hitgroup.moduleAH            = moduleAH->module;
-          pgDesc.hitgroup.entryFunctionNameAH = annotatedProgNameAH.c_str();
-        } else {
-          pgDesc.hitgroup.moduleAH            = nullptr;
-          pgDesc.hitgroup.entryFunctionNameAH = nullptr;
-        }
-        // ----------- intersect -----------
-        Module *moduleIS = modules.get(pg.intersect.moduleID);
-        std::string annotatedProgNameIS
-          = pg.intersect.progName
-          ? std::string("__intersection__")+pg.intersect.progName
-          : "";
-        if (moduleIS) {
-          assert(moduleIS->module != nullptr);
-          assert(pg.intersect.progName != nullptr);
-          pgDesc.hitgroup.moduleIS            = moduleIS->module;
-          pgDesc.hitgroup.entryFunctionNameIS = annotatedProgNameIS.c_str();
-        } else {
-          pgDesc.hitgroup.moduleIS            = nullptr;
-          pgDesc.hitgroup.entryFunctionNameIS = nullptr;
-        }
-        char log[2048];
-        size_t sizeof_log = sizeof( log );
-        OPTIX_CHECK(optixProgramGroupCreate(context->optixContext,
-                                            &pgDesc,
-                                            1,
-                                            &pgOptions,
-                                            log,&sizeof_log,
-                                            &pg.pg
-                                            ));
-      }
-
-      // ----------- bounds -----------
-      if (geomType.boundsProg.moduleID >= 0 &&
-          geomType.boundsProg.progName != nullptr) {
-        LOG("building bounds function ....");
-        Module *module = modules.get(geomType.boundsProg.moduleID);
-        assert(module);
-        assert(module->boundsModule);
-
-        const std::string annotatedProgName
-          = std::string("__boundsFuncKernel__")
-          + geomType.boundsProg.progName;
-          
-        CUresult rc = cuModuleGetFunction(&geomType.boundsFuncKernel,
-                                          module->boundsModule,
-                                          annotatedProgName.c_str());
-        switch(rc) {
-        case CUDA_SUCCESS:
-          /* all OK, nothing to do */
-          LOG_OK("found bounds function " << annotatedProgName << " ... perfect!");
-          break;
-        case CUDA_ERROR_NOT_FOUND:
-          throw std::runtime_error("in "+std::string(__PRETTY_FUNCTION__)
-                                   +": could not find OPTIX_BOUNDS_PROGRAM("
-                                   +geomType.boundsProg.progName+")");
-        default:
-          const char *errName = 0;
-          cuGetErrorName(rc,&errName);
-          PRINT(errName);
-          exit(0);
-        }
-      }
-    }
-    context->popActive(oldActive);
-  }
-#endif
   
   // void Context::destroyPrograms(Device *device)
   // {

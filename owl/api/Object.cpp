@@ -24,7 +24,7 @@ namespace owl {
     : uniqueID(nextAvailableID++)
   {}
 
-  void Object::createDeviceData(const std::vector<ll::Device *> &devices)
+  void Object::createDeviceData(const std::vector<std::shared_ptr<DeviceContext>> &devices)
   {
     if (!deviceData.empty())
       throw std::runtime_error("trying to create device data on object "+toString()

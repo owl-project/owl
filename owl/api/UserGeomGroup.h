@@ -37,7 +37,7 @@ namespace owl {
 
     /*! low-level accel structure builder for given device */
     template<bool FULL_REBUILD>
-    void buildAccelOn(ll::Device *device);
+    void buildAccelOn(const DeviceContext::SP &device);
 
   };
 

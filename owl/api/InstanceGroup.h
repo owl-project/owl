@@ -28,6 +28,10 @@ namespace owl {
     struct DeviceData : public Group::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
       
+      DeviceData(const DeviceContext::SP &device)
+        : Group::DeviceData(device)
+      {};
+      
       DeviceMemory optixInstanceBuffer;
 
       /*! if we use motion blur, this is used to store all the motoin transforms */
@@ -58,16 +62,19 @@ namespace owl {
     void refitAccel() override;
 
     /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(); }
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
+    { return std::make_shared<DeviceData>(device); }
     
-    DeviceData &getDD(ll::Device *device)
-    { assert(device->ID < deviceData.size()); return *deviceData[device->ID]->as<InstanceGroup::DeviceData>(); }
-    
+    DeviceData &getDD(const DeviceContext::SP &device) const
+    {
+      assert(device->ID < deviceData.size());
+      return *deviceData[device->ID]->as<DeviceData>();
+    }
+
     template<bool FULL_REBUILD>
-    void staticBuildOn(ll::Device *device);
+    void staticBuildOn(const DeviceContext::SP &device);
     template<bool FULL_REBUILD>
-    void motionBlurBuildOn(ll::Device *device);
+    void motionBlurBuildOn(const DeviceContext::SP &device);
 
     virtual std::string toString() const { return "InstanceGroup"; }
 

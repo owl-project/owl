@@ -40,8 +40,8 @@ namespace owl {
 
     assert(texels != nullptr);
     
-    for (auto device : context->llo->devices) {
-      int oldActive = device->context->pushActive();
+    for (auto device : context->getDevices()) {
+      SetActiveGPU forLifeTime(device);
 
       cudaResourceDesc res_desc = {};
       
@@ -87,8 +87,6 @@ namespace owl {
       CUDA_CALL(CreateTextureObject(&cuda_tex, &res_desc, &tex_desc, nullptr));
 
       textureObjects.push_back(cuda_tex);
-      
-      device->context->popActive(oldActive);
     }
   }
 

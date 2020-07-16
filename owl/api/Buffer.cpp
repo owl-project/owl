@@ -35,9 +35,9 @@ namespace owl {
   }
 
   /*! creates the device-specific data for this group */
-  RegisteredObject::DeviceData::SP Buffer::createOn(ll::Device *device)
+  RegisteredObject::DeviceData::SP Buffer::createOn(const DeviceContext::SP &device)
   {
-    return std::make_shared<Buffer::DeviceData>();
+    return std::make_shared<Buffer::DeviceData>(device);
   }
 
   Buffer::~Buffer()
@@ -66,8 +66,8 @@ namespace owl {
     if (newElementCount > 0)
       CUDA_CALL(MallocHost((void**)&cudaHostPinnedMem, sizeInBytes()));
 
-    for (int i=0;i<deviceData.size();i++)
-      getDD(i).d_pointer = cudaHostPinnedMem;
+    for (auto device : context->getDevices())
+      getDD(device).d_pointer = cudaHostPinnedMem;
   }
   
   void HostPinnedBuffer::upload(const void *sourcePtr)
@@ -144,8 +144,8 @@ namespace owl {
            begin += pageSize)
         {
           unsigned char *end = std::min(begin+pageSize,mem_end);
-          int devID = pageID++ % context->llo->devices.size();
-          int cudaDevID = context->llo->devices[devID]->getCudaDeviceID();
+          int devID = pageID++ % context->deviceCount();
+          int cudaDevID = context->getDevice(devID)->getCudaDeviceID();
           int result = 0;
           cudaDeviceGetAttribute(&result, cudaDevAttrConcurrentManagedAccess, cudaDevID);
           if (result) {
@@ -155,8 +155,8 @@ namespace owl {
         }
     }
     
-    for (int i=0;i<deviceData.size();i++)
-      getDD(i).d_pointer = cudaManagedMem;
+    for (auto device : context->getDevices())
+      getDD(device).d_pointer = cudaManagedMem;
   }
   
   void ManagedMemoryBuffer::upload(const void *hostPtr)
@@ -177,14 +177,14 @@ namespace owl {
   {
     if (d_pointer == 0) return;
 
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
+    
     CUDA_CALL_NOTHROW(Free(d_pointer));
     d_pointer = nullptr;
-    device->popActive(oldActive);
   }
-
+  
   /*! creates the device-specific data for this group */
-RegisteredObject::DeviceData::SP DeviceBuffer::createOn(ll::Device *device)
+  RegisteredObject::DeviceData::SP DeviceBuffer::createOn(const DeviceContext::SP &device)
   {
     if (type >= _OWL_BEGIN_COPYABLE_TYPES)
       return std::make_shared<DeviceBuffer::DeviceDataForCopyableData>(this,device);
@@ -200,7 +200,7 @@ RegisteredObject::DeviceData::SP DeviceBuffer::createOn(ll::Device *device)
   
   void DeviceBuffer::upload(const void *hostPtr)
   {
-    assert(deviceData.size() == context->llo->devices.size());
+    assert(deviceData.size() == context->deviceCount());
     for (auto dd : deviceData)
       dd->as<DeviceBuffer::DeviceData>()->uploadAsync(hostPtr);
     CUDA_SYNC_CHECK();
@@ -323,26 +323,26 @@ RegisteredObject::DeviceData::SP DeviceBuffer::createOn(ll::Device *device)
   void DeviceBuffer::resize(size_t newElementCount)
   {
     elementCount = newElementCount;
-    for (auto device : context->llo->devices) 
-      deviceData[device->ID]->as<DeviceBuffer::DeviceData>()->executeResize();
+    for (auto device : context->getDevices()) 
+      getDD(device).executeResize();
   }
   
 
 
   void DeviceBuffer::DeviceDataForTextures::executeResize() 
   {
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
     if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
 
     if (parent->elementCount)
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(cudaTextureObject_t)));
     
-    device->popActive(oldActive);
   }
   
   void DeviceBuffer::DeviceDataForTextures::uploadAsync(const void *hostDataPtr) 
   {
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
+    
     hostHandles.resize(parent->elementCount);
     APIHandle **apiHandles = (APIHandle **)hostDataPtr;
     std::vector<cudaTextureObject_t> devRep(parent->elementCount);
@@ -360,23 +360,22 @@ RegisteredObject::DeviceData::SP DeviceBuffer::createOn(ll::Device *device)
                           devRep.size()*sizeof(devRep[0]),
                           cudaMemcpyDefault,
                           device->getStream()));
-    device->popActive(oldActive);
   }
   
   void DeviceBuffer::DeviceDataForBuffers::executeResize() 
   {
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
+    
     if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
 
     if (parent->elementCount)
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(device::Buffer)));
-    
-    device->popActive(oldActive);
   }
   
   void DeviceBuffer::DeviceDataForBuffers::uploadAsync(const void *hostDataPtr) 
   {
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
+    
     hostHandles.resize(parent->elementCount);
     APIHandle **apiHandles = (APIHandle **)hostDataPtr;
     std::vector<device::Buffer> devRep(parent->elementCount);
@@ -401,28 +400,26 @@ RegisteredObject::DeviceData::SP DeviceBuffer::createOn(ll::Device *device)
                           devRep.size()*sizeof(devRep[0]),
                           cudaMemcpyDefault,
                           device->getStream()));
-    device->popActive(oldActive);
   }
   
   void DeviceBuffer::DeviceDataForCopyableData::executeResize() 
   {
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
+    
     if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
 
     if (parent->elementCount)
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeOf(parent->type)));
-    
-    device->popActive(oldActive);
   }
   
   void DeviceBuffer::DeviceDataForCopyableData::uploadAsync(const void *hostDataPtr)
   {
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
+    
     CUDA_CALL(MemcpyAsync(d_pointer,hostDataPtr,
                           parent->elementCount*sizeOf(parent->type),
                           cudaMemcpyDefault,
                           device->getStream()));
-    device->popActive(oldActive);
   }
   
 
@@ -461,9 +458,10 @@ RegisteredObject::DeviceData::SP DeviceBuffer::createOn(ll::Device *device)
 
 
 
-  void GraphicsBuffer::map(int deviceID, CUstream stream)
+  void GraphicsBuffer::map(const int deviceID, CUstream stream)
   {
-    DeviceData &dd = getDD(deviceID);
+    DeviceContext::SP device = context->getDevice(deviceID);
+    DeviceData &dd = getDD(device);
     // void GraphicsBuffer::map(Device *device, CUstream stream)
     // {
     CUDA_CHECK(cudaGraphicsMapResources(1, &resource, stream));
@@ -475,9 +473,10 @@ RegisteredObject::DeviceData::SP DeviceBuffer::createOn(ll::Device *device)
     //   }
   }
 
-  void GraphicsBuffer::unmap(int deviceID, CUstream stream)
+  void GraphicsBuffer::unmap(const int deviceID, CUstream stream)
   {
-    DeviceData &dd = getDD(deviceID);
+    DeviceContext::SP device = context->getDevice(deviceID);
+    DeviceData &dd = getDD(device);
     CUDA_CHECK(cudaGraphicsUnmapResources(1, &resource, stream));
     dd.d_pointer = nullptr;
   }
@@ -498,266 +497,3 @@ RegisteredObject::DeviceData::SP DeviceBuffer::createOn(ll::Device *device)
   }
   
 } // ::owl
-
-
-
-
-#if 0
-void Device::bufferDestroy(int bufferID)
-{
-  assert("check valid buffer ID" && bufferID >= 0);
-  assert("check valid buffer ID" && bufferID <  buffers.size());
-  assert("check buffer to be destroyed actually exists"
-         && buffers[bufferID] != nullptr);
-  int oldActive = context->pushActive();
-  delete buffers[bufferID];
-  buffers[bufferID] = nullptr;
-  context->popActive(oldActive);
-}
-    
-void Device::deviceBufferCreate(int bufferID,
-                                size_t elementCount,
-                                size_t elementSize,
-                                const void *initData)
-{
-  assert("check valid buffer ID" && bufferID >= 0);
-  assert("check valid buffer ID" && bufferID <  buffers.size());
-  assert("check buffer ID available" && buffers[bufferID] == nullptr);
-  STACK_PUSH_ACTIVE(context);
-  // context->pushActive();
-  DeviceBuffer *buffer = new DeviceBuffer(elementCount,elementSize);
-  if (initData) {
-    buffer->devMem.upload(initData,"createDeviceBuffer: uploading initData");
-    // LOG("uploading " << elementCount
-    //     << " items of size " << elementSize
-    //     << " from host ptr " << initData
-    //     << " to device ptr " << buffer->devMem.get());
-  }
-  assert("check buffer properly created" && buffer != nullptr);
-  buffers[bufferID] = buffer;
-  // context->popActive();
-  STACK_POP_ACTIVE();
-}
-    
-/*! create a managed memory buffer */
-void Device::managedMemoryBufferCreate(int bufferID,
-                                       size_t elementCount,
-                                       size_t elementSize,
-                                       ManagedMemory::SP managedMem)
-{
-  assert("check valid buffer ID" && bufferID >= 0);
-  assert("check valid buffer ID" && bufferID <  buffers.size());
-  assert("check buffer ID available" && buffers[bufferID] == nullptr);
-  int oldActive = context->pushActive();
-  Buffer *buffer = new ManagedMemoryBuffer(elementCount,elementSize,managedMem);
-  assert("check buffer properly created" && buffer != nullptr);
-  buffers[bufferID] = buffer;
-  context->popActive(oldActive);
-}
-      
-void Device::hostPinnedBufferCreate(int bufferID,
-                                    size_t elementCount,
-                                    size_t elementSize,
-                                    HostPinnedMemory::SP pinnedMem)
-{
-  assert("check valid buffer ID" && bufferID >= 0);
-  assert("check valid buffer ID" && bufferID <  buffers.size());
-  assert("check buffer ID available" && buffers[bufferID] == nullptr);
-  int oldActive = context->pushActive();
-  Buffer *buffer = new HostPinnedBuffer(elementCount,elementSize,pinnedMem);
-  assert("check buffer properly created" && buffer != nullptr);
-  buffers[bufferID] = buffer;
-  context->popActive(oldActive);
-}
-
-void Device::graphicsBufferCreate(int bufferID,
-                                  size_t elementCount,
-                                  size_t elementSize,
-                                  cudaGraphicsResource_t resource)
-{
-  assert("check valid buffer ID" && bufferID >= 0);
-  assert("check valid buffer ID" && bufferID < buffers.size());
-  assert("check buffer ID available" && buffers[bufferID] == nullptr);
-  int oldActive = context->pushActive();
-  Buffer *buffer = new GraphicsBuffer(elementCount, elementSize, resource);
-  assert("check buffer properly created" && buffer != nullptr);
-  buffers[bufferID] = buffer;
-  context->popActive(oldActive);
-}
-
-void Device::graphicsBufferMap(int bufferID)
-{
-  assert("check valid buffer ID" && bufferID >= 0);
-  assert("check valid buffer ID" && bufferID < buffers.size());
-  int oldActive = context->pushActive();
-  GraphicsBuffer *buffer = dynamic_cast<GraphicsBuffer*>(buffers[bufferID]);
-  assert("check buffer properly casted" && buffer != nullptr);
-  buffer->map(this, context->stream);
-  context->popActive(oldActive);
-}
-
-void Device::graphicsBufferUnmap(int bufferID)
-{
-  assert("check valid buffer ID" && bufferID >= 0);
-  assert("check valid buffer ID" && bufferID < buffers.size());
-  int oldActive = context->pushActive();
-  GraphicsBuffer *buffer = dynamic_cast<GraphicsBuffer*>(buffers[bufferID]);
-  assert("check buffer properly casted" && buffer != nullptr);
-  buffer->unmap(this, context->stream);
-  context->popActive(oldActive);
-}
-    
-      
-/*! returns the given buffers device pointer */
-void *Device::bufferGetPointer(int bufferID)
-{
-  return (void*)checkGetBuffer(bufferID)->d_pointer;
-}
-
-void Device::bufferResize(int bufferID, size_t newItemCount)
-{
-  checkGetBuffer(bufferID)->resize(this,newItemCount);
-}
-    
-void Device::bufferUpload(int bufferID, const void *hostPtr)
-{
-  int oldActive = context->pushActive();
-  checkGetBuffer(bufferID)->upload(this,hostPtr);
-  context->popActive(oldActive);
-}
-
-    
-
-// ##################################################################
-// ManagedMemoryMemory
-// ##################################################################
-
-ManagedMemory::ManagedMemory(DeviceGroup *devGroup,
-                             size_t amount,
-                             /*! data with which to populate this buffer; may
-                               be null, but has to be of size 'amount' if
-                               not */
-                             const void *initData)
-  : devGroup(devGroup)
-{
-  alloc(amount);
-  if (initData)
-    CUDA_CALL(Memcpy(pointer,initData,amount,
-                     cudaMemcpyDefault));
-  assert(pointer != nullptr);
-}
-    
-ManagedMemory::~ManagedMemory()
-{
-  assert(pointer != nullptr);
-  free();
-}
-
-void ManagedMemory::alloc(size_t amount)
-{
-  CUDA_CALL(MallocManaged((void**)&pointer, amount));
-  // CUDA_CALL(MemAdvise((void*)pointer, amount, cudaMemAdviseSetReadMostly, -1));
-  unsigned char *mem_end = (unsigned char *)pointer + amount;
-  size_t pageSize = 16*1024*1024;
-  int pageID = 0;
-  for (unsigned char *begin = (unsigned char *)pointer; begin < mem_end; begin += pageSize) {
-    unsigned char *end = std::min(begin+pageSize,mem_end);
-    int devID = pageID++ % devGroup->devices.size();
-    int cudaDevID = devGroup->devices[devID]->getCudaDeviceID();
-    int result = 0;
-    cudaDeviceGetAttribute (&result, cudaDevAttrConcurrentManagedAccess, cudaDevID);
-    if (result) {
-      CUDA_CALL(MemAdvise((void*)begin, end-begin, cudaMemAdviseSetPreferredLocation, cudaDevID));
-    }
-  }
-}
-    
-void ManagedMemory::free()
-{
-  CUDA_CALL_NOTHROW(Free(pointer));
-  pointer = nullptr;
-}
-
-
-
-void DeviceGroup::bufferDestroy(int bufferID)
-{
-  for (auto device : devices) 
-    device->bufferDestroy(bufferID);
-}
-
-void DeviceGroup::deviceBufferCreate(int bufferID,
-                                     size_t elementCount,
-                                     size_t elementSize,
-                                     const void *initData)
-{
-  for (auto device : devices) 
-    device->deviceBufferCreate(bufferID,elementCount,elementSize,initData);
-}
-
-void DeviceGroup::hostPinnedBufferCreate(int bufferID,
-                                         size_t elementCount,
-                                         size_t elementSize)
-{
-  HostPinnedMemory::SP pinned
-    = std::make_shared<HostPinnedMemory>(elementCount*elementSize);
-  for (auto device : devices) 
-    device->hostPinnedBufferCreate(bufferID,elementCount,elementSize,pinned);
-}
-
-void DeviceGroup::managedMemoryBufferCreate(int bufferID,
-                                            size_t elementCount,
-                                            size_t elementSize,
-                                            const void *initData)
-{
-  ManagedMemory::SP mem
-    = std::make_shared<ManagedMemory>(this,elementCount*elementSize,initData);
-  for (auto device : devices) 
-    device->managedMemoryBufferCreate(bufferID,elementCount,elementSize,mem);
-}
-
-void DeviceGroup::graphicsBufferCreate(int bufferID,
-                                       size_t elementCount,
-                                       size_t elementSize,
-                                       cudaGraphicsResource_t resource)
-{
-  for (auto device : devices)
-    device->graphicsBufferCreate(bufferID, elementCount, elementSize, resource);
-}
-
-void DeviceGroup::graphicsBufferMap(int bufferID)
-{
-  for (auto device : devices)
-    device->graphicsBufferMap(bufferID);
-}
-
-void DeviceGroup::graphicsBufferUnmap(int bufferID)
-{
-  for (auto device : devices)
-    device->graphicsBufferUnmap(bufferID);
-}
-      
-
-void DeviceGroup::bufferResize(int bufferID, size_t newItemCount)
-{
-  for (auto device : devices)
-    device->bufferResize(bufferID,newItemCount);
-}
-    
-void DeviceGroup::bufferUpload(int bufferID, const void *hostPtr)
-{
-  for (auto device : devices)
-    device->bufferUpload(bufferID,hostPtr);
-}
-      
-void DeviceGroup::bufferUploadToSpecificDevice(int bufferID,
-                                               int devID,
-                                               const void *hostPtr)
-{
-  devices[devID]->bufferUpload(bufferID,hostPtr);
-}
-      
-
-
-#endif
-

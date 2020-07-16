@@ -165,9 +165,8 @@ namespace owl {
 
 
   /*! run the bounding box program for all primitives within this geometry */
-  void UserGeom::executeBoundsProgOnPrimitives(int deviceID)
+  void UserGeom::executeBoundsProgOnPrimitives(const DeviceContext::SP &device)
   {
-    DeviceContext::SP device = context->getDevice(deviceID);
     SetActiveGPU activeGPU(device);
     // int oldActive = device->pushActive();
       

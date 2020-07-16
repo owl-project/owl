@@ -51,11 +51,11 @@ namespace owl {
     for (auto child : geometries) {
       UserGeom::SP userGeom = child->as<UserGeom>();
       assert(userGeom);
-      for (auto device : context->llo->devices)
+      for (auto device : context->getDevices())
         userGeom->executeBoundsProgOnPrimitives(device);
     }
     
-    for (auto device : context->llo->devices)
+    for (auto device : context->getDevices())
       if (FULL_REBUILD)
         buildAccelOn<true>(device);
       else
@@ -80,10 +80,10 @@ namespace owl {
 
   /*! low-level accel structure builder for given device */
   template<bool FULL_REBUILD>
-  void UserGeomGroup::buildAccelOn(ll::Device *device)
+  void UserGeomGroup::buildAccelOn(const DeviceContext::SP &device)
   {
     DeviceData &dd = getDD(device);
-    auto optixContext = device->context->optixContext;
+    auto optixContext = device->optixContext;
     
     assert("check does not yet exist" && dd.traversable == 0);
     if (FULL_REBUILD)
@@ -91,14 +91,14 @@ namespace owl {
     else
       assert("check DOES exist on first build " && !dd.bvhMemory.empty());
       
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
     LOG("building user accel over "
         << geometries.size() << " geometries");
 
     size_t sumPrims = 0;
     uint32_t maxPrimsPerGAS = 0;
     optixDeviceContextGetProperty
-      (device->context->optixContext,
+      (device->optixContext,
        OPTIX_DEVICE_PROPERTY_LIMIT_MAX_PRIMITIVES_PER_GAS,
        &maxPrimsPerGAS,
        sizeof(maxPrimsPerGAS));
@@ -251,7 +251,6 @@ namespace owl {
     // ==================================================================
 
     tempBuffer.free();
-    device->popActive(oldActive);
 
     LOG_OK("successfully built user geom group accel");
 

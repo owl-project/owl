@@ -76,7 +76,7 @@ namespace owl {
   
   void TrianglesGeomGroup::buildAccel()
   {
-    for (auto device : context->llo->devices) 
+    for (auto device : context->getDevices()) 
       buildAccelOn<true>(device);
 
     if (context->motionBlurEnabled)
@@ -85,7 +85,7 @@ namespace owl {
   
   void TrianglesGeomGroup::refitAccel()
   {
-    for (auto device : context->llo->devices) 
+    for (auto device : context->getDevices()) 
       buildAccelOn<false>(device);
     
     if (context->motionBlurEnabled)
@@ -93,7 +93,7 @@ namespace owl {
   }
 
   template<bool FULL_REBUILD>
-  void TrianglesGeomGroup::buildAccelOn(ll::Device *device) 
+  void TrianglesGeomGroup::buildAccelOn(const DeviceContext::SP &device) 
   {
     DeviceData &dd = getDD(device);
 
@@ -103,14 +103,14 @@ namespace owl {
     else
       assert("check DOES exist on refit" && !dd.bvhMemory.empty());
       
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
     LOG("building triangles accel over "
         << geometries.size() << " geometries");
     PING;
     size_t sumPrims = 0;
     uint32_t maxPrimsPerGAS = 0;
     optixDeviceContextGetProperty
-      (device->context->optixContext,
+      (device->optixContext,
        OPTIX_DEVICE_PROPERTY_LIMIT_MAX_PRIMITIVES_PER_GAS,
        &maxPrimsPerGAS,
        sizeof(maxPrimsPerGAS));
@@ -225,7 +225,7 @@ namespace owl {
     PING;
     OptixAccelBufferSizes blasBufferSizes;
     OPTIX_CHECK(optixAccelComputeMemoryUsage
-                (device->context->optixContext,
+                (device->optixContext,
                  &accelOptions,
                  triangleInputs.data(),
                  (uint32_t)triangleInputs.size(),
@@ -265,7 +265,7 @@ namespace owl {
 
     PING;
     if (FULL_REBUILD) {
-      OPTIX_CHECK(optixAccelBuild(device->context->optixContext,
+      OPTIX_CHECK(optixAccelBuild(device->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
                                   // array of build inputs:
@@ -284,7 +284,7 @@ namespace owl {
                                   ));
     } else {
       PING; PRINT(dd.bvhMemory.get());
-      OPTIX_CHECK(optixAccelBuild(device->context->optixContext,
+      OPTIX_CHECK(optixAccelBuild(device->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
                                   // array of build inputs:
@@ -317,7 +317,7 @@ namespace owl {
         
       dd.bvhMemory.alloc(compactedSize);
       // ... and perform compaction
-      OPTIX_CALL(AccelCompact(device->context->optixContext,
+      OPTIX_CALL(AccelCompact(device->optixContext,
                               /*TODO: stream:*/0,
                               // OPTIX_COPY_MODE_COMPACT,
                               dd.traversable,
@@ -337,9 +337,6 @@ namespace owl {
     tempBuffer.free();
     if (FULL_REBUILD)
       compactedSizeBuffer.free();
-      
-    PING;
-    device->popActive(oldActive);
 
     LOG_OK("successfully build triangles geom group accel");
   }

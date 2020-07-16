@@ -113,7 +113,7 @@ namespace owl {
     void computeBounds(box3f bounds[2]);
 
     /*! run the bounding box program for all primitives within this geometry */
-    void executeBoundsProgOnPrimitives(int deviceID);
+    void executeBoundsProgOnPrimitives(const DeviceContext::SP &device);
     
     size_t primCount = 0;
   };

@@ -98,7 +98,7 @@ namespace owl {
     virtual std::string toString() const { return "Geom"; }
 
     void writeSBTRecord(uint8_t *const sbtRecord,
-                        int deviceID,
+                        const DeviceContext::SP &device,
                         int rayTypeID);
     
     GeomType::SP geomType;

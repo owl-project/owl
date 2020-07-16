@@ -94,11 +94,11 @@ namespace owl {
     // { assert(deviceID < llo->devices.size()); return llo->devices[deviceID]; }
 
     /*! part of the SBT creation - builds the hit group array */
-    void buildHitGroupRecordsOn(int deviceID);
+    void buildHitGroupRecordsOn(const DeviceContext::SP &device);
     /*! part of the SBT creation - builds the raygen array */
-    void buildRayGenRecordsOn(int deviceID);
+    void buildRayGenRecordsOn(const DeviceContext::SP &device);
     /*! part of the SBT creation - builds the miss group array */
-    void buildMissProgRecordsOn(int deviceID);
+    void buildMissProgRecordsOn(const DeviceContext::SP &device);
     
     void setRayTypeCount(size_t rayTypeCount);
     void enableMotionBlur();

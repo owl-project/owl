@@ -128,25 +128,25 @@ namespace owl {
 
   void InstanceGroup::buildAccel()
   {
-    for (auto device : context->llo->devices)
+    for (auto device : context->getDevices())
       if (transforms[1].empty())
         staticBuildOn<true>(device);
       else
         motionBlurBuildOn<true>(device);
     
     // throw std::runtime_error("not yet ported");
-    // for (auto device : context->llo->devices)
+    // for (auto device : context->getDevices())
     //   device->groupBuildAccel(this->ID);
   }
   
   void InstanceGroup::refitAccel()
   {
-    for (auto device : context->llo->devices)
+    for (auto device : context->getDevices())
       if (transforms[1].empty())
         staticBuildOn<false>(device);
       else
         motionBlurBuildOn<false>(device);
-    // for (auto device : context->llo->devices)
+    // for (auto device : context->getDevices())
     //   device->groupRefitAccel(this->ID);
   }
 
@@ -155,10 +155,10 @@ namespace owl {
 
 
   template<bool FULL_REBUILD>
-  void InstanceGroup::staticBuildOn(ll::Device *device) 
+  void InstanceGroup::staticBuildOn(const DeviceContext::SP &device) 
   {
     DeviceData &dd = getDD(device);
-    auto optixContext = device->context->optixContext;
+    auto optixContext = device->optixContext;
     
     if (FULL_REBUILD) {
       assert("check does not yet exist" && dd.traversable == 0);
@@ -168,7 +168,7 @@ namespace owl {
       assert("check does not yet exist" && !dd.bvhMemory.empty());
     }
       
-    int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
     LOG("building instance accel over "
         << children.size() << " groups");
 
@@ -319,7 +319,6 @@ namespace owl {
     // TODO: move those free's to the destructor, so we can delay the
     // frees until all objects are done
     tempBuffer.free();
-    device->popActive(oldActive);
       
     LOG_OK("successfully built instance group accel");
   }
@@ -332,10 +331,10 @@ namespace owl {
 
 
   template<bool FULL_REBUILD>
-  void InstanceGroup::motionBlurBuildOn(ll::Device *device) 
+  void InstanceGroup::motionBlurBuildOn(const DeviceContext::SP &device)
   {
     DeviceData &dd = getDD(device);
-    auto optixContext = device->context->optixContext;
+    auto optixContext = device->optixContext;
     
     if (FULL_REBUILD) {
       assert("check does not yet exist" && dd.traversable == 0);
@@ -345,7 +344,7 @@ namespace owl {
       assert("check does not yet exist" && !dd.bvhMemory.empty());
     }
       
-      int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
       LOG("building instance accel over "
           << children.size() << " groups");
 
@@ -564,13 +563,8 @@ namespace owl {
       // TODO: move those free's to the destructor, so we can delay the
       // frees until all objects are done
       tempBuffer.free();
-      device->popActive(oldActive);
       
       LOG_OK("successfully built instance group accel");
     }
-
-
-
-
   
 }

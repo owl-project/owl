@@ -92,22 +92,22 @@ namespace owl {
   Module::~Module()
   {
     for (auto device : context->getDevices())
-      getDD(device).destroy(device);
+      getDD(device).destroy();
   }
   
-  void Module::DeviceData::build(Module *parent, Device *device)
+  void Module::DeviceData::build()
   {
     assert(module == 0);
-    const int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
     
     LOG("building module #" + parent->toString());
     
     char log[2048];
     size_t sizeof_log = sizeof( log );
 
-    OPTIX_CHECK_LOG(optixModuleCreateFromPTX(device->context->optixContext,
-                                             &device->context->moduleCompileOptions,
-                                             &device->context->pipelineCompileOptions,
+    OPTIX_CHECK_LOG(optixModuleCreateFromPTX(device->optixContext,
+                                             &device->moduleCompileOptions,
+                                             &device->pipelineCompileOptions,
                                              parent->ptxCode.c_str(),
                                              strlen(parent->ptxCode.c_str()),
                                              log,      // Log string
@@ -156,18 +156,15 @@ namespace owl {
       exit(0);
     }
     LOG_OK("created module #" << parent->ID << " (both optix and cuda)");
-    device->popActive(oldActive);
   }
   
-  void Module::DeviceData::destroy(Device *device)
+  void Module::DeviceData::destroy()
   {
-    const int oldActive = device->pushActive();
+    SetActiveGPU forLifeTime(device);
 
     if (module)
       optixModuleDestroy(module);
     module = 0;
-
-    device->popActive(oldActive);
   }
 
 } // ::owl
