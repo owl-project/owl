@@ -62,7 +62,9 @@ namespace owl {
       return *deviceData[deviceID]->as<DeviceData>();
     }
     DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
-    
+    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
+    { return std::make_shared<DeviceData>(); }
+
 
     virtual std::string toString() const { return "Module"; }
     

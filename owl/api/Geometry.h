@@ -43,14 +43,20 @@ namespace owl {
     struct DeviceData : public RegisteredObject::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
+      void buildHitGroupPrograms(GeomType *gt,
+                                 Device *device);
+      
+      virtual void fillPGDesc(OptixProgramGroupDesc &pgDesc,
+                              GeomType *gt,
+                              Device *device,
+                              int rayType);
+      
       virtual void writeSBTHeader(uint8_t *const sbtRecord,
                                   Device *device,
                                   int rayTypeID);
 
-      /*! for hit progs these may be multiple entires; for miss and
-          raygens this will be exactly one */
-      std::vector<OptixProgramGroup> chPGs;
-      std::vector<OptixProgramGroup> ahPGs;
+      /*! hit group program groups, per ray type */
+      std::vector<OptixProgramGroup> hgPGs;
     };
 
     

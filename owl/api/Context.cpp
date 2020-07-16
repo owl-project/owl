@@ -74,7 +74,13 @@ namespace owl {
     // ll = ll::DeviceGroup::create();
     llo = ll::DeviceGroup::create(requestedDeviceIDs,
                                   numRequestedDevices);
+    createDeviceData(getDevices());
     LOG_OK("device group created");
+
+
+    LaunchParamsType::SP emptyLPType
+      = createLaunchParamsType(0,{});
+    dummyLaunchParams = createLaunchParams(emptyLPType);
   }
   
   /*! creates a buffer that uses CUDA host pinned memory; that
@@ -145,7 +151,7 @@ namespace owl {
       = std::make_shared<GraphicsBuffer>(this, type, resource);
     
     assert(buffer);
-    buffer->createDeviceData(llo->devices);
+    buffer->createDeviceData(getDevices());
     buffer->resize(count);
 
     return buffer;
@@ -154,19 +160,25 @@ namespace owl {
   RayGen::SP
   Context::createRayGen(const std::shared_ptr<RayGenType> &type)
   {
-    return std::make_shared<RayGen>(this,type);
+    RayGen::SP rg = std::make_shared<RayGen>(this,type);
+    rg->createDeviceData(getDevices());
+    return rg;
   }
 
   LaunchParams::SP
   Context::createLaunchParams(const std::shared_ptr<LaunchParamsType> &type)
   {
-    return std::make_shared<LaunchParams>(this,type);
+    LaunchParams::SP lp = std::make_shared<LaunchParams>(this,type);
+    lp->createDeviceData(getDevices());
+    return lp;
   }
 
   MissProg::SP
   Context::createMissProg(const std::shared_ptr<MissProgType> &type)
   {
-    return std::make_shared<MissProg>(this,type);
+    MissProg::SP mp = std::make_shared<MissProg>(this,type);
+    mp->createDeviceData(getDevices());
+    return mp;
   }
 
   RayGenType::SP
@@ -175,10 +187,12 @@ namespace owl {
                             size_t varStructSize,
                             const std::vector<OWLVarDecl> &varDecls)
   {
-    return std::make_shared<RayGenType>(this,
-                                        module,progName,
-                                        varStructSize,
-                                        varDecls);
+    RayGenType::SP rgt = std::make_shared<RayGenType>(this,
+                                                      module,progName,
+                                                      varStructSize,
+                                                      varDecls);
+    rgt->createDeviceData(getDevices());
+    return rgt;
   }
   
 
@@ -186,9 +200,12 @@ namespace owl {
   Context::createLaunchParamsType(size_t varStructSize,
                                   const std::vector<OWLVarDecl> &varDecls)
   {
-    return std::make_shared<LaunchParamsType>(this,
+    LaunchParamsType::SP lpt
+      = std::make_shared<LaunchParamsType>(this,
                                               varStructSize,
-                                              varDecls);
+                                           varDecls);
+    lpt->createDeviceData(getDevices());
+    return lpt;
   }
   
 
@@ -198,21 +215,30 @@ namespace owl {
                               size_t varStructSize,
                               const std::vector<OWLVarDecl> &varDecls)
   {
-    return std::make_shared<MissProgType>(this,
-                                          module,progName,
-                                          varStructSize,
-                                          varDecls);
+    MissProgType::SP mpt
+      = std::make_shared<MissProgType>(this,
+                                       module,progName,
+                                       varStructSize,
+                                       varDecls);
+    mpt->createDeviceData(getDevices());
+    return mpt;
   }
   
 
   GeomGroup::SP Context::trianglesGeomGroupCreate(size_t numChildren)
   {
-    return std::make_shared<TrianglesGeomGroup>(this,numChildren);
+    GeomGroup::SP gg
+      = std::make_shared<TrianglesGeomGroup>(this,numChildren);
+    gg->createDeviceData(getDevices());
+    return gg;
   }
 
   GeomGroup::SP Context::userGeomGroupCreate(size_t numChildren)
   {
-    return std::make_shared<UserGeomGroup>(this,numChildren);
+    GeomGroup::SP gg
+      = std::make_shared<UserGeomGroup>(this,numChildren);
+    gg->createDeviceData(getDevices());
+    return gg;
   }
 
 
@@ -221,36 +247,45 @@ namespace owl {
                           size_t varStructSize,
                           const std::vector<OWLVarDecl> &varDecls)
   {
+    GeomType::SP gt;
     switch(kind) {
     case OWL_GEOMETRY_TRIANGLES:
-      return std::make_shared<TrianglesGeomType>(this,varStructSize,varDecls);
+      gt = std::make_shared<TrianglesGeomType>(this,varStructSize,varDecls);
+      break;
     case OWL_GEOMETRY_USER:
-      return std::make_shared<UserGeomType>(this,varStructSize,varDecls);
+      gt = std::make_shared<UserGeomType>(this,varStructSize,varDecls);
+      break;
     default:
       OWL_NOTIMPLEMENTED;
     }
+    gt->createDeviceData(getDevices());
+    return gt;
   }
 
   Module::SP Context::createModule(const std::string &ptxCode)
   {
-    return std::make_shared<Module>(this,ptxCode);//,modules.allocID());
+    Module::SP module = std::make_shared<Module>(this,ptxCode);//,modules.allocID());;
+    assert(module);
+    module->createDeviceData(getDevices());
+    return module;
   }
 
   std::shared_ptr<Geom> UserGeomType::createGeom()
   {
     GeomType::SP self
       = std::dynamic_pointer_cast<GeomType>(shared_from_this());
-    assert(self);
-
-    return std::make_shared<UserGeom>(context,self);
+    Geom::SP geom = std::make_shared<UserGeom>(context,self);
+    geom->createDeviceData(context->getDevices());
+    return geom;
   }
 
   std::shared_ptr<Geom> TrianglesGeomType::createGeom()
   {
     GeomType::SP self
       = std::dynamic_pointer_cast<GeomType>(shared_from_this());
-    assert(self);
-    return std::make_shared<TrianglesGeom>(context,self);
+    Geom::SP geom = std::make_shared<TrianglesGeom>(context,self);
+    geom->createDeviceData(context->getDevices());
+    return geom;
   }
 
   void Context::buildHitGroupRecordsOn(ll::Device *device)
@@ -371,6 +406,13 @@ namespace owl {
   void Context::buildMissProgRecordsOn(ll::Device *device)
   {
     LOG("building SBT miss group records");
+    
+    size_t numMissProgRecords = missProgs.size();
+    if (numMissProgRecords == 0) {
+      std::cout << "warning: no miss progs!" << std::endl;
+      return;
+    }
+    
     int oldActive = device->pushActive();
 
     size_t maxMissProgDataSize = 0;
@@ -382,7 +424,9 @@ namespace owl {
       maxMissProgDataSize = std::max(maxMissProgDataSize,missProg->type->varStructSize);
     }
     PING; PRINT(maxMissProgDataSize);
-    size_t numMissProgRecords = missProgs.size();
+    
+    PRINT(numRayTypes);
+    PRINT(numMissProgRecords);
     assert(numMissProgRecords == numRayTypes);
     
     size_t missProgRecordSize
@@ -494,14 +538,86 @@ namespace owl {
 
   void Context::buildPipeline()
   {
-    throw std::runtime_error("not implemented");
-    // lloCreatePipeline(llo);
-    // llo->createPipeline();
+    for (auto device : getDevices()) {
+      getDD(device).destroyPipeline();
+      getDD(device).buildPipeline();
+    }
+  }
+
+  void Context::DeviceData::destroyPipeline()
+  {
+    if (!device->context->pipeline) return;
+    
+    const int oldActive = device->pushActive();
+    
+    OPTIX_CHECK(optixPipelineDestroy(device->context->pipeline));
+    device->context->pipeline = 0;
+    
+    device->popActive(oldActive);
+  }
+  
+  void Context::DeviceData::buildPipeline()
+  {
+    const int oldActive = device->pushActive();
+    
+    auto &allPGs = allActivePrograms;
+    if (allPGs.empty())
+      throw std::runtime_error("trying to create a pipeline w/ 0 programs!?");
+      
+    char log[2048];
+    size_t sizeof_log = sizeof( log );
+
+    OPTIX_CHECK(optixPipelineCreate(device->context->optixContext,
+                                    &device->context->pipelineCompileOptions,
+                                    &device->context->pipelineLinkOptions,
+                                    allPGs.data(),
+                                    (uint32_t)allPGs.size(),
+                                    log,&sizeof_log,
+                                    &device->context->pipeline
+                                    ));
+      
+    uint32_t maxAllowedByOptix = 0;
+    optixDeviceContextGetProperty
+      (device->context->optixContext,
+       OPTIX_DEVICE_PROPERTY_LIMIT_MAX_TRAVERSABLE_GRAPH_DEPTH,
+       &maxAllowedByOptix,
+       sizeof(maxAllowedByOptix));
+    if (uint32_t(parent->maxInstancingDepth+1) > maxAllowedByOptix)
+      throw std::runtime_error
+        ("error when building pipeline: "
+         "attempting to set max instancing depth to "
+         "value that exceeds OptiX's MAX_TRAVERSABLE_GRAPH_DEPTH limit");
+      
+    OPTIX_CHECK(optixPipelineSetStackSize
+                (device->context->pipeline,
+                 /* [in] The pipeline to configure the stack size for */
+                 2*1024,
+                 /* [in] The direct stack size requirement for
+                    direct callables invoked from IS or AH. */
+                 2*1024,
+                 /* [in] The direct stack size requirement for
+                    direct callables invoked from RG, MS, or CH.  */
+                 2*1024,
+                 /* [in] The continuation stack requirement. */
+                 int(parent->maxInstancingDepth+1)
+                 /* [in] The maximum depth of a traversable graph
+                    passed to trace. */
+                 ));
+
+    device->popActive(oldActive);
   }
 
   void Context::buildModules()
   {
-    throw std::runtime_error("not implemented");
+    for (auto device : getDevices()) {
+      device->context->configurePipelineOptions(this);
+      for (int moduleID=0;moduleID<modules.size();moduleID++) {
+        Module *module = modules.getPtr(moduleID);
+        if (!module) continue;
+        
+        module->getDD(device).build(module,device);
+      }
+    }
   }
   
   void Context::setRayTypeCount(size_t rayTypeCount)
@@ -583,33 +699,140 @@ namespace owl {
 
   void Context::DeviceData::buildMissPrograms()
   {
-    throw std::runtime_error("not implemented");
+    // ------------------------------------------------------------------
+    // miss programs
+    // ------------------------------------------------------------------
+    for (int progID=0;progID<parent->missProgTypes.size();progID++) {
+      OptixProgramGroupOptions pgOptions = {};
+      OptixProgramGroupDesc    pgDesc    = {};
+      
+      MissProgType *prog = parent->missProgTypes.getPtr(progID);
+      if (!prog) continue;
+      auto &dd = prog->getDD(device);
+      assert(dd.pg == 0);
+
+      Module::SP module = prog->module;
+      assert(module);
+      
+      pgDesc.kind = OPTIX_PROGRAM_GROUP_KIND_MISS;
+      OptixModule optixModule = module->getDD(device).module;
+      assert(optixModule);
+      
+      const std::string annotatedProgName
+        = std::string("__miss__")+prog->progName;
+      pgDesc.miss.module            = optixModule;
+      pgDesc.miss.entryFunctionName = annotatedProgName.c_str();
+      
+      char log[2048];
+      size_t sizeof_log = sizeof( log );
+      OPTIX_CHECK(optixProgramGroupCreate(device->context->optixContext,
+                                          &pgDesc,
+                                          1,
+                                          &pgOptions,
+                                          log,&sizeof_log,
+                                          &dd.pg
+                                          ));
+      assert(dd.pg);
+      allActivePrograms.push_back(dd.pg);
+    }
   }
   
   void Context::DeviceData::buildRayGenPrograms()
   {
-    throw std::runtime_error("not implemented");
+    // ------------------------------------------------------------------
+    // rayGen programs
+    // ------------------------------------------------------------------
+
+    for (int pgID=0;pgID<parent->rayGenTypes.size();pgID++) {
+      OptixProgramGroupOptions pgOptions = {};
+      OptixProgramGroupDesc    pgDesc    = {};
+      
+      RayGenType *prog = parent->rayGenTypes.getPtr(pgID);
+      if (!prog) continue;
+      
+      auto &dd = prog->getDD(device);
+      assert(dd.pg == 0);
+      
+      Module::SP module = prog->module;
+      assert(module);
+      
+      OptixModule optixModule = module->getDD(device).module;
+      assert(optixModule);
+      
+      pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
+      const std::string annotatedProgName
+        = std::string("__raygen__")+prog->progName;
+      pgDesc.raygen.module            = optixModule;
+      pgDesc.raygen.entryFunctionName = annotatedProgName.c_str();
+      
+      char log[2048];
+      size_t sizeof_log = sizeof( log );
+      OPTIX_CHECK(optixProgramGroupCreate(device->context->optixContext,
+                                          &pgDesc,
+                                          1,
+                                          &pgOptions,
+                                          log,&sizeof_log,
+                                          &dd.pg
+                                          ));
+      assert(dd.pg);
+      allActivePrograms.push_back(dd.pg);
+    }
   }
   
-  void Context::DeviceData::buildIsecPrograms()
+  void Context::DeviceData::buildHitGroupPrograms()
   {
-    throw std::runtime_error("not implemented");
+    const int numRayTypes = parent->numRayTypes;
+    
+    // ------------------------------------------------------------------
+    // geometry type programs -> what goes into hit groups
+    // ------------------------------------------------------------------
+    for (int geomTypeID=0;geomTypeID<parent->geomTypes.size();geomTypeID++) {
+      GeomType::SP geomType = parent->geomTypes.getSP(geomTypeID);
+      if (!geomType)
+        continue;
+
+      auto &dd = geomType->getDD(device);
+      dd.hgPGs.clear();
+      dd.hgPGs.resize(numRayTypes);
+      
+      for (int rt=0;rt<numRayTypes;rt++) {
+        
+        OptixProgramGroupOptions pgOptions = {};
+        OptixProgramGroupDesc    pgDesc    = {};
+        
+        pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
+        // ----------- default init closesthit -----------
+        pgDesc.hitgroup.moduleCH            = nullptr;
+        pgDesc.hitgroup.entryFunctionNameCH = nullptr;
+        // ----------- default init anyhit -----------
+        pgDesc.hitgroup.moduleAH            = nullptr;
+        pgDesc.hitgroup.entryFunctionNameAH = nullptr;
+        // ----------- default init intersect -----------
+        pgDesc.hitgroup.moduleIS            = nullptr;
+        pgDesc.hitgroup.entryFunctionNameIS = nullptr;
+        
+        // now let the type fill in what it has
+        dd.fillPGDesc(pgDesc,geomType.get(),device,rt);
+        
+        char log[2048];
+        size_t sizeof_log = sizeof( log );
+        OptixProgramGroup &pg = dd.hgPGs[rt];
+        OPTIX_CHECK(optixProgramGroupCreate(device->context->optixContext,
+                                            &pgDesc,
+                                            1,
+                                            &pgOptions,
+                                            log,&sizeof_log,
+                                            &pg
+                                            ));
+        allActivePrograms.push_back(pg);
+      }
+    }
   }
   
-  void Context::DeviceData::buildBoundsPrograms()
-  {
-    throw std::runtime_error("not implemented");
-  }
-  
-  void Context::DeviceData::buildAnyHitPrograms()
-  {
-    throw std::runtime_error("not implemented");
-  }
-  
-  void Context::DeviceData::buildClosestHitPrograms()
-  {
-    throw std::runtime_error("not implemented");
-  }
+  // void Context::DeviceData::buildBoundsPrograms()
+  // {
+  //   throw std::runtime_error("not implemented");
+  // }
   
   void Context::DeviceData::buildPrograms()
   {
@@ -617,10 +840,7 @@ namespace owl {
     destroyPrograms();
     buildMissPrograms();
     buildRayGenPrograms();
-    buildBoundsPrograms();
-    buildIsecPrograms();
-    buildClosestHitPrograms();
-    buildAnyHitPrograms();
+    buildHitGroupPrograms();
     device->popActive(oldActive);
   }
 

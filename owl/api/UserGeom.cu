@@ -124,7 +124,7 @@ namespace owl {
   {
     assert(rayType < intersectProg.size());
 
-    intersectProg[rayType].progName = progName;
+    intersectProg[rayType].progName = "__intersection__"+progName;
     intersectProg[rayType].module   = module;
     // context->llo->setGeomTypeIntersect(this->ID,
     //                      rayType,module->ID,
@@ -218,6 +218,24 @@ namespace owl {
     cudaDeviceSynchronize();
     device->popActive(oldActive);
   }
+
+  void UserGeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
+                                            GeomType *_parent,
+                                            Device *device,
+                                            int rt)
+  {
+    GeomType::DeviceData::fillPGDesc(pgDesc,_parent,device,rt);
+    UserGeomType *parent = (UserGeomType*)_parent;
+    
+    // ----------- intserect -----------
+    if (rt < parent->intersectProg.size()) {
+      const ProgramDesc &pd = parent->intersectProg[rt];
+      if (pd.module) {
+        pgDesc.hitgroup.moduleIS = pd.module->getDD(device).module;
+        pgDesc.hitgroup.entryFunctionNameIS = pd.progName.c_str();
+      }
+    }
+  }
   
   void UserGeomType::DeviceData::writeSBTHeader(uint8_t *const sbtRecord,
                                                 Device *device,
@@ -232,4 +250,5 @@ namespace owl {
     throw std::runtime_error("not implemented");
   }
 
+  
 } // ::owl

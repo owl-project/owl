@@ -56,12 +56,7 @@ namespace owl {
     virtual DeviceData::SP createOn(ll::Device *device)
     { return std::make_shared<DeviceData>(); }
 
-    void createDeviceData(const std::vector<ll::Device *> &devices)
-    {
-      assert(deviceData.empty());
-      for (auto device : devices)
-        deviceData.push_back(createOn(device));
-    }
+    void createDeviceData(const std::vector<ll::Device *> &devices);
 
     template<typename T>
     inline std::shared_ptr<T> as() 

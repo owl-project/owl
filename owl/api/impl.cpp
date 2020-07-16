@@ -372,7 +372,7 @@ checkGet(_context)->buildSBT(flags);
     APIContext::SP context = checkGet(_context);
     GeomGroup::SP  group = context->trianglesGeomGroupCreate(numGeometries);
     assert(group);
-    group->createDeviceData(context->getDevices());
+    // group->createDeviceData(context->getDevices());
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     PING;
@@ -398,7 +398,7 @@ checkGet(_context)->buildSBT(flags);
     APIContext::SP context = checkGet(_context);
     GeomGroup::SP  group
       = context->userGeomGroupCreate(numGeometries);
-    group->createDeviceData(context->getDevices());
+    // group->createDeviceData(context->getDevices());
     assert(group);
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
@@ -712,7 +712,7 @@ checkGet(_context)->buildSBT(flags);
     Geom::SP geometry
       = geometryType->createGeom();
     assert(geometry);
-    geometry->createDeviceData(context->getDevices());
+    // geometry->createDeviceData(context->getDevices());
 
 
     return (OWLGeom)context->createHandle(geometry);

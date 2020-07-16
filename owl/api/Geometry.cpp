@@ -46,7 +46,7 @@ namespace owl {
   {
     assert(rayType < closestHit.size());
       
-    closestHit[rayType].progName = progName;
+    closestHit[rayType].progName = "__closesthit__"+progName;
     closestHit[rayType].module   = module;
     // context->llo->setGeomTypeClosestHit(this->ID,
     //                       rayType,module->ID,
@@ -58,12 +58,12 @@ namespace owl {
   }
 
   void GeomType::setAnyHitProgram(int rayType,
-                                      Module::SP module,
-                                      const std::string &progName)
+                                  Module::SP module,
+                                  const std::string &progName)
   {
     assert(rayType < anyHit.size());
       
-    anyHit[rayType].progName = progName;
+    anyHit[rayType].progName = "__anyhit__"+progName;
     anyHit[rayType].module   = module;
     // context->llo->setGeomTypeAnyHit(this->ID,
     //                       rayType,module->ID,
@@ -107,5 +107,72 @@ namespace owl {
     // ------------------------------------------------------------------
     writeVariables(sbtRecordData,device->ID);
   }  
+
+
+
+
+  
+  void GeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
+                                        GeomType *parent,
+                                        Device *device,
+                                        int rt)
+  {
+    // ----------- closest hit -----------
+    if (rt < parent->closestHit.size()) {
+      const ProgramDesc &pd = parent->closestHit[rt];
+      if (pd.module) {
+        pgDesc.hitgroup.moduleCH = pd.module->getDD(device).module;
+        pgDesc.hitgroup.entryFunctionNameCH = pd.progName.c_str();
+      }
+    }
+    // ----------- any hit -----------
+    if (rt < parent->anyHit.size()) {
+      const ProgramDesc &pd = parent->anyHit[rt];
+      if (pd.module) {
+        std::string annotatedProgName
+          = std::string("__anyhit__")+pd.progName;
+        pgDesc.hitgroup.moduleAH = pd.module->getDD(device).module;
+        pgDesc.hitgroup.entryFunctionNameAH = annotatedProgName.c_str();
+      }
+    }
+  }
+  
+
+  // void GeomType::DeviceData::buildHitGroupPrograms(GeomType *gt,
+  //                                                  Device *device)
+  // {
+  //   const int numRayTypes = gt->context->numRayTypes;
+  //   hgPGs.resize(numRayTypes);
+        
+  //   for (int rt=0;rt<numRayTypes;rt++) {
+      
+  //     OptixProgramGroupOptions pgOptions = {};
+  //     OptixProgramGroupDesc    pgDesc    = {};
+      
+  //     pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
+  //     // ----------- default init closesthit -----------
+  //     pgDesc.hitgroup.moduleCH            = nullptr;
+  //     pgDesc.hitgroup.entryFunctionNameCH = nullptr;
+  //     // ----------- default init anyhit -----------
+  //     pgDesc.hitgroup.moduleAH            = nullptr;
+  //     pgDesc.hitgroup.entryFunctionNameAH = nullptr;
+  //     // ----------- default init intersect -----------
+  //     pgDesc.hitgroup.moduleIS            = nullptr;
+  //     pgDesc.hitgroup.entryFunctionNameIS = nullptr;
+
+  //     // now let the type fill in what it has
+  //     fillPGDesc(pgDesc,gt,device,rt);
+        
+  //     char log[2048];
+  //     size_t sizeof_log = sizeof( log );
+  //     OPTIX_CHECK(optixProgramGroupCreate(device->context->optixContext,
+  //                                         &pgDesc,
+  //                                         1,
+  //                                         &pgOptions,
+  //                                         log,&sizeof_log,
+  //                                         &pg
+  //                                         ));
+  //     allActivePrograms.push_back(pg);
+  //   }
 
 } //::owl

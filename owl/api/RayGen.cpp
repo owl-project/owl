@@ -66,7 +66,9 @@ namespace owl {
 
   void RayGen::launch(const vec2i &dims)
   {
-    throw std::runtime_error("only working with lauch params irght now");
+    launchAsync(dims,context->dummyLaunchParams);
+    context->dummyLaunchParams->sync();
+    // throw std::runtime_error("only working with lauch params irght now");
   }
 
 

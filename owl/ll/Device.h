@@ -356,15 +356,15 @@ namespace owl {
 
       // void enableMotionBlur() { context->motionBlurEnabled = true; context->configurePipelineOptions(); };
 
-      void createPipeline()
-      {
-        context->createPipeline(this);
-      }
+      // void createPipeline()
+      // {
+      //   context->createPipeline(this);
+      // }
       
-      void destroyPipeline()
-      {
-        context->destroyPipeline();
-      }
+      // void destroyPipeline()
+      // {
+      //   context->destroyPipeline();
+      // }
 
       // void buildModules()
       // {

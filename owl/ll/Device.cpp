@@ -186,6 +186,7 @@ namespace owl {
       maxConfiguredInstanceDepth */
     void Context::configurePipelineOptions(owl::Context *apiContext)
     {
+      PING;
       // ------------------------------------------------------------------
       // configure default module compile options
       // ------------------------------------------------------------------
@@ -226,6 +227,7 @@ namespace owl {
       pipelineCompileOptions.usesMotionBlur     = apiContext->motionBlurEnabled;
       pipelineCompileOptions.numPayloadValues   = 2;
       pipelineCompileOptions.numAttributeValues = 2;
+      PRINT(pipelineCompileOptions.numAttributeValues);
       pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
       pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
       
@@ -262,7 +264,7 @@ namespace owl {
     Device::~Device()
     {
       
-      destroyPipeline();
+      // destroyPipeline();
       
       // modules.destroyOptixHandles(context);
       const int owlDeviceID = context->owlDeviceID;
@@ -276,15 +278,15 @@ namespace owl {
       CLOG_OK("successfully destroyed owl device ...");
     }
 
-    void Context::destroyPipeline()
-    {
-      if (pipeline) {
-        // pushActive();
-        OPTIX_CHECK(optixPipelineDestroy(pipeline));
-        pipeline = nullptr;
-        // popActive();
-      }
-    }
+    // void Context::destroyPipeline()
+    // {
+    //   if (pipeline) {
+    //     // pushActive();
+    //     OPTIX_CHECK(optixPipelineDestroy(pipeline));
+    //     pipeline = nullptr;
+    //     // popActive();
+    //   }
+    // }
 
 
 #if 0

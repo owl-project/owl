@@ -44,11 +44,14 @@ namespace owl {
       void buildPrograms();
       void buildMissPrograms();
       void buildRayGenPrograms();
-      void buildIsecPrograms();
-      void buildBoundsPrograms();
-      void buildAnyHitPrograms();
-      void buildClosestHitPrograms();
+      void buildHitGroupPrograms();
+      // void buildIsecPrograms();
+      // // void buildBoundsPrograms();
+      // void buildAnyHitPrograms();
+      // void buildClosestHitPrograms();
       void destroyPrograms();
+      void destroyPipeline();
+      void buildPipeline();
       
       std::vector<OptixProgramGroup> allActivePrograms;
       ll::Device *const device;
@@ -138,12 +141,12 @@ namespace owl {
     void destroyPrograms();
     void buildModules();
 
-    void buildMissPrograms(Device *device);
-    void buildRayGenPrograms(Device *device);
-    void buildIsecPrograms(Device *device);
-    void buildBoundsPrograms(Device *device);
-    void buildAnyHitPrograms(Device *device);
-    void buildClosestHitPrograms(Device *device);
+    // void buildMissPrograms(Device *device);
+    // void buildRayGenPrograms(Device *device);
+    // void buildIsecPrograms(Device *device);
+    // // void buildBoundsPrograms(Device *device);
+    // void buildAnyHitPrograms(Device *device);
+    // void buildClosestHitPrograms(Device *device);
 
     
     GeomGroup::SP
@@ -224,6 +227,8 @@ namespace owl {
     int numRayTypes { 1 };
     /*! by default motion blur is off, as it costs performacne */
     bool motionBlurEnabled = false;
+
+    LaunchParams::SP dummyLaunchParams;
     
     owl::ll::DeviceGroup *llo;
   };

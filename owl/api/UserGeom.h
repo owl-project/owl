@@ -32,9 +32,11 @@ namespace owl {
                           Device *device,
                           int rayTypeID) override;
       
-      /*! for hit progs these may be multiple entires; for miss and
-          raygens this will be exactly one */
-      std::vector<OptixProgramGroup> isecPGs;
+      void fillPGDesc(OptixProgramGroupDesc &pgDesc,
+                      GeomType *gt,
+                      Device *device,
+                      int rayType) override;
+      
       CUfunction boundsFuncKernel;
     };
 
