@@ -523,7 +523,7 @@ owlTexture2DCreate(OWLContext context,
 
 /*! destroy the given texture; after this call any accesses to the given texture are invalid */
 OWL_API void
-owlTextureDestroy(OWLTexture texture);
+owlTexture2DDestroy(OWLTexture texture);
 
 /*! creates a device buffer where every device has its own local copy
   of the given buffer */

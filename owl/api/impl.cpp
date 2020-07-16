@@ -562,7 +562,25 @@ checkGet(_context)->buildSBT(flags);
     return (OWLTexture)context->createHandle(texture);
   }
 
-  
+  /*! destroy the given texture; this will both release the app's
+    refcount on the given texture handle, *and* the texture itself; i.e.,
+    even if some objects still hold variables that refer to the old
+    handle the texture itself will be freed */
+  OWL_API void 
+  owlTexture2DDestroy(OWLTexture _texture)
+  {
+    LOG_API_CALL();
+    assert(_texture);
+    APIHandle *handle = (APIHandle *)_texture;
+    assert(handle);
+    
+    Texture::SP texture = handle->get<Texture>();
+    assert(texture);
+    texture->destroy();
+
+    handle->clear();
+  }
+
   /*! creates a buffer that uses CUDA host pinned memory; that memory is
     pinned on the host and accessive to all devices in the deviec
     group */

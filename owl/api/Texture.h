@@ -37,7 +37,7 @@ namespace owl {
     
     std::string toString() const override { return "Texture"; }
 
-    /*! destroy whatever resouces this texture's ll-layer handle this
+    /*! destroy whatever resources this texture's ll-layer handle this
         may refer to; this will not destruct the current object
         itself, but should already release all its references */
     void destroy();

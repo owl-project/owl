@@ -92,9 +92,28 @@ namespace owl {
 
   Texture::~Texture()
   {
-    PING;
-    std::cout << "NOT IMPLEMENTED" << std::endl;
-    exit(0);
+    destroy();
+  }
+
+  /*! destroy whatever resources this buffer's ll-layer handle this
+    may refer to; this will not destruct the current object
+    itself, but should already release all its references */
+  void Texture::destroy()
+  {
+    if (ID < 0)
+      /* already destroyed */
+      return;
+
+    for (auto device : context->getDevices()) {
+      SetActiveGPU forLifeTime(device);
+      uint32_t id = device->getCudaDeviceID();
+      cudaDestroyTextureObject(textureObjects[id]);
+      cudaFreeArray(textureArrays[id]);
+    }
+
+    deviceData.clear();
+    
+    registry.forget(this); // sets ID to -1
   }
   
 } // ::owl
