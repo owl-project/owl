@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "DeviceContext.h"
+#include "owl/ll/DeviceMemory.h"
 #include "ObjectRegistry.h"
 #include "Buffer.h"
 #include "Texture.h"
@@ -24,7 +26,7 @@
 #include "LaunchParams.h"
 #include "MissProg.h"
 // ll
-#include "../ll/DeviceGroup.h"
+// #include "../ll/DeviceGroup.h"
 
 namespace owl {
 
@@ -33,40 +35,19 @@ namespace owl {
   struct Context : public Object {
     typedef std::shared_ptr<Context> SP;
 
-    /*! for miss progs there's exactly one programgroup pre object */
-    struct DeviceData : public Object::DeviceData {
-      typedef std::shared_ptr<DeviceData> SP;
-      
-      DeviceData(Context *parent,
-                 ll::Device *device)
-        : parent(parent), device(device) {}
-      
-      void buildPrograms();
-      void buildMissPrograms();
-      void buildRayGenPrograms();
-      void buildHitGroupPrograms();
-      // void buildIsecPrograms();
-      // // void buildBoundsPrograms();
-      // void buildAnyHitPrograms();
-      // void buildClosestHitPrograms();
-      void destroyPrograms();
-      void destroyPipeline();
-      void buildPipeline();
-      
-      std::vector<OptixProgramGroup> allActivePrograms;
-      ll::Device *const device;
-      Context    *const parent;
-    };
+    // /*! for miss progs there's exactly one programgroup pre object */
+    // struct DeviceData : public DeviceContext {
+    // };
 
     DeviceData &getDD(int deviceID) const
     {
       assert(deviceID < deviceData.size());
       return *deviceData[deviceID]->as<DeviceData>();
     }
-    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
+    // DeviceData &getDD(const deviceID) const { return getDD(device->ID); }
     /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(this,device); }
+    // RegisteredObject::DeviceData::SP createOn(int deviceID) override
+    // { return std::make_shared<DeviceData>(this,deviceID); }
 
     /*! returns whether logging is enabled */
     inline static bool logging()
@@ -100,24 +81,24 @@ namespace owl {
     ObjectRegistryT<LaunchParamsType> launchParamTypes;
     ObjectRegistryT<LaunchParams>     launchParams;
 
-    ll::RangeAllocator sbtRangeAllocator;
+    RangeAllocator sbtRangeAllocator;
 
     std::vector<MissProg::SP> missProgPerRayType;
 
     /*! access list of all devices */
-    const std::vector<ll::Device *> &getDevices() const { return llo->devices; }
+    // const std::vector<ll::Device *> &getDevices() const { return llo->devices; }
 
     /*! return device with given linear (owl-)ID; throws an error if
         that is a invalid ID */
-    ll::Device *getDevice(uint32_t deviceID) const
-    { assert(deviceID < llo->devices.size()); return llo->devices[deviceID]; }
+    // ll::Device *getDevice(int deviceID) const
+    // { assert(deviceID < llo->devices.size()); return llo->devices[deviceID]; }
 
     /*! part of the SBT creation - builds the hit group array */
-    void buildHitGroupRecordsOn(ll::Device *device);
+    void buildHitGroupRecordsOn(int deviceID);
     /*! part of the SBT creation - builds the raygen array */
-    void buildRayGenRecordsOn(ll::Device *device);
+    void buildRayGenRecordsOn(int deviceID);
     /*! part of the SBT creation - builds the miss group array */
-    void buildMissProgRecordsOn(ll::Device *device);
+    void buildMissProgRecordsOn(int deviceID);
     
     void setRayTypeCount(size_t rayTypeCount);
     void enableMotionBlur();
@@ -241,9 +222,13 @@ namespace owl {
 
     LaunchParams::SP dummyLaunchParams;
 
-    owl::ll::DeviceGroup *llo;
+    size_t deviceCount() const { return getDevices().size(); }
+    const std::vector<DeviceContext::SP> &getDevices() const { return devices; }
+    DeviceContext::SP getDevice(int ID) const
+    { assert(ID >= 0 && ID < devices.size()); return devices[ID]; }
   private:
     void enablePeerAccess();
+    std::vector<DeviceContext::SP> devices;
   };
 
 } // ::owl

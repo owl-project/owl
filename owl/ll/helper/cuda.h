@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -48,15 +48,15 @@
     }                                                                   \
   }
 
-#define CUDA_SYNC_CHECK()                                               \
-  {                                                                     \
-    cudaDeviceSynchronize();                                            \
-    cudaError_t rc = cudaGetLastError();                                \
-    if (rc != cudaSuccess) {                                            \
-      fprintf(stderr, "error (%s: line %d): %s\n",                      \
-              __FILE__, __LINE__, cudaGetErrorString(rc));              \
-      throw std::runtime_error("fatal cuda error");                     \
-    }                                                                   \
+#define CUDA_SYNC_CHECK()                                       \
+  {                                                             \
+    cudaDeviceSynchronize();                                    \
+    cudaError_t rc = cudaGetLastError();                        \
+    if (rc != cudaSuccess) {                                    \
+      fprintf(stderr, "error (%s: line %d): %s\n",              \
+              __FILE__, __LINE__, cudaGetErrorString(rc));      \
+      throw std::runtime_error("fatal cuda error");             \
+    }                                                           \
   }
 
 

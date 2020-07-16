@@ -22,72 +22,31 @@
 
 namespace owl {
 
-  using ll::Device;
-  
-  /*! class that maintains the cuda host pinned memoery handle for a
-    group of HostPinnedBuffer's (host pinned memory is shared
-    across all devices) */
-  // struct HostPinnedMemory
-  // {
-  //   typedef std::shared_ptr<HostPinnedMemory> SP;
-  //   HostPinnedMemory(Devisize_t amount);
-  //   ~HostPinnedMemory();
-
-  //   void free();
-  //   void alloc(size_t newSizeInBytes);
-  //   void *get() const { return pointer; }
-      
-  //   void *pointer = nullptr;
-  // };
-
-  // /*! class that maintains the cuda managed memoery address for a
-  //   group of ManagedMemoryBuffer's (managed memory is allocated
-  //   only once on the group level, and then shared across all
-  //   devices) */
-  // struct ManagedMemory
-  // {
-  //   typedef std::shared_ptr<ManagedMemory> SP;
-  //   ManagedMemory(size_t amount
-  //                 // ,                    
-  //                 // /*! data with which to populate this buffer; may
-  //                 //     be null, but has to be of size 'amount' if
-  //                 //     not */
-  //                 // const void *initData
-  //                 );
-  //   ~ManagedMemory();
-
-  //   void free();
-  //   void alloc(size_t newSizeInBytes);
-  //   void *get() const { return pointer; }
-      
-  //   void *pointer = nullptr;
-  //   DeviceGroup *devGroup;
-  // };
-
   struct Buffer : public RegisteredObject
   {
     typedef std::shared_ptr<Buffer> SP;
-
+    
     /*! any device-specific data, such as optix handles, cuda device
-        pointers, etc */
+      pointers, etc */
     struct DeviceData : public RegisteredObject::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
+      DeviceData(const DeviceContext::SP &device)
+        : RegisteredObject::DeviceData(device)
+      {};
+      
       void *d_pointer { 0 };
     };
-
+    
     Buffer(Context *const context,
-           OWLDataType type
-           // ,
-           // size_t elementCount
-           );
+           OWLDataType type);
     
     /*! destructor - free device data, de-regsiter, and destruct */
     virtual ~Buffer();
     
     std::string toString() const override { return "Buffer"; }
 
-    const void *getPointer(const ll::Device *device) const
+    const void *getPointer(const DeviceContext::SP &device) const
     { return getPointer(device->ID); }
 
     Buffer::DeviceData &getDD(int deviceID) const
@@ -105,7 +64,7 @@ namespace owl {
     virtual void upload(const void *hostPtr) = 0;
     virtual void upload(const int deviceID, const void *hostPtr) = 0;
     /*! creates the device-specific data for this group */
-    virtual RegisteredObject::DeviceData::SP createOn(ll::Device *device);
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
 
     /*! destroy whatever resouces this buffer's ll-layer handle this
         may refer to; this will not destruct the current object
@@ -126,7 +85,9 @@ namespace owl {
     struct DeviceData : public Buffer::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
-      DeviceData(DeviceBuffer*parent, Device *device) : parent(parent), device(device) {}
+      DeviceData(DeviceBuffer *parent, const DeviceContext::SP &device)
+        : Buffer::DeviceData(device), parent(parent), device(device)
+      {}
       virtual ~DeviceData();
 
       /*! executes the resize on the given device, including freeing
@@ -143,11 +104,11 @@ namespace owl {
           be done to ensure no race conditiosn will occur */
       virtual void uploadAsync(const void *hostDataPtr) = 0;
       
-      Device *const device;
+      DeviceContext::SP const device;
       DeviceBuffer *const parent;
     };
     struct DeviceDataForTextures : public DeviceData {
-      DeviceDataForTextures(DeviceBuffer *parent, Device *device)
+      DeviceDataForTextures(DeviceBuffer *parent, const DeviceContext::SP &device)
         : DeviceData(parent,device)
       {}
       void executeResize() override;
@@ -160,7 +121,7 @@ namespace owl {
       std::vector<Texture::SP> hostHandles;
     };
     struct DeviceDataForBuffers : public DeviceData {
-      DeviceDataForBuffers(DeviceBuffer *parent, Device *device)
+      DeviceDataForBuffers(DeviceBuffer *parent, const DeviceContext::SP &device)
         : DeviceData(parent,device)
       {}
       void executeResize() override;
@@ -173,7 +134,7 @@ namespace owl {
       std::vector<Buffer::SP> hostHandles;
     };
     struct DeviceDataForCopyableData : public DeviceData {
-      DeviceDataForCopyableData(DeviceBuffer *parent, Device *device)
+      DeviceDataForCopyableData(DeviceBuffer *parent, const DeviceContext::SP &device)
         : DeviceData(parent,device)
       {}
       void executeResize() override;
@@ -195,7 +156,7 @@ namespace owl {
     void upload(const void *hostPtr) override;
     void upload(const int deviceID, const void *hostPtr) override;
     /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override;
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
   };
   
   struct HostPinnedBuffer : public Buffer {
@@ -212,8 +173,6 @@ namespace owl {
     void resize(size_t newElementCount) override;
     void upload(const void *hostPtr) override;
     void upload(const int deviceID, const void *hostPtr) override;
-    /*! creates the device-specific data for this group */
-    // Buffer::DeviceData::SP createOn(ll::Device *device) override;
 
     void *cudaHostPinnedMem { 0 };
   };
@@ -235,7 +194,7 @@ namespace owl {
     void upload(const void *hostPtr) override;
     void upload(const int deviceID, const void *hostPtr) override;
     /*! creates the device-specific data for this group */
-    // Buffer::DeviceData::SP createOn(ll::Device *device) override;
+    // Buffer::DeviceData::SP createOn(ll::const DeviceContext::SP &device) override;
 
 
     /*! pretty-printer, for debugging */
@@ -265,7 +224,7 @@ namespace owl {
     void upload(const void *hostPtr) override;
     void upload(const int deviceID, const void *hostPtr) override;
     /*! creates the device-specific data for this group */
-    // Buffer::DeviceData::SP createOn(ll::Device *device) override;
+    // Buffer::DeviceData::SP createOn(ll::const DeviceContext::SP &device) override;
 
     /*! the cuda graphics resource to map to - note that this is
         probably valid on only one GPU */

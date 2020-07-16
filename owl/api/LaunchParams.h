@@ -37,8 +37,7 @@ namespace owl {
     typedef std::shared_ptr<LaunchParams> SP;
 
     struct DeviceData : public RegisteredObject::DeviceData {
-      DeviceData(size_t  dataSize,
-                 Device *device);
+      DeviceData(const DeviceContext::SP &device, size_t  dataSize);
       
       OptixShaderBindingTable sbt;
 
@@ -56,9 +55,6 @@ namespace owl {
       /*! a cuda stream we can use for the async upload and the
           following async launch */
       cudaStream_t         stream = nullptr;
-
-      /*! the optix device this will run on */
-      Device *const device;
     };
 
     
@@ -69,15 +65,14 @@ namespace owl {
 
 
     /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(type->varStructSize,device); }
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
+    { return std::make_shared<DeviceData>(device,type->varStructSize); }
 
     DeviceData &getDD(int deviceID) const
     {
       assert(deviceID < deviceData.size());
       return *deviceData[deviceID]->as<DeviceData>();
     }
-    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
       
 
     

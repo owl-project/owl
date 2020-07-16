@@ -83,17 +83,17 @@ namespace owl {
     int numThreads = 1024;
     int numBlocks = (primCount + numThreads - 1) / numThreads;
 
-    ll::Device *device = context->llo->devices[0];
-    int oldActive = device->pushActive();
+    DeviceContext::SP device = context->getDevices()[0];
+    SetActiveGPU forLifeTime(device);
+  // ll::Device *device = context->llo->devices[0];
+  //   int oldActive = device->pushActive();
 
-    ll::DeviceMemory d_bounds;
+    DeviceMemory d_bounds;
     d_bounds.alloc(sizeof(box3f));
     bounds[0] = bounds[1] = box3f();
     d_bounds.upload(bounds);
 
     DeviceData &dd = getDD(device);
-    // ll::UserGeom *ug =
-    //   (ll::UserGeom *)context->llo->devices[0]->checkGetGeom(this->ID);
     
     computeBoundsOfPrimBounds<<<numBlocks,numThreads>>>
       (((box3f*)d_bounds.get())+0,
@@ -105,7 +105,7 @@ namespace owl {
     CUDA_SYNC_CHECK();
     bounds[1] = bounds[0];
 
-    device->popActive(oldActive);
+    // device->popActive(oldActive);
   }
 
   UserGeomType::UserGeomType(Context *const context,
@@ -165,9 +165,11 @@ namespace owl {
 
 
   /*! run the bounding box program for all primitives within this geometry */
-  void UserGeom::executeBoundsProgOnPrimitives(ll::Device *device)
+  void UserGeom::executeBoundsProgOnPrimitives(int deviceID)
   {
-    int oldActive = device->pushActive();
+    DeviceContext::SP device = context->getDevice(deviceID);
+    SetActiveGPU activeGPU(device);
+    // int oldActive = device->pushActive();
       
     std::vector<uint8_t> userGeomData(geomType->varStructSize);
     DeviceMemory tempMem;
@@ -176,67 +178,65 @@ namespace owl {
     // for (int childID=0;childID<ugg->children.size();childID++) {
     //   UserGeom::SP child = geometry[childID]->as<UserGeom>();
     // assert(child);
-    UserGeom::DeviceData &ugDD = getDD(device);
-    ugDD.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
+    DeviceData &dd = getDD(device);
+    dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
       // = ug->internalBufferForBoundsProgram.get();
 
-      writeVariables(userGeomData.data(),device->ID);
-      // cb(userGeomData.data(),context->owlDeviceID,
-      //    ug->geomID,childID,cbData); 
+    writeVariables(userGeomData.data(),device->ID);
+    // cb(userGeomData.data(),context->owlDeviceID,
+    //    ug->geomID,childID,cbData); 
         
-      // size of each thread block during bounds function call
-      vec3i blockDims(32,32,1);
-      uint32_t threadsPerBlock = blockDims.x*blockDims.y*blockDims.z;
+    // size of each thread block during bounds function call
+    vec3i blockDims(32,32,1);
+    uint32_t threadsPerBlock = blockDims.x*blockDims.y*blockDims.z;
         
-      uint32_t numBlocks = owl::common::divRoundUp((uint32_t)primCount,threadsPerBlock);
-      uint32_t numBlocks_x
-        = 1+uint32_t(powf((float)numBlocks,1.f/3.f));
-      uint32_t numBlocks_y
-        = 1+uint32_t(sqrtf((float)(numBlocks/numBlocks_x)));
-      uint32_t numBlocks_z
-        = owl::common::divRoundUp(numBlocks,numBlocks_x*numBlocks_y);
+    uint32_t numBlocks = owl::common::divRoundUp((uint32_t)primCount,threadsPerBlock);
+    uint32_t numBlocks_x
+      = 1+uint32_t(powf((float)numBlocks,1.f/3.f));
+    uint32_t numBlocks_y
+      = 1+uint32_t(sqrtf((float)(numBlocks/numBlocks_x)));
+    uint32_t numBlocks_z
+      = owl::common::divRoundUp(numBlocks,numBlocks_x*numBlocks_y);
         
-      vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
+    vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
         
-      tempMem.upload(userGeomData);
+    tempMem.upload(userGeomData);
         
-      void  *d_geomData = tempMem.get();//nullptr;
-      vec3f *d_boundsArray = (vec3f*)ugDD.internalBufferForBoundsProgram.get();
-      void  *args[] = {
-        &d_geomData,
-        &d_boundsArray,
-        (void *)&primCount
-      };
+    void  *d_geomData = tempMem.get();//nullptr;
+    vec3f *d_boundsArray = (vec3f*)dd.internalBufferForBoundsProgram.get();
+    void  *args[] = {
+                     &d_geomData,
+                     &d_boundsArray,
+                     (void *)&primCount
+    };
         
-      // ll::GeomType *gt = device->checkGetGeomType(geomType->ID);//ug->geomTypeID);
-      CUstream stream = device->context->stream;
-      UserGeomType::DeviceData &typeDD = getTypeDD(device);
-      if (!typeDD.boundsFuncKernel)
-        throw std::runtime_error("bounds kernel set, but not yet compiled - did you forget to call BuildPrograms() before (User)GroupAccelBuild()!?");
+    CUstream stream = device->stream;
+    UserGeomType::DeviceData &typeDD = getTypeDD(device);
+    if (!typeDD.boundsFuncKernel)
+      throw std::runtime_error("bounds kernel set, but not yet compiled - did you forget to call BuildPrograms() before (User)GroupAccelBuild()!?");
         
-      CUresult rc
-        = cuLaunchKernel(typeDD.boundsFuncKernel,
-                         gridDims.x,gridDims.y,gridDims.z,
-                         blockDims.x,blockDims.y,blockDims.z,
-                         0, stream, args, 0);
-      if (rc) {
-        const char *errName = 0;
-        cuGetErrorName(rc,&errName);
-        PRINT(errName);
-        exit(0);
-      }
+    CUresult rc
+      = cuLaunchKernel(typeDD.boundsFuncKernel,
+                       gridDims.x,gridDims.y,gridDims.z,
+                       blockDims.x,blockDims.y,blockDims.z,
+                       0, stream, args, 0);
+    if (rc) {
+      const char *errName = 0;
+      cuGetErrorName(rc,&errName);
+      PRINT(errName);
+      exit(0);
+    }
     // }
     tempMem.free();
     cudaDeviceSynchronize();
-    device->popActive(oldActive);
+    // device->popActive(oldActive);
   }
 
   void UserGeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
                                             GeomType *_parent,
-                                            Device *device,
                                             int rt)
   {
-    GeomType::DeviceData::fillPGDesc(pgDesc,_parent,device,rt);
+    GeomType::DeviceData::fillPGDesc(pgDesc,_parent,rt);
     UserGeomType *parent = (UserGeomType*)_parent;
     
     // ----------- intserect -----------
@@ -259,7 +259,7 @@ namespace owl {
 
     for (auto device : context->getDevices()) {
       LOG("building bounds function ....");
-      const int oldActive = device->pushActive();
+      SetActiveGPU forLifeTime(device);
       auto &typeDD = getDD(device);
       auto &moduleDD = module->getDD(device);
       
@@ -272,7 +272,6 @@ namespace owl {
       CUresult rc = cuModuleGetFunction(&typeDD.boundsFuncKernel,
                                         moduleDD.boundsModule,
                                         annotatedProgName.c_str());
-      device->popActive(oldActive);
       
       switch(rc) {
       case CUDA_SUCCESS:

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -29,11 +29,16 @@ namespace owl {
     /*! any device-specific data, such as optix handles, cuda device
         pointers, etc */
     struct DeviceData : public RegisteredObject::DeviceData {
-
+      DeviceData(Module *parent, DeviceContext::SP device)
+        : RegisteredObject::DeviceData(device),
+          parent(parent)
+      {}
       virtual ~DeviceData() { assert(module == nullptr); }
       
-      void build(Module *parent, Device *device);
-      void destroy(Device *device);
+      void build();
+      void destroy();
+
+      Module *parent;
       
       /*! for all *optix* programs we can directly buidl the PTX code
         into a module using optixbuildmodule - this is the result of
@@ -58,14 +63,19 @@ namespace owl {
     //   std::cout << "#owl: created module ..." << std::endl;
     // }
     
-    DeviceData &getDD(int deviceID) const
+    // DeviceData &getDD(int deviceID) const
+    // {
+    //   assert(deviceID < deviceData.size());
+    //   return *deviceData[deviceID]->as<DeviceData>();
+    // }
+    DeviceData &getDD(const DeviceContext::SP &device) const
     {
-      assert(deviceID < deviceData.size());
-      return *deviceData[deviceID]->as<DeviceData>();
+      assert(device->ID < deviceData.size());
+      return *deviceData[device->ID]->as<DeviceData>();
     }
-    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
-    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(); }
+    
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
+    { return std::make_shared<DeviceData>(this,device); }
 
 
     virtual std::string toString() const { return "Module"; }

@@ -61,13 +61,13 @@ cuda_add_library(owl_static STATIC
 ${OWL_NG_SOURCES}
   )
 
-target_link_libraries(owl
-  llowl_static
-  )
+#target_link_libraries(owl
+#  llowl_static
+#  )
 
-target_link_libraries(owl_static
-  llowl_static
-  )
+#target_link_libraries(owl_static
+#  llowl_static
+#  )
 
 
 set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)

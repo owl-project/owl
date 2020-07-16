@@ -36,6 +36,10 @@ namespace owl {
     struct DeviceData : public RegisteredObject::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
+      DeviceData(const DeviceContext::SP &device)
+        : RegisteredObject::DeviceData(device)
+      {};
+      
       OptixProgramGroup pg;
     };
 
@@ -44,10 +48,10 @@ namespace owl {
       assert(deviceID < deviceData.size());
       return *deviceData[deviceID]->as<DeviceData>();
     }
-    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
+    // DeviceData &getDD(const int deviceID) const { return getDD(device->ID); }
     /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(); }
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
+    { return std::make_shared<DeviceData>(device); }
     
     Module::SP        module;
     const std::string progName;
@@ -57,8 +61,7 @@ namespace owl {
     typedef std::shared_ptr<RayGen> SP;
     
     struct DeviceData : public RegisteredObject::DeviceData {
-      DeviceData(size_t  dataSize,
-                 Device *device);
+      DeviceData(const DeviceContext::SP &device, size_t  dataSize);
       
       /*! device side copy of 'hostMemory' - this is the pointer that
           will go into the actual SBT */
@@ -76,19 +79,17 @@ namespace owl {
     
     void launchAsync(const vec2i &dims, const LaunchParams::SP &launchParams);
     
-    void writeSBTRecord(uint8_t *const sbtRecord,
-                        Device *device);
+    void writeSBTRecord(uint8_t *const sbtRecord, int devicID);
 
     /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(type->varStructSize,device); }
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
+    { return std::make_shared<DeviceData>(device,type->varStructSize); }
 
-    DeviceData &getDD(int deviceID) const
+    DeviceData &getDD(const DeviceContext::SP &device) const
     {
-      assert(deviceID < deviceData.size());
-      return *deviceData[deviceID]->as<DeviceData>();
+      assert(device->ID < deviceData.size());
+      return *deviceData[device->ID]->as<DeviceData>();
     }
-    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
   };
 
 } // ::owl

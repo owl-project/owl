@@ -48,21 +48,24 @@ namespace owl {
     /*! any device-specific data, such as optix handles, cuda device
         pointers, etc */
     struct DeviceData : public Geom::DeviceData {
+      DeviceData(const DeviceContext::SP &device)
+        : Geom::DeviceData(device)
+      {};
+      
       std::vector<CUdeviceptr> vertexPointers;
       CUdeviceptr indexPointer  = (CUdeviceptr)0;
     };
     
     /*! creates the device-specific data for this group */
-    Geom::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(); }
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
+    { return std::make_shared<DeviceData>(device); }
 
 
-    inline DeviceData &getDD(ll::Device *device)
+    DeviceData &getDD(const DeviceContext::SP &device) const
     {
-      assert(device->ID < deviceData.size()); 
-      return *deviceData[device->ID]->as<TrianglesGeom::DeviceData>();
+      assert(device->ID < deviceData.size());
+      return *deviceData[device->ID]->as<DeviceData>();
     }
-                        
                                 
     TrianglesGeom(Context *const context,
                   GeomType::SP geometryType);

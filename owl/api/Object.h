@@ -16,21 +16,15 @@
 
 #pragma once
 
-#include "owl/owl.h"
-#include "owl/ll/common.h"
-#include "owl/ll/DeviceGroup.h"
-#include "owl/ll/Device.h"
-#include "owl/ll/DeviceMemory.h"
+#include "DeviceContext.h"
 
 namespace owl {
 
-  using ll::Device;
-  using ll::DeviceMemory;
-  
   std::string typeToString(OWLDataType type);
   size_t      sizeOf(OWLDataType type);
 
   struct Context;
+  struct DeviceContext;
 
   /*! common "root" abstraction for every object this library creates */
   struct Object : public std::enable_shared_from_this<Object> {
@@ -41,10 +35,13 @@ namespace owl {
     struct DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
+      DeviceData(DeviceContext::SP device) : device(device) {};
       virtual ~DeviceData() {}
       
       template<typename T>
       inline T *as() { return dynamic_cast<T*>(this); }
+
+      DeviceContext::SP device;
     };
 
     Object();
@@ -53,10 +50,10 @@ namespace owl {
     virtual std::string toString() const { return "Object"; }
 
     /*! creates the device-specific data for this group */
-    virtual DeviceData::SP createOn(ll::Device *device)
-    { return std::make_shared<DeviceData>(); }
+    virtual DeviceData::SP createOn(const std::shared_ptr<DeviceContext> &device)
+    { return std::make_shared<DeviceData>(device); }
 
-    void createDeviceData(const std::vector<ll::Device *> &devices);
+    void createDeviceData(const std::vector<std::shared_ptr<DeviceContext>> &devices);
 
     template<typename T>
     inline std::shared_ptr<T> as() 

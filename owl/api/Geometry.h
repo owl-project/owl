@@ -26,8 +26,6 @@
 
 namespace owl {
 
-  using ll::DeviceMemory;
-  
   struct Geom;
 
   struct ProgramDesc {
@@ -43,12 +41,14 @@ namespace owl {
     struct DeviceData : public RegisteredObject::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
-      void buildHitGroupPrograms(GeomType *gt,
-                                 Device *device);
+      DeviceData(const DeviceContext::SP &device)
+        : RegisteredObject::DeviceData(device)
+      {};
+      
+      void buildHitGroupPrograms(GeomType *gt);
       
       virtual void fillPGDesc(OptixProgramGroupDesc &pgDesc,
                               GeomType *gt,
-                              Device *device,
                               int rayType);
       
       // void writeSBTHeader(uint8_t *const sbtRecord,
@@ -66,15 +66,14 @@ namespace owl {
     
     virtual std::string toString() const { return "GeomType"; }
 
-    DeviceData &getDD(int deviceID) const
+    DeviceData &getDD(const DeviceContext::SP &device) const
     {
-      assert(deviceID < deviceData.size());
-      return *deviceData[deviceID]->as<DeviceData>();
+      assert(device->ID < deviceData.size());
+      return *deviceData[device->ID]->as<DeviceData>();
     }
-    DeviceData &getDD(const ll::Device *device) const { return getDD(device->ID); }
     /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(ll::Device *device) override
-    { return std::make_shared<DeviceData>(); }
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
+    { return std::make_shared<DeviceData>(device); }
     
     
     virtual std::shared_ptr<Geom> createGeom() = 0;
@@ -99,7 +98,7 @@ namespace owl {
     virtual std::string toString() const { return "Geom"; }
 
     void writeSBTRecord(uint8_t *const sbtRecord,
-                        Device *device,
+                        int deviceID,
                         int rayTypeID);
     
     GeomType::SP geomType;

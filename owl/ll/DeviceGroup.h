@@ -19,32 +19,32 @@
 #include "owl/ll/helper/optix.h"
 #include <owl/owl.h>
 
-namespace owl {
-  namespace ll {
+// namespace owl {
+//   namespace ll {
 
-    // typedef int32_t id_t;
+//     // typedef int32_t id_t;
 
-    // struct DeviceGroup;
-    // typedef DeviceGroup *LLOContext;
+//     // struct DeviceGroup;
+//     // typedef DeviceGroup *LLOContext;
     
 
-    struct Device;
+//     struct Device;
     
-    struct DeviceGroup {
+//     struct DeviceGroup {
       
-      DeviceGroup(const std::vector<Device *> &devices);
-      ~DeviceGroup();
+//       DeviceGroup(const std::vector<Device *> &devices);
+//       ~DeviceGroup();
 
-      /* create an instance of this object that has properly
-         initialized devices for given cuda device IDs. */
-      static DeviceGroup *create(const int *deviceIDs  = nullptr,
-                                 size_t     numDevices = 0);
+//       /* create an instance of this object that has properly
+//          initialized devices for given cuda device IDs. */
+//       static DeviceGroup *create(const int *deviceIDs  = nullptr,
+//                                  size_t     numDevices = 0);
       
-      // /*! helper function that enables peer access across all devices */
-      // void enablePeerAccess();
+//       // /*! helper function that enables peer access across all devices */
+//       // void enablePeerAccess();
 
-      const std::vector<Device *> devices;
-    };
+//       const std::vector<Device *> devices;
+//     };
 
-  } // ::owl::ll
-} //::owl
+//   } // ::owl::ll
+// } //::owl

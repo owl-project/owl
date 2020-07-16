@@ -43,6 +43,14 @@
 
 namespace owl {
 
+  Context::DeviceData::DeviceData(Context *parent,
+                                  ll::Device *device)
+    : parent(parent),
+      device(device),
+      owlDeviceID(device->owlDeviceID),
+      cudaDeviceID(device->cudaDeviceID)
+  {}
+
   Context::~Context()
   {
   }

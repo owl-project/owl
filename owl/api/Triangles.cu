@@ -76,9 +76,10 @@ namespace owl {
     int numThreads = 1024;
     int numBlocks = (vertex.count + numThreads - 1) / numThreads;
 
-    int oldActive = context->llo->devices[0]->pushActive();
+    DeviceContext::SP device = context->getDevices()[0];
+    SetActiveGPU forLifeTime(device);
       
-    ll::DeviceMemory d_bounds;
+    DeviceMemory d_bounds;
     d_bounds.alloc(2*sizeof(box3f));
     bounds[0] = bounds[1] = box3f();
     d_bounds.upload(bounds);
@@ -135,7 +136,7 @@ namespace owl {
     //   device->trianglesGeomSetVertexBuffers(this->ID,
     //                                         vertexBufferIDs,count,stride,offset);
 
-    for (auto device : context->llo->devices) {
+    for (auto device : context->getDevices()) {
       DeviceData &dd = getDD(device);
       dd.vertexPointers.clear();
       for (auto va : vertexArrays)
@@ -154,7 +155,7 @@ namespace owl {
     index.offset = offset;
     PRINT(index.count);
     
-    for (auto device : context->llo->devices) {
+    for (auto device : context->getDevices()) {
       DeviceData &dd = getDD(device);
       dd.indexPointer = (CUdeviceptr)indices->getPointer(device->ID);
     }
