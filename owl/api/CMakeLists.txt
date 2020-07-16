@@ -16,7 +16,11 @@
 
 set(INTERFACE_POSITION_INDEPENDENT_CODE ON)
 
-set(OWL_NG_SOURCES
+set(CUDA_SEPARABLE_COMPILATION ON)
+set(CUDA_VERBOSE_BUILD ON)
+set(CUDA_NVCC_FLAGS --compiler-options -fPIC)
+
+set(OWL_SOURCES
 
   Buffer.cpp
 
@@ -59,10 +63,14 @@ set(OWL_NG_SOURCES
 )
 
 cuda_add_library(owl
-${OWL_NG_SOURCES}
+  ${OWL_SOURCES}
   )
-cuda_add_library(owl_static STATIC
-${OWL_NG_SOURCES}
+cuda_add_library(owl_static
+  ${OWL_SOURCES}
+  STATIC
+#  OPTIONS
+#  DEBUG -g  -fPIC
+#  RELEASE --use_fast_math 
   )
 
 target_link_libraries(owl
@@ -80,8 +88,4 @@ target_link_libraries(owl_static
 
 #set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-
-
-
-
+#target_compile_options(owl_static PRIVATE -fPIC)

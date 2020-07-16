@@ -55,6 +55,9 @@ if (NOT WIN32)
   set (CUDA_PROPAGATE_HOST_FLAGS ON)
 endif()
 
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 include(configure_cuda)
 include(configure_optix)
 include(configure_owl)

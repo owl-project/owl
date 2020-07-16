@@ -14,6 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
+
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
