@@ -318,7 +318,7 @@ namespace owl {
     //        && maxHitProgDataSize != (size_t)-1);
     size_t numHitGroupEntries = sbtRangeAllocator.maxAllocedID;
     PRINT(numHitGroupEntries);
-    size_t numHitGroupRecords = numHitGroupEntries*numRayTypes;
+    size_t numHitGroupRecords = numHitGroupEntries*numRayTypes + 1;
     size_t hitGroupRecordSize
       = OPTIX_SBT_RECORD_HEADER_SIZE
       + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
@@ -405,6 +405,55 @@ namespace owl {
 
   void Context::buildMissProgRecordsOn(ll::Device *device)
   {
+#if 1
+    LOG("building SBT miss group records");
+    int oldActive = device->pushActive();
+    
+    size_t numMissProgRecords = numRayTypes;
+    size_t maxMissProgDataSize = 0;
+    for (int i=0;i<missProgs.size();i++) {
+      MissProg *missProg = (MissProg *)missProgs.getPtr(i);
+      if (!missProg) continue;
+        
+      assert(missProg->type);
+      maxMissProgDataSize = std::max(maxMissProgDataSize,missProg->type->varStructSize);
+    }
+    PING; PRINT(maxMissProgDataSize);
+    
+    size_t missProgRecordSize
+      = OPTIX_SBT_RECORD_HEADER_SIZE
+      + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxMissProgDataSize);
+    PRINT(missProgRecordSize);
+    
+    assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
+    device->sbt.missProgRecordSize  = missProgRecordSize;
+    device->sbt.missProgRecordCount = numMissProgRecords;
+
+    size_t totalMissProgRecordsArraySize
+      = numMissProgRecords * missProgRecordSize;
+    std::vector<uint8_t> missProgRecords(totalMissProgRecordsArraySize);
+
+    // ------------------------------------------------------------------
+    // now, write all records (only on the host so far): we need to
+    // write one record per geometry, per ray type
+    // ------------------------------------------------------------------
+    for (int recordID=0;recordID<numMissProgRecords;recordID++) {
+      MissProg *miss
+        = (recordID < missProgs.size())
+        ? missProgs.getPtr(recordID)
+        : nullptr;
+      
+      if (!miss) continue;
+      
+      uint8_t *const sbtRecord
+        = missProgRecords.data() + recordID*missProgRecordSize;
+      miss->writeSBTRecord(sbtRecord,device);
+    }
+    device->sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
+    device->sbt.missProgRecordsBuffer.upload(missProgRecords);
+    device->popActive(oldActive);
+    LOG_OK("done building (and uploading) SBT miss group records");
+#else
     LOG("building SBT miss group records");
     
     size_t numMissProgRecords = missProgs.size();
@@ -458,6 +507,7 @@ namespace owl {
     device->sbt.missProgRecordsBuffer.upload(missProgRecords);
     device->popActive(oldActive);
     LOG_OK("done building (and uploading) SBT miss group records");
+#endif
   }
 
 
