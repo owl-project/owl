@@ -16,6 +16,8 @@
 
 # this library is mostly header-only, but let's list it anyway -
 # including all the header fiels - to make visual studio happy
+set(INTERFACE_POSITION_INDEPENDENT_CODE ON)
+
 add_library(owl-common STATIC
 
   owl-common.cpp
@@ -32,3 +34,5 @@ add_library(owl-common STATIC
   cmake/configure_cuda.cmake
   cmake/configure_build_type.cmake
   )
+
+set_target_properties(owl-common PROPERTIES POSITION_INDEPENDENT_CODE ON)

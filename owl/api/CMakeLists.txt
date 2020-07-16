@@ -14,6 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+set(INTERFACE_POSITION_INDEPENDENT_CODE ON)
+
 set(OWL_NG_SOURCES
 
   Buffer.cpp
