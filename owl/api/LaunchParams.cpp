@@ -15,7 +15,6 @@
 // ======================================================================== //
 
 #include "LaunchParams.h"
-#include "../ll/Device.h"
 #include "Context.h"
 
 namespace owl {

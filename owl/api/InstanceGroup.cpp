@@ -16,8 +16,6 @@
 
 #include "InstanceGroup.h"
 #include "Context.h"
-#include "ll/Device.h"
-#include <fstream>
 
 #define LOG(message)                                    \
   if (Context::logging())                               \

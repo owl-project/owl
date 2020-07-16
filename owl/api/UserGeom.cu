@@ -14,11 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "api/UserGeom.h"
-#include "api/Context.h"
-#include "ll/DeviceMemory.h"
-#include "ll/Device.h"
-#include "ll/DeviceGroup.h"
+#include "UserGeom.h"
+#include "Context.h"
 #include "Context.h"
 
 namespace owl {

@@ -17,7 +17,6 @@
 #pragma once
 
 #include "DeviceContext.h"
-#include "owl/ll/DeviceMemory.h"
 #include "ObjectRegistry.h"
 #include "Buffer.h"
 #include "Texture.h"
@@ -25,8 +24,6 @@
 #include "RayGen.h"
 #include "LaunchParams.h"
 #include "MissProg.h"
-// ll
-// #include "../ll/DeviceGroup.h"
 
 namespace owl {
 

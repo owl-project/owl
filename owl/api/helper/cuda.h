@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "owl/ll/common.h"
+#include "owl/api/common.h"
 
 #include <cuda_runtime.h>
 

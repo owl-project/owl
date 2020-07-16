@@ -17,9 +17,9 @@
 #pragma once
 
 #include "owl/owl.h"
-#include "owl/ll/common.h"
-#include "owl/ll/DeviceMemory.h"
-#include "owl/ll/helper/optix.h"
+#include "owl/api/common.h"
+#include "owl/api/DeviceMemory.h"
+#include "owl/api/helper/optix.h"
 // ll
 // #include "../ll/DeviceGroup.h"
 

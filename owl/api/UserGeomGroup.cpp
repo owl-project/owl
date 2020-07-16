@@ -14,10 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "api/UserGeomGroup.h"
-#include "api/Context.h"
-#include "ll/Device.h"
-#include <fstream>
+#include "UserGeomGroup.h"
+#include "Context.h"
 
 #define LOG(message)                                            \
   if (Context::logging())                                   \

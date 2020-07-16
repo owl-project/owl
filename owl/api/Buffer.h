@@ -17,7 +17,6 @@
 #pragma once
 
 #include "RegisteredObject.h"
-#include "ll/Device.h"
 #include "Texture.h"
 
 namespace owl {

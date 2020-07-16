@@ -17,13 +17,11 @@
 #include "Context.h"
 #include "Module.h"
 #include "Geometry.h"
-#include "api/Triangles.h"
-#include "api/UserGeom.h"
+#include "Triangles.h"
+#include "UserGeom.h"
 #include "Texture.h"
-#include "api/TrianglesGeomGroup.h"
-#include "api/UserGeomGroup.h"
-
-#include "owl/ll/Device.h"
+#include "TrianglesGeomGroup.h"
+#include "UserGeomGroup.h"
 
 #define LOG(message)                            \
   if (Context::logging())                   \

@@ -16,7 +16,6 @@
 
 #include "APIContext.h"
 #include "APIHandle.h"
-#include "owl/ll/DeviceGroup.h"
 
 #define LOG(message)                            \
   if (Context::logging())                       \

@@ -14,11 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "api/Triangles.h"
-#include "api/Context.h"
-#include "ll/DeviceMemory.h"
-#include "ll/Device.h"
-#include "ll/DeviceGroup.h"
+#include "Triangles.h"
+#include "Context.h"
 
 namespace owl {
 

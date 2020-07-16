@@ -16,8 +16,6 @@
 
 #include "Texture.h"
 #include "Context.h"
-#include "owl/ll/Device.h"
-#include "owl/ll/helper/cuda.h"
 
 namespace owl {
 

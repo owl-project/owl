@@ -17,11 +17,6 @@
 #include "TrianglesGeomGroup.h"
 #include "Triangles.h"
 #include "Context.h"
-#include "ll/Device.h"
-#include "ll/DeviceGroup.h"
-
-
-#include <fstream>
 
 #define LOG(message)                                            \
   if (Context::logging())                                   \

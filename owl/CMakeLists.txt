@@ -19,14 +19,14 @@ set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 
 add_definitions(${OWL_CXX_FLAGS})
 
 # owl-common library (math stuff, utils, etc; mostly header-only)
 add_subdirectory(common)
-
-# low-level interface
-add_subdirectory(ll)
 
 # node graph layer API
 add_subdirectory(api)

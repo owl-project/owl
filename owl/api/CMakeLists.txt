@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -19,6 +19,11 @@ set(INTERFACE_POSITION_INDEPENDENT_CODE ON)
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_VERBOSE_BUILD ON)
 set(CUDA_NVCC_FLAGS --compiler-options -fPIC)
+
+include_directories(${PROJECT_SOURCE_DIR}/)
+include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+
+cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
 set(OWL_SOURCES
 

@@ -21,9 +21,6 @@
 #include "Module.h"
 #include "Buffer.h"
 
-#include "ll/Device.h"
-#include "ll/DeviceMemory.h"
-
 namespace owl {
 
   struct Geom;
