@@ -85,7 +85,7 @@ namespace owl {
     DeviceData &dd = getDD(device);
     auto optixContext = device->optixContext;
     
-    assert("check does not yet exist" && dd.traversable == 0);
+    // assert("check does not yet exist" && dd.traversable == 0);
     if (FULL_REBUILD)
       assert("check does not yet exist on first build " && dd.bvhMemory.empty());
     else
