@@ -82,11 +82,17 @@ namespace owl {
     virtual void set(const vec4d  &value)    { mismatchingType(); }
     
     virtual std::string toString() const { return "Variable"; }
-    
-    void mismatchingType() { throw std::runtime_error("trying to set variable to value of wrong type"); }
 
-    virtual void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const;
-    
+    /*! throw an exception that the type the user tried to set doesn't
+        math the type he/she declared*/
+    void mismatchingType();
+
+    /*! writes the device specific representation of the given type */
+    virtual void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const = 0;
+
+    /*! creates an instance of this variable type to be attached to a
+        given object - this instance will can then store the values
+        that the user passes */
     static Variable::SP createInstanceOf(const OWLVarDecl *decl);
     
     /*! the variable we're setting in the given object */
@@ -94,4 +100,3 @@ namespace owl {
   };
   
 } // ::owl
-

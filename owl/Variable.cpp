@@ -22,13 +22,16 @@
 
 namespace owl {
   
-  void Variable::writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const
+  /*! throw an exception that the type the user tried to set doesn't
+    math the type he/she declared*/
+  void Variable::mismatchingType()
   {
-    throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
-                             +": not yet implemented for type "
-                             +typeToString(varDecl->type));
+    throw std::runtime_error("trying to set variable to value of wrong type");
   }
 
+  /*! Variable type for ray "user yypes". User types have a
+      user-specified size in bytes, and get set by passing a pointer
+      to 'raw' data that then gets copied in binary form */
   struct UserTypeVariable : public Variable
   {
     UserTypeVariable(const OWLVarDecl *const varDecl)
@@ -41,14 +44,18 @@ namespace owl {
       memcpy(data.data(),ptr,data.size());
     }
 
-    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
+    /*! writes the device specific representation of the given type */
+    void writeToSBT(uint8_t *sbtEntry,
+                    const DeviceContext::SP &device) const override
     {
       memcpy(sbtEntry,data.data(),data.size());
     }
     
     std::vector<uint8_t> data;
   };
-    
+
+  /*! Variable type for basic and compound-basic data types such as
+      float, vec3f, etc */
   template<typename T>
   struct VariableT : public Variable {
     typedef std::shared_ptr<VariableT<T>> SP;
@@ -59,7 +66,9 @@ namespace owl {
     
     void set(const T &value) override { this->value = value; }
 
-    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
+    /*! writes the device specific representation of the given type */
+    void writeToSBT(uint8_t *sbtEntry,
+                    const DeviceContext::SP &device) const override
     {
       *(T*)sbtEntry = value;
     }
@@ -67,6 +76,8 @@ namespace owl {
     T value;
   };
 
+  /*! Variable type that accepts owl buffer types, and on the
+      device-side writes just the raw device pointer into the SBT */
   struct BufferPointerVariable : public Variable {
     typedef std::shared_ptr<BufferPointerVariable> SP;
 
@@ -75,7 +86,9 @@ namespace owl {
     {}
     void set(const Buffer::SP &value) override { this->buffer = value; }
 
-    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
+    /*! writes the device specific representation of the given type */
+    void writeToSBT(uint8_t *sbtEntry,
+                    const DeviceContext::SP &device) const override
     {
       const void *value
         = buffer
@@ -86,7 +99,10 @@ namespace owl {
     
     Buffer::SP buffer;
   };
-  
+
+  /*! Fully-implicit Variable type that doesn't actually take _any_
+      user data, but instead always writes the currently active
+      device's device ID into the SBT */
   struct DeviceIndexVariable : public Variable {
     typedef std::shared_ptr<BufferPointerVariable> SP;
 
@@ -98,7 +114,9 @@ namespace owl {
       throw std::runtime_error("cannot _set_ a device index variable; it is purely implicit");
     }
 
-    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
+    /*! writes the device specific representation of the given type */
+    void writeToSBT(uint8_t *sbtEntry,
+                    const DeviceContext::SP &device) const override
     {
       *(int*)sbtEntry = device->ID;
     }
@@ -106,6 +124,8 @@ namespace owl {
     Buffer::SP buffer;
   };
   
+  /*! Buffer variable that takes owl buffer types, and on the device
+      writes full device::Buffer types with size, pointer, etc */
   struct BufferVariable : public Variable {
     typedef std::shared_ptr<BufferVariable> SP;
 
@@ -114,7 +134,9 @@ namespace owl {
     {}
     void set(const Buffer::SP &value) override { this->buffer = value; }
 
-    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
+    /*! writes the device specific representation of the given type */
+    void writeToSBT(uint8_t *sbtEntry,
+                    const DeviceContext::SP &device) const override
     {
       device::Buffer *devRep = (device::Buffer *)sbtEntry;
       if (!buffer) {
@@ -130,7 +152,10 @@ namespace owl {
     
     Buffer::SP buffer;
   };
-  
+
+  /*! Variable type that accepts owl Group types on the host, and
+      writes the groups' respective OptixTraversableHandle into the
+      SBT */
   struct GroupVariable : public Variable {
     typedef std::shared_ptr<GroupVariable> SP;
 
@@ -144,7 +169,9 @@ namespace owl {
       this->group = value;
     }
 
-    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
+    /*! writes the device specific representation of the given type */
+    void writeToSBT(uint8_t *sbtEntry,
+                    const DeviceContext::SP &device) const override
     {
       const OptixTraversableHandle value
         = group
@@ -157,9 +184,9 @@ namespace owl {
     Group::SP group;
   };
   
-
-
-
+  /*! Variable type that manages textures; accepting owl::Texture
+      objects on the host, and writing their corresponding cuda
+      texture obejct handles into the SBT */
   struct TextureVariable : public Variable {
     typedef std::shared_ptr<TextureVariable> SP;
 
@@ -171,7 +198,9 @@ namespace owl {
       this->texture = value;
     }
 
-    void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const override
+    /*! writes the device specific representation of the given type */
+    void writeToSBT(uint8_t *sbtEntry,
+                    const DeviceContext::SP &device) const override
     {
       cudaTextureObject_t to = {};
       if (texture) {
@@ -184,9 +213,8 @@ namespace owl {
     Texture::SP texture;
   };
   
-
-
-
+  /*! creates a variable type that matches the given variable
+      declaration */
   Variable::SP Variable::createInstanceOf(const OWLVarDecl *decl)
   {
     assert(decl);
