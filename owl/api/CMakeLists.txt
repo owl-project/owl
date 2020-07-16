@@ -76,7 +76,7 @@ target_link_libraries(owl_static
   )
 
 
-set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+#set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 
