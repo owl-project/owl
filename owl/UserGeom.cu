@@ -21,14 +21,14 @@ namespace owl {
 
 #define LOG(message)                                    \
   if (Context::logging())                               \
-    std::cout << "#owl.ll(" << device->ID << "): "      \
+    std::cout << "#owl(" << device->ID << "): "         \
               << message                                \
               << std::endl
 
 #define LOG_OK(message)                                         \
   if (Context::logging())                                       \
     std::cout << OWL_TERMINAL_GREEN                             \
-              << "#owl.ll(" << device->ID << "): "              \
+              << "#owl(" << device->ID << "): "                 \
               << message << OWL_TERMINAL_DEFAULT << std::endl
 
   __device__ static float atomicMax(float* address, float val)

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -19,15 +19,15 @@
 #include "Group.h"
 
 namespace owl {
-  namespace ll {
-    struct Device;
-  };
 
+  /*! a group / BLAS over triangle meshes */
   struct TrianglesGeomGroup : public GeomGroup {
 
-    TrianglesGeomGroup(Context *const context,
-                       size_t numChildren);
-    virtual std::string toString() const { return "TrianglesGeomGroup"; }
+    /*! constructor - passthroughto parent class */
+    TrianglesGeomGroup(Context *const context, size_t numChildren);
+    
+    /*! pretty-printer, for printf-debugging */
+    std::string toString() const override;
 
     void buildAccel() override;
     void refitAccel() override;

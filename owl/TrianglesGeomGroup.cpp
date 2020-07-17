@@ -19,40 +19,32 @@
 #include "Context.h"
 
 #define LOG(message)                                            \
-  if (Context::logging())                                   \
-    std::cout << "#owl.ll(" << device->ID << "): "    \
+  if (Context::logging())                                       \
+    std::cout << "#owl(" << device->ID << "): "                 \
               << message                                        \
               << std::endl
 
 #define LOG_OK(message)                                         \
   if (Context::logging())                                       \
     std::cout << OWL_TERMINAL_GREEN                             \
-              << "#owl.ll(" << device->ID << "): "    \
-              << message << OWL_TERMINAL_DEFAULT << std::endl
-
-#define CLOG(message)                                   \
-  if (Context::logging())                               \
-    std::cout << "#owl.ll(" << device->ID << "): "     \
-              << message                                \
-              << std::endl
-
-#define CLOG_OK(message)                                        \
-  if (Context::logging())                                       \
-    std::cout << OWL_TERMINAL_GREEN                             \
-              << "#owl.ll(" << device->ID << "): "             \
+              << "#owl(" << device->ID << "): "                 \
               << message << OWL_TERMINAL_DEFAULT << std::endl
 
 
 namespace owl {
 
+  /*! pretty-printer, for printf-debugging */
+  std::string TrianglesGeomGroup::toString() const
+  {
+    return "TrianglesGeomGroup";
+  }
+  
+  /*! constructor - passthroughto parent class */
   TrianglesGeomGroup::TrianglesGeomGroup(Context *const context,
                                          size_t numChildren)
     : GeomGroup(context,numChildren)
-  {
-    // context->llo->trianglesGeomGroupCreate(this->ID,
-    //                                        nullptr,numChildren);
-  }
-
+  {}
+  
   void TrianglesGeomGroup::updateMotionBounds()
   {
     bounds[0] = bounds[1] = box3f();
@@ -63,11 +55,7 @@ namespace owl {
       for (int i=0;i<2;i++)
         bounds[i].extend(meshBounds[i]);
     }
-    PING; PRINT(bounds[0]);
-    PRINT(bounds[1]);
   }
-  
-
   
   void TrianglesGeomGroup::buildAccel()
   {
@@ -86,7 +74,7 @@ namespace owl {
     if (context->motionBlurEnabled)
       updateMotionBounds();
   }
-
+  
   template<bool FULL_REBUILD>
   void TrianglesGeomGroup::buildAccelOn(const DeviceContext::SP &device) 
   {
@@ -101,7 +89,6 @@ namespace owl {
     SetActiveGPU forLifeTime(device);
     LOG("building triangles accel over "
         << geometries.size() << " geometries");
-    PING;
     size_t sumPrims = 0;
     uint32_t maxPrimsPerGAS = 0;
     optixDeviceContextGetProperty
@@ -114,30 +101,21 @@ namespace owl {
     TrianglesGeom::SP child0 = geometries[0]->as<TrianglesGeom>();
     assert(child0);
     int numKeys = child0->vertex.buffers.size();
-    PRINT(numKeys);
     assert(numKeys > 0);
     const bool hasMotion = (numKeys > 1);
     if (hasMotion) assert(context->motionBlurEnabled);
-      
-    PING;
+    
     // ==================================================================
     // create triangle inputs
     // ==================================================================
     //! the N build inputs that go into the builder
     std::vector<OptixBuildInput> triangleInputs(geometries.size());
-    // /*! *arrays* of the vertex pointers - the buildinputs cointina
-    //  *pointers* to the pointers, so need a temp copy here */
-    // std::vector<CUdeviceptr> vertexPointers(geometries.size());
-    // std::vector<CUdeviceptr> indexPointers(geometries.size());
- 
+    // one build flag per build input
     std::vector<uint32_t> triangleInputFlags(geometries.size());
-    // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT
 
     // now go over all geometries to set up the buildinputs
-    PING;
-    // std::vector<std::vector<CUdeviceptr>> vertexPointers(geometries.size());
     for (int childID=0;childID<geometries.size();childID++) {
-       
+      
       // the child wer're setting them with (with sanity checks)
       TrianglesGeom::SP tris = geometries[childID]->as<TrianglesGeom>();
       assert(tris);
@@ -146,15 +124,12 @@ namespace owl {
         throw std::runtime_error("invalid combination of meshes with "
                                  "different motion keys in the same "
                                  "triangles geom group");
-      // for (auto buffer : tris->vertex.buffers)
-      //   vertexPointers[childID].push_back(buffer->getPointer(device->ID));
-      TrianglesGeom::DeviceData &trisDD
-        = tris->getDD(device);
-        
+      TrianglesGeom::DeviceData &trisDD = tris->getDD(device);
+      
       CUdeviceptr     *d_vertices    = trisDD.vertexPointers.data();
       assert(d_vertices);
       OptixBuildInput &triangleInput = triangleInputs[childID];
-
+      
       triangleInput.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
       auto &ta = triangleInput.triangleArray;
       ta.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
@@ -167,12 +142,11 @@ namespace owl {
       ta.numIndexTriplets    = (uint32_t)tris->index.count;
       ta.indexBuffer         = trisDD.indexPointer;
       assert(ta.indexBuffer);
-
+      
       // -------------------------------------------------------
       // sanity check that we don't have too many prims
       // -------------------------------------------------------
       sumPrims += ta.numIndexTriplets;
-      PRINT(ta.numIndexTriplets);
       // we always have exactly one SBT entry per shape (i.e., triangle
       // mesh), and no per-primitive materials:
       triangleInputFlags[childID]    = 0;
@@ -187,12 +161,11 @@ namespace owl {
       ta.sbtIndexOffsetSizeInBytes   = 0; 
       ta.sbtIndexOffsetStrideInBytes = 0; 
     }
-      
-    PING;
+    
     if (sumPrims > maxPrimsPerGAS) 
       throw std::runtime_error("number of prim in user geom group exceeds "
                                "OptiX's MAX_PRIMITIVES_PER_GAS limit");
-        
+    
     // ==================================================================
     // BLAS setup: buildinputs set up, build the blas
     // ==================================================================
@@ -202,12 +175,10 @@ namespace owl {
     // ------------------------------------------------------------------
     OptixAccelBuildOptions accelOptions = {};
     accelOptions.buildFlags =
-      OPTIX_BUILD_FLAG_ALLOW_UPDATE
-      |
-      OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
-      |
+      OPTIX_BUILD_FLAG_ALLOW_UPDATE |
+      OPTIX_BUILD_FLAG_PREFER_FAST_TRACE |
       OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
-
+    
     accelOptions.motionOptions.numKeys   = numKeys;
     accelOptions.motionOptions.flags     = 0;
     accelOptions.motionOptions.timeBegin = 0.f;
@@ -217,7 +188,6 @@ namespace owl {
     else
       accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
       
-    PING;
     OptixAccelBufferSizes blasBufferSizes;
     OPTIX_CHECK(optixAccelComputeMemoryUsage
                 (device->optixContext,
@@ -226,8 +196,7 @@ namespace owl {
                  (uint32_t)triangleInputs.size(),
                  &blasBufferSizes
                  ));
-      
-    PING;
+    
     // ------------------------------------------------------------------
     // ... and allocate buffers: temp buffer, initial (uncompacted)
     // BVH buffer, and a one-single-size_t buffer to store the
@@ -244,13 +213,11 @@ namespace owl {
     DeviceMemory outputBuffer;
     outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
 
-    PING;
     // single size-t buffer to store compacted size in
     DeviceMemory compactedSizeBuffer;
     if (FULL_REBUILD)
       compactedSizeBuffer.alloc(sizeof(uint64_t));
       
-    PING;
     // ------------------------------------------------------------------
     // now execute initial, uncompacted build
     // ------------------------------------------------------------------
@@ -258,7 +225,6 @@ namespace owl {
     emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
     emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
 
-    PING;
     if (FULL_REBUILD) {
       OPTIX_CHECK(optixAccelBuild(device->optixContext,
                                   /* todo: stream */0,
@@ -278,7 +244,6 @@ namespace owl {
                                   &emitDesc,1u
                                   ));
     } else {
-      PING; PRINT(dd.bvhMemory.get());
       OPTIX_CHECK(optixAccelBuild(device->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
@@ -298,18 +263,17 @@ namespace owl {
                                   ));
     }
     CUDA_SYNC_CHECK();
-    PING;
-      
+    
     // ==================================================================
     // perform compaction
     // ==================================================================
-
+    
     // alloc the buffer...
     if (FULL_REBUILD) {
       // download builder's compacted size from device
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
-        
+      
       dd.bvhMemory.alloc(compactedSize);
       // ... and perform compaction
       OPTIX_CALL(AccelCompact(device->optixContext,
@@ -321,8 +285,6 @@ namespace owl {
                               &dd.traversable));
     }
     CUDA_SYNC_CHECK();
-    PING;
-
       
     // ==================================================================
     // aaaaaand .... clean up

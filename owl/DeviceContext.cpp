@@ -117,7 +117,7 @@ namespace owl {
     int totalNumDevicesAvailable = 0;
     cudaGetDeviceCount(&totalNumDevicesAvailable);
     if (totalNumDevicesAvailable == 0)
-      throw std::runtime_error("#owl.ll: no CUDA capable devices found!");
+      throw std::runtime_error("#owl: no CUDA capable devices found!");
     LOG_OK("found " << totalNumDevicesAvailable << " CUDA device(s)");
 
 
@@ -163,7 +163,7 @@ namespace owl {
         devices.push_back(dev);
       } catch (std::exception &e) {
         std::cout << OWL_TERMINAL_RED
-                  << "#owl.ll: Error creating optix device on CUDA device #"
+                  << "#owl: Error creating optix device on CUDA device #"
                   << deviceIDs[i] << ": " << e.what() << " ... dropping this device"
                   << OWL_TERMINAL_DEFAULT << std::endl;
       }
