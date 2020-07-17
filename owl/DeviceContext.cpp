@@ -240,7 +240,7 @@ namespace owl {
     moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
     moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_NONE;
 #else
-    PING;
+    std::cout << "WARNING: RUNNING OPTIX PROGRAMS IN -O0 DEBUG MODE!!!" << std::endl;
     moduleCompileOptions.maxRegisterCount  = 100;
     moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
     moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
@@ -520,7 +520,6 @@ namespace owl {
       auto &dd = geomType->getDD(shared_from_this());
       for (auto &pg : dd.hgPGs) 
         if (pg) {
-          PING; PRINT(pg);
           OPTIX_CHECK(optixProgramGroupDestroy(pg));
         }
       dd.hgPGs.clear();
