@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -18,6 +18,10 @@
 
 namespace owl {
 
+  // ------------------------------------------------------------------
+  // SBTObjectType
+  // ------------------------------------------------------------------
+  
   SBTObjectType::SBTObjectType(Context *const context,
                                ObjectRegistry &registry,
                                size_t varStructSize,
@@ -58,11 +62,32 @@ namespace owl {
     return variables;
   }
 
-  /*! this function is arguably the heart of the NG layer: given an
-    SBT Object's set of variables, create the SBT entry that writes
-    the given variables' values into the specified format, prorperly
-    translating per-device data (buffers, traversable) while doing
-    so */
+  /*! pretty-typecast into derived classes */
+  std::string SBTObjectType::toString() const
+  {
+    return "SBTObjectType";
+  }
+  
+  // ------------------------------------------------------------------
+  // SBTObjectBase
+  // ------------------------------------------------------------------
+  
+  /*! create a new SBTOBject with this type descriptor, and register
+    it in that registry */
+  SBTObjectBase::SBTObjectBase(Context *const context,
+                               ObjectRegistry &registry,
+                               std::shared_ptr<SBTObjectType> type)
+    : RegisteredObject(context,registry),
+      type(type),
+      variables(type->instantiateVariables())
+  {}
+
+  /*! this function is arguably the heart of the owl variable layer:
+    given an SBT Object's set of variables, create the SBT entry
+    that writes the given variables' values into the specified
+    format, prorperly translating per-device data (buffers,
+    traversable) while doing so (also works for launch params, even
+    though those, strictly speaking, are not part of the SBT)*/
   void SBTObjectBase::writeVariables(uint8_t *sbtEntryBase,
                                      const DeviceContext::SP &device) const
   {
