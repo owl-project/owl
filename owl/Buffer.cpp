@@ -202,7 +202,7 @@ namespace owl {
   {
     assert(deviceData.size() == context->deviceCount());
     for (auto dd : deviceData)
-      dd->as<DeviceBuffer::DeviceData>()->uploadAsync(hostPtr);
+      dd->as<DeviceBuffer::DeviceData>().uploadAsync(hostPtr);
     CUDA_SYNC_CHECK();
   }
   
@@ -227,7 +227,7 @@ namespace owl {
     //   }
     // }
     assert(deviceID < deviceData.size());
-    deviceData[deviceID]->as<DeviceBuffer::DeviceData>()->uploadAsync(hostPtr);
+    deviceData[deviceID]->as<DeviceBuffer::DeviceData>().uploadAsync(hostPtr);
     CUDA_SYNC_CHECK();
   }
   

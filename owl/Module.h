@@ -84,13 +84,7 @@ namespace owl {
   inline Module::DeviceData &Module::getDD(const DeviceContext::SP &device) const
   {
     assert(device && device->ID >= 0 && device->ID < deviceData.size());
-    return *deviceData[device->ID]->as<DeviceData>();
-  }
-  
-  /*! create this object's device-specific data for the device */
-  inline RegisteredObject::DeviceData::SP Module::createOn(const DeviceContext::SP &device) 
-  {
-    return std::make_shared<DeviceData>(this,device);
+    return deviceData[device->ID]->as<Module::DeviceData>();
   }
   
 } // ::owl

@@ -72,7 +72,7 @@ namespace owl {
     {
       assert(device);
       assert(device->ID >= 0 && device->ID < deviceData.size());
-      return *deviceData[device->ID]->as<DeviceData>();
+      return deviceData[device->ID]->as<DeviceData>();
     }
       
 

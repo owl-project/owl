@@ -20,11 +20,12 @@
 
 namespace owl {
 
+  /*! convert a OWLDataType enum into a strict that represents the name of that type */
   std::string typeToString(OWLDataType type);
+
+  /*! returns number of bytes for given data type (where applicable) */
   size_t      sizeOf(OWLDataType type);
 
-  struct Context;
-  struct DeviceContext;
 
   /*! common "root" abstraction for every object this library creates */
   struct Object : public std::enable_shared_from_this<Object> {
@@ -35,29 +36,38 @@ namespace owl {
     struct DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
+      /*! construtor */
       DeviceData(DeviceContext::SP device) : device(device) {};
-      virtual ~DeviceData() {}
-      
-      template<typename T>
-      inline T *as() { return dynamic_cast<T*>(this); }
 
+      /*! destructor - does nothing in itself, but forces a virtual
+          destructor for derived classes */
+      virtual ~DeviceData() {}
+
+      /*! pretty-typecast into derived classes */
+      template<typename T> inline T &as();
+
+      /*! shared-pointer to the device context in wihch this
+          device-specific data lives; makes sure that all 'dependent'
+          device data can properly destruct before the device context
+          itself dies */
       DeviceContext::SP device;
     };
 
+    /*! constructor */
     Object();
 
     /*! pretty-printer, for printf-debugging */
     virtual std::string toString() const;
 
     /*! creates the device-specific data for this group */
-    virtual DeviceData::SP createOn(const std::shared_ptr<DeviceContext> &device)
-    { return std::make_shared<DeviceData>(device); }
+    virtual DeviceData::SP createOn(const std::shared_ptr<DeviceContext> &device);
 
+    /*! creates the actual device data for all devies,by calling \see
+        createOn() for each device */
     void createDeviceData(const std::vector<std::shared_ptr<DeviceContext>> &devices);
 
-    template<typename T>
-    inline std::shared_ptr<T> as() 
-    { return std::dynamic_pointer_cast<T>(shared_from_this()); }
+    /*! pretty-typecase to all derived classes */
+    template<typename T> inline std::shared_ptr<T> as();
 
     /*! a unique ID we assign to each newly created object - this
         allows any caching algorithms to check if a given object was
@@ -84,10 +94,26 @@ namespace owl {
       : context(context)
     {}
     
-    virtual std::string toString() const { return "ContextObject"; }
+    /*! pretty-printer, for printf-debugging */
+    std::string toString() const override;
     
     Context *const context;
   };
+
+
+  // ------------------------------------------------------------------
+  // implementation section
+  // ------------------------------------------------------------------
+  
+  /*! pretty-typecast into derived classes */
+  template<typename T>
+  inline T &Object::DeviceData::as()
+  { return *dynamic_cast<T *>(this); }
+
+  /*! pretty-typecase to all derived classes */
+  template<typename T>
+  inline std::shared_ptr<T> Object::as() 
+  { return std::dynamic_pointer_cast<T>(shared_from_this()); }
 
 } // ::owl
 

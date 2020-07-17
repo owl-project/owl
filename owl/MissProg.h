@@ -43,7 +43,7 @@ namespace owl {
     DeviceData &getDD(const DeviceContext::SP &device) const
     {
       assert(device->ID < deviceData.size());
-      return *deviceData[device->ID]->as<DeviceData>();
+      return deviceData[device->ID]->as<DeviceData>();
     }
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override

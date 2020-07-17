@@ -39,7 +39,7 @@ namespace owl {
     DeviceData &getDD(int deviceID) const
     {
       assert(deviceID < deviceData.size());
-      return *deviceData[deviceID]->as<DeviceData>();
+      return deviceData[deviceID]->as<DeviceData>();
     }
     // DeviceData &getDD(const deviceID) const { return getDD(device->ID); }
     /*! creates the device-specific data for this group */

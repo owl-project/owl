@@ -150,7 +150,7 @@ namespace owl {
   UserGeomType::getDD(const DeviceContext::SP &device) const
   {
     assert(device && device->ID >= 0 && device->ID < deviceData.size());
-    return *deviceData[device->ID]->as<UserGeomType::DeviceData>();
+    return deviceData[device->ID]->as<UserGeomType::DeviceData>();
   }
 
   /*! get reference to given device-specific data for this object */
@@ -158,7 +158,7 @@ namespace owl {
   UserGeom::getDD(const DeviceContext::SP &device)
   {
     assert(device && device->ID >= 0 && device->ID < deviceData.size());
-    return *deviceData[device->ID]->as<UserGeom::DeviceData>();
+    return deviceData[device->ID]->as<UserGeom::DeviceData>();
   }
 
   /*! get reference to the device-specific data for this object's *type* descriptor */

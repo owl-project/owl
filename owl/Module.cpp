@@ -180,6 +180,12 @@ namespace owl {
       getDD(device).destroy();
   }
   
+  /*! create this object's device-specific data for the device */
+  RegisteredObject::DeviceData::SP Module::createOn(const DeviceContext::SP &device) 
+  {
+    return std::make_shared<DeviceData>(this,device);
+  }
+  
   /*! pretty-printer, for printf-debugging */
   std::string Module::toString() const
   {

@@ -18,25 +18,17 @@
 
 namespace owl {
 
+  // ------------------------------------------------------------------
+  // non class specific and global stuff
+  // ------------------------------------------------------------------
+  
+  /*! atomic counter that always describes the next not yet used
+    unique ID, which we can use to fill in the Object::uniquID
+    values */
   std::atomic<uint64_t> Object::nextAvailableID;
 
-  Object::Object()
-    : uniqueID(nextAvailableID++)
-  {}
-
-  std::string Object::toString() const
-  { return "Object"; }
   
-  void Object::createDeviceData(const std::vector<std::shared_ptr<DeviceContext>> &devices)
-  {
-    if (!deviceData.empty())
-      throw std::runtime_error("trying to create device data on object "+toString()
-                               +", but it already exists!?");
-    assert(deviceData.empty());
-    for (auto device : devices)
-      deviceData.push_back(createOn(device));
-  }
-  
+  /*! returns number of bytes for given data type (where applicable) */
   size_t sizeOf(OWLDataType type)
   {
     if ((size_t)type >= (size_t)OWL_USER_TYPE_BEGIN)
@@ -126,6 +118,8 @@ namespace owl {
     }
   }
 
+  
+  /*! convert a OWLDataType enum into a strict that represents the name of that type */
   std::string typeToString(OWLDataType type)
   {
     if (type >= OWL_USER_TYPE_BEGIN)
@@ -190,6 +184,54 @@ namespace owl {
                                +": not yet implemented for type #"
                                +std::to_string((int)type));
     }
+  }
+
+
+  
+  // ------------------------------------------------------------------
+  // Object::DeviceData
+  // ------------------------------------------------------------------
+  
+  /*! creates the device-specific data for this group */
+  Object::DeviceData::SP Object::createOn(const std::shared_ptr<DeviceContext> &device)
+  {
+    return std::make_shared<DeviceData>(device);
+  }
+  
+  /*! creates the actual device data for all devies,by calling \see
+    createOn() for each device */
+  void Object::createDeviceData(const std::vector<std::shared_ptr<DeviceContext>> &devices)
+  {
+    if (!deviceData.empty())
+      throw std::runtime_error("trying to create device data on object "+toString()
+                               +", but it already exists!?");
+    assert(deviceData.empty());
+    for (auto device : devices)
+      deviceData.push_back(createOn(device));
+  }
+  
+  // ------------------------------------------------------------------
+  // Object
+  // ------------------------------------------------------------------
+  
+  Object::Object()
+    : uniqueID(nextAvailableID++)
+  {}
+
+  std::string Object::toString() const
+  { return "Object"; }
+
+
+
+
+  // ------------------------------------------------------------------
+  // Object
+  // ------------------------------------------------------------------
+
+  /*! pretty-printer, for printf-debugging */
+  std::string ContextObject::toString() const 
+  {
+    return "ContextObject";
   }
   
 } // ::owl

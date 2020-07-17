@@ -50,7 +50,7 @@ namespace owl {
     {
       assert(device);
       assert(device->ID < deviceData.size());
-      return *deviceData[device->ID]->as<Buffer::DeviceData>();
+      return deviceData[device->ID]->as<Buffer::DeviceData>();
     }
       
     // const void *getPointer(int deviceID) const
@@ -155,7 +155,7 @@ namespace owl {
     DeviceData &getDD(const DeviceContext::SP &device) const
     {
       assert(device->ID < deviceData.size());
-      return *deviceData[device->ID]->as<DeviceData>();
+      return deviceData[device->ID]->as<DeviceData>();
     }
       
     void resize(size_t newElementCount) override;
