@@ -29,21 +29,13 @@
               << "#owl.ll(" << device->ID << "): "    \
               << message << OWL_TERMINAL_DEFAULT << std::endl
 
-#define CLOG(message)                                   \
-  if (Context::logging())                               \
-    std::cout << "#owl.ll(" << device->ID << "): "     \
-              << message                                \
-              << std::endl
-
-#define CLOG_OK(message)                                        \
-  if (Context::logging())                                       \
-    std::cout << OWL_TERMINAL_GREEN                             \
-              << "#owl.ll(" << device->ID << "): "             \
-              << message << OWL_TERMINAL_DEFAULT << std::endl
-
-
 namespace owl {
   
+  UserGeomGroup::UserGeomGroup(Context *const context,
+                               size_t numChildren)
+    : GeomGroup(context,numChildren)
+  {}
+
   void UserGeomGroup::buildOrRefit(bool FULL_REBUILD)
   {
     for (auto child : geometries) {
@@ -68,12 +60,6 @@ namespace owl {
   void UserGeomGroup::refitAccel()
   {
     buildOrRefit(false);
-  }
-
-  UserGeomGroup::UserGeomGroup(Context *const context,
-                               size_t numChildren)
-    : GeomGroup(context,numChildren)
-  {
   }
 
   /*! low-level accel structure builder for given device */
@@ -112,7 +98,6 @@ namespace owl {
 
     // for now we use the same flags for all geoms
     std::vector<uint32_t> userGeomInputFlags(geometries.size());
-    // { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT };
 
     // now go over all geometries to set up the buildinputs
     for (int childID=0;childID<geometries.size();childID++) {
@@ -131,23 +116,15 @@ namespace owl {
       CUdeviceptr     &d_bounds = boundsPointers[childID];
       OptixBuildInput &userGeomInput = userGeomInputs[childID];
 
-      // the child wer're setting them with (with sanity checks)
-      // Geom *geom = geometries[childID];
-      // assert("double-check geom isn't null" && geom != nullptr);
-       
-      // UserGeom *userGeom = dynamic_cast<UserGeom*>(geom);
-      // assert("double-check it's really user"
-      //        && userGeom != nullptr);
       assert("user geom has valid bounds buffer"
              && ugDD.internalBufferForBoundsProgram.alloced());
       d_bounds = (CUdeviceptr)ugDD.internalBufferForBoundsProgram.get();
-        
+      
       userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
 #if OPTIX_VERSION >= 70100
-  auto &aa = userGeomInput.customPrimitiveArray;//aabbsArray;
+      auto &aa = userGeomInput.customPrimitiveArray;
 #else
-  auto &aa = userGeomInput.aabbArray; //aabbBuffers;
-  // auto &aa = userGeomInput.aabbsArray;
+      auto &aa = userGeomInput.aabbArray;
 #endif
       aa.aabbBuffers   = &d_bounds;
       aa.numPrimitives = (uint32_t)child->primCount;
@@ -163,7 +140,7 @@ namespace owl {
       // number of per-ray-type 'groups' of SBT enties (i.e., before
       // scaling by the SBT_STRIDE that gets passed to
       // optixTrace. So, for the build input this value remains *1*).
-      aa.numSbtRecords               = 1; //context->numRayTypes;
+      aa.numSbtRecords               = 1; 
       aa.sbtIndexOffsetBuffer        = 0; 
       aa.sbtIndexOffsetSizeInBytes   = 0; 
       aa.sbtIndexOffsetStrideInBytes = 0; 
@@ -188,7 +165,7 @@ namespace owl {
       accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
     else
       accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
-      
+    
     OptixAccelBufferSizes blasBufferSizes;
     OPTIX_CHECK(optixAccelComputeMemoryUsage
                 (optixContext,
@@ -197,7 +174,7 @@ namespace owl {
                  (uint32_t)userGeomInputs.size(),
                  &blasBufferSizes
                  ));
-      
+    
     // ------------------------------------------------------------------
     // ... and allocate buffers: temp buffer, initial (uncompacted)
     // BVH buffer, and a one-single-size_t buffer to store the
@@ -234,16 +211,6 @@ namespace owl {
       
     CUDA_SYNC_CHECK();
 
-#if 0
-    // for debugging only - dumps the BVH to disk
-    std::vector<uint8_t> dumpBuffer(outputBuffer.size());
-    outputBuffer.download(dumpBuffer.data());
-    std::ofstream dump("/tmp/outputBuffer.bin",std::ios::binary);
-    dump.write((char*)dumpBuffer.data(),dumpBuffer.size());
-    PRINT(dumpBuffer.size());
-    exit(0);
-#endif
-      
     // ==================================================================
     // finish - clean up
     // ==================================================================
@@ -258,8 +225,6 @@ namespace owl {
       UserGeom::SP child = geometries[childID]->as<UserGeom>();
       assert(child);
       
-      // sumPrims += child->primCount;
-      
       UserGeom::DeviceData &ugDD = child->getDD(device);
       
       sumBoundsMem += ugDD.internalBufferForBoundsProgram.sizeInBytes;
@@ -267,20 +232,7 @@ namespace owl {
         ugDD.internalBufferForBoundsProgram.free();
     }
 
-
     CUDA_SYNC_CHECK();
-
-    // dbgPrintBVHSizes(/*numItems*/
-    //                  sumPrims,
-    //                  /*boundsArraySize*/
-    //                  sumBoundsMem,
-    //                  /*tempMemSize*/
-    //                  blasBufferSizes.tempSizeInBytes,
-    //                  /*initialBVHSize*/
-    //                  blasBufferSizes.outputSizeInBytes,
-    //                  /*finalBVHSize*/
-    //                  0
-    //                  );
   }
     
 } // ::owl

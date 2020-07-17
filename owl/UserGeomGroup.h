@@ -21,6 +21,8 @@
 
 namespace owl {
 
+  /*! a geometry group / BLAS over user-defined/custom
+      primitives. This Group may only be built over UserGeom's */
   struct UserGeomGroup : public GeomGroup {
 
     UserGeomGroup(Context *const context,
@@ -38,7 +40,6 @@ namespace owl {
     /*! low-level accel structure builder for given device */
     template<bool FULL_REBUILD>
     void buildAccelOn(const DeviceContext::SP &device);
-
   };
 
 } // ::owl
