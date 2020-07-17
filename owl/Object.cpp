@@ -24,6 +24,9 @@ namespace owl {
     : uniqueID(nextAvailableID++)
   {}
 
+  std::string Object::toString() const
+  { return "Object"; }
+  
   void Object::createDeviceData(const std::vector<std::shared_ptr<DeviceContext>> &devices)
   {
     if (!deviceData.empty())

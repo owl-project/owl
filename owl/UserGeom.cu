@@ -74,6 +74,33 @@ namespace owl {
     }
   }
                                           
+      /*! construct a new device-data for this type */
+  UserGeomType::DeviceData::DeviceData(const DeviceContext::SP &device)
+    : GeomType::DeviceData(device)
+  {}
+
+  /*! creates the device-specific data for this group */
+  RegisteredObject::DeviceData::SP
+  UserGeom::createOn(const DeviceContext::SP &device) 
+  {
+    return std::make_shared<DeviceData>(device);
+  }
+
+  /*! create this object's device-specific data for the device */
+  RegisteredObject::DeviceData::SP
+  UserGeomType::createOn(const DeviceContext::SP &device) 
+  {
+    return std::make_shared<DeviceData>(device);
+  }
+
+    /*! pretty-printer, for printf-debugging */
+  std::string UserGeomType::toString() const
+  { return "UserGeomType"; }
+
+  /*! pretty-printer, for printf-debugging */
+  std::string UserGeom::toString() const
+  { return "UserGeom"; }
+  
   /*! call a cuda kernel that computes the bounds of the vertex buffers */
   void UserGeom::computeBounds(box3f bounds[2])
   {

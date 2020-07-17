@@ -46,8 +46,8 @@ namespace owl {
 
     Object();
 
-    /*! pretty-printer, for debugging */
-    virtual std::string toString() const { return "Object"; }
+    /*! pretty-printer, for printf-debugging */
+    virtual std::string toString() const;
 
     /*! creates the device-specific data for this group */
     virtual DeviceData::SP createOn(const std::shared_ptr<DeviceContext> &device)
@@ -65,8 +65,13 @@ namespace owl {
         up with the same array index as a previous other object */
     const size_t uniqueID;
 
+    /*! atomic counter that always describes the next not yet used
+        unique ID, which we can use to fill in the Object::uniquID
+        values */
     static std::atomic<uint64_t> nextAvailableID;
 
+    /*! the list of per-device data for this object - should be
+        exactly one per GPU in the context */
     std::vector<DeviceData::SP> deviceData;
   };
 
