@@ -21,6 +21,7 @@
 
 namespace owl {
 
+  /*! base class for any sort of buffer type - pinned, device, managed, ... */
   struct Buffer : public RegisteredObject
   {
     typedef std::shared_ptr<Buffer> SP;
@@ -30,64 +31,82 @@ namespace owl {
     struct DeviceData : public RegisteredObject::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
-      DeviceData(const DeviceContext::SP &device)
-        : RegisteredObject::DeviceData(device)
-      {};
-      
+      /*! constructor */
+      DeviceData(const DeviceContext::SP &device);
+
+      /*! device-side pointer - depending on buffer type this may or
+          may not be accessible on the host */
       void *d_pointer { 0 };
     };
-    
-    Buffer(Context *const context,
-           OWLDataType type);
+
+    /*! construct a new buffer of given type - actual implementation
+        of 'construct' done in derives class */
+    Buffer(Context *const context, OWLDataType type);
     
     /*! destructor - free device data, de-regsiter, and destruct */
     virtual ~Buffer();
     
-    std::string toString() const override { return "Buffer"; }
+    /*! pretty-printer, for printf-debugging */
+    std::string toString() const override;
 
+    /*! get reference to given device-specific data for this object */
+    inline Buffer::DeviceData &getDD(const DeviceContext::SP &device) const;
 
-    Buffer::DeviceData &getDD(const DeviceContext::SP &device) const
-    {
-      assert(device);
-      assert(device->ID < deviceData.size());
-      return deviceData[device->ID]->as<Buffer::DeviceData>();
-    }
-      
-    // const void *getPointer(int deviceID) const
-    // { std::cout << "deprecated - kill this" << std::endl; return getDD(deviceID).d_pointer; }
-    const void *getPointer(const DeviceContext::SP &device) const
-    { assert(device); return getDD(device).d_pointer; }
-        
-    size_t getElementCount() const;
+    /*! get device pointer for given buffer */
+    inline const void *getPointer(const DeviceContext::SP &device) const;
+
+    /*! return *number* of elements - number of bytes will depend on data type */
+    inline size_t getElementCount() const;
+
+    /*! return the number of *bytes* in this buffer (coiuted in size
+        of device types) */
+    inline size_t sizeInBytes() const { return elementCount * sizeOf(type); }
     
+    
+    /*! resize buffer to new num elements */
     virtual void resize(size_t newElementCount) = 0;
+    
+    /*! upload data from host, using as many bytes as required by
+        elemnetCount and dataSize */
     virtual void upload(const void *hostPtr) = 0;
-    virtual void upload(const int deviceID, const void *hostPtr) = 0;
-    /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
 
-    /*! destroy whatever resouces this buffer's ll-layer handle this
-        may refer to; this will not destruct the current object
-        itself, but should already release all its references */
+    /*! upload data from host, to only given device ID */
+    virtual void upload(const int deviceID, const void *hostPtr) = 0;
+    
+    /*! destroy whatever resouces this buffer may own on the device,
+        but do NOT destroy this class itself. baiscally that's a
+        resize(0), but that buffer can not - and shoult not - be used
+        any more after that */
     void destroy();
 
-    size_t sizeInBytes() const { return elementCount * sizeOf(type); }
-    
+    /*! data type of elements contained in this buffer */
     const OWLDataType type;
+
+    /*! number of elements */
     size_t      elementCount { 0 };
   };
 
+
+
+  /*! a device-side buffer that has its own cuda-malloc'ed memory on
+      each device. DeviceBuffers are fastest to access on the device,
+      *BUT* are not visible on the host, and are replicated in the
+      sense that changing to a device buffer on one GPU will not be
+      visible on other GPUs */
   struct DeviceBuffer : public Buffer {
     typedef std::shared_ptr<DeviceBuffer> SP;
 
     /*! any device-specific data, such as optix handles, cuda device
-        pointers, etc */
+        pointers, etc. this is a virtual base class whose derived
+        classes will do the actual work */
     struct DeviceData : public Buffer::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
-      DeviceData(DeviceBuffer *parent, const DeviceContext::SP &device)
-        : Buffer::DeviceData(device), parent(parent), device(device)
-      {}
+      /*! any device-specific data, such as optix handles, cuda device
+        pointers, etc */
+      DeviceData(DeviceBuffer *parent, const DeviceContext::SP &device);
+
+      /*! destructor that releases any still-alloced memory */
       virtual ~DeviceData();
 
       /*! executes the resize on the given device, including freeing
@@ -104,9 +123,17 @@ namespace owl {
           be done to ensure no race conditiosn will occur */
       virtual void uploadAsync(const void *hostDataPtr) = 0;
 
-      DeviceContext::SP const device;
+      // DeviceContext::SP const device;
       DeviceBuffer *const parent;
     };
+
+
+
+    
+    /*! device-data for a device buffer like other device buffers, but
+        containing texture objects - ie, these are Texture::SP on the
+        host, but get translated to cudaTextureObject_t's upon
+        upload */
     struct DeviceDataForTextures : public DeviceData {
       DeviceDataForTextures(DeviceBuffer *parent, const DeviceContext::SP &device)
         : DeviceData(parent,device)
@@ -120,19 +147,30 @@ namespace owl {
         to ensure proper recounting */
       std::vector<Texture::SP> hostHandles;
     };
+
+
+
+    /*! device-data for a device buffer like other device buffers, but
+        containing buffers - ie, these are Buffer::SP on the host, but
+        get translated to buffer descriptors upon upload */
     struct DeviceDataForBuffers : public DeviceData {
       DeviceDataForBuffers(DeviceBuffer *parent, const DeviceContext::SP &device)
         : DeviceData(parent,device)
       {}
+      
       void executeResize() override;
       void uploadAsync(const void *hostDataPtr) override;
-    
+      
       /*! this is used only for buffers over object types (bufers of
         textures, or buffers of buffers). For those buffers, we use this
         vector to store host-side handles of the objects in this buffer,
         to ensure proper recounting */
       std::vector<Buffer::SP> hostHandles;
     };
+
+
+    /*! device-data for a device buffer that contains raw, copyable
+        data (float, vec3f, etc) */
     struct DeviceDataForCopyableData : public DeviceData {
       DeviceDataForCopyableData(DeviceBuffer *parent, const DeviceContext::SP &device)
         : DeviceData(parent,device)
@@ -140,87 +178,81 @@ namespace owl {
       void executeResize() override;
       void uploadAsync(const void *hostDataPtr) override;
     };
-    
+
+    /*! contructor - creates the right device data type based on content type */
     DeviceBuffer(Context *const context,
-                 OWLDataType type
-                 // ,
-                 // size_t count
-                 // ,
-                 // const void *init
-                 );
+                 OWLDataType type);
 
     /*! pretty-printer, for debugging */
-    std::string toString() const override { return "DeviceBuffer"; }
+    std::string toString() const override;
 
-    DeviceData &getDD(const DeviceContext::SP &device) const
-    {
-      assert(device->ID < deviceData.size());
-      return deviceData[device->ID]->as<DeviceData>();
-    }
-      
+    /*! get reference to given device-specific data for this object */
+    inline DeviceData &getDD(const DeviceContext::SP &device) const;
+
+    /*! resize this buffer - actual work will get done in DeviceData */
     void resize(size_t newElementCount) override;
+    /*! upload to device data(s) of that buffer - actual work will get done in DeviceData */
     void upload(const void *hostPtr) override;
+    
+    /*! upload to only ONE device - only makes sense for device buffers */
     void upload(const int deviceID, const void *hostPtr) override;
+    
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
   };
-  
+
+
+  /*! a buffer that uses CUDA host-pinned memory. only makes sense for
+      copyable data types */
   struct HostPinnedBuffer : public Buffer {
     typedef std::shared_ptr<HostPinnedBuffer> SP;
     
     HostPinnedBuffer(Context *const context,
-                     OWLDataType type// ,
-                     // size_t count
-                     );
+                     OWLDataType type);
 
     /*! pretty-printer, for debugging */
-    std::string toString() const override { return "HostPinnedBuffer"; }
+    std::string toString() const override;
 
     void resize(size_t newElementCount) override;
     void upload(const void *hostPtr) override;
     void upload(const int deviceID, const void *hostPtr) override;
 
+    /*! pointer to the (shared) cuda pinned mem - this gets alloced
+        once and is valid on both host and devices */
     void *cudaHostPinnedMem { 0 };
   };
+
+
   
+  /*! a buffer that uses CUDA 'managed' memory. only makes sense for
+      copyable data types. Make sure to read up on how managed mem
+      works */
   struct ManagedMemoryBuffer : public Buffer {
     typedef std::shared_ptr<ManagedMemoryBuffer> SP;
     
     ManagedMemoryBuffer(Context *const context,
-                        OWLDataType type// ,
-                        // size_t count
-                        // ,
-                        // /*! data with which to populate this buffer;
-                        //   may be null, but has to be of size 'amount'
-                        //   if not */
-                        // const void *initData
-                        );
+                        OWLDataType type);
 
     void resize(size_t newElementCount) override;
     void upload(const void *hostPtr) override;
     void upload(const int deviceID, const void *hostPtr) override;
-    /*! creates the device-specific data for this group */
-    // Buffer::DeviceData::SP createOn(ll::const DeviceContext::SP &device) override;
-
 
     /*! pretty-printer, for debugging */
-    std::string toString() const override { return "ManagedMemoryBuffer"; }
+    std::string toString() const override;
 
+    /*! pointer to the (shared) cuda managed mem - this gets alloced
+        once and is valid on both host and devices */
     void *cudaManagedMem { 0 };
   };
 
+
+  /*! a special graphics resource buffer that, upon mapping, will map
+      that graphics resource */
   struct GraphicsBuffer : public Buffer {
     typedef std::shared_ptr<GraphicsBuffer> SP;
 
-    // /*! any device-specific data, such as optix handles, cuda device
-    //     pointers, etc */
-    // struct DeviceData : public Buffer::DeviceData {
-    //   typedef std::shared_ptr<DeviceData> SP;
-    // };
-
     GraphicsBuffer(Context* const context,
                    OWLDataType type,
-                   // size_t count,
                    cudaGraphicsResource_t resource);
 
     void map(const int deviceID=0, CUstream stream=0);
@@ -229,15 +261,47 @@ namespace owl {
     void resize(size_t newElementCount) override;
     void upload(const void *hostPtr) override;
     void upload(const int deviceID, const void *hostPtr) override;
-    /*! creates the device-specific data for this group */
-    // Buffer::DeviceData::SP createOn(ll::const DeviceContext::SP &device) override;
 
     /*! the cuda graphics resource to map to - note that this is
         probably valid on only one GPU */
     cudaGraphicsResource_t resource;
     
     /*! pretty-printer, for debugging */
-    std::string toString() const override { return "GraphicsBuffer"; }
+    std::string toString() const override;
   };
+
+
+
+  // ------------------------------------------------------------------
+  // implementation section
+  // ------------------------------------------------------------------
   
+  
+  /*! return *number* of elements - number of bytes will depend on data type */
+  inline size_t Buffer::getElementCount() const
+  {
+    return elementCount;
+  }
+  
+  /*! get device pointer for given buffer */
+  const void *Buffer::getPointer(const DeviceContext::SP &device) const
+  {
+    assert(device);
+    return getDD(device).d_pointer;
+  }
+  
+  /*! get reference to given device-specific data for this object */
+  inline Buffer::DeviceData &Buffer::getDD(const DeviceContext::SP &device) const
+  {
+    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    return deviceData[device->ID]->as<Buffer::DeviceData>();
+  }
+  
+    /*! get reference to given device-specific data for this object */
+  inline DeviceBuffer::DeviceData &DeviceBuffer::getDD(const DeviceContext::SP &device) const
+  {
+    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    return deviceData[device->ID]->as<DeviceData>();
+  }
+
 } // ::owl
