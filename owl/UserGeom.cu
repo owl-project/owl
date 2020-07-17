@@ -16,20 +16,19 @@
 
 #include "UserGeom.h"
 #include "Context.h"
-#include "Context.h"
 
 namespace owl {
 
-#define LOG(message)                                            \
-  if (Context::logging())                                   \
-    std::cout << "#owl.ll(" << device->ID << "): "    \
-              << message                                        \
+#define LOG(message)                                    \
+  if (Context::logging())                               \
+    std::cout << "#owl.ll(" << device->ID << "): "      \
+              << message                                \
               << std::endl
 
 #define LOG_OK(message)                                         \
   if (Context::logging())                                       \
     std::cout << OWL_TERMINAL_GREEN                             \
-              << "#owl.ll(" << device->ID << "): "    \
+              << "#owl.ll(" << device->ID << "): "              \
               << message << OWL_TERMINAL_DEFAULT << std::endl
 
   __device__ static float atomicMax(float* address, float val)
@@ -74,7 +73,7 @@ namespace owl {
     }
   }
                                           
-      /*! construct a new device-data for this type */
+  /*! construct a new device-data for this type */
   UserGeomType::DeviceData::DeviceData(const DeviceContext::SP &device)
     : GeomType::DeviceData(device)
   {}
@@ -93,7 +92,7 @@ namespace owl {
     return std::make_shared<DeviceData>(device);
   }
 
-    /*! pretty-printer, for printf-debugging */
+  /*! pretty-printer, for printf-debugging */
   std::string UserGeomType::toString() const
   { return "UserGeomType"; }
 
@@ -101,7 +100,8 @@ namespace owl {
   std::string UserGeom::toString() const
   { return "UserGeom"; }
   
-  /*! call a cuda kernel that computes the bounds of the vertex buffers */
+  /*! call a cuda kernel that computes the bounds of the vertex
+      buffers. note we alwyas (and only) do this on the first GPU */
   void UserGeom::computeBounds(box3f bounds[2])
   {
     int numThreads = 1024;
@@ -109,8 +109,6 @@ namespace owl {
 
     DeviceContext::SP device = context->getDevices()[0];
     SetActiveGPU forLifeTime(device);
-  // ll::Device *device = context->llo->devices[0];
-  //   int oldActive = device->pushActive();
 
     DeviceMemory d_bounds;
     d_bounds.alloc(sizeof(box3f));
@@ -128,8 +126,6 @@ namespace owl {
     d_bounds.free();
     CUDA_SYNC_CHECK();
     bounds[1] = bounds[0];
-
-    // device->popActive(oldActive);
   }
 
   UserGeomType::UserGeomType(Context *const context,
@@ -141,73 +137,51 @@ namespace owl {
     /*! nothing special - all inherited */
   }
 
+  /*! constructor */
   UserGeom::UserGeom(Context *const context,
                      GeomType::SP geometryType)
     : Geom(context,geometryType)
-  {
-    // int numPrims = 0;
-    // context->llo->userGeomCreate(this->ID,geometryType->ID,numPrims);
-  }
+  {}
 
+  /*! set number of primitives that this geom will contain */
   void UserGeom::setPrimCount(size_t count)
   {
     primCount = count;
   }
 
+  /*! set intersection program to run for this type and given ray type */
   void UserGeomType::setIntersectProg(int rayType,
                                       Module::SP module,
                                       const std::string &progName)
   {
-    assert(rayType < intersectProg.size());
+    assert(rayType >= 0 && rayType < intersectProg.size());
 
     intersectProg[rayType].progName = "__intersection__"+progName;
     intersectProg[rayType].module   = module;
-    // context->llo->setGeomTypeIntersect(this->ID,
-    //                      rayType,module->ID,
-    //                      // warning: this 'this' here is importat, since
-    //                      // *we* manage the lifetime of this string, and
-    //                      // the one on the constructor list will go out of
-    //                       // scope after this function
-    //                      intersectProg[rayType].progName.c_str());
   }
 
+  /*! set bounding box program to run for this type */
   void UserGeomType::setBoundsProg(Module::SP module,
                                    const std::string &progName)
   {
     this->boundsProg.progName = progName;
     this->boundsProg.module   = module;
-    // context->llo->setGeomTypeBoundsProgDevice(this->ID,
-    //                             module->ID,
-    //                             // warning: this 'this' here is importat, since
-    //                             // *we* manage the lifetime of this string, and
-    //                             // the one on the constructor list will go out of
-    //                             // scope after this function
-    //                             this->boundsProg.progName.c_str(),
-    //                             varStructSize
-    //                             );
   }
-
 
   /*! run the bounding box program for all primitives within this geometry */
   void UserGeom::executeBoundsProgOnPrimitives(const DeviceContext::SP &device)
   {
     SetActiveGPU activeGPU(device);
-    // int oldActive = device->pushActive();
       
     std::vector<uint8_t> userGeomData(geomType->varStructSize);
+    
     DeviceMemory tempMem;
     tempMem.alloc(geomType->varStructSize);
     
-    // for (int childID=0;childID<ugg->children.size();childID++) {
-    //   UserGeom::SP child = geometry[childID]->as<UserGeom>();
-    // assert(child);
     DeviceData &dd = getDD(device);
     dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
-      // = ug->internalBufferForBoundsProgram.get();
 
     writeVariables(userGeomData.data(),device);
-    // cb(userGeomData.data(),context->owlDeviceID,
-    //    ug->geomID,childID,cbData); 
         
     // size of each thread block during bounds function call
     vec3i blockDims(32,32,1);
@@ -224,19 +198,22 @@ namespace owl {
     vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
         
     tempMem.upload(userGeomData);
-        
-    void  *d_geomData = tempMem.get();//nullptr;
+    
+    void  *d_geomData = tempMem.get();
     vec3f *d_boundsArray = (vec3f*)dd.internalBufferForBoundsProgram.get();
+    /* arguments for the kernel we are to call */
     void  *args[] = {
                      &d_geomData,
                      &d_boundsArray,
                      (void *)&primCount
     };
-        
+    
     CUstream stream = device->stream;
     UserGeomType::DeviceData &typeDD = getTypeDD(device);
     if (!typeDD.boundsFuncKernel)
-      throw std::runtime_error("bounds kernel set, but not yet compiled - did you forget to call BuildPrograms() before (User)GroupAccelBuild()!?");
+      throw std::runtime_error("bounds kernel set, but not yet compiled - "
+                               "did you forget to call BuildPrograms() before"
+                               " (User)GroupAccelBuild()!?");
         
     CUresult rc
       = cuLaunchKernel(typeDD.boundsFuncKernel,
@@ -246,15 +223,15 @@ namespace owl {
     if (rc) {
       const char *errName = 0;
       cuGetErrorName(rc,&errName);
-      PRINT(errName);
-      exit(0);
+      throw std::runtime_error("unknown CUDA error in calling bounds function kernel: "
+                               +std::string(errName));
     }
-    // }
     tempMem.free();
     cudaDeviceSynchronize();
-    // device->popActive(oldActive);
   }
 
+  /*! fill in an OptixProgramGroup descriptor with the module and
+    program names for this type */
   void UserGeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
                                             GeomType *_parent,
                                             int rt)
@@ -275,8 +252,8 @@ namespace owl {
   /*! build the CUDA bounds program kernel (if bounds prog is set) */
   void UserGeomType::buildBoundsProg()
   {
-    PING;
     if (!boundsProg.module) return;
+    
     Module::SP module = boundsProg.module;
     assert(module);
 
@@ -308,8 +285,8 @@ namespace owl {
       default:
         const char *errName = 0;
         cuGetErrorName(rc,&errName);
-        PRINT(errName);
-        exit(0);
+        throw std::runtime_error("unknown CUDA error when building bounds program kernel"
+                                 +std::string(errName));
       }
     }
   }

@@ -21,16 +21,16 @@
 namespace owl {
 
   /*! Describes a geometry type for "User Geometries" or, as they area
-      also known in OptiX land, "Custom Primitives" - ie, primitives
-      where the user specifies bounding box program and intersection
-      program. This "Type" class describes these programs; the
-      "UserGeom" class then creates objects of this type and stores
-      the respective data that describe that object */
+    also known in OptiX land, "Custom Primitives" - ie, primitives
+    where the user specifies bounding box program and intersection
+    program. This "Type" class describes these programs; the
+    "UserGeom" class then creates objects of this type and stores
+    the respective data that describe that object */
   struct UserGeomType : public GeomType {
     typedef std::shared_ptr<UserGeomType> SP;
 
     /*! any device-specific data, such as optix handles, cuda device
-        pointers, etc */
+      pointers, etc */
     struct DeviceData : public GeomType::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
@@ -38,23 +38,23 @@ namespace owl {
       DeviceData(const DeviceContext::SP &device);
 
       /*! fill in an OptixProgramGroup descriptor with the module and
-          program names for this type */
+        program names for this type */
       void fillPGDesc(OptixProgramGroupDesc &pgDesc,
                       GeomType *gt,
                       int rayType) override;
 
       /*! cuda function handle for the (automatically generatd) kernel
-          that runs the primitive bounds program on the device */
+        that runs the primitive bounds program on the device */
       CUfunction boundsFuncKernel = 0;
     };
 
     /*! constructor, using the variable declaratoins that the user
-        supplied */
+      supplied */
     UserGeomType(Context *const context,
                  size_t varStructSize,
                  const std::vector<OWLVarDecl> &varDecls);
 
-    /*! set interseciton program to run for this type and given ray type */
+    /*! set intersection program to run for this type and given ray type */
     void setIntersectProg(int rayType,
                           Module::SP module,
                           const std::string &progName);
@@ -70,7 +70,7 @@ namespace owl {
     std::string toString() const override;
 
     /*! create an instance of this geometry that the user can then
-        parameterize and attach to a group */
+      parameterize and attach to a group */
     virtual std::shared_ptr<Geom> createGeom() override;
 
     /*! get reference to given device-specific data for this object */
@@ -83,29 +83,29 @@ namespace owl {
     ProgramDesc boundsProg;
     
     /*! the vector of intersect programs to run for this type, one per
-        ray type */
+      ray type */
     std::vector<ProgramDesc> intersectProg;
   };
 
 
   /*! instance of a user geometry - this describes a type of geometry
-      whose bounds and isec programs are speciffied through its
-      associated type, and whose values are stores in this object's
-      variables */
+    whose bounds and isec programs are speciffied through its
+    associated type, and whose values are stores in this object's
+    variables */
   struct UserGeom : public Geom {
     typedef std::shared_ptr<UserGeom> SP;
 
     /*! any device-specific data, such as optix handles, cuda device
-        pointers, etc */
+      pointers, etc */
     struct DeviceData : public Geom::DeviceData {
       DeviceData(const DeviceContext::SP &device)
         : Geom::DeviceData(device)
       {};
 
       /*! stors the device-side buffer to store the bounding boxes in
-          that the bounds program generates, and that the BVH builder
-          requires. (in theory we can release this memory after BVH is
-          built)*/
+        that the bounds program generates, and that the BVH builder
+        requires. (in theory we can release this memory after BVH is
+        built)*/
       DeviceMemory internalBufferForBoundsProgram;
     };
 
@@ -129,8 +129,8 @@ namespace owl {
     void setPrimCount(size_t count);
     
     /*! call a cuda kernel that computes the bounds *across* all
-        primitives within this group; may only get caleld after bound
-        progs have been executed */
+      primitives within this group; may only get caleld after bound
+      progs have been executed */
     void computeBounds(box3f bounds[2]);
 
     /*! run the bounding box program for all primitives within this geometry */
@@ -161,7 +161,7 @@ namespace owl {
     return *deviceData[device->ID]->as<UserGeom::DeviceData>();
   }
 
-    /*! get reference to the device-specific data for this object's *type* descriptor */
+  /*! get reference to the device-specific data for this object's *type* descriptor */
   inline UserGeomType::DeviceData &
   UserGeom::getTypeDD(const DeviceContext::SP &device) const
   {

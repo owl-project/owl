@@ -151,9 +151,8 @@ namespace owl {
     if (rc != CUDA_SUCCESS) {
       const char *errName = 0;
       cuGetErrorName(rc,&errName);
-      PRINT(errName);
-      PRINT(log);
-      exit(0);
+      throw std::runtime_error("unknown CUDA error when building module for bounds program kernel"
+                               +std::string(errName));
     }
     LOG_OK("created module #" << parent->ID << " (both optix and cuda)");
   }
