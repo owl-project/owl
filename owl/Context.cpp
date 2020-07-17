@@ -364,7 +364,6 @@ namespace owl {
     size_t hitGroupRecordSize
       = OPTIX_SBT_RECORD_HEADER_SIZE
       + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxHitProgDataSize);
-    PRINT(hitGroupRecordSize);
     
     assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
     device->sbt.hitGroupRecordSize = hitGroupRecordSize;

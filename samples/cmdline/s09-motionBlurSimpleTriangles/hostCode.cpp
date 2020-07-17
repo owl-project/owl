@@ -141,9 +141,7 @@ int main(int ac, char **av)
   owlGeomSetBuffer(trianglesGeom,"vertex0",vertexBuffer0);
   owlGeomSetBuffer(trianglesGeom,"vertex1",vertexBuffer0);
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
-  PING;
   owlGeomSet3f(trianglesGeom,"color",owl3f{0,1,0});
-  PING;
   
   // ------------------------------------------------------------------
   // the group/accel for that mesh
