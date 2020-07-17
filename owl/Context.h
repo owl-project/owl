@@ -208,6 +208,9 @@ namespace owl {
     /*! create new instance of a miss program of given type */
     MissProg::SP
     createMissProg(const std::shared_ptr<MissProgType> &type);
+
+    /*! sets miss prog to use for a given ray type */
+    void setMissProg(int rayTypeToSet, MissProg::SP missProgToUse);
     
     /*! creates new geometry type defitiion with given variable declarations */
     GeomType::SP

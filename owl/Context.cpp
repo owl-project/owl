@@ -216,7 +216,23 @@ namespace owl {
   {
     MissProg::SP mp = std::make_shared<MissProg>(this,type);
     mp->createDeviceData(getDevices());
+
+    // for backwards compatibility: automatically set miss prog if none are set, yet
+    if (mp->ID < numRayTypes &&
+        (mp->ID >= missProgPerRayType.size() || !missProgPerRayType[mp->ID]))
+      LOG("for backwards compatibility to pre-0.9.0 versions of OWL, "
+          "hereby installing this miss program for ray type #" << mp->ID);
+      setMissProg(mp->ID,mp);
     return mp;
+  }
+
+  /*! sets miss prog to use for a given ray type */
+  void Context::setMissProg(int rayTypeToSet, MissProg::SP missProgToUse)
+  {
+    assert(rayTypeToSet >= 0 && rayTypeToSet < numRayTypes);
+    if (missProgPerRayType.size() < numRayTypes)
+      missProgPerRayType.resize(numRayTypes);
+    missProgPerRayType[rayTypeToSet] = missProgToUse;
   }
 
   RayGenType::SP
@@ -403,20 +419,20 @@ namespace owl {
     SetActiveGPU forLifeTime(device);
     
     size_t numMissProgRecords = numRayTypes;
+    if (missProgPerRayType.size() < numRayTypes)
+      missProgPerRayType.resize(numRayTypes);
+    
     size_t maxMissProgDataSize = 0;
-    for (int i=0;i<missProgs.size();i++) {
-      MissProg *missProg = (MissProg *)missProgs.getPtr(i);
+    for (int i=0;i<missProgPerRayType.size();i++) {
+      MissProg::SP missProg = missProgPerRayType[i];
       if (!missProg) continue;
-        
       assert(missProg->type);
       maxMissProgDataSize = std::max(maxMissProgDataSize,missProg->type->varStructSize);
     }
-    PING; PRINT(maxMissProgDataSize);
     
     size_t missProgRecordSize
       = OPTIX_SBT_RECORD_HEADER_SIZE
       + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxMissProgDataSize);
-    PRINT(missProgRecordSize);
     
     assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
     device->sbt.missProgRecordSize  = missProgRecordSize;
@@ -431,11 +447,7 @@ namespace owl {
     // write one record per geometry, per ray type
     // ------------------------------------------------------------------
     for (int recordID=0;recordID<numMissProgRecords;recordID++) {
-      MissProg *miss
-        = (recordID < missProgs.size())
-        ? missProgs.getPtr(recordID)
-        : nullptr;
-      
+      MissProg::SP miss = missProgPerRayType[recordID];
       if (!miss) continue;
       
       uint8_t *const sbtRecord

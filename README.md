@@ -138,6 +138,9 @@ v0.9.x - Elimination of LL layer, and support for motion blur
   
 - owlLaunch2D now synchronous, async version explicitly owlLaunhc2DAsync
 
+- added owlMissProgSet(context,rayType,missProg) to set miss program
+  for a given ray type
+
 v0.8.x - Revamped build system, owl viewer, interative samples, and textures
 ----------------------------------------------------------------------
 

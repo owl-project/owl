@@ -312,7 +312,6 @@ checkGet(_context)->buildSBT(flags);
     return (OWLRayGen)context->createHandle(rayGen);
   }
 
-
   OWL_API OWLParams
   owlParamsCreate(OWLContext _context,
                   size_t      sizeOfVarStruct,
@@ -333,6 +332,22 @@ checkGet(_context)->buildSBT(flags);
     return (OWLLaunchParams)context->createHandle(launchParams);
   }
 
+  OWL_API void
+  owlMissProgSet(OWLContext _context,
+                 int rayType,
+                 OWLMissProg _miss)
+  {
+    LOG_API_CALL();
+
+    assert(_context);
+    MissProg::SP miss
+      = _miss
+      ? ((APIHandle *)_miss)->get<MissProg>()
+      : MissProg::SP();
+    checkGet(_context)->setMissProg(rayType,miss);
+  }
+
+
   OWL_API OWLMissProg
   owlMissProgCreate(OWLContext _context,
                     OWLModule  _module,
@@ -342,7 +357,7 @@ checkGet(_context)->buildSBT(flags);
                     size_t      numVars)
   {
     LOG_API_CALL();
-
+ 
     assert(_module);
     Module::SP module
       = ((APIHandle *)_module)->get<Module>();
@@ -360,6 +375,7 @@ checkGet(_context)->buildSBT(flags);
     return (OWLMissProg)checkGet(_context)->createHandle(missProg);
   }
 
+  
   OWL_API OWLGroup
   owlTrianglesGeomGroupCreate(OWLContext _context,
                               size_t numGeometries,

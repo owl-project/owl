@@ -81,8 +81,7 @@ namespace owl {
   /*! destructor */
   Module::DeviceData::~DeviceData()
   {
-    // should already have been deleted by this time
-    assert(module == nullptr);
+    destroy();
   }
 
   /*! destroy the optix data for this module; the owl data for the
