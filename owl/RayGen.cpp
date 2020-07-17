@@ -19,6 +19,20 @@
 
 namespace owl {
 
+  // ------------------------------------------------------------------
+  // RayGenType::DeviceData
+  // ------------------------------------------------------------------
+  
+  /*! constructor */
+  RayGenType::DeviceData::DeviceData(const DeviceContext::SP &device)
+    : RegisteredObject::DeviceData(device)
+  {}
+  
+  // ------------------------------------------------------------------
+  // RayGenType
+  // ------------------------------------------------------------------
+
+  /*! constructor, with all the info to describe this type */
   RayGenType::RayGenType(Context *const context,
                          Module::SP module,
                          const std::string &progName,
@@ -27,59 +41,24 @@ namespace owl {
     : SBTObjectType(context,context->rayGenTypes,varStructSize,varDecls),
       module(module),
       progName(progName)
-  {
-  }
+  {}
   
-  RayGen::RayGen(Context *const context,
-                 RayGenType::SP type) 
-    : SBTObject(context,context->rayGens,type)
+  /*! pretty-typecast into derived classes */
+  std::string RayGenType::toString() const
   {
-    assert(context);
-    assert(type);
-    assert(type.get());
-    assert(type->module);
-    assert(type->progName != "");
-    // context->llo->setRayGen(this->ID,
-    //                 type->module->ID,
-    //                 type->progName.c_str(),
-    //                 type->varStructSize);
+    return "RayGenType";
+  }
+    
+  /*! creates the device-specific data for this group */
+  RegisteredObject::DeviceData::SP RayGenType::createOn(const DeviceContext::SP &device) 
+  {
+    return std::make_shared<DeviceData>(device);
   }
 
-  RayGen::~RayGen()
-  {
-    for (auto device : context->getDevices()) {
-      SetActiveGPU forLifeTime(device);
-      getDD(device).sbtRecordBuffer.free();
-    }
-  }
-
-  // void RayGen::launch(const vec2i &dims)
-  // {
-  //   context->llo->launch(this->ID,dims);
-  // }
-
-  // void RayGen::launch(const vec2i &dims, const LaunchParams::SP &lp)
-  // {
-  //   context->llo->launch
-  //     (this->ID,dims,lp->ID,
-  //      [](uint8_t *output, int devID, const void *cbData)
-  //      {
-  //        const LaunchParams *lp
-  //          = (const LaunchParams *)cbData;
-  //        lp->writeVariables(output,devID);
-  //      },
-  //      (const void *)lp.get());
-  // }
-
-
-  void RayGen::launch(const vec2i &dims)
-  {
-    launchAsync(dims,context->dummyLaunchParams);
-    context->dummyLaunchParams->sync();
-    // throw std::runtime_error("only working with lauch params irght now");
-  }
-
-
+  // ------------------------------------------------------------------
+  // RayGen::DeviceData
+  // ------------------------------------------------------------------
+  
   RayGen::DeviceData::DeviceData(const DeviceContext::SP &device,
                                  size_t dataSize)
     : RegisteredObject::DeviceData(device),
@@ -88,11 +67,47 @@ namespace owl {
   {
     SetActiveGPU forLifeTime(device);
     
-    PING; PRINT(rayGenRecordSize);
     sbtRecordBuffer.alloc(rayGenRecordSize);
   }
 
+  // ------------------------------------------------------------------
+  // RayGen
+  // ------------------------------------------------------------------
+  
+  /*! create new raygen of given type */
+  RayGen::RayGen(Context *const context,
+                 RayGenType::SP type) 
+    : SBTObject(context,context->rayGens,type)
+  {
+    assert(context);
+    assert(type);
+    assert(type->module);
+    assert(type->progName != "");
+  }
 
+  /*! clean up... */
+  RayGen::~RayGen()
+  {
+    for (auto device : context->getDevices()) {
+      SetActiveGPU forLifeTime(device);
+      getDD(device).sbtRecordBuffer.free();
+    }
+  }
+
+  /*! pretty-printer, for printf-debugging */
+  std::string RayGen::toString() const
+  {
+    return "RayGen";
+  }
+  
+  /*! creates the device-specific data for this group */
+  RegisteredObject::DeviceData::SP RayGen::createOn(const DeviceContext::SP &device) 
+  {
+    return std::make_shared<DeviceData>(device,type->varStructSize);
+  }
+
+  /*! write the given SBT record, using the given device's
+    corresponding device-side data represenataion */
   void RayGen::writeSBTRecord(uint8_t *const sbtRecord,
                               const DeviceContext::SP &device)
   {
@@ -113,9 +128,17 @@ namespace owl {
     writeVariables(sbtRecordData,device);
   }  
 
+  /*! execute a *synchronous* launch of this raygen program, of given
+    dimensions - this will wait for the program to complete */
+  void RayGen::launch(const vec2i &dims)
+  {
+    launchAsync(dims,context->dummyLaunchParams);
+    context->dummyLaunchParams->sync();
+  }
 
-
-  
+  /*! *launch* this raygen prog with given launch params, but do NOT
+    wait for completion - this means the SBT shuld NOT be changed or
+    rebuild until a launchParams->sync() has been done */
   void RayGen::launchAsync(const vec2i &dims,
                            const LaunchParams::SP &lp)
   {
@@ -127,10 +150,8 @@ namespace owl {
       DeviceContext::SP device = context->getDevice(deviceID);
       SetActiveGPU forLifeTime(device);
       
-      RayGen::DeviceData &rgDD
-        = getDD(device);
-      LaunchParams::DeviceData &lpDD
-        = lp->getDD(device);
+      RayGen::DeviceData       &rgDD = getDD(device);
+      LaunchParams::DeviceData &lpDD = lp->getDD(device);
       
       lp->writeVariables(lpDD.hostMemory.data(),device);
       lpDD.deviceMemory.uploadAsync(lpDD.hostMemory.data(),lpDD.stream);
@@ -143,9 +164,6 @@ namespace owl {
       sbt.raygenRecord
         = (CUdeviceptr)rgDD.sbtRecordBuffer.d_pointer;
       assert(sbt.raygenRecord);
-      // sbt.raygenRecordSize
-      //   = rgDD.deviceMemory.size();
-      // assert(sbt.raygenRecordSize);
 
       // -------------------------------------------------------
       // set miss progs part of SBT 
@@ -176,6 +194,8 @@ namespace owl {
                         &lpDD.sbt,
                         dims.x,dims.y,1
                         ));
+
+      /* note we do NOT sync here ! */
     }
   }
 

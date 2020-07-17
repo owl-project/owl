@@ -45,7 +45,7 @@ namespace owl {
         set variable that we do not own */
     bool hasVariable(const std::string &varName);
 
-    /*! pretty-typecast into derived classes */
+    /*! pretty-printer, for printf-debugging */
     std::string toString() const override;
 
     /*! add a new variable of given type and name, and with given byte
