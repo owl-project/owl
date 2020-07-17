@@ -21,6 +21,7 @@
 
 namespace owl {
 
+  /*! type that describes a miss program's variables and programs */
   struct MissProgType : public SBTObjectType {
     typedef std::shared_ptr<MissProgType> SP;
     MissProgType(Context *const context,
@@ -33,39 +34,58 @@ namespace owl {
     struct DeviceData : public RegisteredObject::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
       
-      DeviceData(const DeviceContext::SP &device)
-        : RegisteredObject::DeviceData(device)
-      {};
+      /*! constructor, only pass-through to parent class */
+      DeviceData(const DeviceContext::SP &device);
 
+      /*! the optix-compiled program group witin the given device's
+        optix context */
       OptixProgramGroup pg = 0;
     };
 
-    DeviceData &getDD(const DeviceContext::SP &device) const
-    {
-      assert(device->ID < deviceData.size());
-      return deviceData[device->ID]->as<DeviceData>();
-    }
+    /*! get reference to given device-specific data for this object */
+    DeviceData &getDD(const DeviceContext::SP &device) const;
+    
     /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
-    { return std::make_shared<DeviceData>(device); }
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
     
-    virtual std::string toString() const { return "MissProgType"; }
+    /*! pretty-printer, for printf-debugging */
+    std::string toString() const override;
     
+    /*! the module in which the program is defined */
     Module::SP module;
+
+    /*! name of the program within this module */
     const std::string progName;
   };
   
+  /*! an actual instance of a miss program - defined by its type and
+      variable values */
   struct MissProg : public SBTObject<MissProgType> {
     typedef std::shared_ptr<MissProg> SP;
-    
+
+    /*! constructor */
     MissProg(Context *const context,
            MissProgType::SP type);
     
+    /*! write the given SBT record, using the given device's
+      corresponding device-side data represenataion */
     void writeSBTRecord(uint8_t *const sbtRecord,
                         const DeviceContext::SP &device);
     
-    virtual std::string toString() const { return "MissProg"; }
+    /*! pretty-printer, for printf-debugging */
+    std::string toString() const override;
   };
-
+  
+  // ------------------------------------------------------------------
+  // implementation section
+  // ------------------------------------------------------------------
+  
+  /*! get reference to given device-specific data for this object */
+  MissProgType::DeviceData &MissProgType::getDD(const DeviceContext::SP &device) const
+  {
+    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    return deviceData[device->ID]->as<DeviceData>();
+  }
+  
 } // ::owl
 

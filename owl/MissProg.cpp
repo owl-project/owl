@@ -19,6 +19,19 @@
 
 namespace owl {
 
+  // ------------------------------------------------------------------
+  // MissProgType::DeviceData
+  // ------------------------------------------------------------------
+
+  /*! constructor, only pass-through to parent class */
+  MissProgType::DeviceData::DeviceData(const DeviceContext::SP &device)
+    : RegisteredObject::DeviceData(device)
+  {}
+
+  // ------------------------------------------------------------------
+  // MissProgType
+  // ------------------------------------------------------------------
+
   MissProgType::MissProgType(Context *const context,
                              Module::SP module,
                              const std::string &progName,
@@ -29,17 +42,36 @@ namespace owl {
       progName(progName)
   {}
   
+  /*! pretty-printer, for printf-debugging */
+  std::string MissProgType::toString() const
+  {
+    return "MissProgType";
+  }
+
+  /*! creates the device-specific data for this group */
+  RegisteredObject::DeviceData::SP
+  MissProgType::createOn(const DeviceContext::SP &device) 
+  {
+    return std::make_shared<DeviceData>(device);
+  }
+  
+  // ------------------------------------------------------------------
+  // MissProg
+  // ------------------------------------------------------------------
+  
   MissProg::MissProg(Context *const context,
                      MissProgType::SP type) 
     : SBTObject(context,context->missProgs,type)
+  {}
+  
+  /*! pretty-printer, for printf-debugging */
+  std::string MissProg::toString() const
   {
-    // context->llo->setMissProg(this->ID,
-    //                           type->module->ID,
-    //                           type->progName.c_str(),
-    //                           type->varStructSize);
+    return "MissProg";
   }
 
-
+  /*! write the given SBT record, using the given device's
+  corresponding device-side data represenataion */
   void MissProg::writeSBTRecord(uint8_t *const sbtRecord,
                                 const DeviceContext::SP &device)
   {
@@ -59,8 +91,6 @@ namespace owl {
     // ------------------------------------------------------------------
     writeVariables(sbtRecordData,device);
   }  
-
-
   
 } // ::owl
 

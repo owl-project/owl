@@ -476,8 +476,6 @@ namespace owl {
     }
   }
   
-  
-
   void Context::buildSBT(OWLBuildSBTFlags flags)
   {
     if (flags & OWL_SBT_HITGROUPS)
