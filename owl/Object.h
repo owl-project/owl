@@ -106,13 +106,11 @@ namespace owl {
   // ------------------------------------------------------------------
   
   /*! pretty-typecast into derived classes */
-  template<typename T>
-  inline T &Object::DeviceData::as()
+  template<typename T> inline T &Object::DeviceData::as()
   { return *dynamic_cast<T *>(this); }
 
   /*! pretty-typecase to all derived classes */
-  template<typename T>
-  inline std::shared_ptr<T> Object::as() 
+  template<typename T> inline std::shared_ptr<T> Object::as() 
   { return std::dynamic_pointer_cast<T>(shared_from_this()); }
 
 } // ::owl

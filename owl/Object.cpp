@@ -235,5 +235,3 @@ namespace owl {
   }
   
 } // ::owl
-
-
