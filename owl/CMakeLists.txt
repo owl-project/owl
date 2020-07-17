@@ -113,12 +113,13 @@ set(OWL_SOURCES
   UserGeomGroup.cpp
 )
 
-cuda_add_library(owl
-  ${OWL_SOURCES}
-  )
 cuda_add_library(owl_static
   ${OWL_SOURCES}
   STATIC
+  )
+
+cuda_add_library(owl
+  ${OWL_SOURCES}
   )
 
 target_link_libraries(owl

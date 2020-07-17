@@ -217,6 +217,9 @@ namespace owl {
     MissProg::SP mp = std::make_shared<MissProg>(this,type);
     mp->createDeviceData(getDevices());
 
+    PING; PRINT(mp->ID);
+    PRINT(numRayTypes);
+    PRINT(missProgPerRayType.size());
     // for backwards compatibility: automatically set miss prog if none are set, yet
     if (mp->ID < numRayTypes &&
         (mp->ID >= missProgPerRayType.size() || !missProgPerRayType[mp->ID]))

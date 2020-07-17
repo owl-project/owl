@@ -169,7 +169,6 @@ namespace owl {
     index.count  = count;
     index.stride = stride;
     index.offset = offset;
-    PRINT(index.count);
     
     for (auto device : context->getDevices()) {
       DeviceData &dd = getDD(device);
