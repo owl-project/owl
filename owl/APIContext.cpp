@@ -21,15 +21,15 @@
   if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_LIGHT_BLUE                \
-      << "#owl.ng: "                            \
+      << "#owl: "                               \
       << message                                \
       << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  if (Context::logging())               \
+  if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_BLUE                      \
-      << "#owl.ng: "                            \
+      << "#owl: "                               \
       << message                                \
       << OWL_TERMINAL_DEFAULT << std::endl
   

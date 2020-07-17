@@ -24,47 +24,23 @@
 #include "UserGeomGroup.h"
 
 #define LOG(message)                            \
-  if (Context::logging())                   \
+  if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_LIGHT_BLUE                \
-      << "#owl.ng: "                            \
+      << "#owl: "                               \
       << message                                \
       << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  if (Context::logging())                   \
+  if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_BLUE                      \
-      << "#owl.ng: "                            \
+      << "#owl: "                               \
       << message                                \
       << OWL_TERMINAL_DEFAULT << std::endl
 
 namespace owl {
 
-  #if 0
-  Context::DeviceData::DeviceData(Context *parent,
-                                  ll::Device *device)
-    : parent(parent),
-      device(device),
-      owlDeviceID(device->owlDeviceID),
-      cudaDeviceID(device->cudaDeviceID)
-  {}
-
-#endif
-
-  Context::~Context()
-  {
-    devices.clear();
-  }
-  
-  Context::SP Context::create(int32_t *requestedDeviceIDs,
-                              int      numRequestedDevices)
-  {
-    LOG("creating node-graph context");
-    return std::make_shared<Context>(requestedDeviceIDs,
-                                     numRequestedDevices);
-  }
-  
   Context::Context(int32_t *requestedDeviceIDs,
                    int      numRequestedDevices)
     : buffers(this),
@@ -83,18 +59,16 @@ namespace owl {
                                    requestedDeviceIDs,
                                    numRequestedDevices))
   {
-    LOG("context ramping up - creating low-level devicegroup");
-    // ll = ll::DeviceGroup::create();
-    // ll::DeviceGroup::create(requestedDeviceIDs,
-    //                               numRequestedDevices);
-    // createDeviceData(getDevices());
-    LOG_OK("device group created");
-
     enablePeerAccess();
     
     LaunchParamsType::SP emptyLPType
       = createLaunchParamsType(0,{});
     dummyLaunchParams = createLaunchParams(emptyLPType);
+  }
+  
+  Context::~Context()
+  {
+    devices.clear();
   }
   
 
@@ -111,10 +85,7 @@ namespace owl {
     
     for (auto device : devices) {
       std::stringstream ss;
-    SetActiveGPU forLifeTime(device);
-      // int restoreActiveDevice = -1;
-      // cudaGetDevice(&restoreActiveDevice);
-      // for (int i=0;i<deviceCount;i++) {
+      SetActiveGPU forLifeTime(device);
       ss << " - device #" << device->ID << " : ";
       int cuda_i = device->getCudaDeviceID();
       int i = device->ID;
@@ -126,33 +97,34 @@ namespace owl {
           int canAccessPeer = 0;
           cudaError_t rc = cudaDeviceCanAccessPeer(&canAccessPeer, cuda_i,cuda_j);
           if (rc != cudaSuccess)
-            throw std::runtime_error("cuda error in cudaDeviceCanAccessPeer: "+std::to_string(rc));
+            throw std::runtime_error("cuda error in cudaDeviceCanAccessPeer: "
+                                     +std::to_string(rc));
           if (!canAccessPeer) {
             // huh. this can happen if you have differnt device
             // types (in my case, a 2070 and a rtx 8000).
             std::cerr << "cannot not enable peer access!? ... skipping..." << std::endl;
             continue;
-            // throw std::runtime_error("could not enable peer access!?");
           }
           
           rc = cudaDeviceEnablePeerAccess(cuda_j,0);
           if (rc != cudaSuccess)
-            throw std::runtime_error("cuda error in cudaDeviceEnablePeerAccess: "+std::to_string(rc));
+            throw std::runtime_error("cuda error in cudaDeviceEnablePeerAccess: "
+                                     +std::to_string(rc));
           ss << " +";
         }
       }
       LOG(ss.str()); 
-      // device->popActive(oldActive);//    cudaSetDevice(restoreActiveDevice);
     }
   }
-
-
-
+  
+  
+  
   /*! creates a buffer that uses CUDA host pinned memory; that
     memory is pinned on the host and accessive to all devices in the
     device group */
-  Buffer::SP Context::hostPinnedBufferCreate(OWLDataType type,
-                                             size_t count)
+  Buffer::SP
+  Context::hostPinnedBufferCreate(OWLDataType type,
+                                  size_t count)
   {
     Buffer::SP buffer = std::make_shared<HostPinnedBuffer>(this,type);
     assert(buffer);
@@ -160,7 +132,7 @@ namespace owl {
     buffer->resize(count);
     return buffer;
   }
-
+  
   /*! creates a buffer that uses CUDA managed memory; that memory is
     managed by CUDA (see CUDAs documentatoin on managed memory) and
     accessive to all devices in the deviec group */
@@ -179,9 +151,10 @@ namespace owl {
     return buffer;
   }
   
-  Buffer::SP Context::deviceBufferCreate(OWLDataType type,
-                                         size_t count,
-                                         const void *init)
+  Buffer::SP
+  Context::deviceBufferCreate(OWLDataType type,
+                              size_t count,
+                              const void *init)
   {
     Buffer::SP buffer
       = std::make_shared<DeviceBuffer>(this,type);
@@ -260,20 +233,20 @@ namespace owl {
     return rgt;
   }
   
-
+  
   LaunchParamsType::SP
   Context::createLaunchParamsType(size_t varStructSize,
                                   const std::vector<OWLVarDecl> &varDecls)
   {
     LaunchParamsType::SP lpt
       = std::make_shared<LaunchParamsType>(this,
-                                              varStructSize,
+                                           varStructSize,
                                            varDecls);
     lpt->createDeviceData(getDevices());
     return lpt;
   }
   
-
+  
   MissProgType::SP
   Context::createMissProgType(Module::SP module,
                               const std::string &progName,
@@ -289,7 +262,7 @@ namespace owl {
     return mpt;
   }
   
-
+  
   GeomGroup::SP Context::trianglesGeomGroupCreate(size_t numChildren)
   {
     GeomGroup::SP gg
@@ -297,7 +270,7 @@ namespace owl {
     gg->createDeviceData(getDevices());
     return gg;
   }
-
+  
   GeomGroup::SP Context::userGeomGroupCreate(size_t numChildren)
   {
     GeomGroup::SP gg
@@ -305,8 +278,7 @@ namespace owl {
     gg->createDeviceData(getDevices());
     return gg;
   }
-
-
+  
   GeomType::SP
   Context::createGeomType(OWLGeomKind kind,
                           size_t varStructSize,
@@ -357,7 +329,6 @@ namespace owl {
   {
     LOG("building SBT hit group records");
     SetActiveGPU forLifeTime(device);
-    // TODO: move this to explicit destroyhitgroups
     if (device->sbt.hitGroupRecordsBuffer.alloced())
       device->sbt.hitGroupRecordsBuffer.free();
 
@@ -365,24 +336,14 @@ namespace owl {
     for (int i=0;i<geoms.size();i++) {
       Geom *geom = (Geom *)geoms.getPtr(i);
       if (!geom) continue;
-        
+      
       assert(geom->geomType);
       maxHitProgDataSize = std::max(maxHitProgDataSize,geom->geomType->varStructSize);
     }
-    // for (int geomID=0;geomID<geoms.size();geomID++) {
-    //   Geom *geom = geoms[geomID];
-    //   if (!geom) continue;
-    //   GeomType &gt = geomTypes[geom->geomTypeID];
-    //   maxHitProgDataSize = std::max(maxHitProgDataSize,gt.hitProgDataSize);
-    // }
-    PING; PRINT(maxHitProgDataSize);
       
-    // if (maxHitProgDataSize == size_t(-1))
-    //   throw std::runtime_error("in sbtHitProgsBuild: at least on geometry uses a type for which geomTypeCreate has not been called");
-    // assert("make sure all geoms had their program size set"
-    //        && maxHitProgDataSize != (size_t)-1);
     size_t numHitGroupEntries = sbtRangeAllocator.maxAllocedID;
-    PRINT(numHitGroupEntries);
+    // always add 1 so we always have a hit group array, even for
+    // programs that didn't create any Groups (yet?)
     size_t numHitGroupRecords = numHitGroupEntries*numRayTypes + 1;
     size_t hitGroupRecordSize
       = OPTIX_SBT_RECORD_HEADER_SIZE
@@ -392,7 +353,7 @@ namespace owl {
     assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
     device->sbt.hitGroupRecordSize = hitGroupRecordSize;
     device->sbt.hitGroupRecordCount = numHitGroupRecords;
-
+    
     size_t totalHitGroupRecordsArraySize
       = numHitGroupRecords * hitGroupRecordSize;
     std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
@@ -408,7 +369,6 @@ namespace owl {
       if (!gg) continue;
         
       const int sbtOffset = (int)gg->sbtOffset;
-      PING; PRINT(groupID); PRINT(sbtOffset);
       for (int childID=0;childID<gg->geometries.size();childID++) {
         Geom::SP geom = gg->geometries[childID];
         if (!geom) continue;
@@ -424,53 +384,21 @@ namespace owl {
           uint8_t *const sbtRecord
             = hitGroupRecords.data() + recordID*hitGroupRecordSize;
 
+          // let the geometry write itself:
           geom->writeSBTRecord(sbtRecord,device,rayTypeID);
           
-          // // ------------------------------------------------------------------
-          // // pack record header with the corresponding hit group:
-          // // ------------------------------------------------------------------
-          // // first, compute pointer to record:
-          // char    *const sbtRecordHeader = (char *)sbtRecord;
-          // // then, get gemetry we want to write (to find its hit group ID)...
-          // // const Geom *const geom = checkGetGeom(geomID);
-          // // ... find the PG that goes into the record header...
-          
-          // // auto geomType = geom->type;//device->geomTypes[geom->geomType->ID];
-          // GeomType::DeviceData &gt = geom->type->getDD(device);
-          // // const ll::HitGroupPG &hgPG
-          // //   = geomType.perRayType[rayTypeID];
-          // // ... and tell optix to write that into the record
-          // OPTIX_CALL(SbtRecordPackHeader(gt.getPG(rayTypeID),sbtRecordHeader));
-          
-          // // ------------------------------------------------------------------
-          // // finally, let the user fill in the record's payload using
-          // // the callback
-          // // ------------------------------------------------------------------
-          // uint8_t *const sbtRecordData
-          //   = sbtRecord + OPTIX_SBT_RECORD_HEADER_SIZE;
-          // geom->writeVariables(sbtRecordData,device->ID);
-
-          // std::cout << " writing geom " << geom->toString()
-          //           << " raytype " << rayTypeID << " to offset " << recordID*hitGroupRecordSize << std::endl;
-          // writeHitProgDataCB(sbtRecordData,
-          //                    context->owlDeviceID,
-          //                    geomID,
-          //                    rayTypeID,
-          //                    callBackUserData);
         }
       }
     }
     device->sbt.hitGroupRecordsBuffer.alloc(hitGroupRecords.size());
     device->sbt.hitGroupRecordsBuffer.upload(hitGroupRecords);
-    PING; PRINT((void *)device->sbt.hitGroupRecordsBuffer.get());
-    // device->popActive(oldActive);
+    
     LOG_OK("done building (and uploading) SBT hit group records");
   }
   
-
+  
   void Context::buildMissProgRecordsOn(const DeviceContext::SP &device)
   {
-#if 1
     LOG("building SBT miss group records");
     SetActiveGPU forLifeTime(device);
     
@@ -516,63 +444,7 @@ namespace owl {
     }
     device->sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
     device->sbt.missProgRecordsBuffer.upload(missProgRecords);
-    // device->popActive(oldActive);
     LOG_OK("done building (and uploading) SBT miss group records");
-#else
-    LOG("building SBT miss group records");
-    
-    size_t numMissProgRecords = missProgs.size();
-    if (numMissProgRecords == 0) {
-      std::cout << "warning: no miss progs!" << std::endl;
-      return;
-    }
-    
-    SetActiveGPU forLifeTime(device);
-
-    size_t maxMissProgDataSize = 0;
-    for (int i=0;i<missProgs.size();i++) {
-      MissProg *missProg = (MissProg *)missProgs.getPtr(i);
-      if (!missProg) continue;
-        
-      assert(missProg->type);
-      maxMissProgDataSize = std::max(maxMissProgDataSize,missProg->type->varStructSize);
-    }
-    PING; PRINT(maxMissProgDataSize);
-    
-    PRINT(numRayTypes);
-    PRINT(numMissProgRecords);
-    assert(numMissProgRecords == numRayTypes);
-    
-    size_t missProgRecordSize
-      = OPTIX_SBT_RECORD_HEADER_SIZE
-      + smallestMultipleOf<OPTIX_SBT_RECORD_ALIGNMENT>(maxMissProgDataSize);
-    PRINT(missProgRecordSize);
-    
-    assert((OPTIX_SBT_RECORD_HEADER_SIZE % OPTIX_SBT_RECORD_ALIGNMENT) == 0);
-    device->sbt.missProgRecordSize  = missProgRecordSize;
-    device->sbt.missProgRecordCount = numMissProgRecords;
-
-    size_t totalMissProgRecordsArraySize
-      = numMissProgRecords * missProgRecordSize;
-    std::vector<uint8_t> missProgRecords(totalMissProgRecordsArraySize);
-
-    // ------------------------------------------------------------------
-    // now, write all records (only on the host so far): we need to
-    // write one record per geometry, per ray type
-    // ------------------------------------------------------------------
-    for (int recordID=0;recordID<missProgs.size();recordID++) {
-      MissProg *miss = missProgs.getPtr(recordID);
-      if (!miss) continue;
-        
-      uint8_t *const sbtRecord
-        = missProgRecords.data() + recordID*missProgRecordSize;
-      miss->writeSBTRecord(sbtRecord,device);
-    }
-    device->sbt.missProgRecordsBuffer.alloc(missProgRecords.size());
-    device->sbt.missProgRecordsBuffer.upload(missProgRecords);
-    // device->popActive(oldActive);
-    LOG_OK("done building (and uploading) SBT miss group records");
-#endif
   }
 
 
@@ -590,65 +462,25 @@ namespace owl {
       rg->writeSBTRecord(hostMem.data(),device);
       dd.sbtRecordBuffer.upload(hostMem);
     }
-    // device->popActive(oldActive);
   }
   
   
 
   void Context::buildSBT(OWLBuildSBTFlags flags)
   {
-// #if 1
     if (flags & OWL_SBT_HITGROUPS)
       for (auto device : getDevices())
         buildHitGroupRecordsOn(device);
-// #else
-//     // ----------- build hitgroups -----------
-//     if (flags & OWL_SBT_HITGROUPS)
-//       llo->sbtHitProgsBuild
-//         ([&](uint8_t *output,int devID,int geomID,int /*ignore: rayID*/) {
-//           const Geom *geom = geoms.getPtr(geomID);
-//           assert(geom);
-//           geom->writeVariables(output,devID);
-//         });
-// #endif
     
     // ----------- build miss prog(s) -----------
     if (flags & OWL_SBT_MISSPROGS)
       for (auto device : getDevices())
         buildMissProgRecordsOn(device);
-      // llo->sbtMissProgsBuild
-      //   ([&](uint8_t *output,
-      //        int devID,
-      //        int rayTypeID) {
-      //     // TODO: eventually, we want to be able to 'assign' miss progs
-      //     // to different ray types, in which case we ahve to be able to
-      //     // look up wich miss prog is used for a given ray types - for
-      //     // now, we assume miss progs are created in exactly the right
-      //     // order ...
-      //     int missProgID = rayTypeID;
-      //     const MissProg *missProg = missProgs.getPtr(missProgID);
-      //     assert(missProg);
-      //     missProg->writeVariables(output,devID);
-      //   });
 
     // ----------- build raygens -----------
     if (flags & OWL_SBT_RAYGENS)
       for (auto device : getDevices())
         buildRayGenRecordsOn(device);
-      // llo->sbtRayGensBuild
-      //   ([&](uint8_t *output,
-      //        int devID,
-      //        int rgID) {
-
-      //     // TODO: need the ID of the miss prog we're writing!
-      //     int rayGenID = rgID;
-      //     assert(rayGens.size() >= 1);
-         
-      //     const RayGen *rayGen = rayGens.getPtr(rayGenID);
-      //     assert(rayGen);
-      //     rayGen->writeVariables(output,devID);
-      //   });
-  
   }
 
   void Context::buildPipeline()
@@ -658,7 +490,7 @@ namespace owl {
       device->buildPipeline();
     }
   }
-
+  
   void Context::buildModules()
   {
     destroyModules();
@@ -678,9 +510,6 @@ namespace owl {
     /* TODO; sanity checking that this is a useful value, and that
        no geoms etc are created yet */
     this->numRayTypes = rayTypeCount;
-      
-    // lloSetRayTypeCount(llo,rayTypeCount);
-    // llo->setRayTypeCount(rayTypeCount);
   }
 
   /*! sets maximum instancing depth for the given context:
@@ -706,12 +535,14 @@ namespace owl {
     this->maxInstancingDepth = maxInstanceDepth;
     
     if (maxInstancingDepth < 1)
-      throw std::runtime_error("a instancing depth of < 1 isnt' currently supported in OWL; pleaes see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
+      throw std::runtime_error
+        ("a instancing depth of < 1 isnt' currently supported in OWL; "
+         "please see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
     
     for (auto device : getDevices()) {
       assert("check pipeline isn't already created"
              && device->pipeline == nullptr);
-      // device->maxInstancingDepth = maxInstancingDepth;
+      
       device->configurePipelineOptions();
     } 
   }
@@ -719,8 +550,6 @@ namespace owl {
   void Context::enableMotionBlur()
   {
     motionBlurEnabled = true;
-    // // todo: axe this
-    // llo->enableMotionBlur();
   }
 
   void Context::buildPrograms()

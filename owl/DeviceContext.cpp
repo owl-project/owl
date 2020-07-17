@@ -107,6 +107,8 @@ namespace owl {
                                                       int32_t *deviceIDs,
                                                       int      numDevices)
   {
+    LOG("context ramping up - creating low-level devicegroup");
+
     // ------------------------------------------------------------------
     // init cuda, and error-out if no cuda devices exist
     // ------------------------------------------------------------------

@@ -27,24 +27,10 @@
 
 namespace owl {
 
-  std::string typeToString(const OWLDataType type);
-  
+  /*! the root 'context' that spans, and manages, all objects and all
+      devices */
   struct Context : public Object {
     typedef std::shared_ptr<Context> SP;
-
-    // /*! for miss progs there's exactly one programgroup pre object */
-    // struct DeviceData : public DeviceContext {
-    // };
-
-    DeviceData &getDD(int deviceID) const
-    {
-      assert(deviceID < deviceData.size());
-      return deviceData[deviceID]->as<DeviceData>();
-    }
-    // DeviceData &getDD(const deviceID) const { return getDD(device->ID); }
-    /*! creates the device-specific data for this group */
-    // RegisteredObject::DeviceData::SP createOn(int deviceID) override
-    // { return std::make_shared<DeviceData>(this,deviceID); }
 
     /*! returns whether logging is enabled */
     inline static bool logging()
@@ -55,40 +41,21 @@ namespace owl {
       return true;
 #endif
     }
-      
-    
-    static Context::SP create(int32_t *requestedDeviceIDs,
-                              int      numRequestedDevices);
 
+    /*! creates a context with the given device IDs. If list of device
+        is nullptr, and number requested devices is > 1, then the
+        first N devices will get used; invalid device IDs in the list
+        will automatically get dropped */
     Context(int32_t *requestedDeviceIDs,
             int      numRequestedDevices);
-    
+
+    /*! virtual destructor to cleanly wind down upon exit */
     virtual ~Context();
 
-    ObjectRegistryT<Buffer>       buffers;
-    ObjectRegistryT<Texture>      textures;
-    ObjectRegistryT<Group>        groups;
-    ObjectRegistryT<RayGenType>   rayGenTypes;
-    ObjectRegistryT<RayGen>       rayGens;
-    ObjectRegistryT<MissProgType> missProgTypes;
-    ObjectRegistryT<MissProg>     missProgs;
-    ObjectRegistryT<GeomType>     geomTypes;
-    ObjectRegistryT<Geom>         geoms;
-    ObjectRegistryT<Module>       modules;
-    ObjectRegistryT<LaunchParamsType> launchParamTypes;
-    ObjectRegistryT<LaunchParams>     launchParams;
-
-    RangeAllocator sbtRangeAllocator;
-
-    std::vector<MissProg::SP> missProgPerRayType;
-
-    /*! access list of all devices */
-    // const std::vector<ll::Device *> &getDevices() const { return llo->devices; }
-
-    /*! return device with given linear (owl-)ID; throws an error if
-        that is a invalid ID */
-    // ll::Device *getDevice(int deviceID) const
-    // { assert(deviceID < llo->devices.size()); return llo->devices[deviceID]; }
+    size_t deviceCount() const { return getDevices().size(); }
+    const std::vector<DeviceContext::SP> &getDevices() const { return devices; }
+    DeviceContext::SP getDevice(int ID) const
+    { assert(ID >= 0 && ID < devices.size()); return devices[ID]; }
 
     /*! part of the SBT creation - builds the hit group array */
     void buildHitGroupRecordsOn(const DeviceContext::SP &device);
@@ -96,8 +63,14 @@ namespace owl {
     void buildRayGenRecordsOn(const DeviceContext::SP &device);
     /*! part of the SBT creation - builds the miss group array */
     void buildMissProgRecordsOn(const DeviceContext::SP &device);
-    
+
+    /*! sets number of ray types to be used - should be done right
+        after context creation, and before SBT and pipeline get
+        built */
     void setRayTypeCount(size_t rayTypeCount);
+    
+    /*! enables motoin blur - should be done right after context
+        creation, and before SBT and pipeline get built */
     void enableMotionBlur();
     
     /*! sets maximum instancing depth for the given context:
@@ -120,42 +93,62 @@ namespace owl {
       instances) */
     void setMaxInstancingDepth(int32_t maxInstanceDepth);
 
-  /*! experimentation code for sbt construction */
+
+    // ------------------------------------------------------------------
+    // internal mechanichs/plumbling that do the actual work
+    // ------------------------------------------------------------------
+    
     void buildSBT(OWLBuildSBTFlags flags);
     void buildPipeline();
     void buildPrograms();
     /*! clearly destroy _pptix_ handles of all active programs */
     void destroyPrograms();
     void buildModules();
-    /*! clearly destroy _pptix_ handles of all active modules */
+    /*! clearly destroy _optix_ handles of all active modules */
     void destroyModules();
 
-    // void buildMissPrograms(Device *device);
-    // void buildRayGenPrograms(Device *device);
-    // void buildIsecPrograms(Device *device);
-    // // void buildBoundsPrograms(Device *device);
-    // void buildAnyHitPrograms(Device *device);
-    // void buildClosestHitPrograms(Device *device);
 
-    
-    GeomGroup::SP
-    trianglesGeomGroupCreate(size_t numChildren);
-    
-    GeomGroup::SP
-    userGeomGroupCreate(size_t numChildren);
-    
-    Buffer::SP
-    deviceBufferCreate(OWLDataType type,
-                       size_t count,
-                       const void *init);
+    // ------------------------------------------------------------------
+    // factory methods to create objects within this context
+    // ------------------------------------------------------------------
 
+    /*! creates a 2D texture object with given parameters; this will
+        internally be mapped to a cuda texture object, and uploaded as
+        such to the device */
     Texture::SP
     texture2DCreate(OWLTexelFormat texelFormat,
                     OWLTextureFilterMode filterMode,
                     const vec2i size,
                     uint32_t linePitchInBytes,
                     const void *texels);
+
+    /*! create a new *triangles* geometry group that will eventually
+        create a BVH over all the trinalges in all its child
+        geometries. only TrianglesGeoms can be added to this
+        group. These triangle geoms can all have different types,
+        different programs, etc, but must all be of "OWL_TRIANGLES"
+        kind */
+    GeomGroup::SP
+    trianglesGeomGroupCreate(size_t numChildren);
     
+    /*! create a new *user* geometry group that will eventually create
+        a BVH over all the user geoms / custom prims in all its child
+        geometries. only UserGeom's can be added to this group. These
+        user geoms can all have different types, different programs,
+        etc, but must all be of "OWL_TRIANGLES" kind */
+    GeomGroup::SP
+    userGeomGroupCreate(size_t numChildren);
+
+    /*! create a new device buffer of given data type and count; if
+        init is non-null it will be used to populoate this
+        buffer. Note that for certain non-trivial types (OWLTexture,
+        OWLGroup, etc) you may have to specify the content upon
+        creation */
+    Buffer::SP
+    deviceBufferCreate(OWLDataType type,
+                       size_t count,
+                       const void *init);
+
     /*! creates a buffer that uses CUDA host pinned memory; that
       memory is pinned on the host and accessive to all devices in the
       device group */
@@ -177,52 +170,102 @@ namespace owl {
     graphicsBufferCreate(OWLDataType type,
                          size_t count,
                          cudaGraphicsResource_t resource);
+
     
-    RayGen::SP
-    createRayGen(const std::shared_ptr<RayGenType> &type);
-    
+    /*! creates new ray gen program *type* with given program name (in
+        given module), and the given variable declarations that
+        describe this type's variables */
     RayGenType::SP
     createRayGenType(Module::SP module,
                      const std::string &progName,
                      size_t varStructSize,
                      const std::vector<OWLVarDecl> &varDecls);
+
+    /*! create new instance of a ray gen program of given type */
+    RayGen::SP
+    createRayGen(const std::shared_ptr<RayGenType> &type);
     
-    LaunchParams::SP
-    createLaunchParams(const std::shared_ptr<LaunchParamsType> &type);
-    
+    /*! create a new launch param type descriptor with given
+        variables; this can then be used to create actual launch param
+        instances (\see createLaunchParams) */
     LaunchParamsType::SP
     createLaunchParamsType(size_t varStructSize,
                            const std::vector<OWLVarDecl> &varDecls);
     
-    MissProg::SP
-    createMissProg(const std::shared_ptr<MissProgType> &type);
+    /*! create new instance of a set of launch params of given type */
+    LaunchParams::SP
+    createLaunchParams(const std::shared_ptr<LaunchParamsType> &type);
     
+    /*! creates new miss program *type* with given program name (in
+        given module), and the given variable declarations that
+        describe this type's variables */
     MissProgType::SP
     createMissProgType(Module::SP module,
                        const std::string &progName,
                        size_t varStructSize,
                        const std::vector<OWLVarDecl> &varDecls);
+
+    /*! create new instance of a miss program of given type */
+    MissProg::SP
+    createMissProg(const std::shared_ptr<MissProgType> &type);
     
+    /*! creates new geometry type defitiion with given variable declarations */
     GeomType::SP
     createGeomType(OWLGeomKind kind,
-                       size_t varStructSize,
-                       const std::vector<OWLVarDecl> &varDecls);
+                   size_t varStructSize,
+                   const std::vector<OWLVarDecl> &varDecls);
     
-    Module::SP createModule(const std::string &ptxCode);
+    /*! creates new module with given precompiled PTX code */
+    Module::SP
+    createModule(const std::string &ptxCode);
+
+    // ------------------------------------------------------------------
+    // member variables
+    // ------------------------------------------------------------------
+
+    /*! @{ registries for all the different object types within this
+        context. allows for keeping track what's alive, and what has
+        to be compiled, put into SBTs, etc */
+    ObjectRegistryT<Buffer>       buffers;
+    ObjectRegistryT<Texture>      textures;
+    ObjectRegistryT<Group>        groups;
+    ObjectRegistryT<RayGenType>   rayGenTypes;
+    ObjectRegistryT<RayGen>       rayGens;
+    ObjectRegistryT<MissProgType> missProgTypes;
+    ObjectRegistryT<MissProg>     missProgs;
+    ObjectRegistryT<GeomType>     geomTypes;
+    ObjectRegistryT<Geom>         geoms;
+    ObjectRegistryT<Module>       modules;
+    ObjectRegistryT<LaunchParamsType> launchParamTypes;
+    ObjectRegistryT<LaunchParams>     launchParams;
+    /*! @} */
+
+    /*! rracks which ID regions in the SBT have already been used -
+        newly created groups allocate ranges of IDs in the SBT (to
+        allow its geometries to be in successive SBT regions), and
+        this struct keeps track of whats already used, and what is
+        available */
+    RangeAllocator sbtRangeAllocator;
+
+    /*! one miss prog per ray type */
+    std::vector<MissProg::SP> missProgPerRayType;
 
     /*! maximum depth instancing tree as specified by
       `setMaxInstancingDepth` */
-    int maxInstancingDepth = 1;      
+    int maxInstancingDepth = 1;
+
+    /*! number of ray types - change via setRayTypeCount() */
     int numRayTypes { 1 };
-    /*! by default motion blur is off, as it costs performacne */
+    
+    /*! by default motion blur is off, as it costs performacne - set
+        via enableMotimBlur() */
     bool motionBlurEnabled = false;
 
+    /*! a set of dummy (ie, empty) launch params. allows us for always
+        using the same launch code, *with* launch params, even if th
+        user didn't specify any during launch */
     LaunchParams::SP dummyLaunchParams;
 
-    size_t deviceCount() const { return getDevices().size(); }
-    const std::vector<DeviceContext::SP> &getDevices() const { return devices; }
-    DeviceContext::SP getDevice(int ID) const
-    { assert(ID >= 0 && ID < devices.size()); return devices[ID]; }
   private:
     void enablePeerAccess();
     std::vector<DeviceContext::SP> devices;
