@@ -398,6 +398,13 @@ owlRayGenCreate(OWLContext  context,
                 OWLVarDecl *vars,
                 size_t      numVars);
 
+/*! creates a miss program with given function name (in given module)
+    and given variables. Note due to backwards compatibility this will
+    also automatically *set*, by default, the first such created
+    program as miss program for ray type number 0, the second one for
+    ray type number 1, etc. If another order is desired, you can use
+    \see owlMissProgSet to explicitly assign miss programs to specific
+    ray types */
 OWL_API OWLMissProg
 owlMissProgCreate(OWLContext  context,
                   OWLModule   module,
@@ -406,6 +413,11 @@ owlMissProgCreate(OWLContext  context,
                   OWLVarDecl *vars,
                   size_t      numVars);
 
+/*! sets the given miss program for the given ray type */
+OWL_API void
+owlMissProgSet(OWLContext  context,
+               int rayType,
+               OWLMissProg missProgToUse);
 
 // ------------------------------------------------------------------
 /*! create a new group (which handles the acceleration strucure) for

@@ -34,7 +34,7 @@ endif()
 # (build modes, glut, optix, etc)
 # ------------------------------------------------------------------
 set(owl_dir ${PROJECT_SOURCE_DIR})
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/common/cmake/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/cmake/")
 include(configure_owl)
 include(configure_tbb)
 # if not a subproject, set "Debug/Release flags and binary output dir
@@ -54,6 +54,9 @@ if (NOT WIN32)
   set (CMAKE_CXX_FLAGS "--std=c++11")
   set (CUDA_PROPAGATE_HOST_FLAGS ON)
 endif()
+
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(configure_cuda)
 include(configure_optix)
