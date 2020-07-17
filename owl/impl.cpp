@@ -173,20 +173,7 @@ checkGet(_context)->buildSBT(flags);
     LOG_API_CALL();
     owlAsyncLaunch2D(_rayGen,dims_x,dims_y,_launchParams);
     owlLaunchSync(_launchParams);
-    // assert(_rayGen);
-    // RayGen::SP rayGen
-    //   = ((APIHandle *)_rayGen)->get<RayGen>();
-    // assert(rayGen);
-
-    // assert(_launchParams);
-    // LaunchParams::SP launchParams
-    //   = ((APIHandle *)_launchParams)->get<LaunchParams>();
-    // assert(launchParams);
-
-    // rayGen->launchAsync(vec2i(dims_x,dims_y),launchParams);
-    // launchParams->sync();
   }
-
 
   /*! wait for the async launch to finish */
   OWL_API void
@@ -198,8 +185,6 @@ checkGet(_context)->buildSBT(flags);
     assert(launchParams);
     launchParams->sync();
   }
-  
-
 
   OWL_API void owlRayGenLaunch2D(OWLRayGen _rayGen,
                                  int dims_x, int dims_y)
@@ -207,10 +192,7 @@ checkGet(_context)->buildSBT(flags);
     LOG_API_CALL();
 
     assert(_rayGen);
-    RayGen::SP rayGen
-      = ((APIHandle *)_rayGen)->get<RayGen>();
-    assert(rayGen);
-
+    RayGen::SP rayGen = ((APIHandle *)_rayGen)->get<RayGen>();
     rayGen->launch(vec2i(dims_x,dims_y));
   }
 
@@ -318,19 +300,15 @@ checkGet(_context)->buildSBT(flags);
     APIContext::SP context = checkGet(_context);
     
     assert(_module);
-    Module::SP module
-      = ((APIHandle *)_module)->get<Module>();
+    Module::SP module = ((APIHandle *)_module)->get<Module>();
     assert(module);
     
-    RayGenType::SP  rayGenType
+    RayGenType::SP rayGenType
       = context->createRayGenType(module,programName,
                                   sizeOfVarStruct,
                                   checkAndPackVariables(vars,numVars));
-    assert(rayGenType);
     
-    RayGen::SP  rayGen
-      = context->createRayGen(rayGenType);
-    assert(rayGen);
+    RayGen::SP rayGen = context->createRayGen(rayGenType);
     return (OWLRayGen)context->createHandle(rayGen);
   }
 
@@ -355,8 +333,6 @@ checkGet(_context)->buildSBT(flags);
     return (OWLLaunchParams)context->createHandle(launchParams);
   }
 
-
-
   OWL_API OWLMissProg
   owlMissProgCreate(OWLContext _context,
                     OWLModule  _module,
@@ -376,7 +352,6 @@ checkGet(_context)->buildSBT(flags);
       = checkGet(_context)->createMissProgType(module,programName,
                                                sizeOfVarStruct,
                                                checkAndPackVariables(vars,numVars));
-    assert(missProgType);
     
     MissProg::SP  missProg
       = checkGet(_context)->createMissProg(missProgType);
@@ -394,15 +369,11 @@ checkGet(_context)->buildSBT(flags);
     APIContext::SP context = checkGet(_context);
     GeomGroup::SP  group = context->trianglesGeomGroupCreate(numGeometries);
     assert(group);
-    // group->createDeviceData(context->getDevices());
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
-    PING;
     if (initValues) {
       for (int i = 0; i < numGeometries; i++) {
-        //owlGeomGroupSetChild(_group, i, initValues[i]);
         Geom::SP child = ((APIHandle *)initValues[i])->get<TrianglesGeom>();
-        PRINT(child);
         assert(child);
         group->setChild(i, child);
       }
@@ -418,15 +389,12 @@ checkGet(_context)->buildSBT(flags);
   {
     LOG_API_CALL();
     APIContext::SP context = checkGet(_context);
-    GeomGroup::SP  group
-      = context->userGeomGroupCreate(numGeometries);
-    // group->createDeviceData(context->getDevices());
+    GeomGroup::SP  group   = context->userGeomGroupCreate(numGeometries);
     assert(group);
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     if (initValues) {
       for (int i = 0; i < numGeometries; i++) {
-        //owlGeomGroupSetChild(_group, i, initValues[i]);
         Geom::SP child = ((APIHandle *)initValues[i])->get<UserGeom>();
         assert(child);
         group->setChild(i, child);
@@ -481,9 +449,6 @@ checkGet(_context)->buildSBT(flags);
     assert(group);
     group->createDeviceData(context->getDevices());
 
-    PING;
-    PRINT(numInstances);
-
     if (_initGroups)
       for (int childID=0;childID<numInstances;childID++) {
         OWLGroup _child = _initGroups[childID];
@@ -505,10 +470,6 @@ checkGet(_context)->buildSBT(flags);
     return _group;
   }
 
-
-
-
-  
 
   OWL_API void owlContextDestroy(OWLContext _context)
   {
@@ -594,7 +555,6 @@ checkGet(_context)->buildSBT(flags);
     APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
     Buffer::SP  buffer  = context->managedMemoryBufferCreate(type,count,init);
-    assert(buffer);
     return (OWLBuffer)context->createHandle(buffer);
   }
 
@@ -734,8 +694,6 @@ checkGet(_context)->buildSBT(flags);
     Geom::SP geometry
       = geometryType->createGeom();
     assert(geometry);
-    // geometry->createDeviceData(context->getDevices());
-
 
     return (OWLGeom)context->createHandle(geometry);
   }
@@ -1042,8 +1000,6 @@ checkGet(_context)->buildSBT(flags);
   }
 
 
-#if 1
-
 #define _OWL_SET_HELPER(stype,abb)                      \
   OWL_API void owlVariableSet1##abb(OWLVariable var,    \
                                     stype v)            \
@@ -1084,56 +1040,6 @@ checkGet(_context)->buildSBT(flags);
   _OWL_SET_HELPER(double,d)
 #undef _OWL_SET_HELPER
 
-#else
-  // ----------- set1 -----------
-  OWL_API void owlVariableSet1f(OWLVariable _variable, float value)
-  {
-    LOG_API_CALL();
-    setVariable((APIHandle *)_variable,value);
-  }
-
-  OWL_API void owlVariableSet1i(OWLVariable _variable, int value)
-  {
-    LOG_API_CALL();
-    setVariable((APIHandle *)_variable,value);
-  }
-  OWL_API void owlVariableSeti(OWLVariable _variable, int value)
-  {
-    LOG_API_CALL();
-    setVariable((APIHandle *)_variable,value);
-  }
-
-  
-  // ----------- set2 -----------
-  OWL_API void owlVariableSet2i(OWLVariable _variable, int x, int y)
-  {
-    LOG_API_CALL();
-    setVariable((APIHandle *)_variable,vec2i(x,y));
-  }
-
-  // ----------- set2v -----------
-  OWL_API void owlVariableSet2iv(OWLVariable _variable, const int *value)
-  {
-    LOG_API_CALL();
-    assert(value);
-    setVariable((APIHandle *)_variable,*(const vec2i*)value);
-  }
-
-  // ----------- set3 -----------
-  OWL_API void owlVariableSet3f(OWLVariable _variable,
-                                float x, float y, float z)
-  {
-    LOG_API_CALL();
-    setVariable((APIHandle *)_variable,vec3f(x,y,z));
-  }
-  // ----------- set3v -----------
-  OWL_API void owlVariableSet3fv(OWLVariable _variable, const float *value)
-  {
-    LOG_API_CALL();
-    assert(value);
-    setVariable((APIHandle *)_variable,*(const vec3f*)value);
-  }
-#endif
   
   // ----------- set<other> -----------
   OWL_API void owlVariableSetGroup(OWLVariable _variable, OWLGroup _group)
@@ -1293,6 +1199,5 @@ checkGet(_context)->buildSBT(flags);
 
     group->setTransform(whichChild, xfm);
   }
-
 
 } // ::owl
