@@ -18,105 +18,20 @@
 #include "Context.h"
 
 namespace owl {
+
+  // ------------------------------------------------------------------
+  // GeomType::DeviceData
+  // ------------------------------------------------------------------
   
-  GeomType::GeomType(Context *const context,
-                     size_t varStructSize,
-                     const std::vector<OWLVarDecl> &varDecls)
-    : SBTObjectType(context,context->geomTypes,
-                    varStructSize,varDecls),
-      closestHit(context->numRayTypes),
-      anyHit(context->numRayTypes)
-  {
-    // context->llo->geomTypeCreate(this->ID,
-    //                              varStructSize);
-  }
-  
-  Geom::Geom(Context *const context,
-             GeomType::SP geomType)
-    : SBTObject(context,context->geoms,geomType), geomType(geomType)
-  {
-    assert(geomType);
-  }
+  /*! construtor - passthrough to parent class */
+  GeomType::DeviceData::DeviceData(const DeviceContext::SP &device)
+    : RegisteredObject::DeviceData(device)
+  {}
 
-
-
-  void GeomType::setClosestHitProgram(int rayType,
-                                      Module::SP module,
-                                      const std::string &progName)
-  {
-    assert(rayType < closestHit.size());
-      
-    closestHit[rayType].progName = "__closesthit__"+progName;
-    closestHit[rayType].module   = module;
-    // context->llo->setGeomTypeClosestHit(this->ID,
-    //                       rayType,module->ID,
-    //                       // warning: this 'this' here is importat, since
-    //                       // *we* manage the lifetime of this string, and
-    //                       // the one on the constructor list will go out of
-    //                       // scope after this function
-    //                       closestHit[rayType].progName.c_str());
-  }
-
-  void GeomType::setAnyHitProgram(int rayType,
-                                  Module::SP module,
-                                  const std::string &progName)
-  {
-    assert(rayType < anyHit.size());
-      
-    anyHit[rayType].progName = "__anyhit__"+progName;
-    anyHit[rayType].module   = module;
-    // context->llo->setGeomTypeAnyHit(this->ID,
-    //                       rayType,module->ID,
-    //                       // warning: this 'this' here is importat, since
-    //                       // *we* manage the lifetime of this string, and
-    //                       // the one on the constructor list will go out of
-    //                       // scope after this function
-    //                       anyHit[rayType].progName.c_str());
-  }
-
-          
-  // void GeomType::DeviceData::writeSBTHeader(uint8_t *const sbtRecord,
-  //                                           Device *device,
-  //                                           int rayTypeID)
-  // {
-    
-  //   // // auto geomType = geom->type;//device->geomTypes[geom->geomType->ID];
-  //   // GeomType::DeviceData &gt = geom->type->getDD(device);
-  //   // // const ll::HitGroupPG &hgPG
-  //   // //   = geomType.perRayType[rayTypeID];
-  //   // // ... and tell optix to write that into the record
-  //   // OPTIX_CALL(SbtRecordPackHeader(gt.getPG(rayTypeID),sbtRecordHeader));
-  //   // throw std::runtime_error("not implemented");
-  // }
-
-  void Geom::writeSBTRecord(uint8_t *const sbtRecord,
-                            const DeviceContext::SP &device,
-                            int rayTypeID)
-  {
-    // first, compute pointer to record:
-    uint8_t *const sbtRecordHeader = sbtRecord;
-    uint8_t *const sbtRecordData   = sbtRecord+OPTIX_SBT_RECORD_HEADER_SIZE;
-
-    // ------------------------------------------------------------------
-    // pack record header with the corresponding hit group:
-    // ------------------------------------------------------------------
-    auto &dd = geomType->getDD(device);
-    assert(rayTypeID < dd.hgPGs.size());
-    OPTIX_CALL(SbtRecordPackHeader(dd.hgPGs[rayTypeID],sbtRecordHeader));
-    
-    // ------------------------------------------------------------------
-    // then, write the data for that record
-    // ------------------------------------------------------------------
-    writeVariables(sbtRecordData,device);
-  }  
-
-
-
-
-  
+  /*! fill in an OptixProgramGroup descriptor with the module and
+    program names for this type */
   void GeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
-                                        GeomType *parent,
-                                        int rt)
+                                        GeomType *parent, int rt)
   {
     // ----------- closest hit -----------
     if (rt < parent->closestHit.size()) {
@@ -137,43 +52,97 @@ namespace owl {
       }
     }
   }
+
+  // ------------------------------------------------------------------
+  // GeomType
+  // ------------------------------------------------------------------
+  
+  /*! constructor - mostly pass through to parent class */
+  GeomType::GeomType(Context *const context,
+                     size_t varStructSize,
+                     const std::vector<OWLVarDecl> &varDecls)
+    : SBTObjectType(context,context->geomTypes,
+                    varStructSize,varDecls),
+      closestHit(context->numRayTypes),
+      anyHit(context->numRayTypes)
+  {}
+  
+  /*! creates the device-specific data for this group */
+  RegisteredObject::DeviceData::SP
+  GeomType::createOn(const DeviceContext::SP &device) 
+  {
+    return std::make_shared<DeviceData>(device);
+  }
+  
+  /*! pretty-printer, for printf-debugging */
+  std::string GeomType::toString() const
+  {
+    return "GeomType";
+  }
+
+    /*! sets the closest program to run for given ray type */
+  void GeomType::setClosestHitProgram(int rayType,
+                                      Module::SP module,
+                                      const std::string &progName)
+  {
+    assert(rayType >=0 && rayType < closestHit.size());
+      
+    closestHit[rayType].progName = "__closesthit__"+progName;
+    closestHit[rayType].module   = module;
+  }
+
+    /*! sets the anyhit program to run for given ray type */
+  void GeomType::setAnyHitProgram(int rayType,
+                                  Module::SP module,
+                                  const std::string &progName)
+  {
+    assert(rayType >=0 && rayType < anyHit.size());
+      
+    anyHit[rayType].progName = "__anyhit__"+progName;
+    anyHit[rayType].module   = module;
+  }
+
+  // ------------------------------------------------------------------
+  // Geom
+  // ------------------------------------------------------------------
+
+  /*! constructor - mostly pass through to parent class */
+  Geom::Geom(Context *const context,
+             GeomType::SP geomType)
+    : SBTObject(context,context->geoms,geomType), geomType(geomType)
+  {
+    assert(geomType);
+  }
+
+  /*! pretty-printer, for printf-debugging */
+  std::string Geom::toString() const
+  {
+    return "Geom";
+  }
   
 
-  // void GeomType::DeviceData::buildHitGroupPrograms(GeomType *gt,
-  //                                                  Device *device)
-  // {
-  //   const int numRayTypes = gt->context->numRayTypes;
-  //   hgPGs.resize(numRayTypes);
-        
-  //   for (int rt=0;rt<numRayTypes;rt++) {
-      
-  //     OptixProgramGroupOptions pgOptions = {};
-  //     OptixProgramGroupDesc    pgDesc    = {};
-      
-  //     pgDesc.kind      = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
-  //     // ----------- default init closesthit -----------
-  //     pgDesc.hitgroup.moduleCH            = nullptr;
-  //     pgDesc.hitgroup.entryFunctionNameCH = nullptr;
-  //     // ----------- default init anyhit -----------
-  //     pgDesc.hitgroup.moduleAH            = nullptr;
-  //     pgDesc.hitgroup.entryFunctionNameAH = nullptr;
-  //     // ----------- default init intersect -----------
-  //     pgDesc.hitgroup.moduleIS            = nullptr;
-  //     pgDesc.hitgroup.entryFunctionNameIS = nullptr;
+  /*! write the SBT record for this object and ray type; this
+    requires finding the proper programs (from the type and ray
+    type), and writign the variables */
+  void Geom::writeSBTRecord(uint8_t *const sbtRecord,
+                            const DeviceContext::SP &device,
+                            int rayTypeID)
+  {
+    // first, compute pointer to record:
+    uint8_t *const sbtRecordHeader = sbtRecord;
+    uint8_t *const sbtRecordData   = sbtRecord+OPTIX_SBT_RECORD_HEADER_SIZE;
 
-  //     // now let the type fill in what it has
-  //     fillPGDesc(pgDesc,gt,device,rt);
-        
-  //     char log[2048];
-  //     size_t sizeof_log = sizeof( log );
-  //     OPTIX_CHECK(optixProgramGroupCreate(device->context->optixContext,
-  //                                         &pgDesc,
-  //                                         1,
-  //                                         &pgOptions,
-  //                                         log,&sizeof_log,
-  //                                         &pg
-  //                                         ));
-  //     allActivePrograms.push_back(pg);
-  //   }
+    // ------------------------------------------------------------------
+    // pack record header with the corresponding hit group:
+    // ------------------------------------------------------------------
+    auto &dd = geomType->getDD(device);
+    assert(rayTypeID < dd.hgPGs.size());
+    OPTIX_CALL(SbtRecordPackHeader(dd.hgPGs[rayTypeID],sbtRecordHeader));
+    
+    // ------------------------------------------------------------------
+    // then, write the data for that record
+    // ------------------------------------------------------------------
+    writeVariables(sbtRecordData,device);
+  }  
 
 } //::owl

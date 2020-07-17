@@ -64,11 +64,8 @@ namespace owl {
         Table) */
     virtual int getSBTOffset() const = 0;
     
-    DeviceData &getDD(const DeviceContext::SP &device) const
-    {
-      assert(device->ID < deviceData.size());
-      return deviceData[device->ID]->as<DeviceData>();
-    }
+    /*! get reference to given device-specific data for this object */
+    inline DeviceData &getDD(const DeviceContext::SP &device) const;
 
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
@@ -115,6 +112,13 @@ namespace owl {
   // ------------------------------------------------------------------
   // implementation section
   // ------------------------------------------------------------------
+  
+  /*! get reference to given device-specific data for this object */
+  inline Group::DeviceData &Group::getDD(const DeviceContext::SP &device) const
+  {
+    assert(device->ID < deviceData.size());
+    return deviceData[device->ID]->as<DeviceData>();
+  }
   
   /*! returns the (device-specific) optix traversable handle to traverse this group */
   inline OptixTraversableHandle Group::getTraversable(const DeviceContext::SP &device) const
