@@ -72,7 +72,10 @@ namespace owl {
 
     /*! upload data from host, to only given device ID */
     virtual void upload(const int deviceID, const void *hostPtr) = 0;
-    
+
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
+
     /*! destroy whatever resouces this buffer may own on the device,
         but do NOT destroy this class itself. baiscally that's a
         resize(0), but that buffer can not - and shoult not - be used

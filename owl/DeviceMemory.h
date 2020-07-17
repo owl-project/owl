@@ -49,7 +49,6 @@ namespace owl {
     this->sizeInBytes = size;
     CUDA_CHECK(cudaMalloc( (void**)&d_pointer, sizeInBytes));
     assert(alloced() || size == 0);
-    std::cout << "CUDA_MEM cudaMalloc( -> " << (int*)d_pointer << ")" << std::endl;
   }
     
   inline void DeviceMemory::allocManaged(size_t size)
@@ -92,7 +91,6 @@ namespace owl {
   {
     assert(alloced() || empty());
     if (!empty()) {
-      std::cout << "CUDA_MEM cudaFree(" << (int*)d_pointer << ")" << std::endl;
       CUDA_CHECK(cudaFree((void*)d_pointer));
     }
     sizeInBytes = 0;

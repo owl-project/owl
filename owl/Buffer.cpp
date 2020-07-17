@@ -66,6 +66,12 @@ namespace owl {
     registry.forget(this); // sets ID to -1
   }
   
+  /*! creates the device-specific data for this group */
+  RegisteredObject::DeviceData::SP Buffer::createOn(const DeviceContext::SP &device)
+  {
+    return std::make_shared<Buffer::DeviceData>(device);
+  }
+
   // ------------------------------------------------------------------
   // Device Buffer
   // ------------------------------------------------------------------
@@ -258,8 +264,9 @@ namespace owl {
     if (newElementCount > 0)
       CUDA_CALL(MallocHost((void**)&cudaHostPinnedMem, sizeInBytes()));
 
-    for (auto device : context->getDevices())
+    for (auto device : context->getDevices()) {
       getDD(device).d_pointer = cudaHostPinnedMem;
+    }
   }
   
   void HostPinnedBuffer::upload(const void *sourcePtr)

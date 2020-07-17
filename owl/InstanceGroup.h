@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -20,17 +20,17 @@
 
 namespace owl {
 
+  /*! a OWL Group / BVH over instances (i.e., a IAS) */
   struct InstanceGroup : public Group {
     typedef std::shared_ptr<InstanceGroup> SP;
     
     /*! any device-specific data, such as optix handles, cuda device
-        pointers, etc */
+      pointers, etc */
     struct DeviceData : public Group::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
       
-      DeviceData(const DeviceContext::SP &device)
-        : Group::DeviceData(device)
-      {};
+      /*! construtor */
+      DeviceData(const DeviceContext::SP &device);
       
       DeviceMemory optixInstanceBuffer;
 
@@ -39,12 +39,16 @@ namespace owl {
       DeviceMemory motionAABBsBuffer;
       DeviceMemory outputBuffer;
     };
-
-
+    
+    /*! construct with given array of groups - transforms can be specified later */
     InstanceGroup(Context *const context,
                   size_t numChildren,
                   Group::SP      *groups);
 
+    /*! pretty-printer, for printf-debugging */
+    std::string toString() const override;
+    
+    /*! set given child to given group */
     void setChild(int childID, Group::SP child);
                   
     /*! set transformation matrix of given child */
@@ -55,38 +59,52 @@ namespace owl {
                        const float *floatsForThisStimeStep,
                        OWLMatrixFormat matrixFormat);
 
-    void setInstanceIDs(/* must be an array of children.size() items */
-                        const uint32_t *instanceIDs);
+    /* set instance IDs to use for the children - MUST be an array of
+       children.size() items */
+    void setInstanceIDs(const uint32_t *instanceIDs);
       
     void buildAccel() override;
     void refitAccel() override;
 
     /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
-    { return std::make_shared<DeviceData>(device); }
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
     
-    DeviceData &getDD(const DeviceContext::SP &device) const
-    {
-      assert(device->ID < deviceData.size());
-      return deviceData[device->ID]->as<DeviceData>();
-    }
+    /*! get reference to given device-specific data for this object */
+    inline DeviceData &getDD(const DeviceContext::SP &device) const;
 
     template<bool FULL_REBUILD>
     void staticBuildOn(const DeviceContext::SP &device);
     template<bool FULL_REBUILD>
     void motionBlurBuildOn(const DeviceContext::SP &device);
 
-    virtual std::string toString() const { return "InstanceGroup"; }
-
+    /*! return the SBT offset to use for this group - SBT offsets for
+      instnace groups are always 0 */
     int getSBTOffset() const override { return 0; }
     
     /*! the list of children - note we do have to keep them both in
-        the ll layer _and_ here for the refcounting to work; the
-        transforms are only stored once, on the ll layer */
+      the ll layer _and_ here for the refcounting to work; the
+      transforms are only stored once, on the ll layer */
     std::vector<Group::SP>  children;
-    /*! set of transform matrices for t=0 and t=1, respectively */
+    
+    /*! set of transform matrices for t=0 and t=1, respectively. if we
+      don't use motion blur, the second one may be unused */
     std::vector<affine3f>   transforms[2];
+
+    /*! vector of instnace IDs to use for these instances - if not
+      specified we/optix will fill in automatically using
+      instanceID=childID */
     std::vector<uint32_t>   instanceIDs;
   };
 
+  // ------------------------------------------------------------------
+  // implementation section
+  // ------------------------------------------------------------------
+  
+  /*! get reference to given device-specific data for this object */
+  inline InstanceGroup::DeviceData &InstanceGroup::getDD(const DeviceContext::SP &device) const
+  {
+    assert(device->ID < deviceData.size());
+    return deviceData[device->ID]->as<DeviceData>();
+  }
+  
 } // ::owl
