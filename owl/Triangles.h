@@ -61,7 +61,7 @@ namespace owl {
       CUdeviceptr indexPointer  = (CUdeviceptr)0;
     };
 
-    /*! constructur - create a new (as yet without vertices, indices,
+    /*! constructor - create a new (as yet without vertices, indices,
         etc) instance of given triangles geom type */
     TrianglesGeom(Context *const context,
                   GeomType::SP geometryType);
