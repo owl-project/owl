@@ -43,7 +43,7 @@ namespace owl {
     };
 
     /*! get reference to given device-specific data for this object */
-    DeviceData &getDD(const DeviceContext::SP &device) const;
+    inline DeviceData &getDD(const DeviceContext::SP &device) const;
     
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
@@ -81,7 +81,7 @@ namespace owl {
   // ------------------------------------------------------------------
   
   /*! get reference to given device-specific data for this object */
-  MissProgType::DeviceData &MissProgType::getDD(const DeviceContext::SP &device) const
+  inline MissProgType::DeviceData &MissProgType::getDD(const DeviceContext::SP &device) const
   {
     assert(device && device->ID >= 0 && device->ID < deviceData.size());
     return deviceData[device->ID]->as<DeviceData>();
