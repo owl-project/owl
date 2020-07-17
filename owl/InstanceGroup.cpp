@@ -75,9 +75,7 @@ namespace owl {
   void InstanceGroup::setTransform(int childID,
                                    const affine3f &xfm)
   {
-    assert(childID >= 0);
-    assert(childID < children.size());
-
+    assert(childID >= 0 && childID < children.size());
     transforms[0][childID] = xfm;
   }
 
@@ -92,7 +90,8 @@ namespace owl {
              children.size()*sizeof(affine3f));
     } break;
     default:
-      throw std::runtime_error("used matrix format not yet implmeneted for InstanceGroup::setTransforms");
+      throw std::runtime_error("used matrix format not yet implmeneted for"
+                               " InstanceGroup::setTransforms");
     };
   }
 
@@ -125,7 +124,6 @@ namespace owl {
       else
         motionBlurBuildOn<false>(device);
   }
-
 
   template<bool FULL_REBUILD>
   void InstanceGroup::staticBuildOn(const DeviceContext::SP &device) 
@@ -188,7 +186,6 @@ namespace owl {
       oi.instanceId        = (instanceIDs.empty())?childID:instanceIDs[childID];
       oi.visibilityMask    = 255;
       oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
-      PRINT(oi.sbtOffset);
       oi.visibilityMask    = 255;
       oi.traversableHandle = child->getTraversable(device);
       assert(oi.traversableHandle);

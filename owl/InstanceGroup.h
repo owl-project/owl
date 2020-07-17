@@ -29,7 +29,7 @@ namespace owl {
     struct DeviceData : public Group::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
       
-      /*! construtor */
+      /*! constructor */
       DeviceData(const DeviceContext::SP &device);
       
       DeviceMemory optixInstanceBuffer;
@@ -103,7 +103,7 @@ namespace owl {
   /*! get reference to given device-specific data for this object */
   inline InstanceGroup::DeviceData &InstanceGroup::getDD(const DeviceContext::SP &device) const
   {
-    assert(device->ID < deviceData.size());
+    assert(device && device->ID < deviceData.size());
     return deviceData[device->ID]->as<DeviceData>();
   }
   
