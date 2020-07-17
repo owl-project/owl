@@ -108,7 +108,7 @@ namespace owl {
     assert(vertex.buffers.size() == 1 || vertex.buffers.size() == 2);
 
     int numThreads = 1024;
-    int numBlocks = (vertex.count + numThreads - 1) / numThreads;
+    int numBlocks = int((vertex.count + numThreads - 1) / numThreads);
 
     DeviceContext::SP device = context->getDevice(0);
     assert(device);

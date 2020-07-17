@@ -30,7 +30,9 @@ set(INTERFACE_POSITION_INDEPENDENT_CODE ON)
 
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_VERBOSE_BUILD ON)
+if (NOT WIN32)
 set(CUDA_NVCC_FLAGS --compiler-options -fPIC)
+endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/)
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
@@ -46,6 +48,7 @@ set(OWL_SOURCES
   cmake/configure_tbb.cmake
   cmake/configure_owl.cmake
   cmake/configure_optix.cmake
+  cmake/configure_glfw.cmake
   cmake/FindOptiX.cmake
 
   # -------------------------------------------------------

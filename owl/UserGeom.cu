@@ -105,7 +105,7 @@ namespace owl {
   void UserGeom::computeBounds(box3f bounds[2])
   {
     int numThreads = 1024;
-    int numBlocks = (primCount + numThreads - 1) / numThreads;
+    int numBlocks = int((primCount + numThreads - 1) / numThreads);
 
     DeviceContext::SP device = context->getDevices()[0];
     SetActiveGPU forLifeTime(device);
