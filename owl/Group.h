@@ -23,39 +23,46 @@
 
 namespace owl {
 
-  // using ll::DeviceMemory;
-  
-  /*! any sort of group */
+  /*! abstract base class for any sort of group (ie, BVH), BLAS'es and
+      IAS'es will be derived from this class */
   struct Group : public RegisteredObject {
     typedef std::shared_ptr<Group> SP;
 
-    virtual int getSBTOffset() const = 0;
-    
     /*! any device-specific data, such as optix handles, cuda device
-        pointers, etc */
+        pointers, etc; for accel's that's pretty much the BVH memory
+        for this type, and the specific OptixTraversableHandle to
+        traverse it */
     struct DeviceData : public RegisteredObject::DeviceData {
       typedef std::shared_ptr<DeviceData> SP;
 
-      DeviceData(const DeviceContext::SP &device)
-        : RegisteredObject::DeviceData(device)
-      {};
-      virtual ~DeviceData() {}
-      
-      template<typename T>
-      inline T *as() { return dynamic_cast<T*>(this); }
-      
+      /*! constructor - pass-through to parent class */
+      DeviceData(const DeviceContext::SP &device);
+
+      /*! the handle for this BVH that can be passed to optixTrace */
       OptixTraversableHandle traversable = 0;
+
+      /*! device memory that keeps the final, possibly compacted, BVH
+          memory */
       DeviceMemory           bvhMemory;
     };
 
+    /*! constructor, that registers this group in the context's registry */
     Group(Context *const context,
-          ObjectRegistry &registry)
-      : RegisteredObject(context,registry)
-    {}
-    virtual ~Group() {}
-    virtual std::string toString() const { return "Group"; }
+          ObjectRegistry &registry);
+
+    /*! pretty-printer, for printf-debugging */
+    std::string toString() const override;
+
+    /*! re*build* this accel - actual work depens on subclass */
     virtual void buildAccel() = 0;
+    
+    /*! re*fit* this accel - actual work depens on subclass */
     virtual void refitAccel() = 0;
+    
+    /*! return the SBT offset (ie, the offset at which the geometries
+        within this group will be written into the Shader Binding
+        Table) */
+    virtual int getSBTOffset() const = 0;
     
     DeviceData &getDD(const DeviceContext::SP &device) const
     {
@@ -64,34 +71,53 @@ namespace owl {
     }
 
     /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
-    { return std::make_shared<DeviceData>(device); }
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
+
+    /*! returns the (device-specific) optix traversable handle to traverse this group */
+    inline OptixTraversableHandle getTraversable(const DeviceContext::SP &device) const;
     
-    OptixTraversableHandle getTraversable(const DeviceContext::SP &device) const
-    { return getDD(device).traversable; }
-    
-    /*! bounding box for t=0 and t=1, respectively; for motion
-        blur. */
+    /*! bounding box for t=0 and t=1; for motion blur. */
     box3f bounds[2];
   };
 
-  /*! a group containing geometries */
+  /*! a group containing geometries (ie, BLASes, whereas the
+      InstanceGroup is a IAS */
   struct GeomGroup : public Group {
     typedef std::shared_ptr<GeomGroup> SP;
 
-    
-    
-    GeomGroup(Context *const context,
-              size_t numChildren);
+    /*! constructor for given number of chilren, will allocate the SBT
+        range for those children*/
+    GeomGroup(Context *const context, size_t numChildren);
+
+    /*! destructor that releases the SBT range used by this group */
     virtual ~GeomGroup();
-    
+
+    /*! set given child ID to given geometry */
     void setChild(int childID, Geom::SP child);
     
+    /*! return the SBT offset (ie, the offset at which the geometries
+        within this group will be written into the Shader Binding
+        Table) */
     int getSBTOffset() const override { return sbtOffset; }
-
-    virtual std::string toString() const { return "GeomGroup"; }
+    
+    /*! pretty-printer, for printf-debugging */
+    std::string toString() const;
+    
+    /*! list of child geometries to use in this BVH */
     std::vector<Geom::SP> geometries;
+
+    /*! the SBT offset that this group will use to write its children
+        into the SBT */
     const int sbtOffset;
   };
 
+  
+  // ------------------------------------------------------------------
+  // implementation section
+  // ------------------------------------------------------------------
+  
+  /*! returns the (device-specific) optix traversable handle to traverse this group */
+  inline OptixTraversableHandle Group::getTraversable(const DeviceContext::SP &device) const
+  { return getDD(device).traversable; }
+  
 } // ::owl

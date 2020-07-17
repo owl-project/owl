@@ -18,53 +18,69 @@
 #include "Context.h"
 
 namespace owl {
+  
+  // ------------------------------------------------------------------
+  // Group::DeviceData
+  // ------------------------------------------------------------------
+  
+  /*! constructor - pass-through to parent class */
+  Group::DeviceData::DeviceData(const DeviceContext::SP &device)
+    : RegisteredObject::DeviceData(device)
+  {}
 
-  // void Group::buildAccel()
-  // {
-  //   // lloGroupAccelBuild(context->llo,this->ID);
-  //   context->llo->groupBuildAccel(this->ID);
-  // }
+  // ------------------------------------------------------------------
+  // Group
+  // ------------------------------------------------------------------
   
-  // void Group::refitAccel()
-  // {
-  //   // lloGroupAccelRefit(context->llo,this->ID);
-  //   context->llo->groupRefitAccel(this->ID);
-  // }
-  
-  // void Group::createDeviceData(const std::vector<ll::Device *> &devices)
-  // {
-  //   for (auto device : devices)
-  //     deviceData.push_back(createOn(device));
-  // }
-  // OptixTraversableHandle Group::getTraversable(int deviceID)
-  // {
-  //   // return lloGroupGetTraversable(context->llo,this->ID,deviceID);
-  //   return context->llo->groupGetTraversable(this->ID,deviceID);
-  // }
-  
-  void GeomGroup::setChild(int childID, Geom::SP child)
+  /*! constructor, that registers this group in the context's registry */
+  Group::Group(Context *const context,
+               ObjectRegistry &registry)
+    : RegisteredObject(context,registry)
+  {}
+
+  /*! creates the device-specific data for this group */
+  RegisteredObject::DeviceData::SP Group::createOn(const DeviceContext::SP &device) 
   {
-    assert(childID >= 0);
-    assert(childID < geometries.size());
-    geometries[childID] = child;
-    // context->llo->geomGroupSetChild(this->ID,childID,child->ID);
-    // lloGeomGroupSetChild(context->llo,this->ID,childID,child->ID);
+    return std::make_shared<DeviceData>(device);
+  }
+  
+  /*! pretty-printer, for printf-debugging */
+  std::string Group::toString() const
+  {
+    return "Group";
   }
 
+  // ------------------------------------------------------------------
+  // GeomGroup
+  // ------------------------------------------------------------------
 
-    
+  /*! constructor for given number of chilren, will allocate the SBT
+    range for those children*/
   GeomGroup::GeomGroup(Context *const context,
                        size_t numChildren)
     : Group(context,context->groups),
       geometries(numChildren),
       sbtOffset(context->sbtRangeAllocator.alloc(numChildren))
-  {
-    PING; PRINT(sbtOffset);
-  }
+  {}
   
+  /*! destructor that releases the SBT range used by this group */
   GeomGroup::~GeomGroup()
   {
     context->sbtRangeAllocator.release(sbtOffset,geometries.size());
   }
 
+
+  /*! set given child ID to given geometry */
+  void GeomGroup::setChild(int childID, Geom::SP child)
+  {
+    assert(childID >= 0 && childID < geometries.size());
+    geometries[childID] = child;
+  }
+  
+  /*! pretty-printer, for printf-debugging */
+  std::string GeomGroup::toString() const
+  {
+    return "GeomGroup";
+  }
+  
 } // ::owl
