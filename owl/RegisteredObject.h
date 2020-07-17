@@ -33,7 +33,12 @@ namespace owl {
                      ObjectRegistry &registry);
     ~RegisteredObject();
 
-    int             ID;
+    /*! the ID we're registered by - should only ever get set to any
+        useful value in the constructor, and get set to -1 when the
+        object is removed from this registry */
+    int ID;
+    
+    /*! the registry (int he context) that we're registered in */
     ObjectRegistry &registry;
   };
 
