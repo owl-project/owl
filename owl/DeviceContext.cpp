@@ -20,89 +20,88 @@
 #include <optix_function_table_definition.h>
 
 #define LOG(message)                            \
-  if (Context::logging())                   \
+  if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_LIGHT_BLUE                \
-      << "#owl: "                            \
+      << "#owl: "                               \
       << message                                \
       << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  if (Context::logging())                   \
+  if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_BLUE                      \
-      << "#owl: "                            \
+      << "#owl: "                               \
       << message                                \
       << OWL_TERMINAL_DEFAULT << std::endl
 
-#define CLOG(message)                                   \
-  if (owl::Context::logging()) \
-  std::cout << "#owl(" << ID << "): "       \
-  << message                                            \
-  << std::endl
-
-#define CLOG_OK(message)                                \
-  if (owl::Context::logging()) \
-  std::cout << OWL_TERMINAL_GREEN                       \
-  << "#owl(" << ID << "): "                 \
-  << message << OWL_TERMINAL_DEFAULT << std::endl
-
 namespace owl {
-  
-    static void context_log_cb(unsigned int level,
-                               const char *tag,
-                               const char *message,
-                               void *)
-    {
-      if (level == 1 || level == 2)
-        fprintf( stderr, "[%2d][%12s]: %s\n", (int)level, tag, message );
-    }
-  
-    int RangeAllocator::alloc(size_t size)
-    {
-      for (size_t i=0;i<freedRanges.size();i++) {
-        if (freedRanges[i].size >= size) {
-          size_t where = freedRanges[i].begin;
-          if (freedRanges[i].size == size)
-            freedRanges.erase(freedRanges.begin()+i);
-          else {
-            freedRanges[i].begin += size;
+
+  /*! logging callback passed to optix for intercepting optix log messages */
+  static void context_log_cb(unsigned int level,
+                             const char *tag,
+                             const char *message,
+                             void *)
+  {
+    if (level == 1 || level == 2)
+      fprintf( stderr, "[%2d][%12s]: %s\n", (int)level, tag, message );
+  }
+
+  /*! allocate 'size' consecutive SBT entries, and return index of
+      first of those */
+  int RangeAllocator::alloc(size_t size)
+  {
+    for (size_t i=0;i<freedRanges.size();i++) {
+      if (freedRanges[i].size >= size) {
+        size_t where = freedRanges[i].begin;
+        if (freedRanges[i].size == size)
+          freedRanges.erase(freedRanges.begin()+i);
+        else {
+          freedRanges[i].begin += size;
             freedRanges[i].size  -= size;
-          }
-          return (int)where;
         }
+        return (int)where;
       }
-      size_t where = maxAllocedID;
-      maxAllocedID+=size;
-      assert(maxAllocedID == size_t(int(maxAllocedID)));
-      return (int)where;
     }
-    void RangeAllocator::release(size_t begin, size_t size)
-    {
-      for (size_t i=0;i<freedRanges.size();i++) {
-        if (freedRanges[i].begin+freedRanges[i].size == begin) {
-          begin -= freedRanges[i].size;
-          size  += freedRanges[i].size;
-          freedRanges.erase(freedRanges.begin()+i);
-          release(begin,size);
-          return;
-        }
-        if (begin+size == freedRanges[i].begin) {
-          size  += freedRanges[i].size;
-          freedRanges.erase(freedRanges.begin()+i);
-          release(begin,size);
-          return;
-        }
-      }
-      if (begin+size == maxAllocedID) {
-        maxAllocedID -= size;
+    size_t where = maxAllocedID;
+    maxAllocedID+=size;
+    assert(maxAllocedID == size_t(int(maxAllocedID)));
+    return (int)where;
+  }
+
+  /*! a given group has died, and tells us to release given range
+      (starting at begin, with 'siez' elements', to be re-used when
+      appropriate */
+  void RangeAllocator::release(size_t begin, size_t size)
+  {
+    for (size_t i=0;i<freedRanges.size();i++) {
+      if (freedRanges[i].begin+freedRanges[i].size == begin) {
+        begin -= freedRanges[i].size;
+        size  += freedRanges[i].size;
+        freedRanges.erase(freedRanges.begin()+i);
+        release(begin,size);
         return;
       }
-      // could not merge with any existing range: add new one
-      freedRanges.push_back({begin,size});
+      if (begin+size == freedRanges[i].begin) {
+        size  += freedRanges[i].size;
+        freedRanges.erase(freedRanges.begin()+i);
+        release(begin,size);
+        return;
+      }
     }
+    if (begin+size == maxAllocedID) {
+      maxAllocedID -= size;
+      return;
+    }
+    // could not merge with any existing range: add new one
+    freedRanges.push_back({begin,size});
+  }
 
-
+  
+  /*! creates the N device contexts with the given device IDs. If list
+    of device is nullptr, and number requested devices is > 1, then
+    the first N devices will get used; invalid device IDs in the
+    list will automatically get dropped */
   std::vector<DeviceContext::SP> createDeviceContexts(Context *parent,
                                                       int32_t *deviceIDs,
                                                       int      numDevices)
@@ -141,45 +140,48 @@ namespace owl {
     
     
     // ------------------------------------------------------------------
-      // init optix itself
-      // ------------------------------------------------------------------
-      LOG("initializing optix 7");
-      OPTIX_CHECK(optixInit());
-      
-      // from here on, we need a non-empty list of requested device IDs
-      assert(deviceIDs != nullptr && numDevices > 0);
-      
-      // ------------------------------------------------------------------
-      // create actual devices, ignoring those that failed to initialize
-      // ------------------------------------------------------------------
-      std::vector<DeviceContext::SP> devices;
-      for (int i=0;i<numDevices;i++) {
-        try {
-          DeviceContext::SP dev = std::make_shared<DeviceContext>(parent,i,deviceIDs[i]);
-          //new Device((int)devices.size(),deviceIDs[i]);
-          assert(dev);
-          devices.push_back(dev);
-        } catch (std::exception &e) {
-          std::cout << OWL_TERMINAL_RED
-                    << "#owl.ll: Error creating optix device on CUDA device #"
-                    << deviceIDs[i] << ": " << e.what() << " ... dropping this device"
-                    << OWL_TERMINAL_DEFAULT << std::endl;
-        }
+    // init optix itself
+    // ------------------------------------------------------------------
+#if OPTIX_VERSION >= 70100
+    LOG("initializing optix 7.1");
+#else
+    LOG("initializing optix 7");
+#endif
+    OPTIX_CHECK(optixInit());
+    
+    // from here on, we need a non-empty list of requested device IDs
+    assert(deviceIDs != nullptr && numDevices > 0);
+    
+    // ------------------------------------------------------------------
+    // create actual devices, ignoring those that failed to initialize
+    // ------------------------------------------------------------------
+    std::vector<DeviceContext::SP> devices;
+    for (int i=0;i<numDevices;i++) {
+      try {
+        DeviceContext::SP dev = std::make_shared<DeviceContext>(parent,i,deviceIDs[i]);
+        assert(dev);
+        devices.push_back(dev);
+      } catch (std::exception &e) {
+        std::cout << OWL_TERMINAL_RED
+                  << "#owl.ll: Error creating optix device on CUDA device #"
+                  << deviceIDs[i] << ": " << e.what() << " ... dropping this device"
+                  << OWL_TERMINAL_DEFAULT << std::endl;
       }
-
-      // ------------------------------------------------------------------
-      // some final sanity check that we managed to create at least
-      // one device...
-      // ------------------------------------------------------------------
-      if (devices.empty())
-        throw std::runtime_error("fatal error - could not find/create any optix devices");
-
-      LOG_OK("successfully created device group with " << devices.size() << " devices");
-      return devices;
+    }
+    
+    // ------------------------------------------------------------------
+    // some final sanity check that we managed to create at least
+    // one device...
+    // ------------------------------------------------------------------
+    if (devices.empty())
+      throw std::runtime_error("fatal error - could not find/create any optix devices");
+    
+    LOG_OK("successfully created device group with " << devices.size() << " devices");
+    return devices;
   }
-
-
-
+  
+  
+  
   DeviceContext::DeviceContext(Context *parent,
                                int owlID,
                                int cudaID)
@@ -187,42 +189,36 @@ namespace owl {
       ID(owlID),
       cudaDeviceID(cudaID)
   {
-    CLOG("trying to create owl device on CUDA device #" << cudaDeviceID);
-
-    sbt = {};
-    PRINT(this);
-    PRINT(&sbt);
+    LOG("trying to create owl device on CUDA device #" << cudaDeviceID);
     
-      cudaDeviceProp prop;
-      cudaGetDeviceProperties(&prop, cudaDeviceID);
-      CLOG(" - device: " << prop.name);
-
-      CUDA_CHECK(cudaSetDevice(cudaDeviceID));
-      CUDA_CHECK(cudaStreamCreate(&stream));
-      
-      CUresult  cuRes = cuCtxGetCurrent(&cudaContext);
-      if (cuRes != CUDA_SUCCESS) 
-        throw std::runtime_error("Error querying current CUDA context...");
-      
-      OPTIX_CHECK(optixDeviceContextCreate(cudaContext, 0, &optixContext));
-      OPTIX_CHECK(optixDeviceContextSetLogCallback
-                  (optixContext,context_log_cb,this,4));
+    LOG(" - device: " << getDeviceName());
+    
+    CUDA_CHECK(cudaSetDevice(cudaDeviceID));
+    CUDA_CHECK(cudaStreamCreate(&stream));
+    
+    CUresult  cuRes = cuCtxGetCurrent(&cudaContext);
+    if (cuRes != CUDA_SUCCESS) 
+      throw std::runtime_error("Error querying current CUDA context...");
+    
+    OPTIX_CHECK(optixDeviceContextCreate(cudaContext, 0, &optixContext));
+    OPTIX_CHECK(optixDeviceContextSetLogCallback
+                (optixContext,context_log_cb,this,4));
   }
   
-  
+  /*! return CUDA's name string for given device */
   std::string DeviceContext::getDeviceName() const
   {
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, getCudaDeviceID());
     return prop.name;
   }
-    
+  
   /*! helper function - return cuda device ID of this device */
   int DeviceContext::getCudaDeviceID() const
   {
     return cudaDeviceID;
   }
-
+  
   void DeviceContext::destroyPipeline()
   {
     if (!pipeline) return;
@@ -231,66 +227,61 @@ namespace owl {
     
     OPTIX_CHECK(optixPipelineDestroy(pipeline));
     pipeline = 0;
-    
-    // device->popActive(oldActive);
   }
-
-
-    void DeviceContext::configurePipelineOptions()
-    {
-      PING;
-      // ------------------------------------------------------------------
-      // configure default module compile options
-      // ------------------------------------------------------------------
+  
+  
+  void DeviceContext::configurePipelineOptions()
+  {
+    // ------------------------------------------------------------------
+    // configure default module compile options
+    // ------------------------------------------------------------------
 #if 1
-      moduleCompileOptions.maxRegisterCount  = 50;
-      moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
-      moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_NONE;
+    moduleCompileOptions.maxRegisterCount  = 50;
+    moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
+    moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_NONE;
 #else
-      PING;
-      moduleCompileOptions.maxRegisterCount  = 100;
-      moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
-      moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
+    PING;
+    moduleCompileOptions.maxRegisterCount  = 100;
+    moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
+    moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
 #endif
-
-      // ------------------------------------------------------------------
-      // configure default pipeline compile options
-      // ------------------------------------------------------------------
-      pipelineCompileOptions = {};
-      assert(parent->maxInstancingDepth >= 0);
-      switch (parent->maxInstancingDepth) {
-      case 0:
-        pipelineCompileOptions.traversableGraphFlags
-          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS;
-        break;
-      case 1:
-        pipelineCompileOptions.traversableGraphFlags
-          = parent->motionBlurEnabled
-          ? OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY
-          : OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
-          // | OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS
-          ;
-        break;
-      default:
-        pipelineCompileOptions.traversableGraphFlags
-          = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
-        break;
-      }
-      pipelineCompileOptions.usesMotionBlur     = parent->motionBlurEnabled;
-      pipelineCompileOptions.numPayloadValues   = 2;
-      pipelineCompileOptions.numAttributeValues = 2;
-      PRINT(pipelineCompileOptions.numAttributeValues);
-      pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
-      pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
-      
-      // ------------------------------------------------------------------
-      // configure default pipeline link options
-      // ------------------------------------------------------------------
-      // pipelineLinkOptions.overrideUsesMotionBlur = motionBlurEnabled;
-      pipelineLinkOptions.maxTraceDepth          = 2;
-      pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
-      
+    
+    // ------------------------------------------------------------------
+    // configure default pipeline compile options
+    // ------------------------------------------------------------------
+    pipelineCompileOptions = {};
+    assert(parent->maxInstancingDepth >= 0);
+    switch (parent->maxInstancingDepth) {
+    case 0:
+      pipelineCompileOptions.traversableGraphFlags
+        = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS;
+      break;
+    case 1:
+      pipelineCompileOptions.traversableGraphFlags
+        = parent->motionBlurEnabled
+        ? OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY
+        : OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING
+        ;
+      break;
+    default:
+      pipelineCompileOptions.traversableGraphFlags
+        = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
+      break;
     }
+    pipelineCompileOptions.usesMotionBlur     = parent->motionBlurEnabled;
+    pipelineCompileOptions.numPayloadValues   = 2;
+    pipelineCompileOptions.numAttributeValues = 2;
+    PRINT(pipelineCompileOptions.numAttributeValues);
+    pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
+    pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
+    
+    // ------------------------------------------------------------------
+    // configure default pipeline link options
+    // ------------------------------------------------------------------
+    // pipelineLinkOptions.overrideUsesMotionBlur = motionBlurEnabled;
+    pipelineLinkOptions.maxTraceDepth          = 2;
+    pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
+  }
   
   void DeviceContext::buildPipeline()
   {
@@ -299,10 +290,10 @@ namespace owl {
     auto &allPGs = allActivePrograms;
     if (allPGs.empty())
       throw std::runtime_error("trying to create a pipeline w/ 0 programs!?");
-      
+    
     char log[2048];
     size_t sizeof_log = sizeof( log );
-
+    
     OPTIX_CHECK(optixPipelineCreate(optixContext,
                                     &pipelineCompileOptions,
                                     &pipelineLinkOptions,
@@ -311,7 +302,7 @@ namespace owl {
                                     log,&sizeof_log,
                                     &pipeline
                                     ));
-      
+    
     uint32_t maxAllowedByOptix = 0;
     optixDeviceContextGetProperty
       (optixContext,
@@ -323,9 +314,6 @@ namespace owl {
         ("error when building pipeline: "
          "attempting to set max instancing depth to "
          "value that exceeds OptiX's MAX_TRAVERSABLE_GRAPH_DEPTH limit");
-
-    PRINT(parent->maxInstancingDepth);
-    PRINT(maxAllowedByOptix);
     
     OPTIX_CHECK(optixPipelineSetStackSize
                 (pipeline,
@@ -342,15 +330,8 @@ namespace owl {
                  /* [in] The maximum depth of a traversable graph
                     passed to trace. */
                  ));
-
-    // device->popActive(oldActive);
   }
 
-  // void DeviceContext::buildBoundsPrograms()
-  // {
-  //   throw std::runtime_error("not implemented");
-  // }
-  
   void DeviceContext::buildPrograms()
   {
     SetActiveGPU forLifeTime(this);
@@ -359,7 +340,6 @@ namespace owl {
     buildRayGenPrograms();
     buildHitGroupPrograms();
   }
-
 
   void DeviceContext::destroyPrograms()
   {
@@ -371,47 +351,10 @@ namespace owl {
 
     allActivePrograms.clear();
   }
-  
-  
-  // void Context::destroyPrograms(Device *device)
-  // {
-  //   for (auto type : rayGenTypes.objects)
-  //     type->destroyProgramGroups(device);
-  //   for (auto type : geomTypes.objects)
-  //     type->destroyProgramGroups(device);
-  //   for (auto type : missProgTypes.objects)
-  //     type->destroyProgramGroups(device);
-    
-  //   // int oldActive = device->pushActive();
-    
-  //   // // ---------------------- rayGen ----------------------
-  //   // // for (auto &pg : rayGenPGs) {
-  //   // //   if (pg.pg) optixProgramGroupDestroy(pg.pg);
-  //   // //   pg.pg = nullptr;
-  //   // // }
-  //   // for (auto rg : rayGens.objects) rg->destroyProgramGroups(device);
-    
-  //   // // ---------------------- hitGroup ----------------------
-  //   // for (auto &geomType : geomTypes) 
-  //   //   for (auto &pg : geomType.perRayType) {
-  //   //     if (pg.pg) optixProgramGroupDestroy(pg.pg);
-  //   //     pg.pg = nullptr;
-  //   //   }
-  //   // // ---------------------- miss ----------------------
-  //   // for (auto &pg : missProgPGs) {
-  //   //   if (pg.pg) optixProgramGroupDestroy(pg.pg);
-  //   //   pg.pg = nullptr;
-  //   // }
 
-  //   // device->popActive(oldActive);
-  // }
-  
-
+  /*! build all optix progrmas for miss program types */
   void DeviceContext::buildMissPrograms()
   {
-    // ------------------------------------------------------------------
-    // miss programs
-    // ------------------------------------------------------------------
     for (int progID=0;progID<parent->missProgTypes.size();progID++) {
       OptixProgramGroupOptions pgOptions = {};
       OptixProgramGroupDesc    pgDesc    = {};
@@ -449,16 +392,12 @@ namespace owl {
 
   void DeviceContext::destroyMissPrograms()
   {
-    // ------------------------------------------------------------------
-    // miss programs
-    // ------------------------------------------------------------------
     for (int progID=0;progID<parent->missProgTypes.size();progID++) {
       MissProgType *prog = parent->missProgTypes.getPtr(progID);
       if (!prog) continue;
       auto &dd = prog->getDD(shared_from_this());
       if (dd.pg == 0) continue;
 
-      PING; PRINT(dd.pg);
       OPTIX_CHECK(optixProgramGroupDestroy(dd.pg));
       dd.pg = 0;
     }
@@ -466,10 +405,6 @@ namespace owl {
   
   void DeviceContext::buildRayGenPrograms()
   {
-    // ------------------------------------------------------------------
-    // rayGen programs
-    // ------------------------------------------------------------------
-
     for (int pgID=0;pgID<parent->rayGenTypes.size();pgID++) {
       OptixProgramGroupOptions pgOptions = {};
       OptixProgramGroupDesc    pgDesc    = {};
@@ -508,9 +443,6 @@ namespace owl {
   
   void DeviceContext::destroyRayGenPrograms()
   {
-    // ------------------------------------------------------------------
-    // rayGen programs
-    // ------------------------------------------------------------------
     for (int pgID=0;pgID<parent->rayGenTypes.size();pgID++) {
       RayGenType *prog = parent->rayGenTypes.getPtr(pgID);
       if (!prog) continue;
@@ -518,7 +450,6 @@ namespace owl {
       auto &dd = prog->getDD(shared_from_this());
       if (dd.pg == 0) continue;
       
-      PING; PRINT(dd.pg);
       OPTIX_CHECK(optixProgramGroupDestroy(dd.pg));
       dd.pg = 0;
     }
@@ -535,12 +466,12 @@ namespace owl {
       GeomType::SP geomType = parent->geomTypes.getSP(geomTypeID);
       if (!geomType)
         continue;
-
+      
       UserGeomType::SP userGeomType
         = geomType->as<UserGeomType>();
       if (userGeomType)
         userGeomType->buildBoundsProg();
-                          
+      
       auto &dd = geomType->getDD(shared_from_this());
       dd.hgPGs.clear();
       dd.hgPGs.resize(numRayTypes);
@@ -578,23 +509,14 @@ namespace owl {
       }
     }
   }
-
-
+  
   void DeviceContext::destroyHitGroupPrograms()
   {
-    // ------------------------------------------------------------------
-    // geometry type programs -> what goes into hit groups
-    // ------------------------------------------------------------------
     for (int geomTypeID=0;geomTypeID<parent->geomTypes.size();geomTypeID++) {
       GeomType::SP geomType = parent->geomTypes.getSP(geomTypeID);
       if (!geomType)
         continue;
 
-      // UserGeomType::SP userGeomType
-      //   = geomType->as<UserGeomType>();
-      // if (userGeomType)
-      //   userGeomType->buildBoundsProg();
-                          
       auto &dd = geomType->getDD(shared_from_this());
       for (auto &pg : dd.hgPGs) 
         if (pg) {

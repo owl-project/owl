@@ -28,7 +28,7 @@
 namespace owl {
 
   /*! the root 'context' that spans, and manages, all objects and all
-      devices */
+    devices */
   struct Context : public Object {
     typedef std::shared_ptr<Context> SP;
 
@@ -43,9 +43,9 @@ namespace owl {
     }
 
     /*! creates a context with the given device IDs. If list of device
-        is nullptr, and number requested devices is > 1, then the
-        first N devices will get used; invalid device IDs in the list
-        will automatically get dropped */
+      is nullptr, and number requested devices is > 1, then the
+      first N devices will get used; invalid device IDs in the list
+      will automatically get dropped */
     Context(int32_t *requestedDeviceIDs,
             int      numRequestedDevices);
 
@@ -65,12 +65,12 @@ namespace owl {
     void buildMissProgRecordsOn(const DeviceContext::SP &device);
 
     /*! sets number of ray types to be used - should be done right
-        after context creation, and before SBT and pipeline get
-        built */
+      after context creation, and before SBT and pipeline get
+      built */
     void setRayTypeCount(size_t rayTypeCount);
     
     /*! enables motoin blur - should be done right after context
-        creation, and before SBT and pipeline get built */
+      creation, and before SBT and pipeline get built */
     void enableMotionBlur();
     
     /*! sets maximum instancing depth for the given context:
@@ -113,8 +113,8 @@ namespace owl {
     // ------------------------------------------------------------------
 
     /*! creates a 2D texture object with given parameters; this will
-        internally be mapped to a cuda texture object, and uploaded as
-        such to the device */
+      internally be mapped to a cuda texture object, and uploaded as
+      such to the device */
     Texture::SP
     texture2DCreate(OWLTexelFormat texelFormat,
                     OWLTextureFilterMode filterMode,
@@ -123,27 +123,27 @@ namespace owl {
                     const void *texels);
 
     /*! create a new *triangles* geometry group that will eventually
-        create a BVH over all the trinalges in all its child
-        geometries. only TrianglesGeoms can be added to this
-        group. These triangle geoms can all have different types,
-        different programs, etc, but must all be of "OWL_TRIANGLES"
-        kind */
+      create a BVH over all the trinalges in all its child
+      geometries. only TrianglesGeoms can be added to this
+      group. These triangle geoms can all have different types,
+      different programs, etc, but must all be of "OWL_TRIANGLES"
+      kind */
     GeomGroup::SP
     trianglesGeomGroupCreate(size_t numChildren);
     
     /*! create a new *user* geometry group that will eventually create
-        a BVH over all the user geoms / custom prims in all its child
-        geometries. only UserGeom's can be added to this group. These
-        user geoms can all have different types, different programs,
-        etc, but must all be of "OWL_TRIANGLES" kind */
+      a BVH over all the user geoms / custom prims in all its child
+      geometries. only UserGeom's can be added to this group. These
+      user geoms can all have different types, different programs,
+      etc, but must all be of "OWL_TRIANGLES" kind */
     GeomGroup::SP
     userGeomGroupCreate(size_t numChildren);
 
     /*! create a new device buffer of given data type and count; if
-        init is non-null it will be used to populoate this
-        buffer. Note that for certain non-trivial types (OWLTexture,
-        OWLGroup, etc) you may have to specify the content upon
-        creation */
+      init is non-null it will be used to populoate this
+      buffer. Note that for certain non-trivial types (OWLTexture,
+      OWLGroup, etc) you may have to specify the content upon
+      creation */
     Buffer::SP
     deviceBufferCreate(OWLDataType type,
                        size_t count,
@@ -173,8 +173,8 @@ namespace owl {
 
     
     /*! creates new ray gen program *type* with given program name (in
-        given module), and the given variable declarations that
-        describe this type's variables */
+      given module), and the given variable declarations that
+      describe this type's variables */
     RayGenType::SP
     createRayGenType(Module::SP module,
                      const std::string &progName,
@@ -186,8 +186,8 @@ namespace owl {
     createRayGen(const std::shared_ptr<RayGenType> &type);
     
     /*! create a new launch param type descriptor with given
-        variables; this can then be used to create actual launch param
-        instances (\see createLaunchParams) */
+      variables; this can then be used to create actual launch param
+      instances (\see createLaunchParams) */
     LaunchParamsType::SP
     createLaunchParamsType(size_t varStructSize,
                            const std::vector<OWLVarDecl> &varDecls);
@@ -197,8 +197,8 @@ namespace owl {
     createLaunchParams(const std::shared_ptr<LaunchParamsType> &type);
     
     /*! creates new miss program *type* with given program name (in
-        given module), and the given variable declarations that
-        describe this type's variables */
+      given module), and the given variable declarations that
+      describe this type's variables */
     MissProgType::SP
     createMissProgType(Module::SP module,
                        const std::string &progName,
@@ -224,8 +224,8 @@ namespace owl {
     // ------------------------------------------------------------------
 
     /*! @{ registries for all the different object types within this
-        context. allows for keeping track what's alive, and what has
-        to be compiled, put into SBTs, etc */
+      context. allows for keeping track what's alive, and what has
+      to be compiled, put into SBTs, etc */
     ObjectRegistryT<Buffer>       buffers;
     ObjectRegistryT<Texture>      textures;
     ObjectRegistryT<Group>        groups;
@@ -240,11 +240,11 @@ namespace owl {
     ObjectRegistryT<LaunchParams>     launchParams;
     /*! @} */
 
-    /*! rracks which ID regions in the SBT have already been used -
-        newly created groups allocate ranges of IDs in the SBT (to
-        allow its geometries to be in successive SBT regions), and
-        this struct keeps track of whats already used, and what is
-        available */
+    /*! tracks which ID regions in the SBT have already been used -
+      newly created groups allocate ranges of IDs in the SBT (to
+      allow its geometries to be in successive SBT regions), and
+      this struct keeps track of whats already used, and what is
+      available */
     RangeAllocator sbtRangeAllocator;
 
     /*! one miss prog per ray type */
@@ -258,12 +258,12 @@ namespace owl {
     int numRayTypes { 1 };
     
     /*! by default motion blur is off, as it costs performacne - set
-        via enableMotimBlur() */
+      via enableMotimBlur() */
     bool motionBlurEnabled = false;
 
     /*! a set of dummy (ie, empty) launch params. allows us for always
-        using the same launch code, *with* launch params, even if th
-        user didn't specify any during launch */
+      using the same launch code, *with* launch params, even if th
+      user didn't specify any during launch */
     LaunchParams::SP dummyLaunchParams;
 
   private:
