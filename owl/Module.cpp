@@ -18,7 +18,7 @@
 #include "Context.h"
 
 #define LOG(message)                            \
-  if (Context::logging())                   \
+  if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_LIGHT_BLUE                \
       << "#owl.ng: "                            \
@@ -26,7 +26,7 @@
       << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  if (Context::logging())                   \
+  if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_BLUE                      \
       << "#owl.ng: "                            \
@@ -36,19 +36,7 @@
 
 namespace owl {
 
-  inline bool ptxContainsInvalidOptixInternalCall(const std::string &line)
-  {
-    static const char *optix_internal_symbols[] = {
-                                                   " _optix_",
-                                                   nullptr
-    };
-    for (const char **testSym = optix_internal_symbols; *testSym; ++testSym) {
-      if (line.find(*testSym) != line.npos)
-        return true;
-    }
-    return false;
-  }
-    
+  /*! get next single line of PTX code */
   std::string getNextLine(const char *&s)
   {
     std::stringstream line;
@@ -59,14 +47,19 @@ namespace owl {
     }
     return line.str();
   }
-    
+
+  /*! given the original PTX code, create a version of this PTX code
+      in which all lines that refer to an internal optix symbol (ie,
+      that contains ' _optix_' get commented out. This will make this
+      PTX code invalid for all optix functions, but makes it
+      compilable by cude for the non-optix bounds program */
   std::string killAllInternalOptixSymbolsFromPtxString(const char *orignalPtxCode)
   {
     std::stringstream fixed;
 
     for (const char *s = orignalPtxCode; *s; ) {
       std::string line = getNextLine(s);
-      if (ptxContainsInvalidOptixInternalCall(line))
+      if (line.find(" _optix_") != line.npos)
         fixed << "//dropped: " << line;
       else
         fixed << line;
@@ -75,26 +68,35 @@ namespace owl {
   }
 
 
-  Module::Module(Context *const context,
-                 const std::string &ptxCode)
-    : RegisteredObject(context,context->modules),
-      ptxCode(ptxCode)
+  // ------------------------------------------------------------------
+  // Module::DeviceData
+  // ------------------------------------------------------------------
+  
+  /*! constructor */
+  Module::DeviceData::DeviceData(Module *parent, DeviceContext::SP device)
+    : RegisteredObject::DeviceData(device),
+      parent(parent)
+  {}
+  
+  /*! destructor */
+  Module::DeviceData::~DeviceData()
   {
-    // lloModuleCreate(context->llo,this->ID,
-    // context->llo->moduleCreate(this->ID,
-    //                            // warning: this 'this' here is importat, since
-    //                            // *we* manage the lifetime of this string, and
-    //                            // the one on the constructor list will go out of
-    //                            // scope after this function
-    //                            this->ptxCode.c_str());
+    // should already have been deleted by this time
+    assert(module == nullptr);
   }
 
-  Module::~Module()
+  /*! destroy the optix data for this module; the owl data for the
+    module itself remains valid */
+  void Module::DeviceData::destroy()
   {
-    for (auto device : context->getDevices())
-      getDD(device).destroy();
+    SetActiveGPU forLifeTime(device);
+    
+    if (module)
+      optixModuleDestroy(module);
+    module = 0;
   }
-  
+
+  /*! build the optix side of this module on this device */
   void Module::DeviceData::build()
   {
     assert(module == 0);
@@ -129,7 +131,6 @@ namespace owl {
     // just leave them in (and as it's in a module that never gets
     // used by optix, this should actually be OK).
     // ------------------------------------------------------------------
-    const char *ptxCode = parent->ptxCode.c_str();
     LOG("generating second, 'non-optix' version of that module, too");
     CUresult rc = (CUresult)0;
     const std::string fixedPtxCode
@@ -151,19 +152,38 @@ namespace owl {
     if (rc != CUDA_SUCCESS) {
       const char *errName = 0;
       cuGetErrorName(rc,&errName);
-      throw std::runtime_error("unknown CUDA error when building module for bounds program kernel"
+      throw std::runtime_error("unknown CUDA error when building module "
+                               "for bounds program kernel"
                                +std::string(errName));
     }
     LOG_OK("created module #" << parent->ID << " (both optix and cuda)");
   }
   
-  void Module::DeviceData::destroy()
+
+
+  // ------------------------------------------------------------------
+  // Module
+  // ------------------------------------------------------------------
+  
+  /*! constructor - ptxCode contains the prec-ompiled ptx code with
+    the compiled functions */
+  Module::Module(Context *const context,
+                 const std::string &ptxCode)
+    : RegisteredObject(context,context->modules),
+      ptxCode(ptxCode)
+  {}
+
+  /*! destructor, to release data if required */
+  Module::~Module()
   {
-    SetActiveGPU forLifeTime(device);
-
-    if (module)
-      optixModuleDestroy(module);
-    module = 0;
+    for (auto device : context->getDevices())
+      getDD(device).destroy();
   }
-
+  
+  /*! pretty-printer, for printf-debugging */
+  std::string Module::toString() const
+  {
+    return "Module";
+  }
+    
 } // ::owl

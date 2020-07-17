@@ -19,7 +19,6 @@
 #include "RegisteredObject.h"
 
 namespace owl {
-  struct Context;
   
   /*! captures the concept of a module that contains one or more
     programs. */
@@ -27,22 +26,29 @@ namespace owl {
     typedef std::shared_ptr<Module> SP;
 
     /*! any device-specific data, such as optix handles, cuda device
-        pointers, etc */
+      pointers, etc */
     struct DeviceData : public RegisteredObject::DeviceData {
-      DeviceData(Module *parent, DeviceContext::SP device)
-        : RegisteredObject::DeviceData(device),
-          parent(parent)
-      {}
-      virtual ~DeviceData() { assert(module == nullptr); }
       
+      /*! constructor */
+      DeviceData(Module *parent, DeviceContext::SP device);
+      
+      /*! destructor */
+      virtual ~DeviceData();
+
+      /*! build the optix side of this module on this device */
       void build();
+
+      /*! destroy the optix data for this module; the owl data for the
+        module itself remains valid */
       void destroy();
 
+      /*! pointer to the non-device specific part of this module */
       Module *const parent;
       
-      /*! for all *optix* programs we can directly buidl the PTX code
-        into a module using optixbuildmodule - this is the result of
-        that operation */
+      /*! optix-compiled module for the optix programs. for all
+       *optix* programs we can directly build the PTX code into a
+       module using optixbuildmodule - this is the result of that
+       operation */
       OptixModule module = 0;
       
       /*! for the *bounds* function we have to build a *separate*
@@ -51,37 +57,40 @@ namespace owl {
       CUmodule    boundsModule = 0;
     };
 
-    
+    /*! constructor - ptxCode contains the prec-ompiled ptx code with
+      the compiled functions */
     Module(Context *context, const std::string &ptxCode);
-    
+
+    /*! destructor, to release data if required */
     virtual ~Module();
-    // Module(const std::string &ptxCode,
-    //        ll::id_t llID)
-    //   : ptxCode(ptxCode),
-    //     llID(llID)
-    // {
-    //   std::cout << "#owl: created module ..." << std::endl;
-    // }
     
-    // DeviceData &getDD(int deviceID) const
-    // {
-    //   assert(deviceID < deviceData.size());
-    //   return *deviceData[deviceID]->as<DeviceData>();
-    // }
-    DeviceData &getDD(const DeviceContext::SP &device) const
-    {
-      assert(device->ID < deviceData.size());
-      return *deviceData[device->ID]->as<DeviceData>();
-    }
+    /*! pretty-printer, for printf-debugging */
+    std::string toString() const override;
     
-    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
-    { return std::make_shared<DeviceData>(this,device); }
+    /*! get reference to given device-specific data for this object */
+    inline DeviceData &getDD(const DeviceContext::SP &device) const;
 
+    /*! create this object's device-specific data for the device */
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
 
-    virtual std::string toString() const { return "Module"; }
-    
+    /*! the precompiled PTX code supplied by the user */
     const std::string ptxCode;
-    // const ll::id_t    llID;
   };
+  
+  // ------------------------------------------------------------------
+  // implementation section
+  // ------------------------------------------------------------------
+  
+  inline Module::DeviceData &Module::getDD(const DeviceContext::SP &device) const
+  {
+    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    return *deviceData[device->ID]->as<DeviceData>();
+  }
+  
+  /*! create this object's device-specific data for the device */
+  inline RegisteredObject::DeviceData::SP Module::createOn(const DeviceContext::SP &device) 
+  {
+    return std::make_shared<DeviceData>(this,device);
+  }
   
 } // ::owl
