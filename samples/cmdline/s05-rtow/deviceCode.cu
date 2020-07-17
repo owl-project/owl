@@ -68,7 +68,7 @@ inline __device__ void intersectProg()
 
   /* iw, jan 11, 2020: for this particular example (where we do not
      yet use instancing) we could also use the World ray; but this
-     verion is cleaner since it would/will also work with
+     version is cleaner since it would/will also work with
      instancing */
   const vec3f org  = optixGetObjectRayOrigin();
   const vec3f dir  = optixGetObjectRayDirection();
@@ -138,7 +138,7 @@ void closestHit()
   /* iw, jan 11, 2020: for this particular example (where we do not
      yet use instancing) we could also get away with just using the
      sphere.center value directly (since we don't use instancing the
-     transform will not have any effect, anyway); but this verion is
+     transform will not have any effect, anyway); but this version is
      cleaner since it would/will also work with instancing */
   const vec3f N     = hit_P-pointToWorld(self.sphere.center);
 

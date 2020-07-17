@@ -97,63 +97,99 @@ typedef enum
 
 typedef enum
   {
-    OWL_FLOAT=100,
-    OWL_FLOAT2,
-    OWL_FLOAT3,
-    OWL_FLOAT4,
+   OWL_SBT_HITGROUPS = 0x1,
+   OWL_SBT_GEOMS     = OWL_SBT_HITGROUPS,
+   OWL_SBT_RAYGENS   = 0x2,
+   OWL_SBT_MISSPROGS = 0x4,
+   OWL_SBT_ALL   = 0x7
+  } OWLBuildSBTFlags;
+  
+typedef enum
+  {
+   OWL_INVALID_TYPE = 0,
 
-    OWL_INT=110,
-    OWL_INT2,
-    OWL_INT3,
-    OWL_INT4,
+   OWL_BUFFER=10,
+   OWL_BUFFER_SIZE,
+   OWL_BUFFER_ID,
+   OWL_BUFFER_POINTER,
+   OWL_BUFPTR=OWL_BUFFER_POINTER,
+
+   OWL_GROUP=20,
+
+   /*! implicit variable of type integer that specifies the *index*
+     of the given device. this variable type is implicit in the
+     sense that it only gets _declared_ on the host, and gets set
+     automatically during SBT creation */
+   OWL_DEVICE=30,
+
+   /*! texture(s) */
+   OWL_TEXTURE=40,
+   OWL_TEXTURE_2D=OWL_TEXTURE,
+
+
+   /* all types that are naively copyable should be below this value,
+      all that aren't should be above */
+   _OWL_BEGIN_COPYABLE_TYPES = 1000,
    
-    OWL_UINT=120,
-    OWL_UINT2,
-    OWL_UINT3,
-    OWL_UINT4,
    
-    OWL_LONG=130,
-    OWL_LONG2,
-    OWL_LONG3,
-    OWL_LONG4,
+   OWL_FLOAT=1000,
+   OWL_FLOAT2,
+   OWL_FLOAT3,
+   OWL_FLOAT4,
 
-    OWL_ULONG=140,
-    OWL_ULONG2,
-    OWL_ULONG3,
-    OWL_ULONG4,
+   OWL_INT=1100,
+   OWL_INT2,
+   OWL_INT3,
+   OWL_INT4,
+   
+   OWL_UINT=1200,
+   OWL_UINT2,
+   OWL_UINT3,
+   OWL_UINT4,
+   
+   OWL_LONG=1300,
+   OWL_LONG2,
+   OWL_LONG3,
+   OWL_LONG4,
 
-    /*! just another name for a 64-bit data type - unlike
-        OWL_BUFFER_POINTER's (which gets translated from OWLBuffer's
-        to actual device-side poiners) these OWL_RAW_POINTER types get
-        copied binary without any translation. This is useful for
-        owl-cuda interaction (where the user already has device
-        pointers), but should not be used for logical buffers */
-    OWL_RAW_POINTER=OWL_ULONG,
+   OWL_ULONG=1400,
+   OWL_ULONG2,
+   OWL_ULONG3,
+   OWL_ULONG4,
+
+   OWL_DOUBLE=1500,
+   OWL_DOUBLE2,
+   OWL_DOUBLE3,
+   OWL_DOUBLE4,
     
-   
-    OWL_BUFFER=1000,
-    OWL_BUFFER_SIZE,
-    OWL_BUFFER_ID,
-    OWL_BUFFER_POINTER,
-    OWL_BUFPTR=OWL_BUFFER_POINTER,
+   OWL_CHAR=1600,
+   OWL_CHAR2,
+   OWL_CHAR3,
+   OWL_CHAR4,
 
-    OWL_GROUP=3000,
+   /*! unsigend 8-bit integer */
+   OWL_UCHAR=1700,
+   OWL_UCHAR2,
+   OWL_UCHAR3,
+   OWL_UCHAR4,
 
-    /*! implicit variable of type integer that specifies the *index*
-        of the given device. this variable type is implicit in the
-        sense that it only gets _declared_ on the host, and gets set
-        automatically during SBT creation */
-    OWL_DEVICE=4000,
+   /*! just another name for a 64-bit data type - unlike
+     OWL_BUFFER_POINTER's (which gets translated from OWLBuffer's
+     to actual device-side poiners) these OWL_RAW_POINTER types get
+     copied binary without any translation. This is useful for
+     owl-cuda interaction (where the user already has device
+     pointers), but should not be used for logical buffers */
+   OWL_RAW_POINTER=OWL_ULONG,
 
-    /*! texture(s) */
-    OWL_TEXTURE=5000,
-    OWL_TEXTURE_2D=OWL_TEXTURE,
 
-    /*! at least for now, use that for buffers with user-defined types:
-      type then is "OWL_USER_TYPE_BEGIN+sizeof(elementtype). Note
-      that since we always _add_ the user type's size to this value
-      this MUST be the last entry in the enum */
-    OWL_USER_TYPE_BEGIN=10000
+   /* matrix formats */
+   OWL_AFFINE3F=1800,
+
+   /*! at least for now, use that for buffers with user-defined types:
+     type then is "OWL_USER_TYPE_BEGIN+sizeof(elementtype). Note
+     that since we always _add_ the user type's size to this value
+     this MUST be the last entry in the enum */
+   OWL_USER_TYPE_BEGIN=10000
   }
   OWLDataType;
 
@@ -161,16 +197,16 @@ typedef enum
 
 typedef enum
   {
-    // soon to be deprecated old naming
-    OWL_GEOMETRY_USER,
-    // new naming, to be consistent with type OLWGeom (not OWLGeometry):
-    OWL_GEOM_USER=OWL_GEOMETRY_USER,
-    // soon to be deprecated old naming
-    OWL_GEOMETRY_TRIANGLES,
-    // new naming, to be consistent with type OLWGeom (not OWLGeometry):
-    OWL_GEOM_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
-    OWL_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
-    OWL_GEOMETRY_HAIR
+   // soon to be deprecated old naming
+   OWL_GEOMETRY_USER,
+   // new naming, to be consistent with type OLWGeom (not OWLGeometry):
+   OWL_GEOM_USER=OWL_GEOMETRY_USER,
+   // soon to be deprecated old naming
+   OWL_GEOMETRY_TRIANGLES,
+   // new naming, to be consistent with type OLWGeom (not OWLGeometry):
+   OWL_GEOM_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
+   OWL_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
+   OWL_GEOMETRY_HAIR
   }
   OWLGeomKind;
 
@@ -178,28 +214,32 @@ typedef enum
 
 
 typedef float    OWL_float;
+typedef double   OWL_double;
 typedef int32_t  OWL_int;
 typedef uint32_t OWL_uint;
 typedef int64_t  OWL_long;
 typedef uint64_t OWL_ulong;
 
-typedef struct _OWL_int2   { int32_t x,y; } owl2i;
-typedef struct _OWL_uint2  { int32_t x,y; } owl2ui;
-typedef struct _OWL_long2  { int64_t x,y; } owl2l;
-typedef struct _OWL_ulong2 { int64_t x,y; } owl2ul;
-typedef struct _OWL_float2 { float   x,y; } owl2f;
+typedef struct _OWL_int2    { int32_t  x,y; } owl2i;
+typedef struct _OWL_uint2   { int32_t  x,y; } owl2ui;
+typedef struct _OWL_long2   { int64_t  x,y; } owl2l;
+typedef struct _OWL_ulong2  { uint64_t x,y; } owl2ul;
+typedef struct _OWL_float2  { float    x,y; } owl2f;
+typedef struct _OWL_double2 { double   x,y; } owl2d;
 
-typedef struct _OWL_int3   { int32_t  x,y,z; } owl3i;
-typedef struct _OWL_uint3  { uint32_t x,y,z; } owl3ui;
-typedef struct _OWL_long3  { int64_t  x,y,z; } owl3l;
-typedef struct _OWL_ulong3 { uint64_t x,y,z; } owl3ul;
-typedef struct _OWL_float3 { float    x,y,z; } owl3f;
+typedef struct _OWL_int3    { int32_t  x,y,z; } owl3i;
+typedef struct _OWL_uint3   { uint32_t x,y,z; } owl3ui;
+typedef struct _OWL_long3   { int64_t  x,y,z; } owl3l;
+typedef struct _OWL_ulong3  { uint64_t x,y,z; } owl3ul;
+typedef struct _OWL_float3  { float    x,y,z; } owl3f;
+typedef struct _OWL_double3 { double   x,y,z; } owl3d;
 
-typedef struct _OWL_int4   { int32_t  x,y,z,w; } owl4i;
-typedef struct _OWL_uint4  { uint32_t x,y,z,w; } owl4ui;
-typedef struct _OWL_long4  { int64_t  x,y,z,w; } owl4l;
-typedef struct _OWL_ulong4 { uint64_t x,y,z,w; } owl4ul;
-typedef struct _OWL_float4 { float    x,y,z,w; } owl4f;
+typedef struct _OWL_int4    { int32_t  x,y,z,w; } owl4i;
+typedef struct _OWL_uint4   { uint32_t x,y,z,w; } owl4ui;
+typedef struct _OWL_long4   { int64_t  x,y,z,w; } owl4l;
+typedef struct _OWL_ulong4  { uint64_t x,y,z,w; } owl4ul;
+typedef struct _OWL_float4  { float    x,y,z,w; } owl4f;
+typedef struct _OWL_double4 { double   x,y,z,w; } owl4d;
 
 typedef struct _OWL_affine3f { owl3f vx,vy,vz,t; } owl4x3f;
 
@@ -245,13 +285,21 @@ typedef struct _OWLModule        *OWLModule;
 typedef struct _OWLGroup         *OWLGroup;
 typedef struct _OWLRayGen        *OWLRayGen;
 typedef struct _OWLMissProg      *OWLMissProg;
-typedef struct _OWLLaunchParams  *OWLLaunchParams;
-
-// typedef OWLGeom OWLTriangles;
+/*! launch params (or "globals") are variables that can be put into
+  device constant memory, accessible through a CUDA "__constant__
+  <Type> optixLaunchParams;" variable on the device side. Launch
+  params capture the layout of this struct, and the value of its
+  members, on the host side, then properly fill it in before executing
+  a launch. OptiX calls those "launch parameters" because they are
+  similar to how parameters to a CUDA kernel are internally treated;
+  we also call them "globals" because they are globally accessible to
+  all programs within a given launch */
+typedef struct _OWLLaunchParams  *OWLLaunchParams, *OWLParams, *OWLGlobals;
 
 OWL_API void owlBuildPrograms(OWLContext context);
 OWL_API void owlBuildPipeline(OWLContext context);
-OWL_API void owlBuildSBT(OWLContext context);
+OWL_API void owlBuildSBT(OWLContext context,
+                         OWLBuildSBTFlags flags OWL_IF_CPP(=OWL_SBT_ALL));
 
 /*! returns number of devices available in the given context */
 OWL_API int32_t
@@ -275,6 +323,13 @@ owlGetDeviceCount(OWLContext context);
 OWL_API OWLContext
 owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
                  int numDevices OWL_IF_CPP(=0));
+
+/*! enable motion blur for this context. this _has_ to be called
+    before creating any geometries, groups, etc, and before the
+    pipeline gets compiled. Ie, it shold be called _right_ after
+    context creation */
+OWL_API void
+owlEnableMotionBlur(OWLContext _context);
 
 /*! set number of ray types to be used in this context; this should be
   done before any programs, pipelines, geometries, etc get
@@ -313,6 +368,14 @@ owlSetMaxInstancingDepth(OWLContext context,
 OWL_API void
 owlContextDestroy(OWLContext context);
 
+/* return the cuda stream associated with the given device. */
+OWL_API CUstream
+owlContextGetStream(OWLContext context, int deviceID);
+
+/* return the optix context associated with the given device. */
+OWL_API OptixDeviceContext
+owlContextGetOptixContext(OWLContext context, int deviceID);
+
 OWL_API OWLModule
 owlModuleCreate(OWLContext  context,
                 const char *ptxCode);
@@ -321,11 +384,11 @@ OWL_API OWLGeom
 owlGeomCreate(OWLContext  context,
               OWLGeomType type);
 
-OWL_API OWLLaunchParams
-owlLaunchParamsCreate(OWLContext  context,
-                      size_t      sizeOfVarStruct,
-                      OWLVarDecl *vars,
-                      size_t      numVars);
+OWL_API OWLParams
+owlParamsCreate(OWLContext  context,
+                size_t      sizeOfVarStruct,
+                OWLVarDecl *vars,
+                size_t      numVars);
 
 OWL_API OWLRayGen
 owlRayGenCreate(OWLContext  context,
@@ -335,6 +398,13 @@ owlRayGenCreate(OWLContext  context,
                 OWLVarDecl *vars,
                 size_t      numVars);
 
+/*! creates a miss program with given function name (in given module)
+    and given variables. Note due to backwards compatibility this will
+    also automatically *set*, by default, the first such created
+    program as miss program for ray type number 0, the second one for
+    ray type number 1, etc. If another order is desired, you can use
+    \see owlMissProgSet to explicitly assign miss programs to specific
+    ray types */
 OWL_API OWLMissProg
 owlMissProgCreate(OWLContext  context,
                   OWLModule   module,
@@ -343,10 +413,15 @@ owlMissProgCreate(OWLContext  context,
                   OWLVarDecl *vars,
                   size_t      numVars);
 
+/*! sets the given miss program for the given ray type */
+OWL_API void
+owlMissProgSet(OWLContext  context,
+               int rayType,
+               OWLMissProg missProgToUse);
 
 // ------------------------------------------------------------------
 /*! create a new group (which handles the acceleration strucure) for
-    triangle geometries.
+  triangle geometries.
 
   \param numGeometries Number of geometries in this group, must be
   non-zero.
@@ -364,7 +439,7 @@ owlUserGeomGroupCreate(OWLContext context,
 
 // ------------------------------------------------------------------
 /*! create a new group (which handles the acceleration strucure) for
-    triangle geometries.
+  triangle geometries.
 
   \param numGeometries Number of geometries in this group, must be
   non-zero.
@@ -381,17 +456,17 @@ owlTrianglesGeomGroupCreate(OWLContext context,
 
 // ------------------------------------------------------------------
 /*! create a new instance group with given number of instances. The
-    child groups and their instance IDs and/or transforms can either
-    be specified "in bulk" as part of this call, or can be set lateron
-    with inviidaul calls to \see owlInstanceGroupSetChild and \see
-    owlInstanceGroupSetTransform. Note however, that in the case of
-    having millions of instances in a group it will be *much* more
-    efficient to set them in bulk open creation, than in millions of
-    inidiviual API calls.
+  child groups and their instance IDs and/or transforms can either
+  be specified "in bulk" as part of this call, or can be set lateron
+  with inviidaul calls to \see owlInstanceGroupSetChild and \see
+  owlInstanceGroupSetTransform. Note however, that in the case of
+  having millions of instances in a group it will be *much* more
+  efficient to set them in bulk open creation, than in millions of
+  inidiviual API calls.
 
-    Either or all of initGroups, initTranforms, or initInstanceIDs may
-    be null, in which case the values used for the 'th child will be a
-    null group, a unit transform, and 'i', respectively.
+  Either or all of initGroups, initTranforms, or initInstanceIDs may
+  be null, in which case the values used for the 'th child will be a
+  null group, a unit transform, and 'i', respectively.
 */
 OWL_API OWLGroup
 owlInstanceGroupCreate(OWLContext context,
@@ -400,34 +475,37 @@ owlInstanceGroupCreate(OWLContext context,
                        size_t     numInstances,
                        
                        /*! the initial list of owl groups to use by
-                           the instances in this group; must be either
-                           null, or an array of the size
-                           'numInstnaces', the i'th instnace in this
-                           gorup will be an instance o the i'th
-                           element in this list */
+                         the instances in this group; must be either
+                         null, or an array of the size
+                         'numInstnaces', the i'th instnace in this
+                         gorup will be an instance o the i'th
+                         element in this list */
                        const OWLGroup *initGroups      OWL_IF_CPP(= nullptr),
 
                        /*! instance IDs to use for the instance in
-                           this group; must be eithe rnull, or an
-                           array of size numInstnaces. If null, the
-                           i'th child of this instance group will use
-                           instanceID=i, otherwise, it will use the
-                           user-provided instnace ID from this
-                           list. Specifying an instanceID will affect
-                           what value 'optixGetInstanceID' will return
-                           in a CH program that refers to the given
-                           instance */
+                         this group; must be eithe rnull, or an
+                         array of size numInstnaces. If null, the
+                         i'th child of this instance group will use
+                         instanceID=i, otherwise, it will use the
+                         user-provided instnace ID from this
+                         list. Specifying an instanceID will affect
+                         what value 'optixGetInstanceID' will return
+                         in a CH program that refers to the given
+                         instance */
                        const uint32_t *initInstanceIDs OWL_IF_CPP(= nullptr),
                        
                        /*! initial list of transforms that this
                          instance group will use; must be either
-                           null, or an array of size numInstnaces, of
-                           the format specified */
+                         null, or an array of size numInstnaces, of
+                         the format specified */
                        const float    *initTransforms  OWL_IF_CPP(= nullptr),
                        OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL)
                        );
 
+
+
 OWL_API void owlGroupBuildAccel(OWLGroup group);
+OWL_API void owlGroupRefitAccel(OWLGroup group);
 
 OWL_API OWLGeomType
 owlGeomTypeCreate(OWLContext context,
@@ -457,7 +535,7 @@ owlTexture2DCreate(OWLContext context,
 
 /*! destroy the given texture; after this call any accesses to the given texture are invalid */
 OWL_API void
-owlTextureDestroy(OWLTexture texture);
+owlTexture2DDestroy(OWLTexture texture);
 
 /*! creates a device buffer where every device has its own local copy
   of the given buffer */
@@ -499,13 +577,13 @@ OWL_API void
 owlGraphicsBufferUnmap(OWLBuffer buffer);
 
 /*! returns the device pointer of the given pointer for the given
-    device ID. For host-pinned or managed memory buffers (where the
-    buffer is shared across all devices) this pointer should be the
-    same across all devices (and even be accessible on the host); for
-    device buffers each device *may* see this buffer under a different
-    address, and that address is not valid on the host. Note this
-    function is paricuarly useful for CUDA-interop; allowing to
-    cudaMemcpy to/from an owl buffer directly from CUDA code */
+  device ID. For host-pinned or managed memory buffers (where the
+  buffer is shared across all devices) this pointer should be the
+  same across all devices (and even be accessible on the host); for
+  device buffers each device *may* see this buffer under a different
+  address, and that address is not valid on the host. Note this
+  function is paricuarly useful for CUDA-interop; allowing to
+  cudaMemcpy to/from an owl buffer directly from CUDA code */
 OWL_API const void *
 owlBufferGetPointer(OWLBuffer buffer, int deviceID);
 
@@ -531,15 +609,26 @@ owlBufferUpload(OWLBuffer buffer, const void *hostPtr);
 OWL_API void
 owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
-/*! executes an optix lauch of given size, with given launch
-  program. Note this call is asynchronous, and may _not_ be
-  completed by the time this function returns. */
+/*! perform a raygen launch with lauch parameters, in a *synchronous*
+    way; it, by the time this function returns the launch is completed */
 OWL_API void
-owlParamsLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
-                  OWLLaunchParams launchParams);
+owlLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
+            OWLParams params);
+
+/*! perform a raygen launch with lauch parameters, in a *A*synchronous
+    way; it, this will only launch, but *NOT* wait for completion (see
+    owlLaunchSync) */
+OWL_API void
+owlAsyncLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
+                 OWLParams params);
+
 
 OWL_API CUstream
-owlParamsGetCudaStream(OWLLaunchParams params, int deviceID);
+owlParamsGetCudaStream(OWLParams params, int deviceID);
+
+/*! wait for the async launch to finish */
+OWL_API void
+owlLaunchSync(OWLParams params);
 
 // ==================================================================
 // "Triangles" functions
@@ -549,6 +638,19 @@ OWL_API void owlTrianglesSetVertices(OWLGeom triangles,
                                      size_t count,
                                      size_t stride,
                                      size_t offset);
+OWL_API void owlTrianglesSetMotionVertices(OWLGeom triangles,
+                                           /*! number of vertex arrays
+                                               passed here, the first
+                                               of those is for t=0,
+                                               thelast for t=1,
+                                               everything is linearly
+                                               interpolated
+                                               in-between */
+                                           size_t    numKeys,
+                                           OWLBuffer *vertexArrays,
+                                           size_t count,
+                                           size_t stride,
+                                           size_t offset);
 OWL_API void owlTrianglesSetIndices(OWLGeom triangles,
                                     OWLBuffer indices,
                                     size_t count,
@@ -569,7 +671,27 @@ OWL_API void
 owlInstanceGroupSetTransform(OWLGroup group,
                              int whichChild,
                              const float *floats,
-                             OWLMatrixFormat matrixFormat);
+                             OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL));
+
+/*! this function allows to set up to N different arrays of trnsforms
+    for motion blur; the first such array is used as transforms for
+    t=0, the last one for t=1.  */
+OWL_API void
+owlInstanceGroupSetTransforms(OWLGroup group,
+                              /*! whether to set for t=0 or t=1 -
+                                  currently supporting only 0 or 1*/
+                              uint32_t timeStep,
+                              const float *floatsForThisStimeStep,
+                              OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL));
+
+/*! sets the list of IDs to use for the child instnaces. By default
+    the instance ID of child #i is simply i, but optix allows to
+    specify a user-defined instnace ID for each instance, which with
+    owl can be done through this array. Array size must match number
+    of instances in the specified group */
+OWL_API void
+owlInstanceGroupSetInstanceIDs(OWLGroup group,
+                               const uint32_t *instanceIDs);
 
 OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,
@@ -595,7 +717,7 @@ owlGeomTypeSetBoundsProg(OWLGeomType type,
                          const char *progName);
 
 /*! set the primitive count for the given uesr geometry. this _has_ to
-    be set before the group(s) that this geom is used in get built */
+  be set before the group(s) that this geom is used in get built */
 OWL_API void
 owlGeomSetPrimCount(OWLGeom geom,
                     size_t  primCount);
@@ -627,8 +749,8 @@ owlMissProgGetVariable(OWLMissProg geom,
                        const char *varName);
 
 OWL_API OWLVariable
-owlLaunchParamsGetVariable(OWLLaunchParams object,
-                           const char *varName);
+owlParamsGetVariable(OWLParams object,
+                     const char *varName);
 
 // -------------------------------------------------------
 // VariableSet for different variable types
@@ -638,6 +760,7 @@ OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
 OWL_API void owlVariableSetTexture(OWLVariable variable, OWLTexture value);
 OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
 OWL_API void owlVariableSetRaw(OWLVariable variable, const void *valuePtr);
+OWL_API void owlVariableSetPointer(OWLVariable variable, const void *valuePtr);
 #define _OWL_SET_HELPER(stype,abb)                      \
   OWL_API void owlVariableSet1##abb(OWLVariable var,    \
                                     stype v);           \
@@ -654,6 +777,7 @@ _OWL_SET_HELPER(uint32_t,ui)
 _OWL_SET_HELPER(int64_t,l)
 _OWL_SET_HELPER(uint64_t,ul)
 _OWL_SET_HELPER(float,f)
+_OWL_SET_HELPER(double,d)
 #undef _OWL_SET_HELPER
 
 
@@ -726,62 +850,73 @@ _OWL_SET_HELPER(float,f)
 #define _OWL_SET_HELPERS_CPP(OType,stype,abb)  /* ignore in C99 mode */
 #endif
 
-#define _OWL_SET_HELPERS(Type)                          \
-  /* texture, buffer, other */                            \
-  inline void owl##Type##SetTexture(OWL##Type object,     \
-                                  const char *varName,  \
-                                  OWLTexture v)           \
-  {                                                     \
-    OWLVariable var                                     \
-      = owl##Type##GetVariable(object,varName);         \
-    owlVariableSetTexture(var,v);                         \
-    owlVariableRelease(var);                            \
-  }                                                     \
-  /* group, buffer, other */                            \
-  inline void owl##Type##SetGroup(OWL##Type object,     \
-                                  const char *varName,  \
-                                  OWLGroup v)           \
-  {                                                     \
-    OWLVariable var                                     \
-      = owl##Type##GetVariable(object,varName);         \
-    owlVariableSetGroup(var,v);                         \
-    owlVariableRelease(var);                            \
-  }                                                     \
-  inline void owl##Type##SetRaw(OWL##Type object,       \
-                                const char *varName,    \
-                                const void *v)          \
-  {                                                     \
-    OWLVariable var                                     \
-      = owl##Type##GetVariable(object,varName);         \
-    owlVariableSetRaw(var,v);                           \
-    owlVariableRelease(var);                            \
-  }                                                     \
-  inline void owl##Type##SetBuffer(OWL##Type object,    \
-                                   const char *varName, \
-                                   OWLBuffer v)         \
-  {                                                     \
-    OWLVariable var                                     \
-      = owl##Type##GetVariable(object,varName);         \
-    owlVariableSetBuffer(var,v);                        \
-    owlVariableRelease(var);                            \
-  }                                                     \
-                                                        \
-  _OWL_SET_HELPERS_C(Type,int32_t,i)                          \
-  _OWL_SET_HELPERS_C(Type,uint32_t,ui)                        \
-  _OWL_SET_HELPERS_C(Type,int64_t,l)                          \
-  _OWL_SET_HELPERS_C(Type,uint64_t,ul)                        \
-  _OWL_SET_HELPERS_C(Type,float,f)                            \
-  _OWL_SET_HELPERS_CPP(Type,int32_t,i)                        \
-  _OWL_SET_HELPERS_CPP(Type,uint32_t,ui)                      \
-  _OWL_SET_HELPERS_CPP(Type,int64_t,l)                        \
-  _OWL_SET_HELPERS_CPP(Type,uint64_t,ul)                      \
-  _OWL_SET_HELPERS_CPP(Type,float,f)                    \
+#define _OWL_SET_HELPERS(Type)                                  \
+  /* texture, buffer, other */                                  \
+  inline void owl##Type##SetTexture(OWL##Type object,           \
+                                    const char *varName,        \
+                                    OWLTexture v)               \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##Type##GetVariable(object,varName);                 \
+    owlVariableSetTexture(var,v);                               \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  /* group, buffer, other */                                    \
+  inline void owl##Type##SetGroup(OWL##Type object,             \
+                                  const char *varName,          \
+                                  OWLGroup v)                   \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##Type##GetVariable(object,varName);                 \
+    owlVariableSetGroup(var,v);                                 \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  inline void owl##Type##SetRaw(OWL##Type object,               \
+                                const char *varName,            \
+                                const void *v)                  \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##Type##GetVariable(object,varName);                 \
+    owlVariableSetRaw(var,v);                                   \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  inline void owl##Type##SetPointer(OWL##Type object,           \
+                                    const char *varName,        \
+                                    const void *v)              \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##Type##GetVariable(object,varName);                 \
+    owlVariableSetPointer(var,v);                               \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  inline void owl##Type##SetBuffer(OWL##Type object,            \
+                                   const char *varName,         \
+                                   OWLBuffer v)                 \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##Type##GetVariable(object,varName);                 \
+    owlVariableSetBuffer(var,v);                                \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+                                                                \
+  _OWL_SET_HELPERS_C(Type,int32_t,i)                            \
+  _OWL_SET_HELPERS_C(Type,uint32_t,ui)                          \
+  _OWL_SET_HELPERS_C(Type,int64_t,l)                            \
+  _OWL_SET_HELPERS_C(Type,uint64_t,ul)                          \
+  _OWL_SET_HELPERS_C(Type,float,f)                              \
+  _OWL_SET_HELPERS_C(Type,double,d)                             \
+  _OWL_SET_HELPERS_CPP(Type,int32_t,i)                          \
+  _OWL_SET_HELPERS_CPP(Type,uint32_t,ui)                        \
+  _OWL_SET_HELPERS_CPP(Type,int64_t,l)                          \
+  _OWL_SET_HELPERS_CPP(Type,uint64_t,ul)                        \
+  _OWL_SET_HELPERS_CPP(Type,float,f)                            \
+  _OWL_SET_HELPERS_CPP(Type,double,d)                           \
   /* end of macro */
 
-_OWL_SET_HELPERS(RayGen)
-_OWL_SET_HELPERS(Geom)
-_OWL_SET_HELPERS(LaunchParams)
-_OWL_SET_HELPERS(MissProg)
+  _OWL_SET_HELPERS(RayGen)
+  _OWL_SET_HELPERS(Geom)
+  _OWL_SET_HELPERS(Params)
+  _OWL_SET_HELPERS(MissProg)
 
 #undef _OWL_SET_HELPERS_CPP
 #undef _OWL_SET_HELPERS_C
@@ -791,14 +926,14 @@ _OWL_SET_HELPERS(MissProg)
 #ifdef __cplusplus
 /*! c++ "convenience variant" of owlInstanceGroupSetTransform that
   also allows passing C++ types) */
-inline void
-owlInstanceGroupSetTransform(OWLGroup group,
-                             int childID,
-                             const owl4x3f &xfm)
-{
-  owlInstanceGroupSetTransform(group,childID,(const float *)&xfm,
-                               OWL_MATRIX_FORMAT_OWL);
-}
+  inline void
+  owlInstanceGroupSetTransform(OWLGroup group,
+                               int childID,
+                               const owl4x3f &xfm)
+  {
+    owlInstanceGroupSetTransform(group,childID,(const float *)&xfm,
+                                 OWL_MATRIX_FORMAT_OWL);
+  }
 /*! c++ "convenience variant" of owlInstanceGroupSetTransform that
   also allows passing C++ types) */
 inline void
@@ -809,7 +944,13 @@ owlInstanceGroupSetTransform(OWLGroup group,
   owlInstanceGroupSetTransform(group,childID,(const float *)xfm,
                                OWL_MATRIX_FORMAT_OWL);
 }
+
 #endif
+
+
+
+
+
 
 
 

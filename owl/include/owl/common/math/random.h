@@ -62,7 +62,12 @@ namespace owl {
       }
       inline __both__ LCG(unsigned int val0, unsigned int val1)
       { init(val0,val1); }
-    
+
+      inline __both__ LCG(const vec2i &seed)
+      { init((unsigned)seed.x,(unsigned)seed.y); }
+      inline __both__ LCG(const vec2ui &seed)
+      { init(seed.x,seed.y); }
+      
       inline __both__ void init(unsigned int val0, unsigned int val1)
       {
         unsigned int v0 = val0;

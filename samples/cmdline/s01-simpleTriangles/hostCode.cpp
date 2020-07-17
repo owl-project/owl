@@ -60,7 +60,7 @@ vec3i indices[NUM_INDICES] =
     { 4,0,2 }, { 4,2,6 }
   };
 
-const char *outFileName = "ng01-simpleTriangles.png";
+const char *outFileName = "s01-simpleTriangles.png";
 const vec2i fbSize(800,600);
 const vec3f lookFrom(-4.f,-3.f,-2.f);
 const vec3f lookAt(0.f,0.f,0.f);

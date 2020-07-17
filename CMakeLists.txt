@@ -17,13 +17,30 @@
 if (POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
 endif()
-project(Optix-OWL VERSION 0.8.1)
+project(Optix-OWL VERSION 0.9.0)
+cmake_minimum_required(VERSION 2.8)
 
-#OPTION(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
+OPTION(OWL_BUILD_SAMPLES "Build the Samples?" ON)
 OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 OPTION(OWL_USE_TBB "Use TBB to parallelize computation?" ON)
+if (NOT (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_HOME_DIRECTORY}))
+  SET(OWL_IS_SUBPROJECT ON)
+else()
+  SET(OWL_IS_SUBPROJECT OFF)
+endif()
 
-cmake_minimum_required(VERSION 2.8)
+# ------------------------------------------------------------------
+# first, include gdt project to do some general configuration stuff
+# (build modes, glut, optix, etc)
+# ------------------------------------------------------------------
+set(owl_dir ${PROJECT_SOURCE_DIR})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/cmake/")
+include(configure_owl)
+include(configure_tbb)
+# if not a subproject, set "Debug/Release flags and binary output dir
+# to <binaryDir>
+include(configure_build_type)
+
 # iw, 1/3/20: yes, i know this is 'old' cmake style, but on CentOS7
 # this is the only way that works, since the 'correct' way of setting
 # the cxx11 standard doesnt propagate those flags to nvcc for the cuda
@@ -34,26 +51,21 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(OWL_CXX_FLAGS "")
 if (NOT WIN32)
-set (CMAKE_CXX_FLAGS "--std=c++11")
-set (CUDA_PROPAGATE_HOST_FLAGS ON)
+  set (CMAKE_CXX_FLAGS "--std=c++11")
+  set (CUDA_PROPAGATE_HOST_FLAGS ON)
 endif()
 
-# ------------------------------------------------------------------
-# first, include gdt project to do some general configuration stuff
-# (build modes, glut, optix, etc)
-# ------------------------------------------------------------------
-set(owl_dir ${PROJECT_SOURCE_DIR})
 
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/common/cmake/")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(configure_cuda)
 include(configure_optix)
 include(configure_owl)
 include(configure_build_type)
+include(configure_tbb)
 
 include_directories(${OWL_INCLUDES})
+add_definitions(${OWL_CXX_FLAGS})
 
 # ------------------------------------------------------------------
 # owl library itself, including owl-common
@@ -63,25 +75,27 @@ add_subdirectory(owl)
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
-#if (OWL_BUILD_SAMPLES)
+message("build samples? ${OWL_BUILD_SAMPLES}")
+if (OWL_BUILD_SAMPLES)
   enable_testing()
   add_subdirectory(samples)
-#endif()
+endif()
 
 # ------------------------------------------------------------------
 # some basic testing
 # ------------------------------------------------------------------
-if (OWL_BUILD_ADVANCED_TESTS)
-  enable_testing()
-  add_subdirectory(tests)
+if (NOT OWL_IS_SUBPROJECT)
+  if (OWL_BUILD_ADVANCED_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+  endif()
 endif()
 
 # ------------------------------------------------------------------
 # check if this is included as a submodule, and if so, export some
 # variables to the parent
 # ------------------------------------------------------------------
-if (NOT (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_HOME_DIRECTORY}))
-  message("#owl.cmake: exporting OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES}")
+if (OWL_IS_SUBPROJECT)
   set(OWL_INCLUDES ${OWL_INCLUDES} PARENT_SCOPE)
   set(OWL_VIEWER_INCLUDES ${OWL_VIEWER_INCLUDES} PARENT_SCOPE)
   set(OWL_LIBRARIES ${OWL_LIBRARIES} PARENT_SCOPE)

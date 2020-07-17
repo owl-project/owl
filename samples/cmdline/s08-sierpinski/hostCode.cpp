@@ -85,6 +85,7 @@ int main(int ac, char **av)
   
   OWLContext owl
     = owlContextCreate(nullptr,1);
+  PING; PRINT(numLevels);
   owlSetMaxInstancingDepth(owl,numLevels);
   
   OWLModule module

@@ -135,23 +135,6 @@ namespace owl {
     template<typename L> inline __both__ const VectorT xfmNormal(const AffineSpaceT<L>& m, const VectorT& n) { return xfmNormal(m.l,n); }
 
 
-    // template<typename S, bool A=false>
-    // inline const box_t<S,3,A> 
-    // xfmBounds(const AffineSpaceT<LinearSpace3<vec_t<S,3,A>>> &m, 
-    //           const box_t<S,3,A> &b)
-    // {
-    //   box_t<S,3,A> dst = empty;
-    //   const vec_t<S,3,A> p0(b.lower.x,b.lower.y,b.lower.z); dst.extend(xfmPoint(m,p0));
-    //   const vec_t<S,3,A> p1(b.lower.x,b.lower.y,b.upper.z); dst.extend(xfmPoint(m,p1));
-    //   const vec_t<S,3,A> p2(b.lower.x,b.upper.y,b.lower.z); dst.extend(xfmPoint(m,p2));
-    //   const vec_t<S,3,A> p3(b.lower.x,b.upper.y,b.upper.z); dst.extend(xfmPoint(m,p3));
-    //   const vec_t<S,3,A> p4(b.upper.x,b.lower.y,b.lower.z); dst.extend(xfmPoint(m,p4));
-    //   const vec_t<S,3,A> p5(b.upper.x,b.lower.y,b.upper.z); dst.extend(xfmPoint(m,p5));
-    //   const vec_t<S,3,A> p6(b.upper.x,b.upper.y,b.lower.z); dst.extend(xfmPoint(m,p6));
-    //   const vec_t<S,3,A> p7(b.upper.x,b.upper.y,b.upper.z); dst.extend(xfmPoint(m,p7));
-    //   return dst;
-    // }
-
     ////////////////////////////////////////////////////////////////////////////////
     /// Comparison Operators
     ////////////////////////////////////////////////////////////////////////////////
@@ -187,5 +170,23 @@ namespace owl {
 #undef VectorT
 #undef ScalarT
 
+
+    inline __both__ box3f xfmBounds(const affine3f &xfm,
+                                    const box3f &box)
+    {
+      box3f dst;
+      const vec3f lo = box.lower;
+      const vec3f hi = box.upper;
+      dst.extend(xfmPoint(xfm,vec3f(lo.x,lo.y,lo.z)));
+      dst.extend(xfmPoint(xfm,vec3f(lo.x,lo.y,hi.z)));
+      dst.extend(xfmPoint(xfm,vec3f(lo.x,hi.y,lo.z)));
+      dst.extend(xfmPoint(xfm,vec3f(lo.x,hi.y,hi.z)));
+      dst.extend(xfmPoint(xfm,vec3f(hi.x,lo.y,lo.z)));
+      dst.extend(xfmPoint(xfm,vec3f(hi.x,lo.y,hi.z)));
+      dst.extend(xfmPoint(xfm,vec3f(hi.x,hi.y,lo.z)));
+      dst.extend(xfmPoint(xfm,vec3f(hi.x,hi.y,hi.z)));
+      return dst;
+    }
+    
   } // ::owl::common
 } // ::owl

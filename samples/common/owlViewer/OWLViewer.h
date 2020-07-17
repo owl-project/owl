@@ -81,7 +81,9 @@ namespace owl {
       
       /*! window notifies us that we got resized */     
       virtual void resize(const vec2i &newSize);
-      
+
+      void setTitle(const std::string &s);
+
       /*! gets called whenever the viewer needs us to re-render out widget */
       virtual void render() {}
       
@@ -173,6 +175,11 @@ namespace owl {
       static vec2i getScreenSize();
       
       Camera &getCamera() { return camera; }
+
+      /*! helper function that dumps the current frame buffer in a png
+        file of given name */
+      void screenShot(const std::string &fileName);
+      
       
       const SimpleCamera getSimplifiedCamera() const
       {

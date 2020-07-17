@@ -69,13 +69,13 @@ Supported Platforms
 ===================
 
 General Requirements:
-- OptiX 7 SDK
-- CUDA 10 (preferably 10.2, but 10.1 is tested, too)
+- OptiX 7 SDK (versoin 7.0 or 7.1, will work with either)
+- CUDA verion 10 or 11
 - a C++-11 capable compiler (regular gcc on CentOS and Linux should do, VS on Windows)
 
 Per-OS Instructions:
 
-- Ubuntu 18 & 19 (automatically tested on 18)
+- Ubuntu 18, 19, and 20 (automatically tested on 18, mostly developed on 20)
     - Requires: `sudo apt install cmake-curses-gui`
 	- Build:
 	```
@@ -101,26 +101,76 @@ Per-OS Instructions:
 		- You may need to Configure twice.
 		- If you get "OptiX headers (optix.h and friends) not found." then define OptiX_INCLUDE manually in CMake-gui by setting it to ```C:/ProgramData/NVIDIA Corporation/OptiX SDK 7.0.0/include```
 
-<!--- ------------------------------------------------------- -->
-(Main) TODOs:
-=============
-
-- more samples/test cases
-
-- add "Launch Params" functionality
-
-- add c-style API on top of ll layer 
-  - wrap `DeviceGroup*` into `LLOContext` type
-  - wrap every `DeviceGroup::xyz(...)` function into a `lloXyz(context,...)` c-linkage API function
-  - build into dll/so
-
 
 <!--- ------------------------------------------------------- -->
 Latest Progress/Revision History
 ================================
 
+v0.9.x - Elimination of LL layer, and support for motion blur
+----------------------------------------------------------------------
+
+*v0.9.0*: initial motion blur, and inital elimination of ll layer
+
+- Major code re-org: eliminated most of ll layer, includign most of
+  ll::Device and virutally all of ll::DeviceGroup; in new design
+  Device will only contain device context, and all object-specific
+  stuff will live in the respective api::Group, api::Geom etc
+  classes. Device-specific data for a given object is handled by this
+  object itself. 
+  
+- initial support for motion blur on triangle meshes, by specifying
+  two vertex arrays
+  
+- initial support of motion blur on instances, by specifyign two sets
+  of transforms. 
+  
+- new api fct owlMotionBlurEnable() to enable support for motion blur.
+
+- groups and geoms now have methods to compute their world-space
+  bounding boxes, as required for instance motion blur. These will get
+  called/evaluated/used only hwne motion blur is enabled.
+
+- moved some files from .cpp to .cu; to allow calling device kernels
+  for computing bboxes.
+  
+- initial support for optix 7.1; code will automatically detect
+  version and compile to proper version where they differ.
+  
+- owlLaunch2D now synchronous, async version explicitly owlLaunhc2DAsync
+
+- added owlMissProgSet(context,rayType,missProg) to set miss program
+  for a given ray type
+
 v0.8.x - Revamped build system, owl viewer, interative samples, and textures
 ----------------------------------------------------------------------
+
+*v0.8.3*: fixes, github issues, and naming
+
+- added OWL_CHAR and OWL_UCHAR types
+
+- renamed: owlParamsLaunch2D -> owlLaunch2D (added to
+  owl_deprecated.h, and also axed lloLaunch function for cleanups)
+
+- renamed owlLaunchParams<XYZ> -> owlParams<XYZ> (create, set, vetvariable etc)
+
+- added OWL_INVALID_TYPE
+
+- added owlXyzSetPointer()
+
+- variables can now have type OWL_BUFFER (not just BUFPTR), and will
+  write a owl::device::Buffer type (with size, type, and data members)
+  
+- device buffers can now be created over OWL_BUFFER and OWL_TEXTURE types
+
+- added int12-buffer-of-objects sample that shows/tests buffers of
+  buffers, and buffers of textures (by creating a buffer of buffers of
+  textures)
+
+*v0.8.2*: double types, interactive sample
+
+- added OWL_DOUBLE type for variables, and al owl3d, setVariable, etc
+
+- added int11-rotationCubes sample that has NxMxK roating textured cubes
 
 *v0.8.1*: first light of textures
 

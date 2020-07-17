@@ -31,8 +31,9 @@
 #endif
 
 namespace owl {
+
   using namespace owl::common;
-  
+
   inline __device__ vec2i getLaunchIndex()
   {
     return (vec2i)optixGetLaunchIndex();

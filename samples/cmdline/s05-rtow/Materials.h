@@ -74,7 +74,7 @@ typedef enum {
               rayGotBounced,
               /*! ray could not get scattered, and should get cancelled */
               rayGotCancelled,
-              /*! ray didn't hit anything, and went into the environemnt */
+              /*! ray didn't hit anything, and went into the environment */
               rayDidntHitAnything
 } ScatterEvent;
 

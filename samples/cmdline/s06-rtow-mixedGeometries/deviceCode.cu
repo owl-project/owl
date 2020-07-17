@@ -63,6 +63,7 @@ template<typename SpheresGeomType>
 inline __device__ void intersectProg()
 {
   const int primID = optixGetPrimitiveIndex();
+  // printf("isec %i %lx\n",primID,&owl::getProgramData<SpheresGeomType>());
   const auto &self
     = owl::getProgramData<SpheresGeomType>().prims[primID];
   
@@ -72,6 +73,12 @@ inline __device__ void intersectProg()
   const float tmin = optixGetRayTmin();
 
   const vec3f oc = org - self.sphere.center;
+  // printf("ctx %f %f %f\n",
+  //        self.sphere.center.x,
+  //        self.sphere.center.y,
+  //        self.sphere.center.z);
+         
+  // return;
   const float a = dot(dir,dir);
   const float b = dot(oc, dir);
   const float c = dot(oc, oc) - self.sphere.radius * self.sphere.radius;
@@ -115,6 +122,7 @@ template<typename SpheresGeomType>
 inline __device__
 void closestHitSpheres()
 {
+  // printf("chsphere\n"); return;
   const int primID = optixGetPrimitiveIndex();
   const auto &self
     = owl::getProgramData<SpheresGeomType>().prims[primID];
@@ -140,15 +148,18 @@ template<typename BoxesGeomType>
 inline __device__
 void closestHitBoxes()
 {
+  // printf("chbox\n");
+  // return;
   const auto &self
     = owl::getProgramData<BoxesGeomType>();
   PerRayData &prd = owl::getPRD<PerRayData>();
 
   // ID of the triangle we've hit:
   const int primID = optixGetPrimitiveIndex();
-  
+
   // there's 12 tris per box:
   const int materialID = primID / 12;
+  
   const auto &material
     = self.perBoxMaterial[materialID];
 
@@ -230,6 +241,7 @@ vec3f tracePath(const RayGenData &self,
                   /*the ray to trace*/ ray,
                   /*prd*/prd);
 
+    
     if (prd.out.scatterEvent == rayDidntHitAnything)
       /* ray got 'lost' to the environment - 'light' it with miss
          shader */
