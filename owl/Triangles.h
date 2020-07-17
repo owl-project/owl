@@ -48,27 +48,30 @@ namespace owl {
     /*! any device-specific data, such as optix handles, cuda device
         pointers, etc */
     struct DeviceData : public Geom::DeviceData {
-      DeviceData(const DeviceContext::SP &device)
-        : Geom::DeviceData(device)
-      {};
-      
+      DeviceData(const DeviceContext::SP &device);
+
+      /*! this is a *vector* of vertex arrays, for motion blur
+          purposes. ie, for static meshes only one entry is used, for
+          motion blur two (and eventually, maybe more) will be used */
       std::vector<CUdeviceptr> vertexPointers;
+
+      /*! device poiner to array of indices - the memory for the
+          indices will live in some sort of buffer; this only points
+          to that buffer */
       CUdeviceptr indexPointer  = (CUdeviceptr)0;
     };
-    
-    /*! creates the device-specific data for this group */
-    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override
-    { return std::make_shared<DeviceData>(device); }
 
-
-    DeviceData &getDD(const DeviceContext::SP &device) const
-    {
-      assert(device->ID < deviceData.size());
-      return deviceData[device->ID]->as<DeviceData>();
-    }
-                                
+    /*! constructur - create a new (as yet without vertices, indices,
+        etc) instance of given triangles geom type */
     TrianglesGeom(Context *const context,
                   GeomType::SP geometryType);
+
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
+    /*! creates the device-specific data for this group */
+
+    /*! get reference to given device-specific data for this object */
+    inline DeviceData &getDD(const DeviceContext::SP &device) const;
 
     /*! set the vertex array (if vector size is 1), or set/enable
         motion blur via multiple time steps, if vector size >= 0 */
@@ -78,17 +81,17 @@ namespace owl {
                      size_t stride,
                      size_t offset);
 
-    /*! call a cuda kernel that computes the bounds of the vertex buffers */
-    void computeBounds(box3f bounds[2]);
-
     /*! set the index buffer; this remains one buffer even if motion blur is enabled. */
     void setIndices(Buffer::SP indices,
                     size_t count,
                     size_t stride,
                     size_t offset);
 
+    /*! call a cuda kernel that computes the bounds of the vertex buffers */
+    void computeBounds(box3f bounds[2]);
+
     /*! pretty-print */
-    std::string toString() const override { return "TrianglesGeom"; }
+    std::string toString() const override;
 
     struct {
       size_t count  = 0;
@@ -104,4 +107,15 @@ namespace owl {
     } vertex;
   };
 
+  // ------------------------------------------------------------------
+  // implementation section
+  // ------------------------------------------------------------------
+  
+  /*! get reference to given device-specific data for this object */
+  inline TrianglesGeom::DeviceData &TrianglesGeom::getDD(const DeviceContext::SP &device) const
+  {
+    assert(device->ID < deviceData.size());
+    return deviceData[device->ID]->as<TrianglesGeom::DeviceData>();
+  }
+  
 } // ::owl

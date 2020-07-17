@@ -42,7 +42,10 @@ namespace owl {
     } while (assumed != old);
     return __int_as_float(old);
   }
-  
+
+  /*! device kernel to compute bounding box ov vertex array (and thus,
+      bbox of triangle mesh, for motion blur (which for instances
+      requies knowing the bboxes of its objects */
   __global__ void computeBoundsOfVertices(box3f *d_bounds,
                                           const void *d_vertices,
                                           size_t count,
@@ -65,6 +68,40 @@ namespace owl {
     atomicMax(&d_bounds->upper.z,vtx.z);
   }
                                           
+  // ------------------------------------------------------------------
+  // TrianglesGeomType
+  // ------------------------------------------------------------------
+  
+  TrianglesGeomType::TrianglesGeomType(Context *const context,
+                                       size_t varStructSize,
+                                       const std::vector<OWLVarDecl> &varDecls)
+    : GeomType(context,varStructSize,varDecls)
+  {}
+
+  // ------------------------------------------------------------------
+  // TrianglesGeom::DeviceData
+  // ------------------------------------------------------------------
+  
+  TrianglesGeom::DeviceData::DeviceData(const DeviceContext::SP &device)
+    : Geom::DeviceData(device)
+  {}
+  
+  
+  // ------------------------------------------------------------------
+  // TrianglesGeom
+  // ------------------------------------------------------------------
+  
+  TrianglesGeom::TrianglesGeom(Context *const context,
+                               GeomType::SP geometryType)
+    : Geom(context,geometryType)
+  {}
+  
+  /*! pretty-print */
+  std::string TrianglesGeom::toString() const
+  {
+    return "TrianglesGeom";
+  }
+
   /*! call a cuda kernel that computes the bounds of the vertex buffers */
   void TrianglesGeom::computeBounds(box3f bounds[2])
   {
@@ -98,22 +135,9 @@ namespace owl {
       bounds[1] = bounds[0];
   }
 
-  TrianglesGeomType::TrianglesGeomType(Context *const context,
-                                       size_t varStructSize,
-                                       const std::vector<OWLVarDecl> &varDecls)
-    : GeomType(context,varStructSize,varDecls)
-  {
-    /*! nothing special - all inherited */
-  }
+  RegisteredObject::DeviceData::SP TrianglesGeom::createOn(const DeviceContext::SP &device) 
+  { return std::make_shared<DeviceData>(device); }
 
-  TrianglesGeom::TrianglesGeom(Context *const context,
-                               GeomType::SP geometryType)
-    : Geom(context,geometryType)
-  {
-    // context->llo->trianglesGeomCreate(this->ID,geometryType->ID);
-    // for (auto device : context->llo->devices)
-    //   llGeom.push_back((ll::TrianglesGeom*)device->checkGetGeom(this->ID));
-  }
 
   /*! set the vertex array (if vector size is 1), or set/enable
     motion blur via multiple time steps, if vector size >= 0 */
@@ -127,12 +151,6 @@ namespace owl {
     vertex.count   = count;
     vertex.stride  = stride;
     vertex.offset  = offset;
-    // std::vector<int32_t> vertexBufferIDs(vertexArrays.size());
-    // for (int i=0;i<vertexArrays.size();i++)
-    //   vertexBufferIDs[i] = vertexArrays[i]->ID;
-    // for (auto device : context->llo->devices)
-    //   device->trianglesGeomSetVertexBuffers(this->ID,
-    //                                         vertexBufferIDs,count,stride,offset);
 
     for (auto device : context->getDevices()) {
       DeviceData &dd = getDD(device);
@@ -157,9 +175,6 @@ namespace owl {
       DeviceData &dd = getDD(device);
       dd.indexPointer = (CUdeviceptr)indices->getPointer(device);
     }
-    // }
-    //   device->trianglesGeomSetIndexBuffer(this->ID,
-    //                                       indices->ID, count, stride, offset);
   }
 
 } // ::owl

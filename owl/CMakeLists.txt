@@ -39,43 +39,78 @@ cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
 set(OWL_SOURCES
 
-  Buffer.cpp
-
+  # -------------------------------------------------------
+  # infrastructure
+  # -------------------------------------------------------
   include/owl/owl.h
   cmake/configure_tbb.cmake
   cmake/configure_owl.cmake
   cmake/configure_optix.cmake
   cmake/FindOptiX.cmake
 
-  impl.cpp
+  # -------------------------------------------------------
+  # API layer
+  # -------------------------------------------------------
   APIContext.h
   APIContext.cpp
   APIHandle.h
   APIHandle.cpp
+  impl.cpp
   
-  Object.cpp
-  Module.cpp
-  RegisteredObject.cpp
-  SBTObject.cpp
+  # -------------------------------------------------------
+  # data handling
+  # -------------------------------------------------------
+  Buffer.h
+  Buffer.cpp
+  Texture.h
   Texture.cpp
+
   
+  # -------------------------------------------------------
+  # base classes
+  # -------------------------------------------------------
+  Object.h
+  Object.cpp
+  Module.h
+  Module.cpp
+  RegisteredObject.h
+  RegisteredObject.cpp
+  DeviceContext.h
+  DeviceContext.cpp
+  
+  ObjectRegistry.h
+  ObjectRegistry.cpp
+  Context.h
+  Context.cpp
+
+  # -------------------------------------------------------
+  # program types
+  # -------------------------------------------------------
+  SBTObject.h
+  SBTObject.cpp
+  RayGen.h
+  RayGen.cpp
+  LaunchParams.h
+  LaunchParams.cpp
+  MissProg.h
+  MissProg.cpp
+  Variable.h
+  Variable.cpp
+  
+  # -------------------------------------------------------
+  # geometries
+  # -------------------------------------------------------
+  Geometry.cpp
+  Triangles.cu
+  UserGeom.cu
+  
+  # -------------------------------------------------------
+  # accel structures
+  # -------------------------------------------------------
   Group.cpp
   InstanceGroup.cpp
   TrianglesGeomGroup.cpp
   UserGeomGroup.cpp
-  
-  ObjectRegistry.cpp
-  Context.cpp
-  RayGen.cpp
-  LaunchParams.cpp
-  MissProg.cpp
-  Variable.cpp
-  
-  Geometry.cpp
-  Triangles.cu
-  UserGeom.cu
-
-  DeviceContext.cpp
 )
 
 cuda_add_library(owl
