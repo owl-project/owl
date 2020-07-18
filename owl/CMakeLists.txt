@@ -14,16 +14,131 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
+
+include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+
 add_definitions(${OWL_CXX_FLAGS})
 
-# owl-common library (math stuff, utils, etc; mostly header-only)
-add_subdirectory(common)
 
-# low-level interface
-add_subdirectory(ll)
+set(INTERFACE_POSITION_INDEPENDENT_CODE ON)
 
-# node graph layer API
-add_subdirectory(api)
+set(CUDA_SEPARABLE_COMPILATION ON)
+set(CUDA_VERBOSE_BUILD ON)
+if (NOT WIN32)
+set(CUDA_NVCC_FLAGS --compiler-options -fPIC)
+endif()
+
+include_directories(${PROJECT_SOURCE_DIR}/)
+include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+
+cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+
+set(OWL_SOURCES
+
+  # -------------------------------------------------------
+  # infrastructure
+  # -------------------------------------------------------
+  include/owl/owl.h
+  cmake/configure_tbb.cmake
+  cmake/configure_owl.cmake
+  cmake/configure_optix.cmake
+  cmake/configure_glfw.cmake
+  cmake/FindOptiX.cmake
+
+  # -------------------------------------------------------
+  # API layer
+  # -------------------------------------------------------
+  APIContext.h
+  APIContext.cpp
+  APIHandle.h
+  APIHandle.cpp
+  impl.cpp
+  
+  # -------------------------------------------------------
+  # data handling
+  # -------------------------------------------------------
+  Buffer.h
+  Buffer.cpp
+  Texture.h
+  Texture.cpp
+
+  
+  # -------------------------------------------------------
+  # base classes
+  # -------------------------------------------------------
+  Object.h
+  Object.cpp
+  Module.h
+  Module.cpp
+  RegisteredObject.h
+  RegisteredObject.cpp
+  DeviceContext.h
+  DeviceContext.cpp
+  
+  ObjectRegistry.h
+  ObjectRegistry.cpp
+  Context.h
+  Context.cpp
+
+  # -------------------------------------------------------
+  # program types
+  # -------------------------------------------------------
+  SBTObject.h
+  SBTObject.cpp
+  RayGen.h
+  RayGen.cpp
+  LaunchParams.h
+  LaunchParams.cpp
+  MissProg.h
+  MissProg.cpp
+  Variable.h
+  Variable.cpp
+  
+  # -------------------------------------------------------
+  # geometries
+  # -------------------------------------------------------
+  Geometry.cpp
+  Triangles.cu
+  UserGeom.cu
+  
+  # -------------------------------------------------------
+  # accel structures
+  # -------------------------------------------------------
+  Group.cpp
+  InstanceGroup.cpp
+  TrianglesGeomGroup.cpp
+  UserGeomGroup.cpp
+)
+
+cuda_add_library(owl_static
+  ${OWL_SOURCES}
+  STATIC
+  )
+
+cuda_add_library(owl
+  ${OWL_SOURCES}
+  )
+
+target_link_libraries(owl
+   ${CUDA_LIBRARIES}
+   ${CUDA_CUDA_LIBRARY}
+  )
+
+target_link_libraries(owl_static
+   ${CUDA_LIBRARIES}
+   ${CUDA_CUDA_LIBRARY}
+  )
+
+
+#set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
+#target_compile_options(owl_static PRIVATE -fPIC)
 
 # -------------------------------------------------------
 # export those back to our parent:
