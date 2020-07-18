@@ -17,7 +17,7 @@
 if (POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
 endif()
-project(Optix-OWL VERSION 0.8.1)
+project(Optix-OWL VERSION 0.9.0)
 cmake_minimum_required(VERSION 2.8)
 
 OPTION(OWL_BUILD_SAMPLES "Build the Samples?" ON)
@@ -34,7 +34,7 @@ endif()
 # (build modes, glut, optix, etc)
 # ------------------------------------------------------------------
 set(owl_dir ${PROJECT_SOURCE_DIR})
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/common/cmake/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/cmake/")
 include(configure_owl)
 include(configure_tbb)
 # if not a subproject, set "Debug/Release flags and binary output dir
@@ -55,6 +55,9 @@ if (NOT WIN32)
   set (CUDA_PROPAGATE_HOST_FLAGS ON)
 endif()
 
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 include(configure_cuda)
 include(configure_optix)
 include(configure_owl)
@@ -72,6 +75,7 @@ add_subdirectory(owl)
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
+message("build samples? ${OWL_BUILD_SAMPLES}")
 if (OWL_BUILD_SAMPLES)
   enable_testing()
   add_subdirectory(samples)

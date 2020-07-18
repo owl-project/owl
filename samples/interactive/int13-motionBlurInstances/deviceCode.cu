@@ -16,9 +16,9 @@
 
 #include "deviceCode.h"
 #include <optix_device.h>
+#include <owl/common/math/random.h>
 
-__constant__ Globals optixLaunchParams;
-
+typedef owl::common::LCG<4> Random;
 
 struct Hit {
   bool  hadHit = false;
@@ -28,13 +28,10 @@ struct Hit {
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
   const RayGenData &self = owl::getProgramData<RayGenData>();
-  int targetDeviceIndex
-    = (getLaunchIndex().x / 32) % optixLaunchParams.deviceCount;
-  if (targetDeviceIndex != optixLaunchParams.deviceIndex)
-    return;
-  
   const vec2i pixelID = owl::getLaunchIndex();
 
+  Random rng(pixelID);
+  
   const vec2f screen = (vec2f(pixelID)+vec2f(.5f)) / vec2f(self.fbSize);
   owl::Ray ray;
   ray.origin    
@@ -43,24 +40,29 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     = normalize(self.camera.dir_00
                 + screen.u * self.camera.dir_du
                 + screen.v * self.camera.dir_dv);
+  ray.time = 0.5f;
 
-  Hit hit;
-  owl::traceRay(/*accel to trace against*/self.world,
-                /*the ray to trace*/ray,
-                /*prd*/hit);
-
-  if (2*getLaunchIndex() == getLaunchDims()) {
-    printf("BLA %f %f %f\n",hit.col.x,hit.col.y,hit.col.z);
+  vec3f avgColor = 0.f;
+  const int numSPP = 16;
+  for (int i=0;i<numSPP;i++) {
+    ray.time = rng();
+    Hit hit;
+    owl::traceRay(/*accel to trace against*/self.world,
+                  /*the ray to trace*/ray,
+                  /*prd*/hit);
+    avgColor += hit.col;
   }
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
-    = owl::make_rgba(hit.col);
+    = owl::make_rgba(avgColor * (1.f/numSPP));
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
   Hit &prd = owl::getPRD<Hit>();
 
+  // printf("HIT\n");
+  
   const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
   
   const vec3f rayOrg = optixGetWorldRayOrigin();
@@ -68,7 +70,7 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 
   // compute normal:
   const int   primID = optixGetPrimitiveIndex();
-  const vec4i index  = self.index[primID];
+  const vec3i index  = self.index[primID];
   const vec3f &A     = self.vertex[index.x];
   const vec3f &B     = self.vertex[index.y];
   const vec3f &C     = self.vertex[index.z];
@@ -81,17 +83,7 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
     = (1.f-uv.x-uv.y)*self.texCoord[index.x]
     +      uv.x      *self.texCoord[index.y]
     +           uv.y *self.texCoord[index.z];
-
-  device::Buffer *textureSets =
-    (device::Buffer *)self.textureSets.data;
-  uint32_t textureSetID
-    = uint32_t(optixLaunchParams.time)
-    % NUM_TEXTURE_SETS;
-  cudaTextureObject_t *textureSet
-    = (cudaTextureObject_t *)textureSets[textureSetID].data;
-  cudaTextureObject_t texture
-    = textureSet[index.w];
-  vec4f texColor = tex2D<float4>(texture,tc.x,tc.y);
+  vec4f texColor = tex2D<float4>(self.texture,tc.x,tc.y);
 
   const vec3f P = rayOrg + (optixGetRayTmax()*.999f) * rayDir;
 

@@ -172,7 +172,7 @@ typedef enum
    OWL_UCHAR2,
    OWL_UCHAR3,
    OWL_UCHAR4,
-   
+
    /*! just another name for a 64-bit data type - unlike
      OWL_BUFFER_POINTER's (which gets translated from OWLBuffer's
      to actual device-side poiners) these OWL_RAW_POINTER types get
@@ -182,6 +182,8 @@ typedef enum
    OWL_RAW_POINTER=OWL_ULONG,
 
 
+   /* matrix formats */
+   OWL_AFFINE3F=1800,
 
    /*! at least for now, use that for buffers with user-defined types:
      type then is "OWL_USER_TYPE_BEGIN+sizeof(elementtype). Note
@@ -325,6 +327,13 @@ OWL_API OWLContext
 owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
                  int numDevices OWL_IF_CPP(=0));
 
+/*! enable motion blur for this context. this _has_ to be called
+    before creating any geometries, groups, etc, and before the
+    pipeline gets compiled. Ie, it shold be called _right_ after
+    context creation */
+OWL_API void
+owlEnableMotionBlur(OWLContext _context);
+
 /*! set number of ray types to be used in this context; this should be
   done before any programs, pipelines, geometries, etc get
   created */
@@ -392,6 +401,13 @@ owlRayGenCreate(OWLContext  context,
                 OWLVarDecl *vars,
                 size_t      numVars);
 
+/*! creates a miss program with given function name (in given module)
+    and given variables. Note due to backwards compatibility this will
+    also automatically *set*, by default, the first such created
+    program as miss program for ray type number 0, the second one for
+    ray type number 1, etc. If another order is desired, you can use
+    \see owlMissProgSet to explicitly assign miss programs to specific
+    ray types */
 OWL_API OWLMissProg
 owlMissProgCreate(OWLContext  context,
                   OWLModule   module,
@@ -400,6 +416,11 @@ owlMissProgCreate(OWLContext  context,
                   OWLVarDecl *vars,
                   size_t      numVars);
 
+/*! sets the given miss program for the given ray type */
+OWL_API void
+owlMissProgSet(OWLContext  context,
+               int rayType,
+               OWLMissProg missProgToUse);
 
 // ------------------------------------------------------------------
 /*! create a new group (which handles the acceleration strucure) for
@@ -484,6 +505,8 @@ owlInstanceGroupCreate(OWLContext context,
                        OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL)
                        );
 
+
+
 OWL_API void owlGroupBuildAccel(OWLGroup group);
 OWL_API void owlGroupRefitAccel(OWLGroup group);
 
@@ -520,7 +543,7 @@ owlTextureGetObject(OWLTexture texture, int deviceID);
 
 /*! destroy the given texture; after this call any accesses to the given texture are invalid */
 OWL_API void
-owlTextureDestroy(OWLTexture texture);
+owlTexture2DDestroy(OWLTexture texture);
 
 /*! creates a device buffer where every device has its own local copy
   of the given buffer */
@@ -594,9 +617,18 @@ owlBufferUpload(OWLBuffer buffer, const void *hostPtr);
 OWL_API void
 owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
+/*! perform a raygen launch with lauch parameters, in a *synchronous*
+    way; it, by the time this function returns the launch is completed */
 OWL_API void
 owlLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
             OWLParams params);
+
+/*! perform a raygen launch with lauch parameters, in a *A*synchronous
+    way; it, this will only launch, but *NOT* wait for completion (see
+    owlLaunchSync) */
+OWL_API void
+owlAsyncLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
+                 OWLParams params);
 
 
 OWL_API CUstream
@@ -614,6 +646,19 @@ OWL_API void owlTrianglesSetVertices(OWLGeom triangles,
                                      size_t count,
                                      size_t stride,
                                      size_t offset);
+OWL_API void owlTrianglesSetMotionVertices(OWLGeom triangles,
+                                           /*! number of vertex arrays
+                                               passed here, the first
+                                               of those is for t=0,
+                                               thelast for t=1,
+                                               everything is linearly
+                                               interpolated
+                                               in-between */
+                                           size_t    numKeys,
+                                           OWLBuffer *vertexArrays,
+                                           size_t count,
+                                           size_t stride,
+                                           size_t offset);
 OWL_API void owlTrianglesSetIndices(OWLGeom triangles,
                                     OWLBuffer indices,
                                     size_t count,
@@ -634,7 +679,27 @@ OWL_API void
 owlInstanceGroupSetTransform(OWLGroup group,
                              int whichChild,
                              const float *floats,
-                             OWLMatrixFormat matrixFormat);
+                             OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL));
+
+/*! this function allows to set up to N different arrays of trnsforms
+    for motion blur; the first such array is used as transforms for
+    t=0, the last one for t=1.  */
+OWL_API void
+owlInstanceGroupSetTransforms(OWLGroup group,
+                              /*! whether to set for t=0 or t=1 -
+                                  currently supporting only 0 or 1*/
+                              uint32_t timeStep,
+                              const float *floatsForThisStimeStep,
+                              OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL));
+
+/*! sets the list of IDs to use for the child instnaces. By default
+    the instance ID of child #i is simply i, but optix allows to
+    specify a user-defined instnace ID for each instance, which with
+    owl can be done through this array. Array size must match number
+    of instances in the specified group */
+OWL_API void
+owlInstanceGroupSetInstanceIDs(OWLGroup group,
+                               const uint32_t *instanceIDs);
 
 OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,
