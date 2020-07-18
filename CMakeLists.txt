@@ -75,7 +75,6 @@ add_subdirectory(owl)
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
-message("build samples? ${OWL_BUILD_SAMPLES}")
 if (OWL_BUILD_SAMPLES)
   enable_testing()
   add_subdirectory(samples)
