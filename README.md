@@ -109,6 +109,8 @@ Latest Progress/Revision History
 v0.9.x - Elimination of LL layer, and support for motion blur
 ----------------------------------------------------------------------
 
+*v0.9.1*: added support for more texture formats, access to the raw texture objects 
+
 *v0.9.0*: initial motion blur, and inital elimination of ll layer
 
 - Major code re-org: eliminated most of ll layer, includign most of
