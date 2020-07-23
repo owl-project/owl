@@ -539,7 +539,7 @@ checkGet(_context)->buildSBT(flags);
     return (OWLTexture)context->createHandle(texture);
   }
 
-  OWL_API const CUtexObject
+  OWL_API CUtexObject
   owlTextureGetObject(OWLTexture _texture, int deviceID)
   {
     LOG_API_CALL();
