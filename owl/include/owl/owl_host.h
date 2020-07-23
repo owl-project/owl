@@ -391,7 +391,7 @@ OWL_API OWLParams
 owlParamsCreate(OWLContext  context,
                 size_t      sizeOfVarStruct,
                 OWLVarDecl *vars,
-                size_t      numVars);
+                int         numVars);
 
 OWL_API OWLRayGen
 owlRayGenCreate(OWLContext  context,
@@ -399,7 +399,7 @@ owlRayGenCreate(OWLContext  context,
                 const char *programName,
                 size_t      sizeOfVarStruct,
                 OWLVarDecl *vars,
-                size_t      numVars);
+                int         numVars);
 
 /*! creates a miss program with given function name (in given module)
     and given variables. Note due to backwards compatibility this will
@@ -414,7 +414,7 @@ owlMissProgCreate(OWLContext  context,
                   const char *programName,
                   size_t      sizeOfVarStruct,
                   OWLVarDecl *vars,
-                  size_t      numVars);
+                  int         numVars);
 
 /*! sets the given miss program for the given ray type */
 OWL_API void
@@ -515,7 +515,7 @@ owlGeomTypeCreate(OWLContext context,
                   OWLGeomKind kind,
                   size_t sizeOfVarStruct,
                   OWLVarDecl *vars,
-                  size_t      numVars);
+                  int         numVars);
 
 
 /*! create new texture of given format and dimensions - for now, we

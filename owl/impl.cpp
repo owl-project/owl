@@ -267,7 +267,7 @@ checkGet(_context)->buildSBT(flags);
   
 
   std::vector<OWLVarDecl> checkAndPackVariables(const OWLVarDecl *vars,
-                                                size_t            numVars)
+                                                int               numVars)
   {
     if (vars == nullptr && (numVars == 0 || numVars == -1))
       return {};
@@ -276,7 +276,7 @@ checkGet(_context)->buildSBT(flags);
     // *access errors early
 
     assert(vars);
-    if (numVars == size_t(-1)) {
+    if (numVars == -1) {
       // using -1 as count value for a variable list means the list is
       // null-terminated... so just count it
       for (numVars = 0; vars[numVars].name != nullptr; numVars++);
@@ -294,7 +294,7 @@ checkGet(_context)->buildSBT(flags);
                   const char *programName,
                   size_t      sizeOfVarStruct,
                   OWLVarDecl *vars,
-                  size_t      numVars)
+                  int         numVars)
   {
     LOG_API_CALL();
     APIContext::SP context = checkGet(_context);
@@ -316,7 +316,7 @@ checkGet(_context)->buildSBT(flags);
   owlParamsCreate(OWLContext _context,
                   size_t      sizeOfVarStruct,
                   OWLVarDecl *vars,
-                  size_t      numVars)
+                  int         numVars)
   {
     LOG_API_CALL();
     APIContext::SP context = checkGet(_context);
@@ -354,7 +354,7 @@ checkGet(_context)->buildSBT(flags);
                     const char *programName,
                     size_t      sizeOfVarStruct,
                     OWLVarDecl *vars,
-                    size_t      numVars)
+                    int         numVars)
   {
     LOG_API_CALL();
  
@@ -711,7 +711,7 @@ checkGet(_context)->buildSBT(flags);
                     OWLGeomKind kind,
                     size_t      varStructSize,
                     OWLVarDecl *vars,
-                    size_t      numVars)
+                    int         numVars)
   {
     LOG_API_CALL();
     assert(_context);
