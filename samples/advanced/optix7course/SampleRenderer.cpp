@@ -112,7 +112,8 @@ namespace osc {
                              width,
                              height,
                              texture->pixel,
-                             OWL_TEXTURE_LINEAR);
+                             OWL_TEXTURE_LINEAR,
+                             OWL_TEXTURE_CLAMP);
 #else
       cudaResourceDesc res_desc = {};
       

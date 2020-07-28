@@ -29,6 +29,7 @@ namespace owl {
             uint32_t             linePitchInBytes,
             OWLTexelFormat       texelFormat,
             OWLTextureFilterMode filterMode,
+            OWLTextureAddressMode addressMode,
             const void          *texels
             );
     
