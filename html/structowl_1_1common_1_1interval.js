@@ -10,6 +10,7 @@ var structowl_1_1common_1_1interval =
     [ "extend", "structowl_1_1common_1_1interval.html#a7b347444b9ec1e8811793dd2bee1c477", null ],
     [ "including", "structowl_1_1common_1_1interval.html#a89fd62d543ac7b31f665840b3d1ead29", null ],
     [ "is_empty", "structowl_1_1common_1_1interval.html#ad0911efc800a41cf36ca1e273f7762e3", null ],
+    [ "positive", "structowl_1_1common_1_1interval.html#a4a5fbe906c03355b98a010f524ecbefd", null ],
     [ "span", "structowl_1_1common_1_1interval.html#a9d85966c31b9e5eeba196dc9344ecdcc", null ],
     [ "begin", "structowl_1_1common_1_1interval.html#adbaaf181d7ada22f6e036853b6af7b13", null ],
     [ "end", "structowl_1_1common_1_1interval.html#ab6bbecdcfacf020cd4e5af12d9b73181", null ],

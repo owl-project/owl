@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('fixedpoint_8h_source.html',''); initRe
 <div class="title">fixedpoint.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
+<a href="fixedpoint_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">// Copyright 2018 Ingo Wald                                                 //</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//                                                                          //</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);          //</span></div>
@@ -108,26 +108,29 @@ $(document).ready(function(){initNavTree('fixedpoint_8h_source.html',''); initRe
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &quot;gdt/math/constants.h&quot;</span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">namespace </span>gdt {</div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="namespacegdt.html">   23</a></span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacegdt.html">gdt</a> {</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> storageT, <span class="keywordtype">int</span> Nbits, <span class="keywordtype">int</span> is_<span class="keywordtype">signed</span>&gt;</div>
 <div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="structgdt_1_1_fixed_point.html">   27</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structgdt_1_1_fixed_point.html">FixedPoint</a> {</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <a class="code" href="structgdt_1_1_fixed_point.html">FixedPoint</a>();</div>
+<div class="line"><a name="l00028"></a><span class="lineno"><a class="line" href="structgdt_1_1_fixed_point.html#ac4591fd1b3f40b931741ed7500df5d9c">   28</a></span>&#160;    <a class="code" href="structgdt_1_1_fixed_point.html#ac4591fd1b3f40b931741ed7500df5d9c">FixedPoint</a>();</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keywordtype">float</span> <span class="keyword">operator</span> float()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;      <span class="keywordflow">return</span> bits / float((1ULL &lt;&lt; Nbits)-1);</div>
+<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="structgdt_1_1_fixed_point.html#ac3314f0473c78c188f52b570e3b9f5dd">   30</a></span>&#160;    <span class="keywordtype">float</span> <span class="keyword">operator</span> float()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;      <span class="keywordflow">return</span> <a class="code" href="structgdt_1_1_fixed_point.html#a99cf0583b181b1244e186a8ffc6d704f">bits</a> / float((1ULL &lt;&lt; Nbits)-1);</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    }</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    storageT bits;</div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="structgdt_1_1_fixed_point.html#a99cf0583b181b1244e186a8ffc6d704f">   33</a></span>&#160;    storageT <a class="code" href="structgdt_1_1_fixed_point.html#a99cf0583b181b1244e186a8ffc6d704f">bits</a>;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  };</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;}</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="anamespacegdt_html"><div class="ttname"><a href="namespacegdt.html">gdt</a></div><div class="ttdef"><b>Definition:</b> fixedpoint.h:23</div></div>
+<div class="ttc" id="astructgdt_1_1_fixed_point_html_ac4591fd1b3f40b931741ed7500df5d9c"><div class="ttname"><a href="structgdt_1_1_fixed_point.html#ac4591fd1b3f40b931741ed7500df5d9c">gdt::FixedPoint::FixedPoint</a></div><div class="ttdeci">FixedPoint()</div></div>
 <div class="ttc" id="astructgdt_1_1_fixed_point_html"><div class="ttname"><a href="structgdt_1_1_fixed_point.html">gdt::FixedPoint</a></div><div class="ttdef"><b>Definition:</b> fixedpoint.h:27</div></div>
+<div class="ttc" id="astructgdt_1_1_fixed_point_html_a99cf0583b181b1244e186a8ffc6d704f"><div class="ttname"><a href="structgdt_1_1_fixed_point.html#a99cf0583b181b1244e186a8ffc6d704f">gdt::FixedPoint::bits</a></div><div class="ttdeci">storageT bits</div><div class="ttdef"><b>Definition:</b> fixedpoint.h:33</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><a class="el" href="dir_f9111f40ae40b6c662c8f31aae18691f.html">common</a></li><li class="navelem"><a class="el" href="dir_10708436ff5433f320df63bcbb459474.html">math</a></li><li class="navelem"><b>fixedpoint.h</b></li>
+    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><a class="el" href="dir_f9111f40ae40b6c662c8f31aae18691f.html">common</a></li><li class="navelem"><a class="el" href="dir_10708436ff5433f320df63bcbb459474.html">math</a></li><li class="navelem"><a class="el" href="fixedpoint_8h.html">fixedpoint.h</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

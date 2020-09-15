@@ -7,6 +7,7 @@ var structowl_1_1common_1_1vec__t_3_01_t_00_013_01_4 =
     [ "vec_t", "structowl_1_1common_1_1vec__t_3_01_t_00_013_01_4.html#a1f05d27502c7e88aa23ee6235a6ca6ab", null ],
     [ "vec_t", "structowl_1_1common_1_1vec__t_3_01_t_00_013_01_4.html#ac2c17ed28116ea2084914d6ce414da61", null ],
     [ "vec_t", "structowl_1_1common_1_1vec__t_3_01_t_00_013_01_4.html#a62245ddc2db7ffa94661f4952d89aeed", null ],
+    [ "make_from", "structowl_1_1common_1_1vec__t_3_01_t_00_013_01_4.html#a426162631a5a433a020a49783532b200", null ],
     [ "operator=", "structowl_1_1common_1_1vec__t_3_01_t_00_013_01_4.html#a107a88918bff460a85feda776036732e", null ],
     [ "operator[]", "structowl_1_1common_1_1vec__t_3_01_t_00_013_01_4.html#a6b8ca7fcbe47cec4a1fdee6541bea0ef", null ],
     [ "operator[]", "structowl_1_1common_1_1vec__t_3_01_t_00_013_01_4.html#a3552a56eec985f0e2302aaf061c98229", null ],

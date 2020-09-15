@@ -12,6 +12,7 @@ var structowl_1_1common_1_1_quaternion_t =
     [ "QuaternionT", "structowl_1_1common_1_1_quaternion_t.html#a195271e163ee1f2b854c10ce2a314fa2", null ],
     [ "QuaternionT", "structowl_1_1common_1_1_quaternion_t.html#a44e166fe707d52a34db96871d32db9be", null ],
     [ "operator=", "structowl_1_1common_1_1_quaternion_t.html#a776c97a1e095ca1254a3588e713d6e5c", null ],
+    [ "rotate", "structowl_1_1common_1_1_quaternion_t.html#ae259c2e4c9ec766e31198d762525b821", null ],
     [ "v", "structowl_1_1common_1_1_quaternion_t.html#a9b536f25f49b7d0efece4835e7006d06", null ],
     [ "i", "structowl_1_1common_1_1_quaternion_t.html#a30253d2a288a81911d7b4d3af06c9240", null ],
     [ "j", "structowl_1_1common_1_1_quaternion_t.html#a9e7bbe54b5edd072021be67518d5db89", null ],

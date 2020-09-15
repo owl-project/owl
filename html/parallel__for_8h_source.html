@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('parallel__for_8h_source.html',''); ini
 <div class="title">parallel_for.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
+<a href="parallel__for_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">// Copyright 2018-2019 Ingo Wald                                            //</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//                                                                          //</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);          //</span></div>
@@ -104,7 +104,7 @@ $(document).ready(function(){initNavTree('parallel__for_8h_source.html',''); ini
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;owl/common/owl-common.h&gt;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="owl-common_8h.html">owl/common/owl-common.h</a>&gt;</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="comment">// std</span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;mutex&gt;</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
@@ -119,11 +119,11 @@ $(document).ready(function(){initNavTree('parallel__for_8h_source.html',''); ini
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#define OWL_HAVE_PARALLEL_FOR 1</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keyword">namespace </span>owl {</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceowl.html">owl</a> {</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="keyword">namespace </span>common {</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> INDEX_T, <span class="keyword">typename</span> TASK_T&gt;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> serial_for(INDEX_T nTasks, TASK_T&amp;&amp; taskFunction)</div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="namespaceowl_1_1common.html#a50a1ad1c992ee267d89c5cfeb5041e6f">   38</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceowl_1_1common.html#a50a1ad1c992ee267d89c5cfeb5041e6f">serial_for</a>(INDEX_T nTasks, TASK_T&amp;&amp; taskFunction)</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    {</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;      <span class="keywordflow">for</span> (INDEX_T taskIndex = 0; taskIndex &lt; nTasks; ++taskIndex) {</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        taskFunction(taskIndex);</div>
@@ -132,16 +132,16 @@ $(document).ready(function(){initNavTree('parallel__for_8h_source.html',''); ini
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  </div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">#if OWL_HAVE_TBB</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> INDEX_T, <span class="keyword">typename</span> TASK_T&gt;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> parallel_for(INDEX_T nTasks, TASK_T&amp;&amp; taskFunction, <span class="keywordtype">size_t</span> blockSize=1)</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceowl_1_1common.html#a97ee34cc0e5f3d90f4294f45ced34eef">parallel_for</a>(INDEX_T nTasks, TASK_T&amp;&amp; taskFunction, <span class="keywordtype">size_t</span> blockSize=1)</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    {</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;      <span class="keywordflow">if</span> (nTasks == 0) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;      <span class="keywordflow">if</span> (nTasks == 1)</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        taskFunction(<span class="keywordtype">size_t</span>(0));</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      <span class="keywordflow">else</span> <span class="keywordflow">if</span> (blockSize==1) {</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        tbb::parallel_for(INDEX_T(0), nTasks, std::forward&lt;TASK_T&gt;(taskFunction));</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        <a class="code" href="namespaceowl_1_1common.html#a97ee34cc0e5f3d90f4294f45ced34eef">tbb::parallel_for</a>(INDEX_T(0), nTasks, std::forward&lt;TASK_T&gt;(taskFunction));</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      } <span class="keywordflow">else</span> {</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">size_t</span> numBlocks = (nTasks+blockSize-1)/blockSize;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        tbb::parallel_for((<span class="keywordtype">size_t</span>)0, numBlocks, [&amp;](<span class="keywordtype">size_t</span> blockIdx){</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        <a class="code" href="namespaceowl_1_1common.html#a97ee34cc0e5f3d90f4294f45ced34eef">tbb::parallel_for</a>((<span class="keywordtype">size_t</span>)0, numBlocks, [&amp;](<span class="keywordtype">size_t</span> blockIdx){</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;            <span class="keywordtype">size_t</span> begin = blockIdx*blockSize;</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;            <span class="keywordtype">size_t</span> end   = std::min(begin+blockSize,<span class="keywordtype">size_t</span>(nTasks));</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i=begin;i&lt;end;i++)</div>
@@ -154,8 +154,8 @@ $(document).ready(function(){initNavTree('parallel__for_8h_source.html',''); ini
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor"># pragma message(&quot;warning: TBB not available, will replace all parallel_for&#39;s with serial_for&#39;s&quot;)</span></div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> INDEX_T, <span class="keyword">typename</span> TASK_T&gt;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> parallel_for(INDEX_T nTasks, TASK_T&amp;&amp; taskFunction, <span class="keywordtype">size_t</span> blockSize=1)</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    { serial_for(nTasks,taskFunction); }</div>
+<div class="line"><a name="l00069"></a><span class="lineno"><a class="line" href="namespaceowl_1_1common.html#a97ee34cc0e5f3d90f4294f45ced34eef">   69</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceowl_1_1common.html#a97ee34cc0e5f3d90f4294f45ced34eef">parallel_for</a>(INDEX_T nTasks, TASK_T&amp;&amp; taskFunction, <span class="keywordtype">size_t</span> blockSize=1)</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    { <a class="code" href="namespaceowl_1_1common.html#a50a1ad1c992ee267d89c5cfeb5041e6f">serial_for</a>(nTasks,taskFunction); }</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  </div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="comment">// template&lt;typename TASK_T&gt;</span></div>
@@ -167,7 +167,7 @@ $(document).ready(function(){initNavTree('parallel__for_8h_source.html',''); ini
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="comment">// }</span></div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> TASK_T&gt;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordtype">void</span> serial_for_blocked(<span class="keywordtype">size_t</span> begin, <span class="keywordtype">size_t</span> end, <span class="keywordtype">size_t</span> blockSize,</div>
+<div class="line"><a name="l00082"></a><span class="lineno"><a class="line" href="namespaceowl_1_1common.html#acbee4fda8dbe0fffca2bcdfa86c00052">   82</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="namespaceowl_1_1common.html#acbee4fda8dbe0fffca2bcdfa86c00052">serial_for_blocked</a>(<span class="keywordtype">size_t</span> begin, <span class="keywordtype">size_t</span> end, <span class="keywordtype">size_t</span> blockSize,</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                            TASK_T &amp;&amp;taskFunction)</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    {</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> block_begin=begin; block_begin &lt; end; block_begin += blockSize)</div>
@@ -175,15 +175,15 @@ $(document).ready(function(){initNavTree('parallel__for_8h_source.html',''); ini
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    }</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  </div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> TASK_T&gt;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordtype">void</span> parallel_for_blocked(<span class="keywordtype">size_t</span> begin, <span class="keywordtype">size_t</span> end, <span class="keywordtype">size_t</span> blockSize,</div>
+<div class="line"><a name="l00090"></a><span class="lineno"><a class="line" href="namespaceowl_1_1common.html#ad13fe0286fea54eb1536ee6c29b64125">   90</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="namespaceowl_1_1common.html#ad13fe0286fea54eb1536ee6c29b64125">parallel_for_blocked</a>(<span class="keywordtype">size_t</span> begin, <span class="keywordtype">size_t</span> end, <span class="keywordtype">size_t</span> blockSize,</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                              <span class="keyword">const</span> TASK_T &amp;taskFunction)</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    {</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="preprocessor">#if 0</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;      serial_for_blocked(begin,end,blockSize,taskFunction);</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;      <a class="code" href="namespaceowl_1_1common.html#acbee4fda8dbe0fffca2bcdfa86c00052">serial_for_blocked</a>(begin,end,blockSize,taskFunction);</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="preprocessor">#else</span></div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;      <span class="keyword">const</span> <span class="keywordtype">size_t</span> numTasks = end-begin;</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;      <span class="keyword">const</span> <span class="keywordtype">size_t</span> numBlocks = (numTasks+blockSize-1)/blockSize;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      parallel_for(numBlocks,[&amp;](<span class="keywordtype">size_t</span> blockID){</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      <a class="code" href="namespaceowl_1_1common.html#a97ee34cc0e5f3d90f4294f45ced34eef">parallel_for</a>(numBlocks,[&amp;](<span class="keywordtype">size_t</span> blockID){</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;          <span class="keywordtype">size_t</span> block_begin = begin+blockID*blockSize;</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;          taskFunction(block_begin,std::min(block_begin+blockSize,end));</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        });</div>
@@ -194,10 +194,16 @@ $(document).ready(function(){initNavTree('parallel__for_8h_source.html',''); ini
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;} <span class="comment">// ::owl</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="anamespaceowl_1_1common_html_a97ee34cc0e5f3d90f4294f45ced34eef"><div class="ttname"><a href="namespaceowl_1_1common.html#a97ee34cc0e5f3d90f4294f45ced34eef">owl::common::parallel_for</a></div><div class="ttdeci">void parallel_for(INDEX_T nTasks, TASK_T &amp;&amp;taskFunction, size_t blockSize=1)</div><div class="ttdef"><b>Definition:</b> parallel_for.h:69</div></div>
+<div class="ttc" id="anamespaceowl_1_1common_html_acbee4fda8dbe0fffca2bcdfa86c00052"><div class="ttname"><a href="namespaceowl_1_1common.html#acbee4fda8dbe0fffca2bcdfa86c00052">owl::common::serial_for_blocked</a></div><div class="ttdeci">void serial_for_blocked(size_t begin, size_t end, size_t blockSize, TASK_T &amp;&amp;taskFunction)</div><div class="ttdef"><b>Definition:</b> parallel_for.h:82</div></div>
+<div class="ttc" id="aowl-common_8h_html"><div class="ttname"><a href="owl-common_8h.html">owl-common.h</a></div></div>
+<div class="ttc" id="anamespaceowl_1_1common_html_ad13fe0286fea54eb1536ee6c29b64125"><div class="ttname"><a href="namespaceowl_1_1common.html#ad13fe0286fea54eb1536ee6c29b64125">owl::common::parallel_for_blocked</a></div><div class="ttdeci">void parallel_for_blocked(size_t begin, size_t end, size_t blockSize, const TASK_T &amp;taskFunction)</div><div class="ttdef"><b>Definition:</b> parallel_for.h:90</div></div>
+<div class="ttc" id="anamespaceowl_html"><div class="ttname"><a href="namespaceowl.html">owl</a></div><div class="ttdef"><b>Definition:</b> APIContext.cpp:36</div></div>
+<div class="ttc" id="anamespaceowl_1_1common_html_a50a1ad1c992ee267d89c5cfeb5041e6f"><div class="ttname"><a href="namespaceowl_1_1common.html#a50a1ad1c992ee267d89c5cfeb5041e6f">owl::common::serial_for</a></div><div class="ttdeci">void serial_for(INDEX_T nTasks, TASK_T &amp;&amp;taskFunction)</div><div class="ttdef"><b>Definition:</b> parallel_for.h:38</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><a class="el" href="dir_f9111f40ae40b6c662c8f31aae18691f.html">common</a></li><li class="navelem"><a class="el" href="dir_361c6ec6ed1a1073e1c3a19f92b2d47a.html">parallel</a></li><li class="navelem"><b>parallel_for.h</b></li>
+    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><a class="el" href="dir_f9111f40ae40b6c662c8f31aae18691f.html">common</a></li><li class="navelem"><a class="el" href="dir_361c6ec6ed1a1073e1c3a19f92b2d47a.html">parallel</a></li><li class="navelem"><a class="el" href="parallel__for_8h.html">parallel_for.h</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

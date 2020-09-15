@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['nextavailableid_593',['nextAvailableID',['../structowl_1_1_object.html#a20ed2164e1f2eb4021f4362eefde9b13',1,'owl::Object']]],
-  ['numraytypes_594',['numRayTypes',['../structowl_1_1_context.html#ab85f92951beb364ccdacb4c8403a908b',1,'owl::Context']]]
+  ['j_1562',['j',['../structowl_1_1common_1_1_quaternion_t.html#a9e7bbe54b5edd072021be67518d5db89',1,'owl::common::QuaternionT']]]
 ];

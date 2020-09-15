@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('cuda_8h_source.html',''); initResizabl
 <div class="title">cuda.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
+<a href="cuda_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">// Copyright 2019-2020 Ingo Wald                                            //</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//                                                                          //</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);          //</span></div>
@@ -104,10 +104,10 @@ $(document).ready(function(){initNavTree('cuda_8h_source.html',''); initResizabl
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;owl/common.h&quot;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="common_8h.html">owl/common.h</a>&quot;</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;cuda_runtime.h&gt;</span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#define CUDA_CHECK( call )                                              \</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="cuda_8h.html#aeaf2b8792be9f99ad11147059ef5079d">   22</a></span>&#160;<span class="preprocessor">#define CUDA_CHECK( call )                                              \</span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">  {                                                                     \</span></div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">    cudaError_t rc = call;                                              \</span></div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">    if (rc != cudaSuccess) {                                            \</span></div>
@@ -118,9 +118,9 @@ $(document).ready(function(){initNavTree('cuda_8h_source.html',''); initResizabl
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">    }                                                                   \</span></div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">  }</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#define CUDA_CALL(call) CUDA_CHECK(cuda##call)</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="cuda_8h.html#a4058d29c3c1ce7a81cf7efeffbf35e97">   33</a></span>&#160;<span class="preprocessor">#define CUDA_CALL(call) CUDA_CHECK(cuda##call)</span></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#define CUDA_CHECK2( where, call )                                      \</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="cuda_8h.html#a6465ed2e70e2ac0bc7762e6ab451f814">   35</a></span>&#160;<span class="preprocessor">#define CUDA_CHECK2( where, call )                                      \</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">  {                                                                     \</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">    cudaError_t rc = call;                                              \</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">    if(rc != cudaSuccess) {                                             \</span></div>
@@ -135,7 +135,7 @@ $(document).ready(function(){initNavTree('cuda_8h_source.html',''); initResizabl
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">    }                                                                   \</span></div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">  }</span></div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">#define CUDA_SYNC_CHECK()                                       \</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="cuda_8h.html#ad5427702b87c7421613dba5e631866f9">   50</a></span>&#160;<span class="preprocessor">#define CUDA_SYNC_CHECK()                                       \</span></div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">  {                                                             \</span></div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">    cudaDeviceSynchronize();                                    \</span></div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">    cudaError_t rc = cudaGetLastError();                        \</span></div>
@@ -148,7 +148,7 @@ $(document).ready(function(){initNavTree('cuda_8h_source.html',''); initResizabl
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor">#define CUDA_CHECK_NOTHROW( call )                                      \</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="cuda_8h.html#a5ca9f09c06e6ea7520f7fb22076ee620">   63</a></span>&#160;<span class="preprocessor">#define CUDA_CHECK_NOTHROW( call )                                      \</span></div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor">  {                                                                     \</span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor">    cudaError_t rc = call;                                              \</span></div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor">    if (rc != cudaSuccess) {                                            \</span></div>
@@ -159,9 +159,9 @@ $(document).ready(function(){initNavTree('cuda_8h_source.html',''); initResizabl
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="preprocessor">    }                                                                   \</span></div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">  }</span></div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor">#define CUDA_CALL_NOTHROW(call) CUDA_CHECK_NOTHROW(cuda##call)</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno"><a class="line" href="cuda_8h.html#aa4a5e3eb2c6a2e1490fa495e28f39bd2">   74</a></span>&#160;<span class="preprocessor">#define CUDA_CALL_NOTHROW(call) CUDA_CHECK_NOTHROW(cuda##call)</span></div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="preprocessor">#define CUDA_CHECK2_NOTHROW( where, call )                              \</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="cuda_8h.html#ae5f02bece6cdc73d7433c64d5f11ec49">   76</a></span>&#160;<span class="preprocessor">#define CUDA_CHECK2_NOTHROW( where, call )                              \</span></div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="preprocessor">  {                                                                     \</span></div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="preprocessor">    cudaError_t rc = call;                                              \</span></div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="preprocessor">    if(rc != cudaSuccess) {                                             \</span></div>
@@ -178,10 +178,11 @@ $(document).ready(function(){initNavTree('cuda_8h_source.html',''); initResizabl
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160; </div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="acommon_8h_html"><div class="ttname"><a href="common_8h.html">common.h</a></div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_21d3df9f6b1c3ba532f61bd7fe63147d.html">helper</a></li><li class="navelem"><b>cuda.h</b></li>
+    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_21d3df9f6b1c3ba532f61bd7fe63147d.html">helper</a></li><li class="navelem"><a class="el" href="cuda_8h.html">cuda.h</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

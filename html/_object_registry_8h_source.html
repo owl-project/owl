@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('_object_registry_8h_source.html',''); 
 <div class="title">ObjectRegistry.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
+<a href="_object_registry_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">// Copyright 2019 Ingo Wald                                                 //</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//                                                                          //</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);          //</span></div>
@@ -104,9 +104,9 @@ $(document).ready(function(){initNavTree('_object_registry_8h_source.html',''); 
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;Object.h&quot;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_object_8h.html">Object.h</a>&quot;</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">namespace </span>owl {</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceowl.html">owl</a> {</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keyword">struct </span>RegisteredObject;</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="keyword">struct </span>Context;</div>
@@ -117,22 +117,22 @@ $(document).ready(function(){initNavTree('_object_registry_8h_source.html',''); 
 <div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry.html">   32</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structowl_1_1_object_registry.html">ObjectRegistry</a> {</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="comment">// ReallocContextIDsCB reallocContextIDs,</span></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="comment">// const char *typeDescription);</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">size_t</span> size()<span class="keyword">  const </span>{ <span class="keywordflow">return</span> objects.size(); }</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">bool</span>   empty()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> objects.empty(); }</div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry.html#a739dacca85882cd5899f5a564b109989">   35</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">size_t</span> <a class="code" href="structowl_1_1_object_registry.html#a739dacca85882cd5899f5a564b109989">size</a>()<span class="keyword">  const </span>{ <span class="keywordflow">return</span> <a class="code" href="structowl_1_1_object_registry.html#ac3da3958a40f57f3971d16ab3038674a">objects</a>.size(); }</div>
+<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry.html#a982b9f959728489dbbfac8f2e287e5f3">   36</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">bool</span>   <a class="code" href="structowl_1_1_object_registry.html#a982b9f959728489dbbfac8f2e287e5f3">empty</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <a class="code" href="structowl_1_1_object_registry.html#ac3da3958a40f57f3971d16ab3038674a">objects</a>.empty(); }</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="comment">// virtual void reallocContextIDs(int newMaxIDs) = 0;</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keywordtype">void</span> forget(<a class="code" href="structowl_1_1_registered_object.html">RegisteredObject</a> *<span class="keywordtype">object</span>);</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <span class="keywordtype">void</span> track(<a class="code" href="structowl_1_1_registered_object.html">RegisteredObject</a> *<span class="keywordtype">object</span>);</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keywordtype">int</span> allocID();</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <a class="code" href="structowl_1_1_registered_object.html">RegisteredObject</a> *getPtr(<span class="keywordtype">int</span> ID);</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="structowl_1_1_object_registry.html#a893e56c6d488cd8dff16d1643b57215c">forget</a>(<a class="code" href="structowl_1_1_registered_object.html">RegisteredObject</a> *<span class="keywordtype">object</span>);</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="structowl_1_1_object_registry.html#ab3dd191c1532831f6a9f675ee959f2ba">track</a>(<a class="code" href="structowl_1_1_registered_object.html">RegisteredObject</a> *<span class="keywordtype">object</span>);</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structowl_1_1_object_registry.html#a372a2559dd02ff6741c15166e9e6e90e">allocID</a>();</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <a class="code" href="structowl_1_1_registered_object.html">RegisteredObject</a> *<a class="code" href="structowl_1_1_object_registry.html#a17aba399c2ff6d9b41842d0bcb17b45a">getPtr</a>(<span class="keywordtype">int</span> ID);</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    std::vector&lt;RegisteredObject *&gt; objects;</div>
+<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry.html#ac3da3958a40f57f3971d16ab3038674a">   48</a></span>&#160;    std::vector&lt;RegisteredObject *&gt; <a class="code" href="structowl_1_1_object_registry.html#ac3da3958a40f57f3971d16ab3038674a">objects</a>;</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordtype">int</span> numIDsAllocedInContext = 0;</div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry.html#a185c5c84bb77f78332537986347ea2a1">   53</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structowl_1_1_object_registry.html#a185c5c84bb77f78332537986347ea2a1">numIDsAllocedInContext</a> = 0;</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    </div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    std::stack&lt;int&gt; previouslyReleasedIDs;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    std::mutex mutex;</div>
+<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry.html#ae28a38b948ae9d09f492e7b39a7032b7">   57</a></span>&#160;    std::stack&lt;int&gt; <a class="code" href="structowl_1_1_object_registry.html#ae28a38b948ae9d09f492e7b39a7032b7">previouslyReleasedIDs</a>;</div>
+<div class="line"><a name="l00058"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry.html#a77a47395cf28255664d79ee0937dc1bb">   58</a></span>&#160;    std::mutex <a class="code" href="structowl_1_1_object_registry.html#a77a47395cf28255664d79ee0937dc1bb">mutex</a>;</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    </div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="comment">// ReallocContextIDsCB reallocContextIDs;</span></div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  };</div>
@@ -140,26 +140,26 @@ $(document).ready(function(){initNavTree('_object_registry_8h_source.html',''); 
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry_t.html">   68</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a> : <span class="keyword">public</span> <a class="code" href="structowl_1_1_object_registry.html">ObjectRegistry</a> {</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <a class="code" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>(<a class="code" href="structowl_1_1_context.html">Context</a> *context)</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      : context(context)</div>
+<div class="line"><a name="l00069"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry_t.html#a30d69b10143e52fa7dd68422da202b70">   69</a></span>&#160;    <a class="code" href="structowl_1_1_object_registry_t.html#a30d69b10143e52fa7dd68422da202b70">ObjectRegistryT</a>(<a class="code" href="structowl_1_1_context.html">Context</a> *<a class="code" href="structowl_1_1_object_registry_t.html#a4cec031a6f8cfae5a3e5373df4eabe55">context</a>)</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      : <a class="code" href="structowl_1_1_object_registry_t.html#a4cec031a6f8cfae5a3e5373df4eabe55">context</a>(<a class="code" href="structowl_1_1_object_registry_t.html#a4cec031a6f8cfae5a3e5373df4eabe55">context</a>)</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    {};</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;      </div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="comment">// void reallocContextIDs(int newMaxIDs) override;</span></div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keyword">inline</span> T *getPtr(<span class="keywordtype">int</span> ID)</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    { <span class="keywordflow">return</span> (T*)ObjectRegistry::getPtr(ID); }</div>
+<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry_t.html#a1ebdc6e563443b5bb51bced0d197f4c4">   75</a></span>&#160;    <span class="keyword">inline</span> T *<a class="code" href="structowl_1_1_object_registry_t.html#a1ebdc6e563443b5bb51bced0d197f4c4">getPtr</a>(<span class="keywordtype">int</span> ID)</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    { <span class="keywordflow">return</span> (T*)<a class="code" href="structowl_1_1_object_registry.html#a17aba399c2ff6d9b41842d0bcb17b45a">ObjectRegistry::getPtr</a>(ID); }</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keyword">inline</span> <span class="keyword">typename</span> T::SP getSP(<span class="keywordtype">int</span> ID)</div>
+<div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry_t.html#a502d588f358b9632ea8354f4b27f3edb">   78</a></span>&#160;    <span class="keyword">inline</span> <span class="keyword">typename</span> T::SP <a class="code" href="structowl_1_1_object_registry_t.html#a502d588f358b9632ea8354f4b27f3edb">getSP</a>(<span class="keywordtype">int</span> ID)</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    {</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;      T *ptr = getPtr(ID);</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;      T *ptr = <a class="code" href="structowl_1_1_object_registry_t.html#a1ebdc6e563443b5bb51bced0d197f4c4">getPtr</a>(ID);</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;      assert(ptr);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      Object::SP <span class="keywordtype">object</span> = ptr-&gt;shared_from_this();</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      <a class="code" href="structowl_1_1_object.html#a74e947dcb06759e0d20bc885afb75779">Object::SP</a> <span class="keywordtype">object</span> = ptr-&gt;shared_from_this();</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      assert(<span class="keywordtype">object</span>);</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      <span class="keywordflow">return</span> <span class="keywordtype">object</span>-&gt;as&lt;T&gt;();</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      <span class="comment">// return ptr-&gt;shared_from_this()-&gt;as&lt;T&gt;();</span></div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    }</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    </div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <a class="code" href="structowl_1_1_context.html">Context</a> *<span class="keyword">const</span> context;</div>
+<div class="line"><a name="l00088"></a><span class="lineno"><a class="line" href="structowl_1_1_object_registry_t.html#a4cec031a6f8cfae5a3e5373df4eabe55">   88</a></span>&#160;    <a class="code" href="structowl_1_1_context.html">Context</a> *<span class="keyword">const</span> <a class="code" href="structowl_1_1_object_registry_t.html#a4cec031a6f8cfae5a3e5373df4eabe55">context</a>;</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  };</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    </div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;} <span class="comment">// ::owl</span></div>
@@ -167,13 +167,30 @@ $(document).ready(function(){initNavTree('_object_registry_8h_source.html',''); 
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <div class="ttc" id="astructowl_1_1_context_html"><div class="ttname"><a href="structowl_1_1_context.html">owl::Context</a></div><div class="ttdef"><b>Definition:</b> Context.h:32</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_html_a17aba399c2ff6d9b41842d0bcb17b45a"><div class="ttname"><a href="structowl_1_1_object_registry.html#a17aba399c2ff6d9b41842d0bcb17b45a">owl::ObjectRegistry::getPtr</a></div><div class="ttdeci">RegisteredObject * getPtr(int ID)</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.cpp:77</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_t_html_a4cec031a6f8cfae5a3e5373df4eabe55"><div class="ttname"><a href="structowl_1_1_object_registry_t.html#a4cec031a6f8cfae5a3e5373df4eabe55">owl::ObjectRegistryT::context</a></div><div class="ttdeci">Context *const context</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:88</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_html_ab3dd191c1532831f6a9f675ee959f2ba"><div class="ttname"><a href="structowl_1_1_object_registry.html#ab3dd191c1532831f6a9f675ee959f2ba">owl::ObjectRegistry::track</a></div><div class="ttdeci">void track(RegisteredObject *object)</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.cpp:48</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_html_a185c5c84bb77f78332537986347ea2a1"><div class="ttname"><a href="structowl_1_1_object_registry.html#a185c5c84bb77f78332537986347ea2a1">owl::ObjectRegistry::numIDsAllocedInContext</a></div><div class="ttdeci">int numIDsAllocedInContext</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:53</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_html_a739dacca85882cd5899f5a564b109989"><div class="ttname"><a href="structowl_1_1_object_registry.html#a739dacca85882cd5899f5a564b109989">owl::ObjectRegistry::size</a></div><div class="ttdeci">size_t size() const</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:35</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_html_ae28a38b948ae9d09f492e7b39a7032b7"><div class="ttname"><a href="structowl_1_1_object_registry.html#ae28a38b948ae9d09f492e7b39a7032b7">owl::ObjectRegistry::previouslyReleasedIDs</a></div><div class="ttdeci">std::stack&lt; int &gt; previouslyReleasedIDs</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:57</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_t_html_a30d69b10143e52fa7dd68422da202b70"><div class="ttname"><a href="structowl_1_1_object_registry_t.html#a30d69b10143e52fa7dd68422da202b70">owl::ObjectRegistryT::ObjectRegistryT</a></div><div class="ttdeci">ObjectRegistryT(Context *context)</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:69</div></div>
 <div class="ttc" id="astructowl_1_1_object_registry_html"><div class="ttname"><a href="structowl_1_1_object_registry.html">owl::ObjectRegistry</a></div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:32</div></div>
 <div class="ttc" id="astructowl_1_1_registered_object_html"><div class="ttname"><a href="structowl_1_1_registered_object.html">owl::RegisteredObject</a></div><div class="ttdef"><b>Definition:</b> RegisteredObject.h:30</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_html_a893e56c6d488cd8dff16d1643b57215c"><div class="ttname"><a href="structowl_1_1_object_registry.html#a893e56c6d488cd8dff16d1643b57215c">owl::ObjectRegistry::forget</a></div><div class="ttdeci">void forget(RegisteredObject *object)</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.cpp:28</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_html_a982b9f959728489dbbfac8f2e287e5f3"><div class="ttname"><a href="structowl_1_1_object_registry.html#a982b9f959728489dbbfac8f2e287e5f3">owl::ObjectRegistry::empty</a></div><div class="ttdeci">bool empty() const</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:36</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_html_a77a47395cf28255664d79ee0937dc1bb"><div class="ttname"><a href="structowl_1_1_object_registry.html#a77a47395cf28255664d79ee0937dc1bb">owl::ObjectRegistry::mutex</a></div><div class="ttdeci">std::mutex mutex</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:58</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_t_html_a502d588f358b9632ea8354f4b27f3edb"><div class="ttname"><a href="structowl_1_1_object_registry_t.html#a502d588f358b9632ea8354f4b27f3edb">owl::ObjectRegistryT::getSP</a></div><div class="ttdeci">T::SP getSP(int ID)</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:78</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_t_html_a1ebdc6e563443b5bb51bced0d197f4c4"><div class="ttname"><a href="structowl_1_1_object_registry_t.html#a1ebdc6e563443b5bb51bced0d197f4c4">owl::ObjectRegistryT::getPtr</a></div><div class="ttdeci">T * getPtr(int ID)</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:75</div></div>
+<div class="ttc" id="anamespaceowl_html"><div class="ttname"><a href="namespaceowl.html">owl</a></div><div class="ttdef"><b>Definition:</b> APIContext.cpp:36</div></div>
+<div class="ttc" id="astructowl_1_1_object_html_a74e947dcb06759e0d20bc885afb75779"><div class="ttname"><a href="structowl_1_1_object.html#a74e947dcb06759e0d20bc885afb75779">owl::Object::SP</a></div><div class="ttdeci">std::shared_ptr&lt; Object &gt; SP</div><div class="ttdef"><b>Definition:</b> Object.h:32</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_html_a372a2559dd02ff6741c15166e9e6e90e"><div class="ttname"><a href="structowl_1_1_object_registry.html#a372a2559dd02ff6741c15166e9e6e90e">owl::ObjectRegistry::allocID</a></div><div class="ttdeci">int allocID()</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.cpp:58</div></div>
+<div class="ttc" id="astructowl_1_1_object_registry_html_ac3da3958a40f57f3971d16ab3038674a"><div class="ttname"><a href="structowl_1_1_object_registry.html#ac3da3958a40f57f3971d16ab3038674a">owl::ObjectRegistry::objects</a></div><div class="ttdeci">std::vector&lt; RegisteredObject * &gt; objects</div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:48</div></div>
+<div class="ttc" id="a_object_8h_html"><div class="ttname"><a href="_object_8h.html">Object.h</a></div></div>
 <div class="ttc" id="astructowl_1_1_object_registry_t_html"><div class="ttname"><a href="structowl_1_1_object_registry_t.html">owl::ObjectRegistryT</a></div><div class="ttdef"><b>Definition:</b> ObjectRegistry.h:68</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><b>ObjectRegistry.h</b></li>
+    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="_object_registry_8h.html">ObjectRegistry.h</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

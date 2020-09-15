@@ -125,6 +125,7 @@ var hierarchy =
       ] ]
     ] ],
     [ "gdt::FixedPoint< storageT, Nbits, is_signed >", "structgdt_1_1_fixed_point.html", null ],
+    [ "owl::RangeAllocator::FreedRange", "structowl_1_1_range_allocator_1_1_freed_range.html", null ],
     [ "owl::common::interval< T >", "structowl_1_1common_1_1interval.html", null ],
     [ "owl::common::LCG< N >", "structowl_1_1common_1_1_l_c_g.html", null ],
     [ "owl::common::limits_traits< is_integer >", "structowl_1_1common_1_1limits__traits.html", null ],
@@ -135,6 +136,8 @@ var hierarchy =
     [ "owl::common::long_type_of< T >", "structowl_1_1common_1_1long__type__of.html", null ],
     [ "owl::common::long_type_of< int32_t >", "structowl_1_1common_1_1long__type__of_3_01int32__t_01_4.html", null ],
     [ "owl::common::long_type_of< uint32_t >", "structowl_1_1common_1_1long__type__of_3_01uint32__t_01_4.html", null ],
+    [ "owl::common::NaNTy", "structowl_1_1common_1_1_na_n_ty.html", null ],
+    [ "owl::common::NegInfTy", "structowl_1_1common_1_1_neg_inf_ty.html", null ],
     [ "owl::ObjectRegistry", "structowl_1_1_object_registry.html", [
       [ "owl::ObjectRegistryT< owl::Buffer >", "structowl_1_1_object_registry_t.html", null ],
       [ "owl::ObjectRegistryT< owl::Geom >", "structowl_1_1_object_registry_t.html", null ],
@@ -150,15 +153,19 @@ var hierarchy =
       [ "owl::ObjectRegistryT< owl::Texture >", "structowl_1_1_object_registry_t.html", null ],
       [ "owl::ObjectRegistryT< T >", "structowl_1_1_object_registry_t.html", null ]
     ] ],
+    [ "owl::common::OneTy", "structowl_1_1common_1_1_one_ty.html", null ],
+    [ "owl::common::PosInfTy", "structowl_1_1common_1_1_pos_inf_ty.html", null ],
     [ "owl::ProgramDesc", "structowl_1_1_program_desc.html", null ],
     [ "owl::common::QuaternionT< T >", "structowl_1_1common_1_1_quaternion_t.html", null ],
     [ "owl::RangeAllocator", "structowl_1_1_range_allocator.html", null ],
     [ "owl::RayT< _rayType, _numRayTypes >", "structowl_1_1_ray_t.html", null ],
     [ "owl::SBT", "structowl_1_1_s_b_t.html", null ],
     [ "owl::SetActiveGPU", "structowl_1_1_set_active_g_p_u.html", null ],
+    [ "owl::common::UlpTy", "structowl_1_1common_1_1_ulp_ty.html", null ],
     [ "owl::common::vec_t< T, N >", "structowl_1_1common_1_1vec__t.html", null ],
     [ "owl::common::vec_t< T, 1 >", "structowl_1_1common_1_1vec__t_3_01_t_00_011_01_4.html", null ],
     [ "owl::common::vec_t< T, 2 >", "structowl_1_1common_1_1vec__t_3_01_t_00_012_01_4.html", null ],
     [ "owl::common::vec_t< T, 3 >", "structowl_1_1common_1_1vec__t_3_01_t_00_013_01_4.html", null ],
-    [ "owl::common::vec_t< T, 4 >", "structowl_1_1common_1_1vec__t_3_01_t_00_014_01_4.html", null ]
+    [ "owl::common::vec_t< T, 4 >", "structowl_1_1common_1_1vec__t_3_01_t_00_014_01_4.html", null ],
+    [ "owl::common::ZeroTy", "structowl_1_1common_1_1_zero_ty.html", null ]
 ];

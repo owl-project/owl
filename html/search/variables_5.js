@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['geometries_578',['geometries',['../structowl_1_1_geom_group.html#aba6b418048f6731c087ea65e362e3dd7',1,'owl::GeomGroup']]],
-  ['geomtype_579',['geomType',['../structowl_1_1_geom.html#aa42455c92ccb3a573d129ce90f634428',1,'owl::Geom']]]
+  ['filtermode_1540',['filterMode',['../structowl_1_1_texture.html#aa7acd606a5f6baacfaacabb0e5af0ec8',1,'owl::Texture']]],
+  ['freedranges_1541',['freedRanges',['../structowl_1_1_range_allocator.html#a2a03c51f99fe2197c21f531fd94e685a',1,'owl::RangeAllocator']]]
 ];

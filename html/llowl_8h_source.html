@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('llowl_8h_source.html',''); initResizab
 <div class="title">llowl.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
+<a href="llowl_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">// Copyright 2019-2020 Ingo Wald                                            //</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//                                                                          //</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);          //</span></div>
@@ -105,7 +105,7 @@ $(document).ready(function(){initNavTree('llowl_8h_source.html',''); initResizab
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#ifndef _USE_MATH_DEFINES</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#  define _USE_MATH_DEFINES</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="llowl_8h.html#a525335710b53cb064ca56b936120431e">   24</a></span>&#160;<span class="preprocessor">#  define _USE_MATH_DEFINES</span></div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#include &lt;math.h&gt;</span> <span class="comment">// using cmath causes issues under Windows</span></div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#ifdef _WIN32</span></div>
@@ -121,9 +121,9 @@ $(document).ready(function(){initNavTree('llowl_8h_source.html',''); initResizab
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#pragma warning( disable : 4996 )</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#include &lt;cuda.h&gt;</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="cuda_8h.html">cuda.h</a>&gt;</span></div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">#include &lt;driver_types.h&gt;</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#include &lt;optix.h&gt;</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="optix_8h.html">optix.h</a>&gt;</span></div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#ifdef _WIN32</span></div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">#pragma warning( push )</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">#endif</span></div>
@@ -135,23 +135,25 @@ $(document).ready(function(){initNavTree('llowl_8h_source.html',''); initResizab
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">#  define OWL_LL_DLL_EXPORT __attribute__((visibility(&quot;default&quot;)))</span></div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#  define OWL_LL_DLL_IMPORT __attribute__((visibility(&quot;default&quot;)))</span></div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">#  define OWL_LL_DLL_EXPORT</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#  define OWL_LL_DLL_IMPORT</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="llowl_8h.html#a913576e9276d7c0c5c3edc4cd686dcf9">   54</a></span>&#160;<span class="preprocessor">#  define OWL_LL_DLL_EXPORT</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="llowl_8h.html#aa2ffc25d05159b7f1d3180db3122244f">   55</a></span>&#160;<span class="preprocessor">#  define OWL_LL_DLL_IMPORT</span></div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="preprocessor">#ifdef llowl_EXPORTS</span></div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">#  define OWL_LL_INTERFACE OWL_LL_DLL_EXPORT</span></div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">#  define OWL_LL_INTERFACE OWL_LL_DLL_IMPORT</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="llowl_8h.html#abe9cfa0d3a9040b95ccaffb39f4ef3c1">   61</a></span>&#160;<span class="preprocessor">#  define OWL_LL_INTERFACE OWL_LL_DLL_IMPORT</span></div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160; </div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="aoptix_8h_html"><div class="ttname"><a href="optix_8h.html">optix.h</a></div></div>
+<div class="ttc" id="acuda_8h_html"><div class="ttname"><a href="cuda_8h.html">cuda.h</a></div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><b>llowl.h</b></li>
+    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><a class="el" href="llowl_8h.html">llowl.h</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

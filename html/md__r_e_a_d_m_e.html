@@ -106,8 +106,8 @@ API Abstraction Level and Directory Structure</h1>
 <li><code>owl/ll/</code>: <em>implementation</em> the low-level API layer</li>
 <li><code>owl/ng/</code>: <em>implementation</em> the node graph API</li>
 <li><code>owl/common/</code>: common helper classes</li>
-<li><code><a class="el" href="owl__host_8h_source.html">include/owl/owl_host.h</a></code>: header for the public, C-linkage host-side API</li>
-<li><code><a class="el" href="owl__device_8h_source.html">include/owl/owl_device.h</a></code>: header to be used on device side, for isec/CH/AH programs.</li>
+<li><code><a class="el" href="owl__host_8h.html">include/owl/owl_host.h</a></code>: header for the public, C-linkage host-side API</li>
+<li><code><a class="el" href="owl__device_8h.html">include/owl/owl_device.h</a></code>: header to be used on device side, for isec/CH/AH programs.</li>
 <li><code>include/owl/common</code>: C++ math/vector classes required for the device-side API</li>
 </ul>
 </li>
@@ -281,7 +281,7 @@ v0.5.x - First Public Release Cleanups</h2>
 <ul>
 <li>first working version of subset of node graph library (all that is required for 'firstTriangleMesh' example)</li>
 <li><code>ng01-firstTriangleMesh</code> working</li>
-<li>significant renames and cleanups of owl/common (in particular, all 'gdt::' and 'gdt/' merged into owl::common and owl/common)</li>
+<li>significant renames and cleanups of owl/common (in particular, all 'gdt::' and 'gdt/' merged into <a class="el" href="namespaceowl_1_1common.html">owl::common</a> and owl/common)</li>
 <li>cleaned up owl/common/viewerWidget. Not used in owl itself (to avoid dependencies to glut etc), but now working successfully in first external test project</li>
 </ul>
 <p><em>v0.5.1</em>: First "c-api" version</p>
@@ -293,7 +293,7 @@ v0.5.x - First Public Release Cleanups</h2>
 <p><em>v0.5.0</em>: First public release</p>
 <ul>
 <li>first publicly accessible project on <a href="http://github.com/owl-project/owl">http://github.com/owl-project/owl</a></li>
-<li>major cleanups: "inlined" al the gdt submodule sources into owl/common to make owl external-dependency-fee. Feplaced gdt:: namespace with owl::common:: to match.</li>
+<li>major cleanups: "inlined" al the gdt submodule sources into owl/common to make owl external-dependency-fee. Feplaced gdt:: namespace with <a class="el" href="namespaceowl_1_1common.html">owl::common</a>:: to match.</li>
 </ul>
 <h2><a class="anchor" id="autotoc_md9"></a>
 v0.4.x - Instances</h2>

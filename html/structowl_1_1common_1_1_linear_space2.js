@@ -14,8 +14,10 @@ var structowl_1_1common_1_1_linear_space2 =
     [ "inverse", "structowl_1_1common_1_1_linear_space2.html#a0790e6239942e379d7a06b6602d7c14f", null ],
     [ "operator=", "structowl_1_1common_1_1_linear_space2.html#a242b87d50710b99164d310d1ad1be6c6", null ],
     [ "orthogonal", "structowl_1_1common_1_1_linear_space2.html#aaea08844919899bf73bccf0d257aa388", null ],
+    [ "rotate", "structowl_1_1common_1_1_linear_space2.html#a39381349ac065478a1a6e920124eb668", null ],
     [ "row0", "structowl_1_1common_1_1_linear_space2.html#aeffaacf0779b5738b4f7998c6ff3559f", null ],
     [ "row1", "structowl_1_1common_1_1_linear_space2.html#ad32eb8e73dca59d24b95217adbb2373c", null ],
+    [ "scale", "structowl_1_1common_1_1_linear_space2.html#a032d56b86ae679f3eae8a7008d039743", null ],
     [ "transposed", "structowl_1_1common_1_1_linear_space2.html#ade3ca3aa9f56490364e9155f41e2399e", null ],
     [ "vx", "structowl_1_1common_1_1_linear_space2.html#aa1dd6291ac91ab017532a84a7525910f", null ],
     [ "vy", "structowl_1_1common_1_1_linear_space2.html#a7a0423a6454368556b60b5b75312cf97", null ]

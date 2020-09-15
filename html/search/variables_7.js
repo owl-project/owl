@@ -1,8 +1,10 @@
 var searchData=
 [
-  ['id_583',['ID',['../structowl_1_1_device_context.html#a2cacae3d4be204c8a9c14506b22f0006',1,'owl::DeviceContext::ID()'],['../structowl_1_1_registered_object.html#a64fb956c3c8850c409bb3302e2395b34',1,'owl::RegisteredObject::ID()']]],
-  ['indexpointer_584',['indexPointer',['../structowl_1_1_triangles_geom_1_1_device_data.html#a6f909fe8b016f3c6becd82d049673b7d',1,'owl::TrianglesGeom::DeviceData']]],
-  ['instanceids_585',['instanceIDs',['../structowl_1_1_instance_group.html#a369e1caec5c87007fa13eb423be32373',1,'owl::InstanceGroup']]],
-  ['internalbufferforboundsprogram_586',['internalBufferForBoundsProgram',['../structowl_1_1_user_geom_1_1_device_data.html#a180cc280b13128edd0fe4980cd979bdb',1,'owl::UserGeom::DeviceData']]],
-  ['intersectprog_587',['intersectProg',['../structowl_1_1_user_geom_type.html#a17f79e5ea7bfa837642a246e597acc2f',1,'owl::UserGeomType']]]
+  ['hgpgs_1548',['hgPGs',['../structowl_1_1_geom_type_1_1_device_data.html#a71b03873c78a344e651a4c6710c3e481',1,'owl::GeomType::DeviceData']]],
+  ['hi_1549',['hi',['../structowl_1_1common_1_1interval.html#a5d0019c5f6cae1a666e3ad8403583ebe',1,'owl::common::interval']]],
+  ['hitgrouprecordcount_1550',['hitGroupRecordCount',['../structowl_1_1_s_b_t.html#aa6e6d3ee0972702d1dec8239957a55d9',1,'owl::SBT']]],
+  ['hitgrouprecordsbuffer_1551',['hitGroupRecordsBuffer',['../structowl_1_1_s_b_t.html#a55d628a080692f42a7d3e351aee7b45b',1,'owl::SBT']]],
+  ['hitgrouprecordsize_1552',['hitGroupRecordSize',['../structowl_1_1_s_b_t.html#a12a6514f767a5612591dc489117c8224',1,'owl::SBT']]],
+  ['hosthandles_1553',['hostHandles',['../structowl_1_1_device_buffer_1_1_device_data_for_textures.html#a038a16bc12b01da3acf3eaa840efa2a5',1,'owl::DeviceBuffer::DeviceDataForTextures::hostHandles()'],['../structowl_1_1_device_buffer_1_1_device_data_for_buffers.html#a4e8e7b97dba9c03ce8d881337b4e1f00',1,'owl::DeviceBuffer::DeviceDataForBuffers::hostHandles()']]],
+  ['hostmemory_1554',['hostMemory',['../structowl_1_1_launch_params_1_1_device_data.html#a5785dc7f69d51577f54c96f9a34fd3e4',1,'owl::LaunchParams::DeviceData']]]
 ];

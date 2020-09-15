@@ -1,0 +1,8 @@
+var searchData=
+[
+  ['xfmbounds_1491',['xfmBounds',['../namespaceowl_1_1common.html#a58768867451f406719b2bb8dd356aa0a',1,'owl::common']]],
+  ['xfmnormal_1492',['xfmNormal',['../namespaceowl_1_1common.html#a93017abe11d08322bf99a04ba7929658',1,'owl::common::xfmNormal(const AffineSpaceT&lt; L &gt; &amp;m, const VectorT &amp;n)'],['../namespaceowl_1_1common.html#a82c33b2aad79994bd7e515a9dcec9c00',1,'owl::common::xfmNormal(const LinearSpace3&lt; T &gt; &amp;s, const T &amp;a)'],['../namespaceowl_1_1common.html#aaad35953d9ab924ba6664547fd05bc54',1,'owl::common::xfmNormal(const QuaternionT&lt; T &gt; &amp;a, const typename QuaternionT&lt; T &gt;::Vector &amp;b)']]],
+  ['xfmpoint_1493',['xfmPoint',['../namespaceowl_1_1common.html#a4a50d49d6651f3ae627f1b0338803b75',1,'owl::common::xfmPoint(const AffineSpaceT&lt; L &gt; &amp;m, const VectorT &amp;p)'],['../namespaceowl_1_1common.html#a47c1b1f7939ab144a09e167c5eba5add',1,'owl::common::xfmPoint(const LinearSpace3&lt; T &gt; &amp;s, const T &amp;a)'],['../namespaceowl_1_1common.html#a755eb8a4827e23757ba1d83edbec8535',1,'owl::common::xfmPoint(const QuaternionT&lt; T &gt; &amp;a, const typename QuaternionT&lt; T &gt;::Vector &amp;b)']]],
+  ['xfmquaternion_1494',['xfmQuaternion',['../namespaceowl_1_1common.html#acec3fe72688dc76460b28e1b2d318243',1,'owl::common']]],
+  ['xfmvector_1495',['xfmVector',['../namespaceowl_1_1common.html#a5d22aff13f5fb154a8b05d458e0327eb',1,'owl::common::xfmVector(const AffineSpaceT&lt; L &gt; &amp;m, const VectorT &amp;v)'],['../namespaceowl_1_1common.html#a56c4a9254ac28abdae059ea835cf7187',1,'owl::common::xfmVector(const LinearSpace3&lt; T &gt; &amp;s, const T &amp;a)']]]
+];

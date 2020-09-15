@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('owl__device_8h_source.html',''); initR
 <div class="title">owl_device.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
+<a href="owl__device_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">// Copyright 2019-2020 Ingo Wald                                            //</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//                                                                          //</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);          //</span></div>
@@ -104,11 +104,11 @@ $(document).ready(function(){initNavTree('owl__device_8h_source.html',''); initR
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;owl/common/math/vec.h&quot;</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &quot;owl/common/math/box.h&quot;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="vec_8h.html">owl/common/math/vec.h</a>&quot;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="box_8h.html">owl/common/math/box.h</a>&quot;</span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="comment">// the &#39;actual&#39; optix</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;cuda.h&gt;</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;optix.h&gt;</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="cuda_8h.html">cuda.h</a>&gt;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="optix_8h.html">optix.h</a>&gt;</span></div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="comment">// ==================================================================</span></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="comment">// actual device-side &quot;API&quot; built-ins.</span></div>
@@ -118,66 +118,66 @@ $(document).ready(function(){initNavTree('owl__device_8h_source.html',''); initR
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#  error &quot;this file should only ever get included on the device side&quot;</span></div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="keyword">namespace </span>owl {</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceowl.html">owl</a> {</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="keyword">using namespace </span>owl::common;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="keyword">using namespace </span><a class="code" href="namespaceowl_1_1common.html">owl::common</a>;</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keyword">inline</span> __device__ vec2i getLaunchIndex()</div>
+<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="namespaceowl.html#ac4036ba773fc73d847e1f09bb4df3b33">   37</a></span>&#160;  <span class="keyword">inline</span> __device__ vec2i <a class="code" href="namespaceowl.html#ac4036ba773fc73d847e1f09bb4df3b33">getLaunchIndex</a>()</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  {</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keywordflow">return</span> (vec2i)optixGetLaunchIndex();</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  }</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="keyword">inline</span> __device__ vec2i getLaunchDims()</div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="namespaceowl.html#affbbc21130a8eafd8b4dacc155a2abdc">   44</a></span>&#160;  <span class="keyword">inline</span> __device__ vec2i <a class="code" href="namespaceowl.html#affbbc21130a8eafd8b4dacc155a2abdc">getLaunchDims</a>()</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  {</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keywordflow">return</span> (vec2i)optixGetLaunchDimensions();</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  }</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="keyword">inline</span> __device__ <span class="keyword">const</span> <span class="keywordtype">void</span> *getProgramDataPointer()</div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="namespaceowl.html#ae7799dc21c8cf4836c9faed32b9d272f">   53</a></span>&#160;  <span class="keyword">inline</span> __device__ <span class="keyword">const</span> <span class="keywordtype">void</span> *<a class="code" href="namespaceowl.html#ae7799dc21c8cf4836c9faed32b9d272f">getProgramDataPointer</a>()</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  {</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordflow">return</span> (<span class="keyword">const</span> <span class="keywordtype">void</span>*)optixGetSbtDataPointer();</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  }</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  <span class="keyword">inline</span> __device__ <span class="keyword">const</span> T &amp;getProgramData()</div>
+<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="namespaceowl.html#a5ca0a7e392328764e73e3d2a5a844636">   63</a></span>&#160;  <span class="keyword">inline</span> __device__ <span class="keyword">const</span> T &amp;<a class="code" href="namespaceowl.html#a5ca0a7e392328764e73e3d2a5a844636">getProgramData</a>()</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  {</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keywordflow">return</span> *(<span class="keyword">const</span> T*)getProgramDataPointer();</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keywordflow">return</span> *(<span class="keyword">const</span> T*)<a class="code" href="namespaceowl.html#ae7799dc21c8cf4836c9faed32b9d272f">getProgramDataPointer</a>();</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  }</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <span class="comment">// ==================================================================</span></div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="comment">// general convenience/helper functions - may move to samples</span></div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="comment">// ==================================================================</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="keyword">inline</span> __device__ <span class="keywordtype">float</span> linear_to_srgb(<span class="keywordtype">float</span> x) {</div>
+<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="namespaceowl.html#aaccc891c9acf331fb18f249ae4e0c2d4">   72</a></span>&#160;  <span class="keyword">inline</span> __device__ <span class="keywordtype">float</span> <a class="code" href="namespaceowl.html#aaccc891c9acf331fb18f249ae4e0c2d4">linear_to_srgb</a>(<span class="keywordtype">float</span> x) {</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keywordflow">if</span> (x &lt;= 0.0031308f) {</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;      <span class="keywordflow">return</span> 12.92f * x;</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    }</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">return</span> 1.055f * pow(x, 1.f/2.4f) - 0.055f;</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  }</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="keyword">inline</span> __device__ uint32_t make_8bit(<span class="keyword">const</span> <span class="keywordtype">float</span> f)</div>
+<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="namespaceowl.html#ae7ec9242cba6b27f36e00c30cc699758">   79</a></span>&#160;  <span class="keyword">inline</span> __device__ uint32_t <a class="code" href="namespaceowl.html#ae7ec9242cba6b27f36e00c30cc699758">make_8bit</a>(<span class="keyword">const</span> <span class="keywordtype">float</span> f)</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  {</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordflow">return</span> min(255,max(0,<span class="keywordtype">int</span>(f*256.f)));</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  }</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160; </div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="keyword">inline</span> __device__ uint32_t make_rgba(<span class="keyword">const</span> vec3f color)</div>
+<div class="line"><a name="l00084"></a><span class="lineno"><a class="line" href="namespaceowl.html#ae9b4a505fa6a8bdf696b4af2edede7d4">   84</a></span>&#160;  <span class="keyword">inline</span> __device__ uint32_t <a class="code" href="namespaceowl.html#ae9b4a505fa6a8bdf696b4af2edede7d4">make_rgba</a>(<span class="keyword">const</span> vec3f color)</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  {</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keywordflow">return</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;      (make_8bit(color.x) &lt;&lt; 0) +</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      (make_8bit(color.y) &lt;&lt; 8) +</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;      (make_8bit(color.z) &lt;&lt; 16) +</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;      (<a class="code" href="namespaceowl.html#ae7ec9242cba6b27f36e00c30cc699758">make_8bit</a>(color.x) &lt;&lt; 0) +</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      (<a class="code" href="namespaceowl.html#ae7ec9242cba6b27f36e00c30cc699758">make_8bit</a>(color.y) &lt;&lt; 8) +</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;      (<a class="code" href="namespaceowl.html#ae7ec9242cba6b27f36e00c30cc699758">make_8bit</a>(color.z) &lt;&lt; 16) +</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;      (0xffU &lt;&lt; 24);</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  }</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keyword">inline</span> __device__ uint32_t make_rgba(<span class="keyword">const</span> vec4f color)</div>
+<div class="line"><a name="l00092"></a><span class="lineno"><a class="line" href="namespaceowl.html#a2c24020657654c690a0ba274a9dc15af">   92</a></span>&#160;  <span class="keyword">inline</span> __device__ uint32_t <a class="code" href="namespaceowl.html#ae9b4a505fa6a8bdf696b4af2edede7d4">make_rgba</a>(<span class="keyword">const</span> vec4f color)</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  {</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="keywordflow">return</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;      (make_8bit(color.x) &lt;&lt; 0) +</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;      (make_8bit(color.y) &lt;&lt; 8) +</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;      (make_8bit(color.z) &lt;&lt; 16) +</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      (make_8bit(color.w) &lt;&lt; 24);</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;      (<a class="code" href="namespaceowl.html#ae7ec9242cba6b27f36e00c30cc699758">make_8bit</a>(color.x) &lt;&lt; 0) +</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;      (<a class="code" href="namespaceowl.html#ae7ec9242cba6b27f36e00c30cc699758">make_8bit</a>(color.y) &lt;&lt; 8) +</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;      (<a class="code" href="namespaceowl.html#ae7ec9242cba6b27f36e00c30cc699758">make_8bit</a>(color.z) &lt;&lt; 16) +</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      (<a class="code" href="namespaceowl.html#ae7ec9242cba6b27f36e00c30cc699758">make_8bit</a>(color.w) &lt;&lt; 24);</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  }</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160; </div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="keyword">static</span> __forceinline__ __device__ <span class="keywordtype">void</span>* unpackPointer( uint32_t i0, uint32_t i1 )</div>
+<div class="line"><a name="l00102"></a><span class="lineno"><a class="line" href="namespaceowl.html#adc391c958bd0103f10c60ef77393bc18">  102</a></span>&#160;  <span class="keyword">static</span> __forceinline__ __device__ <span class="keywordtype">void</span>* <a class="code" href="namespaceowl.html#adc391c958bd0103f10c60ef77393bc18">unpackPointer</a>( uint32_t i0, uint32_t i1 )</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  {</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keyword">const</span> uint64_t uptr = <span class="keyword">static_cast&lt;</span>uint64_t<span class="keyword">&gt;</span>( i0 ) &lt;&lt; 32 | i1;</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keywordtype">void</span>*           ptr = <span class="keyword">reinterpret_cast&lt;</span><span class="keywordtype">void</span>*<span class="keyword">&gt;</span>( uptr ); </div>
@@ -185,7 +185,7 @@ $(document).ready(function(){initNavTree('owl__device_8h_source.html',''); initR
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  }</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160; </div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="keyword">static</span> __forceinline__ __device__ <span class="keywordtype">void</span>  packPointer( <span class="keywordtype">void</span>* ptr, uint32_t&amp; i0, uint32_t&amp; i1 )</div>
+<div class="line"><a name="l00110"></a><span class="lineno"><a class="line" href="namespaceowl.html#a3eb47ecdc3dc1c9b20816a4a4164a171">  110</a></span>&#160;  <span class="keyword">static</span> __forceinline__ __device__ <span class="keywordtype">void</span>  <a class="code" href="namespaceowl.html#a3eb47ecdc3dc1c9b20816a4a4164a171">packPointer</a>( <span class="keywordtype">void</span>* ptr, uint32_t&amp; i0, uint32_t&amp; i1 )</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  {</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <span class="keyword">const</span> uint64_t uptr = <span class="keyword">reinterpret_cast&lt;</span>uint64_t<span class="keyword">&gt;</span>( ptr );</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    i0 = uptr &gt;&gt; 32;</div>
@@ -193,23 +193,23 @@ $(document).ready(function(){initNavTree('owl__device_8h_source.html',''); initR
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  }</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160; </div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160; </div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  <span class="keyword">static</span> __forceinline__ __device__ <span class="keywordtype">void</span> *getPRDPointer()</div>
+<div class="line"><a name="l00118"></a><span class="lineno"><a class="line" href="namespaceowl.html#aa008068f234898e8231a13d2d4e5ec79">  118</a></span>&#160;  <span class="keyword">static</span> __forceinline__ __device__ <span class="keywordtype">void</span> *<a class="code" href="namespaceowl.html#aa008068f234898e8231a13d2d4e5ec79">getPRDPointer</a>()</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  { </div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keyword">const</span> uint32_t u0 = optixGetPayload_0();</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keyword">const</span> uint32_t u1 = optixGetPayload_1();</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <span class="keywordflow">return</span> unpackPointer(u0, u1);</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="namespaceowl.html#adc391c958bd0103f10c60ef77393bc18">unpackPointer</a>(u0, u1);</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  }</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="keyword">static</span> __forceinline__ __device__ T &amp;getPRD()</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  { <span class="keywordflow">return</span> *(T*)getPRDPointer(); }</div>
+<div class="line"><a name="l00126"></a><span class="lineno"><a class="line" href="namespaceowl.html#aec591f521d852249738028c4fc4b8f1a">  126</a></span>&#160;  <span class="keyword">static</span> __forceinline__ __device__ T &amp;<a class="code" href="namespaceowl.html#aec591f521d852249738028c4fc4b8f1a">getPRD</a>()</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  { <span class="keywordflow">return</span> *(T*)<a class="code" href="namespaceowl.html#aa008068f234898e8231a13d2d4e5ec79">getPRDPointer</a>(); }</div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160; </div>
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span> _rayType=0, <span class="keywordtype">int</span> _numRayTypes=1&gt;</div>
 <div class="line"><a name="l00130"></a><span class="lineno"><a class="line" href="structowl_1_1_ray_t.html">  130</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structowl_1_1_ray_t.html">RayT</a> {</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="keyword">enum</span> { rayType = _rayType };</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="keyword">enum</span> { numRayTypes = _numRayTypes };</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keyword">inline</span> __device__ <a class="code" href="structowl_1_1_ray_t.html">RayT</a>() {}</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keyword">inline</span> __device__ <a class="code" href="structowl_1_1_ray_t.html">RayT</a>(<span class="keyword">const</span> vec3f &amp;origin,</div>
+<div class="line"><a name="l00131"></a><span class="lineno"><a class="line" href="structowl_1_1_ray_t.html#a110bfc03d52b1bf4eee2dbe07226b249a1c36fe48d383c73c2b24c21037c94117">  131</a></span>&#160;    <span class="keyword">enum</span> { rayType = _rayType };</div>
+<div class="line"><a name="l00132"></a><span class="lineno"><a class="line" href="structowl_1_1_ray_t.html#abc8a4b87c743c515e3dbb7cf01439515a715803156b285a110b2162539ce09263">  132</a></span>&#160;    <span class="keyword">enum</span> { numRayTypes = _numRayTypes };</div>
+<div class="line"><a name="l00133"></a><span class="lineno"><a class="line" href="structowl_1_1_ray_t.html#af4de4aa2179627f320834f9be456f7bc">  133</a></span>&#160;    <span class="keyword">inline</span> __device__ <a class="code" href="structowl_1_1_ray_t.html#af4de4aa2179627f320834f9be456f7bc">RayT</a>() {}</div>
+<div class="line"><a name="l00134"></a><span class="lineno"><a class="line" href="structowl_1_1_ray_t.html#a3aaa8c4db7a517a61ae95de5ba1bf5e9">  134</a></span>&#160;    <span class="keyword">inline</span> __device__ <a class="code" href="structowl_1_1_ray_t.html#a3aaa8c4db7a517a61ae95de5ba1bf5e9">RayT</a>(<span class="keyword">const</span> vec3f &amp;origin,</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;                          <span class="keyword">const</span> vec3f &amp;direction,</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;                          <span class="keywordtype">float</span> tmin,</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;                          <span class="keywordtype">float</span> tmax)</div>
@@ -219,22 +219,22 @@ $(document).ready(function(){initNavTree('owl__device_8h_source.html',''); initR
 <div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;        tmax(tmax)</div>
 <div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    {}</div>
 <div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;    </div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    vec3f origin, direction;</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    <span class="keywordtype">float</span> tmin=0.f,tmax=1e30f,time=0.f;</div>
+<div class="line"><a name="l00144"></a><span class="lineno"><a class="line" href="structowl_1_1_ray_t.html#abbd5e86f311dbd4e2fea8aaf0f6f417e">  144</a></span>&#160;    vec3f <a class="code" href="structowl_1_1_ray_t.html#abbd5e86f311dbd4e2fea8aaf0f6f417e">origin</a>, direction;</div>
+<div class="line"><a name="l00145"></a><span class="lineno"><a class="line" href="structowl_1_1_ray_t.html#a98045dc69bb15085bf7de27e27f5664c">  145</a></span>&#160;    <span class="keywordtype">float</span> tmin=0.f,tmax=1e30f,time=0.f;</div>
 <div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;  };</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;  <span class="keyword">typedef</span> <a class="code" href="structowl_1_1_ray_t.html">RayT&lt;0,1&gt;</a> <a class="code" href="structowl_1_1_ray_t.html">Ray</a>;</div>
+<div class="line"><a name="l00147"></a><span class="lineno"><a class="line" href="namespaceowl.html#a73985d6a093ba14c3d52b931682d6708">  147</a></span>&#160;  <span class="keyword">typedef</span> <a class="code" href="structowl_1_1_ray_t.html">RayT&lt;0,1&gt;</a> <a class="code" href="namespaceowl.html#a73985d6a093ba14c3d52b931682d6708">Ray</a>;</div>
 <div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160; </div>
 <div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160; </div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> RayType, <span class="keyword">typename</span> PRD&gt;</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;  <span class="keyword">inline</span> __device__</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  <span class="keywordtype">void</span> traceRay(OptixTraversableHandle traversable,</div>
+<div class="line"><a name="l00152"></a><span class="lineno"><a class="line" href="namespaceowl.html#a0b4cc167ffcdbdf1a699f6551015d17d">  152</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="namespaceowl.html#a0b4cc167ffcdbdf1a699f6551015d17d">traceRay</a>(OptixTraversableHandle traversable,</div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;                <span class="keyword">const</span> RayType &amp;ray,</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;                PRD           &amp;prd,</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;                uint32_t rayFlags = 0u)</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  {</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>           p0 = 0;</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>           p1 = 0;</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    owl::packPointer(&amp;prd,p0,p1);</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <a class="code" href="namespaceowl.html#a3eb47ecdc3dc1c9b20816a4a4164a171">owl::packPointer</a>(&amp;prd,p0,p1);</div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160; </div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    optixTrace(traversable,</div>
 <div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;               (<span class="keyword">const</span> float3&amp;)ray.origin,</div>
@@ -253,50 +253,50 @@ $(document).ready(function(){initNavTree('owl__device_8h_source.html',''); initR
 <div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160; </div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> PRD&gt;</div>
 <div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="keyword">inline</span> __device__</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keywordtype">void</span> trace(OptixTraversableHandle traversable,</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;             <span class="keyword">const</span> Ray &amp;ray,</div>
+<div class="line"><a name="l00178"></a><span class="lineno"><a class="line" href="namespaceowl.html#ae558adc2610e5275a74053e119d4e86e">  178</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="namespaceowl.html#ae558adc2610e5275a74053e119d4e86e">trace</a>(OptixTraversableHandle traversable,</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;             <span class="keyword">const</span> <a class="code" href="structowl_1_1_ray_t.html">Ray</a> &amp;ray,</div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;             <span class="keywordtype">int</span> numRayTypes,</div>
 <div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;             PRD &amp;prd,</div>
 <div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;             <span class="keywordtype">int</span> sbtOffset = 0)</div>
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;  {</div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>           p0 = 0;</div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>           p1 = 0;</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    owl::packPointer(&amp;prd,p0,p1);</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    <a class="code" href="namespaceowl.html#a3eb47ecdc3dc1c9b20816a4a4164a171">owl::packPointer</a>(&amp;prd,p0,p1);</div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    </div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    optixTrace(traversable,</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;               (<span class="keyword">const</span> float3&amp;)ray.origin,</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;               (<span class="keyword">const</span> float3&amp;)ray.direction,</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;               ray.tmin,</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;               ray.tmax,</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;               ray.time,</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;               (<span class="keyword">const</span> float3&amp;)ray.<a class="code" href="structowl_1_1_ray_t.html#abbd5e86f311dbd4e2fea8aaf0f6f417e">origin</a>,</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;               (<span class="keyword">const</span> float3&amp;)ray.<a class="code" href="structowl_1_1_ray_t.html#a9ad1123e2d7be0ad96b9f375780369ba">direction</a>,</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;               ray.<a class="code" href="structowl_1_1_ray_t.html#a98045dc69bb15085bf7de27e27f5664c">tmin</a>,</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;               ray.<a class="code" href="structowl_1_1_ray_t.html#a84098945046c504bcf82f54359127588">tmax</a>,</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;               ray.<a class="code" href="structowl_1_1_ray_t.html#abfd72d7fbe3785e10d008cb0fd91a7b7">time</a>,</div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;               (OptixVisibilityMask)-1,</div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;               <span class="comment">/*rayFlags     */</span>0u,</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;               <span class="comment">/*SBToffset    */</span>ray.rayType + numRayTypes*sbtOffset,</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;               <span class="comment">/*SBToffset    */</span>ray.<a class="code" href="structowl_1_1_ray_t.html#a110bfc03d52b1bf4eee2dbe07226b249a1c36fe48d383c73c2b24c21037c94117">rayType</a> + numRayTypes*sbtOffset,</div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;               <span class="comment">/*SBTstride    */</span>numRayTypes,</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;               <span class="comment">/*missSBTIndex */</span>ray.rayType,</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;               <span class="comment">/*missSBTIndex */</span>ray.<a class="code" href="structowl_1_1_ray_t.html#a110bfc03d52b1bf4eee2dbe07226b249a1c36fe48d383c73c2b24c21037c94117">rayType</a>,</div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;               p0,</div>
 <div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;               p1);</div>
 <div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;  }</div>
 <div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;  </div>
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;} <span class="comment">// ::owl</span></div>
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160; </div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;<span class="preprocessor">#define OPTIX_RAYGEN_PROGRAM(programName) \</span></div>
+<div class="line"><a name="l00205"></a><span class="lineno"><a class="line" href="owl__device_8h.html#a564065f27c0aa070a8095999370fc6e5">  205</a></span>&#160;<span class="preprocessor">#define OPTIX_RAYGEN_PROGRAM(programName) \</span></div>
 <div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="preprocessor">  extern &quot;C&quot; __global__ \</span></div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;<span class="preprocessor">  void __raygen__##programName</span></div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160; </div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;<span class="preprocessor">#define OPTIX_CLOSEST_HIT_PROGRAM(programName) \</span></div>
+<div class="line"><a name="l00209"></a><span class="lineno"><a class="line" href="owl__device_8h.html#a13c3053d4e4e468f66b74031dd7c0aad">  209</a></span>&#160;<span class="preprocessor">#define OPTIX_CLOSEST_HIT_PROGRAM(programName) \</span></div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;<span class="preprocessor">  extern &quot;C&quot; __global__ \</span></div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;<span class="preprocessor">  void __closesthit__##programName</span></div>
 <div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160; </div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;<span class="preprocessor">#define OPTIX_ANY_HIT_PROGRAM(programName) \</span></div>
+<div class="line"><a name="l00213"></a><span class="lineno"><a class="line" href="owl__device_8h.html#af5e252e984c0401ee7932e4c8cde9a59">  213</a></span>&#160;<span class="preprocessor">#define OPTIX_ANY_HIT_PROGRAM(programName) \</span></div>
 <div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;<span class="preprocessor">  extern &quot;C&quot; __global__ \</span></div>
 <div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;<span class="preprocessor">  void __anyhit__##programName</span></div>
 <div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160; </div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="preprocessor">#define OPTIX_INTERSECT_PROGRAM(programName) \</span></div>
+<div class="line"><a name="l00217"></a><span class="lineno"><a class="line" href="owl__device_8h.html#afb31bb23a26e63665014a4e3d2664117">  217</a></span>&#160;<span class="preprocessor">#define OPTIX_INTERSECT_PROGRAM(programName) \</span></div>
 <div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;<span class="preprocessor">  extern &quot;C&quot; __global__ \</span></div>
 <div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="preprocessor">  void __intersection__##programName</span></div>
 <div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160; </div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;<span class="preprocessor">#define OPTIX_MISS_PROGRAM(programName) \</span></div>
+<div class="line"><a name="l00221"></a><span class="lineno"><a class="line" href="owl__device_8h.html#a24fcacd9096ef81620a59041d591802a">  221</a></span>&#160;<span class="preprocessor">#define OPTIX_MISS_PROGRAM(programName) \</span></div>
 <div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;<span class="preprocessor">  extern &quot;C&quot; __global__ \</span></div>
 <div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;<span class="preprocessor">  void __miss__##programName</span></div>
 <div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160; </div>
@@ -304,7 +304,7 @@ $(document).ready(function(){initNavTree('owl__device_8h_source.html',''); initR
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160; </div>
 <div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;<span class="comment">/* defines the wrapper stuff to actually launch all the bounds</span></div>
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;<span class="comment">   programs from the host - todo: move to deviceAPI.h once working */</span></div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<span class="preprocessor">#define OPTIX_BOUNDS_PROGRAM(progName)                                  \</span></div>
+<div class="line"><a name="l00229"></a><span class="lineno"><a class="line" href="owl__device_8h.html#a19db22f97517a7becb50715fc13a5dd7">  229</a></span>&#160;<span class="preprocessor">#define OPTIX_BOUNDS_PROGRAM(progName)                                  \</span></div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;<span class="preprocessor">  </span><span class="comment">/* fwd decl for the kernel func to call */</span><span class="preprocessor">                            \</span></div>
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;<span class="preprocessor">  inline __device__                                                     \</span></div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;<span class="preprocessor">  void __boundsFunc__##progName(const void *geomData,                   \</span></div>
@@ -336,11 +336,39 @@ $(document).ready(function(){initNavTree('owl__device_8h_source.html',''); initR
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  </div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="anamespaceowl_html_a5ca0a7e392328764e73e3d2a5a844636"><div class="ttname"><a href="namespaceowl.html#a5ca0a7e392328764e73e3d2a5a844636">owl::getProgramData</a></div><div class="ttdeci">__device__ const T &amp; getProgramData()</div><div class="ttdef"><b>Definition:</b> owl_device.h:63</div></div>
+<div class="ttc" id="anamespaceowl_html_adc391c958bd0103f10c60ef77393bc18"><div class="ttname"><a href="namespaceowl.html#adc391c958bd0103f10c60ef77393bc18">owl::unpackPointer</a></div><div class="ttdeci">static __forceinline__ __device__ void * unpackPointer(uint32_t i0, uint32_t i1)</div><div class="ttdef"><b>Definition:</b> owl_device.h:102</div></div>
+<div class="ttc" id="aoptix_8h_html"><div class="ttname"><a href="optix_8h.html">optix.h</a></div></div>
+<div class="ttc" id="anamespaceowl_html_a0b4cc167ffcdbdf1a699f6551015d17d"><div class="ttname"><a href="namespaceowl.html#a0b4cc167ffcdbdf1a699f6551015d17d">owl::traceRay</a></div><div class="ttdeci">__device__ void traceRay(OptixTraversableHandle traversable, const RayType &amp;ray, PRD &amp;prd, uint32_t rayFlags=0u)</div><div class="ttdef"><b>Definition:</b> owl_device.h:152</div></div>
+<div class="ttc" id="anamespaceowl_html_ae9b4a505fa6a8bdf696b4af2edede7d4"><div class="ttname"><a href="namespaceowl.html#ae9b4a505fa6a8bdf696b4af2edede7d4">owl::make_rgba</a></div><div class="ttdeci">__device__ uint32_t make_rgba(const vec3f color)</div><div class="ttdef"><b>Definition:</b> owl_device.h:84</div></div>
+<div class="ttc" id="astructowl_1_1_ray_t_html_a84098945046c504bcf82f54359127588"><div class="ttname"><a href="structowl_1_1_ray_t.html#a84098945046c504bcf82f54359127588">owl::RayT::tmax</a></div><div class="ttdeci">float tmax</div><div class="ttdef"><b>Definition:</b> owl_device.h:145</div></div>
+<div class="ttc" id="anamespaceowl_html_a3eb47ecdc3dc1c9b20816a4a4164a171"><div class="ttname"><a href="namespaceowl.html#a3eb47ecdc3dc1c9b20816a4a4164a171">owl::packPointer</a></div><div class="ttdeci">static __forceinline__ __device__ void packPointer(void *ptr, uint32_t &amp;i0, uint32_t &amp;i1)</div><div class="ttdef"><b>Definition:</b> owl_device.h:110</div></div>
+<div class="ttc" id="acuda_8h_html"><div class="ttname"><a href="cuda_8h.html">cuda.h</a></div></div>
+<div class="ttc" id="anamespaceowl_html_aa008068f234898e8231a13d2d4e5ec79"><div class="ttname"><a href="namespaceowl.html#aa008068f234898e8231a13d2d4e5ec79">owl::getPRDPointer</a></div><div class="ttdeci">static __forceinline__ __device__ void * getPRDPointer()</div><div class="ttdef"><b>Definition:</b> owl_device.h:118</div></div>
+<div class="ttc" id="astructowl_1_1_ray_t_html_af4de4aa2179627f320834f9be456f7bc"><div class="ttname"><a href="structowl_1_1_ray_t.html#af4de4aa2179627f320834f9be456f7bc">owl::RayT::RayT</a></div><div class="ttdeci">__device__ RayT()</div><div class="ttdef"><b>Definition:</b> owl_device.h:133</div></div>
+<div class="ttc" id="abox_8h_html"><div class="ttname"><a href="box_8h.html">box.h</a></div></div>
 <div class="ttc" id="astructowl_1_1_ray_t_html"><div class="ttname"><a href="structowl_1_1_ray_t.html">owl::RayT</a></div><div class="ttdef"><b>Definition:</b> owl_device.h:130</div></div>
+<div class="ttc" id="astructowl_1_1_ray_t_html_abfd72d7fbe3785e10d008cb0fd91a7b7"><div class="ttname"><a href="structowl_1_1_ray_t.html#abfd72d7fbe3785e10d008cb0fd91a7b7">owl::RayT::time</a></div><div class="ttdeci">float time</div><div class="ttdef"><b>Definition:</b> owl_device.h:145</div></div>
+<div class="ttc" id="astructowl_1_1_ray_t_html_a9ad1123e2d7be0ad96b9f375780369ba"><div class="ttname"><a href="structowl_1_1_ray_t.html#a9ad1123e2d7be0ad96b9f375780369ba">owl::RayT::direction</a></div><div class="ttdeci">vec3f direction</div><div class="ttdef"><b>Definition:</b> owl_device.h:144</div></div>
+<div class="ttc" id="anamespaceowl_html_affbbc21130a8eafd8b4dacc155a2abdc"><div class="ttname"><a href="namespaceowl.html#affbbc21130a8eafd8b4dacc155a2abdc">owl::getLaunchDims</a></div><div class="ttdeci">__device__ vec2i getLaunchDims()</div><div class="ttdef"><b>Definition:</b> owl_device.h:44</div></div>
+<div class="ttc" id="anamespaceowl_html_aaccc891c9acf331fb18f249ae4e0c2d4"><div class="ttname"><a href="namespaceowl.html#aaccc891c9acf331fb18f249ae4e0c2d4">owl::linear_to_srgb</a></div><div class="ttdeci">__device__ float linear_to_srgb(float x)</div><div class="ttdef"><b>Definition:</b> owl_device.h:72</div></div>
+<div class="ttc" id="anamespaceowl_html_a73985d6a093ba14c3d52b931682d6708"><div class="ttname"><a href="namespaceowl.html#a73985d6a093ba14c3d52b931682d6708">owl::Ray</a></div><div class="ttdeci">RayT&lt; 0, 1 &gt; Ray</div><div class="ttdef"><b>Definition:</b> owl_device.h:147</div></div>
+<div class="ttc" id="anamespaceowl_1_1common_html"><div class="ttname"><a href="namespaceowl_1_1common.html">owl::common</a></div><div class="ttdef"><b>Definition:</b> array2D.h:22</div></div>
+<div class="ttc" id="astructowl_1_1_ray_t_html_a3aaa8c4db7a517a61ae95de5ba1bf5e9"><div class="ttname"><a href="structowl_1_1_ray_t.html#a3aaa8c4db7a517a61ae95de5ba1bf5e9">owl::RayT::RayT</a></div><div class="ttdeci">__device__ RayT(const vec3f &amp;origin, const vec3f &amp;direction, float tmin, float tmax)</div><div class="ttdef"><b>Definition:</b> owl_device.h:134</div></div>
+<div class="ttc" id="anamespaceowl_html_ae558adc2610e5275a74053e119d4e86e"><div class="ttname"><a href="namespaceowl.html#ae558adc2610e5275a74053e119d4e86e">owl::trace</a></div><div class="ttdeci">__device__ void trace(OptixTraversableHandle traversable, const Ray &amp;ray, int numRayTypes, PRD &amp;prd, int sbtOffset=0)</div><div class="ttdef"><b>Definition:</b> owl_device.h:178</div></div>
+<div class="ttc" id="anamespaceowl_html_ae7ec9242cba6b27f36e00c30cc699758"><div class="ttname"><a href="namespaceowl.html#ae7ec9242cba6b27f36e00c30cc699758">owl::make_8bit</a></div><div class="ttdeci">__device__ uint32_t make_8bit(const float f)</div><div class="ttdef"><b>Definition:</b> owl_device.h:79</div></div>
+<div class="ttc" id="avec_8h_html"><div class="ttname"><a href="vec_8h.html">vec.h</a></div></div>
+<div class="ttc" id="astructowl_1_1_ray_t_html_abbd5e86f311dbd4e2fea8aaf0f6f417e"><div class="ttname"><a href="structowl_1_1_ray_t.html#abbd5e86f311dbd4e2fea8aaf0f6f417e">owl::RayT::origin</a></div><div class="ttdeci">vec3f origin</div><div class="ttdef"><b>Definition:</b> owl_device.h:144</div></div>
+<div class="ttc" id="anamespaceowl_html"><div class="ttname"><a href="namespaceowl.html">owl</a></div><div class="ttdef"><b>Definition:</b> APIContext.cpp:36</div></div>
+<div class="ttc" id="anamespaceowl_html_ac4036ba773fc73d847e1f09bb4df3b33"><div class="ttname"><a href="namespaceowl.html#ac4036ba773fc73d847e1f09bb4df3b33">owl::getLaunchIndex</a></div><div class="ttdeci">__device__ vec2i getLaunchIndex()</div><div class="ttdef"><b>Definition:</b> owl_device.h:37</div></div>
+<div class="ttc" id="anamespaceowl_html_ae7799dc21c8cf4836c9faed32b9d272f"><div class="ttname"><a href="namespaceowl.html#ae7799dc21c8cf4836c9faed32b9d272f">owl::getProgramDataPointer</a></div><div class="ttdeci">__device__ const void * getProgramDataPointer()</div><div class="ttdef"><b>Definition:</b> owl_device.h:53</div></div>
+<div class="ttc" id="anamespaceowl_html_aec591f521d852249738028c4fc4b8f1a"><div class="ttname"><a href="namespaceowl.html#aec591f521d852249738028c4fc4b8f1a">owl::getPRD</a></div><div class="ttdeci">static __forceinline__ __device__ T &amp; getPRD()</div><div class="ttdef"><b>Definition:</b> owl_device.h:126</div></div>
+<div class="ttc" id="astructowl_1_1_ray_t_html_a110bfc03d52b1bf4eee2dbe07226b249a1c36fe48d383c73c2b24c21037c94117"><div class="ttname"><a href="structowl_1_1_ray_t.html#a110bfc03d52b1bf4eee2dbe07226b249a1c36fe48d383c73c2b24c21037c94117">owl::RayT::rayType</a></div><div class="ttdeci">@ rayType</div><div class="ttdef"><b>Definition:</b> owl_device.h:131</div></div>
+<div class="ttc" id="astructowl_1_1_ray_t_html_a98045dc69bb15085bf7de27e27f5664c"><div class="ttname"><a href="structowl_1_1_ray_t.html#a98045dc69bb15085bf7de27e27f5664c">owl::RayT::tmin</a></div><div class="ttdeci">float tmin</div><div class="ttdef"><b>Definition:</b> owl_device.h:145</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><b>owl_device.h</b></li>
+    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><a class="el" href="owl__device_8h.html">owl_device.h</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

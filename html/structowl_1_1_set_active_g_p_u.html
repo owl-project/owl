@@ -84,6 +84,7 @@ $(document).ready(function(){initNavTree('structowl_1_1_set_active_g_p_u.html','
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="structowl_1_1_set_active_g_p_u-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">owl::SetActiveGPU Struct Reference</div>  </div>
@@ -94,16 +95,122 @@ $(document).ready(function(){initNavTree('structowl_1_1_set_active_g_p_u.html','
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a59b46f0953816df8f622b328ebbb4049"><td class="memItemLeft" align="right" valign="top"><a id="a59b46f0953816df8f622b328ebbb4049"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SetActiveGPU</b> (const DeviceContext::SP &amp;device)</td></tr>
+<tr class="memitem:a59b46f0953816df8f622b328ebbb4049"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_set_active_g_p_u.html#a59b46f0953816df8f622b328ebbb4049">SetActiveGPU</a> (const <a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> &amp;device)</td></tr>
 <tr class="separator:a59b46f0953816df8f622b328ebbb4049"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22304394d33cd9362f2220881a0299d9"><td class="memItemLeft" align="right" valign="top"><a id="a22304394d33cd9362f2220881a0299d9"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SetActiveGPU</b> (const <a class="el" href="structowl_1_1_device_context.html">DeviceContext</a> *device)</td></tr>
+<tr class="memitem:a22304394d33cd9362f2220881a0299d9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_set_active_g_p_u.html#a22304394d33cd9362f2220881a0299d9">SetActiveGPU</a> (const <a class="el" href="structowl_1_1_device_context.html">DeviceContext</a> *device)</td></tr>
 <tr class="separator:a22304394d33cd9362f2220881a0299d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab54848c98df31c4bedd61cfe6b6af81f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_set_active_g_p_u.html#ab54848c98df31c4bedd61cfe6b6af81f">~SetActiveGPU</a> ()</td></tr>
+<tr class="separator:ab54848c98df31c4bedd61cfe6b6af81f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
+Private Attributes</h2></td></tr>
+<tr class="memitem:ac08f83852ab6d3a2f86e456b6249109f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_set_active_g_p_u.html#ac08f83852ab6d3a2f86e456b6249109f">savedActiveDeviceID</a> = -1</td></tr>
+<tr class="separator:ac08f83852ab6d3a2f86e456b6249109f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>helper class that will set the active cuda device (to the device associated with a given Context::DeviceData) for the duration fo the lifetime of this class, and resets it to whatever it was after class dies </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a59b46f0953816df8f622b328ebbb4049"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59b46f0953816df8f622b328ebbb4049">&#9670;&nbsp;</a></span>SetActiveGPU() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">owl::SetActiveGPU::SetActiveGPU </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> &amp;&#160;</td>
+          <td class="paramname"><em>device</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a22304394d33cd9362f2220881a0299d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22304394d33cd9362f2220881a0299d9">&#9670;&nbsp;</a></span>SetActiveGPU() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">owl::SetActiveGPU::SetActiveGPU </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structowl_1_1_device_context.html">DeviceContext</a> *&#160;</td>
+          <td class="paramname"><em>device</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ab54848c98df31c4bedd61cfe6b6af81f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab54848c98df31c4bedd61cfe6b6af81f">&#9670;&nbsp;</a></span>~SetActiveGPU()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">owl::SetActiveGPU::~SetActiveGPU </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="ac08f83852ab6d3a2f86e456b6249109f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac08f83852ab6d3a2f86e456b6249109f">&#9670;&nbsp;</a></span>savedActiveDeviceID</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int owl::SetActiveGPU::savedActiveDeviceID = -1</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
 <li>owl/<a class="el" href="_device_context_8h_source.html">DeviceContext.h</a></li>
 </ul>
 </div><!-- contents -->
@@ -111,7 +218,7 @@ Public Member Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><b>owl</b></li><li class="navelem"><a class="el" href="structowl_1_1_set_active_g_p_u.html">SetActiveGPU</a></li>
+    <li class="navelem"><a class="el" href="namespaceowl.html">owl</a></li><li class="navelem"><a class="el" href="structowl_1_1_set_active_g_p_u.html">SetActiveGPU</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

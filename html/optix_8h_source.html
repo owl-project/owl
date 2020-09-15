@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('optix_8h_source.html',''); initResizab
 <div class="title">optix.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
+<a href="optix_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">// Copyright 2019-2020 Ingo Wald                                            //</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//                                                                          //</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);          //</span></div>
@@ -104,14 +104,14 @@ $(document).ready(function(){initNavTree('optix_8h_source.html',''); initResizab
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;owl/helper/cuda.h&quot;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="cuda_8h.html">owl/helper/cuda.h</a>&quot;</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#ifdef _WIN32</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#pragma warning( push )</span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#pragma warning( disable : 4996 )</span></div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#include &lt;optix.h&gt;</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="optix_8h.html">optix.h</a>&gt;</span></div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#include &lt;optix_function_table.h&gt;</span></div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#include &lt;optix_stubs.h&gt;</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
@@ -119,7 +119,7 @@ $(document).ready(function(){initNavTree('optix_8h_source.html',''); initResizab
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#pragma warning( push )</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#define OPTIX_CHECK( call )                                             \</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="optix_8h.html#a1c20780ec61988a3c90c4252962b5ffb">   34</a></span>&#160;<span class="preprocessor">#define OPTIX_CHECK( call )                                             \</span></div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">  {                                                                     \</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">    OptixResult res = call;                                             \</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">    if( res != OPTIX_SUCCESS )                                          \</span></div>
@@ -129,7 +129,7 @@ $(document).ready(function(){initNavTree('optix_8h_source.html',''); initResizab
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">      }                                                                 \</span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">  }</span></div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">#define OPTIX_CHECK_LOG( call )                                         \</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="optix_8h.html#a0e5606307a59078c5b4433641c536920">   44</a></span>&#160;<span class="preprocessor">#define OPTIX_CHECK_LOG( call )                                         \</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">  {                                                                     \</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor">    OptixResult res = call;                                             \</span></div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">    if( res != OPTIX_SUCCESS )                                          \</span></div>
@@ -140,14 +140,16 @@ $(document).ready(function(){initNavTree('optix_8h_source.html',''); initResizab
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">      }                                                                 \</span></div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">  }</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#define OPTIX_CALL( call ) OPTIX_CHECK(optix##call)</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="optix_8h.html#a6692b80fd50ad22954f9b8cb7a12b250">   55</a></span>&#160;<span class="preprocessor">#define OPTIX_CALL( call ) OPTIX_CHECK(optix##call)</span></div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="aoptix_8h_html"><div class="ttname"><a href="optix_8h.html">optix.h</a></div></div>
+<div class="ttc" id="acuda_8h_html"><div class="ttname"><a href="cuda_8h.html">cuda.h</a></div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_21d3df9f6b1c3ba532f61bd7fe63147d.html">helper</a></li><li class="navelem"><b>optix.h</b></li>
+    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_21d3df9f6b1c3ba532f61bd7fe63147d.html">helper</a></li><li class="navelem"><a class="el" href="optix_8h.html">optix.h</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('random_8h_source.html',''); initResiza
 <div class="title">random.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
+<a href="random_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">// Copyright 2018-2020 Ingo Wald                                            //</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//                                                                          //</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);          //</span></div>
@@ -135,27 +135,27 @@ $(document).ready(function(){initNavTree('random_8h_source.html',''); initResiza
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">#include &quot;owl/common/math/vec.h&quot;</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="vec_8h.html">owl/common/math/vec.h</a>&quot;</span></div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">namespace </span>owl {</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceowl.html">owl</a> {</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="keyword">namespace </span>common {</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keyword">template</span>&lt;<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> N=4&gt;</div>
 <div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_l_c_g.html">   57</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structowl_1_1common_1_1_l_c_g.html">LCG</a> {</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    </div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;      <span class="keyword">inline</span> __both__ <a class="code" href="structowl_1_1common_1_1_l_c_g.html">LCG</a>()</div>
+<div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_l_c_g.html#ac7174b1a9dbd6f01039e381b2165f7d3">   59</a></span>&#160;      <span class="keyword">inline</span> <a class="code" href="owl-common_8h.html#ab89cae7fe740626a7d3c5a50132051dc">__both__</a> <a class="code" href="structowl_1_1common_1_1_l_c_g.html#ac7174b1a9dbd6f01039e381b2165f7d3">LCG</a>()</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;      { <span class="comment">/* intentionally empty so we can use it in device vars that</span></div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="comment">           don&#39;t allow dynamic initialization (ie, PRD) */</span></div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;      }</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;      <span class="keyword">inline</span> __both__ <a class="code" href="structowl_1_1common_1_1_l_c_g.html">LCG</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> val0, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> val1)</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;      { init(val0,val1); }</div>
+<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_l_c_g.html#a119c0a526d98d6bc401dcf2a8808135a">   63</a></span>&#160;      <span class="keyword">inline</span> <a class="code" href="owl-common_8h.html#ab89cae7fe740626a7d3c5a50132051dc">__both__</a> <a class="code" href="structowl_1_1common_1_1_l_c_g.html#a119c0a526d98d6bc401dcf2a8808135a">LCG</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> val0, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> val1)</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;      { <a class="code" href="structowl_1_1common_1_1_l_c_g.html#a12c65205fe2ac4d9062e14a95b9c7cac">init</a>(val0,val1); }</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;      <span class="keyword">inline</span> __both__ <a class="code" href="structowl_1_1common_1_1_l_c_g.html">LCG</a>(<span class="keyword">const</span> vec2i &amp;seed)</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      { init((<span class="keywordtype">unsigned</span>)seed.x,(<span class="keywordtype">unsigned</span>)seed.y); }</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;      <span class="keyword">inline</span> __both__ <a class="code" href="structowl_1_1common_1_1_l_c_g.html">LCG</a>(<span class="keyword">const</span> vec2ui &amp;seed)</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;      { init(seed.x,seed.y); }</div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_l_c_g.html#add5cdae4d030c4e6ad59e172b196922a">   66</a></span>&#160;      <span class="keyword">inline</span> <a class="code" href="owl-common_8h.html#ab89cae7fe740626a7d3c5a50132051dc">__both__</a> <a class="code" href="structowl_1_1common_1_1_l_c_g.html#add5cdae4d030c4e6ad59e172b196922a">LCG</a>(<span class="keyword">const</span> vec2i &amp;seed)</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      { <a class="code" href="structowl_1_1common_1_1_l_c_g.html#a12c65205fe2ac4d9062e14a95b9c7cac">init</a>((<span class="keywordtype">unsigned</span>)seed.x,(<span class="keywordtype">unsigned</span>)seed.y); }</div>
+<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_l_c_g.html#af0384c5f99117f720535cbd10abe396b">   68</a></span>&#160;      <span class="keyword">inline</span> <a class="code" href="owl-common_8h.html#ab89cae7fe740626a7d3c5a50132051dc">__both__</a> <a class="code" href="structowl_1_1common_1_1_l_c_g.html#af0384c5f99117f720535cbd10abe396b">LCG</a>(<span class="keyword">const</span> vec2ui &amp;seed)</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;      { <a class="code" href="structowl_1_1common_1_1_l_c_g.html#a12c65205fe2ac4d9062e14a95b9c7cac">init</a>(seed.x,seed.y); }</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;      <span class="keyword">inline</span> __both__ <span class="keywordtype">void</span> init(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> val0, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> val1)</div>
+<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_l_c_g.html#a12c65205fe2ac4d9062e14a95b9c7cac">   71</a></span>&#160;      <span class="keyword">inline</span> <a class="code" href="owl-common_8h.html#ab89cae7fe740626a7d3c5a50132051dc">__both__</a> <span class="keywordtype">void</span> <a class="code" href="structowl_1_1common_1_1_l_c_g.html#a12c65205fe2ac4d9062e14a95b9c7cac">init</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> val0, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> val1)</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;      {</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> v0 = val0;</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> v1 = val1;</div>
@@ -166,57 +166,68 @@ $(document).ready(function(){initNavTree('random_8h_source.html',''); initResiza
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;          v0 += ((v1&lt;&lt;4)+0xa341316c)^(v1+s0)^((v1&gt;&gt;5)+0xc8013ea4);</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;          v1 += ((v0&lt;&lt;4)+0xad90777d)^(v0+s0)^((v0&gt;&gt;5)+0x7e95761e);</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        }</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        state = v0;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        <a class="code" href="structowl_1_1common_1_1_l_c_g.html#a1b8bf9934eb6ff467f0ff8cef13f8acc">state</a> = v0;</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      }</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    </div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      <span class="comment">// Generate random unsigned int in [0, 2^24)</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      <span class="keyword">inline</span> __both__ <span class="keywordtype">float</span> operator() ()</div>
+<div class="line"><a name="l00086"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_l_c_g.html#a9d2a06943d04ddc50cdfcd49269c0612">   86</a></span>&#160;      <span class="keyword">inline</span> <a class="code" href="owl-common_8h.html#ab89cae7fe740626a7d3c5a50132051dc">__both__</a> <span class="keywordtype">float</span> <a class="code" href="structowl_1_1common_1_1_l_c_g.html#a9d2a06943d04ddc50cdfcd49269c0612">operator() </a>()</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;      {</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        <span class="keyword">const</span> uint32_t LCG_A = 1664525u;</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;        <span class="keyword">const</span> uint32_t LCG_C = 1013904223u;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        state = (LCG_A * state + LCG_C);</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        <span class="keywordflow">return</span> ldexpf(<span class="keywordtype">float</span>(state), -32);</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        <a class="code" href="structowl_1_1common_1_1_l_c_g.html#a1b8bf9934eb6ff467f0ff8cef13f8acc">state</a> = (LCG_A * <a class="code" href="structowl_1_1common_1_1_l_c_g.html#a1b8bf9934eb6ff467f0ff8cef13f8acc">state</a> + LCG_C);</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        <span class="keywordflow">return</span> ldexpf(<span class="keywordtype">float</span>(<a class="code" href="structowl_1_1common_1_1_l_c_g.html#a1b8bf9934eb6ff467f0ff8cef13f8acc">state</a>), -32);</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        <span class="comment">// return (state &amp; 0x00FFFFFF) / (float) 0x01000000;</span></div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;      }</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    </div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;      uint32_t state;</div>
+<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_l_c_g.html#a1b8bf9934eb6ff467f0ff8cef13f8acc">   95</a></span>&#160;      uint32_t <a class="code" href="structowl_1_1common_1_1_l_c_g.html#a1b8bf9934eb6ff467f0ff8cef13f8acc">state</a>;</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    };</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
 <div class="line"><a name="l00102"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_d_rand48.html">  102</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structowl_1_1common_1_1_d_rand48.html">DRand48</a></div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    {</div>
-<div class="line"><a name="l00106"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_d_rand48.html#a944521592d7d3932328c32f8fe868c8e">  106</a></span>&#160;      <span class="keyword">inline</span> __both__ <span class="keywordtype">void</span> <a class="code" href="structowl_1_1common_1_1_d_rand48.html#a944521592d7d3932328c32f8fe868c8e">init</a>(<span class="keywordtype">int</span> seed = 0)</div>
+<div class="line"><a name="l00106"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_d_rand48.html#a944521592d7d3932328c32f8fe868c8e">  106</a></span>&#160;      <span class="keyword">inline</span> <a class="code" href="owl-common_8h.html#ab89cae7fe740626a7d3c5a50132051dc">__both__</a> <span class="keywordtype">void</span> <a class="code" href="structowl_1_1common_1_1_d_rand48.html#a944521592d7d3932328c32f8fe868c8e">init</a>(<span class="keywordtype">int</span> seed = 0)</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;      {</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;        state = seed;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;        <a class="code" href="structowl_1_1common_1_1_d_rand48.html#a935db0e85a2db50e4cd5c7fbe38a9e4f">state</a> = seed;</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> warmUp=0;warmUp&lt;10;warmUp++)</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;          (*<span class="keyword">this</span>)();</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;      }</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
-<div class="line"><a name="l00114"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_d_rand48.html#afffdff684882bb5c67f29931a0907892">  114</a></span>&#160;      <span class="keyword">inline</span> __both__ <span class="keywordtype">float</span> <a class="code" href="structowl_1_1common_1_1_d_rand48.html#afffdff684882bb5c67f29931a0907892">operator() </a>()</div>
+<div class="line"><a name="l00114"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_d_rand48.html#afffdff684882bb5c67f29931a0907892">  114</a></span>&#160;      <span class="keyword">inline</span> <a class="code" href="owl-common_8h.html#ab89cae7fe740626a7d3c5a50132051dc">__both__</a> <span class="keywordtype">float</span> <a class="code" href="structowl_1_1common_1_1_d_rand48.html#afffdff684882bb5c67f29931a0907892">operator() </a>()</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;      {</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        <span class="keyword">const</span> uint64_t a = 0x5DEECE66DULL;</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        <span class="keyword">const</span> uint64_t c = 0xBULL;</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;        <span class="keyword">const</span> uint64_t mask = 0xFFFFFFFFFFFFULL;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;        state = a*state + c;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        <span class="keywordflow">return</span> float(state &amp; mask) / float(mask+1ULL);</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;        <a class="code" href="structowl_1_1common_1_1_d_rand48.html#a935db0e85a2db50e4cd5c7fbe38a9e4f">state</a> = a*<a class="code" href="structowl_1_1common_1_1_d_rand48.html#a935db0e85a2db50e4cd5c7fbe38a9e4f">state</a> + c;</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        <span class="keywordflow">return</span> float(<a class="code" href="structowl_1_1common_1_1_d_rand48.html#a935db0e85a2db50e4cd5c7fbe38a9e4f">state</a> &amp; mask) / float(mask+1ULL);</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        <span class="comment">//return ldexpf(float(state &amp; mask), -24);</span></div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      }</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160; </div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;      uint64_t state;</div>
+<div class="line"><a name="l00124"></a><span class="lineno"><a class="line" href="structowl_1_1common_1_1_d_rand48.html#a935db0e85a2db50e4cd5c7fbe38a9e4f">  124</a></span>&#160;      uint64_t <a class="code" href="structowl_1_1common_1_1_d_rand48.html#a935db0e85a2db50e4cd5c7fbe38a9e4f">state</a>;</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    };</div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    </div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  } <span class="comment">// ::owl::common</span></div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;} <span class="comment">// ::owl</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="astructowl_1_1common_1_1_l_c_g_html_af0384c5f99117f720535cbd10abe396b"><div class="ttname"><a href="structowl_1_1common_1_1_l_c_g.html#af0384c5f99117f720535cbd10abe396b">owl::common::LCG::LCG</a></div><div class="ttdeci">__both__ LCG(const vec2ui &amp;seed)</div><div class="ttdef"><b>Definition:</b> random.h:68</div></div>
 <div class="ttc" id="astructowl_1_1common_1_1_d_rand48_html_afffdff684882bb5c67f29931a0907892"><div class="ttname"><a href="structowl_1_1common_1_1_d_rand48.html#afffdff684882bb5c67f29931a0907892">owl::common::DRand48::operator()</a></div><div class="ttdeci">__both__ float operator()()</div><div class="ttdef"><b>Definition:</b> random.h:114</div></div>
 <div class="ttc" id="astructowl_1_1common_1_1_d_rand48_html"><div class="ttname"><a href="structowl_1_1common_1_1_d_rand48.html">owl::common::DRand48</a></div><div class="ttdef"><b>Definition:</b> random.h:103</div></div>
 <div class="ttc" id="astructowl_1_1common_1_1_l_c_g_html"><div class="ttname"><a href="structowl_1_1common_1_1_l_c_g.html">owl::common::LCG</a></div><div class="ttdef"><b>Definition:</b> random.h:57</div></div>
+<div class="ttc" id="astructowl_1_1common_1_1_l_c_g_html_add5cdae4d030c4e6ad59e172b196922a"><div class="ttname"><a href="structowl_1_1common_1_1_l_c_g.html#add5cdae4d030c4e6ad59e172b196922a">owl::common::LCG::LCG</a></div><div class="ttdeci">__both__ LCG(const vec2i &amp;seed)</div><div class="ttdef"><b>Definition:</b> random.h:66</div></div>
+<div class="ttc" id="astructowl_1_1common_1_1_l_c_g_html_a119c0a526d98d6bc401dcf2a8808135a"><div class="ttname"><a href="structowl_1_1common_1_1_l_c_g.html#a119c0a526d98d6bc401dcf2a8808135a">owl::common::LCG::LCG</a></div><div class="ttdeci">__both__ LCG(unsigned int val0, unsigned int val1)</div><div class="ttdef"><b>Definition:</b> random.h:63</div></div>
+<div class="ttc" id="astructowl_1_1common_1_1_l_c_g_html_a12c65205fe2ac4d9062e14a95b9c7cac"><div class="ttname"><a href="structowl_1_1common_1_1_l_c_g.html#a12c65205fe2ac4d9062e14a95b9c7cac">owl::common::LCG::init</a></div><div class="ttdeci">__both__ void init(unsigned int val0, unsigned int val1)</div><div class="ttdef"><b>Definition:</b> random.h:71</div></div>
+<div class="ttc" id="astructowl_1_1common_1_1_l_c_g_html_a9d2a06943d04ddc50cdfcd49269c0612"><div class="ttname"><a href="structowl_1_1common_1_1_l_c_g.html#a9d2a06943d04ddc50cdfcd49269c0612">owl::common::LCG::operator()</a></div><div class="ttdeci">__both__ float operator()()</div><div class="ttdef"><b>Definition:</b> random.h:86</div></div>
 <div class="ttc" id="astructowl_1_1common_1_1_d_rand48_html_a944521592d7d3932328c32f8fe868c8e"><div class="ttname"><a href="structowl_1_1common_1_1_d_rand48.html#a944521592d7d3932328c32f8fe868c8e">owl::common::DRand48::init</a></div><div class="ttdeci">__both__ void init(int seed=0)</div><div class="ttdef"><b>Definition:</b> random.h:106</div></div>
+<div class="ttc" id="astructowl_1_1common_1_1_l_c_g_html_a1b8bf9934eb6ff467f0ff8cef13f8acc"><div class="ttname"><a href="structowl_1_1common_1_1_l_c_g.html#a1b8bf9934eb6ff467f0ff8cef13f8acc">owl::common::LCG::state</a></div><div class="ttdeci">uint32_t state</div><div class="ttdef"><b>Definition:</b> random.h:95</div></div>
+<div class="ttc" id="astructowl_1_1common_1_1_l_c_g_html_ac7174b1a9dbd6f01039e381b2165f7d3"><div class="ttname"><a href="structowl_1_1common_1_1_l_c_g.html#ac7174b1a9dbd6f01039e381b2165f7d3">owl::common::LCG::LCG</a></div><div class="ttdeci">__both__ LCG()</div><div class="ttdef"><b>Definition:</b> random.h:59</div></div>
+<div class="ttc" id="astructowl_1_1common_1_1_d_rand48_html_a935db0e85a2db50e4cd5c7fbe38a9e4f"><div class="ttname"><a href="structowl_1_1common_1_1_d_rand48.html#a935db0e85a2db50e4cd5c7fbe38a9e4f">owl::common::DRand48::state</a></div><div class="ttdeci">uint64_t state</div><div class="ttdef"><b>Definition:</b> random.h:124</div></div>
+<div class="ttc" id="avec_8h_html"><div class="ttname"><a href="vec_8h.html">vec.h</a></div></div>
+<div class="ttc" id="anamespaceowl_html"><div class="ttname"><a href="namespaceowl.html">owl</a></div><div class="ttdef"><b>Definition:</b> APIContext.cpp:36</div></div>
+<div class="ttc" id="aowl-common_8h_html_ab89cae7fe740626a7d3c5a50132051dc"><div class="ttname"><a href="owl-common_8h.html#ab89cae7fe740626a7d3c5a50132051dc">__both__</a></div><div class="ttdeci">#define __both__</div><div class="ttdef"><b>Definition:</b> owl-common.h:102</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><a class="el" href="dir_f9111f40ae40b6c662c8f31aae18691f.html">common</a></li><li class="navelem"><a class="el" href="dir_10708436ff5433f320df63bcbb459474.html">math</a></li><li class="navelem"><b>random.h</b></li>
+    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><a class="el" href="dir_f9111f40ae40b6c662c8f31aae18691f.html">common</a></li><li class="navelem"><a class="el" href="dir_10708436ff5433f320df63bcbb459474.html">math</a></li><li class="navelem"><a class="el" href="random_8h.html">random.h</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['textureobjects_607',['textureObjects',['../structowl_1_1_texture.html#a52693202eec2a217eb831b3f5078f00d',1,'owl::Texture']]],
-  ['transforms_608',['transforms',['../structowl_1_1_instance_group.html#a028a190af9c4e931a4b3374cbb7e2ee4',1,'owl::InstanceGroup']]],
-  ['traversable_609',['traversable',['../structowl_1_1_group_1_1_device_data.html#a95dc1fef70597dc6601637d2fb5a04db',1,'owl::Group::DeviceData']]],
-  ['type_610',['type',['../structowl_1_1_buffer.html#af1f5e8f706ed00ec452088c290814ab6',1,'owl::Buffer::type()'],['../structowl_1_1_s_b_t_object_base.html#a1142f41fc8fe617b38944bf1d48611a1',1,'owl::SBTObjectBase::type()'],['../structowl_1_1_s_b_t_object.html#a8156844aa71486e933d3aee6c15a590d',1,'owl::SBTObject::type()']]]
+  ['name_1588',['name',['../struct___o_w_l_var_decl.html#a42e4ba6f63c5c1e0ecd1a40db3362bf8',1,'_OWLVarDecl']]],
+  ['nextavailableid_1589',['nextAvailableID',['../structowl_1_1_object.html#a20ed2164e1f2eb4021f4362eefde9b13',1,'owl::Object']]],
+  ['numidsallocedincontext_1590',['numIDsAllocedInContext',['../structowl_1_1_object_registry.html#a185c5c84bb77f78332537986347ea2a1',1,'owl::ObjectRegistry']]],
+  ['numraytypes_1591',['numRayTypes',['../structowl_1_1_context.html#ab85f92951beb364ccdacb4c8403a908b',1,'owl::Context']]]
 ];

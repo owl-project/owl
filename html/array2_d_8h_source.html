@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('array2_d_8h_source.html',''); initResi
 <div class="title">array2D.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
+<a href="array2_d_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// ======================================================================== //</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">// Copyright 2019-2020 Ingo Wald                                            //</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//                                                                          //</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);          //</span></div>
@@ -104,17 +104,17 @@ $(document).ready(function(){initNavTree('array2_d_8h_source.html',''); initResi
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;owl/common/math/vec.h&gt;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="vec_8h.html">owl/common/math/vec.h</a>&gt;</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">namespace </span>owl {</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="keyword">namespace </span>common {</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keyword">namespace </span>array2D {</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceowl.html">owl</a> {</div>
+<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="namespaceowl_1_1common.html">   22</a></span>&#160;  <span class="keyword">namespace </span>common {</div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="namespaceowl_1_1common_1_1array2_d.html">   23</a></span>&#160;    <span class="keyword">namespace </span>array2D {</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    </div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;      <span class="keyword">inline</span> <span class="keywordtype">int</span> linear(<span class="keyword">const</span> vec2i &amp;ID, <span class="keyword">const</span> vec2i &amp;dims)</div>
+<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="namespaceowl_1_1common_1_1array2_d.html#a897f3a49665d29765429af54d2a5758f">   25</a></span>&#160;      <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="namespaceowl_1_1common_1_1array2_d.html#a897f3a49665d29765429af54d2a5758f">linear</a>(<span class="keyword">const</span> vec2i &amp;ID, <span class="keyword">const</span> vec2i &amp;dims)</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;      { <span class="keywordflow">return</span> ID.x + dims.x*ID.y; }</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;      <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Lambda&gt;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;      <span class="keyword">inline</span> <span class="keywordtype">void</span> for_each(<span class="keyword">const</span> vec2i &amp;dims, <span class="keyword">const</span> Lambda &amp;lambda)</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="namespaceowl_1_1common_1_1array2_d.html#a6220a0b55762d1c0da00c1886062a07e">   29</a></span>&#160;      <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceowl_1_1common_1_1array2_d.html#a6220a0b55762d1c0da00c1886062a07e">for_each</a>(<span class="keyword">const</span> vec2i &amp;dims, <span class="keyword">const</span> Lambda &amp;lambda)</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;      {</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> iy=0;iy&lt;dims.y;iy++)</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;          <span class="keywordflow">for</span> (<span class="keywordtype">int</span> ix=0;ix&lt;dims.x;ix++)</div>
@@ -123,17 +123,17 @@ $(document).ready(function(){initNavTree('array2_d_8h_source.html',''); initResi
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#if OWL_HAVE_PARALLEL_FOR</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;      <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Lambda&gt;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;      <span class="keyword">inline</span> <span class="keywordtype">void</span> parallel_for(<span class="keyword">const</span> vec2i &amp;dims, <span class="keyword">const</span> Lambda &amp;lambda)</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;      <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceowl_1_1common.html#a97ee34cc0e5f3d90f4294f45ced34eef">parallel_for</a>(<span class="keyword">const</span> vec2i &amp;dims, <span class="keyword">const</span> Lambda &amp;lambda)</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;      {</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        owl::common::parallel_for(dims.x*dims.y,[&amp;](<span class="keywordtype">int</span> index){</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        <a class="code" href="namespaceowl_1_1common.html#a97ee34cc0e5f3d90f4294f45ced34eef">owl::common::parallel_for</a>(dims.x*dims.y,[&amp;](<span class="keywordtype">int</span> index){</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            lambda(vec2i(index%dims.x,index/dims.x));</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;          });</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;      }</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;      <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Lambda&gt;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;      <span class="keyword">inline</span> <span class="keywordtype">void</span> serial_for(<span class="keyword">const</span> vec2i &amp;dims, <span class="keyword">const</span> Lambda &amp;lambda)</div>
+<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="namespaceowl_1_1common_1_1array2_d.html#afdf263d2a2a7213d904f4333a5ea6a8f">   46</a></span>&#160;      <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceowl_1_1common_1_1array2_d.html#afdf263d2a2a7213d904f4333a5ea6a8f">serial_for</a>(<span class="keyword">const</span> vec2i &amp;dims, <span class="keyword">const</span> Lambda &amp;lambda)</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;      {</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        owl::common::serial_for(dims.x*dims.y,[&amp;](<span class="keywordtype">int</span> index){</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <a class="code" href="namespaceowl_1_1common.html#a50a1ad1c992ee267d89c5cfeb5041e6f">owl::common::serial_for</a>(dims.x*dims.y,[&amp;](<span class="keywordtype">int</span> index){</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;            lambda(vec2i(index%dims.x,index/dims.x));</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;          });</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      }</div>
@@ -143,10 +143,17 @@ $(document).ready(function(){initNavTree('array2_d_8h_source.html',''); initResi
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;} <span class="comment">// owl</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="anamespaceowl_1_1common_1_1array2_d_html_afdf263d2a2a7213d904f4333a5ea6a8f"><div class="ttname"><a href="namespaceowl_1_1common_1_1array2_d.html#afdf263d2a2a7213d904f4333a5ea6a8f">owl::common::array2D::serial_for</a></div><div class="ttdeci">void serial_for(const vec2i &amp;dims, const Lambda &amp;lambda)</div><div class="ttdef"><b>Definition:</b> array2D.h:46</div></div>
+<div class="ttc" id="anamespaceowl_1_1common_html_a97ee34cc0e5f3d90f4294f45ced34eef"><div class="ttname"><a href="namespaceowl_1_1common.html#a97ee34cc0e5f3d90f4294f45ced34eef">owl::common::parallel_for</a></div><div class="ttdeci">void parallel_for(INDEX_T nTasks, TASK_T &amp;&amp;taskFunction, size_t blockSize=1)</div><div class="ttdef"><b>Definition:</b> parallel_for.h:69</div></div>
+<div class="ttc" id="anamespaceowl_1_1common_1_1array2_d_html_a6220a0b55762d1c0da00c1886062a07e"><div class="ttname"><a href="namespaceowl_1_1common_1_1array2_d.html#a6220a0b55762d1c0da00c1886062a07e">owl::common::array2D::for_each</a></div><div class="ttdeci">void for_each(const vec2i &amp;dims, const Lambda &amp;lambda)</div><div class="ttdef"><b>Definition:</b> array2D.h:29</div></div>
+<div class="ttc" id="anamespaceowl_1_1common_1_1array2_d_html_a897f3a49665d29765429af54d2a5758f"><div class="ttname"><a href="namespaceowl_1_1common_1_1array2_d.html#a897f3a49665d29765429af54d2a5758f">owl::common::array2D::linear</a></div><div class="ttdeci">int linear(const vec2i &amp;ID, const vec2i &amp;dims)</div><div class="ttdef"><b>Definition:</b> array2D.h:25</div></div>
+<div class="ttc" id="avec_8h_html"><div class="ttname"><a href="vec_8h.html">vec.h</a></div></div>
+<div class="ttc" id="anamespaceowl_html"><div class="ttname"><a href="namespaceowl.html">owl</a></div><div class="ttdef"><b>Definition:</b> APIContext.cpp:36</div></div>
+<div class="ttc" id="anamespaceowl_1_1common_html_a50a1ad1c992ee267d89c5cfeb5041e6f"><div class="ttname"><a href="namespaceowl_1_1common.html#a50a1ad1c992ee267d89c5cfeb5041e6f">owl::common::serial_for</a></div><div class="ttdeci">void serial_for(INDEX_T nTasks, TASK_T &amp;&amp;taskFunction)</div><div class="ttdef"><b>Definition:</b> parallel_for.h:38</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><a class="el" href="dir_f9111f40ae40b6c662c8f31aae18691f.html">common</a></li><li class="navelem"><a class="el" href="dir_3aa690363574bbbc6eb13f11e5e0b09e.html">arrayND</a></li><li class="navelem"><b>array2D.h</b></li>
+    <li class="navelem"><a class="el" href="dir_ef9c08334a541937acaa47daade78384.html">owl</a></li><li class="navelem"><a class="el" href="dir_986b4fa9e66cfaee8120d46525ff44cc.html">include</a></li><li class="navelem"><a class="el" href="dir_0a6fa1b8e16ebf67880c09217357d558.html">owl</a></li><li class="navelem"><a class="el" href="dir_f9111f40ae40b6c662c8f31aae18691f.html">common</a></li><li class="navelem"><a class="el" href="dir_3aa690363574bbbc6eb13f11e5e0b09e.html">arrayND</a></li><li class="navelem"><a class="el" href="array2_d_8h.html">array2D.h</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

@@ -87,6 +87,8 @@ $(document).ready(function(){initNavTree('structowl_1_1_context.html',''); initR
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
+<a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="structowl_1_1_context-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">owl::Context Struct Reference</div>  </div>
@@ -107,12 +109,10 @@ Inheritance diagram for owl::Context:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a45cdba754e27369d5386b178d40ef2f9"><td class="memItemLeft" align="right" valign="top"><a id="a45cdba754e27369d5386b178d40ef2f9"></a>
-typedef std::shared_ptr&lt; <a class="el" href="structowl_1_1_context.html">Context</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>SP</b></td></tr>
+<tr class="memitem:a45cdba754e27369d5386b178d40ef2f9"><td class="memItemLeft" align="right" valign="top">typedef std::shared_ptr&lt; <a class="el" href="structowl_1_1_context.html">Context</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a45cdba754e27369d5386b178d40ef2f9">SP</a></td></tr>
 <tr class="separator:a45cdba754e27369d5386b178d40ef2f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_types_structowl_1_1_object"><td colspan="2" onclick="javascript:toggleInherit('pub_types_structowl_1_1_object')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="structowl_1_1_object.html">owl::Object</a></td></tr>
-<tr class="memitem:a74e947dcb06759e0d20bc885afb75779 inherit pub_types_structowl_1_1_object"><td class="memItemLeft" align="right" valign="top"><a id="a74e947dcb06759e0d20bc885afb75779"></a>
-typedef std::shared_ptr&lt; <a class="el" href="structowl_1_1_object.html">Object</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>SP</b></td></tr>
+<tr class="memitem:a74e947dcb06759e0d20bc885afb75779 inherit pub_types_structowl_1_1_object"><td class="memItemLeft" align="right" valign="top">typedef std::shared_ptr&lt; <a class="el" href="structowl_1_1_object.html">Object</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a74e947dcb06759e0d20bc885afb75779">SP</a></td></tr>
 <tr class="separator:a74e947dcb06759e0d20bc885afb75779 inherit pub_types_structowl_1_1_object"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
@@ -121,20 +121,17 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a6c947f08e4112aa2d50c9a77fa9a1373"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a7a62a55938f614a94b1eae447e8e0b"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a7a7a62a55938f614a94b1eae447e8e0b">~Context</a> ()</td></tr>
 <tr class="separator:a7a7a62a55938f614a94b1eae447e8e0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeced6204202cdbb1c38b71f2d47a8243"><td class="memItemLeft" align="right" valign="top"><a id="aeced6204202cdbb1c38b71f2d47a8243"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>deviceCount</b> () const</td></tr>
+<tr class="memitem:aeced6204202cdbb1c38b71f2d47a8243"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#aeced6204202cdbb1c38b71f2d47a8243">deviceCount</a> () const</td></tr>
 <tr class="separator:aeced6204202cdbb1c38b71f2d47a8243"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09d0bd10e2e4bd1080008c17d964ccae"><td class="memItemLeft" align="right" valign="top"><a id="a09d0bd10e2e4bd1080008c17d964ccae"></a>
-const std::vector&lt; DeviceContext::SP &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getDevices</b> () const</td></tr>
+<tr class="memitem:a09d0bd10e2e4bd1080008c17d964ccae"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a09d0bd10e2e4bd1080008c17d964ccae">getDevices</a> () const</td></tr>
 <tr class="separator:a09d0bd10e2e4bd1080008c17d964ccae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae393c11e9529c22d6a853af97688adad"><td class="memItemLeft" align="right" valign="top"><a id="ae393c11e9529c22d6a853af97688adad"></a>
-DeviceContext::SP&#160;</td><td class="memItemRight" valign="bottom"><b>getDevice</b> (int ID) const</td></tr>
+<tr class="memitem:ae393c11e9529c22d6a853af97688adad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#ae393c11e9529c22d6a853af97688adad">getDevice</a> (int ID) const</td></tr>
 <tr class="separator:ae393c11e9529c22d6a853af97688adad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac67220030045737419787f09384dfca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#aac67220030045737419787f09384dfca">buildHitGroupRecordsOn</a> (const DeviceContext::SP &amp;device)</td></tr>
+<tr class="memitem:aac67220030045737419787f09384dfca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#aac67220030045737419787f09384dfca">buildHitGroupRecordsOn</a> (const <a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> &amp;device)</td></tr>
 <tr class="separator:aac67220030045737419787f09384dfca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec3518d8b27fee3c793a3eec3619ece6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#aec3518d8b27fee3c793a3eec3619ece6">buildRayGenRecordsOn</a> (const DeviceContext::SP &amp;device)</td></tr>
+<tr class="memitem:aec3518d8b27fee3c793a3eec3619ece6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#aec3518d8b27fee3c793a3eec3619ece6">buildRayGenRecordsOn</a> (const <a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> &amp;device)</td></tr>
 <tr class="separator:aec3518d8b27fee3c793a3eec3619ece6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05ac0feb11adc0fea557f5a17f5a4ab7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a05ac0feb11adc0fea557f5a17f5a4ab7">buildMissProgRecordsOn</a> (const DeviceContext::SP &amp;device)</td></tr>
+<tr class="memitem:a05ac0feb11adc0fea557f5a17f5a4ab7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a05ac0feb11adc0fea557f5a17f5a4ab7">buildMissProgRecordsOn</a> (const <a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> &amp;device)</td></tr>
 <tr class="separator:a05ac0feb11adc0fea557f5a17f5a4ab7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afbcd9627781b0f6fc7c44dad7d867729"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#afbcd9627781b0f6fc7c44dad7d867729">setRayTypeCount</a> (size_t rayTypeCount)</td></tr>
 <tr class="separator:afbcd9627781b0f6fc7c44dad7d867729"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -142,60 +139,56 @@ DeviceContext::SP&#160;</td><td class="memItemRight" valign="bottom"><b>getDevic
 <tr class="separator:a134dbf470e6837661bb6b74710a865c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b410e830a68c48df13451020bc67281"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a5b410e830a68c48df13451020bc67281">setMaxInstancingDepth</a> (int32_t maxInstanceDepth)</td></tr>
 <tr class="separator:a5b410e830a68c48df13451020bc67281"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4d96cd4936b9e396069d000baf268b9"><td class="memItemLeft" align="right" valign="top"><a id="aa4d96cd4936b9e396069d000baf268b9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>buildSBT</b> (OWLBuildSBTFlags flags)</td></tr>
+<tr class="memitem:aa4d96cd4936b9e396069d000baf268b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#aa4d96cd4936b9e396069d000baf268b9">buildSBT</a> (<a class="el" href="owl__host_8h.html#a3b9a255cefcd05c4445bfa3b5758c850">OWLBuildSBTFlags</a> flags)</td></tr>
 <tr class="separator:aa4d96cd4936b9e396069d000baf268b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf46589f7aa12e1842158badf62282fc"><td class="memItemLeft" align="right" valign="top"><a id="abf46589f7aa12e1842158badf62282fc"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>buildPipeline</b> ()</td></tr>
+<tr class="memitem:abf46589f7aa12e1842158badf62282fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#abf46589f7aa12e1842158badf62282fc">buildPipeline</a> ()</td></tr>
 <tr class="separator:abf46589f7aa12e1842158badf62282fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a58208144eda05ea7aabf3a35bbc4790a"><td class="memItemLeft" align="right" valign="top"><a id="a58208144eda05ea7aabf3a35bbc4790a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>buildPrograms</b> ()</td></tr>
+<tr class="memitem:a58208144eda05ea7aabf3a35bbc4790a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a58208144eda05ea7aabf3a35bbc4790a">buildPrograms</a> ()</td></tr>
 <tr class="separator:a58208144eda05ea7aabf3a35bbc4790a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7fb4153532245f41c458a8e732b6e967"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a7fb4153532245f41c458a8e732b6e967">destroyPrograms</a> ()</td></tr>
 <tr class="separator:a7fb4153532245f41c458a8e732b6e967"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af11409e17d9af18eb922c929912d8275"><td class="memItemLeft" align="right" valign="top"><a id="af11409e17d9af18eb922c929912d8275"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>buildModules</b> ()</td></tr>
+<tr class="memitem:af11409e17d9af18eb922c929912d8275"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#af11409e17d9af18eb922c929912d8275">buildModules</a> ()</td></tr>
 <tr class="separator:af11409e17d9af18eb922c929912d8275"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef79e653b7cc2b3ff10f27fd59ea8837"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#aef79e653b7cc2b3ff10f27fd59ea8837">destroyModules</a> ()</td></tr>
 <tr class="separator:aef79e653b7cc2b3ff10f27fd59ea8837"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a356ef55912c796145fa1c2cce91f56"><td class="memItemLeft" align="right" valign="top">Texture::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a4a356ef55912c796145fa1c2cce91f56">texture2DCreate</a> (OWLTexelFormat texelFormat, OWLTextureFilterMode filterMode, OWLTextureAddressMode addressMode, const vec2i size, uint32_t linePitchInBytes, const void *texels)</td></tr>
+<tr class="memitem:a4a356ef55912c796145fa1c2cce91f56"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_texture.html#ac475a117330f6ab4019c70c731c69329">Texture::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a4a356ef55912c796145fa1c2cce91f56">texture2DCreate</a> (<a class="el" href="owl__host_8h.html#a2ee16dbc582af76129e454ea1b8ce839">OWLTexelFormat</a> texelFormat, <a class="el" href="owl__host_8h.html#ae0a182da5b8c87477a9eb169a6f88b42">OWLTextureFilterMode</a> filterMode, <a class="el" href="owl__host_8h.html#aa9fb321d2d1b92f49f3f9f837e68ad16">OWLTextureAddressMode</a> addressMode, const vec2i size, uint32_t linePitchInBytes, const void *texels)</td></tr>
 <tr class="separator:a4a356ef55912c796145fa1c2cce91f56"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a215005f9832fd671a66f5a24031d3c34"><td class="memItemLeft" align="right" valign="top">GeomGroup::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a215005f9832fd671a66f5a24031d3c34">trianglesGeomGroupCreate</a> (size_t numChildren)</td></tr>
+<tr class="memitem:a215005f9832fd671a66f5a24031d3c34"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_geom_group.html#a3d53de1ab911d862cf2db3000fe27291">GeomGroup::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a215005f9832fd671a66f5a24031d3c34">trianglesGeomGroupCreate</a> (size_t numChildren)</td></tr>
 <tr class="separator:a215005f9832fd671a66f5a24031d3c34"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8cdaae71f2d177a1d77e2d6568c56b33"><td class="memItemLeft" align="right" valign="top">GeomGroup::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a8cdaae71f2d177a1d77e2d6568c56b33">userGeomGroupCreate</a> (size_t numChildren)</td></tr>
+<tr class="memitem:a8cdaae71f2d177a1d77e2d6568c56b33"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_geom_group.html#a3d53de1ab911d862cf2db3000fe27291">GeomGroup::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a8cdaae71f2d177a1d77e2d6568c56b33">userGeomGroupCreate</a> (size_t numChildren)</td></tr>
 <tr class="separator:a8cdaae71f2d177a1d77e2d6568c56b33"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab157d495abf170c6b02a623f6e055967"><td class="memItemLeft" align="right" valign="top">Buffer::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#ab157d495abf170c6b02a623f6e055967">deviceBufferCreate</a> (OWLDataType type, size_t count, const void *init)</td></tr>
+<tr class="memitem:ab157d495abf170c6b02a623f6e055967"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_buffer.html#affd0280855154b42f3e4035ad4ff15d8">Buffer::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#ab157d495abf170c6b02a623f6e055967">deviceBufferCreate</a> (<a class="el" href="owl__host_8h.html#a7cc01d97d92ac0221b4517fb0906ff9b">OWLDataType</a> type, size_t count, const void *init)</td></tr>
 <tr class="separator:ab157d495abf170c6b02a623f6e055967"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56eba1db4b76056a8fae22bb4e3daa62"><td class="memItemLeft" align="right" valign="top">Buffer::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a56eba1db4b76056a8fae22bb4e3daa62">hostPinnedBufferCreate</a> (OWLDataType type, size_t count)</td></tr>
+<tr class="memitem:a56eba1db4b76056a8fae22bb4e3daa62"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_buffer.html#affd0280855154b42f3e4035ad4ff15d8">Buffer::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a56eba1db4b76056a8fae22bb4e3daa62">hostPinnedBufferCreate</a> (<a class="el" href="owl__host_8h.html#a7cc01d97d92ac0221b4517fb0906ff9b">OWLDataType</a> type, size_t count)</td></tr>
 <tr class="separator:a56eba1db4b76056a8fae22bb4e3daa62"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe20cacd4e20419a6ade21a1264f2ca2"><td class="memItemLeft" align="right" valign="top">Buffer::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#abe20cacd4e20419a6ade21a1264f2ca2">managedMemoryBufferCreate</a> (OWLDataType type, size_t count, const void *init)</td></tr>
+<tr class="memitem:abe20cacd4e20419a6ade21a1264f2ca2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_buffer.html#affd0280855154b42f3e4035ad4ff15d8">Buffer::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#abe20cacd4e20419a6ade21a1264f2ca2">managedMemoryBufferCreate</a> (<a class="el" href="owl__host_8h.html#a7cc01d97d92ac0221b4517fb0906ff9b">OWLDataType</a> type, size_t count, const void *init)</td></tr>
 <tr class="separator:abe20cacd4e20419a6ade21a1264f2ca2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c01ca37c443eb38961c3a66ccd275e5"><td class="memItemLeft" align="right" valign="top">Buffer::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a9c01ca37c443eb38961c3a66ccd275e5">graphicsBufferCreate</a> (OWLDataType type, size_t count, cudaGraphicsResource_t resource)</td></tr>
+<tr class="memitem:a9c01ca37c443eb38961c3a66ccd275e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_buffer.html#affd0280855154b42f3e4035ad4ff15d8">Buffer::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a9c01ca37c443eb38961c3a66ccd275e5">graphicsBufferCreate</a> (<a class="el" href="owl__host_8h.html#a7cc01d97d92ac0221b4517fb0906ff9b">OWLDataType</a> type, size_t count, cudaGraphicsResource_t resource)</td></tr>
 <tr class="separator:a9c01ca37c443eb38961c3a66ccd275e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9911ca77377f62b78b01753b328d2643"><td class="memItemLeft" align="right" valign="top">RayGenType::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a9911ca77377f62b78b01753b328d2643">createRayGenType</a> (Module::SP module, const std::string &amp;progName, size_t varStructSize, const std::vector&lt; <a class="el" href="struct___o_w_l_var_decl.html">OWLVarDecl</a> &gt; &amp;varDecls)</td></tr>
+<tr class="memitem:a9911ca77377f62b78b01753b328d2643"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_ray_gen_type.html#ad66ae2767fe5829477212285434b2a52">RayGenType::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a9911ca77377f62b78b01753b328d2643">createRayGenType</a> (<a class="el" href="structowl_1_1_module.html#a61c46069e1de8c04415a33367d692e9a">Module::SP</a> module, const std::string &amp;progName, size_t varStructSize, const std::vector&lt; <a class="el" href="owl__host_8h.html#a73ca01dcc89553d12782ea5b06d02fc5">OWLVarDecl</a> &gt; &amp;varDecls)</td></tr>
 <tr class="separator:a9911ca77377f62b78b01753b328d2643"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ace2f78b552197a06759d3d6963f5d5b2"><td class="memItemLeft" align="right" valign="top">RayGen::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#ace2f78b552197a06759d3d6963f5d5b2">createRayGen</a> (const std::shared_ptr&lt; <a class="el" href="structowl_1_1_ray_gen_type.html">RayGenType</a> &gt; &amp;type)</td></tr>
+<tr class="memitem:ace2f78b552197a06759d3d6963f5d5b2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_ray_gen.html#ac9340024b7a2d63fed51bfed9e4acec9">RayGen::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#ace2f78b552197a06759d3d6963f5d5b2">createRayGen</a> (const std::shared_ptr&lt; <a class="el" href="structowl_1_1_ray_gen_type.html">RayGenType</a> &gt; &amp;type)</td></tr>
 <tr class="separator:ace2f78b552197a06759d3d6963f5d5b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f9e26bfd6054b4d60b36b9e9396b263"><td class="memItemLeft" align="right" valign="top">LaunchParamsType::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a3f9e26bfd6054b4d60b36b9e9396b263">createLaunchParamsType</a> (size_t varStructSize, const std::vector&lt; <a class="el" href="struct___o_w_l_var_decl.html">OWLVarDecl</a> &gt; &amp;varDecls)</td></tr>
+<tr class="memitem:a3f9e26bfd6054b4d60b36b9e9396b263"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_launch_params_type.html#a34f116b31d3d2f9d798292285ef1971e">LaunchParamsType::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a3f9e26bfd6054b4d60b36b9e9396b263">createLaunchParamsType</a> (size_t varStructSize, const std::vector&lt; <a class="el" href="owl__host_8h.html#a73ca01dcc89553d12782ea5b06d02fc5">OWLVarDecl</a> &gt; &amp;varDecls)</td></tr>
 <tr class="separator:a3f9e26bfd6054b4d60b36b9e9396b263"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af05cf23ab624f37f0916f1528063d10b"><td class="memItemLeft" align="right" valign="top">LaunchParams::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#af05cf23ab624f37f0916f1528063d10b">createLaunchParams</a> (const std::shared_ptr&lt; <a class="el" href="structowl_1_1_launch_params_type.html">LaunchParamsType</a> &gt; &amp;type)</td></tr>
+<tr class="memitem:af05cf23ab624f37f0916f1528063d10b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_launch_params.html#af67cfc93883a597fec812071d4e22e1a">LaunchParams::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#af05cf23ab624f37f0916f1528063d10b">createLaunchParams</a> (const std::shared_ptr&lt; <a class="el" href="structowl_1_1_launch_params_type.html">LaunchParamsType</a> &gt; &amp;type)</td></tr>
 <tr class="separator:af05cf23ab624f37f0916f1528063d10b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3142bc0eaa599eae00e05106f607675"><td class="memItemLeft" align="right" valign="top">MissProgType::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#ab3142bc0eaa599eae00e05106f607675">createMissProgType</a> (Module::SP module, const std::string &amp;progName, size_t varStructSize, const std::vector&lt; <a class="el" href="struct___o_w_l_var_decl.html">OWLVarDecl</a> &gt; &amp;varDecls)</td></tr>
+<tr class="memitem:ab3142bc0eaa599eae00e05106f607675"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_miss_prog_type.html#a6a8876600778bfd23726e7b5a001d4a5">MissProgType::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#ab3142bc0eaa599eae00e05106f607675">createMissProgType</a> (<a class="el" href="structowl_1_1_module.html#a61c46069e1de8c04415a33367d692e9a">Module::SP</a> module, const std::string &amp;progName, size_t varStructSize, const std::vector&lt; <a class="el" href="owl__host_8h.html#a73ca01dcc89553d12782ea5b06d02fc5">OWLVarDecl</a> &gt; &amp;varDecls)</td></tr>
 <tr class="separator:ab3142bc0eaa599eae00e05106f607675"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ed91b95891f48af2d3a417a007525ce"><td class="memItemLeft" align="right" valign="top">MissProg::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a0ed91b95891f48af2d3a417a007525ce">createMissProg</a> (const std::shared_ptr&lt; <a class="el" href="structowl_1_1_miss_prog_type.html">MissProgType</a> &gt; &amp;type)</td></tr>
+<tr class="memitem:a0ed91b95891f48af2d3a417a007525ce"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_miss_prog.html#a1f045983628596417ddfd86ae08d5973">MissProg::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a0ed91b95891f48af2d3a417a007525ce">createMissProg</a> (const std::shared_ptr&lt; <a class="el" href="structowl_1_1_miss_prog_type.html">MissProgType</a> &gt; &amp;type)</td></tr>
 <tr class="separator:a0ed91b95891f48af2d3a417a007525ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e23359fa318a8a344f392af7546abbb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a7e23359fa318a8a344f392af7546abbb">setMissProg</a> (int rayTypeToSet, MissProg::SP missProgToUse)</td></tr>
+<tr class="memitem:a7e23359fa318a8a344f392af7546abbb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a7e23359fa318a8a344f392af7546abbb">setMissProg</a> (int rayTypeToSet, <a class="el" href="structowl_1_1_miss_prog.html#a1f045983628596417ddfd86ae08d5973">MissProg::SP</a> missProgToUse)</td></tr>
 <tr class="separator:a7e23359fa318a8a344f392af7546abbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65fe753b36bfa7f6b2985c8b5868b2cf"><td class="memItemLeft" align="right" valign="top">GeomType::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a65fe753b36bfa7f6b2985c8b5868b2cf">createGeomType</a> (OWLGeomKind kind, size_t varStructSize, const std::vector&lt; <a class="el" href="struct___o_w_l_var_decl.html">OWLVarDecl</a> &gt; &amp;varDecls)</td></tr>
+<tr class="memitem:a65fe753b36bfa7f6b2985c8b5868b2cf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_geom_type.html#a19b29dfc7faa6d7a6a269586fc6d1668">GeomType::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a65fe753b36bfa7f6b2985c8b5868b2cf">createGeomType</a> (<a class="el" href="owl__host_8h.html#a38b7dee03f93e9108ff06a023abb2250">OWLGeomKind</a> kind, size_t varStructSize, const std::vector&lt; <a class="el" href="owl__host_8h.html#a73ca01dcc89553d12782ea5b06d02fc5">OWLVarDecl</a> &gt; &amp;varDecls)</td></tr>
 <tr class="separator:a65fe753b36bfa7f6b2985c8b5868b2cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6caa9d6c62a66296e6976b247e38832"><td class="memItemLeft" align="right" valign="top">Module::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#ab6caa9d6c62a66296e6976b247e38832">createModule</a> (const std::string &amp;ptxCode)</td></tr>
+<tr class="memitem:ab6caa9d6c62a66296e6976b247e38832"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_module.html#a61c46069e1de8c04415a33367d692e9a">Module::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#ab6caa9d6c62a66296e6976b247e38832">createModule</a> (const std::string &amp;ptxCode)</td></tr>
 <tr class="separator:ab6caa9d6c62a66296e6976b247e38832"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structowl_1_1_object"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structowl_1_1_object')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structowl_1_1_object.html">owl::Object</a></td></tr>
 <tr class="memitem:a2dd9c78eddb7e42f54b145bfbdee3d39 inherit pub_methods_structowl_1_1_object"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a2dd9c78eddb7e42f54b145bfbdee3d39">Object</a> ()</td></tr>
 <tr class="separator:a2dd9c78eddb7e42f54b145bfbdee3d39 inherit pub_methods_structowl_1_1_object"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f8db237a8eb33988e25925a93d3a342 inherit pub_methods_structowl_1_1_object"><td class="memItemLeft" align="right" valign="top">virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a2f8db237a8eb33988e25925a93d3a342">toString</a> () const</td></tr>
 <tr class="separator:a2f8db237a8eb33988e25925a93d3a342 inherit pub_methods_structowl_1_1_object"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54b6362ef3a26e1a392b6ce29aa7519f inherit pub_methods_structowl_1_1_object"><td class="memItemLeft" align="right" valign="top">virtual DeviceData::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a54b6362ef3a26e1a392b6ce29aa7519f">createOn</a> (const std::shared_ptr&lt; <a class="el" href="structowl_1_1_device_context.html">DeviceContext</a> &gt; &amp;device)</td></tr>
+<tr class="memitem:a54b6362ef3a26e1a392b6ce29aa7519f inherit pub_methods_structowl_1_1_object"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structowl_1_1_object_1_1_device_data.html#a7ee587f3ff9ca4afcbde9b03f81e53f6">DeviceData::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a54b6362ef3a26e1a392b6ce29aa7519f">createOn</a> (const std::shared_ptr&lt; <a class="el" href="structowl_1_1_device_context.html">DeviceContext</a> &gt; &amp;device)</td></tr>
 <tr class="separator:a54b6362ef3a26e1a392b6ce29aa7519f inherit pub_methods_structowl_1_1_object"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79983e195c5f388f9f34f304cdfa1fe7 inherit pub_methods_structowl_1_1_object"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a79983e195c5f388f9f34f304cdfa1fe7">createDeviceData</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="structowl_1_1_device_context.html">DeviceContext</a> &gt;&gt; &amp;devices)</td></tr>
 <tr class="separator:a79983e195c5f388f9f34f304cdfa1fe7 inherit pub_methods_structowl_1_1_object"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -212,7 +205,7 @@ Static Public Member Functions</h2></td></tr>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a091d1f77d43221d9bd56fbbc84caf3e0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_range_allocator.html">RangeAllocator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a091d1f77d43221d9bd56fbbc84caf3e0">sbtRangeAllocator</a></td></tr>
 <tr class="separator:a091d1f77d43221d9bd56fbbc84caf3e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21033c2d07f969278320122ab544d5d3"><td class="memItemLeft" align="right" valign="top">std::vector&lt; MissProg::SP &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a21033c2d07f969278320122ab544d5d3">missProgPerRayType</a></td></tr>
+<tr class="memitem:a21033c2d07f969278320122ab544d5d3"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structowl_1_1_miss_prog.html#a1f045983628596417ddfd86ae08d5973">MissProg::SP</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a21033c2d07f969278320122ab544d5d3">missProgPerRayType</a></td></tr>
 <tr class="separator:a21033c2d07f969278320122ab544d5d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56825f3720b659ff760808f8f1435043"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a56825f3720b659ff760808f8f1435043">maxInstancingDepth</a> = 1</td></tr>
 <tr class="separator:a56825f3720b659ff760808f8f1435043"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -220,49 +213,48 @@ Public Attributes</h2></td></tr>
 <tr class="separator:ab85f92951beb364ccdacb4c8403a908b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f4061b4745b98c4e04b4f1a4b406c67"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a0f4061b4745b98c4e04b4f1a4b406c67">motionBlurEnabled</a> = false</td></tr>
 <tr class="separator:a0f4061b4745b98c4e04b4f1a4b406c67"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:accef382b02640cb3654774a4251a9314"><td class="memItemLeft" align="right" valign="top">LaunchParams::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#accef382b02640cb3654774a4251a9314">dummyLaunchParams</a></td></tr>
+<tr class="memitem:accef382b02640cb3654774a4251a9314"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_launch_params.html#af67cfc93883a597fec812071d4e22e1a">LaunchParams::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#accef382b02640cb3654774a4251a9314">dummyLaunchParams</a></td></tr>
 <tr class="separator:accef382b02640cb3654774a4251a9314"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader"></div></td></tr>
 <tr class="memitem:afba13bd2349517cffd71206fbdbec46d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_buffer.html">Buffer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#afba13bd2349517cffd71206fbdbec46d">buffers</a></td></tr>
 <tr class="separator:afba13bd2349517cffd71206fbdbec46d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad5c5b47f202c9279ec94cc127b564acb"><td class="memItemLeft" align="right" valign="top"><a id="ad5c5b47f202c9279ec94cc127b564acb"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_texture.html">Texture</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>textures</b></td></tr>
+<tr class="memitem:ad5c5b47f202c9279ec94cc127b564acb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_texture.html">Texture</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#ad5c5b47f202c9279ec94cc127b564acb">textures</a></td></tr>
 <tr class="separator:ad5c5b47f202c9279ec94cc127b564acb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a824b764aa1dff4810e2ac9a524d1194d"><td class="memItemLeft" align="right" valign="top"><a id="a824b764aa1dff4810e2ac9a524d1194d"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_group.html">Group</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>groups</b></td></tr>
+<tr class="memitem:a824b764aa1dff4810e2ac9a524d1194d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_group.html">Group</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a824b764aa1dff4810e2ac9a524d1194d">groups</a></td></tr>
 <tr class="separator:a824b764aa1dff4810e2ac9a524d1194d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a958c2c09358e52570e4d3dec31c46395"><td class="memItemLeft" align="right" valign="top"><a id="a958c2c09358e52570e4d3dec31c46395"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_ray_gen_type.html">RayGenType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>rayGenTypes</b></td></tr>
+<tr class="memitem:a958c2c09358e52570e4d3dec31c46395"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_ray_gen_type.html">RayGenType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a958c2c09358e52570e4d3dec31c46395">rayGenTypes</a></td></tr>
 <tr class="separator:a958c2c09358e52570e4d3dec31c46395"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff689b2e77f231d30e2cbac86a8759b5"><td class="memItemLeft" align="right" valign="top"><a id="aff689b2e77f231d30e2cbac86a8759b5"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_ray_gen.html">RayGen</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>rayGens</b></td></tr>
+<tr class="memitem:aff689b2e77f231d30e2cbac86a8759b5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_ray_gen.html">RayGen</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#aff689b2e77f231d30e2cbac86a8759b5">rayGens</a></td></tr>
 <tr class="separator:aff689b2e77f231d30e2cbac86a8759b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e5af9e5bb20b8dfe8907c644ebc4488"><td class="memItemLeft" align="right" valign="top"><a id="a0e5af9e5bb20b8dfe8907c644ebc4488"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_miss_prog_type.html">MissProgType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>missProgTypes</b></td></tr>
+<tr class="memitem:a0e5af9e5bb20b8dfe8907c644ebc4488"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_miss_prog_type.html">MissProgType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a0e5af9e5bb20b8dfe8907c644ebc4488">missProgTypes</a></td></tr>
 <tr class="separator:a0e5af9e5bb20b8dfe8907c644ebc4488"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa421151529efe853bd4bf9618790e74a"><td class="memItemLeft" align="right" valign="top"><a id="aa421151529efe853bd4bf9618790e74a"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_miss_prog.html">MissProg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>missProgs</b></td></tr>
+<tr class="memitem:aa421151529efe853bd4bf9618790e74a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_miss_prog.html">MissProg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#aa421151529efe853bd4bf9618790e74a">missProgs</a></td></tr>
 <tr class="separator:aa421151529efe853bd4bf9618790e74a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a054ffb5c893391ea937ca791a5437d81"><td class="memItemLeft" align="right" valign="top"><a id="a054ffb5c893391ea937ca791a5437d81"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_geom_type.html">GeomType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>geomTypes</b></td></tr>
+<tr class="memitem:a054ffb5c893391ea937ca791a5437d81"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_geom_type.html">GeomType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a054ffb5c893391ea937ca791a5437d81">geomTypes</a></td></tr>
 <tr class="separator:a054ffb5c893391ea937ca791a5437d81"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff06bab6b42da1ea8d450d4e9acd110f"><td class="memItemLeft" align="right" valign="top"><a id="aff06bab6b42da1ea8d450d4e9acd110f"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_geom.html">Geom</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>geoms</b></td></tr>
+<tr class="memitem:aff06bab6b42da1ea8d450d4e9acd110f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_geom.html">Geom</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#aff06bab6b42da1ea8d450d4e9acd110f">geoms</a></td></tr>
 <tr class="separator:aff06bab6b42da1ea8d450d4e9acd110f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a886dec738c473517049f79167aec1e89"><td class="memItemLeft" align="right" valign="top"><a id="a886dec738c473517049f79167aec1e89"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_module.html">Module</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>modules</b></td></tr>
+<tr class="memitem:a886dec738c473517049f79167aec1e89"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_module.html">Module</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a886dec738c473517049f79167aec1e89">modules</a></td></tr>
 <tr class="separator:a886dec738c473517049f79167aec1e89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b7955c3daa6f8692a1657bd614699c1"><td class="memItemLeft" align="right" valign="top"><a id="a9b7955c3daa6f8692a1657bd614699c1"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_launch_params_type.html">LaunchParamsType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>launchParamTypes</b></td></tr>
+<tr class="memitem:a9b7955c3daa6f8692a1657bd614699c1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_launch_params_type.html">LaunchParamsType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a9b7955c3daa6f8692a1657bd614699c1">launchParamTypes</a></td></tr>
 <tr class="separator:a9b7955c3daa6f8692a1657bd614699c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f7a239d64e9d497c5413182debc7c2f"><td class="memItemLeft" align="right" valign="top"><a id="a5f7a239d64e9d497c5413182debc7c2f"></a>
-<a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_launch_params.html">LaunchParams</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>launchParams</b></td></tr>
+<tr class="memitem:a5f7a239d64e9d497c5413182debc7c2f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt; <a class="el" href="structowl_1_1_launch_params.html">LaunchParams</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a5f7a239d64e9d497c5413182debc7c2f">launchParams</a></td></tr>
 <tr class="separator:a5f7a239d64e9d497c5413182debc7c2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_structowl_1_1_object"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_structowl_1_1_object')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="structowl_1_1_object.html">owl::Object</a></td></tr>
 <tr class="memitem:a6ae3f1e70a452ce48a7d7d55cf3916f9 inherit pub_attribs_structowl_1_1_object"><td class="memItemLeft" align="right" valign="top">const size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a6ae3f1e70a452ce48a7d7d55cf3916f9">uniqueID</a></td></tr>
 <tr class="separator:a6ae3f1e70a452ce48a7d7d55cf3916f9 inherit pub_attribs_structowl_1_1_object"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43133612fd3b4bfcd35abdbf49ab34ca inherit pub_attribs_structowl_1_1_object"><td class="memItemLeft" align="right" valign="top">std::vector&lt; DeviceData::SP &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a43133612fd3b4bfcd35abdbf49ab34ca">deviceData</a></td></tr>
+<tr class="memitem:a43133612fd3b4bfcd35abdbf49ab34ca inherit pub_attribs_structowl_1_1_object"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structowl_1_1_object_1_1_device_data.html#a7ee587f3ff9ca4afcbde9b03f81e53f6">DeviceData::SP</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a43133612fd3b4bfcd35abdbf49ab34ca">deviceData</a></td></tr>
 <tr class="separator:a43133612fd3b4bfcd35abdbf49ab34ca inherit pub_attribs_structowl_1_1_object"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr class="memitem:a491d68369b0bbfde20e859e5a396c306"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a491d68369b0bbfde20e859e5a396c306">enablePeerAccess</a> ()</td></tr>
+<tr class="separator:a491d68369b0bbfde20e859e5a396c306"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
+Private Attributes</h2></td></tr>
+<tr class="memitem:a0cd3454c75dc3885f6715e92fb29ff49"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_context.html#a0cd3454c75dc3885f6715e92fb29ff49">devices</a></td></tr>
+<tr class="separator:a0cd3454c75dc3885f6715e92fb29ff49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -272,7 +264,22 @@ Additional Inherited Members</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>the root 'context' that spans, and manages, all objects and all devices </p>
-</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+</div><h2 class="groupheader">Member Typedef Documentation</h2>
+<a id="a45cdba754e27369d5386b178d40ef2f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a45cdba754e27369d5386b178d40ef2f9">&#9670;&nbsp;</a></span>SP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef std::shared_ptr&lt;<a class="el" href="structowl_1_1_context.html">Context</a>&gt; <a class="el" href="structowl_1_1_context.html#a45cdba754e27369d5386b178d40ef2f9">owl::Context::SP</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a6c947f08e4112aa2d50c9a77fa9a1373"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6c947f08e4112aa2d50c9a77fa9a1373">&#9670;&nbsp;</a></span>Context()</h2>
 
@@ -338,7 +345,7 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="memname">void owl::Context::buildHitGroupRecordsOn </td>
           <td>(</td>
-          <td class="paramtype">const DeviceContext::SP &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> &amp;&#160;</td>
           <td class="paramname"><em>device</em></td><td>)</td>
           <td></td>
         </tr>
@@ -357,13 +364,64 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="memname">void owl::Context::buildMissProgRecordsOn </td>
           <td>(</td>
-          <td class="paramtype">const DeviceContext::SP &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> &amp;&#160;</td>
           <td class="paramname"><em>device</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>part of the <a class="el" href="structowl_1_1_s_b_t.html">SBT</a> creation - builds the miss group array </p>
+
+</div>
+</div>
+<a id="af11409e17d9af18eb922c929912d8275"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af11409e17d9af18eb922c929912d8275">&#9670;&nbsp;</a></span>buildModules()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void owl::Context::buildModules </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="abf46589f7aa12e1842158badf62282fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf46589f7aa12e1842158badf62282fc">&#9670;&nbsp;</a></span>buildPipeline()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void owl::Context::buildPipeline </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a58208144eda05ea7aabf3a35bbc4790a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58208144eda05ea7aabf3a35bbc4790a">&#9670;&nbsp;</a></span>buildPrograms()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void owl::Context::buildPrograms </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -376,13 +434,31 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="memname">void owl::Context::buildRayGenRecordsOn </td>
           <td>(</td>
-          <td class="paramtype">const DeviceContext::SP &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> &amp;&#160;</td>
           <td class="paramname"><em>device</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>part of the <a class="el" href="structowl_1_1_s_b_t.html">SBT</a> creation - builds the raygen array </p>
+
+</div>
+</div>
+<a id="aa4d96cd4936b9e396069d000baf268b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4d96cd4936b9e396069d000baf268b9">&#9670;&nbsp;</a></span>buildSBT()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void owl::Context::buildSBT </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="owl__host_8h.html#a3b9a255cefcd05c4445bfa3b5758c850">OWLBuildSBTFlags</a>&#160;</td>
+          <td class="paramname"><em>flags</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -393,9 +469,9 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">GeomType::SP owl::Context::createGeomType </td>
+          <td class="memname"><a class="el" href="structowl_1_1_geom_type.html#a19b29dfc7faa6d7a6a269586fc6d1668">GeomType::SP</a> owl::Context::createGeomType </td>
           <td>(</td>
-          <td class="paramtype">OWLGeomKind&#160;</td>
+          <td class="paramtype"><a class="el" href="owl__host_8h.html#a38b7dee03f93e9108ff06a023abb2250">OWLGeomKind</a>&#160;</td>
           <td class="paramname"><em>kind</em>, </td>
         </tr>
         <tr>
@@ -407,7 +483,7 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="struct___o_w_l_var_decl.html">OWLVarDecl</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="owl__host_8h.html#a73ca01dcc89553d12782ea5b06d02fc5">OWLVarDecl</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>varDecls</em>&#160;</td>
         </tr>
         <tr>
@@ -428,7 +504,7 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">LaunchParams::SP owl::Context::createLaunchParams </td>
+          <td class="memname"><a class="el" href="structowl_1_1_launch_params.html#af67cfc93883a597fec812071d4e22e1a">LaunchParams::SP</a> owl::Context::createLaunchParams </td>
           <td>(</td>
           <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="structowl_1_1_launch_params_type.html">LaunchParamsType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>type</em></td><td>)</td>
@@ -447,7 +523,7 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">LaunchParamsType::SP owl::Context::createLaunchParamsType </td>
+          <td class="memname"><a class="el" href="structowl_1_1_launch_params_type.html#a34f116b31d3d2f9d798292285ef1971e">LaunchParamsType::SP</a> owl::Context::createLaunchParamsType </td>
           <td>(</td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>varStructSize</em>, </td>
@@ -455,7 +531,7 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="struct___o_w_l_var_decl.html">OWLVarDecl</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="owl__host_8h.html#a73ca01dcc89553d12782ea5b06d02fc5">OWLVarDecl</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>varDecls</em>&#160;</td>
         </tr>
         <tr>
@@ -476,7 +552,7 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">MissProg::SP owl::Context::createMissProg </td>
+          <td class="memname"><a class="el" href="structowl_1_1_miss_prog.html#a1f045983628596417ddfd86ae08d5973">MissProg::SP</a> owl::Context::createMissProg </td>
           <td>(</td>
           <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="structowl_1_1_miss_prog_type.html">MissProgType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>type</em></td><td>)</td>
@@ -495,9 +571,9 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">MissProgType::SP owl::Context::createMissProgType </td>
+          <td class="memname"><a class="el" href="structowl_1_1_miss_prog_type.html#a6a8876600778bfd23726e7b5a001d4a5">MissProgType::SP</a> owl::Context::createMissProgType </td>
           <td>(</td>
-          <td class="paramtype">Module::SP&#160;</td>
+          <td class="paramtype"><a class="el" href="structowl_1_1_module.html#a61c46069e1de8c04415a33367d692e9a">Module::SP</a>&#160;</td>
           <td class="paramname"><em>module</em>, </td>
         </tr>
         <tr>
@@ -515,7 +591,7 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="struct___o_w_l_var_decl.html">OWLVarDecl</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="owl__host_8h.html#a73ca01dcc89553d12782ea5b06d02fc5">OWLVarDecl</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>varDecls</em>&#160;</td>
         </tr>
         <tr>
@@ -536,7 +612,7 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">Module::SP owl::Context::createModule </td>
+          <td class="memname"><a class="el" href="structowl_1_1_module.html#a61c46069e1de8c04415a33367d692e9a">Module::SP</a> owl::Context::createModule </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>ptxCode</em></td><td>)</td>
@@ -555,7 +631,7 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">RayGen::SP owl::Context::createRayGen </td>
+          <td class="memname"><a class="el" href="structowl_1_1_ray_gen.html#ac9340024b7a2d63fed51bfed9e4acec9">RayGen::SP</a> owl::Context::createRayGen </td>
           <td>(</td>
           <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="structowl_1_1_ray_gen_type.html">RayGenType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>type</em></td><td>)</td>
@@ -574,9 +650,9 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">RayGenType::SP owl::Context::createRayGenType </td>
+          <td class="memname"><a class="el" href="structowl_1_1_ray_gen_type.html#ad66ae2767fe5829477212285434b2a52">RayGenType::SP</a> owl::Context::createRayGenType </td>
           <td>(</td>
-          <td class="paramtype">Module::SP&#160;</td>
+          <td class="paramtype"><a class="el" href="structowl_1_1_module.html#a61c46069e1de8c04415a33367d692e9a">Module::SP</a>&#160;</td>
           <td class="paramname"><em>module</em>, </td>
         </tr>
         <tr>
@@ -594,7 +670,7 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="struct___o_w_l_var_decl.html">OWLVarDecl</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="owl__host_8h.html#a73ca01dcc89553d12782ea5b06d02fc5">OWLVarDecl</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>varDecls</em>&#160;</td>
         </tr>
         <tr>
@@ -651,9 +727,9 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">Buffer::SP owl::Context::deviceBufferCreate </td>
+          <td class="memname"><a class="el" href="structowl_1_1_buffer.html#affd0280855154b42f3e4035ad4ff15d8">Buffer::SP</a> owl::Context::deviceBufferCreate </td>
           <td>(</td>
-          <td class="paramtype">OWLDataType&#160;</td>
+          <td class="paramtype"><a class="el" href="owl__host_8h.html#a7cc01d97d92ac0221b4517fb0906ff9b">OWLDataType</a>&#160;</td>
           <td class="paramname"><em>type</em>, </td>
         </tr>
         <tr>
@@ -679,6 +755,31 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
+<a id="aeced6204202cdbb1c38b71f2d47a8243"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeced6204202cdbb1c38b71f2d47a8243">&#9670;&nbsp;</a></span>deviceCount()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t owl::Context::deviceCount </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a134dbf470e6837661bb6b74710a865c6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a134dbf470e6837661bb6b74710a865c6">&#9670;&nbsp;</a></span>enableMotionBlur()</h2>
 
@@ -697,6 +798,82 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
+<a id="a491d68369b0bbfde20e859e5a396c306"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a491d68369b0bbfde20e859e5a396c306">&#9670;&nbsp;</a></span>enablePeerAccess()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void owl::Context::enablePeerAccess </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ae393c11e9529c22d6a853af97688adad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae393c11e9529c22d6a853af97688adad">&#9670;&nbsp;</a></span>getDevice()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a> owl::Context::getDevice </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ID</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a09d0bd10e2e4bd1080008c17d964ccae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09d0bd10e2e4bd1080008c17d964ccae">&#9670;&nbsp;</a></span>getDevices()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt;<a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a>&gt;&amp; owl::Context::getDevices </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a9c01ca37c443eb38961c3a66ccd275e5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9c01ca37c443eb38961c3a66ccd275e5">&#9670;&nbsp;</a></span>graphicsBufferCreate()</h2>
 
@@ -704,9 +881,9 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">Buffer::SP owl::Context::graphicsBufferCreate </td>
+          <td class="memname"><a class="el" href="structowl_1_1_buffer.html#affd0280855154b42f3e4035ad4ff15d8">Buffer::SP</a> owl::Context::graphicsBufferCreate </td>
           <td>(</td>
-          <td class="paramtype">OWLDataType&#160;</td>
+          <td class="paramtype"><a class="el" href="owl__host_8h.html#a7cc01d97d92ac0221b4517fb0906ff9b">OWLDataType</a>&#160;</td>
           <td class="paramname"><em>type</em>, </td>
         </tr>
         <tr>
@@ -739,9 +916,9 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">Buffer::SP owl::Context::hostPinnedBufferCreate </td>
+          <td class="memname"><a class="el" href="structowl_1_1_buffer.html#affd0280855154b42f3e4035ad4ff15d8">Buffer::SP</a> owl::Context::hostPinnedBufferCreate </td>
           <td>(</td>
-          <td class="paramtype">OWLDataType&#160;</td>
+          <td class="paramtype"><a class="el" href="owl__host_8h.html#a7cc01d97d92ac0221b4517fb0906ff9b">OWLDataType</a>&#160;</td>
           <td class="paramname"><em>type</em>, </td>
         </tr>
         <tr>
@@ -794,9 +971,9 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">Buffer::SP owl::Context::managedMemoryBufferCreate </td>
+          <td class="memname"><a class="el" href="structowl_1_1_buffer.html#affd0280855154b42f3e4035ad4ff15d8">Buffer::SP</a> owl::Context::managedMemoryBufferCreate </td>
           <td>(</td>
-          <td class="paramtype">OWLDataType&#160;</td>
+          <td class="paramtype"><a class="el" href="owl__host_8h.html#a7cc01d97d92ac0221b4517fb0906ff9b">OWLDataType</a>&#160;</td>
           <td class="paramname"><em>type</em>, </td>
         </tr>
         <tr>
@@ -861,7 +1038,7 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">MissProg::SP&#160;</td>
+          <td class="paramtype"><a class="el" href="structowl_1_1_miss_prog.html#a1f045983628596417ddfd86ae08d5973">MissProg::SP</a>&#160;</td>
           <td class="paramname"><em>missProgToUse</em>&#160;</td>
         </tr>
         <tr>
@@ -901,21 +1078,21 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">Texture::SP owl::Context::texture2DCreate </td>
+          <td class="memname"><a class="el" href="structowl_1_1_texture.html#ac475a117330f6ab4019c70c731c69329">Texture::SP</a> owl::Context::texture2DCreate </td>
           <td>(</td>
-          <td class="paramtype">OWLTexelFormat&#160;</td>
+          <td class="paramtype"><a class="el" href="owl__host_8h.html#a2ee16dbc582af76129e454ea1b8ce839">OWLTexelFormat</a>&#160;</td>
           <td class="paramname"><em>texelFormat</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">OWLTextureFilterMode&#160;</td>
+          <td class="paramtype"><a class="el" href="owl__host_8h.html#ae0a182da5b8c87477a9eb169a6f88b42">OWLTextureFilterMode</a>&#160;</td>
           <td class="paramname"><em>filterMode</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">OWLTextureAddressMode&#160;</td>
+          <td class="paramtype"><a class="el" href="owl__host_8h.html#aa9fb321d2d1b92f49f3f9f837e68ad16">OWLTextureAddressMode</a>&#160;</td>
           <td class="paramname"><em>addressMode</em>, </td>
         </tr>
         <tr>
@@ -954,7 +1131,7 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">GeomGroup::SP owl::Context::trianglesGeomGroupCreate </td>
+          <td class="memname"><a class="el" href="structowl_1_1_geom_group.html#a3d53de1ab911d862cf2db3000fe27291">GeomGroup::SP</a> owl::Context::trianglesGeomGroupCreate </td>
           <td>(</td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>numChildren</em></td><td>)</td>
@@ -973,7 +1150,7 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">GeomGroup::SP owl::Context::userGeomGroupCreate </td>
+          <td class="memname"><a class="el" href="structowl_1_1_geom_group.html#a3d53de1ab911d862cf2db3000fe27291">GeomGroup::SP</a> owl::Context::userGeomGroupCreate </td>
           <td>(</td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>numChildren</em></td><td>)</td>
@@ -1001,6 +1178,28 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
+<a id="a0cd3454c75dc3885f6715e92fb29ff49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0cd3454c75dc3885f6715e92fb29ff49">&#9670;&nbsp;</a></span>devices</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="structowl_1_1_device_context.html#a82410cea425118b5845b2cbe0c72968c">DeviceContext::SP</a>&gt; owl::Context::devices</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="accef382b02640cb3654774a4251a9314"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#accef382b02640cb3654774a4251a9314">&#9670;&nbsp;</a></span>dummyLaunchParams</h2>
 
@@ -1008,11 +1207,81 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">LaunchParams::SP owl::Context::dummyLaunchParams</td>
+          <td class="memname"><a class="el" href="structowl_1_1_launch_params.html#af67cfc93883a597fec812071d4e22e1a">LaunchParams::SP</a> owl::Context::dummyLaunchParams</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>a set of dummy (ie, empty) launch params. allows us for always using the same launch code, <em>with</em> launch params, even if th user didn't specify any during launch </p>
+
+</div>
+</div>
+<a id="aff06bab6b42da1ea8d450d4e9acd110f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff06bab6b42da1ea8d450d4e9acd110f">&#9670;&nbsp;</a></span>geoms</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_geom.html">Geom</a>&gt; owl::Context::geoms</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a054ffb5c893391ea937ca791a5437d81"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a054ffb5c893391ea937ca791a5437d81">&#9670;&nbsp;</a></span>geomTypes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_geom_type.html">GeomType</a>&gt; owl::Context::geomTypes</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a824b764aa1dff4810e2ac9a524d1194d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a824b764aa1dff4810e2ac9a524d1194d">&#9670;&nbsp;</a></span>groups</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_group.html">Group</a>&gt; owl::Context::groups</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a5f7a239d64e9d497c5413182debc7c2f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f7a239d64e9d497c5413182debc7c2f">&#9670;&nbsp;</a></span>launchParams</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_launch_params.html">LaunchParams</a>&gt; owl::Context::launchParams</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a9b7955c3daa6f8692a1657bd614699c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b7955c3daa6f8692a1657bd614699c1">&#9670;&nbsp;</a></span>launchParamTypes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_launch_params_type.html">LaunchParamsType</a>&gt; owl::Context::launchParamTypes</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -1038,11 +1307,53 @@ Additional Inherited Members</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;MissProg::SP&gt; owl::Context::missProgPerRayType</td>
+          <td class="memname">std::vector&lt;<a class="el" href="structowl_1_1_miss_prog.html#a1f045983628596417ddfd86ae08d5973">MissProg::SP</a>&gt; owl::Context::missProgPerRayType</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>one miss prog per ray type </p>
+
+</div>
+</div>
+<a id="aa421151529efe853bd4bf9618790e74a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa421151529efe853bd4bf9618790e74a">&#9670;&nbsp;</a></span>missProgs</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_miss_prog.html">MissProg</a>&gt; owl::Context::missProgs</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a0e5af9e5bb20b8dfe8907c644ebc4488"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e5af9e5bb20b8dfe8907c644ebc4488">&#9670;&nbsp;</a></span>missProgTypes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_miss_prog_type.html">MissProgType</a>&gt; owl::Context::missProgTypes</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a886dec738c473517049f79167aec1e89"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a886dec738c473517049f79167aec1e89">&#9670;&nbsp;</a></span>modules</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_module.html">Module</a>&gt; owl::Context::modules</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -1076,6 +1387,34 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
+<a id="aff689b2e77f231d30e2cbac86a8759b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff689b2e77f231d30e2cbac86a8759b5">&#9670;&nbsp;</a></span>rayGens</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_ray_gen.html">RayGen</a>&gt; owl::Context::rayGens</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a958c2c09358e52570e4d3dec31c46395"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a958c2c09358e52570e4d3dec31c46395">&#9670;&nbsp;</a></span>rayGenTypes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_ray_gen_type.html">RayGenType</a>&gt; owl::Context::rayGenTypes</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a091d1f77d43221d9bd56fbbc84caf3e0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a091d1f77d43221d9bd56fbbc84caf3e0">&#9670;&nbsp;</a></span>sbtRangeAllocator</h2>
 
@@ -1091,16 +1430,30 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
+<a id="ad5c5b47f202c9279ec94cc127b564acb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad5c5b47f202c9279ec94cc127b564acb">&#9670;&nbsp;</a></span>textures</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structowl_1_1_object_registry_t.html">ObjectRegistryT</a>&lt;<a class="el" href="structowl_1_1_texture.html">Texture</a>&gt; owl::Context::textures</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following files:<ul>
 <li>owl/<a class="el" href="_context_8h_source.html">Context.h</a></li>
-<li>owl/Context.cpp</li>
+<li>owl/<a class="el" href="_context_8cpp.html">Context.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><b>owl</b></li><li class="navelem"><a class="el" href="structowl_1_1_context.html">Context</a></li>
+    <li class="navelem"><a class="el" href="namespaceowl.html">owl</a></li><li class="navelem"><a class="el" href="structowl_1_1_context.html">Context</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

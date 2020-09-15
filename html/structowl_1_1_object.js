@@ -8,5 +8,6 @@ var structowl_1_1_object =
     [ "createOn", "structowl_1_1_object.html#a54b6362ef3a26e1a392b6ce29aa7519f", null ],
     [ "toString", "structowl_1_1_object.html#a2f8db237a8eb33988e25925a93d3a342", null ],
     [ "deviceData", "structowl_1_1_object.html#a43133612fd3b4bfcd35abdbf49ab34ca", null ],
+    [ "nextAvailableID", "structowl_1_1_object.html#a20ed2164e1f2eb4021f4362eefde9b13", null ],
     [ "uniqueID", "structowl_1_1_object.html#a6ae3f1e70a452ce48a7d7d55cf3916f9", null ]
 ];

@@ -123,8 +123,7 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a74e947dcb06759e0d20bc885afb75779"><td class="memItemLeft" align="right" valign="top"><a id="a74e947dcb06759e0d20bc885afb75779"></a>
-typedef std::shared_ptr&lt; <a class="el" href="structowl_1_1_object.html">Object</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>SP</b></td></tr>
+<tr class="memitem:a74e947dcb06759e0d20bc885afb75779"><td class="memItemLeft" align="right" valign="top">typedef std::shared_ptr&lt; <a class="el" href="structowl_1_1_object.html">Object</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a74e947dcb06759e0d20bc885afb75779">SP</a></td></tr>
 <tr class="separator:a74e947dcb06759e0d20bc885afb75779"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
@@ -133,7 +132,7 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a2dd9c78eddb7e42f54b145bfbdee3d39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f8db237a8eb33988e25925a93d3a342"><td class="memItemLeft" align="right" valign="top">virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a2f8db237a8eb33988e25925a93d3a342">toString</a> () const</td></tr>
 <tr class="separator:a2f8db237a8eb33988e25925a93d3a342"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54b6362ef3a26e1a392b6ce29aa7519f"><td class="memItemLeft" align="right" valign="top">virtual DeviceData::SP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a54b6362ef3a26e1a392b6ce29aa7519f">createOn</a> (const std::shared_ptr&lt; <a class="el" href="structowl_1_1_device_context.html">DeviceContext</a> &gt; &amp;device)</td></tr>
+<tr class="memitem:a54b6362ef3a26e1a392b6ce29aa7519f"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structowl_1_1_object_1_1_device_data.html#a7ee587f3ff9ca4afcbde9b03f81e53f6">DeviceData::SP</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a54b6362ef3a26e1a392b6ce29aa7519f">createOn</a> (const std::shared_ptr&lt; <a class="el" href="structowl_1_1_device_context.html">DeviceContext</a> &gt; &amp;device)</td></tr>
 <tr class="separator:a54b6362ef3a26e1a392b6ce29aa7519f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79983e195c5f388f9f34f304cdfa1fe7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a79983e195c5f388f9f34f304cdfa1fe7">createDeviceData</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="structowl_1_1_device_context.html">DeviceContext</a> &gt;&gt; &amp;devices)</td></tr>
 <tr class="separator:a79983e195c5f388f9f34f304cdfa1fe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,7 +144,7 @@ Public Member Functions</h2></td></tr>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a6ae3f1e70a452ce48a7d7d55cf3916f9"><td class="memItemLeft" align="right" valign="top">const size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a6ae3f1e70a452ce48a7d7d55cf3916f9">uniqueID</a></td></tr>
 <tr class="separator:a6ae3f1e70a452ce48a7d7d55cf3916f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43133612fd3b4bfcd35abdbf49ab34ca"><td class="memItemLeft" align="right" valign="top">std::vector&lt; DeviceData::SP &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a43133612fd3b4bfcd35abdbf49ab34ca">deviceData</a></td></tr>
+<tr class="memitem:a43133612fd3b4bfcd35abdbf49ab34ca"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structowl_1_1_object_1_1_device_data.html#a7ee587f3ff9ca4afcbde9b03f81e53f6">DeviceData::SP</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structowl_1_1_object.html#a43133612fd3b4bfcd35abdbf49ab34ca">deviceData</a></td></tr>
 <tr class="separator:a43133612fd3b4bfcd35abdbf49ab34ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
@@ -155,7 +154,22 @@ Static Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>common "root" abstraction for every object this library creates </p>
-</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+</div><h2 class="groupheader">Member Typedef Documentation</h2>
+<a id="a74e947dcb06759e0d20bc885afb75779"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74e947dcb06759e0d20bc885afb75779">&#9670;&nbsp;</a></span>SP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef std::shared_ptr&lt;<a class="el" href="structowl_1_1_object.html">Object</a>&gt; <a class="el" href="structowl_1_1_object.html#a74e947dcb06759e0d20bc885afb75779">owl::Object::SP</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a2dd9c78eddb7e42f54b145bfbdee3d39"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2dd9c78eddb7e42f54b145bfbdee3d39">&#9670;&nbsp;</a></span>Object()</h2>
 
@@ -215,7 +229,7 @@ template&lt;typename T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>creates the actual device data for all devies,by calling </p><dl class="section see"><dt>See also</dt><dd><a class="el" href="structowl_1_1_object.html#a54b6362ef3a26e1a392b6ce29aa7519f">createOn()</a> for each device </dd></dl>
+<p>creates the actual device data for all devies,by calling </p><dl class="section see"><dt>See also</dt><dd><a class="el" href="structowl_1_1_object.html#a54b6362ef3a26e1a392b6ce29aa7519f">createOn()</a> for each <a class="el" href="namespaceowl_1_1device.html">device</a> </dd></dl>
 
 </div>
 </div>
@@ -229,7 +243,7 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">Object::DeviceData::SP owl::Object::createOn </td>
+          <td class="memname"><a class="el" href="structowl_1_1_object_1_1_device_data.html#a7ee587f3ff9ca4afcbde9b03f81e53f6">Object::DeviceData::SP</a> owl::Object::createOn </td>
           <td>(</td>
           <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="structowl_1_1_device_context.html">DeviceContext</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>device</em></td><td>)</td>
@@ -282,7 +296,7 @@ template&lt;typename T &gt; </div>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;DeviceData::SP&gt; owl::Object::deviceData</td>
+          <td class="memname">std::vector&lt;<a class="el" href="structowl_1_1_object_1_1_device_data.html#a7ee587f3ff9ca4afcbde9b03f81e53f6">DeviceData::SP</a>&gt; owl::Object::deviceData</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -330,14 +344,14 @@ template&lt;typename T &gt; </div>
 </div>
 <hr/>The documentation for this struct was generated from the following files:<ul>
 <li>owl/<a class="el" href="_object_8h_source.html">Object.h</a></li>
-<li>owl/Object.cpp</li>
+<li>owl/<a class="el" href="_object_8cpp.html">Object.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><b>owl</b></li><li class="navelem"><a class="el" href="structowl_1_1_object.html">Object</a></li>
+    <li class="navelem"><a class="el" href="namespaceowl.html">owl</a></li><li class="navelem"><a class="el" href="structowl_1_1_object.html">Object</a></li>
     <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
   </ul>
 </div>

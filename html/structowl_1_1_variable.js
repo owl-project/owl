@@ -2,6 +2,7 @@ var structowl_1_1_variable =
 [
     [ "SP", "structowl_1_1_variable.html#a131962dfe52006dc99d4653d2573214d", null ],
     [ "Variable", "structowl_1_1_variable.html#a3e92ad0afc3c352747a26534ee3179f4", null ],
+    [ "createInstanceOf", "structowl_1_1_variable.html#a7227ac4420a3c873324987eb8398612c", null ],
     [ "mismatchingType", "structowl_1_1_variable.html#ad0703827f078139e6246f3c91b851ddd", null ],
     [ "set", "structowl_1_1_variable.html#ac98717e2f643db7eee9a7b644500c089", null ],
     [ "set", "structowl_1_1_variable.html#a8e2066a1ee817a7dbf5d73f5f1e510ad", null ],

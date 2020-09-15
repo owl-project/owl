@@ -43,7 +43,13 @@ var NAVTREE =
       [ "Contributors", "md__r_e_a_d_m_e.html#autotoc_md13", null ]
     ] ],
     [ "Namespaces", "namespaces.html", [
-      [ "Namespace List", "namespaces.html", "namespaces_dup" ]
+      [ "Namespace List", "namespaces.html", "namespaces_dup" ],
+      [ "Namespace Members", "namespacemembers.html", [
+        [ "All", "namespacemembers.html", "namespacemembers_dup" ],
+        [ "Functions", "namespacemembers_func.html", "namespacemembers_func" ],
+        [ "Variables", "namespacemembers_vars.html", null ],
+        [ "Typedefs", "namespacemembers_type.html", null ]
+      ] ]
     ] ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -52,22 +58,35 @@ var NAVTREE =
       [ "Class Members", "functions.html", [
         [ "All", "functions.html", "functions_dup" ],
         [ "Functions", "functions_func.html", "functions_func" ],
-        [ "Variables", "functions_vars.html", null ]
+        [ "Variables", "functions_vars.html", "functions_vars" ],
+        [ "Typedefs", "functions_type.html", null ],
+        [ "Enumerator", "functions_eval.html", null ]
       ] ]
     ] ],
     [ "Files", "files.html", [
-      [ "File List", "files.html", "files_dup" ]
+      [ "File List", "files.html", "files_dup" ],
+      [ "File Members", "globals.html", [
+        [ "All", "globals.html", "globals_dup" ],
+        [ "Functions", "globals_func.html", null ],
+        [ "Typedefs", "globals_type.html", null ],
+        [ "Enumerations", "globals_enum.html", null ],
+        [ "Enumerator", "globals_eval.html", null ],
+        [ "Macros", "globals_defs.html", null ]
+      ] ]
     ] ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"_a_p_i_context_8h_source.html",
-"structowl_1_1_buffer_1_1_device_data.html#a8fe7da17f8ede81732c90f2184d81974",
-"structowl_1_1_launch_params.html",
-"structowl_1_1_user_geom_type.html#a3a96bc45081d05f7b2e55ce7103e7160",
-"structowl_1_1common_1_1vec__t_3_01_t_00_013_01_4.html#a80ae4ff3f5cc02ceb0f956127e9b183e"
+"_a_p_i_context_8cpp.html",
+"compare_8h.html#a79dbc7ef6843917b83b8b07ef5573869",
+"impl_8cpp.html#ac9d4b79c7f67d0c41d9745620ac2f18d",
+"owl__host_8h.html#a7527ccf3b073523b8b517b2a80eda465",
+"structowl_1_1_buffer.html#a3edef97bed79698ef2d078a19cbd2485",
+"structowl_1_1_instance_group.html#a80a09cbe8205374f34c5f6c994185006",
+"structowl_1_1_user_geom.html#a327c0adc311f40e6dfe00d75ca2f5203",
+"structowl_1_1common_1_1_zero_ty.html#a72e77503ac80104a93afcda44a19ff9b"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
