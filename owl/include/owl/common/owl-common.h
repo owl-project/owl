@@ -228,8 +228,31 @@ namespace owl {
     }
   
 
-
+    /*! return a nicely formatted number as in "3.4M" instead of
+        "3400000", etc, using mulitples of thousands (K), millions
+        (M), etc. Ie, the value 64000 would be returned as 64K, and
+        65536 would be 65.5K */
     inline std::string prettyNumber(const size_t s)
+    {
+      char buf[1000];
+      if (s >= (1000LL*1000LL*1000LL*1000LL)) {
+        osp_snprintf(buf, 1000,"%.2fT",s/(1000.f*1000.f*1000.f*1000.f));
+      } else if (s >= (1000LL*1000LL*1000LL)) {
+        osp_snprintf(buf, 1000, "%.2fG",s/(1000.f*1000.f*1000.f));
+      } else if (s >= (1000LL*1000LL)) {
+        osp_snprintf(buf, 1000, "%.2fM",s/(1000.f*1000.f));
+      } else if (s >= (1000LL)) {
+        osp_snprintf(buf, 1000, "%.2fK",s/(1000.f));
+      } else {
+        osp_snprintf(buf,1000,"%zi",s);
+      }
+      return buf;
+    }
+
+    /*! return a nicely formatted number as in "3.4M" instead of
+        "3400000", etc, using mulitples of 1024 as in kilobytes,
+        etc. Ie, the value 65534 would be 64K, 64000 would be 63.8K */
+    inline std::string prettyBytes(const size_t s)
     {
       char buf[1000];
       if (s >= (1024LL*1024LL*1024LL*1024LL)) {
