@@ -102,7 +102,9 @@ namespace owl {
           if (!canAccessPeer) {
             // huh. this can happen if you have differnt device
             // types (in my case, a 2070 and a rtx 8000).
-            std::cerr << "cannot not enable peer access!? ... skipping..." << std::endl;
+            // nvm - yup, this isn't an error. Expect certain configs to not allow peer access.
+            // disabling this, as it's concerning end users.
+            // std::cerr << "cannot not enable peer access!? ... skipping..." << std::endl;
             continue;
           }
           
