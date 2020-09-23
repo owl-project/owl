@@ -45,10 +45,8 @@ namespace owl {
     if (rt < parent->anyHit.size()) {
       const ProgramDesc &pd = parent->anyHit[rt];
       if (pd.module) {
-        std::string annotatedProgName
-          = std::string("__anyhit__")+pd.progName;
         pgDesc.hitgroup.moduleAH = pd.module->getDD(device).module;
-        pgDesc.hitgroup.entryFunctionNameAH = annotatedProgName.c_str();
+        pgDesc.hitgroup.entryFunctionNameAH = pd.progName.c_str();
       }
     }
   }
