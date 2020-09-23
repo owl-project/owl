@@ -497,9 +497,6 @@ namespace owl {
         char log[2048];
         size_t sizeof_log = sizeof( log );
         OptixProgramGroup &pg = dd.hgPGs[rt];
-        PING;
-        PRINT(pgDesc.hitgroup.moduleAH);
-        PRINT(pgDesc.hitgroup.entryFunctionNameAH);
         OPTIX_CHECK(optixProgramGroupCreate(optixContext,
                                             &pgDesc,
                                             1,
@@ -507,7 +504,6 @@ namespace owl {
                                             log,&sizeof_log,
                                             &pg
                                             ));
-        PING;
         allActivePrograms.push_back(pg);
       }
     }
