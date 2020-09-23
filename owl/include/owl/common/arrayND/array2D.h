@@ -33,7 +33,17 @@ namespace owl {
             lambda(vec2i(ix,iy));
       }
 
-#if OWL_HAVE_PARALLEL_FOR
+      template<typename Lambda>
+      inline void for_each(const vec2i &begin,
+                           const vec2i &end,
+                           const Lambda &lambda)
+      {
+        for (int iy=begin.y;iy<end.y;iy++)
+          for (int ix=begin.x;ix<end.x;ix++)
+            lambda(vec2i(ix,iy));
+      }
+
+// #if OWL_HAVE_PARALLEL_FOR
       template<typename Lambda>
       inline void parallel_for(const vec2i &dims, const Lambda &lambda)
       {
@@ -41,7 +51,7 @@ namespace owl {
             lambda(vec2i(index%dims.x,index/dims.x));
           });
       }
-#endif
+// #endif
       template<typename Lambda>
       inline void serial_for(const vec2i &dims, const Lambda &lambda)
       {
@@ -50,6 +60,22 @@ namespace owl {
           });
       }
     
+      template<typename Lambda>
+      inline void parallel_for_blocked(const vec2i &dims,
+                                       const vec2i &blockSize,
+                                       const Lambda &lambda)
+      {
+        const vec2i numBlocks = divRoundUp(dims,blockSize);
+        array2D::parallel_for
+          (numBlocks,[&](const vec2i &block){
+                       const vec2i begin = block*blockSize;
+                       const vec2i end   = min(begin+blockSize,dims);
+                       lambda(begin,end);
+                       // array2D::for_each(begin,end,
+                       //                   [&](const vec2i &pixel)
+                       //                   { lambda(pixel); });
+                     });
+      }
     } // owl::common::array2D
   } // owl::common
 } // owl
