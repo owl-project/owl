@@ -316,7 +316,8 @@ namespace owl {
     }
     
     OWLViewer::OWLViewer(const std::string &title,
-                         const vec2i &initWindowSize)
+                         const vec2i &initWindowSize,
+                               bool visible)
     {
       glfwSetErrorCallback(glfw_error_callback);
       // glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
@@ -325,7 +326,7 @@ namespace owl {
       
       glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
       glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-      glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+      glfwWindowHint(GLFW_VISIBLE, visible);
       
       handle = glfwCreateWindow(initWindowSize.x, initWindowSize.y,
                                 title.c_str(), NULL, NULL);

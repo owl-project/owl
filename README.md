@@ -29,6 +29,8 @@ Key links:
   
 - The OWL API is explained in part here: https://owl-project.github.io/ng-api-overview.html
 
+- Documentation: https://owl-project.github.io/owl/html/index.html
+
 
 <!--- ------------------------------------------------------- -->
 API Abstraction Level and Directory Structure

@@ -493,7 +493,7 @@ namespace owl {
         
         // now let the type fill in what it has
         dd.fillPGDesc(pgDesc,geomType.get(),rt);
-        
+
         char log[2048];
         size_t sizeof_log = sizeof( log );
         OptixProgramGroup &pg = dd.hgPGs[rt];

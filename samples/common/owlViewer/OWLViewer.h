@@ -71,7 +71,8 @@ namespace owl {
       static inline vec3f getUpVector(const vec3f &v) { return owl::viewer::getUpVector(v); }
 
       OWLViewer(const std::string &title = "OWL Sample Viewer",
-                const vec2i &initWindowSize=vec2i(1200,800)
+                const vec2i &initWindowSize=vec2i(1200,800),
+                      bool visible=true
                 // ,
                 // const vec3f &cameraInitFrom = vec3f(0,0,-1),
                 // const vec3f &cameraInitAt   = vec3f(0,0,0),
