@@ -49,9 +49,6 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
                 /*the ray to trace*/ray,
                 /*prd*/hit);
 
-  if (2*getLaunchIndex() == getLaunchDims()) {
-    printf("BLA %f %f %f\n",hit.col.x,hit.col.y,hit.col.z);
-  }
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
     = owl::make_rgba(hit.col);
