@@ -97,6 +97,8 @@ namespace owl {
         tex_desc.addressMode[0]      = cudaAddressModeClamp;
         tex_desc.addressMode[1]      = cudaAddressModeClamp;
         break;
+      default:
+        throw std::runtime_error("not implemented wrapmode");
       };
       assert(filterMode == OWL_TEXTURE_NEAREST
              ||
@@ -105,7 +107,19 @@ namespace owl {
         filterMode == OWL_TEXTURE_NEAREST
         ? cudaFilterModePoint
         : cudaFilterModeLinear;
-      tex_desc.readMode            = cudaReadModeNormalizedFloat;
+      switch (texelFormat) {
+      case OWL_TEXEL_FORMAT_RGBA8:
+        tex_desc.readMode            = cudaReadModeNormalizedFloat;
+        break;
+      case OWL_TEXEL_FORMAT_RGBA32F:
+        tex_desc.readMode            = cudaReadModeElementType;
+        break;
+      case OWL_TEXEL_FORMAT_R32F:
+        tex_desc.readMode            = cudaReadModeElementType;
+        break;
+      default:
+        throw std::runtime_error("texel format not implemented");
+      }
       tex_desc.normalizedCoords    = 1;
       tex_desc.maxAnisotropy       = 1;
       tex_desc.maxMipmapLevelClamp = 99;

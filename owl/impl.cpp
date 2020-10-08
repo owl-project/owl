@@ -1104,8 +1104,6 @@ checkGet(_context)->buildSBT(flags);
       ? handle->get<Texture>()
       : Texture::SP();
     
-    assert(texture);
-
     setVariable((APIHandle *)_variable,texture);
   }
 
