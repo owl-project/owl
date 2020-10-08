@@ -19,22 +19,36 @@
 
 namespace owl {
 
+  size_t bytesPerTexel(OWLTexelFormat       texelFormat)
+  {
+    switch(texelFormat){
+    case OWL_TEXEL_FORMAT_RGBA8:
+      return sizeof(vec4uc);
+    case OWL_TEXEL_FORMAT_RGBA32F:
+      return sizeof(vec4f);
+    case OWL_TEXEL_FORMAT_R32F:
+      return sizeof(float);
+    default:
+      throw std::runtime_error("texel format not implemented");
+    };
+  }
+  
   Texture::Texture(Context *const context,
                    vec2i                size,
                    uint32_t             linePitchInBytes,
                    OWLTexelFormat       texelFormat,
                    OWLTextureFilterMode filterMode,
-                   const void *texels
+                   OWLTextureWrapMode   wrapMode,
+                   const void          *texels
                    )
     : RegisteredObject(context,context->textures)
   {
     assert(size.x > 0);
     assert(size.y > 0);
     int32_t pitch  = linePitchInBytes;
-    
-    assert(texelFormat == OWL_TEXEL_FORMAT_RGBA8);
+
     if (pitch == 0)
-      pitch = size.x*sizeof(vec4uc);
+      pitch = size.x*bytesPerTexel(texelFormat);//sizeof(vec4uc);
 
     assert(texels != nullptr);
     
@@ -44,7 +58,19 @@ namespace owl {
       cudaResourceDesc res_desc = {};
       
       cudaChannelFormatDesc channel_desc;
-      channel_desc = cudaCreateChannelDesc<uchar4>();
+      switch (texelFormat) {
+      case OWL_TEXEL_FORMAT_RGBA8:
+        channel_desc = cudaCreateChannelDesc<uchar4>();
+        break;
+      case OWL_TEXEL_FORMAT_RGBA32F:
+        channel_desc = cudaCreateChannelDesc<float4>();
+        break;
+      case OWL_TEXEL_FORMAT_R32F:
+        channel_desc = cudaCreateChannelDesc<float>();
+        break;
+      default:
+        throw std::runtime_error("texel format not implemented");
+      }
 
       cudaArray_t   pixelArray;
       CUDA_CALL(MallocArray(&pixelArray,
@@ -62,8 +88,16 @@ namespace owl {
       res_desc.res.array.array  = pixelArray;
       
       cudaTextureDesc tex_desc     = {};
-      tex_desc.addressMode[0]      = cudaAddressModeWrap;
-      tex_desc.addressMode[1]      = cudaAddressModeWrap;
+      switch (wrapMode) {
+      case OWL_TEXTURE_WRAP:
+        tex_desc.addressMode[0]      = cudaAddressModeWrap;
+        tex_desc.addressMode[1]      = cudaAddressModeWrap;
+        break;
+      case OWL_TEXTURE_CLAMP:
+        tex_desc.addressMode[0]      = cudaAddressModeClamp;
+        tex_desc.addressMode[1]      = cudaAddressModeClamp;
+        break;
+      };
       assert(filterMode == OWL_TEXTURE_NEAREST
              ||
              filterMode == OWL_TEXTURE_LINEAR);

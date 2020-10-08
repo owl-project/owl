@@ -97,6 +97,12 @@ typedef enum
 
 typedef enum
   {
+   OWL_TEXTURE_WRAP = 0,
+   OWL_TEXTURE_CLAMP
+  } OWLTextureWrapMode;
+
+typedef enum
+  {
    OWL_SBT_HITGROUPS = 0x1,
    OWL_SBT_GEOMS     = OWL_SBT_HITGROUPS,
    OWL_SBT_RAYGENS   = 0x2,
@@ -253,7 +259,9 @@ typedef struct _OWLVarDecl {
 /*! supported formats for texels in textures */
 typedef enum
   {
-   OWL_TEXEL_FORMAT_RGBA8
+   OWL_TEXEL_FORMAT_RGBA8,
+   OWL_TEXEL_FORMAT_RGBA32F,
+   OWL_TEXEL_FORMAT_R32F
   }
   OWLTexelFormat;
 
@@ -528,6 +536,7 @@ owlTexture2DCreate(OWLContext context,
                    uint32_t size_y,
                    const void *texels,
                    OWLTextureFilterMode filterMode OWL_IF_CPP(=OWL_TEXTURE_LINEAR),
+                   OWLTextureWrapMode wrapMode     OWL_IF_CPP(=OWL_TEXTURE_WRAP),
                    /*! number of bytes between one line of texels and
                      the next; '0' means 'size_x * sizeof(texel)' */
                    uint32_t linePitchInBytes       OWL_IF_CPP(=0)
