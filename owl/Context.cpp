@@ -77,7 +77,7 @@ namespace owl {
     LOG("enabling peer access ('.'=self, '+'=can access other device)");
     auto &devices = getDevices();
 
-    int deviceCount = devices.size();
+    int deviceCount = int(devices.size());
     LOG("found " << deviceCount << " CUDA capable devices");
     for (auto device : devices) 
       LOG(" - device #" << device->ID << " : " << device->getDeviceName());
@@ -171,7 +171,6 @@ namespace owl {
   Texture::SP
   Context::texture2DCreate(OWLTexelFormat texelFormat,
                            OWLTextureFilterMode filterMode,
-                           OWLTextureWrapMode wrapMode,
                            OWLTextureAddressMode addressMode,
                            const vec2i size,
                            uint32_t linePitchInBytes,
@@ -522,7 +521,7 @@ namespace owl {
   {
     /* TODO; sanity checking that this is a useful value, and that
        no geoms etc are created yet */
-    this->numRayTypes = rayTypeCount;
+    this->numRayTypes = int(rayTypeCount);
   }
 
   /*! sets maximum instancing depth for the given context:
