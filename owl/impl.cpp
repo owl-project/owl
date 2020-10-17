@@ -1098,8 +1098,6 @@ checkGet(_context)->buildSBT(flags);
       ? handle->get<Group>()
       : Group::SP();
     
-    assert(group);
-
     setVariable((APIHandle *)_variable,group);
   }
 
@@ -1114,8 +1112,6 @@ checkGet(_context)->buildSBT(flags);
       ? handle->get<Texture>()
       : Texture::SP();
     
-    assert(texture);
-
     setVariable((APIHandle *)_variable,texture);
   }
 
