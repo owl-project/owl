@@ -267,7 +267,7 @@ checkGet(_context)->buildSBT(flags);
   
 
   std::vector<OWLVarDecl> checkAndPackVariables(const OWLVarDecl *vars,
-                                                size_t            numVars)
+                                                int               numVars)
   {
     if (vars == nullptr && (numVars == 0 || numVars == -1))
       return {};
@@ -276,7 +276,7 @@ checkGet(_context)->buildSBT(flags);
     // *access errors early
 
     assert(vars);
-    if (numVars == size_t(-1)) {
+    if (numVars == -1) {
       // using -1 as count value for a variable list means the list is
       // null-terminated... so just count it
       for (numVars = 0; vars[numVars].name != nullptr; numVars++);
@@ -294,7 +294,7 @@ checkGet(_context)->buildSBT(flags);
                   const char *programName,
                   size_t      sizeOfVarStruct,
                   OWLVarDecl *vars,
-                  size_t      numVars)
+                  int         numVars)
   {
     LOG_API_CALL();
     APIContext::SP context = checkGet(_context);
@@ -316,7 +316,7 @@ checkGet(_context)->buildSBT(flags);
   owlParamsCreate(OWLContext _context,
                   size_t      sizeOfVarStruct,
                   OWLVarDecl *vars,
-                  size_t      numVars)
+                  int         numVars)
   {
     LOG_API_CALL();
     APIContext::SP context = checkGet(_context);
@@ -354,7 +354,7 @@ checkGet(_context)->buildSBT(flags);
                     const char *programName,
                     size_t      sizeOfVarStruct,
                     OWLVarDecl *vars,
-                    size_t      numVars)
+                    int         numVars)
   {
     LOG_API_CALL();
  
@@ -522,7 +522,7 @@ checkGet(_context)->buildSBT(flags);
                      uint32_t size_y,
                      const void *texels,
                      OWLTextureFilterMode filterMode,
-                     OWLTextureWrapMode wrapMode,
+                     OWLTextureAddressMode addressMode,
                      /*! number of bytes between one line of texels and
                        the next; '0' means 'size_x * sizeof(texel)' */
                      uint32_t linePitchInBytes
@@ -533,7 +533,7 @@ checkGet(_context)->buildSBT(flags);
     Texture::SP  texture
       = context->texture2DCreate(texelFormat,
                                  filterMode,
-                                 wrapMode,
+                                 addressMode,
                                  vec2i(size_x,size_y),
                                  linePitchInBytes,
                                  texels);
@@ -541,6 +541,16 @@ checkGet(_context)->buildSBT(flags);
     return (OWLTexture)context->createHandle(texture);
   }
 
+  OWL_API CUtexObject
+  owlTextureGetObject(OWLTexture _texture, int deviceID)
+  {
+    LOG_API_CALL();
+    assert(_texture);
+    Texture::SP texture = ((APIHandle *)_texture)->get<Texture>();
+    assert(texture);
+    return texture->getObject(deviceID);
+  }
+  
   /*! destroy the given texture; this will both release the app's
     refcount on the given texture handle, *and* the texture itself; i.e.,
     even if some objects still hold variables that refer to the old
@@ -703,7 +713,7 @@ checkGet(_context)->buildSBT(flags);
                     OWLGeomKind kind,
                     size_t      varStructSize,
                     OWLVarDecl *vars,
-                    size_t      numVars)
+                    int         numVars)
   {
     LOG_API_CALL();
     assert(_context);
@@ -1088,8 +1098,6 @@ checkGet(_context)->buildSBT(flags);
       ? handle->get<Group>()
       : Group::SP();
     
-    assert(group);
-
     setVariable((APIHandle *)_variable,group);
   }
 

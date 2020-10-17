@@ -49,61 +49,65 @@ namespace owl {
 
     template<typename L>
     struct OWL_INTERFACE AffineSpaceT
-    {
-      L l;           /*< linear part of affine space */
-      VectorT p;     /*< affine part of affine space */
+      {
+       L l;           /*< linear part of affine space */
+       VectorT p;     /*< affine part of affine space */
 
-      ////////////////////////////////////////////////////////////////////////////////
-      // Constructors, Assignment, Cast, Copy Operations
-      ////////////////////////////////////////////////////////////////////////////////
+       ////////////////////////////////////////////////////////////////////////////////
+       // Constructors, Assignment, Cast, Copy Operations
+       ////////////////////////////////////////////////////////////////////////////////
 
-      // inline AffineSpaceT           ( ) = default;
-#ifdef __CUDA_ARCH__
-      inline __both__ AffineSpaceT           ( ) : l(OneTy()), p(ZeroTy()) {}
-#else
-      inline __both__ AffineSpaceT           ( ) : l(one), p(zero) {}
-#endif
+       // inline AffineSpaceT           ( ) = default;
+// #ifdef __CUDA_ARCH__
+       inline __both__
+       AffineSpaceT           ( )
+       : l(OneTy()),
+       p(ZeroTy())
+       {}
+// #else
+//        inline __both__ AffineSpaceT           ( ) : l(one), p(zero) {}
+// #endif
 
-      inline __both__ AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
-      inline __both__ AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(ZeroTy()); }
-      inline __both__ AffineSpaceT& operator=( const AffineSpaceT& other ) { l = other.l; p = other.p; return *this; }
+       inline __both__ AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
+       inline __both__ AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(ZeroTy()); }
+       inline __both__ AffineSpaceT& operator=( const AffineSpaceT& other ) { l = other.l; p = other.p; return *this; }
 
-      inline __both__ AffineSpaceT( const VectorT& vx, const VectorT& vy, const VectorT& vz, const VectorT& p ) : l(vx,vy,vz), p(p) {}
-      inline __both__ AffineSpaceT( const L& l, const VectorT& p ) : l(l), p(p) {}
+       inline __both__ AffineSpaceT( const VectorT& vx, const VectorT& vy, const VectorT& vz, const VectorT& p ) : l(vx,vy,vz), p(p) {}
+       inline __both__ AffineSpaceT( const L& l, const VectorT& p ) : l(l), p(p) {}
 
-      template<typename L1> inline __both__ AffineSpaceT( const AffineSpaceT<L1>& s ) : l(s.l), p(s.p) {}
+       template<typename L1> inline __both__ AffineSpaceT( const AffineSpaceT<L1>& s ) : l(s.l), p(s.p) {}
 
-      ////////////////////////////////////////////////////////////////////////////////
-      // Constants
-      ////////////////////////////////////////////////////////////////////////////////
+       ////////////////////////////////////////////////////////////////////////////////
+       // Constants
+       ////////////////////////////////////////////////////////////////////////////////
 
-      inline AffineSpaceT( ZeroTy ) : l(zero), p(zero) {}
-      inline AffineSpaceT( OneTy )  : l(one),  p(zero) {}
+       inline AffineSpaceT( ZeroTy ) : l(ZeroTy()), p(ZeroTy()) {}
+       inline AffineSpaceT( OneTy )  : l(OneTy()),  p(ZeroTy()) {}
 
-      /*! return matrix for scaling */
-      static inline AffineSpaceT scale(const VectorT& s) { return L::scale(s); }
+       /*! return matrix for scaling */
+       static inline AffineSpaceT scale(const VectorT& s) { return L::scale(s); }
 
-      /*! return matrix for translation */
-      static inline AffineSpaceT translate(const VectorT& p) { return AffineSpaceT(one,p); }
+       /*! return matrix for translation */
+       static inline AffineSpaceT translate(const VectorT& p) { return AffineSpaceT(OneTy(),p); }
 
-      /*! return matrix for rotation, only in 2D */
-      static inline AffineSpaceT rotate(const ScalarT& r) { return L::rotate(r); }
+       /*! return matrix for rotation, only in 2D */
+       static inline AffineSpaceT rotate(const ScalarT& r) { return L::rotate(r); }
 
-      /*! return matrix for rotation around arbitrary point (2D) or axis (3D) */
-      static inline AffineSpaceT rotate(const VectorT& u, const ScalarT& r) { return L::rotate(u,r); }
+       /*! return matrix for rotation around arbitrary point (2D) or axis (3D) */
+       static inline AffineSpaceT rotate(const VectorT& u, const ScalarT& r) { return L::rotate(u,r); }
 
-      /*! return matrix for rotation around arbitrary axis and point, only in 3D */
-      static inline AffineSpaceT rotate(const VectorT& p, const VectorT& u, const ScalarT& r) { return translate(+p) * rotate(u,r) * translate(-p);  }
+       /*! return matrix for rotation around arbitrary axis and point, only in 3D */
+       static inline AffineSpaceT rotate(const VectorT& p, const VectorT& u, const ScalarT& r) { return translate(+p) * rotate(u,r) * translate(-p);  }
 
-      /*! return matrix for looking at given point, only in 3D; right-handed coordinate system */
-      static inline AffineSpaceT lookat(const VectorT& eye, const VectorT& point, const VectorT& up) {
-        VectorT Z = normalize(point-eye);
-        VectorT U = normalize(cross(Z,up));
-        VectorT V = cross(U,Z);
-        return AffineSpaceT(L(U,V,Z),eye);
-      }
+       /*! return matrix for looking at given point, only in 3D; right-handed coordinate system */
+       static inline AffineSpaceT lookat(const VectorT& eye, const VectorT& point, const VectorT& up) {
+                                                                                                       VectorT Z = normalize(point-eye);
+                                                                                                       VectorT U = normalize(cross(Z,up));
+                                                                                                       VectorT V = cross(U,Z);
+                                                                                                       return AffineSpaceT(L(U,V,Z),eye);
+       }
 
-    };
+      };
 
     ////////////////////////////////////////////////////////////////////////////////
     // Unary Operators

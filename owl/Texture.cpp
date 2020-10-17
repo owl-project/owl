@@ -38,17 +38,31 @@ namespace owl {
                    uint32_t             linePitchInBytes,
                    OWLTexelFormat       texelFormat,
                    OWLTextureFilterMode filterMode,
-                   OWLTextureWrapMode   wrapMode,
-                   const void          *texels
+                   OWLTextureAddressMode addressMode,
+                   const void *texels
                    )
     : RegisteredObject(context,context->textures)
   {
     assert(size.x > 0);
     assert(size.y > 0);
     int32_t pitch  = linePitchInBytes;
-
     if (pitch == 0)
       pitch = size.x*bytesPerTexel(texelFormat);//sizeof(vec4uc);
+    assert(
+      (texelFormat == OWL_TEXEL_FORMAT_RGBA8) ||
+      (texelFormat == OWL_TEXEL_FORMAT_RGBA32F) ||
+      (texelFormat == OWL_TEXEL_FORMAT_R8) ||
+      (texelFormat == OWL_TEXEL_FORMAT_R32F)
+    );
+    if (pitch == 0) {
+      switch(texelFormat) {
+        case OWL_TEXEL_FORMAT_RGBA8:   pitch = size.x*sizeof(vec4uc); break;
+        case OWL_TEXEL_FORMAT_RGBA32F: pitch = size.x*sizeof(vec4f); break;
+        case OWL_TEXEL_FORMAT_R8:      pitch = size.x*sizeof(uint8_t); break;
+        case OWL_TEXEL_FORMAT_R32F:    pitch = size.x*sizeof(float); break;
+        default: assert(false);
+      }  
+    }
 
     assert(texels != nullptr);
     
@@ -58,19 +72,13 @@ namespace owl {
       cudaResourceDesc res_desc = {};
       
       cudaChannelFormatDesc channel_desc;
-      switch (texelFormat) {
-      case OWL_TEXEL_FORMAT_RGBA8:
-        channel_desc = cudaCreateChannelDesc<uchar4>();
-        break;
-      case OWL_TEXEL_FORMAT_RGBA32F:
-        channel_desc = cudaCreateChannelDesc<float4>();
-        break;
-      case OWL_TEXEL_FORMAT_R32F:
-        channel_desc = cudaCreateChannelDesc<float>();
-        break;
-      default:
-        throw std::runtime_error("texel format not implemented");
-      }
+      switch(texelFormat) {
+        case OWL_TEXEL_FORMAT_RGBA8:   channel_desc = cudaCreateChannelDesc<uchar4>(); break;
+        case OWL_TEXEL_FORMAT_RGBA32F: channel_desc = cudaCreateChannelDesc<float4>(); break;
+        case OWL_TEXEL_FORMAT_R8:      channel_desc = cudaCreateChannelDesc<uint8_t>(); break;
+        case OWL_TEXEL_FORMAT_R32F:    channel_desc = cudaCreateChannelDesc<float>(); break;
+        default: assert(false);
+      }        
 
       cudaArray_t   pixelArray;
       CUDA_CALL(MallocArray(&pixelArray,
@@ -88,18 +96,19 @@ namespace owl {
       res_desc.res.array.array  = pixelArray;
       
       cudaTextureDesc tex_desc     = {};
-      switch (wrapMode) {
-      case OWL_TEXTURE_WRAP:
-        tex_desc.addressMode[0]      = cudaAddressModeWrap;
-        tex_desc.addressMode[1]      = cudaAddressModeWrap;
-        break;
-      case OWL_TEXTURE_CLAMP:
+      if (addressMode == OWL_TEXTURE_BORDER) {
+        tex_desc.addressMode[0]      = cudaAddressModeBorder;
+        tex_desc.addressMode[1]      = cudaAddressModeBorder;
+      } else if (addressMode == OWL_TEXTURE_CLAMP) {
         tex_desc.addressMode[0]      = cudaAddressModeClamp;
         tex_desc.addressMode[1]      = cudaAddressModeClamp;
-        break;
-      default:
-        throw std::runtime_error("not implemented wrapmode");
-      };
+      } else if (addressMode == OWL_TEXTURE_WRAP) {
+        tex_desc.addressMode[0]      = cudaAddressModeWrap;
+        tex_desc.addressMode[1]      = cudaAddressModeWrap;
+      } else {
+        tex_desc.addressMode[0]      = cudaAddressModeMirror;
+        tex_desc.addressMode[1]      = cudaAddressModeMirror;
+      }
       assert(filterMode == OWL_TEXTURE_NEAREST
              ||
              filterMode == OWL_TEXTURE_LINEAR);
@@ -107,19 +116,9 @@ namespace owl {
         filterMode == OWL_TEXTURE_NEAREST
         ? cudaFilterModePoint
         : cudaFilterModeLinear;
-      switch (texelFormat) {
-      case OWL_TEXEL_FORMAT_RGBA8:
-        tex_desc.readMode            = cudaReadModeNormalizedFloat;
-        break;
-      case OWL_TEXEL_FORMAT_RGBA32F:
-        tex_desc.readMode            = cudaReadModeElementType;
-        break;
-      case OWL_TEXEL_FORMAT_R32F:
-        tex_desc.readMode            = cudaReadModeElementType;
-        break;
-      default:
-        throw std::runtime_error("texel format not implemented");
-      }
+      tex_desc.readMode            =
+        ((texelFormat == OWL_TEXEL_FORMAT_R8) || (texelFormat == OWL_TEXEL_FORMAT_RGBA8)) ?
+        cudaReadModeNormalizedFloat : cudaReadModeElementType;
       tex_desc.normalizedCoords    = 1;
       tex_desc.maxAnisotropy       = 1;
       tex_desc.maxMipmapLevelClamp = 99;
@@ -134,6 +133,13 @@ namespace owl {
 
       textureObjects.push_back(cuda_tex);
     }
+  }
+
+  /* return the cuda texture object corresponding to the specified 
+       device ID*/
+  cudaTextureObject_t Texture::getObject(int deviceID)
+  {
+    return textureObjects[deviceID];
   }
 
   Texture::~Texture()

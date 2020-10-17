@@ -211,7 +211,8 @@ Viewer::Viewer()
                          OWL_TEXEL_FORMAT_RGBA8,
                          texSize.x,texSize.y,
                          texels.data(),
-                         OWL_TEXTURE_NEAREST);
+                         OWL_TEXTURE_NEAREST,
+                         OWL_TEXTURE_CLAMP);
   owlGeomSetTexture(trianglesGeom,"texture",cbTexture);
   
   // ------------------------------------------------------------------
