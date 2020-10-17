@@ -29,7 +29,11 @@ namespace owl {
             uint32_t             linePitchInBytes,
             OWLTexelFormat       texelFormat,
             OWLTextureFilterMode filterMode,
+<<<<<<< HEAD
             OWLTextureWrapMode   wrapMode,
+=======
+            OWLTextureAddressMode addressMode,
+>>>>>>> 0e681e0e2fb373ffd1b0ec038e23fcc0db11d9a0
             const void          *texels
             );
     
@@ -38,6 +42,11 @@ namespace owl {
     
     std::string toString() const override { return "Texture"; }
 
+    /* return the cuda texture object corresponding to the specified 
+       device ID*/
+    cudaTextureObject_t getObject(int deviceID);
+
+    
     /*! destroy whatever resources this texture's ll-layer handle this
         may refer to; this will not destruct the current object
         itself, but should already release all its references */

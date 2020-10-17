@@ -102,7 +102,9 @@ namespace owl {
           if (!canAccessPeer) {
             // huh. this can happen if you have differnt device
             // types (in my case, a 2070 and a rtx 8000).
-            std::cerr << "cannot not enable peer access!? ... skipping..." << std::endl;
+            // nvm - yup, this isn't an error. Expect certain configs to not allow peer access.
+            // disabling this, as it's concerning end users.
+            // std::cerr << "cannot not enable peer access!? ... skipping..." << std::endl;
             continue;
           }
           
@@ -170,15 +172,20 @@ namespace owl {
   Context::texture2DCreate(OWLTexelFormat texelFormat,
                            OWLTextureFilterMode filterMode,
                            OWLTextureWrapMode wrapMode,
+                           OWLTextureAddressMode addressMode,
                            const vec2i size,
                            uint32_t linePitchInBytes,
                            const void *texels)
   {
     Texture::SP texture
+<<<<<<< HEAD
       = std::make_shared<Texture>
       (this,size,linePitchInBytes,
        texelFormat,filterMode,wrapMode,
        texels);
+=======
+      = std::make_shared<Texture>(this,size,linePitchInBytes,texelFormat,filterMode,addressMode,texels);
+>>>>>>> 0e681e0e2fb373ffd1b0ec038e23fcc0db11d9a0
     assert(texture);
     return texture;
   }

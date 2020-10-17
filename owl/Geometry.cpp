@@ -33,10 +33,12 @@ namespace owl {
   void GeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
                                         GeomType *parent, int rt)
   {
+    pgDesc.hitgroup = {};
+
     // ----------- closest hit -----------
     if (rt < parent->closestHit.size()) {
       const ProgramDesc &pd = parent->closestHit[rt];
-      if (pd.module) {
+      if (pd.module && pd.progName != "") {
         pgDesc.hitgroup.moduleCH = pd.module->getDD(device).module;
         pgDesc.hitgroup.entryFunctionNameCH = pd.progName.c_str();
       }
@@ -44,7 +46,11 @@ namespace owl {
     // ----------- any hit -----------
     if (rt < parent->anyHit.size()) {
       const ProgramDesc &pd = parent->anyHit[rt];
+<<<<<<< HEAD
       if (pd.module) {
+=======
+      if (pd.module && pd.progName != "") {
+>>>>>>> 0e681e0e2fb373ffd1b0ec038e23fcc0db11d9a0
         pgDesc.hitgroup.moduleAH = pd.module->getDD(device).module;
         pgDesc.hitgroup.entryFunctionNameAH = pd.progName.c_str();
       }

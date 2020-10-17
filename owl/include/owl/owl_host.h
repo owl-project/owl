@@ -257,22 +257,29 @@ typedef struct _OWLVarDecl {
 
 
 /*! supported formats for texels in textures */
-typedef enum
-  {
-   OWL_TEXEL_FORMAT_RGBA8,
-   OWL_TEXEL_FORMAT_RGBA32F,
-   OWL_TEXEL_FORMAT_R32F
-  }
-  OWLTexelFormat;
+typedef enum {
+  OWL_TEXEL_FORMAT_RGBA8,
+  OWL_TEXEL_FORMAT_RGBA32F,
+  OWL_TEXEL_FORMAT_R8,
+  OWL_TEXEL_FORMAT_R32F
+}
+OWLTexelFormat;
 
 /*! currently supported texture filter modes */
-typedef enum
-  {
-   OWL_TEXTURE_NEAREST,
-   OWL_TEXTURE_LINEAR
-  }
-  OWLTextureFilterMode;
-  
+typedef enum {
+  OWL_TEXTURE_NEAREST,
+  OWL_TEXTURE_LINEAR
+}
+OWLTextureFilterMode;
+
+/*! currently supported texture filter modes */
+typedef enum {
+  OWL_TEXTURE_WRAP,
+  OWL_TEXTURE_CLAMP,
+  OWL_TEXTURE_BORDER,
+  OWL_TEXTURE_MIRROR
+}
+OWLTextureAddressMode;
 
 
 // ------------------------------------------------------------------
@@ -396,7 +403,7 @@ OWL_API OWLParams
 owlParamsCreate(OWLContext  context,
                 size_t      sizeOfVarStruct,
                 OWLVarDecl *vars,
-                size_t      numVars);
+                int         numVars);
 
 OWL_API OWLRayGen
 owlRayGenCreate(OWLContext  context,
@@ -404,7 +411,7 @@ owlRayGenCreate(OWLContext  context,
                 const char *programName,
                 size_t      sizeOfVarStruct,
                 OWLVarDecl *vars,
-                size_t      numVars);
+                int         numVars);
 
 /*! creates a miss program with given function name (in given module)
     and given variables. Note due to backwards compatibility this will
@@ -419,7 +426,7 @@ owlMissProgCreate(OWLContext  context,
                   const char *programName,
                   size_t      sizeOfVarStruct,
                   OWLVarDecl *vars,
-                  size_t      numVars);
+                  int         numVars);
 
 /*! sets the given miss program for the given ray type */
 OWL_API void
@@ -520,7 +527,7 @@ owlGeomTypeCreate(OWLContext context,
                   OWLGeomKind kind,
                   size_t sizeOfVarStruct,
                   OWLVarDecl *vars,
-                  size_t      numVars);
+                  int         numVars);
 
 
 /*! create new texture of given format and dimensions - for now, we
@@ -536,11 +543,16 @@ owlTexture2DCreate(OWLContext context,
                    uint32_t size_y,
                    const void *texels,
                    OWLTextureFilterMode filterMode OWL_IF_CPP(=OWL_TEXTURE_LINEAR),
-                   OWLTextureWrapMode wrapMode     OWL_IF_CPP(=OWL_TEXTURE_WRAP),
+                   OWLTextureAddressMode addressMode OWL_IF_CPP(=OWL_TEXTURE_CLAMP),
                    /*! number of bytes between one line of texels and
                      the next; '0' means 'size_x * sizeof(texel)' */
                    uint32_t linePitchInBytes       OWL_IF_CPP(=0)
                    );
+
+/*! returns the device handle of the given texture for the given
+    device ID. Useful for custom texture object arrays. */
+OWL_API CUtexObject
+owlTextureGetObject(OWLTexture texture, int deviceID);
 
 /*! destroy the given texture; after this call any accesses to the given texture are invalid */
 OWL_API void

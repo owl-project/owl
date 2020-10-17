@@ -89,8 +89,8 @@ namespace owl {
       /// Constants
       ////////////////////////////////////////////////////////////////////////////////
 
-      inline LinearSpace2( ZeroTy ) : vx(zero), vy(zero) {}
-      inline LinearSpace2( OneTy ) : vx(one, zero), vy(zero, one) {}
+      inline __both__ LinearSpace2( ZeroTy ) : vx(ZeroTy()), vy(ZeroTy()) {}
+      inline __both__ LinearSpace2( OneTy ) : vx(OneTy(), ZeroTy()), vy(ZeroTy(), OneTy()) {}
 
       /*! return matrix for scaling */
       static inline LinearSpace2 scale(const vector_t& s) {
@@ -110,8 +110,8 @@ namespace owl {
         LinearSpace2 m = *this;
 
         // mirrored?
-        scalar_t mirror(one);
-        if (m.det() < scalar_t(zero)) {
+        scalar_t mirror(OneTy());
+        if (m.det() < scalar_t(ZeroTy())) {
           m.vx = -m.vx;
           mirror = -mirror;
         }
@@ -242,7 +242,7 @@ namespace owl {
       /// Constants
       ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef __CUDA_ARCH__
+// #ifdef __CUDA_ARCH__
       inline __both__ LinearSpace3( const ZeroTy & )
         : vx(ZeroTy()), vy(ZeroTy()), vz(ZeroTy())
         {}
@@ -251,10 +251,10 @@ namespace owl {
         vy(ZeroTy(), OneTy(), ZeroTy()),
         vz(ZeroTy(), ZeroTy(), OneTy())
         {}
-#else
-      inline __both__ LinearSpace3( ZeroTy ) : vx(zero), vy(zero), vz(zero) {}
-      inline __both__ LinearSpace3( OneTy ) : vx(one, zero, zero), vy(zero, one, zero), vz(zero, zero, one) {}
-#endif
+// #else
+//       inline __both__ LinearSpace3( ZeroTy ) : vx(zero), vy(zero), vz(zero) {}
+//       inline __both__ LinearSpace3( OneTy ) : vx(one, zero, zero), vy(zero, one, zero), vz(zero, zero, one) {}
+// #endif
 
       /*! return matrix for scaling */
       static inline __both__ LinearSpace3 scale(const vector_t& s) {
@@ -321,13 +321,13 @@ namespace owl {
     template<typename T>  
     inline __both__ LinearSpace3<T> frame(const T &N) 
     {
-#ifdef __CUDA_ARCH__
+// #ifdef __CUDA_ARCH__
       const T dx0 = cross(T(OneTy(),ZeroTy(),ZeroTy()),N);
       const T dx1 = cross(T(ZeroTy(),OneTy(),ZeroTy()),N);
-#else
-      const T dx0 = cross(T(one,zero,zero),N);
-      const T dx1 = cross(T(zero,one,zero),N);
-#endif
+// #else
+//       const T dx0 = cross(T(one,zero,zero),N);
+//       const T dx1 = cross(T(zero,one,zero),N);
+// #endif
       const T dx = normalize(select(dot(dx0,dx0) > dot(dx1,dx1),dx0,dx1));
       const T dy = normalize(cross(N,dx));
       return LinearSpace3<T>(dx,dy,N);
