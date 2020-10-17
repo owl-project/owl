@@ -97,12 +97,6 @@ typedef enum
 
 typedef enum
   {
-   OWL_TEXTURE_WRAP = 0,
-   OWL_TEXTURE_CLAMP
-  } OWLTextureWrapMode;
-
-typedef enum
-  {
    OWL_SBT_HITGROUPS = 0x1,
    OWL_SBT_GEOMS     = OWL_SBT_HITGROUPS,
    OWL_SBT_RAYGENS   = 0x2,

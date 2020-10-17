@@ -46,11 +46,7 @@ namespace owl {
     // ----------- any hit -----------
     if (rt < parent->anyHit.size()) {
       const ProgramDesc &pd = parent->anyHit[rt];
-<<<<<<< HEAD
-      if (pd.module) {
-=======
       if (pd.module && pd.progName != "") {
->>>>>>> 0e681e0e2fb373ffd1b0ec038e23fcc0db11d9a0
         pgDesc.hitgroup.moduleAH = pd.module->getDD(device).module;
         pgDesc.hitgroup.entryFunctionNameAH = pd.progName.c_str();
       }

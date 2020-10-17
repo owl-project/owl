@@ -116,28 +116,9 @@ namespace owl {
         filterMode == OWL_TEXTURE_NEAREST
         ? cudaFilterModePoint
         : cudaFilterModeLinear;
-<<<<<<< HEAD
-      switch (texelFormat) {
-      case OWL_TEXEL_FORMAT_RGBA8:
-        tex_desc.readMode            = cudaReadModeNormalizedFloat;
-        break;
-      case OWL_TEXEL_FORMAT_RGBA32F:
-        tex_desc.readMode            = cudaReadModeElementType;
-        break;
-      case OWL_TEXEL_FORMAT_R8:
-        tex_desc.readMode            = cudaReadModeElementType;
-        break;
-      case OWL_TEXEL_FORMAT_R32F:
-        tex_desc.readMode            = cudaReadModeNormalizedFloat;
-        break;
-      default:
-        throw std::runtime_error("texel format not implemented");
-      }
-=======
       tex_desc.readMode            =
         ((texelFormat == OWL_TEXEL_FORMAT_R8) || (texelFormat == OWL_TEXEL_FORMAT_RGBA8)) ?
         cudaReadModeNormalizedFloat : cudaReadModeElementType;
->>>>>>> 0e681e0e2fb373ffd1b0ec038e23fcc0db11d9a0
       tex_desc.normalizedCoords    = 1;
       tex_desc.maxAnisotropy       = 1;
       tex_desc.maxMipmapLevelClamp = 99;
