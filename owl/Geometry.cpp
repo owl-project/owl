@@ -35,12 +35,6 @@ namespace owl {
   {
     pgDesc.hitgroup = {};
 
-    PING;
-    for (auto ch : parent->closestHit)
-      PRINT(ch.progName);
-    for (auto ah : parent->anyHit)
-      PRINT(ah.progName);
-    
     // ----------- closest hit -----------
     if (rt < parent->closestHit.size()) {
       const ProgramDesc &pd = parent->closestHit[rt];
