@@ -149,7 +149,7 @@ namespace owl {
     buffer->createDeviceData(getDevices());
     buffer->resize(count);
     if (init)
-      buffer->upload(init);
+      buffer->upload(init, 0, -1);
     return buffer;
   }
   
@@ -164,7 +164,7 @@ namespace owl {
     buffer->createDeviceData(getDevices());
     buffer->resize(count);
     if (init)
-      buffer->upload(init);
+      buffer->upload(init, 0, -1);
     return buffer;
   }
 

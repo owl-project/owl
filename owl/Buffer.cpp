@@ -113,18 +113,18 @@ namespace owl {
     throw std::runtime_error("unsupported element type for device buffer");
   }
   
-  void DeviceBuffer::upload(const void *hostPtr)
+  void DeviceBuffer::upload(const void *hostPtr, size_t offset, size_t count)
   {
     assert(deviceData.size() == context->deviceCount());
     for (auto dd : deviceData)
-      dd->as<DeviceBuffer::DeviceData>().uploadAsync(hostPtr);
+      dd->as<DeviceBuffer::DeviceData>().uploadAsync(hostPtr, offset, count);
     CUDA_SYNC_CHECK();
   }
   
-  void DeviceBuffer::upload(const int deviceID, const void *hostPtr) 
+  void DeviceBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, size_t count) 
   {
     assert(deviceID < deviceData.size());
-    deviceData[deviceID]->as<DeviceBuffer::DeviceData>().uploadAsync(hostPtr);
+    deviceData[deviceID]->as<DeviceBuffer::DeviceData>().uploadAsync(hostPtr, offset, count);
     CUDA_SYNC_CHECK();
   }
   
@@ -151,15 +151,15 @@ namespace owl {
     
   }
   
-  void DeviceBuffer::DeviceDataForTextures::uploadAsync(const void *hostDataPtr) 
+  void DeviceBuffer::DeviceDataForTextures::uploadAsync(const void *hostDataPtr, size_t offset, size_t count) 
   {
     SetActiveGPU forLifeTime(device);
     
-    hostHandles.resize(parent->elementCount);
+    hostHandles.resize((count == -1) ? parent->elementCount : count);
     APIHandle **apiHandles = (APIHandle **)hostDataPtr;
-    std::vector<cudaTextureObject_t> devRep(parent->elementCount);
+    std::vector<cudaTextureObject_t> devRep((count == -1) ? parent->elementCount : count);
     
-    for (int i=0;i<parent->elementCount;i++)
+    for (int i=0; i < (count == -1) ? parent->elementCount : count; i++)
       if (apiHandles[i]) {
         Texture::SP texture = apiHandles[i]->object->as<Texture>();
         assert(texture && "make sure those are really textures in this buffer!");
@@ -168,7 +168,7 @@ namespace owl {
       } else
         hostHandles[i] = nullptr;
 
-    CUDA_CALL(MemcpyAsync(d_pointer,devRep.data(),
+    CUDA_CALL(MemcpyAsync((char*)d_pointer + offset, devRep.data(),
                           devRep.size()*sizeof(devRep[0]),
                           cudaMemcpyDefault,
                           device->getStream()));
@@ -184,15 +184,15 @@ namespace owl {
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(device::Buffer)));
   }
   
-  void DeviceBuffer::DeviceDataForBuffers::uploadAsync(const void *hostDataPtr) 
+  void DeviceBuffer::DeviceDataForBuffers::uploadAsync(const void *hostDataPtr, size_t offset, size_t count) 
   {
     SetActiveGPU forLifeTime(device);
     
-    hostHandles.resize(parent->elementCount);
+    hostHandles.resize( (count == -1) ? parent->elementCount : count);
     APIHandle **apiHandles = (APIHandle **)hostDataPtr;
-    std::vector<device::Buffer> devRep(parent->elementCount);
+    std::vector<device::Buffer> devRep( (count == -1) ? parent->elementCount : count);
     
-    for (int i=0;i<parent->elementCount;i++)
+    for (int i=0; i < (count == -1) ? parent->elementCount : count; i++)
       if (apiHandles[i]) {
         Buffer::SP buffer = apiHandles[i]->object->as<Buffer>();
         assert(buffer && "make sure those are really textures in this buffer!");
@@ -208,7 +208,7 @@ namespace owl {
         devRep[i].count   = 0;
       }
 
-    CUDA_CALL(MemcpyAsync(d_pointer,devRep.data(),
+    CUDA_CALL(MemcpyAsync((char*)d_pointer + offset,devRep.data(),
                           devRep.size()*sizeof(devRep[0]),
                           cudaMemcpyDefault,
                           device->getStream()));
@@ -224,12 +224,12 @@ namespace owl {
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeOf(parent->type)));
   }
   
-  void DeviceBuffer::DeviceDataForCopyableData::uploadAsync(const void *hostDataPtr)
+  void DeviceBuffer::DeviceDataForCopyableData::uploadAsync(const void *hostDataPtr, size_t offset, size_t count)
   {
     SetActiveGPU forLifeTime(device);
     
-    CUDA_CALL(MemcpyAsync(d_pointer,hostDataPtr,
-                          parent->elementCount*sizeOf(parent->type),
+    CUDA_CALL(MemcpyAsync((char*)d_pointer + offset,hostDataPtr,
+                          ((count == -1) ? parent->elementCount : count)*sizeOf(parent->type),
                           cudaMemcpyDefault,
                           device->getStream()));
   }
@@ -269,13 +269,13 @@ namespace owl {
     }
   }
   
-  void HostPinnedBuffer::upload(const void *sourcePtr)
+  void HostPinnedBuffer::upload(const void *sourcePtr, size_t offset, size_t count)
   {
     assert(cudaHostPinnedMem);
-    memcpy(cudaHostPinnedMem,sourcePtr,sizeInBytes());
+    memcpy((char*)cudaHostPinnedMem + offset, sourcePtr, (count == -1) ? sizeInBytes() : count * sizeOf(type));
   }
   
-  void HostPinnedBuffer::upload(const int deviceID, const void *hostPtr)
+  void HostPinnedBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, size_t count)
   {
     throw std::runtime_error("uploading to specific device doesn't "
                              "make sense for host pinned buffers");
@@ -329,15 +329,15 @@ namespace owl {
       getDD(device).d_pointer = cudaManagedMem;
   }
   
-  void ManagedMemoryBuffer::upload(const void *hostPtr)
+  void ManagedMemoryBuffer::upload(const void *hostPtr, size_t offset, size_t count)
   {
     assert(cudaManagedMem);
-    cudaMemcpy(cudaManagedMem,hostPtr,
-               sizeInBytes(),cudaMemcpyDefault);
+    cudaMemcpy((char*)cudaManagedMem + offset, hostPtr,
+               (count == -1) ? sizeInBytes() : count * sizeOf(type), cudaMemcpyDefault);
   }
   
   void ManagedMemoryBuffer::upload(const int deviceID,
-                                   const void *hostPtr)
+                                   const void *hostPtr, size_t offset, size_t count)
   {
     throw std::runtime_error("copying to a specific device doesn't"
                              " make sense for a managed mem buffer");
@@ -364,12 +364,12 @@ namespace owl {
     elementCount = newElementCount;
   }
 
-  void GraphicsBuffer::upload(const void *hostPtr)
+  void GraphicsBuffer::upload(const void *hostPtr, size_t offset, size_t count)
   {
     throw std::runtime_error("Buffer::upload doesn' tmake sense for graphics buffers");
   }
   
-  void GraphicsBuffer::upload(const int deviceID, const void *hostPtr) 
+  void GraphicsBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, size_t count) 
   {
     throw std::runtime_error("Buffer::upload doesn' tmake sense for graphics buffers");
   }

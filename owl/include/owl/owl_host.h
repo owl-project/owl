@@ -616,7 +616,7 @@ OWL_API void
 owlBufferDestroy(OWLBuffer buffer);
 
 OWL_API void 
-owlBufferUpload(OWLBuffer buffer, const void *hostPtr);
+owlBufferUpload(OWLBuffer buffer, const void *hostPtr, size_t offset = 0, size_t bytes = -1);
 
 /*! executes an optix lauch of given size, with given launch
   program. Note this is asynchronous, and may _not_ be
