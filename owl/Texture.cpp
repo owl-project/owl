@@ -19,6 +19,20 @@
 
 namespace owl {
 
+  size_t bytesPerTexel(OWLTexelFormat       texelFormat)
+  {
+    switch(texelFormat){
+    case OWL_TEXEL_FORMAT_RGBA8:
+      return sizeof(vec4uc);
+    case OWL_TEXEL_FORMAT_RGBA32F:
+      return sizeof(vec4f);
+    case OWL_TEXEL_FORMAT_R32F:
+      return sizeof(float);
+    default:
+      throw std::runtime_error("texel format not implemented");
+    };
+  }
+  
   Texture::Texture(Context *const context,
                    vec2i                size,
                    uint32_t             linePitchInBytes,

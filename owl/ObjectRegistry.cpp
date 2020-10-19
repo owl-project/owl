@@ -80,7 +80,7 @@ namespace owl {
       
     assert(ID >= 0);
     assert(ID < objects.size());
-    assert(objects[ID]);
+    // assert(objects[ID]);
     return objects[ID];
   }
 

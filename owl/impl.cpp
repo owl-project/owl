@@ -680,13 +680,13 @@ checkGet(_context)->buildSBT(flags);
   }
 
   OWL_API void 
-  owlBufferUpload(OWLBuffer _buffer, const void *hostPtr)
+  owlBufferUpload(OWLBuffer _buffer, const void *hostPtr, size_t offset, int64_t bytes)
   {
     LOG_API_CALL();
     assert(_buffer);
     Buffer::SP buffer = ((APIHandle *)_buffer)->get<Buffer>();
     assert(buffer);
-    return buffer->upload(hostPtr);
+    return buffer->upload(hostPtr, offset, bytes);
   }
 
   /*! destroy the given buffer; this will both release the app's
@@ -1098,8 +1098,6 @@ checkGet(_context)->buildSBT(flags);
       ? handle->get<Group>()
       : Group::SP();
     
-    assert(group);
-
     setVariable((APIHandle *)_variable,group);
   }
 
@@ -1114,8 +1112,6 @@ checkGet(_context)->buildSBT(flags);
       ? handle->get<Texture>()
       : Texture::SP();
     
-    assert(texture);
-
     setVariable((APIHandle *)_variable,texture);
   }
 

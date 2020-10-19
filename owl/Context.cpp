@@ -77,7 +77,7 @@ namespace owl {
     LOG("enabling peer access ('.'=self, '+'=can access other device)");
     auto &devices = getDevices();
 
-    int deviceCount = devices.size();
+    int deviceCount = int(devices.size());
     LOG("found " << deviceCount << " CUDA capable devices");
     for (auto device : devices) 
       LOG(" - device #" << device->ID << " : " << device->getDeviceName());
@@ -149,7 +149,7 @@ namespace owl {
     buffer->createDeviceData(getDevices());
     buffer->resize(count);
     if (init)
-      buffer->upload(init);
+      buffer->upload(init, 0, -1);
     return buffer;
   }
   
@@ -164,7 +164,7 @@ namespace owl {
     buffer->createDeviceData(getDevices());
     buffer->resize(count);
     if (init)
-      buffer->upload(init);
+      buffer->upload(init, 0, -1);
     return buffer;
   }
 
@@ -521,7 +521,7 @@ namespace owl {
   {
     /* TODO; sanity checking that this is a useful value, and that
        no geoms etc are created yet */
-    this->numRayTypes = rayTypeCount;
+    this->numRayTypes = int(rayTypeCount);
   }
 
   /*! sets maximum instancing depth for the given context:
