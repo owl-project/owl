@@ -113,7 +113,7 @@ namespace owl {
     throw std::runtime_error("unsupported element type for device buffer");
   }
   
-  void DeviceBuffer::upload(const void *hostPtr, size_t offset, size_t count)
+  void DeviceBuffer::upload(const void *hostPtr, size_t offset, int64_t count)
   {
     assert(deviceData.size() == context->deviceCount());
     for (auto dd : deviceData)
@@ -121,7 +121,7 @@ namespace owl {
     CUDA_SYNC_CHECK();
   }
   
-  void DeviceBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, size_t count) 
+  void DeviceBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) 
   {
     assert(deviceID < deviceData.size());
     deviceData[deviceID]->as<DeviceBuffer::DeviceData>().uploadAsync(hostPtr, offset, count);
@@ -151,7 +151,7 @@ namespace owl {
     
   }
   
-  void DeviceBuffer::DeviceDataForTextures::uploadAsync(const void *hostDataPtr, size_t offset, size_t count) 
+  void DeviceBuffer::DeviceDataForTextures::uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) 
   {
     SetActiveGPU forLifeTime(device);
     
@@ -159,7 +159,7 @@ namespace owl {
     APIHandle **apiHandles = (APIHandle **)hostDataPtr;
     std::vector<cudaTextureObject_t> devRep((count == -1) ? parent->elementCount : count);
     
-    for (int i=0; i < (count == -1) ? parent->elementCount : count; i++)
+    for (int i=0; i < ((count == -1) ? parent->elementCount : count); i++)
       if (apiHandles[i]) {
         Texture::SP texture = apiHandles[i]->object->as<Texture>();
         assert(texture && "make sure those are really textures in this buffer!");
@@ -184,7 +184,7 @@ namespace owl {
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(device::Buffer)));
   }
   
-  void DeviceBuffer::DeviceDataForBuffers::uploadAsync(const void *hostDataPtr, size_t offset, size_t count) 
+  void DeviceBuffer::DeviceDataForBuffers::uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) 
   {
     SetActiveGPU forLifeTime(device);
     
@@ -192,7 +192,7 @@ namespace owl {
     APIHandle **apiHandles = (APIHandle **)hostDataPtr;
     std::vector<device::Buffer> devRep( (count == -1) ? parent->elementCount : count);
     
-    for (int i=0; i < (count == -1) ? parent->elementCount : count; i++)
+    for (int i=0; i < ((count == -1) ? parent->elementCount : count); i++)
       if (apiHandles[i]) {
         Buffer::SP buffer = apiHandles[i]->object->as<Buffer>();
         assert(buffer && "make sure those are really textures in this buffer!");
@@ -224,7 +224,7 @@ namespace owl {
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeOf(parent->type)));
   }
   
-  void DeviceBuffer::DeviceDataForCopyableData::uploadAsync(const void *hostDataPtr, size_t offset, size_t count)
+  void DeviceBuffer::DeviceDataForCopyableData::uploadAsync(const void *hostDataPtr, size_t offset, int64_t count)
   {
     SetActiveGPU forLifeTime(device);
     
@@ -269,13 +269,13 @@ namespace owl {
     }
   }
   
-  void HostPinnedBuffer::upload(const void *sourcePtr, size_t offset, size_t count)
+  void HostPinnedBuffer::upload(const void *sourcePtr, size_t offset, int64_t count)
   {
     assert(cudaHostPinnedMem);
     memcpy((char*)cudaHostPinnedMem + offset, sourcePtr, (count == -1) ? sizeInBytes() : count * sizeOf(type));
   }
   
-  void HostPinnedBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, size_t count)
+  void HostPinnedBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count)
   {
     throw std::runtime_error("uploading to specific device doesn't "
                              "make sense for host pinned buffers");
@@ -329,7 +329,7 @@ namespace owl {
       getDD(device).d_pointer = cudaManagedMem;
   }
   
-  void ManagedMemoryBuffer::upload(const void *hostPtr, size_t offset, size_t count)
+  void ManagedMemoryBuffer::upload(const void *hostPtr, size_t offset, int64_t count)
   {
     assert(cudaManagedMem);
     cudaMemcpy((char*)cudaManagedMem + offset, hostPtr,
@@ -337,7 +337,7 @@ namespace owl {
   }
   
   void ManagedMemoryBuffer::upload(const int deviceID,
-                                   const void *hostPtr, size_t offset, size_t count)
+                                   const void *hostPtr, size_t offset, int64_t count)
   {
     throw std::runtime_error("copying to a specific device doesn't"
                              " make sense for a managed mem buffer");
@@ -364,12 +364,12 @@ namespace owl {
     elementCount = newElementCount;
   }
 
-  void GraphicsBuffer::upload(const void *hostPtr, size_t offset, size_t count)
+  void GraphicsBuffer::upload(const void *hostPtr, size_t offset, int64_t count)
   {
     throw std::runtime_error("Buffer::upload doesn' tmake sense for graphics buffers");
   }
   
-  void GraphicsBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, size_t count) 
+  void GraphicsBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) 
   {
     throw std::runtime_error("Buffer::upload doesn' tmake sense for graphics buffers");
   }

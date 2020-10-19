@@ -680,7 +680,7 @@ checkGet(_context)->buildSBT(flags);
   }
 
   OWL_API void 
-  owlBufferUpload(OWLBuffer _buffer, const void *hostPtr, size_t offset, size_t bytes)
+  owlBufferUpload(OWLBuffer _buffer, const void *hostPtr, size_t offset, int64_t bytes)
   {
     LOG_API_CALL();
     assert(_buffer);
