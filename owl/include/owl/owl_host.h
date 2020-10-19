@@ -615,11 +615,14 @@ owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 OWL_API void 
 owlBufferDestroy(OWLBuffer buffer);
 
+/*! uploads data from given host poiner to given device. offset refers
+    to the offset (in bytes) on the device. \param numbytes is the
+    number of bytes to upload; -1 meaning "full buffer" */
 OWL_API void 
 owlBufferUpload(OWLBuffer buffer,
                 const void *hostPtr,
-                size_t offset,
-                size_t numBytes);
+                size_t offset OWL_IF_CPP(=0),
+                size_t numBytes OWL_IF_CPP(=size_t(-1)));
 
 /*! executes an optix lauch of given size, with given launch
   program. Note this is asynchronous, and may _not_ be
