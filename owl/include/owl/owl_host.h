@@ -792,6 +792,11 @@ OWL_API void owlVariableSetPointer(OWLVariable variable, const void *valuePtr);
                                     stype x,            \
                                     stype y,            \
                                     stype z);           \
+  OWL_API void owlVariableSet4##abb(OWLVariable var,    \
+                                    stype x,            \
+                                    stype y,            \
+                                    stype z,            \
+                                    stype w);           \
   /*end of macro */
 _OWL_SET_HELPER(int32_t,i)
 _OWL_SET_HELPER(uint32_t,ui)
@@ -843,6 +848,19 @@ _OWL_SET_HELPER(double,d)
     owlVariableSet3##abb(var,x,y,z);                            \
     owlVariableRelease(var);                                    \
   }                                                             \
+  /* set4 */                                                    \
+  inline void owl##OType##Set4##abb(OWL##OType object,          \
+                                    const char *varName,        \
+                                    stype x,                    \
+                                    stype y,                    \
+                                    stype z,                    \
+                                    stype w)                    \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet4##abb(var,x,y,z,w);                           \
+    owlVariableRelease(var);                                    \
+  }                                                             \
   /* end of macro */
 
 
@@ -866,9 +884,18 @@ _OWL_SET_HELPER(double,d)
     owlVariableSet3##abb(var,v.x,v.y,v.z);                      \
     owlVariableRelease(var);                                    \
   }                                                             \
+  inline void owl##OType##Set4##abb(OWL##OType object,          \
+                                    const char *varName,        \
+                                    const owl4##abb &v)         \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet4##abb(var,v.x,v.y,v.z,v.w);                  \
+    owlVariableRelease(var);                                    \
+  }                                                             \
   /* end of macro */
 #else
-#define _OWL_SET_HELPERS_CPP(OType,stype,abb)  /* ignore in C99 mode */
+# define _OWL_SET_HELPERS_CPP(OType,stype,abb)  /* ignore in C99 mode */
 #endif
 
 #define _OWL_SET_HELPERS(Type)                                  \
