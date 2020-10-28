@@ -139,9 +139,8 @@ namespace owl {
       cudaError_t rc = cudaGraphicsGLRegisterImage
         (&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
 
-      if (rc == cudaSuccess) {
-        resourceSharingSuccessful = true;
-      } else {
+      const char *forceSlowDisplay = getenv("OWL_NO_CUDA_RESOURCE_SHARING");
+      if (rc != cudaSuccess || (forceSlowDisplay && std::stoi(forceSlowDisplay) != 0)) {
         std::cout << OWL_TERMINAL_RED
                   << "Warning: Could not do CUDA graphics resource sharing "
                   << "for the display buffer texture ("
@@ -150,6 +149,8 @@ namespace owl {
                   << OWL_TERMINAL_DEFAULT
                   << std::endl;
         resourceSharingSuccessful = false;
+      } else {
+        resourceSharingSuccessful = true;
       }
     }
 
