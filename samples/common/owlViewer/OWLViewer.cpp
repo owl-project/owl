@@ -186,49 +186,55 @@ namespace owl {
       cudaMallocManaged(&fbPointer,newSize.x*newSize.y*sizeof(uint32_t));
       
       fbSize = newSize;
-      bool firstResize = false;
+      // bool firstResize = false;
       if (fbTexture == 0) {
         GL_CHECK(glGenTextures(1, &fbTexture));
-        firstResize = true;
+        // firstResize = true;
       }
       else {
-        if (resourceSharingSuccessful)
+        if (cuDisplayTexture) {
           cudaGraphicsUnregisterResource(cuDisplayTexture);
+          cuDisplayTexture = 0;
+        }
       }
 
       GL_CHECK(glBindTexture(GL_TEXTURE_2D, fbTexture));
       // GL_CHECK(glActiveTexture(GL_TEXTURE0));
       GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSize.x, newSize.y, 0, GL_RGBA,
                             GL_UNSIGNED_BYTE, nullptr));
-      GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
       
       // We need to re-register when resizing the texture
       cudaError_t rc = cudaGraphicsGLRegisterImage
         (&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
-
-      if (firstResize || !firstResize && resourceSharingSuccessful) {
-        const char *forceSlowDisplay = getenv("OWL_NO_CUDA_RESOURCE_SHARING");
-        if (rc != cudaSuccess || (forceSlowDisplay && std::stoi(forceSlowDisplay) != 0)) {
-          std::cout << OWL_TERMINAL_RED
-                    << "Warning: Could not do CUDA graphics resource sharing "
-                    << "for the display buffer texture ("
-                    << cudaGetErrorString(cudaGetLastError())
-                    << ")... falling back to slower path"
-                    << OWL_TERMINAL_DEFAULT
-                    << std::endl;
-          resourceSharingSuccessful = false;
-        } else {
-          resourceSharingSuccessful = true;
+      
+      // if (firstResize || !firstResize && resourceSharingSuccessful) {
+      //   const char *forceSlowDisplay = getenv("OWL_NO_CUDA_RESOURCE_SHARING");
+      bool forceSlowDisplay = false;
+      if (rc != cudaSuccess || forceSlowDisplay) {
+        std::cout << OWL_TERMINAL_RED
+                  << "Warning: Could not do CUDA graphics resource sharing "
+                  << "for the display buffer texture ("
+                  << cudaGetErrorString(cudaGetLastError())
+                  << ")... falling back to slower path"
+                  << OWL_TERMINAL_DEFAULT
+                  << std::endl;
+        resourceSharingSuccessful = false;
+        if (cuDisplayTexture) {
+          cudaGraphicsUnregisterResource(cuDisplayTexture);
+          cuDisplayTexture = 0;
         }
+      } else {
+        resourceSharingSuccessful = true;
       }
+      // }
       // if (cuDisplayTexture != 0) {
       //   cudaGraphicsUnmapResources(1, &cuDisplayTexture);
       //   /* drop last error: */cudaGetLastError();
       //   cuDisplayTexture = 0;
       // }
       // } else {
-      if (resourceSharingSuccessful)
-        cudaGraphicsUnmapResources(1, &cuDisplayTexture);
+      // if (resourceSharingSuccessful)
+      //   cudaGraphicsUnmapResources(1, &cuDisplayTexture);
       //   resourceSharingSuccessful = true;
       // }
     }
@@ -241,10 +247,10 @@ namespace owl {
     {
       glfwMakeContextCurrent(handle);
       if (resourceSharingSuccessful) {
-        cudaGraphicsMapResources(1, &cuDisplayTexture);
+        GL_CHECK(cudaGraphicsMapResources(1, &cuDisplayTexture));
         
         cudaArray_t array;
-        cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0);
+        GL_CHECK(cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0));
         {
           cudaMemcpy2DToArray(array,
                               0,
@@ -255,7 +261,6 @@ namespace owl {
                               fbSize.y,
                               cudaMemcpyDeviceToDevice);
         }
-        cudaGraphicsUnmapResources(1, &cuDisplayTexture);
       } else {
         GL_CHECK(glBindTexture(GL_TEXTURE_2D, fbTexture));
         glEnable(GL_TEXTURE_2D);
@@ -299,6 +304,9 @@ namespace owl {
         glVertex3f((float)fbSize.x, 0.f, 0.f);
       }
       glEnd();
+      if (resourceSharingSuccessful) {
+        GL_CHECK(cudaGraphicsUnmapResources(1, &cuDisplayTexture));
+      }
     }
 
     /*! re-computes the 'camera' from the 'cameracontrol', and notify
