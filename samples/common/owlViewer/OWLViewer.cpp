@@ -18,6 +18,7 @@
 #include "Camera.h"
 #include "InspectMode.h"
 #include "FlyMode.h"
+#include <sstream>
 
 // eventually to go into 'apps/'
 #define STB_IMAGE_WRITE_IMPLEMENTATION 1
@@ -25,6 +26,67 @@
 
 namespace owl {
   namespace viewer {
+
+    inline const char* getGLErrorString( GLenum error )
+{
+    switch( error )
+    {
+        case GL_NO_ERROR:            return "No error";
+        case GL_INVALID_ENUM:        return "Invalid enum";
+        case GL_INVALID_VALUE:       return "Invalid value";
+        case GL_INVALID_OPERATION:   return "Invalid operation";
+        //case GL_STACK_OVERFLOW:      return "Stack overflow";
+        //case GL_STACK_UNDERFLOW:     return "Stack underflow";
+        case GL_OUT_OF_MEMORY:       return "Out of memory";
+        //case GL_TABLE_TOO_LARGE:     return "Table too large";
+        default:                     return "Unknown GL error";
+    }
+}
+
+
+
+#define DO_GL_CHECK
+#ifdef DO_GL_CHECK
+#    define GL_CHECK( call )                                                   \
+        do                                                                     \
+        {                                                                      \
+            call;                                                              \
+            GLenum err = glGetError();                                         \
+            if( err != GL_NO_ERROR )                                           \
+            {                                                                  \
+                std::stringstream ss;                                          \
+                ss << "GL error " <<  getGLErrorString( err ) << " at " \
+                   << __FILE__  << "(" <<  __LINE__  << "): " << #call         \
+                   << std::endl;                                               \
+                std::cerr << ss.str() << std::endl;                            \
+                throw std::runtime_error( ss.str().c_str() );                        \
+            }                                                                  \
+        }                                                                      \
+        while (0)
+
+
+#    define GL_CHECK_ERRORS( )                                                 \
+        do                                                                     \
+        {                                                                      \
+            GLenum err = glGetError();                                         \
+            if( err != GL_NO_ERROR )                                           \
+            {                                                                  \
+                std::stringstream ss;                                          \
+                ss << "GL error " <<  getGLErrorString( err ) << " at " \
+                   << __FILE__  << "(" <<  __LINE__  << ")";                   \
+                std::cerr << ss.str() << std::endl;                            \
+                throw std::runtime_error( ss.str().c_str() );                    \
+            }                                                                  \
+        }                                                                      \
+        while (0)
+
+#else
+#    define GL_CHECK( call )   do { call; } while(0)
+#    define GL_CHECK_ERRORS( ) do { ;     } while(0)
+#endif
+
+
+
 
     void initGLFW()
     {
@@ -60,8 +122,6 @@ namespace owl {
       initGLFW();
       int numModes = 0;
       auto monitor = glfwGetPrimaryMonitor();
-      PING;
-      PRINT(monitor);
       if (!monitor) 
         throw std::runtime_error("could not query monitor...");
       const GLFWvidmode *modes
@@ -120,23 +180,63 @@ namespace owl {
 
     void OWLViewer::resize(const vec2i &newSize)
     {
+      glfwMakeContextCurrent(handle);
       if (fbPointer)
         cudaFree(fbPointer);
       cudaMallocManaged(&fbPointer,newSize.x*newSize.y*sizeof(uint32_t));
       
       fbSize = newSize;
+      // bool firstResize = false;
       if (fbTexture == 0) {
-        glGenTextures(1, &fbTexture);
-      } else {
-        cudaGraphicsUnregisterResource(cuDisplayTexture);
+        GL_CHECK(glGenTextures(1, &fbTexture));
+        // firstResize = true;
       }
-      
-      glBindTexture(GL_TEXTURE_2D, fbTexture);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSize.x, newSize.y, 0, GL_RGBA,
-                   GL_UNSIGNED_BYTE, nullptr);
+      else {
+        if (cuDisplayTexture) {
+          cudaGraphicsUnregisterResource(cuDisplayTexture);
+          cuDisplayTexture = 0;
+        }
+      }
+
+      GL_CHECK(glBindTexture(GL_TEXTURE_2D, fbTexture));
+      // GL_CHECK(glActiveTexture(GL_TEXTURE0));
+      GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSize.x, newSize.y, 0, GL_RGBA,
+                            GL_UNSIGNED_BYTE, nullptr));
       
       // We need to re-register when resizing the texture
-      cudaGraphicsGLRegisterImage(&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
+      cudaError_t rc = cudaGraphicsGLRegisterImage
+        (&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
+      
+      // if (firstResize || !firstResize && resourceSharingSuccessful) {
+      //   const char *forceSlowDisplay = getenv("OWL_NO_CUDA_RESOURCE_SHARING");
+      bool forceSlowDisplay = false;
+      if (rc != cudaSuccess || forceSlowDisplay) {
+        std::cout << OWL_TERMINAL_RED
+                  << "Warning: Could not do CUDA graphics resource sharing "
+                  << "for the display buffer texture ("
+                  << cudaGetErrorString(cudaGetLastError())
+                  << ")... falling back to slower path"
+                  << OWL_TERMINAL_DEFAULT
+                  << std::endl;
+        resourceSharingSuccessful = false;
+        if (cuDisplayTexture) {
+          cudaGraphicsUnregisterResource(cuDisplayTexture);
+          cuDisplayTexture = 0;
+        }
+      } else {
+        resourceSharingSuccessful = true;
+      }
+      // }
+      // if (cuDisplayTexture != 0) {
+      //   cudaGraphicsUnmapResources(1, &cuDisplayTexture);
+      //   /* drop last error: */cudaGetLastError();
+      //   cuDisplayTexture = 0;
+      // }
+      // } else {
+      // if (resourceSharingSuccessful)
+      //   cudaGraphicsUnmapResources(1, &cuDisplayTexture);
+      //   resourceSharingSuccessful = true;
+      // }
     }
 
     
@@ -145,22 +245,30 @@ namespace owl {
       is */
     void OWLViewer::draw()
     {
-      cudaGraphicsMapResources(1, &cuDisplayTexture);
-
-      cudaArray_t array;
-      cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0);
-      {
-        // sample.copyGPUPixels(cuDisplayTexture);
-        cudaMemcpy2DToArray(array,
-                            0,
-                            0,
-                            reinterpret_cast<const void *>(fbPointer),
-                            fbSize.x * sizeof(uint32_t),
-                            fbSize.x * sizeof(uint32_t),
-                            fbSize.y,
-                            cudaMemcpyDeviceToDevice);
+      glfwMakeContextCurrent(handle);
+      if (resourceSharingSuccessful) {
+        GL_CHECK(cudaGraphicsMapResources(1, &cuDisplayTexture));
+        
+        cudaArray_t array;
+        GL_CHECK(cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0));
+        {
+          cudaMemcpy2DToArray(array,
+                              0,
+                              0,
+                              reinterpret_cast<const void *>(fbPointer),
+                              fbSize.x * sizeof(uint32_t),
+                              fbSize.x * sizeof(uint32_t),
+                              fbSize.y,
+                              cudaMemcpyDeviceToDevice);
+        }
+      } else {
+        GL_CHECK(glBindTexture(GL_TEXTURE_2D, fbTexture));
+        glEnable(GL_TEXTURE_2D);
+        GL_CHECK(glTexSubImage2D(GL_TEXTURE_2D,0,
+                                 0,0,
+                                 fbSize.x, fbSize.y,
+                                 GL_RGBA, GL_UNSIGNED_BYTE, fbPointer));
       }
-      cudaGraphicsUnmapResources(1, &cuDisplayTexture);
       
       glDisable(GL_LIGHTING);
       glColor3f(1, 1, 1);
@@ -196,6 +304,9 @@ namespace owl {
         glVertex3f((float)fbSize.x, 0.f, 0.f);
       }
       glEnd();
+      if (resourceSharingSuccessful) {
+        GL_CHECK(cudaGraphicsUnmapResources(1, &cuDisplayTexture));
+      }
     }
 
     /*! re-computes the 'camera' from the 'cameracontrol', and notify
@@ -419,12 +530,34 @@ namespace owl {
       }
     }
 
+    void OWLViewer::setCameraOptions(float fovy,
+                            float focalDistance)
+
+      {
+        camera.setFovy(fovy);
+        camera.setFocalDistance(focalDistance);
+
+        updateCamera();
+      }
+
+      /*! set a new orientation for the camera, update the camera, and
+        notify the app */
+      void OWLViewer::setCameraOrientation(/* camera origin    : */const vec3f &origin,
+                                /* point of interest: */const vec3f &interest,
+                                /* up-vector        : */const vec3f &up,
+                                /* fovy, in degrees : */float fovyInDegrees)
+      {
+        //camera.setOrientation(origin,interest,up,fovyInDegrees);
+        camera.setOrientation(origin,interest,up,fovyInDegrees,false);
+        updateCamera();
+      }
+
+    
 
     void OWLViewer::showAndRun()
     {
       int width, height;
       glfwGetFramebufferSize(handle, &width, &height);
-      // PRINT(vec2i(width,height));
       resize(vec2i(width,height));
 
       // glfwSetWindowUserPointer(window, OWLViewer::current);

@@ -149,23 +149,10 @@ namespace owl {
       void setCameraOrientation(/* camera origin    : */const vec3f &origin,
                                 /* point of interest: */const vec3f &interest,
                                 /* up-vector        : */const vec3f &up,
-                                /* fovy, in degrees : */float fovyInDegrees)
-      {
-        //camera.setOrientation(origin,interest,up,fovyInDegrees);
-        camera.setOrientation(origin,interest,up,fovyInDegrees,false);
-        updateCamera();
-      }
-
+                                /* fovy, in degrees : */float fovyInDegrees);
 
       void setCameraOptions(float fovy,
-                            float focalDistance)
-
-      {
-        camera.setFovy(fovy);
-        camera.setFocalDistance(focalDistance);
-
-        updateCamera();
-      }
+                            float focalDistance);
 
       /*! this function gets called whenever any camera manipulator
         updates the camera. gets called AFTER all values have been updated */
@@ -239,10 +226,12 @@ namespace owl {
       
       /*! the glfw window handle */
       GLFWwindow *handle { nullptr };
-      // struct {
-      //   bool leftButton { false }, middleButton { false }, rightButton { false };
-      // } isPressed;
       vec2i lastMousePos = { -1,-1 };
+
+      /*! tracks whether we could successfully do cuda resource
+          binding to the GL display texture; if not, we'll have to
+          fall back to a slower path with glTexImage */
+      bool resourceSharingSuccessful;
     };
 
   } // ::owl::viewer
