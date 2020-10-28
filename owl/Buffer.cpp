@@ -319,8 +319,23 @@ namespace owl {
           int result = 0;
           cudaDeviceGetAttribute(&result, cudaDevAttrConcurrentManagedAccess, cudaDevID);
           if (result) {
-            CUDA_CALL(MemAdvise((void*)begin, end-begin,
-                                cudaMemAdviseSetPreferredLocation, cudaDevID));
+            cudaError_t rc = cudaMemAdvise((void*)begin, end-begin,
+                                           cudaMemAdviseSetPreferredLocation, cudaDevID);
+            if (rc != cudaSuccess) {
+#ifndef NDEBUG
+              static bool alreadyWarned = false;
+              if (!alreadyWarned) {
+                std::cout << OWL_TERMINAL_RED
+                          << "#owl: Warning - error in trying to memadvise a managed "
+                          << "memory buffer: " << cudaGetErrorString(rc)
+                          << " (should be OK, ignoring this)."
+                          << OWL_TERMINAL_DEFUALT << std::endl;
+                alreadyWarned = true;
+              }
+#endif
+              /* clear this error */cudaGetLastError();
+            }
+          
           }
         }
     }

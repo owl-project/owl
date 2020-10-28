@@ -88,6 +88,8 @@ Latest Progress/Revision History
 v1.0.0 - First "considered to be complete" version
 ----------------------------------------------------------------------
 
+*1.0.3*: bugfix: no longer fatally failing when memadvise optimization didn't work
+
 *1.0.2*: (finally) fixed long-standing bug in owlViewer that caused
    samples to crash when forcing OWL to run on a GPU that's different
    from the GPU that held the OpenGL graphics context for the viewer. Fixed.
