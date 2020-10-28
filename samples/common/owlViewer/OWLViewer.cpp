@@ -136,7 +136,21 @@ namespace owl {
                    GL_UNSIGNED_BYTE, nullptr);
       
       // We need to re-register when resizing the texture
-      cudaGraphicsGLRegisterImage(&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
+      cudaError_t rc = cudaGraphicsGLRegisterImage
+        (&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
+
+      if (rc == cudaSuccess) {
+        resourceSharingSuccessful = true;
+      } else {
+        std::cout << OWL_TERMINAL_RED
+                  << "Warning: Could not do CUDA graphics resource sharing "
+                  << "for the display buffer texture ("
+                  << cudaGetErrorString(cudaGetLastError())
+                  << ")... falling back to slower path"
+                  << OWL_TERMINAL_DEFAULT
+                  << std::endl;
+        resourceSharingSuccessful = false;
+      }
     }
 
     
@@ -145,22 +159,29 @@ namespace owl {
       is */
     void OWLViewer::draw()
     {
-      cudaGraphicsMapResources(1, &cuDisplayTexture);
+      if (resourceSharingSuccessful) {
+        cudaGraphicsMapResources(1, &cuDisplayTexture);
 
-      cudaArray_t array;
-      cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0);
-      {
-        // sample.copyGPUPixels(cuDisplayTexture);
-        cudaMemcpy2DToArray(array,
-                            0,
-                            0,
-                            reinterpret_cast<const void *>(fbPointer),
-                            fbSize.x * sizeof(uint32_t),
-                            fbSize.x * sizeof(uint32_t),
-                            fbSize.y,
-                            cudaMemcpyDeviceToDevice);
+        cudaArray_t array;
+        cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0);
+        {
+          // sample.copyGPUPixels(cuDisplayTexture);
+          cudaMemcpy2DToArray(array,
+                              0,
+                              0,
+                              reinterpret_cast<const void *>(fbPointer),
+                              fbSize.x * sizeof(uint32_t),
+                              fbSize.x * sizeof(uint32_t),
+                              fbSize.y,
+                              cudaMemcpyDeviceToDevice);
+        }
+        cudaGraphicsUnmapResources(1, &cuDisplayTexture);
+      } else {
+        glBindTexture(GL_TEXTURE_2D, fbTexture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                        fbSize.x, fbSize.y, 0, GL_RGBA,
+                        GL_UNSIGNED_BYTE, fbPointer);
       }
-      cudaGraphicsUnmapResources(1, &cuDisplayTexture);
       
       glDisable(GL_LIGHTING);
       glColor3f(1, 1, 1);
@@ -419,6 +440,29 @@ namespace owl {
       }
     }
 
+    void OWLViewer::setCameraOptions(float fovy,
+                            float focalDistance)
+
+      {
+        camera.setFovy(fovy);
+        camera.setFocalDistance(focalDistance);
+
+        updateCamera();
+      }
+
+      /*! set a new orientation for the camera, update the camera, and
+        notify the app */
+      void OWLViewer::setCameraOrientation(/* camera origin    : */const vec3f &origin,
+                                /* point of interest: */const vec3f &interest,
+                                /* up-vector        : */const vec3f &up,
+                                /* fovy, in degrees : */float fovyInDegrees)
+      {
+        //camera.setOrientation(origin,interest,up,fovyInDegrees);
+        camera.setOrientation(origin,interest,up,fovyInDegrees,false);
+        updateCamera();
+      }
+
+    
 
     void OWLViewer::showAndRun()
     {
