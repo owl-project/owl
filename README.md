@@ -108,6 +108,11 @@ Per-OS Instructions:
 Latest Progress/Revision History
 ================================
 
+v1.0.0 - First "considered to be complete" version
+----------------------------------------------------------------------
+
+*1.0.1: bugfix for missing owlSet4{}() functions
+
 v0.9.x - Elimination of LL layer, and support for motion blur
 ----------------------------------------------------------------------
 

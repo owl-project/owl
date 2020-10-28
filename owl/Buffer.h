@@ -68,10 +68,10 @@ namespace owl {
     
     /*! upload data from host, using as many bytes as required by
         elemnetCount and dataSize */
-    virtual void upload(const void *hostPtr) = 0;
+    virtual void upload(const void *hostPtr, size_t offset, int64_t count) = 0;
 
     /*! upload data from host, to only given device ID */
-    virtual void upload(const int deviceID, const void *hostPtr) = 0;
+    virtual void upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) = 0;
 
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
@@ -124,7 +124,7 @@ namespace owl {
           cudaTextreObject_t for that device). this will *not* wait
           for the upload to complete, so an explicit cuda sync has to
           be done to ensure no race conditiosn will occur */
-      virtual void uploadAsync(const void *hostDataPtr) = 0;
+      virtual void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) = 0;
 
       // DeviceContext::SP const device;
       DeviceBuffer *const parent;
@@ -142,7 +142,7 @@ namespace owl {
         : DeviceData(parent,device)
       {}
       void executeResize() override;
-      void uploadAsync(const void *hostDataPtr) override;
+      void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) override;
     
       /*! this is used only for buffers over object types (bufers of
         textures, or buffers of buffers). For those buffers, we use this
@@ -162,7 +162,7 @@ namespace owl {
       {}
       
       void executeResize() override;
-      void uploadAsync(const void *hostDataPtr) override;
+      void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) override;
       
       /*! this is used only for buffers over object types (bufers of
         textures, or buffers of buffers). For those buffers, we use this
@@ -179,7 +179,7 @@ namespace owl {
         : DeviceData(parent,device)
       {}
       void executeResize() override;
-      void uploadAsync(const void *hostDataPtr) override;
+      void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) override;
     };
 
     /*! contructor - creates the right device data type based on content type */
@@ -195,10 +195,10 @@ namespace owl {
     /*! resize this buffer - actual work will get done in DeviceData */
     void resize(size_t newElementCount) override;
     /*! upload to device data(s) of that buffer - actual work will get done in DeviceData */
-    void upload(const void *hostPtr) override;
+    void upload(const void *hostPtr, size_t offset, int64_t count) override;
     
     /*! upload to only ONE device - only makes sense for device buffers */
-    void upload(const int deviceID, const void *hostPtr) override;
+    void upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) override;
     
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
@@ -217,8 +217,8 @@ namespace owl {
     std::string toString() const override;
 
     void resize(size_t newElementCount) override;
-    void upload(const void *hostPtr) override;
-    void upload(const int deviceID, const void *hostPtr) override;
+    void upload(const void *hostPtr, size_t offset, int64_t count) override;
+    void upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) override;
 
     /*! pointer to the (shared) cuda pinned mem - this gets alloced
         once and is valid on both host and devices */
@@ -237,8 +237,8 @@ namespace owl {
                         OWLDataType type);
 
     void resize(size_t newElementCount) override;
-    void upload(const void *hostPtr) override;
-    void upload(const int deviceID, const void *hostPtr) override;
+    void upload(const void *hostPtr, size_t offset, int64_t count) override;
+    void upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) override;
 
     /*! pretty-printer, for debugging */
     std::string toString() const override;
@@ -262,8 +262,8 @@ namespace owl {
     void unmap(const int deviceID=0, CUstream stream=0);
 
     void resize(size_t newElementCount) override;
-    void upload(const void *hostPtr) override;
-    void upload(const int deviceID, const void *hostPtr) override;
+    void upload(const void *hostPtr, size_t offset, int64_t count) override;
+    void upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) override;
 
     /*! the cuda graphics resource to map to - note that this is
         probably valid on only one GPU */
