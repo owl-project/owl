@@ -7,7 +7,7 @@ OWL is a convenience/productivity-oriented library on top of OptiX
 7.x, and aims at making it easier to write OptiX programs by taking
 some of the more arcane arts (like knowing what a Shader Binding Table
 is, and how to actually build it), and doing that for the user. For
-example, assuing the node graph (ie, the programs, geometries, and
+example, assuming the node graph (ie, the programs, geometries, and
 acceleration structures) have already been built, the shader binding
 table (SBT) can be built and properly populated by a single call
 `owlBuildSBT(context)`.
@@ -42,7 +42,7 @@ strucutres, the following example code snippet takes a host-based
 triangle mesh and:
 
 - uploads the index and vertex buffer to the active GPU(s)
-- creates a trianle mesh geometry with a sample 'color' SBT entry
+- creates a triangle mesh geometry with a sample 'color' SBT entry
 - puts this mesh into a triangle bottom-level accel structure (BLAS)
 - builds that acceleration structure, including BVH compaction
 - creates an instance with an instance transform, and finally
@@ -52,7 +52,7 @@ Note how this little example will do these step: including data
 upload, set-up of build inputs, BVH construction, BVH compaction, and
 everything else that's required for this. Though still a relatively
 benign example, doing the same in low-level CUDA and OptiX code would
-result in significantly more code that the use would have to write,
+result in significantly more code that the user would have to write,
 debug, and maintain.
 
     /* simple sample of setting up a full geometry, BLAS and
@@ -85,7 +85,7 @@ debug, and maintain.
 	   OWLGroup ias = owlInstanceGroupCreate(ctx,1,
 	       /* instantiated BLASes */&blas,
 	       /* instance IDs:       */nullptr,
-		   /* instnace transforms */&instXfm);
+		   /* instance transforms */&instXfm);
 	   owlGroupBuildAccel(ias);
 	   return blas; // that's it!
 	}
@@ -125,11 +125,11 @@ In particular for advanced users, OWL is *explicitly* intended to
 allow advanced users to mix OWL code and data structures with other,
 manually written CUDA code if and whenever so desired. For example,
 OWL offers functions to easily query the CUDA device-addresses of
-buffers, OptixTraversableHandle's from groups, cuda streams from
-launches, etc. As such, it is absoltely possible to mix OWL and CUDA
+buffers, OptixTraversableHandle's from groups, CUDA streams from
+launches, etc. As such, it is absolutely possible to mix OWL and CUDA
 code by, for example, having a multi-pass renderer in which CUDA does
 all the shading code and set-up of ray streams, and OWL doing the
-acceleration structure build and (RTX hardware accelerated) tracing of
+acceleration structure build and (RTX hardware-accelerated) tracing of
 these ray streams, even in multi-threaded and multi-GPU settings, with
 proper CUDA streams, etc (in fact, I do that in several of my own OWL
 applications).
@@ -150,7 +150,7 @@ Despite these significant changes after the initial release, the
 current abstraction level and API have remained stable over roughly a
 year now, with only relatively minor additions such as buffers of
 buffers, refitting, textures, or motion blur. Some features will still
-need adding (e.g., curves, with got added to OptiX 7.1 but are not yet
+need adding (e.g., curves, which got added to OptiX 7.1 but are not yet
 exposed in OWL); however, we consider the current release to be
 sufficiently stable to finally have given it the long-awaited "version
 1.0.0".
@@ -187,7 +187,7 @@ Some sample use projects/papers that recently used OWL:
  
  
  - "A Virtual Frame Buffer Abstraction for Parallel Rendering of Large
-  TiledDisplay Walls". M Han, I Wald, W Usher, N Morrical, A Knoll, V
+  Tiled Display Walls". M Han, I Wald, W Usher, N Morrical, A Knoll, V
   Pascucci, C R Johnson. IEEE Vis Short Papers 2020.
   
   (http://www.sci.utah.edu/~wald/Publications/2020/dw2/dw2.pdf)
@@ -240,7 +240,7 @@ Some sample use projects/papers that recently used OWL:
 General Requirements:
 - OptiX 7 SDK (version 7.0, 7.1, or 7.2, will work with either)
 - CUDA verion 10 or 11
-- a C++-11 capable compiler (regular gcc on CentOS and Linux should do, VS on Windows)
+- a C++11 capable compiler (regular gcc on CentOS and Linux should do, VS on Windows)
 
 Per-OS Instructions:
 
@@ -273,7 +273,7 @@ Per-OS Instructions:
 <!--- ------------------------------------------------------- -->
 # Using OWL through CMake
 
-Though you can of course use OWL without CMake, it is highly enourages
+Though you can of course use OWL without CMake, it is highly encouraged
 to use OWL as a git submodule, using CMake to configure and build this
 submodule. In particular, the suggested procedure is to first
 do a `add_subdirectory` with the owl submodules as such:
@@ -300,7 +300,7 @@ found with a `find_package` script. In particular, it will set the following var
   using OWL.  This will, for example, automatically include TBB
   dependencies if those could be found.
   
-- `OWL_VIEWER_LIBRARIES`: libraries requierd when (also) using the OWL
+- `OWL_VIEWER_LIBRARIES`: libraries required when (also) using the OWL
   sampler viewer widget (programs that use their own viewer/windowing
   code can ignore this).
   
