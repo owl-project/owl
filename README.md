@@ -164,6 +164,8 @@ Some sample use projects/papers that recently used OWL:
 
   (https://ingowald.blog/2020/10/26/moana-on-rtx-first-light/)
 
+  ![Sample "Moana on OWL/OptIX" images](doc/jpg/collage-moana.jpg)
+  
 - "VisII - A Python-Scriptable Virtual Scene Imaging Interface (2020)
 
   (https://github.com/owl-project/ViSII)
