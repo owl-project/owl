@@ -186,6 +186,12 @@ Some sample use projects/papers that recently used OWL:
   (https://arxiv.org/pdf/2008.11235.pdf)
  
  
+ - "A Virtual Frame Buffer Abstraction for Parallel Rendering of Large
+  TiledDisplay Walls". M Han, I Wald, W Usher, N Morrical, A Knoll, V
+  Pascucci, C R Johnson. IEEE Vis Short Papers 2020.
+  
+  (http://www.sci.utah.edu/~wald/Publications/2020/dw2/dw2.pdf)
+ 
 - "Spatial Partitioning Strategies for Memory-Efficient Ray Tracing of
   Particles".  P Gralka, I Wald, S Geringer, G Reina, Th Ertl. IEEE
   Symposium on Large Data Analysis and Viusalization (LDAV) 2020.
