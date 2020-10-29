@@ -1,4 +1,4 @@
-# owl - "Optix Wrappers Library" on top of Optix 7
+# OWL: A Node Graph "Wrapper" Library for OptiX 7
 
 <!--- ------------------------------------------------------- -->
 ## What is OWL?
