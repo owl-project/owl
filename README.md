@@ -291,10 +291,9 @@ found with a `find_package` script. In particular, it will set the following var
 - `OWL_INCLUDES`: the list of directories where owl-related includes
   (like `owl/owl.h' etc) can be found.
 
-- `OWL_CXX_FLAGS`: command-line parameters that the app should pass to
-  file that include owl header files. These will, for example, tell
-  owl whether TBB was found (and whether OWL this is allowed t ouse
-  TBB calls), etc.
+- `OWL_CXX_FLAGS`: command-line parameters that the app should pass as
+  `compile_definitions` to any source file that includes any owl
+  header files. 
 
 - `OWL_LIBRARIES`: the list of libraries the user should link to when
   using OWL.  This will, for example, automatically include TBB
