@@ -175,7 +175,7 @@ Some sample use projects/papers that recently used OWL:
   
   (https://www.willusher.io/publications/exabrick)
   
-  !(Sample "ExaBricks" images)[doc/jpg/collage-exabricks.jpg]
+  ![Sample "ExaBricks" images](doc/jpg/collage-exabricks.jpg)
   
 - "Accelerating Force-Directed Graph Drawing with RT Cores".  S
   Zellmann, M Weier, I Wald, IEEE Vis Short
