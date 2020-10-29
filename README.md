@@ -164,7 +164,7 @@ Some sample use projects/papers that recently used OWL:
 
   (https://ingowald.blog/2020/10/26/moana-on-rtx-first-light/)
 
-  ![Sample "Moana on OWL/OptIX" images](doc/jpg/collage-moana.jpg)
+  ![Sample "Moana on OWL/OptiX" images](doc/jpg/collage-moana.jpg)
   
 - "VisII - A Python-Scriptable Virtual Scene Imaging Interface (2020)
 
@@ -177,7 +177,7 @@ Some sample use projects/papers that recently used OWL:
   
   (https://www.willusher.io/publications/exabrick)
   
-  ![Sample "ExaBricks" images](doc/jpg/collage-exabricks.jpg)
+  ![Sample "ExaBricks" images (Image Credits: See Authors)](doc/jpg/collage-exabricks.jpg)
   
 - "Accelerating Force-Directed Graph Drawing with RT Cores".  S
   Zellmann, M Weier, I Wald, IEEE Vis Short
@@ -196,12 +196,16 @@ Some sample use projects/papers that recently used OWL:
   
   (https://vis.uni-koeln.de/forschung/publikationen/finding-efficient-spatial-distributions-for-massively-instanced-3-d-models)
  
+  ![Sample "Data Parallel Ray Tracing w/ OWL" images (Image Credits: See Authors)](doc/jpg/collage-instances.jpg)
+ 
 - "High-Quality Rendering of Glyphs Using Hardware-Accelerated Ray
   Tracing".  S Zellmann, M Aumüller, N Marshak, I Wald.  Eurographics
   Symposium on Parallel Graphics and Visualization (EGPGV 2020).
   
   (https://vis.uni-koeln.de/forschung/publikationen/high-quality-rendering-of-glyphs-using-hardware-accelerated-ray-tracing)
 
+  ![Sample "ExaBricks" images (Image Credits: See Authors)](doc/jpg/collage-tubes.jpg)
+  
 - "RTX Beyond Ray Tracing: Exploring the Use of Hardware Ray Tracing
   Cores for Tet-Mesh Point Location". I Wald, W Usher, N Morrical, L
   Lediaev, and V Pascucci.  In High Performance Graphics Short Papers,
