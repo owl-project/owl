@@ -235,7 +235,7 @@ Some sample use projects/papers that recently used OWL:
 
 
 <!--- ------------------------------------------------------- -->
-# Supported Platforms
+# Building OWL / Supported Platforms
 
 General Requirements:
 - OptiX 7 SDK (version 7.0, 7.1, or 7.2, will work with either)
@@ -269,6 +269,43 @@ Per-OS Instructions:
 		- Specifics: source code path is ```...Gitlab/owl```, binaries ```...Gitlab/owl/build```, and after pushing the Configure button choose ```x64``` for the optional platform.
 		- You may need to Configure twice.
 		- If you get "OptiX headers (optix.h and friends) not found." then define OptiX_INCLUDE manually in CMake-gui by setting it to ```C:/ProgramData/NVIDIA Corporation/OptiX SDK 7.0.0/include```
+
+<!--- ------------------------------------------------------- -->
+# Using OWL through CMake
+
+Though you can of course use OWL without CMake, it is highly enourages
+to use OWL as a git submodule, using CMake to configure and build this
+submodule. In particular, the suggested procedure is to first
+do a `add_subdirectory` with the owl submodules as such:
+
+    set(owl_dir ${PROJECT_SOURCE_DIR}/whereeverYourOWLSubmoduleIs)
+    add_subdirectory(${owl_dir} EXCLUDE_FROM_ALL)
+
+(the `EXCLUDE_FROM_ALL` makes sure that your main project won't
+automatically build any owl samples or test cases unless you explicitly request so).
+
+After that `include_subdirectory` OWL sets some CMake variables in the
+parent script that let this parent CMakeList file use it as if it had been
+found with a `find_package` script. In particular, it will set the following variables for the user's convenience:
+
+- `OWL_INCLUDES`: the list of directories where owl-related includes
+  (like `owl/owl.h' etc) can be found.
+
+- `OWL_CXX_FLAGS`: command-line parameters that the app should pass to
+  file that include owl header files. These will, for example, tell
+  owl whether TBB was found (and whether OWL this is allowed t ouse
+  TBB calls), etc.
+
+- `OWL_LIBRARIES`: the list of libraries the user should link to when
+  using OWL.  This will, for example, automatically include TBB
+  dependencies if those could be found.
+  
+- `OWL_VIEWER_LIBRARIES`: libraries requierd when (also) using the OWL
+  sampler viewer widget (programs that use their own viewer/windowing
+  code can ignore this).
+  
+For sample code on how to use this, have a look at the `owl/samples/`
+directory.
 
 <!--- ------------------------------------------------------- -->
 # Latest Progress/Revision History
