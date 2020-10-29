@@ -156,7 +156,7 @@ sufficiently stable to finally have given it the long-awaited "version
 1.0.0".
 
 <!--- ------------------------------------------------------- -->
-# Sample User Cases
+# Sample Use Cases
 
 Some sample use projects/papers that recently used OWL:
 
