@@ -273,7 +273,7 @@ Per-OS Instructions:
 <!--- ------------------------------------------------------- -->
 # Latest Progress/Revision History
 
-v1.0.0 - First "considered to be complete" version
+v1.0.x - First "considered to be complete" version
 ----------------------------------------------------------------------
 
 *1.0.3*: bugfix: no longer fatally failing when memadvise optimization didn't work
