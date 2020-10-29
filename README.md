@@ -161,19 +161,27 @@ sufficiently stable to finally have given it the long-awaited "version
 Some sample use projects/papers that recently used OWL:
 
 - Moana on OWL/OptiX (Oct 2020)
+
   (https://ingowald.blog/2020/10/26/moana-on-rtx-first-light/)
 
 - "VisII - A Python-Scriptable Virtual Scene Imaging Interface (2020)
+
   (https://github.com/owl-project/ViSII)
 
 - "Ray Tracing Structured AMR Data Using ExaBricks". I Wald, S
   Zellmann, W Usher, N Morrical, U Lang, and V Pascucci. IEEE
   TVCG(Proceedings of IEEE Vis
-  2020). (https://www.willusher.io/publications/exabrick)
+  2020).
+  
+  (https://www.willusher.io/publications/exabrick)
+  
+  !(Sample "ExaBricks" images)[doc/jpg/collage-exabricks.jpg]
   
 - "Accelerating Force-Directed Graph Drawing with RT Cores".  S
   Zellmann, M Weier, I Wald, IEEE Vis Short
-  Papers 2020. (https://arxiv.org/pdf/2008.11235.pdf)
+  Papers 2020.
+  
+  (https://arxiv.org/pdf/2008.11235.pdf)
  
  
 - "Spatial Partitioning Strategies for Memory-Efficient Ray Tracing of
@@ -183,28 +191,34 @@ Some sample use projects/papers that recently used OWL:
 - "Finding Efficient Spatial Distributions for Massively Instanced 3-d
   Models".  S Zellmann, N Morrical, I Wald, V Pascucci.  Eurographics
   Symposium on Parallel Graphics and Visualization (EGPGV 2020).
+  
   (https://vis.uni-koeln.de/forschung/publikationen/finding-efficient-spatial-distributions-for-massively-instanced-3-d-models)
  
 - "High-Quality Rendering of Glyphs Using Hardware-Accelerated Ray
   Tracing".  S Zellmann, M Aumüller, N Marshak, I Wald.  Eurographics
   Symposium on Parallel Graphics and Visualization (EGPGV 2020).
+  
   (https://vis.uni-koeln.de/forschung/publikationen/high-quality-rendering-of-glyphs-using-hardware-accelerated-ray-tracing)
 
 - "RTX Beyond Ray Tracing: Exploring the Use of Hardware Ray Tracing
   Cores for Tet-Mesh Point Location". I Wald, W Usher, N Morrical, L
   Lediaev, and V Pascucci.  In High Performance Graphics Short Papers,
-  2019 (https://www.willusher.io/publications/rtx-points)
+  2019 
+  
+  (https://www.willusher.io/publications/rtx-points)
 
 - "Using Hardware Ray Transforms to Accelerate Ray/Primitive
   Intersections for Long, Thin Primitive Types". I Wald, N Morrical, S
   Zellmann, L Ma, W Usher, T Huang, V Pascucci.  Proceedings of the
   ACM on Computer Graphics and Interactive Techniques (Proceedings of
   High Performance Graphics), 2020
+  
   (https://www.willusher.io/publications/owltubes)
 
 - "Efficient Space Skipping and Adaptive Sampling of Unstructured
   Volumes Using Hardware Accelerated Ray Tracing. N Morrical, W
   Usher, I Wald, V Pascucci. In IEEE VIS Short Papers, 2019
+  
   (https://www.willusher.io/publications/rtx-space-skipping)
 
 
