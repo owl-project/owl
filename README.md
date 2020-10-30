@@ -170,6 +170,8 @@ Some sample use projects/papers that recently used OWL:
 
   (https://github.com/owl-project/ViSII)
 
+  ![Sample "VisII" images](doc/jpg/collage-visii.jpg)
+  
 - "Ray Tracing Structured AMR Data Using ExaBricks". I Wald, S
   Zellmann, W Usher, N Morrical, U Lang, and V Pascucci. IEEE
   TVCG(Proceedings of IEEE Vis
