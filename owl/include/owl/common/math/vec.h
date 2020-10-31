@@ -144,6 +144,7 @@ namespace owl {
       enum { dims = 3 };
       typedef T scalar_t;
     
+      inline __both__ vec_t(const vec_t &) = default;
       inline __both__ vec_t() {}
       inline __both__ vec_t(const T &t) : x(t), y(t), z(t) {}
       inline __both__ vec_t(const T &_x, const T &_y, const T &_z) : x(_x), y(_y), z(_z) {}

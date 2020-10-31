@@ -68,7 +68,7 @@ namespace owl {
 //        inline __both__ AffineSpaceT           ( ) : l(one), p(zero) {}
 // #endif
 
-       inline __both__ AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
+       inline __both__ AffineSpaceT           ( const AffineSpaceT& other ) = default;
        inline __both__ AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(ZeroTy()); }
        inline __both__ AffineSpaceT& operator=( const AffineSpaceT& other ) { l = other.l; p = other.p; return *this; }
 

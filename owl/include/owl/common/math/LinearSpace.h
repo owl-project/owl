@@ -196,7 +196,7 @@ namespace owl {
         vz(ZeroTy(),ZeroTy(),OneTy())
         {}
         
-      inline __both__ LinearSpace3           ( const LinearSpace3& other ) { vx = other.vx; vy = other.vy; vz = other.vz; }
+      inline __both__ LinearSpace3           ( const LinearSpace3& other ) = default;
       inline __both__ LinearSpace3& operator=( const LinearSpace3& other ) { vx = other.vx; vy = other.vy; vz = other.vz; return *this; }
 
       template<typename L1> inline __both__ LinearSpace3( const LinearSpace3<L1>& s ) : vx(s.vx), vy(s.vy), vz(s.vz) {}
