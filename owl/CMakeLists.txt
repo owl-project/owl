@@ -121,14 +121,20 @@ cuda_add_library(owl_static
   STATIC
   )
 
-cuda_add_library(owl
-  ${OWL_SOURCES}
-  )
 
-target_link_libraries(owl
-   ${CUDA_LIBRARIES}
-   ${CUDA_CUDA_LIBRARY}
-  )
+# Nate: 11/3/20: I get "fatal error C1041: cannot open program database" 
+# on windows from this "owl" shared target being built in parallel against 
+# the "owl_static" target, as for some reason they seem to try to 
+# write to the same .pdb file simultaneously.
+
+# cuda_add_library(owl
+#   ${OWL_SOURCES}
+#   )
+
+# target_link_libraries(owl
+#    ${CUDA_LIBRARIES}
+#    ${CUDA_CUDA_LIBRARY}
+#   )
 
 target_link_libraries(owl_static
    ${CUDA_LIBRARIES}
