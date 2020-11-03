@@ -329,7 +329,7 @@ namespace owl {
                           << "#owl: Warning - error in trying to memadvise a managed "
                           << "memory buffer: " << cudaGetErrorString(rc)
                           << " (should be OK, ignoring this)."
-                          << OWL_TERMINAL_DEFUALT << std::endl;
+                          << OWL_TERMINAL_DEFAULT << std::endl;
                 alreadyWarned = true;
               }
 #endif
