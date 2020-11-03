@@ -47,7 +47,8 @@ namespace owl {
     assert(size.x > 0);
     assert(size.y > 0);
     int32_t pitch  = linePitchInBytes;
-    
+    if (pitch == 0)
+      pitch = size.x*bytesPerTexel(texelFormat);//sizeof(vec4uc);
     assert(
       (texelFormat == OWL_TEXEL_FORMAT_RGBA8) ||
       (texelFormat == OWL_TEXEL_FORMAT_RGBA32F) ||
@@ -99,8 +100,7 @@ namespace owl {
       if (addressMode == OWL_TEXTURE_BORDER) {
         tex_desc.addressMode[0]      = cudaAddressModeBorder;
         tex_desc.addressMode[1]      = cudaAddressModeBorder;
-      }
-      else if (addressMode == OWL_TEXTURE_CLAMP) {
+      } else if (addressMode == OWL_TEXTURE_CLAMP) {
         tex_desc.addressMode[0]      = cudaAddressModeClamp;
         tex_desc.addressMode[1]      = cudaAddressModeClamp;
       } else if (addressMode == OWL_TEXTURE_WRAP) {

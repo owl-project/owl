@@ -33,8 +33,8 @@ Key links:
 
 
 <!--- ------------------------------------------------------- -->
-API Abstraction Level and Directory Structure
-=============================================
+API Abstraction Level
+=====================
 
 The OWL API aims at an abstraction that is similar to OptiX 6's node
 graph. To do so it introduces logical types such as `OWLBuffer`s (to
@@ -43,35 +43,12 @@ handle buffers of data), `OWLGeomType`(s) (abstractions for geometry
 a given type), `OWLGeom`s (instances of geometry types, with specific
 inputs for those programs to operate on), etc.
 
-Internally OWL actually uses two different abstration layers that live
-on top of each other: a "low-level" API (`llowl`) that is still rather
-basic; and the actual "node graph" owl API (`owl`). Externally only
-the public owl API is exposed.
-
-Directory Structure of the Project:
-
-- `owl/`: the root OWL *library* defined in this project
-  - `owl/ll/`: *implementation* the low-level API layer
-  - `owl/ng/`: *implementation* the node graph API
-  - `owl/common/`: common helper classes
-  - `include/owl/owl_host.h`: header for the public, C-linkage host-side API 
-  - `include/owl/owl_device.h`: header to be used on device side, for isec/CH/AH programs.
-  - `include/owl/common`: C++ math/vector classes required for the device-side API
-
-- `samples/`: Samples/Tutorials/TestCases for OWL
-  - `samples/`: tutorial-style samples that show how to create geometries, instances, etc
-  - `samples/advanced`: more advanced sample containing a full OBJ model viewer
-     (based on the siggraph 2019 OptiX course)
-
-- `tests/`: Some internal test cases; only for CI/testing/debugging,
-  should usually not be of much interest to users of the API
-
 <!--- ------------------------------------------------------- -->
 Supported Platforms
 ===================
 
 General Requirements:
-- OptiX 7 SDK (versoin 7.0 or 7.1, will work with either)
+- OptiX 7 SDK (version 7.0, 7.1, or 7.2, will work with either)
 - CUDA verion 10 or 11
 - a C++-11 capable compiler (regular gcc on CentOS and Linux should do, VS on Windows)
 
@@ -107,6 +84,17 @@ Per-OS Instructions:
 <!--- ------------------------------------------------------- -->
 Latest Progress/Revision History
 ================================
+
+v1.0.0 - First "considered to be complete" version
+----------------------------------------------------------------------
+
+*1.0.3*: bugfix: no longer fatally failing when memadvise optimization didn't work
+
+*1.0.2*: (finally) fixed long-standing bug in owlViewer that caused
+   samples to crash when forcing OWL to run on a GPU that's different
+   from the GPU that held the OpenGL graphics context for the viewer. Fixed.
+
+*1.0.1: bugfix for missing owlSet4{}() functions
 
 v0.9.x - Elimination of LL layer, and support for motion blur
 ----------------------------------------------------------------------

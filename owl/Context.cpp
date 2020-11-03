@@ -178,7 +178,9 @@ namespace owl {
                            const void *texels)
   {
     Texture::SP texture
-      = std::make_shared<Texture>(this,size,linePitchInBytes,texelFormat,filterMode,addressMode,colorSpace,texels);
+      = std::make_shared<Texture>(this,size,linePitchInBytes,
+                                  texelFormat,filterMode,addressMode,colorSpace
+                                  texels);
     assert(texture);
     return texture;
   }

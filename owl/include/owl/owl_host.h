@@ -622,8 +622,14 @@ owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 OWL_API void 
 owlBufferDestroy(OWLBuffer buffer);
 
+/*! uploads data from given host poiner to given device. offset refers
+    to the offset (in bytes) on the device. \param numbytes is the
+    number of bytes to upload; -1 meaning "full buffer" */
 OWL_API void 
-owlBufferUpload(OWLBuffer buffer, const void *hostPtr, size_t offset = 0, size_t bytes = -1);
+owlBufferUpload(OWLBuffer buffer,
+                const void *hostPtr,
+                size_t offset OWL_IF_CPP(=0),
+                size_t numBytes OWL_IF_CPP(=size_t(-1)));
 
 /*! executes an optix lauch of given size, with given launch
   program. Note this is asynchronous, and may _not_ be
@@ -793,6 +799,11 @@ OWL_API void owlVariableSetPointer(OWLVariable variable, const void *valuePtr);
                                     stype x,            \
                                     stype y,            \
                                     stype z);           \
+  OWL_API void owlVariableSet4##abb(OWLVariable var,    \
+                                    stype x,            \
+                                    stype y,            \
+                                    stype z,            \
+                                    stype w);           \
   /*end of macro */
 _OWL_SET_HELPER(int32_t,i)
 _OWL_SET_HELPER(uint32_t,ui)
@@ -844,6 +855,19 @@ _OWL_SET_HELPER(double,d)
     owlVariableSet3##abb(var,x,y,z);                            \
     owlVariableRelease(var);                                    \
   }                                                             \
+  /* set4 */                                                    \
+  inline void owl##OType##Set4##abb(OWL##OType object,          \
+                                    const char *varName,        \
+                                    stype x,                    \
+                                    stype y,                    \
+                                    stype z,                    \
+                                    stype w)                    \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet4##abb(var,x,y,z,w);                           \
+    owlVariableRelease(var);                                    \
+  }                                                             \
   /* end of macro */
 
 
@@ -867,9 +891,18 @@ _OWL_SET_HELPER(double,d)
     owlVariableSet3##abb(var,v.x,v.y,v.z);                      \
     owlVariableRelease(var);                                    \
   }                                                             \
+  inline void owl##OType##Set4##abb(OWL##OType object,          \
+                                    const char *varName,        \
+                                    const owl4##abb &v)         \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet4##abb(var,v.x,v.y,v.z,v.w);                  \
+    owlVariableRelease(var);                                    \
+  }                                                             \
   /* end of macro */
 #else
-#define _OWL_SET_HELPERS_CPP(OType,stype,abb)  /* ignore in C99 mode */
+# define _OWL_SET_HELPERS_CPP(OType,stype,abb)  /* ignore in C99 mode */
 #endif
 
 #define _OWL_SET_HELPERS(Type)                                  \
