@@ -172,12 +172,13 @@ namespace owl {
   Context::texture2DCreate(OWLTexelFormat texelFormat,
                            OWLTextureFilterMode filterMode,
                            OWLTextureAddressMode addressMode,
+                           OWLTextureColorSpace colorSpace,
                            const vec2i size,
                            uint32_t linePitchInBytes,
                            const void *texels)
   {
     Texture::SP texture
-      = std::make_shared<Texture>(this,size,linePitchInBytes,texelFormat,filterMode,addressMode,texels);
+      = std::make_shared<Texture>(this,size,linePitchInBytes,texelFormat,filterMode,addressMode,colorSpace,texels);
     assert(texture);
     return texture;
   }

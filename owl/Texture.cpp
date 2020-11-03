@@ -39,6 +39,7 @@ namespace owl {
                    OWLTexelFormat       texelFormat,
                    OWLTextureFilterMode filterMode,
                    OWLTextureAddressMode addressMode,
+                   OWLTextureColorSpace colorSpace,
                    const void *texels
                    )
     : RegisteredObject(context,context->textures)
@@ -125,7 +126,7 @@ namespace owl {
       tex_desc.minMipmapLevelClamp = 0;
       tex_desc.mipmapFilterMode    = cudaFilterModePoint;
       tex_desc.borderColor[0]      = 1.0f;
-      tex_desc.sRGB                = 0;
+      tex_desc.sRGB                = (colorSpace == OWL_COLOR_SPACE_SRGB);
       
       // Create texture object
       cudaTextureObject_t cuda_tex = 0;

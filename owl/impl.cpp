@@ -523,6 +523,7 @@ checkGet(_context)->buildSBT(flags);
                      const void *texels,
                      OWLTextureFilterMode filterMode,
                      OWLTextureAddressMode addressMode,
+                     OWLTextureColorSpace colorSpace,
                      /*! number of bytes between one line of texels and
                        the next; '0' means 'size_x * sizeof(texel)' */
                      uint32_t linePitchInBytes
@@ -534,6 +535,7 @@ checkGet(_context)->buildSBT(flags);
       = context->texture2DCreate(texelFormat,
                                  filterMode,
                                  addressMode,
+                                 colorSpace,
                                  vec2i(size_x,size_y),
                                  linePitchInBytes,
                                  texels);

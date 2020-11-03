@@ -30,6 +30,7 @@ namespace owl {
             OWLTexelFormat       texelFormat,
             OWLTextureFilterMode filterMode,
             OWLTextureAddressMode addressMode,
+            OWLTextureColorSpace colorSpace,
             const void          *texels
             );
     

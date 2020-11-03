@@ -54,6 +54,12 @@ if (NOT WIN32)
   set (CMAKE_CXX_FLAGS "--std=c++11")
   set (CUDA_PROPAGATE_HOST_FLAGS ON)
 endif()
+if (WIN32)
+  # Nate: 11/3/20: I get "fatal error C1041: cannot open program database" 
+  # on windows from multiple targets writing to the same .pdb file simultaneously.
+  # This flag seems to fix it.
+  set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "/FS")
+endif()
 
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)

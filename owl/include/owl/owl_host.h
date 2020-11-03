@@ -275,6 +275,12 @@ typedef enum {
 }
 OWLTextureAddressMode;
 
+/*! Indicates if a texture is linear or SRGB */
+typedef enum {
+  OWL_COLOR_SPACE_LINEAR,
+  OWL_COLOR_SPACE_SRGB
+}
+OWLTextureColorSpace;
 
 // ------------------------------------------------------------------
 // device-objects - size of those _HAS_ to match the device-side
@@ -538,6 +544,7 @@ owlTexture2DCreate(OWLContext context,
                    const void *texels,
                    OWLTextureFilterMode filterMode OWL_IF_CPP(=OWL_TEXTURE_LINEAR),
                    OWLTextureAddressMode addressMode OWL_IF_CPP(=OWL_TEXTURE_CLAMP),
+                   OWLTextureColorSpace colorSpace OWL_IF_CPP(=OWL_COLOR_SPACE_LINEAR),
                    /*! number of bytes between one line of texels and
                      the next; '0' means 'size_x * sizeof(texel)' */
                    uint32_t linePitchInBytes       OWL_IF_CPP(=0)
