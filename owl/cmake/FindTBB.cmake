@@ -117,7 +117,15 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(TBB
 
 # check version
 IF (TBB_INCLUDE_DIR)
-  FILE(READ ${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h TBB_STDDEF_H)
+  #  FILE(READ ${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h TBB_STDDEF_H) issue
+  
+  # (iw): issue #68: should use tbb/version.h, not tbb/tbb_stddef.h, to make
+  # newest intel beta software happy.
+  if (EXISTS ${TBB_INCLUDE_DIR}/tbb/version.h)
+    FILE(READ ${TBB_INCLUDE_DIR}/tbb/version.h TBB_STDDEF_H)
+  else()
+    FILE(READ ${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h TBB_STDDEF_H) 
+  endif()
 
   STRING(REGEX MATCH "#define TBB_VERSION_MAJOR ([0-9]+)" DUMMY "${TBB_STDDEF_H}")
   SET(TBB_VERSION_MAJOR ${CMAKE_MATCH_1})

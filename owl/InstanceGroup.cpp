@@ -311,7 +311,12 @@ namespace owl {
     // ==================================================================
     assert(!transforms[1].empty());
     std::vector<OptixMatrixMotionTransform> motionTransforms(children.size());
+#if OPTIX_VERSION >= 70200
+    /* since 7.2, optix no longer requires those aabbs (and in fact,
+       no longer supports specifying them */
+#else
     std::vector<box3f> motionAABBs(children.size());
+#endif
     for (int childID=0;childID<children.size();childID++) {
       Group::SP child = children[childID];
       assert(child);
@@ -342,18 +347,27 @@ namespace owl {
 
       motionTransforms[childID] = mt;
 
+#if OPTIX_VERSION >= 70200
+    /* since 7.2, optix no longer requires those aabbs (and in fact,
+       no longer supports specifying them */
+#else
       motionAABBs[childID]
         = xfmBounds(transforms[0][childID],child->bounds[0]);
       motionAABBs[childID].extend(xfmBounds(transforms[1][childID],child->bounds[1]));
+#endif
     }
     // and upload
     dd.motionTransformsBuffer.alloc(motionTransforms.size()*
                                     sizeof(motionTransforms[0]));
     dd.motionTransformsBuffer.upload(motionTransforms.data(),"motionTransforms");
       
+#if OPTIX_VERSION >= 70200
+    /* since 7.2, optix no longer requires those aabbs (and in fact,
+       no longer supports specifying them */
+#else
     dd.motionAABBsBuffer.alloc(motionAABBs.size()*sizeof(box3f));
     dd.motionAABBsBuffer.upload(motionAABBs.data(),"motionaabbs");
-      
+#endif      
     // ==================================================================
     // create instance build inputs
     // ==================================================================
@@ -416,10 +430,16 @@ namespace owl {
     instanceInput.instanceArray.numInstances
       = (int)optixInstances.size();
 
+#if OPTIX_VERSION >= 70200
+    /* since 7.2, optix no longer requires those aabbs (and in fact,
+       no longer supports specifying them */
+#else
     instanceInput.instanceArray.aabbs
       = dd.motionAABBsBuffer.d_pointer;
     instanceInput.instanceArray.numAabbs
       = (int)motionAABBs.size();
+#endif
+    
       
     // ==================================================================
     // set up accel uption

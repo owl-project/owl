@@ -314,6 +314,8 @@ directory.
 v1.0.x - First "considered to be complete" version
 ----------------------------------------------------------------------
 
+*1.0.4*: fixed issue #68 - now compiles with optix 7.2, and newewst intel tbb
+
 *1.0.3*: bugfix: no longer fatally failing when memadvise optimization didn't work
 
 *1.0.2*: (finally) fixed long-standing bug in owlViewer that caused
