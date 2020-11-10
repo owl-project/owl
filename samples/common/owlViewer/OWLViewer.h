@@ -162,6 +162,10 @@ namespace owl {
       vec2i getWindowSize() const { return fbSize; }
       static vec2i getScreenSize();
       
+      /*! tell GLFW to set desired active window size (GLFW my choose
+          something smaller if it can't fit this on screen */
+      void setWindowSize(const vec2i &desiredSize) const;
+      
       Camera &getCamera() { return camera; }
 
       /*! helper function that dumps the current frame buffer in a png

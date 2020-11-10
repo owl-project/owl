@@ -146,13 +146,28 @@ namespace owl {
         fc.motionSpeed /= 2.f;
         std::cout << "# viewer: new motion speed is " << fc.motionSpeed << std::endl;
         break;
-      case 'C':
+      case 'C': {
+        // for anybody deriving from this class: if you do not like
+        // this output, simply intercept the 'C' key in your derived
+        // 'key()' method before calling this...
         std::cout << "(C)urrent camera:" << std::endl;
         std::cout << "- from :" << fc.position << std::endl;
         std::cout << "- poi  :" << fc.getPOI() << std::endl;
         std::cout << "- upVec:" << fc.upVector << std::endl;
         std::cout << "- frame:" << fc.frame << std::endl;
-        break;
+
+        const vec3f vp = fc.position;
+        const vec3f vi = fc.getPOI();
+        const vec3f vu = fc.upVector;
+        const float fovy = fc.getFovyInDegrees();
+        std::cout << "(suggested cmdline format, for apps that support this:) "
+                  << " --camera"
+                  << " " << vp.x << " " << vp.y << " " << vp.z
+                  << " " << vi.x << " " << vi.y << " " << vi.z
+                  << " " << vu.x << " " << vu.y << " " << vu.z
+                  << " -fovy " << fovy
+                  << std::endl;
+      } break;
       case 'x':
       case 'X':
         fc.setUpVector(fc.upVector==vec3f(1,0,0)?vec3f(-1,0,0):vec3f(1,0,0));
