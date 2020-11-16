@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2019 Ingo Wald                                            //
+// Copyright 2018-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -28,65 +28,60 @@ namespace owl {
   namespace viewer {
 
     inline const char* getGLErrorString( GLenum error )
-{
-    switch( error )
     {
+      switch( error )
+        {
         case GL_NO_ERROR:            return "No error";
         case GL_INVALID_ENUM:        return "Invalid enum";
         case GL_INVALID_VALUE:       return "Invalid value";
         case GL_INVALID_OPERATION:   return "Invalid operation";
-        //case GL_STACK_OVERFLOW:      return "Stack overflow";
-        //case GL_STACK_UNDERFLOW:     return "Stack underflow";
+          //case GL_STACK_OVERFLOW:      return "Stack overflow";
+          //case GL_STACK_UNDERFLOW:     return "Stack underflow";
         case GL_OUT_OF_MEMORY:       return "Out of memory";
-        //case GL_TABLE_TOO_LARGE:     return "Table too large";
+          //case GL_TABLE_TOO_LARGE:     return "Table too large";
         default:                     return "Unknown GL error";
+        }
     }
-}
-
-
 
 #define DO_GL_CHECK
 #ifdef DO_GL_CHECK
-#    define GL_CHECK( call )                                                   \
-        do                                                                     \
-        {                                                                      \
-            call;                                                              \
-            GLenum err = glGetError();                                         \
-            if( err != GL_NO_ERROR )                                           \
-            {                                                                  \
-                std::stringstream ss;                                          \
-                ss << "GL error " <<  getGLErrorString( err ) << " at " \
-                   << __FILE__  << "(" <<  __LINE__  << "): " << #call         \
-                   << std::endl;                                               \
-                std::cerr << ss.str() << std::endl;                            \
-                throw std::runtime_error( ss.str().c_str() );                        \
-            }                                                                  \
-        }                                                                      \
-        while (0)
+#    define GL_CHECK( call )                                            \
+    do                                                                  \
+      {                                                                 \
+        call;                                                           \
+        GLenum err = glGetError();                                      \
+        if( err != GL_NO_ERROR )                                        \
+          {                                                             \
+            std::stringstream ss;                                       \
+            ss << "GL error " <<  getGLErrorString( err ) << " at "     \
+               << __FILE__  << "(" <<  __LINE__  << "): " << #call      \
+               << std::endl;                                            \
+            std::cerr << ss.str() << std::endl;                         \
+            throw std::runtime_error( ss.str().c_str() );               \
+          }                                                             \
+      }                                                                 \
+    while (0)
 
 
-#    define GL_CHECK_ERRORS( )                                                 \
-        do                                                                     \
-        {                                                                      \
-            GLenum err = glGetError();                                         \
-            if( err != GL_NO_ERROR )                                           \
-            {                                                                  \
-                std::stringstream ss;                                          \
-                ss << "GL error " <<  getGLErrorString( err ) << " at " \
-                   << __FILE__  << "(" <<  __LINE__  << ")";                   \
-                std::cerr << ss.str() << std::endl;                            \
-                throw std::runtime_error( ss.str().c_str() );                    \
-            }                                                                  \
-        }                                                                      \
-        while (0)
+#    define GL_CHECK_ERRORS( )                                          \
+    do                                                                  \
+      {                                                                 \
+        GLenum err = glGetError();                                      \
+        if( err != GL_NO_ERROR )                                        \
+          {                                                             \
+            std::stringstream ss;                                       \
+            ss << "GL error " <<  getGLErrorString( err ) << " at "     \
+               << __FILE__  << "(" <<  __LINE__  << ")";                \
+            std::cerr << ss.str() << std::endl;                         \
+            throw std::runtime_error( ss.str().c_str() );               \
+          }                                                             \
+      }                                                                 \
+    while (0)
 
 #else
 #    define GL_CHECK( call )   do { call; } while(0)
 #    define GL_CHECK_ERRORS( ) do { ;     } while(0)
 #endif
-
-
-
 
     void initGLFW()
     {
@@ -99,7 +94,7 @@ namespace owl {
     }
     
     /*! helper function that dumps the current frame buffer in a png
-        file of given name */
+      file of given name */
     void OWLViewer::screenShot(const std::string &fileName)
     {
       const uint32_t *fb
@@ -166,12 +161,11 @@ namespace owl {
       easy.screen.vertical   = screen_height * camera.frame.vy;
       easy.screen.horizontal = screen_height * camera.aspect * camera.frame.vx;
       easy.screen.lower_left
-        = //easy.lens.center
+        = 
         /* NEGATIVE z axis! */
         - max(minFocalDistance,camera.focalDistance) * camera.frame.vz
         - 0.5f * easy.screen.vertical
         - 0.5f * easy.screen.horizontal;
-      // easy.lastModified = getCurrentTime();
     }
     
     // ==================================================================
@@ -186,10 +180,8 @@ namespace owl {
       cudaMallocManaged(&fbPointer,newSize.x*newSize.y*sizeof(uint32_t));
       
       fbSize = newSize;
-      // bool firstResize = false;
       if (fbTexture == 0) {
         GL_CHECK(glGenTextures(1, &fbTexture));
-        // firstResize = true;
       }
       else {
         if (cuDisplayTexture) {
@@ -199,7 +191,6 @@ namespace owl {
       }
 
       GL_CHECK(glBindTexture(GL_TEXTURE_2D, fbTexture));
-      // GL_CHECK(glActiveTexture(GL_TEXTURE0));
       GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSize.x, newSize.y, 0, GL_RGBA,
                             GL_UNSIGNED_BYTE, nullptr));
       
@@ -208,7 +199,6 @@ namespace owl {
         (&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
       
       // if (firstResize || !firstResize && resourceSharingSuccessful) {
-      //   const char *forceSlowDisplay = getenv("OWL_NO_CUDA_RESOURCE_SHARING");
       bool forceSlowDisplay = false;
       if (rc != cudaSuccess || forceSlowDisplay) {
         std::cout << OWL_TERMINAL_RED
@@ -226,20 +216,9 @@ namespace owl {
       } else {
         resourceSharingSuccessful = true;
       }
-      // }
-      // if (cuDisplayTexture != 0) {
-      //   cudaGraphicsUnmapResources(1, &cuDisplayTexture);
-      //   /* drop last error: */cudaGetLastError();
-      //   cuDisplayTexture = 0;
-      // }
-      // } else {
-      // if (resourceSharingSuccessful)
-      //   cudaGraphicsUnmapResources(1, &cuDisplayTexture);
-      //   resourceSharingSuccessful = true;
-      // }
+      setAspect(fbSize.x/float(fbSize.y));
     }
 
-    
     /*! re-draw the current frame. This function itself isn't
       virtual, but it calls the framebuffer's render(), which
       is */
@@ -327,7 +306,6 @@ namespace owl {
         = std::make_shared<CameraInspectMode>
         (this,validPoiRange,minPoiDist,maxPoiDist,
          rm==POI? CameraInspectMode::POI: CameraInspectMode::Arcball);
-      // if (!cameraManipulator)
       cameraManipulator = inspectModeManipulator;
     }
 
@@ -342,7 +320,6 @@ namespace owl {
     {
       flyModeManipulator
         = std::make_shared<CameraFlyMode>(this);
-      // if (!cameraManipulator)
       cameraManipulator = flyModeManipulator;
     }
 
@@ -366,19 +343,22 @@ namespace owl {
       if (cameraManipulator) cameraManipulator->mouseDragLeft(where,delta);
     }
 
-    /*! mouse got dragged with left button pressedn, by 'delta' pixels, at last position where */
+    /*! mouse got dragged with left button pressedn, by 'delta'
+        pixels, at last position where */
     void OWLViewer::mouseDragCenter(const vec2i &where, const vec2i &delta)
     {
       if (cameraManipulator) cameraManipulator->mouseDragCenter(where,delta);
     }
 
-    /*! mouse got dragged with left button pressedn, by 'delta' pixels, at last position where */
+    /*! mouse got dragged with left button pressedn, by 'delta'
+        pixels, at last position where */
     void OWLViewer::mouseDragRight (const vec2i &where, const vec2i &delta)
     {
       if (cameraManipulator) cameraManipulator->mouseDragRight(where,delta);
     }
 
-    /*! mouse button got either pressed or released at given location */
+    /*! mouse button got either pressed or released at given
+        location */
     void OWLViewer::mouseButtonLeft  (const vec2i &where, bool pressed)
     {
       if (cameraManipulator) cameraManipulator->mouseButtonLeft(where,pressed);
@@ -428,10 +408,9 @@ namespace owl {
     
     OWLViewer::OWLViewer(const std::string &title,
                          const vec2i &initWindowSize,
-                               bool visible)
+                         bool visible)
     {
       glfwSetErrorCallback(glfw_error_callback);
-      // glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
 
       initGLFW();
       
@@ -458,8 +437,6 @@ namespace owl {
       OWLViewer *gw = static_cast<OWLViewer*>(glfwGetWindowUserPointer(window));
       assert(gw);
       gw->resize(vec2i(width,height));
-      // assert(OWLViewer::current);
-      //   OWLViewer::current->resize(vec2i(width,height));
     }
 
     /*! callback for a key press */
@@ -494,7 +471,10 @@ namespace owl {
     }
 
     /*! callback for pressing _or_ releasing a mouse button*/
-    static void glfwindow_mouseButton_cb(GLFWwindow *window, int button, int action, int mods) 
+    static void glfwindow_mouseButton_cb(GLFWwindow *window,
+                                         int button,
+                                         int action,
+                                         int mods) 
     {
       OWLViewer *gw = static_cast<OWLViewer*>(glfwGetWindowUserPointer(window));
       assert(gw);
@@ -531,26 +511,25 @@ namespace owl {
     }
 
     void OWLViewer::setCameraOptions(float fovy,
-                            float focalDistance)
+                                     float focalDistance)
 
-      {
-        camera.setFovy(fovy);
-        camera.setFocalDistance(focalDistance);
+    {
+      camera.setFovy(fovy);
+      camera.setFocalDistance(focalDistance);
 
-        updateCamera();
-      }
+      updateCamera();
+    }
 
-      /*! set a new orientation for the camera, update the camera, and
-        notify the app */
-      void OWLViewer::setCameraOrientation(/* camera origin    : */const vec3f &origin,
-                                /* point of interest: */const vec3f &interest,
-                                /* up-vector        : */const vec3f &up,
-                                /* fovy, in degrees : */float fovyInDegrees)
-      {
-        //camera.setOrientation(origin,interest,up,fovyInDegrees);
-        camera.setOrientation(origin,interest,up,fovyInDegrees,false);
-        updateCamera();
-      }
+    /*! set a new orientation for the camera, update the camera, and
+      notify the app */
+    void OWLViewer::setCameraOrientation(/* camera origin    : */const vec3f &origin,
+                                         /* point of interest: */const vec3f &interest,
+                                         /* up-vector        : */const vec3f &up,
+                                         /* fovy, in degrees : */float fovyInDegrees)
+    {
+      camera.setOrientation(origin,interest,up,fovyInDegrees,false);
+      updateCamera();
+    }
 
     
 
@@ -560,7 +539,6 @@ namespace owl {
       glfwGetFramebufferSize(handle, &width, &height);
       resize(vec2i(width,height));
 
-      // glfwSetWindowUserPointer(window, OWLViewer::current);
       glfwSetFramebufferSizeCallback(handle, glfwindow_reshape_cb);
       glfwSetMouseButtonCallback(handle, glfwindow_mouseButton_cb);
       glfwSetKeyCallback(handle, glfwindow_key_cb);
@@ -579,6 +557,13 @@ namespace owl {
         glfwSwapBuffers(handle);
         glfwPollEvents();
       }
+    }
+
+    /*! tell GLFW to set desired active window size (GLFW my choose
+      something smaller if it can't fit this on screen */
+    void OWLViewer::setWindowSize(const vec2i &desiredSize) const
+    {
+      glfwSetWindowSize(handle,desiredSize.x,desiredSize.y);
     }
     
   } // ::owl::viewer

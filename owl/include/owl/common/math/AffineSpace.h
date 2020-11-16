@@ -68,7 +68,8 @@ namespace owl {
 //        inline __both__ AffineSpaceT           ( ) : l(one), p(zero) {}
 // #endif
 
-       inline __both__ AffineSpaceT           ( const AffineSpaceT& other ) { l = other.l; p = other.p; }
+       inline// __both__
+       AffineSpaceT           ( const AffineSpaceT& other ) = default;
        inline __both__ AffineSpaceT           ( const L           & other ) { l = other  ; p = VectorT(ZeroTy()); }
        inline __both__ AffineSpaceT& operator=( const AffineSpaceT& other ) { l = other.l; p = other.p; return *this; }
 
@@ -115,7 +116,12 @@ namespace owl {
 
     template<typename L> inline AffineSpaceT<L> operator -( const AffineSpaceT<L>& a ) { return AffineSpaceT<L>(-a.l,-a.p); }
     template<typename L> inline AffineSpaceT<L> operator +( const AffineSpaceT<L>& a ) { return AffineSpaceT<L>(+a.l,+a.p); }
-    template<typename L> inline AffineSpaceT<L>        rcp( const AffineSpaceT<L>& a ) { L il = rcp(a.l); return AffineSpaceT<L>(il,-(il*a.p)); }
+    template<typename L>
+    inline __both__
+    AffineSpaceT<L> rcp( const AffineSpaceT<L>& a ) {
+      L il = rcp(a.l);
+      return AffineSpaceT<L>(il,-(il*a.p));
+    }
 
     ////////////////////////////////////////////////////////////////////////////////
     // Binary Operators
