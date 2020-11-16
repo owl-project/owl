@@ -35,17 +35,27 @@ namespace owl {
               lambda(vec3i(ix,iy,iz));
       }
 
-#if OWL_HAVE_PARALLEL_FOR
+      template<typename Lambda>
+      inline void for_each(const vec3i &begin,
+                           const vec3i &end,
+                           const Lambda &lambda)
+      {
+        for (int iz=begin.z;iz<end.z;iz++)
+          for (int iy=begin.y;iy<end.y;iy++)
+            for (int ix=begin.z;ix<end.x;ix++)
+              lambda(vec3i(ix,iy,iz));
+      }
+
       template<typename Lambda>
       inline void parallel_for(const vec3i &dims, const Lambda &lambda)
       {
-        owl::common::parallel_for(dims.x*(size_t)dims.y*dims.z,[&](size_t index){
+        owl::common::parallel_for
+          (dims.x*(size_t)dims.y*dims.z,[&](size_t index){
             lambda(vec3i(index%dims.x,
                          (index/dims.x)%dims.y,
                          index/((size_t)dims.x*dims.y)));
           });
       }
-#endif
       template<typename Lambda>
       inline void serial_for(const vec3i &dims, const Lambda &lambda)
       {
