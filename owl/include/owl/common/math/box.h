@@ -62,7 +62,7 @@ namespace owl {
     template<typename T>
     inline __both__ std::ostream &operator<<(std::ostream &o, const interval<T> &b)
     {
-#ifndef __CUDACC__
+#ifndef __CUDA_ARCH__
       o << "[" << b.lower << ":" << b.upper << "]";
 #endif
       return o;
@@ -189,7 +189,7 @@ namespace owl {
     template<typename T>
     inline __both__ std::ostream &operator<<(std::ostream &o, const box_t<T> &b)
     {
-#ifndef __CUDACC__
+#ifndef __CUDA_ARCH__
       o << "[" << b.lower << ":" << b.upper << "]";
 #endif
       return o;
