@@ -44,7 +44,7 @@ namespace owl {
       {
         for (int iz=begin.z;iz<end.z;iz++)
           for (int iy=begin.y;iy<end.y;iy++)
-            for (int ix=begin.z;ix<end.x;ix++)
+            for (int ix=begin.x;ix<end.x;ix++)
               lambda(vec3i(ix,iy,iz));
       }
 
