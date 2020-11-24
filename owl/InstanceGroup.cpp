@@ -46,7 +46,7 @@ namespace owl {
     std::vector<uint32_t> childIDs;
     if (groups) {
       childIDs.resize(numChildren);
-      for (int i=0;i<numChildren;i++) {
+      for (size_t i=0;i<numChildren;i++) {
         assert(groups[i]);
         children[i] = groups[i];
         childIDs[i] = groups[i]->ID;
@@ -75,7 +75,7 @@ namespace owl {
   void InstanceGroup::setTransform(int childID,
                                    const affine3f &xfm)
   {
-    assert(childID >= 0 && childID < children.size());
+    assert(childID >= 0 && childID < (int)children.size());
     transforms[0][childID] = xfm;
   }
 
@@ -86,7 +86,7 @@ namespace owl {
     switch(matrixFormat) {
     case OWL_MATRIX_FORMAT_OWL: {
       transforms[timeStep].resize(children.size());
-      memcpy(transforms[timeStep].data(),floatsForThisStimeStep,
+      memcpy((char*)transforms[timeStep].data(),floatsForThisStimeStep,
              children.size()*sizeof(affine3f));
     } break;
     default:
@@ -103,7 +103,7 @@ namespace owl {
   
   void InstanceGroup::setChild(int childID, Group::SP child)
   {
-    assert(childID >= 0 && childID < children.size());
+    assert(childID >= 0 && childID < (int)children.size());
     children[childID] = child;
   }
 
@@ -159,7 +159,7 @@ namespace owl {
     std::vector<OptixInstance>   optixInstances(children.size());
 
     // now go over all children to set up the buildinputs
-    for (int childID=0;childID<children.size();childID++) {
+    for (size_t childID=0;childID<children.size();childID++) {
       Group::SP child = children[childID];
       assert(child);
 
@@ -317,7 +317,7 @@ namespace owl {
 #else
     std::vector<box3f> motionAABBs(children.size());
 #endif
-    for (int childID=0;childID<children.size();childID++) {
+    for (size_t childID=0;childID<children.size();childID++) {
       Group::SP child = children[childID];
       assert(child);
       OptixMatrixMotionTransform mt = {};
@@ -378,7 +378,7 @@ namespace owl {
     std::vector<OptixInstance>   optixInstances(children.size());
 
     // now go over all children to set up the buildinputs
-    for (int childID=0;childID<children.size();childID++) {
+    for (size_t childID=0;childID<children.size();childID++) {
       Group::SP child = children[childID];
       assert(child);
 

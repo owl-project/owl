@@ -138,7 +138,10 @@ namespace owl {
   { mismatchingType("double3"); }
   void Variable::set(const vec4d  &value)
   { mismatchingType("double4"); }
-    
+
+  void Variable::set(const affine3f &value)
+  { mismatchingType("affine3f"); }
+  
   /*! Variable type for ray "user yypes". User types have a
       user-specified size in bytes, and get set by passing a pointer
       to 'raw' data that then gets copied in binary form */
@@ -207,6 +210,54 @@ namespace owl {
       *(const void**)sbtEntry = value;
     }
     
+    Buffer::SP buffer;
+  };
+
+  /*! Variable type that accepts owl buffer types, and on the
+      device-side writes just the raw device pointer into the SBT */
+  struct BufferSizeVariable : public Variable {
+    typedef std::shared_ptr<BufferSizeVariable> SP;
+
+    BufferSizeVariable(const OWLVarDecl *const varDecl)
+      : Variable(varDecl)
+    {}
+    void set(const Buffer::SP &value) override { this->buffer = value; }
+
+    /*! writes the device specific representation of the given type */
+    void writeToSBT(uint8_t *sbtEntry,
+                    const DeviceContext::SP &device) const override
+    {
+      const size_t value
+        = buffer
+        ? buffer->elementCount
+        : 0ull;
+      *(size_t*)sbtEntry = value;
+    }
+
+    Buffer::SP buffer;
+  };
+
+  /*! Variable type that accepts owl buffer types, and on the
+      device-side writes just the raw device pointer into the SBT */
+  struct BufferIDVariable : public Variable {
+    typedef std::shared_ptr<BufferIDVariable> SP;
+
+    BufferIDVariable(const OWLVarDecl *const varDecl)
+      : Variable(varDecl)
+    {}
+    void set(const Buffer::SP &value) override { this->buffer = value; }
+
+    /*! writes the device specific representation of the given type */
+    void writeToSBT(uint8_t *sbtEntry,
+                    const DeviceContext::SP &device) const override
+    {
+      const int32_t value
+        = buffer
+        ? buffer->ID
+        : -1;
+      *(int32_t*)sbtEntry = value;
+    }
+
     Buffer::SP buffer;
   };
 
@@ -314,7 +365,7 @@ namespace owl {
     {
       cudaTextureObject_t to = {};
       if (texture) {
-        assert(device->ID < texture->textureObjects.size());
+        assert(device->ID < (int)texture->textureObjects.size());
         to = texture->textureObjects[device->ID];
       }
       *(cudaTextureObject_t*)sbtEntry = to;
@@ -434,6 +485,9 @@ namespace owl {
     case OWL_DOUBLE4:
       return std::make_shared<VariableT<vec4d>>(decl);
 
+    case OWL_AFFINE3F:
+      return std::make_shared<VariableT<affine3f>>(decl);
+      
       // ------------------------------------------------------------------
       // meta
       // ------------------------------------------------------------------
@@ -445,12 +499,19 @@ namespace owl {
       return std::make_shared<BufferVariable>(decl);
     case OWL_BUFFER_POINTER:
       return std::make_shared<BufferPointerVariable>(decl);
+    case OWL_BUFFER_ID:
+      return std::make_shared<BufferIDVariable>(decl);
+    case OWL_BUFFER_SIZE:
+      return std::make_shared<BufferSizeVariable>(decl);
     case OWL_DEVICE:
       return std::make_shared<DeviceIndexVariable>(decl);
+    case OWL_INVALID_TYPE:
+      throw std::runtime_error("Tried to create an instance of OWL_INVALID_TYPE");
+    default:
+      throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
+                               +": not yet implemented for type "
+                               +typeToString(decl->type));
     }
-    throw std::runtime_error(std::string(__PRETTY_FUNCTION__)
-                             +": not yet implemented for type "
-                             +typeToString(decl->type));
   }
     
 } // ::owl

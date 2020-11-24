@@ -111,6 +111,8 @@ namespace owl {
     // meta/other
     // -------------------------------------------------------
 
+    virtual void set(const affine3f &value);
+    
     virtual void set(const std::shared_ptr<Buffer>  &value);
     virtual void set(const std::shared_ptr<Group>   &value);
     virtual void set(const std::shared_ptr<Texture> &value);

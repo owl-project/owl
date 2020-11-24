@@ -261,7 +261,7 @@ void Viewer::cameraChanged()
   owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
   owlRayGenSet3f    (rayGen,"camera.dir_dv",(const owl3f&)camera_ddv);
-  vec3f lightDir = (1.f,1.f,1.f);
+  vec3f lightDir = {1.f,1.f,1.f};
   owlRayGenSet3f    (rayGen,"lightDir",     (const owl3f&)lightDir);
   sbtDirty = true;
 }
@@ -402,7 +402,7 @@ void Viewer::render()
 {
   static double t0 = getCurrentTime();
   double t = animSpeed * (getCurrentTime() - t0);
-  for (int i=0;i<boxTransforms.size();i++) {
+  for (size_t i=0;i<boxTransforms.size();i++) {
     boxTransforms[i] = boxAnimStates[i].getTransform((float)t);
     owlInstanceGroupSetTransform(world,i,
                                  (const float*)&boxTransforms[i],
@@ -411,8 +411,6 @@ void Viewer::render()
 
   static double updateTime = 0.f;
   updateTime -= getCurrentTime();
-  static int frameID = 0;
-  int thisFrameID = frameID++;
   // we can resort to update here because the initial build was
   // already done before
   owlGroupBuildAccel(world);

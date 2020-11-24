@@ -119,6 +119,9 @@ namespace owl {
 
     case OWL_AFFINE3F:
       return sizeof(affine3f);
+
+    case OWL_BUFFER_SIZE:
+      return sizeof(size_t);
       
     case OWL_BUFFER:
       //      return sizeof();

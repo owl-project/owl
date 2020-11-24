@@ -388,7 +388,7 @@ namespace owl {
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     if (initValues) {
-      for (int i = 0; i < numGeometries; i++) {
+      for (size_t i = 0; i < numGeometries; i++) {
         Geom::SP child = ((APIHandle *)initValues[i])->get<TrianglesGeom>();
         assert(child);
         group->setChild(i, child);
@@ -410,7 +410,7 @@ namespace owl {
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     if (initValues) {
-      for (int i = 0; i < numGeometries; i++) {
+      for (size_t i = 0; i < numGeometries; i++) {
         Geom::SP child = ((APIHandle *)initValues[i])->get<UserGeom>();
         assert(child);
         group->setChild(i, child);
@@ -466,7 +466,7 @@ namespace owl {
     group->createDeviceData(context->getDevices());
 
     if (_initGroups)
-      for (int childID=0;childID<numInstances;childID++) {
+      for (size_t childID=0;childID<numInstances;childID++) {
         OWLGroup _child = _initGroups[childID];
         if (!_child) continue;
         
@@ -880,7 +880,7 @@ namespace owl {
 
     assert(numKeys >= 2);
     std::vector<Buffer::SP> buffers;
-    for (int i=0;i<numKeys;i++) {
+    for (size_t i=0;i<numKeys;i++) {
       Buffer::SP buffer
         = ((APIHandle *)vertexArrays[i])->get<Buffer>();
       assert(buffer);

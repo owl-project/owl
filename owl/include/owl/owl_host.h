@@ -109,6 +109,7 @@ typedef enum
    OWL_INVALID_TYPE = 0,
 
    OWL_BUFFER=10,
+   /*! a 64-bit int representing the number of elemnets in a buffer */
    OWL_BUFFER_SIZE,
    OWL_BUFFER_ID,
    OWL_BUFFER_POINTER,

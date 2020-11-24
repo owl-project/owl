@@ -114,13 +114,13 @@ namespace owl {
     std::vector<uint32_t> triangleInputFlags(geometries.size());
 
     // now go over all geometries to set up the buildinputs
-    for (int childID=0;childID<geometries.size();childID++) {
+    for (size_t childID=0;childID<geometries.size();childID++) {
       
       // the child wer're setting them with (with sanity checks)
       TrianglesGeom::SP tris = geometries[childID]->as<TrianglesGeom>();
       assert(tris);
       
-      if (tris->vertex.buffers.size() != numKeys)
+      if (tris->vertex.buffers.size() != (size_t)numKeys)
         throw std::runtime_error("invalid combination of meshes with "
                                  "different motion keys in the same "
                                  "triangles geom group");
