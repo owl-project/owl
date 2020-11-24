@@ -19,7 +19,7 @@
 #include "InstanceGroup.h"
 // device buffer representation that we'll write for Buffer variables
 #include "owl/owl_device_buffer.h"
-
+ 
 namespace owl { 
   
   /*! throw an exception that the type the user tried to set doesn't
