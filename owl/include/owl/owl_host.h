@@ -191,6 +191,8 @@ typedef enum
      owl-cuda interaction (where the user already has device
      pointers), but should not be used for logical buffers */
    OWL_RAW_POINTER=OWL_ULONG,
+   OWL_BYTE = OWL_UCHAR,
+   OWL_BOOL = OWL_UCHAR,
 
 
    /* matrix formats */

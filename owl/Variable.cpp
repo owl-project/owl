@@ -24,11 +24,121 @@ namespace owl {
   
   /*! throw an exception that the type the user tried to set doesn't
     math the type he/she declared*/
-  void Variable::mismatchingType()
+  void Variable::mismatchingType(const std::string &attemptedType)
   {
-    throw std::runtime_error("trying to set variable to value of wrong type");
+    assert(varDecl);
+    throw std::runtime_error
+      ("trying to set variable to value of wrong type.\n"
+       "note: name of variable is " + std::string(varDecl->name) + "\n"
+       "note: type of variable is " + typeToString(varDecl->type) + "\n"
+       "note: type of value attempted to be set is " + attemptedType
+       );
   }
 
+  void Variable::set(const std::shared_ptr<Buffer>  &value)
+  { mismatchingType("Buffer"); }
+  void Variable::set(const std::shared_ptr<Group>   &value)
+  { mismatchingType("Group"); }
+  void Variable::set(const std::shared_ptr<Texture> &value)
+  { mismatchingType("Texture"); }
+    
+  void Variable::setRaw(const void *ptr)
+  { mismatchingType("void*"); }
+
+
+  void Variable::set(const int8_t &value)
+  { mismatchingType("char"); }
+  void Variable::set(const vec2c &value)
+  { mismatchingType("char2"); }
+  void Variable::set(const vec3c &value)
+  { mismatchingType("char3"); }
+  void Variable::set(const vec4c &value)
+  { mismatchingType("char4"); }
+    
+  void Variable::set(const uint8_t &value)
+  { mismatchingType("uchar"); }
+  void Variable::set(const vec2uc &value)
+  { mismatchingType("uchar2"); }
+  void Variable::set(const vec3uc &value)
+  { mismatchingType("uchar3"); }
+  void Variable::set(const vec4uc &value)
+  { mismatchingType("uchar4"); }
+    
+
+
+  void Variable::set(const int16_t &value)
+  { mismatchingType("short"); }
+  void Variable::set(const vec2s &value)
+  { mismatchingType("short2"); }
+  void Variable::set(const vec3s &value)
+  { mismatchingType("short3"); }
+  void Variable::set(const vec4s &value)
+  { mismatchingType("short4"); }
+    
+  void Variable::set(const uint16_t &value)
+  { mismatchingType("ushort"); }
+  void Variable::set(const vec2us &value)
+  { mismatchingType("ushort2"); }
+  void Variable::set(const vec3us &value)
+  { mismatchingType("ushort3"); }
+  void Variable::set(const vec4us &value)
+  { mismatchingType("ushort4"); }
+    
+
+  void Variable::set(const int32_t &value)
+  { mismatchingType("int"); }
+  void Variable::set(const vec2i &value)
+  { mismatchingType("int2"); }
+  void Variable::set(const vec3i &value)
+  { mismatchingType("int3"); }
+  void Variable::set(const vec4i &value)
+  { mismatchingType("int4"); }
+    
+  void Variable::set(const uint32_t &value)
+  { mismatchingType("uint"); }
+  void Variable::set(const vec2ui &value)
+  { mismatchingType("uint2"); }
+  void Variable::set(const vec3ui &value)
+  { mismatchingType("uint3"); }
+  void Variable::set(const vec4ui &value)
+  { mismatchingType("uint4"); }
+    
+  void Variable::set(const int64_t &value)
+  { mismatchingType("long"); }
+  void Variable::set(const vec2l &value)
+  { mismatchingType("long2"); }
+  void Variable::set(const vec3l &value)
+  { mismatchingType("long3"); }
+  void Variable::set(const vec4l &value)
+  { mismatchingType("long4"); }
+    
+  void Variable::set(const uint64_t &value)
+  { mismatchingType("ulong"); }
+  void Variable::set(const vec2ul &value)
+  { mismatchingType("ulong2"); }
+  void Variable::set(const vec3ul &value)
+  { mismatchingType("ulong3"); }
+  void Variable::set(const vec4ul &value)
+  { mismatchingType("ulong4"); }
+    
+  void Variable::set(const float  &value)
+  { mismatchingType("float"); }
+  void Variable::set(const vec2f  &value)
+  { mismatchingType("float2"); }
+  void Variable::set(const vec3f  &value)
+  { mismatchingType("float3"); }
+  void Variable::set(const vec4f  &value)
+  { mismatchingType("float4"); }
+
+  void Variable::set(const double &value)
+  { mismatchingType("double"); }
+  void Variable::set(const vec2d  &value)
+  { mismatchingType("double2"); }
+  void Variable::set(const vec3d  &value)
+  { mismatchingType("double3"); }
+  void Variable::set(const vec4d  &value)
+  { mismatchingType("double4"); }
+    
   /*! Variable type for ray "user yypes". User types have a
       user-specified size in bytes, and get set by passing a pointer
       to 'raw' data that then gets copied in binary form */
@@ -222,6 +332,51 @@ namespace owl {
     if (decl->type >= OWL_USER_TYPE_BEGIN)
       return std::make_shared<UserTypeVariable>(decl);
     switch(decl->type) {
+      // ------------------------------------------------------------------
+      // 8 bit
+      // ------------------------------------------------------------------
+    case OWL_CHAR:
+      return std::make_shared<VariableT<int8_t>>(decl);
+    case OWL_CHAR2:
+      return std::make_shared<VariableT<vec2c>>(decl);
+    case OWL_CHAR3:
+      return std::make_shared<VariableT<vec3c>>(decl);
+    case OWL_CHAR4:
+      return std::make_shared<VariableT<vec4c>>(decl);
+
+    case OWL_UCHAR:
+      return std::make_shared<VariableT<uint8_t>>(decl);
+    case OWL_UCHAR2:
+      return std::make_shared<VariableT<vec2uc>>(decl);
+    case OWL_UCHAR3:
+      return std::make_shared<VariableT<vec3uc>>(decl);
+    case OWL_UCHAR4:
+      return std::make_shared<VariableT<vec4uc>>(decl);
+
+      // ------------------------------------------------------------------
+      // 16 bit
+      // ------------------------------------------------------------------
+    case OWL_SHORT:
+      return std::make_shared<VariableT<int16_t>>(decl);
+    case OWL_SHORT2:
+      return std::make_shared<VariableT<vec2s>>(decl);
+    case OWL_SHORT3:
+      return std::make_shared<VariableT<vec3s>>(decl);
+    case OWL_SHORT4:
+      return std::make_shared<VariableT<vec4s>>(decl);
+
+    case OWL_USHORT:
+      return std::make_shared<VariableT<uint16_t>>(decl);
+    case OWL_USHORT2:
+      return std::make_shared<VariableT<vec2us>>(decl);
+    case OWL_USHORT3:
+      return std::make_shared<VariableT<vec3us>>(decl);
+    case OWL_USHORT4:
+      return std::make_shared<VariableT<vec4us>>(decl);
+      
+      // ------------------------------------------------------------------
+      // 32 bit
+      // ------------------------------------------------------------------
     case OWL_INT:
       return std::make_shared<VariableT<int32_t>>(decl);
     case OWL_INT2:
@@ -240,7 +395,18 @@ namespace owl {
     case OWL_UINT4:
       return std::make_shared<VariableT<vec4ui>>(decl);
 
+    case OWL_FLOAT:
+      return std::make_shared<VariableT<float>>(decl);
+    case OWL_FLOAT2:
+      return std::make_shared<VariableT<vec2f>>(decl);
+    case OWL_FLOAT3:
+      return std::make_shared<VariableT<vec3f>>(decl);
+    case OWL_FLOAT4:
+      return std::make_shared<VariableT<vec4f>>(decl);
       
+      // ------------------------------------------------------------------
+      // 64 bit
+      // ------------------------------------------------------------------
     case OWL_LONG:
       return std::make_shared<VariableT<int64_t>>(decl);
     case OWL_LONG2:
@@ -259,16 +425,6 @@ namespace owl {
     case OWL_ULONG4:
       return std::make_shared<VariableT<vec4ul>>(decl);
 
-
-    case OWL_FLOAT:
-      return std::make_shared<VariableT<float>>(decl);
-    case OWL_FLOAT2:
-      return std::make_shared<VariableT<vec2f>>(decl);
-    case OWL_FLOAT3:
-      return std::make_shared<VariableT<vec3f>>(decl);
-    case OWL_FLOAT4:
-      return std::make_shared<VariableT<vec4f>>(decl);
-
     case OWL_DOUBLE:
       return std::make_shared<VariableT<double>>(decl);
     case OWL_DOUBLE2:
@@ -278,6 +434,9 @@ namespace owl {
     case OWL_DOUBLE4:
       return std::make_shared<VariableT<vec4d>>(decl);
 
+      // ------------------------------------------------------------------
+      // meta
+      // ------------------------------------------------------------------
     case OWL_GROUP:
       return std::make_shared<GroupVariable>(decl);
     case OWL_TEXTURE:
