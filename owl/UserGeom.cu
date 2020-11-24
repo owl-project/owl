@@ -241,7 +241,7 @@ namespace owl {
     UserGeomType *parent = (UserGeomType*)_parent;
     
     // ----------- intserect -----------
-    if (rt < parent->intersectProg.size()) {
+    if (rt < (int)parent->intersectProg.size()) {
       const ProgramDesc &pd = parent->intersectProg[rt];
       if (pd.module) {
         pgDesc.hitgroup.moduleIS = pd.module->getDD(device).module;

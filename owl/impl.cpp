@@ -129,7 +129,7 @@ namespace owl {
                            OWLBuildSBTFlags flags)
   {
     LOG_API_CALL();
-checkGet(_context)->buildSBT(flags);
+    checkGet(_context)->buildSBT(flags);
   }
 
   OWL_API void owlBuildPrograms(OWLContext _context)
@@ -509,10 +509,10 @@ checkGet(_context)->buildSBT(flags);
     return (OWLBuffer)context->createHandle(buffer);
   }
 
-/*! create new texture of given format and dimensions - for now, we
-  only do "wrap" textures, and eithe rbilinear or nearest filter;
-  once we allow for doing things like texture borders we'll have to
-  change this api */
+  /*! create new texture of given format and dimensions - for now, we
+    only do "wrap" textures, and eithe rbilinear or nearest filter;
+    once we allow for doing things like texture borders we'll have to
+    change this api */
   OWL_API OWLTexture
   owlTexture2DCreate(OWLContext _context,
                      OWLTexelFormat texelFormat,
@@ -726,7 +726,7 @@ checkGet(_context)->buildSBT(flags);
     assert(context);
     GeomType::SP geometryType
       = context->createGeomType(kind,varStructSize,
-                                    checkAndPackVariables(vars,numVars));
+                                checkAndPackVariables(vars,numVars));
     assert(geometryType);
     return (OWLGeomType)context->createHandle(geometryType);
   }
@@ -1051,37 +1051,55 @@ checkGet(_context)->buildSBT(flags);
   }
 
 
-#define _OWL_SET_HELPER(stype,abb)                      \
-  OWL_API void owlVariableSet1##abb(OWLVariable var,    \
-                                    stype v)            \
-  {                                                     \
-    LOG_API_CALL();                                     \
-    setVariable((APIHandle *)var,v);                    \
-  }                                                     \
-  OWL_API void owlVariableSet2##abb(OWLVariable var,    \
-                                    stype x,            \
-                                    stype y)            \
-  {                                                     \
-    LOG_API_CALL();                                     \
-    setVariable((APIHandle *)var,vec2##abb(x,y));       \
-  }                                                     \
-  OWL_API void owlVariableSet3##abb(OWLVariable var,    \
-                                    stype x,            \
-                                    stype y,            \
-                                    stype z)            \
-  {                                                     \
-    LOG_API_CALL();                                     \
-    setVariable((APIHandle *)var,vec3##abb(x,y,z));     \
-  }                                                     \
-  OWL_API void owlVariableSet4##abb(OWLVariable var,    \
-                                    stype x,            \
-                                    stype y,            \
-                                    stype z,            \
-                                    stype w)            \
-  {                                                     \
-    LOG_API_CALL();                                     \
-    setVariable((APIHandle *)var,vec4##abb(x,y,z,w));   \
-  }                                                     \
+#define _OWL_SET_HELPER(stype,abb)                                      \
+  OWL_API void owlVariableSet1##abb(OWLVariable var,                    \
+                                    stype v)                            \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,v);                                    \
+  }                                                                     \
+  OWL_API void owlVariableSet2##abb(OWLVariable var,                    \
+                                    stype x,                            \
+                                    stype y)                            \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec2##abb(x,y));                       \
+  }                                                                     \
+  OWL_API void owlVariableSet2##abb##v(OWLVariable var,                 \
+                                       const stype *v)                  \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec2##abb(v[0],v[1]));                 \
+  }                                                                     \
+  OWL_API void owlVariableSet3##abb(OWLVariable var,                    \
+                                    stype x,                            \
+                                    stype y,                            \
+                                    stype z)                            \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec3##abb(x,y,z));                     \
+  }                                                                     \
+  OWL_API void owlVariableSet3##abb##v(OWLVariable var,                 \
+                                       const stype *v)                  \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec3##abb(v[0],v[1],v[2]));            \
+  }                                                                     \
+  OWL_API void owlVariableSet4##abb(OWLVariable var,                    \
+                                    stype x,                            \
+                                    stype y,                            \
+                                    stype z,                            \
+                                    stype w)                            \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec4##abb(x,y,z,w));                   \
+  }                                                                     \
+  OWL_API void owlVariableSet4##abb##v(OWLVariable var,                 \
+                                       const stype *v)                  \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec4##abb(v[0],v[1],v[2],v[3]));       \
+  }                                                                     \
   /*end of macro */
   _OWL_SET_HELPER(int32_t,i)
   _OWL_SET_HELPER(uint32_t,ui)
@@ -1237,7 +1255,7 @@ checkGet(_context)->buildSBT(flags);
       xfm.p    = vec3f(floats[0+3],floats[4+3],floats[8+3]);
       break;
     default: 
-        FATAL("un-recognized matrix format");
+      FATAL("un-recognized matrix format");
     }
     
     assert(_group);
