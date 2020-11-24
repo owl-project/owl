@@ -100,7 +100,7 @@ namespace owl {
     std::vector<uint32_t> userGeomInputFlags(geometries.size());
 
     // now go over all geometries to set up the buildinputs
-    for (int childID=0;childID<geometries.size();childID++) {
+    for (size_t childID=0;childID<geometries.size();childID++) {
       // the three fields we're setting:
 
       UserGeom::SP child = geometries[childID]->as<UserGeom>();
@@ -221,7 +221,7 @@ namespace owl {
 
     // size_t sumPrims = 0;
     size_t sumBoundsMem = 0;
-    for (int childID=0;childID<geometries.size();childID++) {
+    for (size_t childID=0;childID<geometries.size();childID++) {
       UserGeom::SP child = geometries[childID]->as<UserGeom>();
       assert(child);
       

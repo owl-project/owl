@@ -95,11 +95,11 @@ namespace owl {
                               Module::SP module,
                               const std::string &progName);
 
-    /*! anyhit programs to run for this geom - one per ray type */
-    std::vector<ProgramDesc> anyHit;
-    
     /*! closest programs to run for this geom - one per ray type */
     std::vector<ProgramDesc> closestHit;
+    
+    /*! anyhit programs to run for this geom - one per ray type */
+    std::vector<ProgramDesc> anyHit;
   };
 
   /*! a actual geometry object with primitives - this class is still
