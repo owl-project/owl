@@ -186,7 +186,7 @@ int main(int ac, char **av)
   owlGroupBuildAccel(meshGroup);
 
   OWLGroup world = meshGroup;
-  for (int level=1;level<numLevels;level++) {
+  for (int level=1;level<(int)numLevels;level++) {
     OWLGroup childGroup = world;
     owl::affine3f xfms[5]
       = {
