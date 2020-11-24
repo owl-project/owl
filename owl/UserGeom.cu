@@ -196,7 +196,7 @@ namespace owl {
       = owl::common::divRoundUp(numBlocks,numBlocks_x*numBlocks_y);
         
     vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
-        
+
     tempMem.upload(userGeomData);
     
     void  *d_geomData = tempMem.get();
@@ -226,6 +226,7 @@ namespace owl {
       throw std::runtime_error("unknown CUDA error in calling bounds function kernel: "
                                +std::string(errName));
     }
+    
     tempMem.free();
     cudaDeviceSynchronize();
   }

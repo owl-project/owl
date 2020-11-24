@@ -180,6 +180,16 @@ namespace owl {
     {
       return limits_traits<std::numeric_limits<T>::is_integer>::value_limits_upper(T());
     }
-  
+
+    template<> inline __both__ uint16_t empty_range_lower<uint16_t>() 
+    { return uint16_t(-1); }
+    template<> inline __both__ uint16_t empty_range_upper<uint16_t>() 
+    { return uint16_t(0); }
+    template<> inline __both__ uint16_t open_range_lower<uint16_t>() 
+    { return uint16_t(0); }
+    template<> inline __both__ uint16_t open_range_upper<uint16_t>() 
+    { return uint16_t(-1); }
+    
+    
   } // ::owl::common
 } // ::owl
