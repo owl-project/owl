@@ -137,41 +137,52 @@ typedef enum
    OWL_FLOAT3,
    OWL_FLOAT4,
 
-   OWL_INT=1100,
+   OWL_INT=1010,
    OWL_INT2,
    OWL_INT3,
    OWL_INT4,
    
-   OWL_UINT=1200,
+   OWL_UINT=1020,
    OWL_UINT2,
    OWL_UINT3,
    OWL_UINT4,
    
-   OWL_LONG=1300,
+   OWL_LONG=1030,
    OWL_LONG2,
    OWL_LONG3,
    OWL_LONG4,
 
-   OWL_ULONG=1400,
+   OWL_ULONG=1040,
    OWL_ULONG2,
    OWL_ULONG3,
    OWL_ULONG4,
 
-   OWL_DOUBLE=1500,
+   OWL_DOUBLE=1050,
    OWL_DOUBLE2,
    OWL_DOUBLE3,
    OWL_DOUBLE4,
     
-   OWL_CHAR=1600,
+   OWL_CHAR=1060,
    OWL_CHAR2,
    OWL_CHAR3,
    OWL_CHAR4,
 
    /*! unsigend 8-bit integer */
-   OWL_UCHAR=1700,
+   OWL_UCHAR=1070,
    OWL_UCHAR2,
    OWL_UCHAR3,
    OWL_UCHAR4,
+
+   OWL_SHORT=1080,
+   OWL_SHORT2,
+   OWL_SHORT3,
+   OWL_SHORT4,
+
+   /*! unsigend 8-bit integer */
+   OWL_USHORT=1090,
+   OWL_USHORT2,
+   OWL_USHORT3,
+   OWL_USHORT4,
 
    /*! just another name for a 64-bit data type - unlike
      OWL_BUFFER_POINTER's (which gets translated from OWLBuffer's
@@ -183,7 +194,7 @@ typedef enum
 
 
    /* matrix formats */
-   OWL_AFFINE3F=1800,
+   OWL_AFFINE3F=1300,
 
    /*! at least for now, use that for buffers with user-defined types:
      type then is "OWL_USER_TYPE_BEGIN+sizeof(elementtype). Note
