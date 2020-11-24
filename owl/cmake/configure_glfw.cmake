@@ -37,7 +37,7 @@ else ()
       set(OWL_GLFW_INCLUDES ${owl_dir}/samples/common/3rdParty/glfw)
       set(OWL_GLFW_LIBRARIES glfw ${OPENGL_LIBRARIES})
 else()
-    find_package(glfw3)
+    find_package(glfw3 QUIET)
     
     if (${glfw3_FOUND})
 #      message("#owl.cmake: found glfw3 package")

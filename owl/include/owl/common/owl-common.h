@@ -113,21 +113,37 @@
 
 #define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" not implemented")
 
-#define OWL_TERMINAL_RED "\033[0;31m"
-#define OWL_TERMINAL_GREEN "\033[0;32m"
-#define OWL_TERMINAL_LIGHT_GREEN "\033[1;32m"
-#define OWL_TERMINAL_YELLOW "\033[1;33m"
-#define OWL_TERMINAL_BLUE "\033[0;34m"
-#define OWL_TERMINAL_LIGHT_BLUE "\033[1;34m"
-#define OWL_TERMINAL_RESET "\033[0m"
-#define OWL_TERMINAL_DEFAULT OWL_TERMINAL_RESET
-#define OWL_TERMINAL_BOLD "\033[1;1m"
+#ifdef WIN32
+# define OWL_TERMINAL_RED ""
+# define OWL_TERMINAL_GREEN ""
+# define OWL_TERMINAL_LIGHT_GREEN ""
+# define OWL_TERMINAL_YELLOW ""
+# define OWL_TERMINAL_BLUE ""
+# define OWL_TERMINAL_LIGHT_BLUE ""
+# define OWL_TERMINAL_RESET ""
+# define OWL_TERMINAL_DEFAULT OWL_TERMINAL_RESET
+# define OWL_TERMINAL_BOLD ""
 
-#define OWL_TERMINAL_MAGENTA "\e[35m"
-#define OWL_TERMINAL_LIGHT_MAGENTA "\e[95m"
-#define OWL_TERMINAL_CYAN "\e[36m"
-//#define OWL_TERMINAL_LIGHT_RED "\e[91m"
-#define OWL_TERMINAL_LIGHT_RED "\033[1;31m"
+# define OWL_TERMINAL_MAGENTA ""
+# define OWL_TERMINAL_LIGHT_MAGENTA ""
+# define OWL_TERMINAL_CYAN ""
+# define OWL_TERMINAL_LIGHT_RED ""
+#else
+# define OWL_TERMINAL_RED "\033[0;31m"
+# define OWL_TERMINAL_GREEN "\033[0;32m"
+# define OWL_TERMINAL_LIGHT_GREEN "\033[1;32m"
+# define OWL_TERMINAL_YELLOW "\033[1;33m"
+# define OWL_TERMINAL_BLUE "\033[0;34m"
+# define OWL_TERMINAL_LIGHT_BLUE "\033[1;34m"
+# define OWL_TERMINAL_RESET "\033[0m"
+# define OWL_TERMINAL_DEFAULT OWL_TERMINAL_RESET
+# define OWL_TERMINAL_BOLD "\033[1;1m"
+
+# define OWL_TERMINAL_MAGENTA "\e[35m"
+# define OWL_TERMINAL_LIGHT_MAGENTA "\e[95m"
+# define OWL_TERMINAL_CYAN "\e[36m"
+# define OWL_TERMINAL_LIGHT_RED "\033[1;31m"
+#endif
 
 #ifdef _MSC_VER
 # define OWL_ALIGN(alignment) __declspec(align(alignment)) 

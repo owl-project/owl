@@ -100,7 +100,7 @@ namespace owl {
     assert(!geometries.empty());
     TrianglesGeom::SP child0 = geometries[0]->as<TrianglesGeom>();
     assert(child0);
-    int numKeys = child0->vertex.buffers.size();
+    int numKeys = (int)child0->vertex.buffers.size();
     assert(numKeys > 0);
     const bool hasMotion = (numKeys > 1);
     if (hasMotion) assert(context->motionBlurEnabled);
