@@ -712,7 +712,8 @@ OWL_API void
 owlInstanceGroupSetTransform(OWLGroup group,
                              int whichChild,
                              const float *floats,
-                             OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL));
+                             OWLMatrixFormat matrixFormat
+                             OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL));
 
 /*! this function allows to set up to N different arrays of trnsforms
     for motion blur; the first such array is used as transforms for
@@ -723,7 +724,8 @@ owlInstanceGroupSetTransforms(OWLGroup group,
                                   currently supporting only 0 or 1*/
                               uint32_t timeStep,
                               const float *floatsForThisStimeStep,
-                              OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL));
+                              OWLMatrixFormat matrixFormat
+                              OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL));
 
 /*! sets the list of IDs to use for the child instnaces. By default
     the instance ID of child #i is simply i, but optix allows to
@@ -797,37 +799,107 @@ owlParamsGetVariable(OWLParams object,
 // VariableSet for different variable types
 // -------------------------------------------------------
 
-OWL_API void owlVariableSetGroup(OWLVariable variable, OWLGroup value);
+// setters for 8-bit types
+#ifdef __cplusplus
+OWL_API void owlVariableSet1b(OWLVariable var, bool val);
+OWL_API void owlVariableSet2b(OWLVariable var, bool x, bool y);
+OWL_API void owlVariableSet3b(OWLVariable var, bool x, bool y, bool z);
+OWL_API void owlVariableSet4b(OWLVariable var, bool x, bool y, bool z, bool w);
+OWL_API void owlVariableSet2bv(OWLVariable var, const bool *val);
+OWL_API void owlVariableSet3bv(OWLVariable var, const bool *val);
+OWL_API void owlVariableSet4bv(OWLVariable var, const bool *val);
+#endif
+
+OWL_API void owlVariableSet1c(OWLVariable var, int8_t val);
+OWL_API void owlVariableSet2c(OWLVariable var, int8_t x, int8_t y);
+OWL_API void owlVariableSet3c(OWLVariable var, int8_t x, int8_t y, int8_t z);
+OWL_API void owlVariableSet4c(OWLVariable var, int8_t x, int8_t y, int8_t z, int8_t w);
+OWL_API void owlVariableSet2cv(OWLVariable var, const int8_t *val);
+OWL_API void owlVariableSet3cv(OWLVariable var, const int8_t *val);
+OWL_API void owlVariableSet4cv(OWLVariable var, const int8_t *val);
+
+OWL_API void owlVariableSet1uc(OWLVariable var, uint8_t val);
+OWL_API void owlVariableSet2uc(OWLVariable var, uint8_t x, uint8_t y);
+OWL_API void owlVariableSet3uc(OWLVariable var, uint8_t x, uint8_t y, uint8_t z);
+OWL_API void owlVariableSet4uc(OWLVariable var, uint8_t x, uint8_t y, uint8_t z, uint8_t w);
+OWL_API void owlVariableSet2ucv(OWLVariable var, const uint8_t *val);
+OWL_API void owlVariableSet3ucv(OWLVariable var, const uint8_t *val);
+OWL_API void owlVariableSet4ucv(OWLVariable var, const uint8_t *val);
+
+// setters for 16-bit types
+OWL_API void owlVariableSet1s(OWLVariable var, int16_t val);
+OWL_API void owlVariableSet2s(OWLVariable var, int16_t x, int16_t y);
+OWL_API void owlVariableSet3s(OWLVariable var, int16_t x, int16_t y, int16_t z);
+OWL_API void owlVariableSet4s(OWLVariable var, int16_t x, int16_t y, int16_t z, int16_t w);
+OWL_API void owlVariableSet2sv(OWLVariable var, const int16_t *val);
+OWL_API void owlVariableSet3sv(OWLVariable var, const int16_t *val);
+OWL_API void owlVariableSet4sv(OWLVariable var, const int16_t *val);
+
+OWL_API void owlVariableSet1us(OWLVariable var, uint16_t val);
+OWL_API void owlVariableSet2us(OWLVariable var, uint16_t x, uint16_t y);
+OWL_API void owlVariableSet3us(OWLVariable var, uint16_t x, uint16_t y, uint16_t z);
+OWL_API void owlVariableSet4us(OWLVariable var, uint16_t x, uint16_t y, uint16_t z, uint16_t w);
+OWL_API void owlVariableSet2usv(OWLVariable var, const uint16_t *val);
+OWL_API void owlVariableSet3usv(OWLVariable var, const uint16_t *val);
+OWL_API void owlVariableSet4usv(OWLVariable var, const uint16_t *val);
+
+// setters for 32-bit types
+OWL_API void owlVariableSet1f(OWLVariable var, float val);
+OWL_API void owlVariableSet2f(OWLVariable var, float x, float y);
+OWL_API void owlVariableSet3f(OWLVariable var, float x, float y, float z);
+OWL_API void owlVariableSet4f(OWLVariable var, float x, float y, float z, float w);
+OWL_API void owlVariableSet2fv(OWLVariable var, const float *val);
+OWL_API void owlVariableSet3fv(OWLVariable var, const float *val);
+OWL_API void owlVariableSet4fv(OWLVariable var, const float *val);
+
+OWL_API void owlVariableSet1i(OWLVariable var, int32_t val);
+OWL_API void owlVariableSet2i(OWLVariable var, int32_t x, int32_t y);
+OWL_API void owlVariableSet3i(OWLVariable var, int32_t x, int32_t y, int32_t z);
+OWL_API void owlVariableSet4i(OWLVariable var, int32_t x, int32_t y, int32_t z, int32_t w);
+OWL_API void owlVariableSet2iv(OWLVariable var, const int32_t *val);
+OWL_API void owlVariableSet3iv(OWLVariable var, const int32_t *val);
+OWL_API void owlVariableSet4iv(OWLVariable var, const int32_t *val);
+
+OWL_API void owlVariableSet1ui(OWLVariable var, uint32_t val);
+OWL_API void owlVariableSet2ui(OWLVariable var, uint32_t x, uint32_t y);
+OWL_API void owlVariableSet3ui(OWLVariable var, uint32_t x, uint32_t y, uint32_t z);
+OWL_API void owlVariableSet4ui(OWLVariable var, uint32_t x, uint32_t y, uint32_t z, uint32_t w);
+OWL_API void owlVariableSet2uiv(OWLVariable var, const uint32_t *val);
+OWL_API void owlVariableSet3uiv(OWLVariable var, const uint32_t *val);
+OWL_API void owlVariableSet4uiv(OWLVariable var, const uint32_t *val);
+
+// setters for 64-bit types
+
+OWL_API void owlVariableSet1d(OWLVariable var, double val);
+OWL_API void owlVariableSet2d(OWLVariable var, double x, double y);
+OWL_API void owlVariableSet3d(OWLVariable var, double x, double y, double z);
+OWL_API void owlVariableSet4d(OWLVariable var, double x, double y, double z, double w);
+OWL_API void owlVariableSet2dv(OWLVariable var, const double *val);
+OWL_API void owlVariableSet3dv(OWLVariable var, const double *val);
+OWL_API void owlVariableSet4dv(OWLVariable var, const double *val);
+
+OWL_API void owlVariableSet1l(OWLVariable var, int64_t val);
+OWL_API void owlVariableSet2l(OWLVariable var, int64_t x, int64_t y);
+OWL_API void owlVariableSet3l(OWLVariable var, int64_t x, int64_t y, int64_t z);
+OWL_API void owlVariableSet4l(OWLVariable var, int64_t x, int64_t y, int64_t z, int64_t w);
+OWL_API void owlVariableSet2lv(OWLVariable var, const int64_t *val);
+OWL_API void owlVariableSet3lv(OWLVariable var, const int64_t *val);
+OWL_API void owlVariableSet4lv(OWLVariable var, const int64_t *val);
+
+OWL_API void owlVariableSet1ul(OWLVariable var, uint64_t val);
+OWL_API void owlVariableSet2ul(OWLVariable var, uint64_t x, uint64_t y);
+OWL_API void owlVariableSet3ul(OWLVariable var, uint64_t x, uint64_t y, uint64_t z);
+OWL_API void owlVariableSet4ul(OWLVariable var, uint64_t x, uint64_t y, uint64_t z, uint64_t w);
+OWL_API void owlVariableSet2ulv(OWLVariable var, const uint64_t *val);
+OWL_API void owlVariableSet3ulv(OWLVariable var, const uint64_t *val);
+OWL_API void owlVariableSet4ulv(OWLVariable var, const uint64_t *val);
+
+// setters for 'meta' variables
+OWL_API void owlVariableSetGroup  (OWLVariable variable, OWLGroup value);
 OWL_API void owlVariableSetTexture(OWLVariable variable, OWLTexture value);
-OWL_API void owlVariableSetBuffer(OWLVariable variable, OWLBuffer value);
-OWL_API void owlVariableSetRaw(OWLVariable variable, const void *valuePtr);
+OWL_API void owlVariableSetBuffer (OWLVariable variable, OWLBuffer value);
+OWL_API void owlVariableSetRaw    (OWLVariable variable, const void *valuePtr);
 OWL_API void owlVariableSetPointer(OWLVariable variable, const void *valuePtr);
-#define _OWL_SET_HELPER(stype,abb)                      \
-  OWL_API void owlVariableSet1##abb(OWLVariable var,    \
-                                    stype v);           \
-  OWL_API void owlVariableSet2##abb(OWLVariable var,    \
-                                    stype x,            \
-                                    stype y);           \
-  OWL_API void owlVariableSet3##abb(OWLVariable var,    \
-                                    stype x,            \
-                                    stype y,            \
-                                    stype z);           \
-  OWL_API void owlVariableSet4##abb(OWLVariable var,    \
-                                    stype x,            \
-                                    stype y,            \
-                                    stype z,            \
-                                    stype w);           \
-  /*end of macro */
-_OWL_SET_HELPER(int32_t,i)
-_OWL_SET_HELPER(uint32_t,ui)
-_OWL_SET_HELPER(int64_t,l)
-_OWL_SET_HELPER(uint64_t,ul)
-_OWL_SET_HELPER(float,f)
-_OWL_SET_HELPER(double,d)
-#undef _OWL_SET_HELPER
-
-
-
 
 
 // -------------------------------------------------------
@@ -967,18 +1039,22 @@ _OWL_SET_HELPER(double,d)
     owlVariableRelease(var);                                    \
   }                                                             \
                                                                 \
-  _OWL_SET_HELPERS_C(Type,int32_t,i)                            \
-  _OWL_SET_HELPERS_C(Type,uint32_t,ui)                          \
-  _OWL_SET_HELPERS_C(Type,int64_t,l)                            \
-  _OWL_SET_HELPERS_C(Type,uint64_t,ul)                          \
-  _OWL_SET_HELPERS_C(Type,float,f)                              \
-  _OWL_SET_HELPERS_C(Type,double,d)                             \
-  _OWL_SET_HELPERS_CPP(Type,int32_t,i)                          \
-  _OWL_SET_HELPERS_CPP(Type,uint32_t,ui)                        \
-  _OWL_SET_HELPERS_CPP(Type,int64_t,l)                          \
-  _OWL_SET_HELPERS_CPP(Type,uint64_t,ul)                        \
-  _OWL_SET_HELPERS_CPP(Type,float,f)                            \
-  _OWL_SET_HELPERS_CPP(Type,double,d)                           \
+  _OWL_SET_HELPERS_C(Type,int8_t,c)                                  \
+  _OWL_SET_HELPERS_C(Type,uint8_t,uc)                                \
+  _OWL_SET_HELPERS_C(Type,int16_t,s)                                 \
+  _OWL_SET_HELPERS_C(Type,uint16_t,us)                               \
+  _OWL_SET_HELPERS_C(Type,int32_t,i)                                 \
+  _OWL_SET_HELPERS_C(Type,uint32_t,ui)                               \
+  _OWL_SET_HELPERS_C(Type,int64_t,l)                                 \
+  _OWL_SET_HELPERS_C(Type,uint64_t,ul)                               \
+  _OWL_SET_HELPERS_C(Type,float,f)                                   \
+  _OWL_SET_HELPERS_C(Type,double,d)                                  \
+  _OWL_SET_HELPERS_CPP(Type,int32_t,i)                               \
+  _OWL_SET_HELPERS_CPP(Type,uint32_t,ui)                             \
+  _OWL_SET_HELPERS_CPP(Type,int64_t,l)                               \
+  _OWL_SET_HELPERS_CPP(Type,uint64_t,ul)                             \
+  _OWL_SET_HELPERS_CPP(Type,float,f)                                 \
+  _OWL_SET_HELPERS_CPP(Type,double,d)                                \
   /* end of macro */
 
   _OWL_SET_HELPERS(RayGen)
@@ -989,6 +1065,7 @@ _OWL_SET_HELPER(double,d)
 #undef _OWL_SET_HELPERS_CPP
 #undef _OWL_SET_HELPERS_C
 #undef _OWL_SET_HELPERS
+
 
 
 #ifdef __cplusplus

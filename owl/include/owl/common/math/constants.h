@@ -189,7 +189,15 @@ namespace owl {
     { return uint16_t(0); }
     template<> inline __both__ uint16_t open_range_upper<uint16_t>() 
     { return uint16_t(-1); }
-    
-    
+
+    template<> inline __both__ uint8_t empty_range_lower<uint8_t>() 
+    { return uint8_t(-1); }
+    template<> inline __both__ uint8_t empty_range_upper<uint8_t>() 
+    { return uint8_t(0); }
+    template<> inline __both__ uint8_t open_range_lower<uint8_t>() 
+    { return uint8_t(0); }
+    template<> inline __both__ uint8_t open_range_upper<uint8_t>() 
+    { return uint8_t(-1); }
+
   } // ::owl::common
 } // ::owl
