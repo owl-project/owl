@@ -61,7 +61,6 @@ if (WIN32)
   # set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "/FS")
 endif()
 
-
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(configure_cuda)
