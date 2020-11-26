@@ -347,7 +347,6 @@ namespace owl {
     checkGet(_context)->setMissProg(rayType,miss);
   }
 
-
   OWL_API OWLMissProg
   owlMissProgCreate(OWLContext _context,
                     OWLModule  _module,
@@ -1051,7 +1050,7 @@ namespace owl {
   }
 
 
-#define _OWL_SET_HELPER(stype,abb)                                      \
+#define _OWL_VARIABLE_SETTERS(stype,abb)                                \
   OWL_API void owlVariableSet1##abb(OWLVariable var,                    \
                                     stype v)                            \
   {                                                                     \
@@ -1101,14 +1100,165 @@ namespace owl {
     setVariable((APIHandle *)var,vec4##abb(v[0],v[1],v[2],v[3]));       \
   }                                                                     \
   /*end of macro */
-  _OWL_SET_HELPER(int32_t,i)
-  _OWL_SET_HELPER(uint32_t,ui)
-  _OWL_SET_HELPER(int64_t,l)
-  _OWL_SET_HELPER(uint64_t,ul)
-  _OWL_SET_HELPER(float,f)
-  _OWL_SET_HELPER(double,d)
-#undef _OWL_SET_HELPER
+  _OWL_VARIABLE_SETTERS(bool,b)
+  _OWL_VARIABLE_SETTERS(int8_t,c)
+  _OWL_VARIABLE_SETTERS(uint8_t,uc)
+  _OWL_VARIABLE_SETTERS(int16_t,s)
+  _OWL_VARIABLE_SETTERS(uint16_t,us)
+  _OWL_VARIABLE_SETTERS(int32_t,i)
+  _OWL_VARIABLE_SETTERS(uint32_t,ui)
+  _OWL_VARIABLE_SETTERS(int64_t,l)
+  _OWL_VARIABLE_SETTERS(uint64_t,ul)
+  _OWL_VARIABLE_SETTERS(float,f)
+  _OWL_VARIABLE_SETTERS(double,d)
+#undef _OWL_VARIABLE_SETTERS
 
+
+#define OBJECT_SETTERS_T(OType,stype,abb)                       \
+  OWL_API void owl##OType##Set1##abb(OWL##OType object,         \
+                                     const char *varName,       \
+                                     stype x)                   \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet1##abb(var,x);                                \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set2##abb(OWL##OType object,         \
+                                     const char *varName,       \
+                                     stype x,                   \
+                                     stype y)                   \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet2##abb(var,x,y);                              \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set2##abb##v(OWL##OType object,      \
+                                        const char *varName,    \
+                                        const stype *v)         \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet2##abb(var,v[0],v[1]);                        \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set3##abb(OWL##OType object,         \
+                                     const char *varName,       \
+                                     stype x,                   \
+                                     stype y,                   \
+                                     stype z)                   \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet3##abb(var,x,y,z);                            \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set3##abb##v(OWL##OType object,      \
+                                        const char *varName,    \
+                                        const stype *v)         \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet3##abb(var,v[0],v[1],v[2]);                   \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set4##abb(OWL##OType object,         \
+                                     const char *varName,       \
+                                     stype x,                   \
+                                     stype y,                   \
+                                     stype z,                   \
+                                     stype w)                   \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet4##abb(var,x,y,z,w);                          \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set4##abb##v(OWL##OType object,      \
+                                        const char *varName,    \
+                                        const stype *v)         \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet4##abb(var,v[0],v[1],v[2],v[3]);              \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+
+
+#define OBJECT_META_SETTERS(OType)                              \
+  OWL_API void owl##OType##SetTexture(OWL##OType object,        \
+                                      const char *varName,      \
+                                      OWLTexture v)             \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSetTexture(var,v);                               \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##SetBuffer(OWL##OType object,         \
+                                     const char *varName,       \
+                                     OWLBuffer v)               \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSetBuffer(var,v);                                \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##SetGroup(OWL##OType object,          \
+                                    const char *varName,        \
+                                    OWLGroup v)                 \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSetGroup(var,v);                                 \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##SetPointer(OWL##OType object,        \
+                                      const char *varName,      \
+                                      const void *v)            \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSetPointer(var,v);                               \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##SetRaw(OWL##OType object,            \
+                                  const char *varName,          \
+                                  const void *v)                \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSetRaw(var,v);                                   \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  
+
+
+#define OBJECT_SETTERS(ObjectType)              \
+  OBJECT_SETTERS_T(ObjectType,bool,b)           \
+  OBJECT_SETTERS_T(ObjectType,char,c)           \
+  OBJECT_SETTERS_T(ObjectType,uint8_t,uc)       \
+  OBJECT_SETTERS_T(ObjectType,int16_t,s)        \
+  OBJECT_SETTERS_T(ObjectType,uint16_t,us)      \
+  OBJECT_SETTERS_T(ObjectType,int32_t,i)        \
+  OBJECT_SETTERS_T(ObjectType,uint32_t,ui)      \
+  OBJECT_SETTERS_T(ObjectType,float,f)          \
+  OBJECT_SETTERS_T(ObjectType,int64_t,l)        \
+    OBJECT_SETTERS_T(ObjectType,uint64_t,ul)    \
+  OBJECT_SETTERS_T(ObjectType,double,d)         \
+  OBJECT_META_SETTERS(ObjectType)               \
+
+  OBJECT_SETTERS(RayGen)
+  OBJECT_SETTERS(Geom)
+  OBJECT_SETTERS(Params)
+  OBJECT_SETTERS(MissProg)
+
+
+
+
+
+  
   
   // ----------- set<other> -----------
   OWL_API void owlVariableSetGroup(OWLVariable _variable, OWLGroup _group)

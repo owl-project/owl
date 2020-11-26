@@ -393,6 +393,7 @@ namespace owl {
     using vec4##t = vec_t<T,4>;                 \
     using vec3##t##a = vec3a_t<T>;              \
   
+    _define_vec_types(bool ,b);
     _define_vec_types(int8_t ,c);
     _define_vec_types(int16_t ,s);
     _define_vec_types(int32_t ,i);

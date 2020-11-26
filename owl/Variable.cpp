@@ -46,6 +46,16 @@ namespace owl {
   { mismatchingType("void*"); }
 
 
+  void Variable::set(const bool &value)
+  { mismatchingType("bool"); }
+  void Variable::set(const vec2b &value)
+  { mismatchingType("bool2"); }
+  void Variable::set(const vec3b &value)
+  { mismatchingType("bool3"); }
+  void Variable::set(const vec4b &value)
+  { mismatchingType("bool4"); }
+
+  
   void Variable::set(const int8_t &value)
   { mismatchingType("char"); }
   void Variable::set(const vec2c &value)
@@ -383,6 +393,19 @@ namespace owl {
     if (decl->type >= OWL_USER_TYPE_BEGIN)
       return std::make_shared<UserTypeVariable>(decl);
     switch(decl->type) {
+
+      // ------------------------------------------------------------------
+      // bool
+      // ------------------------------------------------------------------
+    case OWL_BOOL:
+      return std::make_shared<VariableT<bool>>(decl);
+    case OWL_BOOL2:
+      return std::make_shared<VariableT<vec2b>>(decl);
+    case OWL_BOOL3:
+      return std::make_shared<VariableT<vec3b>>(decl);
+    case OWL_BOOL4:
+      return std::make_shared<VariableT<vec4b>>(decl);
+
       // ------------------------------------------------------------------
       // 8 bit
       // ------------------------------------------------------------------

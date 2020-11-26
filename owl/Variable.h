@@ -46,6 +46,14 @@ namespace owl {
     { assert(varDecl); }
     
     // -------------------------------------------------------
+    // bool
+    // -------------------------------------------------------
+    virtual void set(const bool &value);
+    virtual void set(const vec2b &value);
+    virtual void set(const vec3b &value);
+    virtual void set(const vec4b &value);
+    
+    // -------------------------------------------------------
     // 8 bit
     // -------------------------------------------------------
     virtual void set(const uint8_t &value);

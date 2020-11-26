@@ -36,6 +36,15 @@ namespace owl {
         
     switch(type) {
       
+    case OWL_BOOL:
+      return sizeof(bool);
+    case OWL_BOOL2:
+      return 2*sizeof(bool);
+    case OWL_BOOL3:
+      return 3*sizeof(bool);
+    case OWL_BOOL4:
+      return 4*sizeof(bool);
+      
     case OWL_UCHAR:
       return sizeof(uint8_t);
     case OWL_UCHAR2:
@@ -146,6 +155,18 @@ namespace owl {
     if (type >= OWL_USER_TYPE_BEGIN)
       return "(user defined type)";
     switch(type) {
+      
+      // ------------------------------------------------------------------
+      // bool
+      // ------------------------------------------------------------------
+    case OWL_BOOL:
+      return "bool";
+    case OWL_BOOL2:
+      return "bool2";
+    case OWL_BOOL3:
+      return "bool3";
+    case OWL_BOOL4:
+      return "bool4";
       
       // ------------------------------------------------------------------
       // 8 bit
