@@ -103,8 +103,6 @@ namespace osc {
 
       int32_t width  = texture->resolution.x;
       int32_t height = texture->resolution.y;
-      int32_t numComponents = 4;
-      int32_t pitch  = int(width*numComponents*sizeof(uint8_t));
 #if OWL_TEXTURES
       this->textures[textureID]
         = owlTexture2DCreate(context,
@@ -115,6 +113,8 @@ namespace osc {
                              OWL_TEXTURE_LINEAR,
                              OWL_TEXTURE_CLAMP);
 #else
+      int32_t numComponents = 4;
+      int32_t pitch  = int(width*numComponents*sizeof(uint8_t));
       cudaResourceDesc res_desc = {};
       
       cudaChannelFormatDesc channel_desc;

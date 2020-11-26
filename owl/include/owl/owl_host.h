@@ -1241,28 +1241,94 @@ OWL_API void owlMissProgSetRaw(OWLMissProg obj, const char *name, const void *va
 // -------------------------------------------------------
 // c++ wrappers
 // -------------------------------------------------------
-#ifdef __clusplus_
+#ifdef __cplusplus
 // int
 inline void owlParamsSet2i(OWLParams obj, const char *name, const owl2i &val)
-{ owlParamSet2i(obj,name,val.x,val.y); }
+{ owlParamsSet2i(obj,name,val.x,val.y); }
 inline void owlParamsSet3i(OWLParams obj, const char *name, const owl3i &val)
-{ owlParamSet3i(obj,name,val.x,val.y,val.z); }
+{ owlParamsSet3i(obj,name,val.x,val.y,val.z); }
 inline void owlParamsSet4i(OWLParams obj, const char *name, const owl4i &val)
-{ owlParamSet4i(obj,name,val.x,val.y,val.z,val.w); }
+{ owlParamsSet4i(obj,name,val.x,val.y,val.z,val.w); }
 // uint
 inline void owlParamsSet2ui(OWLParams obj, const char *name, const owl2ui &val)
-{ owlParamSet2ui(obj,name,val.x,val.y); }
+{ owlParamsSet2ui(obj,name,val.x,val.y); }
 inline void owlParamsSet3ui(OWLParams obj, const char *name, const owl3ui &val)
-{ owlParamSet3ui(obj,name,val.x,val.y,val.z); }
+{ owlParamsSet3ui(obj,name,val.x,val.y,val.z); }
 inline void owlParamsSet4ui(OWLParams obj, const char *name, const owl4ui &val)
-{ owlParamSet4ui(obj,name,val.x,val.y,val.z,val.w); }
+{ owlParamsSet4ui(obj,name,val.x,val.y,val.z,val.w); }
 // float
 inline void owlParamsSet2f(OWLParams obj, const char *name, const owl2f &val)
-{ owlParamSet2f(obj,name,val.x,val.y); }
+{ owlParamsSet2f(obj,name,val.x,val.y); }
 inline void owlParamsSet3f(OWLParams obj, const char *name, const owl3f &val)
-{ owlParamSet3f(obj,name,val.x,val.y,val.z); }
+{ owlParamsSet3f(obj,name,val.x,val.y,val.z); }
 inline void owlParamsSet4f(OWLParams obj, const char *name, const owl4f &val)
-{ owlParamSet4f(obj,name,val.x,val.y,val.z,val.w); }
+{ owlParamsSet4f(obj,name,val.x,val.y,val.z,val.w); }
+
+// int
+inline void owlGeomSet2i(OWLGeom obj, const char *name, const owl2i &val)
+{ owlGeomSet2i(obj,name,val.x,val.y); }
+inline void owlGeomSet3i(OWLGeom obj, const char *name, const owl3i &val)
+{ owlGeomSet3i(obj,name,val.x,val.y,val.z); }
+inline void owlGeomSet4i(OWLGeom obj, const char *name, const owl4i &val)
+{ owlGeomSet4i(obj,name,val.x,val.y,val.z,val.w); }
+// uint
+inline void owlGeomSet2ui(OWLGeom obj, const char *name, const owl2ui &val)
+{ owlGeomSet2ui(obj,name,val.x,val.y); }
+inline void owlGeomSet3ui(OWLGeom obj, const char *name, const owl3ui &val)
+{ owlGeomSet3ui(obj,name,val.x,val.y,val.z); }
+inline void owlGeomSet4ui(OWLGeom obj, const char *name, const owl4ui &val)
+{ owlGeomSet4ui(obj,name,val.x,val.y,val.z,val.w); }
+// float
+inline void owlGeomSet2f(OWLGeom obj, const char *name, const owl2f &val)
+{ owlGeomSet2f(obj,name,val.x,val.y); }
+inline void owlGeomSet3f(OWLGeom obj, const char *name, const owl3f &val)
+{ owlGeomSet3f(obj,name,val.x,val.y,val.z); }
+inline void owlGeomSet4f(OWLGeom obj, const char *name, const owl4f &val)
+{ owlGeomSet4f(obj,name,val.x,val.y,val.z,val.w); }
+
+// int
+inline void owlMissProgSet2i(OWLMissProg obj, const char *name, const owl2i &val)
+{ owlMissProgSet2i(obj,name,val.x,val.y); }
+inline void owlMissProgSet3i(OWLMissProg obj, const char *name, const owl3i &val)
+{ owlMissProgSet3i(obj,name,val.x,val.y,val.z); }
+inline void owlMissProgSet4i(OWLMissProg obj, const char *name, const owl4i &val)
+{ owlMissProgSet4i(obj,name,val.x,val.y,val.z,val.w); }
+// uint
+inline void owlMissProgSet2ui(OWLMissProg obj, const char *name, const owl2ui &val)
+{ owlMissProgSet2ui(obj,name,val.x,val.y); }
+inline void owlMissProgSet3ui(OWLMissProg obj, const char *name, const owl3ui &val)
+{ owlMissProgSet3ui(obj,name,val.x,val.y,val.z); }
+inline void owlMissProgSet4ui(OWLMissProg obj, const char *name, const owl4ui &val)
+{ owlMissProgSet4ui(obj,name,val.x,val.y,val.z,val.w); }
+// float
+inline void owlMissProgSet2f(OWLMissProg obj, const char *name, const owl2f &val)
+{ owlMissProgSet2f(obj,name,val.x,val.y); }
+inline void owlMissProgSet3f(OWLMissProg obj, const char *name, const owl3f &val)
+{ owlMissProgSet3f(obj,name,val.x,val.y,val.z); }
+inline void owlMissProgSet4f(OWLMissProg obj, const char *name, const owl4f &val)
+{ owlMissProgSet4f(obj,name,val.x,val.y,val.z,val.w); }
+
+// int
+inline void owlRayGenSet2i(OWLRayGen obj, const char *name, const owl2i &val)
+{ owlRayGenSet2i(obj,name,val.x,val.y); }
+inline void owlRayGenSet3i(OWLRayGen obj, const char *name, const owl3i &val)
+{ owlRayGenSet3i(obj,name,val.x,val.y,val.z); }
+inline void owlRayGenSet4i(OWLRayGen obj, const char *name, const owl4i &val)
+{ owlRayGenSet4i(obj,name,val.x,val.y,val.z,val.w); }
+// uint
+inline void owlRayGenSet2ui(OWLRayGen obj, const char *name, const owl2ui &val)
+{ owlRayGenSet2ui(obj,name,val.x,val.y); }
+inline void owlRayGenSet3ui(OWLRayGen obj, const char *name, const owl3ui &val)
+{ owlRayGenSet3ui(obj,name,val.x,val.y,val.z); }
+inline void owlRayGenSet4ui(OWLRayGen obj, const char *name, const owl4ui &val)
+{ owlRayGenSet4ui(obj,name,val.x,val.y,val.z,val.w); }
+// float
+inline void owlRayGenSet2f(OWLRayGen obj, const char *name, const owl2f &val)
+{ owlRayGenSet2f(obj,name,val.x,val.y); }
+inline void owlRayGenSet3f(OWLRayGen obj, const char *name, const owl3f &val)
+{ owlRayGenSet3f(obj,name,val.x,val.y,val.z); }
+inline void owlRayGenSet4f(OWLRayGen obj, const char *name, const owl4f &val)
+{ owlRayGenSet4f(obj,name,val.x,val.y,val.z,val.w); }
 #endif
 
 #ifdef __cplusplus

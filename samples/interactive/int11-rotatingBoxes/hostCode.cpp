@@ -374,7 +374,7 @@ void Viewer::render()
   static double updateTime = 0.f;
   updateTime -= getCurrentTime();
   static int frameID = 0;
-  size_t thisFrameID = frameID++;
+  frameID++;
   // we can resort to update here because the initial build was
   // already done before
   owlGroupRefitAccel(world);

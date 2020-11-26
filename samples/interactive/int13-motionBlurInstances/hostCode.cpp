@@ -93,7 +93,7 @@ void getTransforms(affine3f &xfm0,
   const vec3f pos1 = pos0+motion;;
 
   xfm0 = affine3f(rot0,pos0);
-  xfm1 = affine3f(rot0,pos1);
+  xfm1 = affine3f(rot1,pos1);
 }
 
 std::vector<affine3f>     boxTransforms0;
@@ -248,7 +248,7 @@ void Viewer::cameraChanged()
   owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
   owlRayGenSet3f    (rayGen,"camera.dir_dv",(const owl3f&)camera_ddv);
-  vec3f lightDir = (1.f,1.f,1.f);
+  vec3f lightDir = {1.f,1.f,1.f};
   owlRayGenSet3f    (rayGen,"lightDir",     (const owl3f&)lightDir);
   sbtDirty = true;
 }
