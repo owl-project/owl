@@ -80,11 +80,16 @@ namespace owl {
   {
     DeviceData &dd = getDD(device);
 
-    assert("check does not yet exist" && dd.traversable == 0);
-    if (FULL_REBUILD)
-      assert("check does not yet exist on first build" && dd.bvhMemory.empty());
-    else
-      assert("check DOES exist on refit" && !dd.bvhMemory.empty());
+    if (FULL_REBUILD && !dd.bvhMemory.empty())
+      dd.bvhMemory.free();
+
+    if (!FULL_REBUILD && dd.bvhMemory.empty())
+      throw std::runtime_error("trying to refit an accel struct that has not been previously built");
+    // assert("check does not yet exist" && dd.traversable == 0);
+    // if (FULL_REBUILD)
+    //   assert("check does not yet exist on first build" && dd.bvhMemory.empty());
+    // else
+    //   assert("check DOES exist on refit" && !dd.bvhMemory.empty());
       
     SetActiveGPU forLifeTime(device);
     LOG("building triangles accel over "
