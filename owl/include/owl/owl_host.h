@@ -902,6 +902,47 @@ OWL_API void owlVariableSetBuffer (OWLVariable variable, OWLBuffer value);
 OWL_API void owlVariableSetRaw    (OWLVariable variable, const void *valuePtr);
 OWL_API void owlVariableSetPointer(OWLVariable variable, const void *valuePtr);
 
+#ifdef __cplusplus
+// ------------------------------------------------------------------
+// setters for variables of type "bool" (bools only on c++)
+// ------------------------------------------------------------------
+
+// setters for variables on "RayGen"s
+OWL_API void owlRayGenSet1b(OWLRayGen var, const char *name, bool val);
+OWL_API void owlRayGenSet2b(OWLRayGen var, const char *name, bool x, bool y);
+OWL_API void owlRayGenSet3b(OWLRayGen var, const char *name, bool x, bool y, bool z);
+OWL_API void owlRayGenSet4b(OWLRayGen var, const char *name, bool x, bool y, bool z, bool w);
+OWL_API void owlRayGenSet2bv(OWLRayGen var, const char *name, const bool *val);
+OWL_API void owlRayGenSet3bv(OWLRayGen var, const char *name, const bool *val);
+OWL_API void owlRayGenSet4bv(OWLRayGen var, const char *name, const bool *val);
+
+// setters for variables on "MissProg"s
+OWL_API void owlMissProgSet1b(OWLMissProg var, const char *name, bool val);
+OWL_API void owlMissProgSet2b(OWLMissProg var, const char *name, bool x, bool y);
+OWL_API void owlMissProgSet3b(OWLMissProg var, const char *name, bool x, bool y, bool z);
+OWL_API void owlMissProgSet4b(OWLMissProg var, const char *name, bool x, bool y, bool z, bool w);
+OWL_API void owlMissProgSet2bv(OWLMissProg var, const char *name, const bool *val);
+OWL_API void owlMissProgSet3bv(OWLMissProg var, const char *name, const bool *val);
+OWL_API void owlMissProgSet4bv(OWLMissProg var, const char *name, const bool *val);
+
+// setters for variables on "Geom"s
+OWL_API void owlGeomSet1b(OWLGeom var, const char *name, bool val);
+OWL_API void owlGeomSet2b(OWLGeom var, const char *name, bool x, bool y);
+OWL_API void owlGeomSet3b(OWLGeom var, const char *name, bool x, bool y, bool z);
+OWL_API void owlGeomSet4b(OWLGeom var, const char *name, bool x, bool y, bool z, bool w);
+OWL_API void owlGeomSet2bv(OWLGeom var, const char *name, const bool *val);
+OWL_API void owlGeomSet3bv(OWLGeom var, const char *name, const bool *val);
+OWL_API void owlGeomSet4bv(OWLGeom var, const char *name, const bool *val);
+
+// setters for variables on "Params"s
+OWL_API void owlParamsSet1b(OWLParams var, const char *name, bool val);
+OWL_API void owlParamsSet2b(OWLParams var, const char *name, bool x, bool y);
+OWL_API void owlParamsSet3b(OWLParams var, const char *name, bool x, bool y, bool z);
+OWL_API void owlParamsSet4b(OWLParams var, const char *name, bool x, bool y, bool z, bool w);
+OWL_API void owlParamsSet2bv(OWLParams var, const char *name, const bool *val);
+OWL_API void owlParamsSet3bv(OWLParams var, const char *name, const bool *val);
+OWL_API void owlParamsSet4bv(OWLParams var, const char *name, const bool *val);
+#endif
 
 // -------------------------------------------------------
 // VariableSet for different *object* types
