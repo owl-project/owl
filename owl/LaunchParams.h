@@ -52,11 +52,12 @@ namespace owl {
 
       /*! constructor, which allocs all the device-side data */
       DeviceData(const DeviceContext::SP &device, size_t  dataSize);
+      ~DeviceData();
+      
+      const size_t            dataSize;
       
       OptixShaderBindingTable sbt = {};
 
-      const size_t         dataSize;
-      
       /*! host-size memory for the launch paramters - we have a
           host-side copy, too, so we can leave the launch2D call
           without having to first wait for the cudaMemcpy to
@@ -74,6 +75,7 @@ namespace owl {
     /*! create a new instenace of given launch param type */
     LaunchParams(Context *const context,
                  LaunchParamsType::SP type);
+    /*! create a new instenace of given launch param type */
     
     /*! pretty-printer, for printf-debugging */
     std::string toString() const override;
@@ -106,7 +108,7 @@ namespace owl {
   /*! get reference to given device-specific data for this object */
   inline LaunchParams::DeviceData &LaunchParams::getDD(const DeviceContext::SP &device) const
   {
-    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    assert(device && device->ID >= 0 && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<LaunchParams::DeviceData>();
   }
   

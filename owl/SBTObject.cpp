@@ -21,6 +21,20 @@ namespace owl {
   // ------------------------------------------------------------------
   // SBTObjectType
   // ------------------------------------------------------------------
+
+  /*! creates a full "deep" copy of the vardecls, just in case the app
+      created variable names on the heap and releases them afterwards
+      (we'll then have a clean copy) */
+  std::vector<OWLVarDecl> copyVarDecls(const std::vector<OWLVarDecl> &varDecls)
+  {
+    std::vector<OWLVarDecl> result;
+    for (auto vd : varDecls) {
+      OWLVarDecl copy_vd = vd;
+      copy_vd.name = strdup(vd.name);
+      result.push_back(copy_vd);
+    }
+    return result;
+  }
   
   SBTObjectType::SBTObjectType(Context *const context,
                                ObjectRegistry &registry,
@@ -28,7 +42,7 @@ namespace owl {
                                const std::vector<OWLVarDecl> &varDecls)
     : RegisteredObject(context,registry),
       varStructSize(varStructSize),
-      varDecls(varDecls)
+      varDecls(copyVarDecls(varDecls))
   {
     for (auto &var : varDecls)
       assert(var.name != nullptr);
@@ -36,9 +50,17 @@ namespace owl {
        name' and 'overlap of variables' checks etc */
   }
 
+    /*! clean up; in particular, frees the vardecls */
+  SBTObjectType::~SBTObjectType()
+  {
+    for (auto &vd : varDecls) {
+      if (vd.name) free((void *)vd.name);
+    }
+  }
+    
   int SBTObjectType::getVariableIdx(const std::string &varName)
   {
-    for (int i=0;i<varDecls.size();i++) {
+    for (int i=0;i<(int)varDecls.size();i++) {
       assert(varDecls[i].name);
       if (!strcmp(varName.c_str(),varDecls[i].name))
         return i;

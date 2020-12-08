@@ -53,7 +53,7 @@ namespace owl {
     size_t missProgRecordSize  = 0;
     size_t missProgRecordCount = 0;
     DeviceMemory missProgRecordsBuffer;
-
+    
     DeviceMemory launchParamsBuffer;
   };
 
@@ -70,6 +70,7 @@ namespace owl {
     DeviceContext(Context *parent,
                   int owlID,
                   int cudaID);
+    ~DeviceContext();
     
     /*! helper function - return cuda name of this device */
     std::string getDeviceName() const;
@@ -114,16 +115,16 @@ namespace owl {
     OptixPipeline               pipeline               = nullptr;
     SBT                         sbt                    = {};
 
-    /* the cuda device ID that this logical device runs on */
-    const int          cudaDeviceID;
+    /*! the owl context that this device is in */
+    Context *const parent;
 
     /*! linear ID (0,1,2,...) of how *we* number devices (i.e.,
       'first' device is always device 0, no matter if it runs on
       another physical/cuda device) */
-    const int ID;
+    const int      ID;
 
-    /*! the owl context that this device is in */
-    Context    *const parent;
+    /* the cuda device ID that this logical device runs on */
+    const int      cudaDeviceID;
   };
 
   /*! creates the N device contexts with the given device IDs. If list

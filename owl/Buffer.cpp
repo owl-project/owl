@@ -93,7 +93,7 @@ namespace owl {
     if (d_pointer == 0) return;
 
     SetActiveGPU forLifeTime(device);
-    
+
     CUDA_CALL_NOTHROW(Free(d_pointer));
     d_pointer = nullptr;
   }
@@ -123,7 +123,7 @@ namespace owl {
   
   void DeviceBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) 
   {
-    assert(deviceID < deviceData.size());
+    assert(deviceID < (int)deviceData.size());
     deviceData[deviceID]->as<DeviceBuffer::DeviceData>().uploadAsync(hostPtr, offset, count);
     CUDA_SYNC_CHECK();
   }
@@ -144,7 +144,9 @@ namespace owl {
   void DeviceBuffer::DeviceDataForTextures::executeResize() 
   {
     SetActiveGPU forLifeTime(device);
-    if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
+    if (d_pointer) {
+      CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
+    }
 
     if (parent->elementCount)
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(cudaTextureObject_t)));
@@ -159,7 +161,7 @@ namespace owl {
     APIHandle **apiHandles = (APIHandle **)hostDataPtr;
     std::vector<cudaTextureObject_t> devRep((count == -1) ? parent->elementCount : count);
     
-    for (int i=0; i < ((count == -1) ? parent->elementCount : count); i++)
+    for (size_t i=0; i < ((count == -1) ? parent->elementCount : count); i++)
       if (apiHandles[i]) {
         Texture::SP texture = apiHandles[i]->object->as<Texture>();
         assert(texture && "make sure those are really textures in this buffer!");
@@ -178,10 +180,13 @@ namespace owl {
   {
     SetActiveGPU forLifeTime(device);
     
-    if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
+    if (d_pointer) {
+      CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
+    }
 
-    if (parent->elementCount)
+    if (parent->elementCount) {
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(device::Buffer)));
+    }
   }
   
   void DeviceBuffer::DeviceDataForBuffers::uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) 
@@ -192,7 +197,7 @@ namespace owl {
     APIHandle **apiHandles = (APIHandle **)hostDataPtr;
     std::vector<device::Buffer> devRep( (count == -1) ? parent->elementCount : count);
     
-    for (int i=0; i < ((count == -1) ? parent->elementCount : count); i++)
+    for (int i=0; i < int((count == -1) ? parent->elementCount : count); i++)
       if (apiHandles[i]) {
         Buffer::SP buffer = apiHandles[i]->object->as<Buffer>();
         assert(buffer && "make sure those are really textures in this buffer!");
@@ -218,10 +223,13 @@ namespace owl {
   {
     SetActiveGPU forLifeTime(device);
     
-    if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
+    if (d_pointer) {
+      CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
+    }
 
-    if (parent->elementCount)
+    if (parent->elementCount) {
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeOf(parent->type)));
+    }
   }
   
   void DeviceBuffer::DeviceDataForCopyableData::uploadAsync(const void *hostDataPtr, size_t offset, int64_t count)

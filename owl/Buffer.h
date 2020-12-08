@@ -296,14 +296,14 @@ namespace owl {
   /*! get reference to given device-specific data for this object */
   inline Buffer::DeviceData &Buffer::getDD(const DeviceContext::SP &device) const
   {
-    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    assert(device && device->ID >= 0 && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<Buffer::DeviceData>();
   }
   
     /*! get reference to given device-specific data for this object */
   inline DeviceBuffer::DeviceData &DeviceBuffer::getDD(const DeviceContext::SP &device) const
   {
-    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    assert(device && device->ID >= 0 && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<DeviceData>();
   }
 

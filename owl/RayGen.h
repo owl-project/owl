@@ -61,6 +61,8 @@ namespace owl {
     
     /*! name of the program within this module */
     const std::string progName;
+    /*! the name, annotated wiht optix' "__raygen__" */
+    const std::string annotatedProgName;
   };
   
   /*! an actual instance of a raygen program - defined by its type and
@@ -121,7 +123,7 @@ namespace owl {
   inline RayGenType::DeviceData &
   RayGenType::getDD(const DeviceContext::SP &device) const
   {
-    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    assert(device && device->ID >= 0 && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<RayGenType::DeviceData>();
   }
 
@@ -129,7 +131,7 @@ namespace owl {
   inline RayGen::DeviceData &
   RayGen::getDD(const DeviceContext::SP &device) const
   {
-    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    assert(device && device->ID >= 0 && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<RayGen::DeviceData>();
   }
 } // ::owl

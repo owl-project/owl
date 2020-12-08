@@ -48,19 +48,19 @@ namespace owl {
       groups(this),
       rayGenTypes(this),
       rayGens(this),
-      launchParamTypes(this),
-      launchParams(this),
       missProgTypes(this),
       missProgs(this),
       geomTypes(this),
       geoms(this),
       modules(this),
+      launchParamTypes(this),
+      launchParams(this),
       devices(createDeviceContexts(this,
                                    requestedDeviceIDs,
                                    numRequestedDevices))
   {
     enablePeerAccess();
-    
+
     LaunchParamsType::SP emptyLPType
       = createLaunchParamsType(0,{});
     dummyLaunchParams = createLaunchParams(emptyLPType);
@@ -172,13 +172,14 @@ namespace owl {
   Context::texture2DCreate(OWLTexelFormat texelFormat,
                            OWLTextureFilterMode filterMode,
                            OWLTextureAddressMode addressMode,
+                           OWLTextureColorSpace colorSpace,
                            const vec2i size,
                            uint32_t linePitchInBytes,
                            const void *texels)
   {
     Texture::SP texture
       = std::make_shared<Texture>(this,size,linePitchInBytes,
-                                  texelFormat,filterMode,addressMode,
+                                  texelFormat,filterMode,addressMode,colorSpace,
                                   texels);
     assert(texture);
     return texture;
@@ -224,7 +225,7 @@ namespace owl {
 
     // for backwards compatibility: automatically set miss prog if none are set, yet
     if (mp->ID < numRayTypes &&
-        (mp->ID >= missProgPerRayType.size() || !missProgPerRayType[mp->ID]))
+        (mp->ID >= (int)missProgPerRayType.size() || !missProgPerRayType[mp->ID]))
       LOG("for backwards compatibility to pre-0.9.0 versions of OWL, "
           "hereby installing this miss program for ray type #" << mp->ID);
       setMissProg(mp->ID,mp);
@@ -235,7 +236,7 @@ namespace owl {
   void Context::setMissProg(int rayTypeToSet, MissProg::SP missProgToUse)
   {
     assert(rayTypeToSet >= 0 && rayTypeToSet < numRayTypes);
-    if (missProgPerRayType.size() < numRayTypes)
+    if ((int)missProgPerRayType.size() < numRayTypes)
       missProgPerRayType.resize(numRayTypes);
     missProgPerRayType[rayTypeToSet] = missProgToUse;
   }
@@ -322,7 +323,7 @@ namespace owl {
 
   Module::SP Context::createModule(const std::string &ptxCode)
   {
-    Module::SP module = std::make_shared<Module>(this,ptxCode);//,modules.allocID());;
+    Module::SP module = std::make_shared<Module>(this,ptxCode);
     assert(module);
     module->createDeviceData(getDevices());
     return module;
@@ -354,7 +355,7 @@ namespace owl {
       device->sbt.hitGroupRecordsBuffer.free();
 
     size_t maxHitProgDataSize = 0;
-    for (int i=0;i<geoms.size();i++) {
+    for (size_t i=0;i<geoms.size();i++) {
       Geom *geom = (Geom *)geoms.getPtr(i);
       if (!geom) continue;
       
@@ -382,14 +383,14 @@ namespace owl {
     // now, write all records (only on the host so far): we need to
     // write one record per geometry, per ray type
     // ------------------------------------------------------------------
-    for (int groupID=0;groupID<groups.size();groupID++) {
+    for (size_t groupID=0;groupID<groups.size();groupID++) {
       Group *group = groups.getPtr(groupID);
       if (!group) continue;
       GeomGroup *gg = dynamic_cast<GeomGroup *>(group);
       if (!gg) continue;
         
-      const int sbtOffset = (int)gg->sbtOffset;
-      for (int childID=0;childID<gg->geometries.size();childID++) {
+      const size_t sbtOffset = gg->sbtOffset;
+      for (size_t childID=0;childID<gg->geometries.size();childID++) {
         Geom::SP geom = gg->geometries[childID];
         if (!geom) continue;
           
@@ -398,7 +399,7 @@ namespace owl {
           // ------------------------------------------------------------------
           // compute pointer to entire record:
           // ------------------------------------------------------------------
-          const int recordID
+          const size_t recordID
             = (sbtOffset+childID)*numRayTypes + rayTypeID;
           assert(recordID < numHitGroupRecords);
           uint8_t *const sbtRecord
@@ -423,11 +424,11 @@ namespace owl {
     SetActiveGPU forLifeTime(device);
     
     size_t numMissProgRecords = numRayTypes;
-    if (missProgPerRayType.size() < numRayTypes)
+    if ((int)missProgPerRayType.size() < numRayTypes)
       missProgPerRayType.resize(numRayTypes);
     
     size_t maxMissProgDataSize = 0;
-    for (int i=0;i<missProgPerRayType.size();i++) {
+    for (int i=0;i<(int)missProgPerRayType.size();i++) {
       MissProg::SP missProg = missProgPerRayType[i];
       if (!missProg) continue;
       assert(missProg->type);
@@ -450,7 +451,7 @@ namespace owl {
     // now, write all records (only on the host so far): we need to
     // write one record per geometry, per ray type
     // ------------------------------------------------------------------
-    for (int recordID=0;recordID<numMissProgRecords;recordID++) {
+    for (size_t recordID=0;recordID<numMissProgRecords;recordID++) {
       MissProg::SP miss = missProgPerRayType[recordID];
       if (!miss) continue;
       
@@ -469,7 +470,7 @@ namespace owl {
     LOG("building SBT rayGen prog records");
     SetActiveGPU forLifeTime(device);
 
-    for (int rgID=0;rgID<rayGens.size();rgID++) {
+    for (size_t rgID=0;rgID<rayGens.size();rgID++) {
       auto rg = rayGens.getPtr(rgID);
       assert(rg);
       auto &dd = rg->getDD(device);
@@ -510,7 +511,7 @@ namespace owl {
     destroyModules();
     for (auto device : getDevices()) {
       device->configurePipelineOptions();
-      for (int moduleID=0;moduleID<modules.size();moduleID++) {
+      for (int moduleID=0;moduleID<(int)modules.size();moduleID++) {
         Module *module = modules.getPtr(moduleID);
         if (!module) continue;
         
@@ -579,7 +580,7 @@ namespace owl {
 
   void Context::destroyModules()
   {
-    for (int moduleID=0;moduleID<modules.size();moduleID++) {
+    for (size_t moduleID=0;moduleID<modules.size();moduleID++) {
       Module *module = modules.getPtr(moduleID);
       if (module)
         for (auto device : getDevices())

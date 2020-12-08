@@ -113,7 +113,6 @@ namespace osc {
       for (int y=0;y<res.y/2;y++) {
         uint32_t *line_y = texture->pixel + y * res.x;
         uint32_t *mirrored_y = texture->pixel + (res.y-1-y) * res.x;
-        int mirror_y = res.y-1-y;
         for (int x=0;x<res.x;x++) {
           std::swap(line_y[x],mirrored_y[x]);
         }
@@ -172,7 +171,7 @@ namespace osc {
       for (int materialID : materialIDs) {
         TriangleMesh *mesh = new TriangleMesh;
         
-        for (int faceID=0;faceID<shape.mesh.material_ids.size();faceID++) {
+        for (size_t faceID=0;faceID<shape.mesh.material_ids.size();faceID++) {
           if (shape.mesh.material_ids[faceID] != materialID) continue;
           if (shape.mesh.num_face_vertices[faceID] != 3)
             throw std::runtime_error("not properly tessellated");
@@ -207,10 +206,10 @@ namespace osc {
             mesh->normal.resize(mesh->vertex.size());
 
           for (auto idx : mesh->index) {
-            if (idx.x < 0 || idx.x >= mesh->vertex.size() ||
-                idx.y < 0 || idx.y >= mesh->vertex.size() ||
-                idx.z < 0 || idx.z >= mesh->vertex.size())
-              { PING; PRINT(idx); PRINT(mesh->vertex.size()); }
+            if (idx.x < 0 || idx.x >= (int)mesh->vertex.size() ||
+                idx.y < 0 || idx.y >= (int)mesh->vertex.size() ||
+                idx.z < 0 || idx.z >= (int)mesh->vertex.size())
+              throw std::runtime_error("invalid triangle indices");
           }
           model->meshes.push_back(mesh);
         }

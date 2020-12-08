@@ -19,7 +19,7 @@
 #include "owl/helper/cuda.h"
 
 namespace owl {
-    
+
   struct DeviceMemory {
     inline ~DeviceMemory() { free(); }
     inline bool   alloced()  const { return !empty(); }
@@ -40,7 +40,7 @@ namespace owl {
     size_t      sizeInBytes { 0 };
     CUdeviceptr d_pointer   { 0 };
   };
-    
+
   inline void DeviceMemory::alloc(size_t size)
   {
     if (alloced()) free();

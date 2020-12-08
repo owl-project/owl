@@ -95,11 +95,11 @@ namespace owl {
                               Module::SP module,
                               const std::string &progName);
 
-    /*! anyhit programs to run for this geom - one per ray type */
-    std::vector<ProgramDesc> anyHit;
-    
     /*! closest programs to run for this geom - one per ray type */
     std::vector<ProgramDesc> closestHit;
+    
+    /*! anyhit programs to run for this geom - one per ray type */
+    std::vector<ProgramDesc> anyHit;
   };
 
   /*! a actual geometry object with primitives - this class is still
@@ -138,7 +138,7 @@ namespace owl {
   /*! get reference to given device-specific data for this object */
   inline GeomType::DeviceData &GeomType::getDD(const DeviceContext::SP &device) const
   {
-    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    assert(device && device->ID >= 0 && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<DeviceData>();
   }
   

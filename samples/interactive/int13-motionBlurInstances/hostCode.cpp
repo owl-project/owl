@@ -78,10 +78,10 @@ void getTransforms(affine3f &xfm0,
 {
   const vec3f rotationAxis = getRandomDir();
   
-  const float rotationAngle0 = distribution_uniform(rndGen)*(2.f*M_PI);
+  const float rotationAngle0 = float(distribution_uniform(rndGen)*(2.f*M_PI));
   const linear3f rot0 = linear3f::rotate(rotationAxis,rotationAngle0);
   
-  const float rotationAngle1 = rotationAngle0+distribution_rot(rndGen);
+  const float rotationAngle1 = float(rotationAngle0+distribution_rot(rndGen));
   const linear3f rot1 = linear3f::rotate(rotationAxis,rotationAngle1);
   
   const vec3f rel = (vec3f(boxID)+.5f) / vec3f(numBoxes);
@@ -93,7 +93,7 @@ void getTransforms(affine3f &xfm0,
   const vec3f pos1 = pos0+motion;;
 
   xfm0 = affine3f(rot0,pos0);
-  xfm1 = affine3f(rot0,pos1);
+  xfm1 = affine3f(rot1,pos1);
 }
 
 std::vector<affine3f>     boxTransforms0;
@@ -101,11 +101,11 @@ std::vector<affine3f>     boxTransforms1;
 
 void addFace(Mesh &mesh, const vec3f ll, const vec3f du, const vec3f dv)
 {
-  int idxll = mesh.vertices.size();
+  int idxll = (int)mesh.vertices.size();
   for (int iy=0;iy<2;iy++)
     for (int ix=0;ix<2;ix++) {
       mesh.vertices.push_back(ll+float(ix)*du+float(iy)*dv);
-      mesh.texCoords.push_back(vec2f(ix,iy));
+      mesh.texCoords.push_back(vec2f((float)ix,(float)iy));
     }
   mesh.indices.push_back(vec3i(idxll,idxll+1,idxll+3));
   mesh.indices.push_back(vec3i(idxll,idxll+3,idxll+2));
@@ -160,9 +160,9 @@ OWLGroup createBox(OWLContext context,
   // create a 4x4 checkerboard texture
   // ------------------------------------------------------------------
   vec2i texSize(distribution_texSize(rndGen),distribution_texSize(rndGen));
-  vec4uc color0 = vec4uc(255.99f*vec4f(distribution_uniform(rndGen),
-                                       distribution_uniform(rndGen),
-                                       distribution_uniform(rndGen),
+  vec4uc color0 = vec4uc(255.99f*vec4f((float)distribution_uniform(rndGen),
+      (float)distribution_uniform(rndGen),
+      (float)distribution_uniform(rndGen),
                                        0.f));
   vec4uc color1 = vec4uc(255)-color0;
   std::vector<vec4uc> texels;
@@ -248,7 +248,7 @@ void Viewer::cameraChanged()
   owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
   owlRayGenSet3f    (rayGen,"camera.dir_dv",(const owl3f&)camera_ddv);
-  vec3f lightDir = (1,1,1);
+  vec3f lightDir = {1.f,1.f,1.f};
   owlRayGenSet3f    (rayGen,"lightDir",     (const owl3f&)lightDir);
   sbtDirty = true;
 }

@@ -140,9 +140,6 @@ int main(int ac, char **av)
   // // set up all *ACCELS* we need to trace into those groups
   // // ##################################################################
   
-  OWLGeom  userGeoms[] = {
-    lambertianSpheresGeom,
-  };
 #if 1
   OWLGroup grp
     = owlUserGeomGroupCreate(context,1,&lambertianSpheresGeom);
@@ -172,6 +169,7 @@ int main(int ac, char **av)
   OWLMissProg missProg
     = owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
                         missProgVars,-1);
+  owlMissProgSet(context,0,missProg);
   
   // ........... set variables  ............................
   /* nothing to set */
@@ -205,7 +203,6 @@ int main(int ac, char **av)
   const float theta = vfov * ((float)M_PI) / 180.0f;
   const float half_height = tanf(theta / 2.0f);
   const float half_width = aspect * half_height;
-  const float aperture = 0.f;
   const float focusDist = 10.f;
   vec3f lookFrom = 1.8f*vec3f(1.3f,1.5f,2.f)*vec3f((float)N);
   vec3f lookAt   = vec3f(0.5f*N);

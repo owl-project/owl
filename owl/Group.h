@@ -116,7 +116,7 @@ namespace owl {
   /*! get reference to given device-specific data for this object */
   inline Group::DeviceData &Group::getDD(const DeviceContext::SP &device) const
   {
-    assert(device->ID < deviceData.size());
+    assert(device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<DeviceData>();
   }
   

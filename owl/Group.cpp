@@ -73,7 +73,7 @@ namespace owl {
   /*! set given child ID to given geometry */
   void GeomGroup::setChild(int childID, Geom::SP child)
   {
-    assert(childID >= 0 && childID < geometries.size());
+    assert(childID >= 0 && childID < (int)geometries.size());
     geometries[childID] = child;
   }
   

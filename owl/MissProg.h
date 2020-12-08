@@ -56,6 +56,8 @@ namespace owl {
 
     /*! name of the program within this module */
     const std::string progName;
+    /*! the name, annotated wiht optix' "__miss__" */
+    const std::string annotatedProgName;
   };
   
   /*! an actual instance of a miss program - defined by its type and
@@ -83,7 +85,7 @@ namespace owl {
   /*! get reference to given device-specific data for this object */
   inline MissProgType::DeviceData &MissProgType::getDD(const DeviceContext::SP &device) const
   {
-    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    assert(device && device->ID >= 0 && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<DeviceData>();
   }
   

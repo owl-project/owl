@@ -68,12 +68,17 @@ namespace owl {
   {
     DeviceData &dd = getDD(device);
     auto optixContext = device->optixContext;
-    
-    // assert("check does not yet exist" && dd.traversable == 0);
-    if (FULL_REBUILD)
-      assert("check does not yet exist on first build " && dd.bvhMemory.empty());
-    else
-      assert("check DOES exist on first build " && !dd.bvhMemory.empty());
+
+    if (FULL_REBUILD && !dd.bvhMemory.empty())
+      dd.bvhMemory.free();
+
+    if (!FULL_REBUILD && dd.bvhMemory.empty())
+      throw std::runtime_error("trying to refit an accel struct that has not been previously built");
+    // // assert("check does not yet exist" && dd.traversable == 0);
+    // if (FULL_REBUILD)
+    //   assert("check does not yet exist on first build " && dd.bvhMemory.empty());
+    // else
+    //   assert("check DOES exist on first build " && !dd.bvhMemory.empty());
       
     SetActiveGPU forLifeTime(device);
     LOG("building user accel over "
@@ -100,7 +105,7 @@ namespace owl {
     std::vector<uint32_t> userGeomInputFlags(geometries.size());
 
     // now go over all geometries to set up the buildinputs
-    for (int childID=0;childID<geometries.size();childID++) {
+    for (size_t childID=0;childID<geometries.size();childID++) {
       // the three fields we're setting:
 
       UserGeom::SP child = geometries[childID]->as<UserGeom>();
@@ -221,7 +226,7 @@ namespace owl {
 
     // size_t sumPrims = 0;
     size_t sumBoundsMem = 0;
-    for (int childID=0;childID<geometries.size();childID++) {
+    for (size_t childID=0;childID<geometries.size();childID++) {
       UserGeom::SP child = geometries[childID]->as<UserGeom>();
       assert(child);
       

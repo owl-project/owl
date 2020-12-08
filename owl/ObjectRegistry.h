@@ -78,7 +78,7 @@ namespace owl {
     inline typename T::SP getSP(int ID)
     {
       T *ptr = getPtr(ID);
-      assert(ptr);
+      if (!ptr) return {};
       Object::SP object = ptr->shared_from_this();
       assert(object);
       return object->as<T>();

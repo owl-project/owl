@@ -45,50 +45,98 @@ namespace owl {
       : varDecl(varDecl)
     { assert(varDecl); }
     
-    virtual void set(const std::shared_ptr<Buffer>  &value) { mismatchingType(); }
-    virtual void set(const std::shared_ptr<Group>   &value) { mismatchingType(); }
-    virtual void set(const std::shared_ptr<Texture> &value) { mismatchingType(); }
+    // -------------------------------------------------------
+    // bool
+    // -------------------------------------------------------
+    virtual void set(const bool &value);
+    virtual void set(const vec2b &value);
+    virtual void set(const vec3b &value);
+    virtual void set(const vec4b &value);
     
-    virtual void setRaw(const void *ptr)    { mismatchingType(); }
+    // -------------------------------------------------------
+    // 8 bit
+    // -------------------------------------------------------
+    virtual void set(const uint8_t &value);
+    virtual void set(const vec2uc &value);
+    virtual void set(const vec3uc &value);
+    virtual void set(const vec4uc &value);
+    
+    virtual void set(const int8_t &value);
+    virtual void set(const vec2c &value);
+    virtual void set(const vec3c &value);
+    virtual void set(const vec4c &value);
 
-    virtual void set(const int32_t &value)  { mismatchingType(); }
-    virtual void set(const vec2i &value)    { mismatchingType(); }
-    virtual void set(const vec3i &value)    { mismatchingType(); }
-    virtual void set(const vec4i &value)    { mismatchingType(); }
+    // -------------------------------------------------------
+    // 16 bit
+    // -------------------------------------------------------
+    virtual void set(const uint16_t &value);
+    virtual void set(const vec2us &value);
+    virtual void set(const vec3us &value);
+    virtual void set(const vec4us &value);
     
-    virtual void set(const uint32_t &value) { mismatchingType(); }
-    virtual void set(const vec2ui &value)   { mismatchingType(); }
-    virtual void set(const vec3ui &value)   { mismatchingType(); }
-    virtual void set(const vec4ui &value)   { mismatchingType(); }
-    
-    virtual void set(const int64_t &value)  { mismatchingType(); }
-    virtual void set(const vec2l &value)    { mismatchingType(); }
-    virtual void set(const vec3l &value)    { mismatchingType(); }
-    virtual void set(const vec4l &value)    { mismatchingType(); }
-    
-    virtual void set(const uint64_t &value) { mismatchingType(); }
-    virtual void set(const vec2ul &value)   { mismatchingType(); }
-    virtual void set(const vec3ul &value)   { mismatchingType(); }
-    virtual void set(const vec4ul &value)   { mismatchingType(); }
-    
-    virtual void set(const float  &value)    { mismatchingType(); }
-    virtual void set(const vec2f  &value)    { mismatchingType(); }
-    virtual void set(const vec3f  &value)    { mismatchingType(); }
-    virtual void set(const vec4f  &value)    { mismatchingType(); }
+    virtual void set(const int16_t &value);
+    virtual void set(const vec2s &value);
+    virtual void set(const vec3s &value);
+    virtual void set(const vec4s &value);
 
-    virtual void set(const double &value)    { mismatchingType(); }
-    virtual void set(const vec2d  &value)    { mismatchingType(); }
-    virtual void set(const vec3d  &value)    { mismatchingType(); }
-    virtual void set(const vec4d  &value)    { mismatchingType(); }
+    // -------------------------------------------------------
+    // 32 bit
+    // -------------------------------------------------------
+    virtual void set(const int32_t &value);
+    virtual void set(const vec2i &value);
+    virtual void set(const vec3i &value);
+    virtual void set(const vec4i &value);
+    
+    virtual void set(const uint32_t &value);
+    virtual void set(const vec2ui &value);
+    virtual void set(const vec3ui &value);
+    virtual void set(const vec4ui &value);
+    
+    virtual void set(const float  &value);
+    virtual void set(const vec2f  &value);
+    virtual void set(const vec3f  &value);
+    virtual void set(const vec4f  &value);
+
+    // -------------------------------------------------------
+    // 64 bit
+    // -------------------------------------------------------
+    virtual void set(const int64_t &value);
+    virtual void set(const vec2l &value);
+    virtual void set(const vec3l &value);
+    virtual void set(const vec4l &value);
+    
+    virtual void set(const uint64_t &value);
+    virtual void set(const vec2ul &value);
+    virtual void set(const vec3ul &value);
+    virtual void set(const vec4ul &value);
+    
+    virtual void set(const double &value);
+    virtual void set(const vec2d  &value);
+    virtual void set(const vec3d  &value);
+    virtual void set(const vec4d  &value);
+
+    // -------------------------------------------------------
+    // meta/other
+    // -------------------------------------------------------
+
+    virtual void set(const affine3f &value);
+    
+    virtual void set(const std::shared_ptr<Buffer>  &value);
+    virtual void set(const std::shared_ptr<Group>   &value);
+    virtual void set(const std::shared_ptr<Texture> &value);
+    
+    virtual void setRaw(const void *ptr);
+
     
     virtual std::string toString() const { return "Variable"; }
 
     /*! throw an exception that the type the user tried to set doesn't
         math the type he/she declared*/
-    void mismatchingType();
+    void mismatchingType(const std::string &attemptedType);
 
     /*! writes the device specific representation of the given type */
-    virtual void writeToSBT(uint8_t *sbtEntry, const DeviceContext::SP &device) const = 0;
+    virtual void writeToSBT(uint8_t *sbtEntry,
+                            const DeviceContext::SP &device) const = 0;
 
     /*! creates an instance of this variable type to be attached to a
         given object - this instance will can then store the values

@@ -216,7 +216,6 @@ void Viewer::cameraChanged()
   const float theta = vfov * ((float)M_PI) / 180.0f;
   const float half_height = tanf(theta / 2.0f);
   const float half_width = aspect * half_height;
-  const float aperture = 0.f;
   const float focusDist = 10.f;
   const vec3f origin = lookFrom;
   const vec3f w = normalize(lookFrom - lookAt);
@@ -564,6 +563,7 @@ Viewer::Viewer()
   OWLMissProg missProg
     = owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
                         missProgVars,-1);
+  owlMissProgSet(context,0,missProg);
   
   // ........... set variables  ............................
   /* nothing to set */

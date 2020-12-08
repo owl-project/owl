@@ -110,14 +110,14 @@ namespace owl {
       virtual void mouseButtonLeft(const vec2i &where, bool pressed) override;
 
 
-      /*! either around ROI or on arcball */
-      RotateMode rotateMode;
-
       /*! if non-empty, bounding box of region the poi is not allowed
         to leave */
       const box3f validPoiBounds;
       const float minDistance;
       const float maxDistance;
+      
+      /*! either around ROI or on arcball */
+      RotateMode rotateMode;
 
       /*! either use arcball rotation or rotation around POI */
 

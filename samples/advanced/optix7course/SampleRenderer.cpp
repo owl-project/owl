@@ -103,8 +103,6 @@ namespace osc {
 
       int32_t width  = texture->resolution.x;
       int32_t height = texture->resolution.y;
-      int32_t numComponents = 4;
-      int32_t pitch  = width*numComponents*sizeof(uint8_t);
 #if OWL_TEXTURES
       this->textures[textureID]
         = owlTexture2DCreate(context,
@@ -115,6 +113,8 @@ namespace osc {
                              OWL_TEXTURE_LINEAR,
                              OWL_TEXTURE_CLAMP);
 #else
+      int32_t numComponents = 4;
+      int32_t pitch  = int(width*numComponents*sizeof(uint8_t));
       cudaResourceDesc res_desc = {};
       
       cudaChannelFormatDesc channel_desc;
@@ -229,7 +229,7 @@ namespace osc {
       owlGeomSet3f(geom,"color",(const owl3f &)mesh.diffuse);
       if (mesh.diffuseTextureID >= 0) {
         owlGeomSet1i(geom,"hasTexture",1);
-        assert(mesh.diffuseTextureID < textures.size());
+        assert(mesh.diffuseTextureID < (int)textures.size());
         owlGeomSetTexture(geom,"texture",textures[mesh.diffuseTextureID]);
       } else {
         owlGeomSet1i(geom,"hasTexture",0);

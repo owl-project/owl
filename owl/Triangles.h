@@ -114,7 +114,7 @@ namespace owl {
   /*! get reference to given device-specific data for this object */
   inline TrianglesGeom::DeviceData &TrianglesGeom::getDD(const DeviceContext::SP &device) const
   {
-    assert(device->ID < deviceData.size());
+    assert(device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<TrianglesGeom::DeviceData>();
   }
   
