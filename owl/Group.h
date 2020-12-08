@@ -90,7 +90,7 @@ namespace owl {
     virtual ~GeomGroup();
 
     /*! set given child ID to given geometry */
-    void setChild(int childID, Geom::SP child);
+    void setChild(size_t childID, Geom::SP child);
     
     /*! return the SBT offset (ie, the offset at which the geometries
         within this group will be written into the Shader Binding

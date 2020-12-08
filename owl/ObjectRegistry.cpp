@@ -73,12 +73,10 @@ namespace owl {
     }
   }
   
-  RegisteredObject *ObjectRegistry::getPtr(int ID)
+  RegisteredObject *ObjectRegistry::getPtr(size_t ID)
   {
+    assert(ID < objects.size());
     std::lock_guard<std::mutex> lock(mutex);
-      
-    assert(ID >= 0);
-    assert(ID < (int)objects.size());
     return objects[ID];
   }
 

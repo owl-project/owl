@@ -72,10 +72,10 @@ namespace owl {
   }
   
   /*! set transformation matrix of given child */
-  void InstanceGroup::setTransform(int childID,
+  void InstanceGroup::setTransform(size_t childID,
                                    const affine3f &xfm)
   {
-    assert(childID >= 0 && childID < (int)children.size());
+    assert(childID < children.size());
     transforms[0][childID] = xfm;
   }
 
@@ -101,9 +101,9 @@ namespace owl {
     std::copy(_instanceIDs,_instanceIDs+instanceIDs.size(),instanceIDs.data());
   }
   
-  void InstanceGroup::setChild(int childID, Group::SP child)
+  void InstanceGroup::setChild(size_t childID, Group::SP child)
   {
-    assert(childID >= 0 && childID < (int)children.size());
+    assert(childID < children.size());
     children[childID] = child;
   }
 
@@ -183,7 +183,7 @@ namespace owl {
       oi.transform[2*4+3]  = xfm.p.z;
         
       oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
-      oi.instanceId        = (instanceIDs.empty())?childID:instanceIDs[childID];
+      oi.instanceId        = (instanceIDs.empty())?uint32_t(childID):instanceIDs[childID];
       oi.visibilityMask    = 255;
       oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
       oi.visibilityMask    = 255;
@@ -408,7 +408,7 @@ namespace owl {
       oi.transform[2*4+3]  = 0.f;//xfm.p.z;
         
       oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
-      oi.instanceId        = (instanceIDs.empty())?childID:instanceIDs[childID];
+      oi.instanceId        = (instanceIDs.empty())?uint32_t(childID):instanceIDs[childID];
       oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
       oi.visibilityMask    = 1; //255;
       oi.traversableHandle = childMotionHandle; 

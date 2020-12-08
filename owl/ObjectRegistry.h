@@ -24,8 +24,6 @@ namespace owl {
   struct Context;
   struct ObjectRegistry;
 
-  // typedef void (*ReallocContextIDsCB)(ObjectRegistry *self, int newMaxIDs);
-  
   /*! registry that tracks mapping between buffers and buffer
     IDs. Every buffer should have a valid ID, and should be tracked
     in this registry under this ID */
@@ -40,7 +38,7 @@ namespace owl {
     void forget(RegisteredObject *object);
     void track(RegisteredObject *object);
     int allocID();
-    RegisteredObject *getPtr(int ID);
+    RegisteredObject *getPtr(size_t ID);
   private:
     /*! list of all tracked objects. note this are *NOT* shared-ptr's,
       else we'd never released objects because each object would
@@ -56,8 +54,6 @@ namespace owl {
       since gotten freed, so can be re-used */
     std::stack<int> previouslyReleasedIDs;
     std::mutex mutex;
-    
-    // ReallocContextIDsCB reallocContextIDs;
   };
 
 
@@ -72,17 +68,18 @@ namespace owl {
       
     // void reallocContextIDs(int newMaxIDs) override;
     
-    inline T *getPtr(int ID)
-    { return (T*)ObjectRegistry::getPtr(ID); }
+    inline T* getPtr(size_t ID)
+    {
+        return (T*)ObjectRegistry::getPtr(ID);
+    }
 
-    inline typename T::SP getSP(int ID)
+    inline typename T::SP getSP(size_t ID)
     {
       T *ptr = getPtr(ID);
       if (!ptr) return {};
       Object::SP object = ptr->shared_from_this();
       assert(object);
       return object->as<T>();
-      // return ptr->shared_from_this()->as<T>();
     }
     
     Context *const context;
