@@ -48,6 +48,11 @@ namespace owl {
     hostMemory.resize(dataSize);
   }
 
+  LaunchParams::DeviceData::~DeviceData()
+  {
+    cudaStreamDestroy(stream);
+  }
+  
   // ------------------------------------------------------------------
   // LaunchParams
   // ------------------------------------------------------------------

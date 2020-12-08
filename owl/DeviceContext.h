@@ -53,7 +53,7 @@ namespace owl {
     size_t missProgRecordSize  = 0;
     size_t missProgRecordCount = 0;
     DeviceMemory missProgRecordsBuffer;
-
+    
     DeviceMemory launchParamsBuffer;
   };
 
@@ -70,6 +70,7 @@ namespace owl {
     DeviceContext(Context *parent,
                   int owlID,
                   int cudaID);
+    ~DeviceContext();
     
     /*! helper function - return cuda name of this device */
     std::string getDeviceName() const;

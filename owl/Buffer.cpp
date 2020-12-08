@@ -93,7 +93,7 @@ namespace owl {
     if (d_pointer == 0) return;
 
     SetActiveGPU forLifeTime(device);
-    
+
     CUDA_CALL_NOTHROW(Free(d_pointer));
     d_pointer = nullptr;
   }
@@ -144,7 +144,9 @@ namespace owl {
   void DeviceBuffer::DeviceDataForTextures::executeResize() 
   {
     SetActiveGPU forLifeTime(device);
-    if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
+    if (d_pointer) {
+      CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
+    }
 
     if (parent->elementCount)
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(cudaTextureObject_t)));
@@ -178,10 +180,13 @@ namespace owl {
   {
     SetActiveGPU forLifeTime(device);
     
-    if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
+    if (d_pointer) {
+      CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
+    }
 
-    if (parent->elementCount)
+    if (parent->elementCount) {
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(device::Buffer)));
+    }
   }
   
   void DeviceBuffer::DeviceDataForBuffers::uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) 
@@ -218,10 +223,13 @@ namespace owl {
   {
     SetActiveGPU forLifeTime(device);
     
-    if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
+    if (d_pointer) {
+      CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
+    }
 
-    if (parent->elementCount)
+    if (parent->elementCount) {
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeOf(parent->type)));
+    }
   }
   
   void DeviceBuffer::DeviceDataForCopyableData::uploadAsync(const void *hostDataPtr, size_t offset, int64_t count)
