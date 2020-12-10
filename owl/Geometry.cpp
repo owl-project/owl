@@ -36,7 +36,7 @@ namespace owl {
     pgDesc.hitgroup = {};
 
     // ----------- closest hit -----------
-    if (rt < parent->closestHit.size()) {
+    if (rt < (int)parent->closestHit.size()) {
       const ProgramDesc &pd = parent->closestHit[rt];
       if (pd.module && pd.progName != "") {
         pgDesc.hitgroup.moduleCH = pd.module->getDD(device).module;
@@ -44,7 +44,7 @@ namespace owl {
       }
     }
     // ----------- any hit -----------
-    if (rt < parent->anyHit.size()) {
+    if (rt < (int)parent->anyHit.size()) {
       const ProgramDesc &pd = parent->anyHit[rt];
       if (pd.module && pd.progName != "") {
         pgDesc.hitgroup.moduleAH = pd.module->getDD(device).module;
@@ -85,7 +85,7 @@ namespace owl {
                                       Module::SP module,
                                       const std::string &progName)
   {
-    assert(rayType >=0 && rayType < closestHit.size());
+    assert(rayType >=0 && rayType < (int)closestHit.size());
       
     closestHit[rayType].progName = "__closesthit__"+progName;
     closestHit[rayType].module   = module;
@@ -96,7 +96,7 @@ namespace owl {
                                   Module::SP module,
                                   const std::string &progName)
   {
-    assert(rayType >=0 && rayType < anyHit.size());
+    assert(rayType >=0 && rayType < (int)anyHit.size());
       
     anyHit[rayType].progName = "__anyhit__"+progName;
     anyHit[rayType].module   = module;
@@ -136,7 +136,7 @@ namespace owl {
     // pack record header with the corresponding hit group:
     // ------------------------------------------------------------------
     auto &dd = geomType->getDD(device);
-    assert(rayTypeID < dd.hgPGs.size());
+    assert(rayTypeID < (int)dd.hgPGs.size());
     OPTIX_CALL(SbtRecordPackHeader(dd.hgPGs[rayTypeID],sbtRecordHeader));
     
     // ------------------------------------------------------------------

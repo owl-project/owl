@@ -223,21 +223,12 @@ namespace owl {
     void CameraInspectMode::kbd_back()
     {
       move(-1.f);
-      // Camera &fc = viewer->camera;
-      // float step = 1.f;
-      
-      // const vec3f poi  = fc.position - fc.poiDistance * fc.frame.vz;
-      // fc.poiDistance   = max(maxDistance,fc.poiDistance+step);
-      // fc.focalDistance = fc.poiDistance;
-      // fc.position = poi + fc.poiDistance * fc.frame.vz;
-      // viewer->updateCamera();
     }
-    
     
     /*! this gets called when the user presses a key on the keyboard ... */
     void CameraInspectMode::key(char key, const vec2i &where) 
     {
-      Camera &fc = viewer->camera;
+      // Camera &fc = viewer->camera;
       
       switch(key) {
       case 'w':

@@ -17,6 +17,7 @@
 #pragma once
 
 #include <limits>
+#include <limits.h>
 #ifdef __CUDACC__
 #include <math_constants.h>
 #endif
@@ -180,6 +181,42 @@ namespace owl {
     {
       return limits_traits<std::numeric_limits<T>::is_integer>::value_limits_upper(T());
     }
-  
+
+    template<> inline __both__ uint16_t empty_bounds_lower<uint16_t>() 
+    { return uint16_t(USHRT_MAX); }
+    template<> inline __both__ uint16_t empty_bounds_upper<uint16_t>() 
+    { return uint16_t(0); }
+    template<> inline __both__ uint16_t open_range_lower<uint16_t>() 
+    { return uint16_t(0); }
+    template<> inline __both__ uint16_t open_range_upper<uint16_t>() 
+    { return uint16_t(USHRT_MAX); }
+
+    template<> inline __both__ int16_t empty_bounds_lower<int16_t>() 
+    { return int16_t(SHRT_MAX); }
+    template<> inline __both__ int16_t empty_bounds_upper<int16_t>() 
+    { return int16_t(SHRT_MIN); }
+    template<> inline __both__ int16_t open_range_lower<int16_t>() 
+    { return int16_t(SHRT_MIN); }
+    template<> inline __both__ int16_t open_range_upper<int16_t>() 
+    { return int16_t(SHRT_MAX); }
+
+    template<> inline __both__ uint8_t empty_bounds_lower<uint8_t>() 
+    { return uint8_t(CHAR_MAX); }
+    template<> inline __both__ uint8_t empty_bounds_upper<uint8_t>() 
+    { return uint8_t(CHAR_MIN); }
+    template<> inline __both__ uint8_t open_range_lower<uint8_t>() 
+    { return uint8_t(CHAR_MIN); }
+    template<> inline __both__ uint8_t open_range_upper<uint8_t>() 
+    { return uint8_t(CHAR_MAX); }
+
+    template<> inline __both__ int8_t empty_bounds_lower<int8_t>() 
+    { return int8_t(SCHAR_MIN); }
+    template<> inline __both__ int8_t empty_bounds_upper<int8_t>() 
+    { return int8_t(SCHAR_MAX); }
+    template<> inline __both__ int8_t open_range_lower<int8_t>() 
+    { return int8_t(SCHAR_MAX); }
+    template<> inline __both__ int8_t open_range_upper<int8_t>() 
+    { return int8_t(SCHAR_MIN); }
+
   } // ::owl::common
 } // ::owl

@@ -46,7 +46,7 @@ namespace owl {
     std::vector<uint32_t> childIDs;
     if (groups) {
       childIDs.resize(numChildren);
-      for (int i=0;i<numChildren;i++) {
+      for (size_t i=0;i<numChildren;i++) {
         assert(groups[i]);
         children[i] = groups[i];
         childIDs[i] = groups[i]->ID;
@@ -72,10 +72,10 @@ namespace owl {
   }
   
   /*! set transformation matrix of given child */
-  void InstanceGroup::setTransform(int childID,
+  void InstanceGroup::setTransform(size_t childID,
                                    const affine3f &xfm)
   {
-    assert(childID >= 0 && childID < children.size());
+    assert(childID < children.size());
     transforms[0][childID] = xfm;
   }
 
@@ -86,7 +86,7 @@ namespace owl {
     switch(matrixFormat) {
     case OWL_MATRIX_FORMAT_OWL: {
       transforms[timeStep].resize(children.size());
-      memcpy(transforms[timeStep].data(),floatsForThisStimeStep,
+      memcpy((char*)transforms[timeStep].data(),floatsForThisStimeStep,
              children.size()*sizeof(affine3f));
     } break;
     default:
@@ -101,9 +101,9 @@ namespace owl {
     std::copy(_instanceIDs,_instanceIDs+instanceIDs.size(),instanceIDs.data());
   }
   
-  void InstanceGroup::setChild(int childID, Group::SP child)
+  void InstanceGroup::setChild(size_t childID, Group::SP child)
   {
-    assert(childID >= 0 && childID < children.size());
+    assert(childID < children.size());
     children[childID] = child;
   }
 
@@ -159,7 +159,7 @@ namespace owl {
     std::vector<OptixInstance>   optixInstances(children.size());
 
     // now go over all children to set up the buildinputs
-    for (int childID=0;childID<children.size();childID++) {
+    for (size_t childID=0;childID<children.size();childID++) {
       Group::SP child = children[childID];
       assert(child);
 
@@ -183,7 +183,7 @@ namespace owl {
       oi.transform[2*4+3]  = xfm.p.z;
         
       oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
-      oi.instanceId        = (instanceIDs.empty())?childID:instanceIDs[childID];
+      oi.instanceId        = (instanceIDs.empty())?uint32_t(childID):instanceIDs[childID];
       oi.visibilityMask    = 255;
       oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
       oi.visibilityMask    = 255;
@@ -317,7 +317,7 @@ namespace owl {
 #else
     std::vector<box3f> motionAABBs(children.size());
 #endif
-    for (int childID=0;childID<children.size();childID++) {
+    for (size_t childID=0;childID<children.size();childID++) {
       Group::SP child = children[childID];
       assert(child);
       OptixMatrixMotionTransform mt = {};
@@ -378,7 +378,7 @@ namespace owl {
     std::vector<OptixInstance>   optixInstances(children.size());
 
     // now go over all children to set up the buildinputs
-    for (int childID=0;childID<children.size();childID++) {
+    for (size_t childID=0;childID<children.size();childID++) {
       Group::SP child = children[childID];
       assert(child);
 
@@ -408,7 +408,7 @@ namespace owl {
       oi.transform[2*4+3]  = 0.f;//xfm.p.z;
         
       oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
-      oi.instanceId        = (instanceIDs.empty())?childID:instanceIDs[childID];
+      oi.instanceId        = (instanceIDs.empty())?uint32_t(childID):instanceIDs[childID];
       oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
       oi.visibilityMask    = 1; //255;
       oi.traversableHandle = childMotionHandle; 

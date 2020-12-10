@@ -84,7 +84,7 @@ namespace owl {
   /*! get reference to given device-specific data for this object */
   inline Module::DeviceData &Module::getDD(const DeviceContext::SP &device) const
   {
-    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    assert(device && device->ID >= 0 && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<Module::DeviceData>();
   }
   

@@ -38,6 +38,9 @@ namespace owl {
                   size_t varStructSize,
                   const std::vector<OWLVarDecl> &varDecls);
 
+    /*! clean up; in particular, frees the vardecls */
+    virtual ~SBTObjectType();
+    
     /*! find index of variable with given name, or -1 if not exists */
     int getVariableIdx(const std::string &varName);
 
@@ -98,12 +101,12 @@ namespace owl {
     void writeVariables(uint8_t *sbtEntry,
                         const DeviceContext::SP &device) const;
     
-    /*! the actual variable *values* */
-    const std::vector<Variable::SP> variables;
-    
     /*! our own type description, that tells us which variables (of
       which type, etc) we have */
     std::shared_ptr<SBTObjectType> const type;
+    
+    /*! the actual variable *values* */
+    const std::vector<Variable::SP> variables;
   };
 
 
@@ -149,7 +152,7 @@ namespace owl {
   {
     int varID = type->getVariableIdx(name);
     assert(varID >= 0);
-    assert(varID <  variables.size());
+    assert(varID < (int)variables.size());
     Variable::SP var = variables[varID];
     assert(var);
     return var;

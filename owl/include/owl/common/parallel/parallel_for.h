@@ -63,7 +63,7 @@ namespace owl {
     }
 #else
 #ifndef OWL_DISABLE_TBB
-# pragma message("warning: TBB not available, will replace all parallel_for's with serial_for's")
+// # pragma message("warning: TBB not available, will replace all parallel_for's with serial_for's")
 #endif
     template<typename INDEX_T, typename TASK_T>
     inline void parallel_for(INDEX_T nTasks, TASK_T&& taskFunction, size_t blockSize=1)

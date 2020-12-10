@@ -55,7 +55,7 @@ namespace owl {
     size_t deviceCount() const { return getDevices().size(); }
     const std::vector<DeviceContext::SP> &getDevices() const { return devices; }
     DeviceContext::SP getDevice(int ID) const
-    { assert(ID >= 0 && ID < devices.size()); return devices[ID]; }
+    { assert(ID >= 0 && ID < (int)devices.size()); return devices[ID]; }
 
     /*! part of the SBT creation - builds the hit group array */
     void buildHitGroupRecordsOn(const DeviceContext::SP &device);

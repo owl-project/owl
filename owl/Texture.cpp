@@ -48,7 +48,7 @@ namespace owl {
     assert(size.y > 0);
     int32_t pitch  = linePitchInBytes;
     if (pitch == 0)
-      pitch = size.x*bytesPerTexel(texelFormat);//sizeof(vec4uc);
+      pitch = int(size.x*bytesPerTexel(texelFormat));
     assert(
       (texelFormat == OWL_TEXEL_FORMAT_RGBA8) ||
       (texelFormat == OWL_TEXEL_FORMAT_RGBA32F) ||

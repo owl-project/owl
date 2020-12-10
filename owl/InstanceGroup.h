@@ -49,10 +49,10 @@ namespace owl {
     std::string toString() const override;
     
     /*! set given child to given group */
-    void setChild(int childID, Group::SP child);
+    void setChild(size_t childID, Group::SP child);
                   
     /*! set transformation matrix of given child */
-    void setTransform(int childID, const affine3f &xfm);
+    void setTransform(size_t childID, const affine3f &xfm);
 
     /*! set transformation matrix of given child */
     void setTransforms(uint32_t timeStep,
@@ -103,7 +103,7 @@ namespace owl {
   /*! get reference to given device-specific data for this object */
   inline InstanceGroup::DeviceData &InstanceGroup::getDD(const DeviceContext::SP &device) const
   {
-    assert(device && device->ID < deviceData.size());
+    assert(device && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<DeviceData>();
   }
   

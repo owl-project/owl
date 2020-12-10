@@ -90,7 +90,7 @@ namespace owl {
     virtual ~GeomGroup();
 
     /*! set given child ID to given geometry */
-    void setChild(int childID, Geom::SP child);
+    void setChild(size_t childID, Geom::SP child);
     
     /*! return the SBT offset (ie, the offset at which the geometries
         within this group will be written into the Shader Binding
@@ -116,7 +116,7 @@ namespace owl {
   /*! get reference to given device-specific data for this object */
   inline Group::DeviceData &Group::getDD(const DeviceContext::SP &device) const
   {
-    assert(device->ID < deviceData.size());
+    assert(device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<DeviceData>();
   }
   

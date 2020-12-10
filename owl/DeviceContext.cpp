@@ -354,7 +354,7 @@ namespace owl {
   /*! build all optix progrmas for miss program types */
   void DeviceContext::buildMissPrograms()
   {
-    for (int progID=0;progID<parent->missProgTypes.size();progID++) {
+    for (size_t progID=0;progID<parent->missProgTypes.size();progID++) {
       OptixProgramGroupOptions pgOptions = {};
       OptixProgramGroupDesc    pgDesc    = {};
       
@@ -391,7 +391,7 @@ namespace owl {
 
   void DeviceContext::destroyMissPrograms()
   {
-    for (int progID=0;progID<parent->missProgTypes.size();progID++) {
+    for (size_t progID=0;progID<parent->missProgTypes.size();progID++) {
       MissProgType *prog = parent->missProgTypes.getPtr(progID);
       if (!prog) continue;
       auto &dd = prog->getDD(shared_from_this());
@@ -404,7 +404,7 @@ namespace owl {
   
   void DeviceContext::buildRayGenPrograms()
   {
-    for (int pgID=0;pgID<parent->rayGenTypes.size();pgID++) {
+    for (size_t pgID=0;pgID<parent->rayGenTypes.size();pgID++) {
       OptixProgramGroupOptions pgOptions = {};
       OptixProgramGroupDesc    pgDesc    = {};
       
@@ -442,7 +442,7 @@ namespace owl {
   
   void DeviceContext::destroyRayGenPrograms()
   {
-    for (int pgID=0;pgID<parent->rayGenTypes.size();pgID++) {
+    for (size_t pgID=0;pgID<parent->rayGenTypes.size();pgID++) {
       RayGenType *prog = parent->rayGenTypes.getPtr(pgID);
       if (!prog) continue;
       
@@ -461,7 +461,7 @@ namespace owl {
     // ------------------------------------------------------------------
     // geometry type programs -> what goes into hit groups
     // ------------------------------------------------------------------
-    for (int geomTypeID=0;geomTypeID<parent->geomTypes.size();geomTypeID++) {
+    for (size_t geomTypeID=0;geomTypeID<parent->geomTypes.size();geomTypeID++) {
       GeomType::SP geomType = parent->geomTypes.getSP(geomTypeID);
       if (!geomType)
         continue;
@@ -511,7 +511,7 @@ namespace owl {
   
   void DeviceContext::destroyHitGroupPrograms()
   {
-    for (int geomTypeID=0;geomTypeID<parent->geomTypes.size();geomTypeID++) {
+    for (size_t geomTypeID=0;geomTypeID<parent->geomTypes.size();geomTypeID++) {
       GeomType::SP geomType = parent->geomTypes.getSP(geomTypeID);
       if (!geomType)
         continue;

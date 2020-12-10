@@ -80,11 +80,16 @@ namespace owl {
   {
     DeviceData &dd = getDD(device);
 
-    assert("check does not yet exist" && dd.traversable == 0);
-    if (FULL_REBUILD)
-      assert("check does not yet exist on first build" && dd.bvhMemory.empty());
-    else
-      assert("check DOES exist on refit" && !dd.bvhMemory.empty());
+    if (FULL_REBUILD && !dd.bvhMemory.empty())
+      dd.bvhMemory.free();
+
+    if (!FULL_REBUILD && dd.bvhMemory.empty())
+      throw std::runtime_error("trying to refit an accel struct that has not been previously built");
+    // assert("check does not yet exist" && dd.traversable == 0);
+    // if (FULL_REBUILD)
+    //   assert("check does not yet exist on first build" && dd.bvhMemory.empty());
+    // else
+    //   assert("check DOES exist on refit" && !dd.bvhMemory.empty());
       
     SetActiveGPU forLifeTime(device);
     LOG("building triangles accel over "
@@ -100,7 +105,7 @@ namespace owl {
     assert(!geometries.empty());
     TrianglesGeom::SP child0 = geometries[0]->as<TrianglesGeom>();
     assert(child0);
-    int numKeys = child0->vertex.buffers.size();
+    int numKeys = (int)child0->vertex.buffers.size();
     assert(numKeys > 0);
     const bool hasMotion = (numKeys > 1);
     if (hasMotion) assert(context->motionBlurEnabled);
@@ -114,13 +119,13 @@ namespace owl {
     std::vector<uint32_t> triangleInputFlags(geometries.size());
 
     // now go over all geometries to set up the buildinputs
-    for (int childID=0;childID<geometries.size();childID++) {
+    for (size_t childID=0;childID<geometries.size();childID++) {
       
       // the child wer're setting them with (with sanity checks)
       TrianglesGeom::SP tris = geometries[childID]->as<TrianglesGeom>();
       assert(tris);
       
-      if (tris->vertex.buffers.size() != numKeys)
+      if (tris->vertex.buffers.size() != (size_t)numKeys)
         throw std::runtime_error("invalid combination of meshes with "
                                  "different motion keys in the same "
                                  "triangles geom group");

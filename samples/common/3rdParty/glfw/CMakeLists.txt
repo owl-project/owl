@@ -18,12 +18,18 @@ if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
     set(GLFW_STANDALONE TRUE)
 endif()
 
-option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
-option(GLFW_BUILD_EXAMPLES "Build the GLFW example programs" OFF)#${GLFW_STANDALONE})
-option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)#${GLFW_STANDALONE})
-option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)#ON)
-option(GLFW_INSTALL "Generate installation target" OFF)#ON)
-option(GLFW_VULKAN_STATIC "Assume the Vulkan loader is linked with the application" OFF)
+set(BUILD_SHARED_LIBS OFF)
+set(GLFW_BUILD_EXAMPLES  OFF)#${GLFW_STANDALONE})
+set(GLFW_BUILD_TESTS  OFF)#${GLFW_STANDALONE})
+set(GLFW_BUILD_DOCS OFF)#ON)
+set(GLFW_INSTALL OFF)#ON)
+set(GLFW_VULKAN_STATIC  OFF)
+#option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+#option(GLFW_BUILD_EXAMPLES "Build the GLFW example programs" OFF)#${GLFW_STANDALONE})
+#option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)#${GLFW_STANDALONE})
+#option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)#ON)
+#option(GLFW_INSTALL "Generate installation target" OFF)#ON)
+#option(GLFW_VULKAN_STATIC "Assume the Vulkan loader is linked with the application" OFF)
 
 include(GNUInstallDirs)
 include(CMakeDependentOption)
@@ -59,12 +65,12 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${GLFW_SOURCE_DIR}/CMake/modules")
 
-find_package(Threads REQUIRED)
+#find_package(Threads REQUIRED)
 
-if (GLFW_BUILD_DOCS)
-    set(DOXYGEN_SKIP_DOT TRUE)
-    find_package(Doxygen)
-endif()
+#if (GLFW_BUILD_DOCS)
+#    set(DOXYGEN_SKIP_DOT TRUE)
+#    find_package(Doxygen)
+#endif()
 
 #--------------------------------------------------------------------
 # Set compiler specific flags

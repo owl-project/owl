@@ -135,6 +135,7 @@ int main(int ac, char **av)
   OWLMissProg miss
     = owlMissProgCreate(owl,module,"miss",
                         sizeof(MissProgData),missVars,-1);
+  owlMissProgSet(owl,0,miss);
   
   
   // ------------------------------------------------------------------
@@ -144,7 +145,6 @@ int main(int ac, char **av)
   // ##################################################################
   // set up all the *GEOMS* we want to run that code on
   // ##################################################################
-  auto lambertian = Lambertian();
   std::vector<Lambertian> materials;
   Lambertian green;
   green.albedo = owl::vec3f(0,.7f,0);
@@ -186,7 +186,7 @@ int main(int ac, char **av)
   owlGroupBuildAccel(meshGroup);
 
   OWLGroup world = meshGroup;
-  for (int level=1;level<numLevels;level++) {
+  for (int level=1;level<(int)numLevels;level++) {
     OWLGroup childGroup = world;
     owl::affine3f xfms[5]
       = {
@@ -224,7 +224,6 @@ int main(int ac, char **av)
   const float theta = vfov * ((float)M_PI) / 180.0f;
   const float half_height = tanf(theta / 2.0f);
   const float half_width = aspect * half_height;
-  const float aperture = 0.f;
   const float focusDist = 10.f;
   const vec3f origin = lookFrom;
   const vec3f w = normalize(lookFrom - lookAt);

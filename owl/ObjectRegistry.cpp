@@ -36,7 +36,7 @@ namespace owl {
     
     std::lock_guard<std::mutex> lock(mutex);
     assert(object->ID >= 0);
-    assert(object->ID < objects.size());
+    assert(object->ID < (int)objects.size());
     assert(objects[object->ID] == object);
     objects[object->ID] = nullptr;
       
@@ -50,7 +50,7 @@ namespace owl {
     assert(object);
     std::lock_guard<std::mutex> lock(mutex);
     assert(object->ID >= 0);
-    assert(object->ID < objects.size());
+    assert(object->ID < (int)objects.size());
     assert(objects[object->ID] == nullptr);
     objects[object->ID] = object;
   }
@@ -64,7 +64,6 @@ namespace owl {
       if (newID >= numIDsAllocedInContext) {
         while (newID >= numIDsAllocedInContext)
           numIDsAllocedInContext = std::max(1,numIDsAllocedInContext*2);
-        // reallocContextIDs(numIDsAllocedInContext);
       }
       return newID;
     } else {
@@ -74,87 +73,12 @@ namespace owl {
     }
   }
   
-  RegisteredObject *ObjectRegistry::getPtr(int ID)
+  RegisteredObject *ObjectRegistry::getPtr(size_t ID)
   {
-    std::lock_guard<std::mutex> lock(mutex);
-      
-    assert(ID >= 0);
     assert(ID < objects.size());
-    // assert(objects[ID]);
+    std::lock_guard<std::mutex> lock(mutex);
     return objects[ID];
   }
-
-  // template<>
-  // void ObjectRegistryT<Buffer>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   // context->llo->allocBuffers(newMaxIDs);
-  // }
-
-  // template<>
-  // void ObjectRegistryT<Texture>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   /* nothing to do - textures not tracked by llo level */
-  // }
-
-  // template<>
-  // void ObjectRegistryT<Module>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   context->llo->allocModules(newMaxIDs);
-  // }
-
-  // template<>
-  // void ObjectRegistryT<Geom>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   // context->llo->allocGeoms(newMaxIDs);
-  // }
-
-  // template<>
-  // void ObjectRegistryT<GeomType>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   context->llo->allocGeomTypes(newMaxIDs);
-  // }
-
-  // template<>
-  // void ObjectRegistryT<RayGen>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   // context->llo->allocRayGens(newMaxIDs);
-  // }
-
-  // template<>
-  // void ObjectRegistryT<RayGenType>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   /* ray gen types are not tracked by ll context, so need no alloc */
-  // }
-
-  // template<>
-  // void ObjectRegistryT<MissProg>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   context->llo->allocMissProgs(newMaxIDs);
-  // }
-
-  // template<>
-  // void ObjectRegistryT<MissProgType>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   /* nothign do to here!? */
-  // }
-
-  // template<>
-  // void ObjectRegistryT<LaunchParams>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   // context->llo->allocLaunchParams(newMaxIDs);
-  // }
-  
-  // template<>
-  // void ObjectRegistryT<LaunchParamsType>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   /* nothign do to here!? */
-  // }
-
-  // template<>
-  // void ObjectRegistryT<Group>::reallocContextIDs(int newMaxIDs)
-  // {
-  //   // context->llo->allocGroups(newMaxIDs);
-  // }
 
 } // ::owl
 

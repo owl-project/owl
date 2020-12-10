@@ -129,7 +129,7 @@ namespace owl {
                            OWLBuildSBTFlags flags)
   {
     LOG_API_CALL();
-checkGet(_context)->buildSBT(flags);
+    checkGet(_context)->buildSBT(flags);
   }
 
   OWL_API void owlBuildPrograms(OWLContext _context)
@@ -347,7 +347,6 @@ checkGet(_context)->buildSBT(flags);
     checkGet(_context)->setMissProg(rayType,miss);
   }
 
-
   OWL_API OWLMissProg
   owlMissProgCreate(OWLContext _context,
                     OWLModule  _module,
@@ -388,7 +387,7 @@ checkGet(_context)->buildSBT(flags);
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     if (initValues) {
-      for (int i = 0; i < numGeometries; i++) {
+      for (size_t i = 0; i < numGeometries; i++) {
         Geom::SP child = ((APIHandle *)initValues[i])->get<TrianglesGeom>();
         assert(child);
         group->setChild(i, child);
@@ -410,7 +409,7 @@ checkGet(_context)->buildSBT(flags);
     
     OWLGroup _group = (OWLGroup)context->createHandle(group);
     if (initValues) {
-      for (int i = 0; i < numGeometries; i++) {
+      for (size_t i = 0; i < numGeometries; i++) {
         Geom::SP child = ((APIHandle *)initValues[i])->get<UserGeom>();
         assert(child);
         group->setChild(i, child);
@@ -466,7 +465,7 @@ checkGet(_context)->buildSBT(flags);
     group->createDeviceData(context->getDevices());
 
     if (_initGroups)
-      for (int childID=0;childID<numInstances;childID++) {
+      for (size_t childID=0;childID<numInstances;childID++) {
         OWLGroup _child = _initGroups[childID];
         if (!_child) continue;
         
@@ -509,10 +508,10 @@ checkGet(_context)->buildSBT(flags);
     return (OWLBuffer)context->createHandle(buffer);
   }
 
-/*! create new texture of given format and dimensions - for now, we
-  only do "wrap" textures, and eithe rbilinear or nearest filter;
-  once we allow for doing things like texture borders we'll have to
-  change this api */
+  /*! create new texture of given format and dimensions - for now, we
+    only do "wrap" textures, and eithe rbilinear or nearest filter;
+    once we allow for doing things like texture borders we'll have to
+    change this api */
   OWL_API OWLTexture
   owlTexture2DCreate(OWLContext _context,
                      OWLTexelFormat texelFormat,
@@ -726,7 +725,7 @@ checkGet(_context)->buildSBT(flags);
     assert(context);
     GeomType::SP geometryType
       = context->createGeomType(kind,varStructSize,
-                                    checkAndPackVariables(vars,numVars));
+                                checkAndPackVariables(vars,numVars));
     assert(geometryType);
     return (OWLGeomType)context->createHandle(geometryType);
   }
@@ -880,7 +879,7 @@ checkGet(_context)->buildSBT(flags);
 
     assert(numKeys >= 2);
     std::vector<Buffer::SP> buffers;
-    for (int i=0;i<numKeys;i++) {
+    for (size_t i=0;i<numKeys;i++) {
       Buffer::SP buffer
         = ((APIHandle *)vertexArrays[i])->get<Buffer>();
       assert(buffer);
@@ -1051,46 +1050,215 @@ checkGet(_context)->buildSBT(flags);
   }
 
 
-#define _OWL_SET_HELPER(stype,abb)                      \
-  OWL_API void owlVariableSet1##abb(OWLVariable var,    \
-                                    stype v)            \
-  {                                                     \
-    LOG_API_CALL();                                     \
-    setVariable((APIHandle *)var,v);                    \
-  }                                                     \
-  OWL_API void owlVariableSet2##abb(OWLVariable var,    \
-                                    stype x,            \
-                                    stype y)            \
-  {                                                     \
-    LOG_API_CALL();                                     \
-    setVariable((APIHandle *)var,vec2##abb(x,y));       \
-  }                                                     \
-  OWL_API void owlVariableSet3##abb(OWLVariable var,    \
-                                    stype x,            \
-                                    stype y,            \
-                                    stype z)            \
-  {                                                     \
-    LOG_API_CALL();                                     \
-    setVariable((APIHandle *)var,vec3##abb(x,y,z));     \
-  }                                                     \
-  OWL_API void owlVariableSet4##abb(OWLVariable var,    \
-                                    stype x,            \
-                                    stype y,            \
-                                    stype z,            \
-                                    stype w)            \
-  {                                                     \
-    LOG_API_CALL();                                     \
-    setVariable((APIHandle *)var,vec4##abb(x,y,z,w));   \
-  }                                                     \
+#define _OWL_VARIABLE_SETTERS(stype,abb)                                \
+  OWL_API void owlVariableSet1##abb(OWLVariable var,                    \
+                                    stype v)                            \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,v);                                    \
+  }                                                                     \
+  OWL_API void owlVariableSet2##abb(OWLVariable var,                    \
+                                    stype x,                            \
+                                    stype y)                            \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec2##abb(x,y));                       \
+  }                                                                     \
+  OWL_API void owlVariableSet2##abb##v(OWLVariable var,                 \
+                                       const stype *v)                  \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec2##abb(v[0],v[1]));                 \
+  }                                                                     \
+  OWL_API void owlVariableSet3##abb(OWLVariable var,                    \
+                                    stype x,                            \
+                                    stype y,                            \
+                                    stype z)                            \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec3##abb(x,y,z));                     \
+  }                                                                     \
+  OWL_API void owlVariableSet3##abb##v(OWLVariable var,                 \
+                                       const stype *v)                  \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec3##abb(v[0],v[1],v[2]));            \
+  }                                                                     \
+  OWL_API void owlVariableSet4##abb(OWLVariable var,                    \
+                                    stype x,                            \
+                                    stype y,                            \
+                                    stype z,                            \
+                                    stype w)                            \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec4##abb(x,y,z,w));                   \
+  }                                                                     \
+  OWL_API void owlVariableSet4##abb##v(OWLVariable var,                 \
+                                       const stype *v)                  \
+  {                                                                     \
+    LOG_API_CALL();                                                     \
+    setVariable((APIHandle *)var,vec4##abb(v[0],v[1],v[2],v[3]));       \
+  }                                                                     \
   /*end of macro */
-  _OWL_SET_HELPER(int32_t,i)
-  _OWL_SET_HELPER(uint32_t,ui)
-  _OWL_SET_HELPER(int64_t,l)
-  _OWL_SET_HELPER(uint64_t,ul)
-  _OWL_SET_HELPER(float,f)
-  _OWL_SET_HELPER(double,d)
-#undef _OWL_SET_HELPER
+  _OWL_VARIABLE_SETTERS(bool,b)
+  _OWL_VARIABLE_SETTERS(int8_t,c)
+  _OWL_VARIABLE_SETTERS(uint8_t,uc)
+  _OWL_VARIABLE_SETTERS(int16_t,s)
+  _OWL_VARIABLE_SETTERS(uint16_t,us)
+  _OWL_VARIABLE_SETTERS(int32_t,i)
+  _OWL_VARIABLE_SETTERS(uint32_t,ui)
+  _OWL_VARIABLE_SETTERS(int64_t,l)
+  _OWL_VARIABLE_SETTERS(uint64_t,ul)
+  _OWL_VARIABLE_SETTERS(float,f)
+  _OWL_VARIABLE_SETTERS(double,d)
+#undef _OWL_VARIABLE_SETTERS
 
+
+#define OBJECT_SETTERS_T(OType,stype,abb)                       \
+  OWL_API void owl##OType##Set1##abb(OWL##OType object,         \
+                                     const char *varName,       \
+                                     stype x)                   \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet1##abb(var,x);                                \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set2##abb(OWL##OType object,         \
+                                     const char *varName,       \
+                                     stype x,                   \
+                                     stype y)                   \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet2##abb(var,x,y);                              \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set2##abb##v(OWL##OType object,      \
+                                        const char *varName,    \
+                                        const stype *v)         \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet2##abb(var,v[0],v[1]);                        \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set3##abb(OWL##OType object,         \
+                                     const char *varName,       \
+                                     stype x,                   \
+                                     stype y,                   \
+                                     stype z)                   \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet3##abb(var,x,y,z);                            \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set3##abb##v(OWL##OType object,      \
+                                        const char *varName,    \
+                                        const stype *v)         \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet3##abb(var,v[0],v[1],v[2]);                   \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set4##abb(OWL##OType object,         \
+                                     const char *varName,       \
+                                     stype x,                   \
+                                     stype y,                   \
+                                     stype z,                   \
+                                     stype w)                   \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet4##abb(var,x,y,z,w);                          \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##Set4##abb##v(OWL##OType object,      \
+                                        const char *varName,    \
+                                        const stype *v)         \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSet4##abb(var,v[0],v[1],v[2],v[3]);              \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+
+
+#define OBJECT_META_SETTERS(OType)                              \
+  OWL_API void owl##OType##SetTexture(OWL##OType object,        \
+                                      const char *varName,      \
+                                      OWLTexture v)             \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSetTexture(var,v);                               \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##SetBuffer(OWL##OType object,         \
+                                     const char *varName,       \
+                                     OWLBuffer v)               \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSetBuffer(var,v);                                \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##SetGroup(OWL##OType object,          \
+                                    const char *varName,        \
+                                    OWLGroup v)                 \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSetGroup(var,v);                                 \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##SetPointer(OWL##OType object,        \
+                                      const char *varName,      \
+                                      const void *v)            \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSetPointer(var,v);                               \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  OWL_API void owl##OType##SetRaw(OWL##OType object,            \
+                                  const char *varName,          \
+                                  const void *v)                \
+  {                                                             \
+    OWLVariable var                                             \
+      = owl##OType##GetVariable(object,varName);                \
+    owlVariableSetRaw(var,v);                                   \
+    owlVariableRelease(var);                                    \
+  }                                                             \
+  
+
+
+#define OBJECT_SETTERS(ObjectType)              \
+  OBJECT_SETTERS_T(ObjectType,bool,b)           \
+  OBJECT_SETTERS_T(ObjectType,char,c)           \
+  OBJECT_SETTERS_T(ObjectType,uint8_t,uc)       \
+  OBJECT_SETTERS_T(ObjectType,int16_t,s)        \
+  OBJECT_SETTERS_T(ObjectType,uint16_t,us)      \
+  OBJECT_SETTERS_T(ObjectType,int32_t,i)        \
+  OBJECT_SETTERS_T(ObjectType,uint32_t,ui)      \
+  OBJECT_SETTERS_T(ObjectType,float,f)          \
+  OBJECT_SETTERS_T(ObjectType,int64_t,l)        \
+    OBJECT_SETTERS_T(ObjectType,uint64_t,ul)    \
+  OBJECT_SETTERS_T(ObjectType,double,d)         \
+  OBJECT_META_SETTERS(ObjectType)               \
+
+  OBJECT_SETTERS(RayGen)
+  OBJECT_SETTERS(Geom)
+  OBJECT_SETTERS(Params)
+  OBJECT_SETTERS(MissProg)
+
+
+
+
+
+  
   
   // ----------- set<other> -----------
   OWL_API void owlVariableSetGroup(OWLVariable _variable, OWLGroup _group)
@@ -1237,7 +1405,7 @@ checkGet(_context)->buildSBT(flags);
       xfm.p    = vec3f(floats[0+3],floats[4+3],floats[8+3]);
       break;
     default: 
-        FATAL("un-recognized matrix format");
+      FATAL("un-recognized matrix format");
     }
     
     assert(_group);

@@ -149,7 +149,7 @@ namespace owl {
   inline UserGeomType::DeviceData &
   UserGeomType::getDD(const DeviceContext::SP &device) const
   {
-    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    assert(device && device->ID >= 0 && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<UserGeomType::DeviceData>();
   }
 
@@ -157,7 +157,7 @@ namespace owl {
   inline UserGeom::DeviceData &
   UserGeom::getDD(const DeviceContext::SP &device)
   {
-    assert(device && device->ID >= 0 && device->ID < deviceData.size());
+    assert(device && device->ID >= 0 && device->ID < (int)deviceData.size());
     return deviceData[device->ID]->as<UserGeom::DeviceData>();
   }
 
