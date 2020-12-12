@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -122,20 +122,36 @@ namespace owl {
 
     void InstanceGroup::destroyAccel(Context *context) 
     {
-      context->pushActive();
+      int oldActive = context->pushActive();
       if (traversable) {
         bvhMemory.free();
         traversable = 0;
       }
-      context->popActive();
+      context->popActive(oldActive);
     }
     
-    void InstanceGroup::buildAccel(Context *context) 
+    void InstanceGroup::buildAccel(Context *context)
     {
-      assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && bvhMemory.empty());
+      buildOrRefit<true>(context);
+    }
+
+    void InstanceGroup::refitAccel(Context *context)
+    {
+      buildOrRefit<false>(context);
+    }
+
+    template<bool FULL_REBUILD>
+    void InstanceGroup::buildOrRefit(Context *context) 
+    {
+      if (FULL_REBUILD) {
+        assert("check does not yet exist" && traversable == 0);
+        assert("check does not yet exist" && bvhMemory.empty());
+      } else {
+        assert("check does not yet exist" && traversable != 0);
+        assert("check does not yet exist" && !bvhMemory.empty());
+      }
       
-      context->pushActive();
+      int oldActive = context->pushActive();
       LOG("building instance accel over "
           << children.size() << " groups");
 
@@ -148,17 +164,6 @@ namespace owl {
          OPTIX_DEVICE_PROPERTY_LIMIT_MAX_INSTANCES_PER_IAS,
          &maxInstsPerIAS,
          sizeof(maxInstsPerIAS));
-
-      // uint32_t maxInstanceID = 0;
-      // optixDeviceContextGetProperty
-      //   (context->optixContext,
-      //    OPTIX_DEVICE_PROPERTY_LIMIT_MAX_INSTANCE_ID,
-      //    &maxInstanceID,
-      //    sizeof(maxInstanceID));
-      // PRINT(maxInstanceID);
-      // exit(0);
-      
-
       
       if (children.size() > maxInstsPerIAS)
         throw std::runtime_error("number of children in instnace group exceeds "
@@ -205,7 +210,6 @@ namespace owl {
         
         oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
         oi.instanceId        = instanceIDs.empty()?childID:instanceIDs[childID];
-        // PRINT(oi.instanceId);
         oi.visibilityMask    = 255;
         oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
         oi.visibilityMask    = 255;
@@ -232,47 +236,55 @@ namespace owl {
       // ==================================================================
       accelOptions.buildFlags =
         OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
+        |
+        OPTIX_BUILD_FLAG_ALLOW_UPDATE
         ;
       accelOptions.motionOptions.numKeys = 1;
-      accelOptions.operation             = OPTIX_BUILD_OPERATION_BUILD;
+      if (FULL_REBUILD)
+        accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
+      else
+        accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
       
       // ==================================================================
       // query build buffer sizes, and allocate those buffers
       // ==================================================================
-      OptixAccelBufferSizes bufferSizes;
+      OptixAccelBufferSizes blasBufferSizes;
       OPTIX_CHECK(optixAccelComputeMemoryUsage(context->optixContext,
                                                &accelOptions,
                                                &instanceInput,
                                                1, // num build inputs
-                                               &bufferSizes
+                                               &blasBufferSizes
                                                ));
     
       // ==================================================================
       // trigger the build ....
       // ==================================================================
-      
-      LOG("starting to build "
+      const size_t tempSize
+        = FULL_REBUILD
+        ? blasBufferSizes.tempSizeInBytes
+        : blasBufferSizes.tempUpdateSizeInBytes;
+      LOG("starting to build/refit "
           << prettyNumber(optixInstances.size()) << " instances, "
-          << prettyNumber(bufferSizes.outputSizeInBytes) << "B in output and "
-          << prettyNumber(bufferSizes.tempSizeInBytes) << "B in temp data");
+          << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
+          << prettyNumber(tempSize) << "B in temp data");
       
-      DeviceMemory tempBuildBuffer;
-      tempBuildBuffer.alloc(bufferSizes.tempSizeInBytes);
+      DeviceMemory tempBuffer;
+      tempBuffer.alloc(tempSize);
       
-      DeviceMemory &outputBuffer = bvhMemory;
-      outputBuffer.alloc(bufferSizes.outputSizeInBytes);
-            
+      if (FULL_REBUILD)
+        bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      
       OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
                                   // array of build inputs:
                                   &instanceInput,1,
                                   // buffer of temp memory:
-                                  (CUdeviceptr)tempBuildBuffer.get(),
-                                  tempBuildBuffer.size(),
+                                  (CUdeviceptr)tempBuffer.get(),
+                                  tempBuffer.size(),
                                   // where we store initial, uncomp bvh:
-                                  (CUdeviceptr)outputBuffer.get(),
-                                  outputBuffer.size(),
+                                  (CUdeviceptr)bvhMemory.get(),
+                                  bvhMemory.size(),
                                   /* the traversable we're building: */ 
                                   &traversable,
                                   /* no compaction for instances: */
@@ -286,8 +298,8 @@ namespace owl {
       // ==================================================================
       // TODO: move those free's to the destructor, so we can delay the
       // frees until all objects are done
-      tempBuildBuffer.free();
-      context->popActive();
+      tempBuffer.free();
+      context->popActive(oldActive);
       
       LOG_OK("successfully built instance group accel");
     }

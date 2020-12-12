@@ -57,11 +57,16 @@ namespace owl {
     virtual void set(const vec3ul &value)   { mismatchingType(); }
     virtual void set(const vec4ul &value)   { mismatchingType(); }
     
-    virtual void set(const float &value)    { mismatchingType(); }
-    virtual void set(const vec2f &value)    { mismatchingType(); }
-    virtual void set(const vec3f &value)    { mismatchingType(); }
-    virtual void set(const vec4f &value)    { mismatchingType(); }
+    virtual void set(const float  &value)    { mismatchingType(); }
+    virtual void set(const vec2f  &value)    { mismatchingType(); }
+    virtual void set(const vec3f  &value)    { mismatchingType(); }
+    virtual void set(const vec4f  &value)    { mismatchingType(); }
 
+    virtual void set(const double &value)    { mismatchingType(); }
+    virtual void set(const vec2d  &value)    { mismatchingType(); }
+    virtual void set(const vec3d  &value)    { mismatchingType(); }
+    virtual void set(const vec4d  &value)    { mismatchingType(); }
+    
     virtual std::string toString() const { return "Variable"; }
     
     void mismatchingType() { throw std::runtime_error("trying to set variable to value of wrong type"); }

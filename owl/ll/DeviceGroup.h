@@ -419,10 +419,17 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
       
       void bufferResize(int bufferID, size_t newItemCount);
       void bufferUpload(int bufferID, const void *hostPtr);
+      void bufferUploadToSpecificDevice(int bufferID, int devID, const void *hostPtr);
       
       /*! returns the given device's buffer address on the specified
         device */
       void *bufferGetPointer(int bufferID, int devID);
+
+      /* return the cuda stream associated with the given device. */
+      CUstream getStream(int devID);
+
+      /* return the optix context associated with the given device. */
+      OptixDeviceContext getOptixContext(int devID);
       
       /*! return the cuda stream by the given launchparams object, on
         given device */
@@ -450,8 +457,8 @@ void lloGroupBuildPrimitiveBounds(LLOContext llo,
           size_t stride,
           size_t offset);
       void groupBuildAccel(int groupID);
-      // NEW naming:
-      void groupAccelBuild(int groupID) { groupBuildAccel(groupID); }
+      void groupRefitAccel(int groupID);
+      
       OptixTraversableHandle groupGetTraversable(int groupID, int deviceID);
       uint32_t groupGetSBTOffset(int groupID);
 

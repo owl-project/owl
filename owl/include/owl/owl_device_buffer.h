@@ -14,43 +14,20 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "LaunchParams.h"
-#include "../ll/Device.h"
-#include "Context.h"
+#pragma once
+
+#include "owl_host.h"
 
 namespace owl {
-
-  LaunchParamsType::LaunchParamsType(Context *const context,
-                                     size_t varStructSize,
-                                     const std::vector<OWLVarDecl> &varDecls)
-    : SBTObjectType(context,context->launchParamTypes,varStructSize,varDecls)
-  {
+  namespace device {
+    /*! a *device*-side buffer; ie, this is the type that OWL will
+        fill in on the devise side if a paramter (or buffer of) type
+        buffers is created on the host */
+    struct Buffer {
+      OWLDataType type;
+      size_t      count;
+      void       *data;
+    };
+    
   }
-  
-  LaunchParams::LaunchParams(Context *const context,
-                 LaunchParamsType::SP type) 
-    : SBTObject(context,context->launchParams,type)
-  {
-    assert(context);
-    assert(type);
-    assert(type.get());
-    context->llo->launchParamsCreate(this->ID,
-                                     type->varStructSize);
-  }
-
-  CUstream LaunchParams::getCudaStream(int deviceID)
-  {
-    return context->llo->launchParamsGetStream(this->ID,deviceID);
-  }
-
-  void LaunchParams::sync()
-  {
-    for (auto device : context->llo->devices) {
-      int oldActive = device->context->pushActive();
-      cudaStreamSynchronize(context->llo->launchParamsGetStream(this->ID,device->context->owlDeviceID));
-      device->context->popActive(oldActive);
-    }
-  }
-  
-} // ::owl
-
+}

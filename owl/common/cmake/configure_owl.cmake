@@ -20,25 +20,17 @@
 #
 # OWL_LIBRARIES - list of libraries to link against when building owl programs
 
-if (OWL_USE_TBB)
-  include(configure_tbb)
-endif()
-
 set(OWL_INCLUDES
   # owl needs cuda:
   ${CUDA_TOOLKIT_ROOT_DIR}/include
   # owl needs optix:
   ${OptiX_INCLUDE}
   # public API
-  ${owl_dir}/owl/include
+  ${PROJECT_SOURCE_DIR}/owl/include
   # device API and common currently still include non-public header files
-  ${owl_dir}/
+  ${PROJECT_SOURCE_DIR}/
   )
 set(OWL_LIBRARIES
   owl_static
   )
-if (TBB_FOUND)
-  set(OWL_INCLUDES ${OWL_INCLUDES} ${TBB_INCLUDES})
-  set(OWL_LIBRARIES ${OWL_LIBRARIES} ${TBB_LIBRARIES})
-endif()
 

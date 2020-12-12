@@ -80,22 +80,9 @@ namespace owl {
     void setMaxInstancingDepth(int32_t maxInstanceDepth);
 
   /*! experimentation code for sbt construction */
-    void buildSBT();
+    void buildSBT(OWLBuildSBTFlags flags);
     void buildPipeline();
     void buildPrograms();
-    
-    // InstanceGroup::SP
-    // createInstanceGroup(size_t numChildren,
-    //                     Group::SP      *groups,
-    //                     const uint32_t *instIDs,
-    //                     const float    *xfms,
-    //                     OWLMatrixFormat matrixFormat)
-    // // InstanceGroup::SP createInstanceGroup(size_t numChildren)
-    // {
-    //   return std::make_shared<InstanceGroup>
-    //     (this,numChildren,groups,instIDs,xfms,matrixFormat);
-    // }
-
     
     GeomGroup::SP
     trianglesGeomGroupCreate(size_t numChildren);

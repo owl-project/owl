@@ -14,43 +14,57 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "LaunchParams.h"
-#include "../ll/Device.h"
-#include "Context.h"
+#pragma once
 
-namespace owl {
+#include <owl/owl.h>
+#include <owl/owl_device_buffer.h>
+#include <owl/common/math/vec.h>
+#include <cuda_runtime.h>
 
-  LaunchParamsType::LaunchParamsType(Context *const context,
-                                     size_t varStructSize,
-                                     const std::vector<OWLVarDecl> &varDecls)
-    : SBTObjectType(context,context->launchParamTypes,varStructSize,varDecls)
-  {
-  }
+using namespace owl;
+
+const int NUM_TEXTURE_SETS = 4;
+
+/* variables for the triangle mesh geometry */
+struct TrianglesGeomData
+{
+  /*! array/buffer of vertex indices */
+  vec4i *index;
+  /*! array/buffer of vertex positions */
+  vec3f *vertex;
+  /*! texture coordinates */
+  vec2f *texCoord;
+  /* texture object */
+  owl::device::Buffer textureSets;
+};
+
+struct Globals {
+  float time;
+  int deviceIndex;
+  int deviceCount;
+};
+
+/* variables for the ray generation program */
+struct RayGenData
+{
+  uint32_t *fbPtr;
+  vec2i  fbSize;
+  OptixTraversableHandle world;
+
+  vec3f lightDir;
   
-  LaunchParams::LaunchParams(Context *const context,
-                 LaunchParamsType::SP type) 
-    : SBTObject(context,context->launchParams,type)
-  {
-    assert(context);
-    assert(type);
-    assert(type.get());
-    context->llo->launchParamsCreate(this->ID,
-                                     type->varStructSize);
-  }
+  struct {
+    vec3f pos;
+    vec3f dir_00;
+    vec3f dir_du;
+    vec3f dir_dv;
+  } camera;
+};
 
-  CUstream LaunchParams::getCudaStream(int deviceID)
-  {
-    return context->llo->launchParamsGetStream(this->ID,deviceID);
-  }
-
-  void LaunchParams::sync()
-  {
-    for (auto device : context->llo->devices) {
-      int oldActive = device->context->pushActive();
-      cudaStreamSynchronize(context->llo->launchParamsGetStream(this->ID,device->context->owlDeviceID));
-      device->context->popActive(oldActive);
-    }
-  }
-  
-} // ::owl
+/* variables for the miss program */
+struct MissProgData
+{
+  vec3f  color0;
+  vec3f  color1;
+};
 

@@ -24,7 +24,9 @@ namespace owl {
   {
     typedef std::shared_ptr<Buffer> SP;
     
-    Buffer(Context *const context, OWLDataType type);
+    Buffer(Context *const context,
+           OWLDataType type,
+           size_t elementCount);
     
     /*! destructor - free device data, de-regsiter, and destruct */
     virtual ~Buffer();
@@ -32,7 +34,8 @@ namespace owl {
     std::string toString() const override { return "Buffer"; }
 
     const void *getPointer(int deviceID);
-
+    size_t getElementCount() const;
+    
     void resize(size_t newSize);
     void upload(const void *hostPtr);
 
@@ -42,6 +45,7 @@ namespace owl {
     void destroy();
 
     OWLDataType type;
+    size_t      elementCount;
   };
 
   struct DeviceBuffer : public Buffer {
@@ -54,6 +58,12 @@ namespace owl {
 
     /*! pretty-printer, for debugging */
     std::string toString() const override { return "DeviceBuffer"; }
+
+    /*! this is used only for buffers over object types (bufers of
+      textures, or buffers of buffers). For those buffers, we use this
+      vector to store host-side handles of the objects in this buffer,
+      to ensure proper recounting */
+    std::vector<Object::SP> hostHandles;
   };
   
   struct HostPinnedBuffer : public Buffer {

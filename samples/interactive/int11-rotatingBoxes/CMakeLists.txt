@@ -17,11 +17,11 @@
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(int10-texturedTriangles
+add_executable(int11-rotatingBoxes
   hostCode.cpp
   ${ptxCode}
   )
-target_link_libraries(int10-texturedTriangles
+target_link_libraries(int11-rotatingBoxes
   ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
   )

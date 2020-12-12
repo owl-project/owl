@@ -57,7 +57,7 @@ namespace owl {
 
     void DeviceBuffer::resize(Device *device, size_t newElementCount) 
     {
-      device->context->pushActive();
+      int oldActive = device->context->pushActive();
 
       devMem.free();
       
@@ -65,14 +65,14 @@ namespace owl {
       devMem.alloc(elementCount*elementSize);
       d_pointer = devMem.get();
       
-      device->context->popActive();
+      device->context->popActive(oldActive);
     }
     
     void DeviceBuffer::upload(Device *device, const void *hostPtr) 
     {
-      device->context->pushActive();
+      int oldActive = device->context->pushActive();
       devMem.upload(hostPtr,"DeviceBuffer::upload");
-      device->context->popActive();
+      device->context->popActive(oldActive);
     }
 
     // ##################################################################
@@ -93,14 +93,14 @@ namespace owl {
     {
       if (device->context->owlDeviceID == 0) {
       
-        device->context->pushActive();
+        int oldActive = device->context->pushActive();
         
         pinnedMem->free();
         
         this->elementCount = newElementCount;
         pinnedMem->alloc(elementCount*elementSize);
         
-        device->context->popActive();
+        device->context->popActive(oldActive);
       }
       
       d_pointer = pinnedMem->get();
@@ -130,14 +130,14 @@ namespace owl {
     {
       if (device->context->owlDeviceID == 0) {
       
-        device->context->pushActive();
+        int oldActive = device->context->pushActive();
         
         managedMem->free();
         
         this->elementCount = newElementCount;
         managedMem->alloc(elementCount*elementSize);
         
-        device->context->popActive();
+        device->context->popActive(oldActive);
       }
       
       d_pointer = managedMem->get();

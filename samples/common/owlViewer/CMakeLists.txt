@@ -48,7 +48,7 @@ if (OWL_HAVE_GLFW)
 
   set(OWL_HAVE_VIEWER ON)
   set(OWL_VIEWER_INCLUDES
-    ${glfw3_DIR}
+    ${OWL_GLFW_INCLUDES}
     ${owl_dir}/samples/common/
     )
   set(OWL_VIEWER_LIBRARIES

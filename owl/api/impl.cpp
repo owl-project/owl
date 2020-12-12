@@ -54,6 +54,26 @@ namespace owl {
     return (OWLContext)context->createHandle(context);
   }
 
+  /* return the cuda stream associated with the given device. */
+  OWL_API CUstream owlContextGetStream(OWLContext _context, int deviceID)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->getContext();
+    assert(context);
+    return context->llo->getStream(deviceID);
+  }
+
+  /* return the optix context associated with the given device. */
+  OWL_API OptixDeviceContext owlContextGetOptixContext(OWLContext _context, int deviceID)
+  {
+    LOG_API_CALL();
+    assert(_context);
+    APIContext::SP context = ((APIHandle *)_context)->getContext();
+    assert(context);
+    return context->llo->getOptixContext(deviceID);
+  }
+
   /*! set number of ray types to be used in this context; this should be
     done before any programs, pipelines, geometries, etc get
     created */
@@ -101,14 +121,15 @@ namespace owl {
   }
   
   
-  OWL_API void owlBuildSBT(OWLContext _context)
+  OWL_API void owlBuildSBT(OWLContext _context,
+                           OWLBuildSBTFlags flags)
   {
     LOG_API_CALL();
     assert(_context);
     APIContext::SP context
       = ((APIHandle *)_context)->get<APIContext>();
     assert(context);
-    context->buildSBT();
+    context->buildSBT(flags);
   }
 
   OWL_API void owlBuildPrograms(OWLContext _context)
@@ -131,9 +152,10 @@ namespace owl {
     context->buildPipeline();
   }
   
-  OWL_API void owlParamsLaunch2D(OWLRayGen _rayGen,
-                                 int dims_x, int dims_y,
-                                 OWLLaunchParams _launchParams)
+  OWL_API void owlLaunch2D(OWLRayGen _rayGen,
+                           int dims_x,
+                           int dims_y,
+                           OWLLaunchParams _launchParams)
   {
     LOG_API_CALL();
 
@@ -149,6 +171,20 @@ namespace owl {
 
     rayGen->launch(vec2i(dims_x,dims_y),launchParams);
   }
+
+
+  /*! wait for the async launch to finish */
+  OWL_API void
+  owlLaunchSync(OWLLaunchParams _launchParams)
+  {
+    assert(_launchParams);
+    LaunchParams::SP launchParams
+      = ((APIHandle *)_launchParams)->get<LaunchParams>();
+    assert(launchParams);
+    launchParams->sync();
+  }
+  
+
 
   OWL_API void owlRayGenLaunch2D(OWLRayGen _rayGen,
                                  int dims_x, int dims_y)
@@ -228,7 +264,7 @@ namespace owl {
   }
 
   OWL_API OWLVariable
-  owlLaunchParamsGetVariable(OWLLaunchParams _prog,
+  owlParamsGetVariable(OWLParams _prog,
                        const char *varName)
   {
     LOG_API_CALL();
@@ -291,11 +327,11 @@ namespace owl {
   }
 
 
-  OWL_API OWLLaunchParams
-  owlLaunchParamsCreate(OWLContext _context,
-                        size_t      sizeOfVarStruct,
-                        OWLVarDecl *vars,
-                        size_t      numVars)
+  OWL_API OWLParams
+  owlParamsCreate(OWLContext _context,
+                   size_t      sizeOfVarStruct,
+                   OWLVarDecl *vars,
+                   size_t      numVars)
   {
     LOG_API_CALL();
 
@@ -830,6 +866,19 @@ namespace owl {
     group->buildAccel();
   }  
 
+  OWL_API void owlGroupRefitAccel(OWLGroup _group)
+  {
+    LOG_API_CALL();
+    
+    assert(_group);
+
+    Group::SP group
+      = ((APIHandle *)_group)->get<Group>();
+    assert(group);
+    
+    group->refitAccel();
+  }  
+
   OWL_API void
   owlTrianglesSetIndices(OWLGeom   _triangles,
                          OWLBuffer _buffer,
@@ -1005,6 +1054,7 @@ namespace owl {
   _OWL_SET_HELPER(int64_t,l)
   _OWL_SET_HELPER(uint64_t,ul)
   _OWL_SET_HELPER(float,f)
+  _OWL_SET_HELPER(double,d)
 #undef _OWL_SET_HELPER
 
 #else
@@ -1115,6 +1165,20 @@ namespace owl {
     assert(variable);
 
     variable->setRaw(valuePtr);
+  }
+
+  OWL_API void owlVariableSetPointer(OWLVariable _variable, const void *valuePtr)
+  {
+    LOG_API_CALL();
+
+    APIHandle *handle = (APIHandle*)_variable;
+    assert(handle);
+
+    Variable::SP variable
+      = handle->get<Variable>();
+    assert(variable);
+
+    variable->set((uint64_t)valuePtr);
   }
 
   // -------------------------------------------------------

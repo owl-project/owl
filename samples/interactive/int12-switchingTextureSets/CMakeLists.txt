@@ -14,14 +14,22 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+# main purpose of this example is to showcase and test the sitation of
+# having buffers of buffers of textures: Though primarily built upon
+# the previous int11-rotatoinBoxes sample, in this sample we no longer
+# have one randomly created texture per box, but instead, have N sets
+# of 6 textures (one per face) of each box, using the current frame
+# time to cycle through those texture sets. Ie, each box stores one
+# one buffer of N buffers of 6 textures each
+
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(int10-texturedTriangles
+add_executable(int12-switchingTextureSets
   hostCode.cpp
   ${ptxCode}
   )
-target_link_libraries(int10-texturedTriangles
+target_link_libraries(int12-switchingTextureSets
   ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
   )

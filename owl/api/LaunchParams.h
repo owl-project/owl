@@ -40,6 +40,9 @@ namespace owl {
            LaunchParamsType::SP type);
 
     CUstream getCudaStream(int deviceID);
+
+    /*! wait for this launch to complete */
+    void sync();
     
     std::string toString() const override { return "LaunchParams"; }
   };

@@ -14,8 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(configure_owl)
-
 include_directories(${PROJECT_SOURCE_DIR}/)
 # for STB image read/write
 include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)

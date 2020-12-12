@@ -19,31 +19,6 @@
 
 namespace owl {
 
-
-/*! C++-only wrapper of callback method with lambda function */
-template<typename Lambda>
-void lloParamsLaunch2D(ll::DeviceGroup *llo,
-                       int32_t      rayGenID,
-                       int32_t      Nx,
-                       int32_t      Ny,
-                       int32_t      launchParamsObjectID,
-                       const Lambda &l)
-{
-  llo->launch
-    (rayGenID,vec2i(Nx,Ny),
-     launchParamsObjectID,
-     [](uint8_t *output,
-        int devID,
-        const void *cbData)
-     {
-       const Lambda *lambda = (const Lambda *)cbData;
-       (*lambda)(output,devID);
-     },
-     (const void *)&l);
-}
-
-
-  
   RayGenType::RayGenType(Context *const context,
                          Module::SP module,
                          const std::string &progName,
@@ -77,21 +52,15 @@ void lloParamsLaunch2D(ll::DeviceGroup *llo,
 
   void RayGen::launch(const vec2i &dims, const LaunchParams::SP &lp)
   {
-    lloParamsLaunch2D(context->llo,this->ID,dims.x,dims.y,lp->ID,
-                      [&](uint8_t *launchParamsToWrite, int deviceID){
-                        lp->writeVariables(launchParamsToWrite,deviceID);
-                      });
-                       // int32_t      rayGenID,
-                       // int32_t      Nx,
-                       // int32_t      Ny,
-                       // int32_t      launchParamsObjectID,
-                       // const Lambda &l)
-
-  // auto lambda = [&](uint8_t *launchParamsToWrite, int deviceID){
-    //                        lp->writeVariables(launchParamsToWrite,deviceID);
-    //               };
-    // context->llo->launch(this->ID,dims,lp->ID,
-    //                      ,(const void *)&lp);
+    context->llo->launch
+      (this->ID,dims,lp->ID,
+       [](uint8_t *output, int devID, const void *cbData)
+       {
+         const LaunchParams *lp
+           = (const LaunchParams *)cbData;
+         lp->writeVariables(output,devID);
+       },
+       (const void *)lp.get());
   }
   
 } // ::owl

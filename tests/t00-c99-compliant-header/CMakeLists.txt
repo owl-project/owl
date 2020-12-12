@@ -34,8 +34,6 @@ enable_c_compiler_flag_if_supported("-Wall")
 enable_c_compiler_flag_if_supported("-Wextra")
 enable_c_compiler_flag_if_supported("-pedantic")
 
-
-
 include_directories(${OWL_INCLUDES})
 add_executable(test00-c99-compliant-header
   hostCode.c

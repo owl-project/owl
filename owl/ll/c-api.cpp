@@ -88,27 +88,6 @@ namespace owl {
         });
     }
 
-  OWL_LL_INTERFACE
-  LLOResult lloParamsLaunch2D(LLOContext llo,
-                              int32_t rayGenID,                              
-                              int32_t launchDimX,
-                              int32_t launchDimY,
-                              int32_t launchParamsID,
-                              LLOWriteLaunchParamsCB writeLaunchParamsCB,
-                              const void *cbData)
-    {
-      return squashExceptions
-        ([&](){
-          DeviceGroup *dg = (DeviceGroup *)llo;
-          dg->launch(rayGenID,vec2i(launchDimX,launchDimY),
-                     launchParamsID,writeLaunchParamsCB,cbData);
-        });
-    }
-
-    
-  
-
-    
     OWL_LL_INTERFACE
     LLOResult lloAllocModules(LLOContext llo,
                               int numModules)

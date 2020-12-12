@@ -73,7 +73,7 @@ namespace owl {
                                            LLOWriteUserGeomBoundsDataCB cb,
                                            const void *cbData)
     {
-      context->pushActive();
+      int oldActive = context->pushActive();
       UserGeomGroup *ugg
         = checkGetUserGeomGroup(groupID);
       
@@ -152,25 +152,39 @@ namespace owl {
       }
       tempMem.free();
       cudaDeviceSynchronize();
-      context->popActive();
+      context->popActive(oldActive);
     }
 
     void UserGeomGroup::destroyAccel(Context *context) 
     {
-      context->pushActive();
+      int oldActive = context->pushActive();
       if (traversable) {
         bvhMemory.free();
         traversable = 0;
       }
-      context->popActive();
+      context->popActive(oldActive);
     }
     
-    void UserGeomGroup::buildAccel(Context *context) 
+    void UserGeomGroup::buildAccel(Context *context)
+    {
+      buildOrRefit<true>(context);
+    }
+
+    void UserGeomGroup::refitAccel(Context *context)
+    {
+      buildOrRefit<false>(context);
+    }
+
+    template<bool FULL_REBUILD>
+    void UserGeomGroup::buildOrRefit(Context *context) 
     {
       assert("check does not yet exist" && traversable == 0);
-      assert("check does not yet exist" && bvhMemory.empty());
+      if (FULL_REBUILD)
+        assert("check does not yet exist on first build " && bvhMemory.empty());
+      else
+        assert("check DOES exist on first build " && !bvhMemory.empty());
       
-      context->pushActive();
+      int oldActive = context->pushActive();
       LOG("building user accel over "
           << children.size() << " geometries");
       // ==================================================================
@@ -238,11 +252,16 @@ namespace owl {
       OptixAccelBuildOptions accelOptions = {};
       accelOptions.buildFlags             =
         // OPTIX_BUILD_FLAG_PREFER_FAST_BUILD
+        OPTIX_BUILD_FLAG_ALLOW_UPDATE
+        |
         OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
         ;
       accelOptions.motionOptions.numKeys  = 1;
-      accelOptions.operation              = OPTIX_BUILD_OPERATION_BUILD;
-
+      if (FULL_REBUILD)
+        accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
+      else
+        accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
+      
       OptixAccelBufferSizes blasBufferSizes;
       OPTIX_CHECK(optixAccelComputeMemoryUsage
                   (context->optixContext,
@@ -257,12 +276,17 @@ namespace owl {
       // BVH buffer, and a one-single-size_t buffer to store the
       // compacted size in
       // ------------------------------------------------------------------
-
+      
       // temp memory:
       DeviceMemory tempBuffer;
-      tempBuffer.alloc(blasBufferSizes.tempSizeInBytes);
+      tempBuffer.alloc
+        (FULL_REBUILD
+         ? blasBufferSizes.tempSizeInBytes
+         : blasBufferSizes.tempUpdateSizeInBytes);
 
-      bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      if (FULL_REBUILD)
+        // alloc only on first rebuild
+        bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
       OPTIX_CHECK(optixAccelBuild(context->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
@@ -280,7 +304,7 @@ namespace owl {
                                   /* we're also querying compacted size: */
                                   nullptr,0u
                                   ));
-
+      
       CUDA_SYNC_CHECK();
 
 #if 0
@@ -298,7 +322,7 @@ namespace owl {
       // ==================================================================
 
       tempBuffer.free();
-      context->popActive();
+      context->popActive(oldActive);
 
       LOG_OK("successfully built user geom group accel");
 
@@ -355,5 +379,10 @@ namespace owl {
       }
     }
 
+    // template<>
+    // void UserGeomGroup::buildOrRefit<true>(Context *context);
+    // template<>
+    // void UserGeomGroup::buildOrRefit<false>(Context *context);
+    
   } // ::owl::ll
 } //::owl

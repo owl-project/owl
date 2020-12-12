@@ -31,6 +31,24 @@ namespace owl {
         
     switch(type) {
       
+    case OWL_UCHAR:
+      return sizeof(uint8_t);
+    case OWL_UCHAR2:
+      return 2*sizeof(uint8_t);
+    case OWL_UCHAR3:
+      return 3*sizeof(uint8_t);
+    case OWL_UCHAR4:
+      return 4*sizeof(uint8_t);
+      
+    case OWL_CHAR:
+      return sizeof(int8_t);
+    case OWL_CHAR2:
+      return 2*sizeof(int8_t);
+    case OWL_CHAR3:
+      return 3*sizeof(int8_t);
+    case OWL_CHAR4:
+      return 4*sizeof(int8_t);
+      
     case OWL_INT:
       return sizeof(int32_t);
     case OWL_INT2:
