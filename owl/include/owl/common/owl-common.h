@@ -113,21 +113,37 @@
 
 #define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" not implemented")
 
-#define OWL_TERMINAL_RED "\033[0;31m"
-#define OWL_TERMINAL_GREEN "\033[0;32m"
-#define OWL_TERMINAL_LIGHT_GREEN "\033[1;32m"
-#define OWL_TERMINAL_YELLOW "\033[1;33m"
-#define OWL_TERMINAL_BLUE "\033[0;34m"
-#define OWL_TERMINAL_LIGHT_BLUE "\033[1;34m"
-#define OWL_TERMINAL_RESET "\033[0m"
-#define OWL_TERMINAL_DEFAULT OWL_TERMINAL_RESET
-#define OWL_TERMINAL_BOLD "\033[1;1m"
+#ifdef WIN32
+# define OWL_TERMINAL_RED ""
+# define OWL_TERMINAL_GREEN ""
+# define OWL_TERMINAL_LIGHT_GREEN ""
+# define OWL_TERMINAL_YELLOW ""
+# define OWL_TERMINAL_BLUE ""
+# define OWL_TERMINAL_LIGHT_BLUE ""
+# define OWL_TERMINAL_RESET ""
+# define OWL_TERMINAL_DEFAULT OWL_TERMINAL_RESET
+# define OWL_TERMINAL_BOLD ""
 
-#define OWL_TERMINAL_MAGENTA "\e[35m"
-#define OWL_TERMINAL_LIGHT_MAGENTA "\e[95m"
-#define OWL_TERMINAL_CYAN "\e[36m"
-//#define OWL_TERMINAL_LIGHT_RED "\e[91m"
-#define OWL_TERMINAL_LIGHT_RED "\033[1;31m"
+# define OWL_TERMINAL_MAGENTA ""
+# define OWL_TERMINAL_LIGHT_MAGENTA ""
+# define OWL_TERMINAL_CYAN ""
+# define OWL_TERMINAL_LIGHT_RED ""
+#else
+# define OWL_TERMINAL_RED "\033[0;31m"
+# define OWL_TERMINAL_GREEN "\033[0;32m"
+# define OWL_TERMINAL_LIGHT_GREEN "\033[1;32m"
+# define OWL_TERMINAL_YELLOW "\033[1;33m"
+# define OWL_TERMINAL_BLUE "\033[0;34m"
+# define OWL_TERMINAL_LIGHT_BLUE "\033[1;34m"
+# define OWL_TERMINAL_RESET "\033[0m"
+# define OWL_TERMINAL_DEFAULT OWL_TERMINAL_RESET
+# define OWL_TERMINAL_BOLD "\033[1;1m"
+
+# define OWL_TERMINAL_MAGENTA "\e[35m"
+# define OWL_TERMINAL_LIGHT_MAGENTA "\e[95m"
+# define OWL_TERMINAL_CYAN "\e[36m"
+# define OWL_TERMINAL_LIGHT_RED "\033[1;31m"
+#endif
 
 #ifdef _MSC_VER
 # define OWL_ALIGN(alignment) __declspec(align(alignment)) 
@@ -228,8 +244,31 @@ namespace owl {
     }
   
 
-
+    /*! return a nicely formatted number as in "3.4M" instead of
+        "3400000", etc, using mulitples of thousands (K), millions
+        (M), etc. Ie, the value 64000 would be returned as 64K, and
+        65536 would be 65.5K */
     inline std::string prettyNumber(const size_t s)
+    {
+      char buf[1000];
+      if (s >= (1000LL*1000LL*1000LL*1000LL)) {
+        osp_snprintf(buf, 1000,"%.2fT",s/(1000.f*1000.f*1000.f*1000.f));
+      } else if (s >= (1000LL*1000LL*1000LL)) {
+        osp_snprintf(buf, 1000, "%.2fG",s/(1000.f*1000.f*1000.f));
+      } else if (s >= (1000LL*1000LL)) {
+        osp_snprintf(buf, 1000, "%.2fM",s/(1000.f*1000.f));
+      } else if (s >= (1000LL)) {
+        osp_snprintf(buf, 1000, "%.2fK",s/(1000.f));
+      } else {
+        osp_snprintf(buf,1000,"%zi",s);
+      }
+      return buf;
+    }
+
+    /*! return a nicely formatted number as in "3.4M" instead of
+        "3400000", etc, using mulitples of 1024 as in kilobytes,
+        etc. Ie, the value 65534 would be 64K, 64000 would be 63.8K */
+    inline std::string prettyBytes(const size_t s)
     {
       char buf[1000];
       if (s >= (1024LL*1024LL*1024LL*1024LL)) {

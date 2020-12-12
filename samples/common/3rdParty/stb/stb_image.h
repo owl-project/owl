@@ -1,4 +1,5 @@
-#ifndef _WIN32
+#ifdef __clang__
+//#ifndef _WIN32
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcomma"
 #pragma clang diagnostic ignored "-Wshadow"
@@ -7189,8 +7190,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 */
 
-#if _WIN32
-#else
+#ifdef __clang__
+// #if _WIN32
+// #else
 #pragma clang diagnostic pop
 #endif
 

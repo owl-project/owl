@@ -71,7 +71,8 @@ namespace owl {
       static inline vec3f getUpVector(const vec3f &v) { return owl::viewer::getUpVector(v); }
 
       OWLViewer(const std::string &title = "OWL Sample Viewer",
-                const vec2i &initWindowSize=vec2i(1200,800)
+                const vec2i &initWindowSize=vec2i(1200,800),
+                      bool visible=true
                 // ,
                 // const vec3f &cameraInitFrom = vec3f(0,0,-1),
                 // const vec3f &cameraInitAt   = vec3f(0,0,0),
@@ -96,6 +97,7 @@ namespace owl {
         vec2i posLastSeen      { -1 };
         bool  shiftWhenPressed { false };
         bool  ctrlWhenPressed  { false };
+        bool  altWhenPressed   { false };
       };
 
       ButtonState leftButton;
@@ -147,23 +149,10 @@ namespace owl {
       void setCameraOrientation(/* camera origin    : */const vec3f &origin,
                                 /* point of interest: */const vec3f &interest,
                                 /* up-vector        : */const vec3f &up,
-                                /* fovy, in degrees : */float fovyInDegrees)
-      {
-        //camera.setOrientation(origin,interest,up,fovyInDegrees);
-        camera.setOrientation(origin,interest,up,fovyInDegrees,false);
-        updateCamera();
-      }
-
+                                /* fovy, in degrees : */float fovyInDegrees);
 
       void setCameraOptions(float fovy,
-                            float focalDistance)
-
-      {
-        camera.setFovy(fovy);
-        camera.setFocalDistance(focalDistance);
-
-        updateCamera();
-      }
+                            float focalDistance);
 
       /*! this function gets called whenever any camera manipulator
         updates the camera. gets called AFTER all values have been updated */
@@ -172,6 +161,10 @@ namespace owl {
       /*! return currently active window size */
       vec2i getWindowSize() const { return fbSize; }
       static vec2i getScreenSize();
+      
+      /*! tell GLFW to set desired active window size (GLFW my choose
+          something smaller if it can't fit this on screen */
+      void setWindowSize(const vec2i &desiredSize) const;
       
       Camera &getCamera() { return camera; }
 
@@ -237,10 +230,12 @@ namespace owl {
       
       /*! the glfw window handle */
       GLFWwindow *handle { nullptr };
-      // struct {
-      //   bool leftButton { false }, middleButton { false }, rightButton { false };
-      // } isPressed;
       vec2i lastMousePos = { -1,-1 };
+
+      /*! tracks whether we could successfully do cuda resource
+          binding to the GL display texture; if not, we'll have to
+          fall back to a slower path with glTexImage */
+      bool resourceSharingSuccessful;
     };
 
   } // ::owl::viewer

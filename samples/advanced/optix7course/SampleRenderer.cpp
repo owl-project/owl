@@ -103,8 +103,6 @@ namespace osc {
 
       int32_t width  = texture->resolution.x;
       int32_t height = texture->resolution.y;
-      int32_t numComponents = 4;
-      int32_t pitch  = width*numComponents*sizeof(uint8_t);
 #if OWL_TEXTURES
       this->textures[textureID]
         = owlTexture2DCreate(context,
@@ -112,8 +110,11 @@ namespace osc {
                              width,
                              height,
                              texture->pixel,
-                             OWL_TEXTURE_LINEAR);
+                             OWL_TEXTURE_LINEAR,
+                             OWL_TEXTURE_CLAMP);
 #else
+      int32_t numComponents = 4;
+      int32_t pitch  = int(width*numComponents*sizeof(uint8_t));
       cudaResourceDesc res_desc = {};
       
       cudaChannelFormatDesc channel_desc;
@@ -167,7 +168,7 @@ namespace osc {
       { "texcoord", OWL_BUFPTR, OWL_OFFSETOF(TriangleMeshSBTData,texcoord) },
       { "hasTexture",OWL_INT,
         OWL_OFFSETOF(TriangleMeshSBTData,hasTexture) },
-      { "texture",   OWL_USER_TYPE(cudaTextureObject_t),
+      { "texture",  OWL_TEXTURE,// OWL_USER_TYPE(cudaTextureObject_t),
         OWL_OFFSETOF(TriangleMeshSBTData,texture) },
       { nullptr /* sentinel to mark end of list */ }
     };
@@ -228,33 +229,22 @@ namespace osc {
       owlGeomSet3f(geom,"color",(const owl3f &)mesh.diffuse);
       if (mesh.diffuseTextureID >= 0) {
         owlGeomSet1i(geom,"hasTexture",1);
-#if OWL_TEXTURES
-        assert(mesh.diffuseTextureID < textures.size());
+        assert(mesh.diffuseTextureID < (int)textures.size());
         owlGeomSetTexture(geom,"texture",textures[mesh.diffuseTextureID]);
-#else
-        assert(mesh.diffuseTextureID < textureObjects.size());
-        owlGeomSetRaw(geom,"texture",&textureObjects[mesh.diffuseTextureID]);
-#endif
       } else {
         owlGeomSet1i(geom,"hasTexture",0);
       }
       geoms.push_back(geom);
     }
 
-#if 1
     OWLGroup triGroup = owlTrianglesGeomGroupCreate(context,geoms.size(),geoms.data());
     owlGroupBuildAccel(triGroup);
 
     world = owlInstanceGroupCreate(context,1);
     owlInstanceGroupSetChild(world,0,triGroup);
     owlGroupBuildAccel(world);
-#else
-    world = owlTrianglesGeomGroupCreate(context,geoms.size(),geoms.data());
-    owlGroupBuildAccel(world);
-#endif
     owlParamsSetGroup(launchParams,"world",world);
   }
-  
 
   /*! render one frame */
   void SampleRenderer::render()

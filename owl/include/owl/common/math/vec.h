@@ -144,6 +144,8 @@ namespace owl {
       enum { dims = 3 };
       typedef T scalar_t;
     
+      inline // __both__
+        vec_t(const vec_t &) = default;
       inline __both__ vec_t() {}
       inline __both__ vec_t(const T &t) : x(t), y(t), z(t) {}
       inline __both__ vec_t(const T &_x, const T &_y, const T &_z) : x(_x), y(_y), z(_z) {}
@@ -258,7 +260,7 @@ namespace owl {
       /*! construct 3-vector from 3-vector of another type */
       template<typename OT>
         inline __both__ explicit vec_t(const vec_t<OT,4> &o)
-        : x(o.x), y(o.y), z(o.z), w(o.w)
+        : x((T)o.x), y((T)o.y), z((T)o.z), w((T)o.w)
         {}
       inline __both__ vec_t(const vec_t<T,4> &o) : x(o.x), y(o.y), z(o.z), w(o.w) {}
 
@@ -391,6 +393,7 @@ namespace owl {
     using vec4##t = vec_t<T,4>;                 \
     using vec3##t##a = vec3a_t<T>;              \
   
+    _define_vec_types(bool ,b);
     _define_vec_types(int8_t ,c);
     _define_vec_types(int16_t ,s);
     _define_vec_types(int32_t ,i);

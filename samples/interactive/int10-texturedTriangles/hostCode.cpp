@@ -49,11 +49,11 @@ const float init_cosFovy = 0.66f;
 
 void addFace(const vec3f ll, const vec3f du, const vec3f dv)
 {
-  int idxll = vertices.size();
+  int idxll = (int)vertices.size();
   for (int iy=0;iy<2;iy++)
     for (int ix=0;ix<2;ix++) {
       vertices.push_back(ll+float(ix)*du+float(iy)*dv);
-      texCoords.push_back(vec2f(ix,iy));
+      texCoords.push_back(vec2f((float)ix, (float)iy));
     }
   indices.push_back(vec3i(idxll,idxll+1,idxll+3));
   indices.push_back(vec3i(idxll,idxll+3,idxll+2));
@@ -211,7 +211,8 @@ Viewer::Viewer()
                          OWL_TEXEL_FORMAT_RGBA8,
                          texSize.x,texSize.y,
                          texels.data(),
-                         OWL_TEXTURE_NEAREST);
+                         OWL_TEXTURE_NEAREST,
+                         OWL_TEXTURE_CLAMP);
   owlGeomSetTexture(trianglesGeom,"texture",cbTexture);
   
   // ------------------------------------------------------------------
