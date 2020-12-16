@@ -159,7 +159,7 @@ namespace owl {
 
     for (auto device : context->getDevices()) {
       SetActiveGPU forLifeTime(device);
-      uint32_t id = device->getCudaDeviceID();
+      uint32_t id = device->ID;
       cudaDestroyTextureObject(textureObjects[id]);
       cudaFreeArray(textureArrays[id]);
     }
