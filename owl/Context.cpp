@@ -506,11 +506,11 @@ namespace owl {
     }
   }
   
-  void Context::buildModules()
+  void Context::buildModules(bool debug)
   {
     destroyModules();
     for (auto device : getDevices()) {
-      device->configurePipelineOptions();
+      device->configurePipelineOptions(debug);
       for (int moduleID=0;moduleID<(int)modules.size();moduleID++) {
         Module *module = modules.getPtr(moduleID);
         if (!module) continue;
@@ -567,9 +567,9 @@ namespace owl {
     motionBlurEnabled = true;
   }
 
-  void Context::buildPrograms()
+  void Context::buildPrograms(bool debug)
   {
-    buildModules();
+    buildModules(debug);
     
     for (auto device : getDevices()) {
       SetActiveGPU forLifeTime(device);
