@@ -531,6 +531,17 @@ namespace owl {
       updateCamera();
     }
 
+    void OWLViewer::getCameraOrientation(/* camera origin    : */vec3f &origin,
+                                         /* point of interest: */vec3f &interest,
+                                         /* up-vector        : */vec3f &up,
+                                         /* fovy, in degrees : */float & fovyInDegrees)
+    {
+      origin = camera.position;
+      interest = -camera.poiDistance * camera.frame.vz + camera.position;
+      up = camera.upVector;
+      fovyInDegrees = camera.fovyInDegrees;
+    }
+
     
 
     void OWLViewer::showAndRun()

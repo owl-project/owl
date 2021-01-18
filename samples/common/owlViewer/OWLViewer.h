@@ -151,6 +151,11 @@ namespace owl {
                                 /* point of interest: */const vec3f &interest,
                                 /* up-vector        : */const vec3f &up,
                                 /* fovy, in degrees : */float fovyInDegrees);
+      
+      void getCameraOrientation(/* camera origin    : */vec3f &origin,
+                                /* point of interest: */vec3f &interest,
+                                /* up-vector        : */vec3f &up,
+                                /* fovy, in degrees : */float & fovyInDegrees);
 
       void setCameraOptions(float fovy,
                             float focalDistance);
