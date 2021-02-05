@@ -55,10 +55,15 @@ namespace owl {
     // create a COPY of the handles we need to destroy, else
     // destroying the handles modifies the std::set while we're
     // iterating through it!
-    std::set<APIHandle *> stillActiveHandles = activeHandles;
-    for (auto handle : stillActiveHandles)  {
-      assert(handle);
-      delete handle;
+    // nm: This still doesnt work on windows. 
+    // I'm getting double frees.
+    std::set<APIHandle *> stillActiveHandles = activeHandles;    
+    while (!stillActiveHandles.empty()) {
+      auto it = stillActiveHandles.begin();
+      stillActiveHandles.erase(it);
+      // nm: not sure why, but sometimes API Handles don't have objects, 
+      // and so deleting causes undefined behavior
+      if ((*it)->object) delete *it;
     }
 
     assert(activeHandles.empty());
