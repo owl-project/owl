@@ -78,6 +78,22 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
   primBounds = boxIndicesToBounds(self.anchor, self.worldScale, indices.x, indices.y, indices.z);
 }
 
+inline __device__ int makeFaceId( float3 t0, float3 t1, float t)
+{
+    if (t == t1.x) 
+        return 0; //+X
+    else if (t == t0.x)
+        return 1; //-X
+    else if (t == t1.y)
+        return 2; //+Y
+    else if (t == t0.y)
+        return 3; //-Y
+    else if (t == t1.z)
+        return 4; //+Z,
+    else //if (t == t0.z)
+        return 5; //-Z
+}
+
 OPTIX_INTERSECT_PROGRAM(VoxGeom)()
 {
   // convert indices to 3d box
@@ -102,32 +118,44 @@ OPTIX_INTERSECT_PROGRAM(VoxGeom)()
 
         bool check_second = true;
         if (tmin > ray_tmin && tmin < ray_tmax) {
-            if (optixReportIntersection( tmin, 0)) { 
+            const int faceId = makeFaceId( t0, t1, tmin );
+            if (optixReportIntersection( tmin, 0, faceId)) { 
                 check_second = false;
             }
         } 
         if (check_second && tmax > ray_tmin && tmax < ray_tmax) {
             // ray might have started inside the box.
             // Can remove this case if camera is guaranteed to be outside
-            optixReportIntersection( tmax, 0);
+            const int faceId = makeFaceId( t0, t1, tmax );
+            optixReportIntersection( tmax, 0, faceId);
         }
     }
 }
 
-static __device__ vec3f makeBoxNormal( float3 t0, float3 t1, float t)
+inline __device__ float3 makeFaceNormalFromFaceId(int faceId)
 {
-    if (t == t1.x) 
-        return vec3f(1.0f,  0.0f,  0.0f);
-    else if (t == t0.x)
-        return vec3f( -1.0f,  0.0f,  0.0f);
-    else if (t == t1.y)
-        return vec3f( 0.0f,  1.0f,  0.0f);
-    else if (t == t0.y)
-        return vec3f( 0.0f, -1.0f,  0.0f);
-    else if (t == t1.z)
-        return vec3f( 0.0f,  0.0f,  1.0f);
-    else //if (t == t0.z)
-        return vec3f( 0.0f,  0.0f, -1.0f);
+  float3 N;
+  switch(faceId) {
+    case 0: //+X
+      N = make_float3( 1.0f,  0.0f,  0.0f);
+      break;
+    case 1: //-X
+      N = make_float3( -1.0f,  0.0f,  0.0f);
+      break;
+    case 2: //+Y
+      N = make_float3( 0.0f,  1.0f,  0.0f);
+      break;
+    case 3: //-Y
+      N = make_float3( 0.0f, -1.0f,  0.0f);
+      break;
+    case 4: //+Z
+      N = make_float3( 0.0f,  0.0f,  1.0f);
+      break;
+    case 5: //-Z
+    default:
+      N = make_float3( 0.0f,  0.0f, -1.0f);
+  }
+  return N;
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
@@ -139,21 +167,19 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
   const box3f primBounds = boxIndicesToBounds(self.anchor, self.worldScale, indices.x, indices.y, indices.z);
 
   vec3f &prd = owl::getPRD<vec3f>();
-  const vec3f org = optixGetWorldRayOrigin();
-  const vec3f dir = optixGetWorldRayDirection();
-  const float hit_t = optixGetRayTmax();
 
-  // Find normal for whichever face we hit
-  vec3f t0 = (primBounds.lower - org) / dir;
-  vec3f t1 = (primBounds.upper - org) / dir;
-  vec3f Ng = makeBoxNormal(t0, t1, hit_t);
+  // Select normal for whichever face we hit
+  const int faceId = optixGetAttribute_0();
+  const float3 Nbox = makeFaceNormalFromFaceId(faceId);
+  const vec3f Ng = optixTransformNormalFromObjectToWorldSpace(Nbox);
 
   // Convert 8 bit color to float
   const int ci = self.prims[primID].w;
   uchar4 col = self.colorPalette[ci];
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 
-  prd = (.2f + .8f*fabs(dot(dir,Ng)))*color;
+  const vec3f rayDir = optixGetWorldRayDirection();
+  prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*color;
 
 
 }
