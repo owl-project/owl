@@ -62,10 +62,10 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*color;
 }
 
-inline __device__ box3f boxIndicesToBounds(vec3f anchor, float worldScale, int x, int y, int z)
+inline __device__ box3f boxIndicesToBounds(int x, int y, int z)
 {
-    const vec3f boxmin = anchor + vec3f( x, y, z ) * 2.0f*worldScale;
-    const vec3f boxmax = boxmin + 2.0f*worldScale;
+    const vec3f boxmin = vec3f( x, y, z );
+    const vec3f boxmax = boxmin + vec3f(1.0f);
     return box3f(boxmin, boxmax);
 } 
 
@@ -75,7 +75,7 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
 {
   const VoxGeomData &self = *(const VoxGeomData*)geomData;
   uchar4 indices = self.prims[primID];
-  primBounds = boxIndicesToBounds(self.anchor, self.worldScale, indices.x, indices.y, indices.z);
+  primBounds = boxIndicesToBounds(indices.x, indices.y, indices.z);
 }
 
 inline __device__ int makeFaceId( float3 t0, float3 t1, float t)
@@ -100,7 +100,7 @@ OPTIX_INTERSECT_PROGRAM(VoxGeom)()
   const int primID = optixGetPrimitiveIndex();
   const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
   uchar4 indices = self.prims[primID];
-  const box3f primBounds = boxIndicesToBounds(self.anchor, self.worldScale, indices.x, indices.y, indices.z);
+  const box3f primBounds = boxIndicesToBounds(indices.x, indices.y, indices.z);
 
   const vec3f org  = optixGetObjectRayOrigin();
   const vec3f dir  = optixGetObjectRayDirection();
@@ -163,15 +163,13 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
   // convert indices to 3d box
   const int primID = optixGetPrimitiveIndex();
   const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
-  uchar4 indices = self.prims[primID];
-  const box3f primBounds = boxIndicesToBounds(self.anchor, self.worldScale, indices.x, indices.y, indices.z);
 
   vec3f &prd = owl::getPRD<vec3f>();
 
   // Select normal for whichever face we hit
   const int faceId = optixGetAttribute_0();
   const float3 Nbox = makeFaceNormalFromFaceId(faceId);
-  const vec3f Ng = optixTransformNormalFromObjectToWorldSpace(Nbox);
+  const vec3f Ng = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
 
   // Convert 8 bit color to float
   const int ci = self.prims[primID].w;

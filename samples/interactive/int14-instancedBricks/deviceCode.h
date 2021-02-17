@@ -37,8 +37,6 @@ struct TrianglesGeomData
 struct VoxGeomData {
   uchar4 *prims;  // (xi, yi, zi, ci)
   uchar4 *colorPalette;
-  vec3f anchor;  // lower left point of grid
-  float worldScale;
 };
 
 /* variables for the ray generation program */

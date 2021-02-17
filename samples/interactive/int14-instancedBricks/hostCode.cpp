@@ -145,8 +145,6 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const VoxelModel &mod
   OWLVarDecl voxGeomVars[] = {
     { "prims",  OWL_BUFPTR, OWL_OFFSETOF(VoxGeomData,prims)},
     { "colorPalette",  OWL_BUFPTR, OWL_OFFSETOF(VoxGeomData,colorPalette)},
-    { "anchor", OWL_FLOAT3, OWL_OFFSETOF(VoxGeomData, anchor)},
-    { "worldScale", OWL_FLOAT, OWL_OFFSETOF(VoxGeomData, worldScale)},
     { /* sentinel to mark end of list */ }
   };
   OWLGeomType voxGeomType
@@ -163,11 +161,6 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const VoxelModel &mod
 
   LOG("building user geometries ...");
 
-  // Normalize model so that longest axis goes from -1 to 1
-  const int maxDim = std::max(std::max(model.dims[0], model.dims[1]), model.dims[2]);
-  const float worldScale = 1.0f / maxDim;
-  const vec3f dims(float(model.dims[0]), float(model.dims[1]), float(model.dims[2]));
-  const vec3f anchor = -worldScale*dims;
 
   // ------------------------------------------------------------------
   // VOX geom
@@ -183,8 +176,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const VoxelModel &mod
 
   owlGeomSetBuffer(voxGeom, "prims", primBuffer);
   owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
-  owlGeomSet3f(voxGeom, "anchor", owl3f{ anchor.x, anchor.y, anchor.z });
-  owlGeomSet1f(voxGeom, "worldScale", worldScale);
+
 
   // ------------------------------------------------------------------
   // bottom level group/accel
@@ -193,7 +185,16 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const VoxelModel &mod
     = owlUserGeomGroupCreate(context,1,&voxGeom);
   owlGroupBuildAccel(userGeomGroup);
 
-  OWLGroup world = owlInstanceGroupCreate(context, 1, &userGeomGroup);
+
+  // Normalize model using single instance transform
+  const vec3f dims(float(model.dims[0]), float(model.dims[1]), float(model.dims[2]));
+  const float maxDim = owl::reduce_max(dims);
+  const float worldScale = 2.0f / maxDim;  // 2 here to match our triangle-based box
+
+  owl::affine3f transform = owl::affine3f::scale(worldScale) * owl::affine3f::translate(-dims*0.5f);
+  OWLGroup world = owlInstanceGroupCreate(context, 1);
+  owlInstanceGroupSetChild(world, 0, userGeomGroup);
+  owlInstanceGroupSetTransform(world, 0, (const float*)&transform, OWL_MATRIX_FORMAT_OWL); 
 
   return world;
 
@@ -263,10 +264,10 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const Vo
   std::vector<owl::affine3f> transforms;
   transforms.reserve(numInstances);
   
-  // Normalize model so that longest axis goes from -1 to 1
-  const int maxDim = std::max(std::max(model.dims[0], model.dims[1]), model.dims[2]);
-  const float worldScale = 1.0f / maxDim;
+  // Normalize model
   const owl::vec3f dims(float(model.dims[0]), float(model.dims[1]), float(model.dims[2]));
+  const float maxDim = owl::reduce_max(dims);
+  const float worldScale = 1.0f / maxDim;
 
   for (size_t i = 0; i < numInstances; ++i) {
       uchar4 b = model.voxels[i];
