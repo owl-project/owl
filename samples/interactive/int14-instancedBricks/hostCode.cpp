@@ -25,6 +25,9 @@
 #include "owlViewer/OWLViewer.h"
 #include "owl/common/math/AffineSpace.h"
 
+// VOX file reader
+#include "readVox.h"
+
 #define LOG(message)                                            \
   std::cout << OWL_TERMINAL_BLUE;                               \
   std::cout << "#owl.sample(main): " << message << std::endl;   \
@@ -73,7 +76,7 @@ const float init_cosFovy = 0.66f;
 
 struct Viewer : public owl::viewer::OWLViewer
 {
-  Viewer();
+  Viewer(const VoxelModel &model, uchar4 *palette);
   
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
@@ -129,7 +132,7 @@ void Viewer::cameraChanged()
   sbtDirty = true;
 }
 
-Viewer::Viewer()
+Viewer::Viewer(const VoxelModel &model, uchar4 *palette)
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
@@ -180,8 +183,13 @@ Viewer::Viewer()
   owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
 
-  const int numInstances = 2;
-  std::vector<owl::vec3f> colors = { {1,0,0}, {0,1,0} };
+  const int numInstances = model.voxels.size();
+  std::vector<owl::vec3f> colors;
+  colors.reserve(numInstances);
+  for (size_t i = 0; i < model.voxels.size(); ++i) {
+      uchar4 col = palette[model.voxels[i].w];
+      colors.push_back({ col.x / 255.0f, col.y / 255.0f, col.z / 255.0f });
+  }
   OWLBuffer colorBuffer
       = owlDeviceBufferCreate(context, OWL_FLOAT3, numInstances, colors.data());
   owlGeomSetBuffer(trianglesGeom, "colorPerInstance", colorBuffer);
@@ -194,15 +202,29 @@ Viewer::Viewer()
     = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
 
+
+  // ------------------------------------------------------------------
+  // instances and world BVH
+  // ------------------------------------------------------------------
+
   std::vector<owl::affine3f> transforms;
-  transforms.push_back(owl::affine3f::translate({ -1.1f, 0.0f, 0.0f }));
-  transforms.push_back(owl::affine3f::translate({ 1.1f, 0.0f, 0.0f }));
+  transforms.reserve(numInstances);
+  
+  // Normalize model so that longest axis goes from -1 to 1
+  const int maxDim = std::max(std::max(model.dims[0], model.dims[1]), model.dims[2]);
+  const float worldScale = 1.0f / maxDim;
+  const owl::vec3f dims(model.dims[0], model.dims[1], model.dims[2]);
+  for (size_t i = 0; i < numInstances; ++i) {
+      uchar4 b = model.voxels[i];
+      owl::vec3f trans = owl::vec3f(b.x, b.y, b.z)*2.0f - dims;
+      transforms.push_back(owl::affine3f::scale(worldScale) * owl::affine3f::translate(trans));
+  }
 
   OWLGroup world
       = owlInstanceGroupCreate(context, transforms.size());
 
-  for (size_t i = 0; i < transforms.size(); ++i) {
-    owlInstanceGroupSetChild(world, i, trianglesGroup);
+  for (int i = 0; i < int(transforms.size()); ++i) {
+    owlInstanceGroupSetChild(world, i, trianglesGroup);  // All instances point to the same geometry
     owlInstanceGroupSetTransform(world, i, (const float*)&transforms[i], OWL_MATRIX_FORMAT_OWL);
   }
 
@@ -277,7 +299,27 @@ int main(int ac, char **av)
 {
   LOG("owl::ng example '" << av[0] << "' starting up");
 
-  Viewer viewer;
+  if (ac < 2) {
+      LOG("missing expected argument for .vox file. Exiting");
+      exit(1);
+  }
+  const std::string infile(av[1]);
+  std::vector<VoxelModel> models;
+  uchar4 palette[256];
+  try {
+      readVox( infile.c_str(), models, palette );
+  } catch ( const std::exception& e ) {
+      std::cerr << "Caught exception while reading voxel model: " << infile << std::endl;
+      std::cerr << e.what() << std::endl;
+      exit(1);
+  }
+
+  if ( models.empty() ) {
+      std::cerr << "No voxels found in file, exiting\n" << std::endl;
+      exit(1);
+  }
+
+  Viewer viewer(models[0], palette);
   viewer.camera.setOrientation(init_lookFrom,
                                init_lookAt,
                                init_lookUp,
