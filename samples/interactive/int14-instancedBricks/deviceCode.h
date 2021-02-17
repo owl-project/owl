@@ -32,6 +32,15 @@ struct TrianglesGeomData
   vec3f *vertex;
 };
 
+// A set of bricks in a 3d grid
+// Each brick is stored as indices in the grid plus a color index
+struct VoxGeomData {
+  uchar4 *prims;  // (xi, yi, zi, ci)
+  uchar4 *colorPalette;
+  vec3f anchor;  // lower left point of grid
+  float worldScale;
+};
+
 /* variables for the ray generation program */
 struct RayGenData
 {

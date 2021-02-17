@@ -64,7 +64,8 @@ vec3i indices[NUM_INDICES] =
   };
 
 // const vec2i fbSize(800,600);
-const vec3f init_lookFrom(-4.f,+3.f,-2.f);
+const vec3f init_lookFrom = vec3f(-4.f,+3.f,-2.f)*0.6f;
+//const vec3f init_lookFrom(-4.f,+3.f,-2.f);
 const vec3f init_lookAt(0.f,0.f,0.f);
 const vec3f init_lookUp(0.f,1.f,0.f);
 const float init_cosFovy = 0.66f;
@@ -89,6 +90,9 @@ struct Viewer : public owl::viewer::OWLViewer
   /*! this function gets called whenever any camera manipulator
     updates the camera. gets called AFTER all values have been updated */
   void cameraChanged() override;
+
+  OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const VoxelModel &model, uchar4 *palette);
+  OWLGroup createUserGeometryScene(OWLModule module, const VoxelModel &model, uchar4 *palette);
 
   bool sbtDirty = true;
   OWLRayGen rayGen   { 0 };
@@ -132,18 +136,73 @@ void Viewer::cameraChanged()
   sbtDirty = true;
 }
 
-Viewer::Viewer(const VoxelModel &model, uchar4 *palette)
+OWLGroup Viewer::createUserGeometryScene(OWLModule module, const VoxelModel &model, uchar4 *palette)
 {
-  // create a context on the first device:
-  context = owlContextCreate(nullptr,1);
-  OWLModule module = owlModuleCreate(context,ptxCode);
-  
-  // ##################################################################
-  // set up all the *GEOMETRY* graph we want to render
-  // ##################################################################
-
   // -------------------------------------------------------
-  // declare geometry type
+  // declare user vox geometry type
+  // -------------------------------------------------------
+
+  OWLVarDecl voxGeomVars[] = {
+    { "prims",  OWL_BUFPTR, OWL_OFFSETOF(VoxGeomData,prims)},
+    { "colorPalette",  OWL_BUFPTR, OWL_OFFSETOF(VoxGeomData,colorPalette)},
+    { "anchor", OWL_FLOAT3, OWL_OFFSETOF(VoxGeomData, anchor)},
+    { "worldScale", OWL_FLOAT, OWL_OFFSETOF(VoxGeomData, worldScale)},
+    { /* sentinel to mark end of list */ }
+  };
+  OWLGeomType voxGeomType
+    = owlGeomTypeCreate(context,
+                        OWL_GEOMETRY_USER,
+                        sizeof(VoxGeomData),
+                        voxGeomVars, -1);
+  owlGeomTypeSetClosestHit(voxGeomType, 0, module, "VoxGeom");
+  owlGeomTypeSetIntersectProg(voxGeomType, 0, module, "VoxGeom");
+  owlGeomTypeSetBoundsProg(voxGeomType, module, "VoxGeom");
+
+  // Do this before setting up user geometry, to compile bounds program
+  owlBuildPrograms(context);
+
+  LOG("building user geometries ...");
+
+  // Normalize model so that longest axis goes from -1 to 1
+  const int maxDim = std::max(std::max(model.dims[0], model.dims[1]), model.dims[2]);
+  const float worldScale = 1.0f / maxDim;
+  const vec3f dims(float(model.dims[0]), float(model.dims[1]), float(model.dims[2]));
+  const vec3f anchor = -worldScale*dims;
+
+  // ------------------------------------------------------------------
+  // VOX geom
+  // ------------------------------------------------------------------
+  OWLBuffer primBuffer 
+    = owlDeviceBufferCreate(context, OWL_UCHAR4, model.voxels.size(), model.voxels.data());
+  OWLBuffer paletteBuffer
+    = owlDeviceBufferCreate(context, OWL_UCHAR4, 256, palette);
+
+  OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
+  
+  owlGeomSetPrimCount(voxGeom, model.voxels.size());
+
+  owlGeomSetBuffer(voxGeom, "prims", primBuffer);
+  owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
+  owlGeomSet3f(voxGeom, "anchor", owl3f{ anchor.x, anchor.y, anchor.z });
+  owlGeomSet1f(voxGeom, "worldScale", worldScale);
+
+  // ------------------------------------------------------------------
+  // bottom level group/accel
+  // ------------------------------------------------------------------
+  OWLGroup userGeomGroup
+    = owlUserGeomGroupCreate(context,1,&voxGeom);
+  owlGroupBuildAccel(userGeomGroup);
+
+  OWLGroup world = owlInstanceGroupCreate(context, 1, &userGeomGroup);
+
+  return world;
+
+}
+
+OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const VoxelModel &model, uchar4 *palette)
+{
+  // -------------------------------------------------------
+  // declare triangle-based box geometry type
   // -------------------------------------------------------
   OWLVarDecl trianglesGeomVars[] = {
     { "index",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,index)},
@@ -158,11 +217,7 @@ Viewer::Viewer(const VoxelModel &model, uchar4 *palette)
   owlGeomTypeSetClosestHit(trianglesGeomType,0,
                            module,"TriangleMesh");
 
-  // ##################################################################
-  // set up all the *GEOMS* we want to run that code on
-  // ##################################################################
-
-  LOG("building geometries ...");
+  LOG("building triangle geometries ...");
 
   // ------------------------------------------------------------------
   // triangle mesh
@@ -194,7 +249,6 @@ Viewer::Viewer(const VoxelModel &model, uchar4 *palette)
       = owlDeviceBufferCreate(context, OWL_FLOAT3, numInstances, colors.data());
   owlGeomSetBuffer(trianglesGeom, "colorPerInstance", colorBuffer);
   
-  
   // ------------------------------------------------------------------
   // the group/accel for that mesh
   // ------------------------------------------------------------------
@@ -202,9 +256,8 @@ Viewer::Viewer(const VoxelModel &model, uchar4 *palette)
     = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
 
-
   // ------------------------------------------------------------------
-  // instances and world BVH
+  // instances
   // ------------------------------------------------------------------
 
   std::vector<owl::affine3f> transforms;
@@ -213,20 +266,35 @@ Viewer::Viewer(const VoxelModel &model, uchar4 *palette)
   // Normalize model so that longest axis goes from -1 to 1
   const int maxDim = std::max(std::max(model.dims[0], model.dims[1]), model.dims[2]);
   const float worldScale = 1.0f / maxDim;
-  const owl::vec3f dims(model.dims[0], model.dims[1], model.dims[2]);
+  const owl::vec3f dims(float(model.dims[0]), float(model.dims[1]), float(model.dims[2]));
+
   for (size_t i = 0; i < numInstances; ++i) {
       uchar4 b = model.voxels[i];
+      // Note: 2.0f here because our triangle-based box mesh is length 2 on each side
       owl::vec3f trans = owl::vec3f(b.x, b.y, b.z)*2.0f - dims;
       transforms.push_back(owl::affine3f::scale(worldScale) * owl::affine3f::translate(trans));
   }
 
-  OWLGroup world
-      = owlInstanceGroupCreate(context, transforms.size());
+  OWLGroup world = owlInstanceGroupCreate(context, transforms.size());
 
   for (int i = 0; i < int(transforms.size()); ++i) {
     owlInstanceGroupSetChild(world, i, trianglesGroup);  // All instances point to the same geometry
     owlInstanceGroupSetTransform(world, i, (const float*)&transforms[i], OWL_MATRIX_FORMAT_OWL);
   }
+
+  return world;
+  
+}
+
+Viewer::Viewer(const VoxelModel &model, uchar4 *palette)
+{
+  // create a context on the first device:
+  context = owlContextCreate(nullptr,1);
+  OWLModule module = owlModuleCreate(context,ptxCode);
+
+  
+  //OWLGroup world = createInstancedTriangleGeometryScene(module, model, palette);
+  OWLGroup world = createUserGeometryScene(module, model, palette);
 
   owlGroupBuildAccel(world);
   
@@ -280,6 +348,7 @@ Viewer::Viewer(const VoxelModel &model, uchar4 *palette)
   // build *SBT* required to trace the groups
   // ##################################################################
   
+  // Build all programs again, even if they have been built already for bounds program
   owlBuildPrograms(context);
   owlBuildPipeline(context);
   owlBuildSBT(context);
