@@ -271,8 +271,9 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const Vo
 
   for (size_t i = 0; i < numInstances; ++i) {
       uchar4 b = model.voxels[i];
-      // Note: 2.0f here because our triangle-based box mesh is length 2 on each side
-      owl::vec3f trans = owl::vec3f(b.x, b.y, b.z)*2.0f - dims;
+      // Note: some unintuitive transforms here to account for our modeled box being 2 units
+      // long on each side, and centered about the origin.
+      owl::vec3f trans = owl::vec3f(b.x, b.y, b.z)*2.0f - dims + owl::vec3f(1.0f);
       transforms.push_back(owl::affine3f::scale(worldScale) * owl::affine3f::translate(trans));
   }
 
