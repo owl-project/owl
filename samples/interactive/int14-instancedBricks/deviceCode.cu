@@ -62,20 +62,15 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*color;
 }
 
-inline __device__ box3f boxIndicesToBounds(int x, int y, int z)
-{
-    const vec3f boxmin = vec3f( x, y, z );
-    const vec3f boxmax = boxmin + vec3f(1.0f);
-    return box3f(boxmin, boxmax);
-} 
-
 OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
                               box3f &primBounds,
                               const int primID)
 {
   const VoxGeomData &self = *(const VoxGeomData*)geomData;
   uchar4 indices = self.prims[primID];
-  primBounds = boxIndicesToBounds(indices.x, indices.y, indices.z);
+  const vec3f boxmin( indices.x, indices.y, indices.z );
+  const vec3f boxmax( 1+indices.x, 1+indices.y, 1+indices.z );
+  primBounds = box3f(boxmin, boxmax);
 }
 
 inline __device__ int makeFaceId( float3 t0, float3 t1, float t)
@@ -100,15 +95,19 @@ OPTIX_INTERSECT_PROGRAM(VoxGeom)()
   const int primID = optixGetPrimitiveIndex();
   const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
   uchar4 indices = self.prims[primID];
-  const box3f primBounds = boxIndicesToBounds(indices.x, indices.y, indices.z);
+  vec3f boxCenter(indices.x+0.5, indices.y+0.5, indices.z+0.5);
 
-  const vec3f org  = optixGetObjectRayOrigin();
-  const vec3f dir  = optixGetObjectRayDirection();
+  // Translate ray to local box space
+  const vec3f rayOrigin  = vec3f(optixGetObjectRayOrigin()) - boxCenter;
+  const vec3f rayDirection  = optixGetObjectRayDirection();  // assume no rotation
+  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
+
   const float ray_tmax = optixGetRayTmax();
   const float ray_tmin = optixGetRayTmin();
 
-  vec3f t0 = (primBounds.lower - org) / dir;
-  vec3f t1 = (primBounds.upper - org) / dir;
+  const vec3f boxRadius(0.5f, 0.5f, 0.5f);
+  vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
+  vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
   vec3f tnear = owl::min(t0, t1);
   vec3f tfar = owl::max(t0, t1);
   float tmin = reduce_max(tnear);
