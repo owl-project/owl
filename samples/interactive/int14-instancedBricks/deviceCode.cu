@@ -117,14 +117,12 @@ OPTIX_INTERSECT_PROGRAM(VoxGeom)()
   const vec3f boxRadius(0.5f, 0.5f, 0.5f);
   vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
   vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
-  vec3f tnear = owl::min(t0, t1);
-  vec3f tfar = owl::max(t0, t1);
-  float tmin = reduce_max(tnear);
-  float tmax = reduce_min(tfar);
+  float tnear = reduce_max(owl::min(t0, t1));
+  float tfar  = reduce_min(owl::max(t0, t1));
 
-  if (tmin <= tmax && tmin > ray_tmin && tmin < ray_tmax) {
-    const float3 N = makeFaceNormal(t0, t1, tmin);
-    optixReportIntersection( tmin, 0, float_as_int(N.x), float_as_int(N.y), float_as_int(N.z));
+  if (tnear <= tfar && tnear > ray_tmin && tnear < ray_tmax) {
+    const float3 N = makeFaceNormal(t0, t1, tnear);
+    optixReportIntersection( tnear, 0, float_as_int(N.x), float_as_int(N.y), float_as_int(N.z));
   }
 }
 
