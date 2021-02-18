@@ -73,29 +73,12 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
   primBounds = box3f(boxmin, boxmax);
 }
 
-inline __device__ float3 makeFaceNormal( float3 t0, float3 t1, float t)
+inline __device__ int indexOfMaxComponent(vec3f v)
 {
-    float3 N;
-    if (t == t1.x) 
-        //+X
-        N = make_float3( 1.0f,  0.0f,  0.0f);
-    else if (t == t0.x)
-        //-X
-        N = make_float3( -1.0f,  0.0f,  0.0f);
-    else if (t == t1.y)
-        //+Y
-        N = make_float3( 0.0f,  1.0f,  0.0f);
-    else if (t == t0.y)
-        //-Y
-        N = make_float3( 0.0f, -1.0f,  0.0f);
-    else if (t == t1.z)
-        //+Z,
-        N = make_float3( 0.0f,  0.0f,  1.0f);
-    else //if (t == t0.z)
-        //-Z
-        N = make_float3( 0.0f,  0.0f, -1.0f);
-
-    return N;
+  if (v.x > v.y) 
+    return v.x > v.z ? 0 : 2;
+  else
+    return v.y > v.z ? 1 : 2;
 }
 
 OPTIX_INTERSECT_PROGRAM(VoxGeom)()
@@ -120,8 +103,14 @@ OPTIX_INTERSECT_PROGRAM(VoxGeom)()
   float tnear = reduce_max(owl::min(t0, t1));
   float tfar  = reduce_min(owl::max(t0, t1));
 
+  // Only handle the case where the ray starts outside the box
+
   if (tnear <= tfar && tnear > ray_tmin && tnear < ray_tmax) {
-    const float3 N = makeFaceNormal(t0, t1, tnear);
+    // compute face normal at local hit point
+    vec3f V = rayOrigin + rayDirection*tnear;
+    vec3f N(0.0f);
+    int i = indexOfMaxComponent(abs(V));
+    N[i] = (V[i] >= 0.0f) ? 1 : -1;
     optixReportIntersection( tnear, 0, float_as_int(N.x), float_as_int(N.y), float_as_int(N.z));
   }
 }
