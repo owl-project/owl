@@ -114,22 +114,10 @@ OPTIX_INTERSECT_PROGRAM(VoxGeom)()
   float tmin = reduce_max(tnear);
   float tmax = reduce_min(tfar);
 
-  if (tmin <= tmax) {
-
-        bool check_second = true;
-        if (tmin > ray_tmin && tmin < ray_tmax) {
-            const int faceId = makeFaceId( t0, t1, tmin );
-            if (optixReportIntersection( tmin, 0, faceId)) { 
-                check_second = false;
-            }
-        } 
-        if (check_second && tmax > ray_tmin && tmax < ray_tmax) {
-            // ray might have started inside the box.
-            // Can remove this case if camera is guaranteed to be outside
-            const int faceId = makeFaceId( t0, t1, tmax );
-            optixReportIntersection( tmax, 0, faceId);
-        }
-    }
+  if (tmin <= tmax && tmin > ray_tmin && tmin < ray_tmax) {
+    const int faceId = makeFaceId( t0, t1, tmin );
+    optixReportIntersection( tmin, 0, faceId);
+  }
 }
 
 inline __device__ float3 makeFaceNormalFromFaceId(int faceId)
