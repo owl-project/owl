@@ -73,20 +73,29 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
   primBounds = box3f(boxmin, boxmax);
 }
 
-inline __device__ int makeFaceId( float3 t0, float3 t1, float t)
+inline __device__ float3 makeFaceNormal( float3 t0, float3 t1, float t)
 {
+    float3 N;
     if (t == t1.x) 
-        return 0; //+X
+        //+X
+        N = make_float3( 1.0f,  0.0f,  0.0f);
     else if (t == t0.x)
-        return 1; //-X
+        //-X
+        N = make_float3( -1.0f,  0.0f,  0.0f);
     else if (t == t1.y)
-        return 2; //+Y
+        //+Y
+        N = make_float3( 0.0f,  1.0f,  0.0f);
     else if (t == t0.y)
-        return 3; //-Y
+        //-Y
+        N = make_float3( 0.0f, -1.0f,  0.0f);
     else if (t == t1.z)
-        return 4; //+Z,
+        //+Z,
+        N = make_float3( 0.0f,  0.0f,  1.0f);
     else //if (t == t0.z)
-        return 5; //-Z
+        //-Z
+        N = make_float3( 0.0f,  0.0f, -1.0f);
+
+    return N;
 }
 
 OPTIX_INTERSECT_PROGRAM(VoxGeom)()
@@ -114,35 +123,9 @@ OPTIX_INTERSECT_PROGRAM(VoxGeom)()
   float tmax = reduce_min(tfar);
 
   if (tmin <= tmax && tmin > ray_tmin && tmin < ray_tmax) {
-    const int faceId = makeFaceId( t0, t1, tmin );
-    optixReportIntersection( tmin, 0, faceId);
+    const float3 N = makeFaceNormal(t0, t1, tmin);
+    optixReportIntersection( tmin, 0, float_as_int(N.x), float_as_int(N.y), float_as_int(N.z));
   }
-}
-
-inline __device__ float3 makeFaceNormalFromFaceId(int faceId)
-{
-  float3 N;
-  switch(faceId) {
-    case 0: //+X
-      N = make_float3( 1.0f,  0.0f,  0.0f);
-      break;
-    case 1: //-X
-      N = make_float3( -1.0f,  0.0f,  0.0f);
-      break;
-    case 2: //+Y
-      N = make_float3( 0.0f,  1.0f,  0.0f);
-      break;
-    case 3: //-Y
-      N = make_float3( 0.0f, -1.0f,  0.0f);
-      break;
-    case 4: //+Z
-      N = make_float3( 0.0f,  0.0f,  1.0f);
-      break;
-    case 5: //-Z
-    default:
-      N = make_float3( 0.0f,  0.0f, -1.0f);
-  }
-  return N;
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
@@ -154,8 +137,10 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
   vec3f &prd = owl::getPRD<vec3f>();
 
   // Select normal for whichever face we hit
-  const int faceId = optixGetAttribute_0();
-  const float3 Nbox = makeFaceNormalFromFaceId(faceId);
+  const float3 Nbox = make_float3(
+        int_as_float(optixGetAttribute_0()),
+        int_as_float(optixGetAttribute_1()),
+        int_as_float(optixGetAttribute_2()));
   const vec3f Ng = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
 
   // Convert 8 bit color to float
