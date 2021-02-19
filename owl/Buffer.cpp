@@ -107,6 +107,9 @@ namespace owl {
     if (type == OWL_BUFFER)
       return std::make_shared<DeviceBuffer::DeviceDataForBuffers>(this,device);
 
+    if (type == OWL_GROUP)
+      return std::make_shared<DeviceBuffer::DeviceDataForGroups>(this,device);
+
     if (type == OWL_TEXTURE)
       return std::make_shared<DeviceBuffer::DeviceDataForTextures>(this,device);
 
@@ -213,6 +216,53 @@ namespace owl {
                           cudaMemcpyDefault,
                           device->getStream()));
   }
+
+
+
+
+
+  void DeviceBuffer::DeviceDataForGroups::executeResize() 
+  {
+    SetActiveGPU forLifeTime(device);
+    
+    if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
+
+    if (parent->elementCount)
+      CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(OptixTraversableHandle)));
+  }
+  
+  void DeviceBuffer::DeviceDataForGroups::uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) 
+  {
+    SetActiveGPU forLifeTime(device);
+    
+    hostHandles.resize( (count == -1) ? parent->elementCount : count);
+    APIHandle **apiHandles = (APIHandle **)hostDataPtr;
+    std::vector<OptixTraversableHandle> devRep( (count == -1) ? parent->elementCount : count);
+    
+    for (int i=0; i < int((count == -1) ? parent->elementCount : count); i++)
+      if (apiHandles[i]) {
+        Group::SP group = apiHandles[i]->object->as<Group>();
+        assert(group && "make sure those are really groups in this buffer!");
+
+        devRep[i] 
+          = group->getTraversable(device);
+        // devRep[i].data    = (void*)buffer->getPointer(device);
+        // devRep[i].type    = buffer->type;
+        // devRep[i].count   = buffer->getElementCount();
+        
+        hostHandles[i] = group;
+      } else {
+        devRep[i] = 0;
+      }
+
+    CUDA_CALL(MemcpyAsync((char*)d_pointer + offset,devRep.data(),
+                          devRep.size()*sizeof(devRep[0]),
+                          cudaMemcpyDefault,
+                          device->getStream()));
+  }
+
+
+
   
   void DeviceBuffer::DeviceDataForCopyableData::executeResize() 
   {
