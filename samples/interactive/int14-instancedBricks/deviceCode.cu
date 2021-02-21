@@ -53,7 +53,8 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   const vec3f &A     = self.vertex[index.x];
   const vec3f &B     = self.vertex[index.y];
   const vec3f &C     = self.vertex[index.z];
-  const vec3f Ng     = normalize(cross(B-A,C-A));
+  const vec3f Nbox   = normalize(cross(B-A,C-A));
+  const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
 
   const unsigned int instanceID = optixGetInstanceId();
   const vec3f color = self.colorPerInstance[instanceID];

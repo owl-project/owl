@@ -80,7 +80,7 @@ const float init_cosFovy = 0.66f;
 
 struct Viewer : public owl::viewer::OWLViewer
 {
-  Viewer(const ogt_vox_scene *scene, const VoxelModel &model, uchar4 *palette);
+  Viewer(const ogt_vox_scene *scene);
   
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
@@ -94,7 +94,7 @@ struct Viewer : public owl::viewer::OWLViewer
     updates the camera. gets called AFTER all values have been updated */
   void cameraChanged() override;
 
-  OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, const VoxelModel &model, uchar4 *palette);
+  OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene);
   OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene);
 
   bool sbtDirty = true;
@@ -230,8 +230,8 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
   // object2world, read in right to left order:
   owl::affine3f transform = owl::affine3f::scale(worldScale) *  // normalize 
-    owl::affine3f::rotate(vec3f(1,0,0), -0.5f*M_PI) *           // rotate Z-up to Y-up
-    owl::affine3f::translate(-dims*0.5f);                       // center about origin
+    owl::affine3f::rotate(vec3f(1,0,0), -M_PI_2) *              // rotate Z-up to Y-up
+    owl::affine3f::translate(-dims*0.5f);                       // center model about origin
 
   OWLGroup world = owlInstanceGroupCreate(context, 1);
   owlInstanceGroupSetChild(world, 0, userGeomGroup);
@@ -241,7 +241,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
 }
 
-OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, const VoxelModel &model, uchar4 *palette)
+OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene)
 {
   // -------------------------------------------------------
   // declare triangle-based box geometry type
@@ -260,6 +260,13 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
                            module,"TriangleMesh");
 
   LOG("building triangle geometries ...");
+
+  // Only handle first model for now.  TODO: handle instances and multiple models
+  assert(scene->num_models > 0);
+  const ogt_vox_model *vox_model = scene->models[0];
+  assert(vox_model);
+  std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
+
 
   // ------------------------------------------------------------------
   // triangle mesh
@@ -280,12 +287,12 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
 
-  const int numInstances = model.voxels.size();
+  const int numInstances = voxdata.size();
   std::vector<owl::vec3f> colors;
   colors.reserve(numInstances);
   for (int i = 0; i < numInstances; ++i) {
-      uchar4 col = palette[model.voxels[i].w];
-      colors.push_back({ col.x / 255.0f, col.y / 255.0f, col.z / 255.0f });
+      ogt_vox_rgba col = scene->palette.color[voxdata[i].w];
+      colors.push_back({ col.r / 255.0f, col.g / 255.0f, col.b / 255.0f });
   }
   OWLBuffer colorBuffer
       = owlDeviceBufferCreate(context, OWL_FLOAT3, numInstances, colors.data());
@@ -306,16 +313,20 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   transforms.reserve(numInstances);
   
   // Normalize model
-  const owl::vec3f dims(float(model.dims[0]), float(model.dims[1]), float(model.dims[2]));
+  const owl::vec3f dims(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z));
   const float maxDim = owl::reduce_max(dims);
   const float worldScale = 1.0f / maxDim;
 
   for (size_t i = 0; i < numInstances; ++i) {
-      uchar4 b = model.voxels[i];
+      uchar4 b = voxdata[i];
       // Note: some unintuitive transforms here to account for our modeled box being 2 units
       // long on each side, and centered about the origin.
       owl::vec3f trans = owl::vec3f(b.x, b.y, b.z)*2.0f - dims + owl::vec3f(1.0f);
-      transforms.push_back(owl::affine3f::scale(worldScale) * owl::affine3f::translate(trans));
+
+      // object2world, read in right to left order:
+      transforms.push_back(owl::affine3f::scale(worldScale) *   // normalize
+          owl::affine3f::rotate(vec3f(1,0,0), -M_PI_2) *        // rotate Z-up to Y-up
+          owl::affine3f::translate(trans));                     // center model about origin
   }
 
   OWLGroup world = owlInstanceGroupCreate(context, transforms.size());
@@ -329,15 +340,15 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   
 }
 
-Viewer::Viewer(const ogt_vox_scene *scene, const VoxelModel &model, uchar4 *palette)
+Viewer::Viewer(const ogt_vox_scene *scene)
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
   OWLModule module = owlModuleCreate(context,ptxCode);
 
   
-  OWLGroup world = createInstancedTriangleGeometryScene(module, scene, model, palette);
-  //OWLGroup world = createUserGeometryScene(module, scene);
+  //OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
+  OWLGroup world = createUserGeometryScene(module, scene);
 
   owlGroupBuildAccel(world);
   
@@ -416,18 +427,7 @@ int main(int ac, char **av)
       exit(1);
   }
   const std::string infile(av[1]);
-  std::vector<VoxelModel> models;
-  uchar4 palette[256];
-  const ogt_vox_scene *scene = nullptr;
-  try {
-      readVox( infile.c_str(), models, palette );
-      scene = loadVoxSceneOGT(infile.c_str());
-
-  } catch ( const std::exception& e ) {
-      LOG("Caught exception while reading voxel model: " << infile);
-      LOG(e.what());
-      exit(1);
-  }
+  const ogt_vox_scene *scene = loadVoxSceneOGT(infile.c_str());
 
   if (!scene) {
       LOG("Could not read vox file: " << infile.c_str() << ", exiting");
@@ -439,12 +439,7 @@ int main(int ac, char **av)
       exit(1);
   }
 
-  if ( models.empty() ) {
-      LOG("No voxels found in file, exiting");
-      exit(1);
-  }
-
-  Viewer viewer(scene, models[0], palette);
+  Viewer viewer(scene);
   viewer.camera.setOrientation(init_lookFrom,
                                init_lookAt,
                                init_lookUp,

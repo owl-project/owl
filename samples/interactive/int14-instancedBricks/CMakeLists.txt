@@ -20,7 +20,6 @@ cuda_compile_and_embed(ptxCode
 add_executable(int14-instancedBricks
   deviceCode.h
   hostCode.cpp
-  readVox.cpp
   readVoxOGT.cpp
   readVox.h
   ${ptxCode}
