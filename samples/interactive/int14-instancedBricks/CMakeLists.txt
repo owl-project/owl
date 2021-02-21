@@ -21,6 +21,7 @@ add_executable(int14-instancedBricks
   deviceCode.h
   hostCode.cpp
   readVox.cpp
+  readVoxOGT.cpp
   readVox.h
   ${ptxCode}
   )

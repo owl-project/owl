@@ -27,6 +27,9 @@
 
 // VOX file reader
 #include "readVox.h"
+#include "ogt_vox.h"
+
+#include <cassert>
 
 #define LOG(message)                                            \
   std::cout << OWL_TERMINAL_BLUE;                               \
@@ -77,7 +80,7 @@ const float init_cosFovy = 0.66f;
 
 struct Viewer : public owl::viewer::OWLViewer
 {
-  Viewer(const VoxelModel &model, uchar4 *palette);
+  Viewer(const ogt_vox_scene *scene, const VoxelModel &model, uchar4 *palette);
   
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
@@ -91,8 +94,8 @@ struct Viewer : public owl::viewer::OWLViewer
     updates the camera. gets called AFTER all values have been updated */
   void cameraChanged() override;
 
-  OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const VoxelModel &model, uchar4 *palette);
-  OWLGroup createUserGeometryScene(OWLModule module, const VoxelModel &model, uchar4 *palette);
+  OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, const VoxelModel &model, uchar4 *palette);
+  OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene);
 
   bool sbtDirty = true;
   OWLRayGen rayGen   { 0 };
@@ -136,7 +139,36 @@ void Viewer::cameraChanged()
   sbtDirty = true;
 }
 
-OWLGroup Viewer::createUserGeometryScene(OWLModule module, const VoxelModel &model, uchar4 *palette)
+// Adapted from ogt demo code. 
+// The OGT format stores voxels as solid grids; we only need to store the nonempty entries on device.
+
+std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model)
+{
+  uint32_t solid_voxel_count = 0;
+  uint32_t voxel_index = 0;
+  std::vector<uchar4> solid_voxels;
+  solid_voxels.reserve(model->size_z * model->size_y * model->size_x);
+  for (uint32_t z = 0; z < model->size_z; z++) {
+    for (uint32_t y = 0; y < model->size_y; y++) {
+      for (uint32_t x = 0; x < model->size_x; x++, voxel_index++) {
+        // if color index == 0, this voxel is empty, otherwise it is solid.
+        uint8_t color_index = model->voxel_data[voxel_index];
+        bool is_voxel_solid = (color_index != 0);
+        // add to our accumulator
+        solid_voxel_count += (is_voxel_solid ? 1 : 0);
+        if (is_voxel_solid) {
+          solid_voxels.push_back(
+              // Switch to Y-up
+              make_uchar4(uint8_t(x), uint8_t(y), uint8_t(z), color_index));
+        }
+      }
+    }
+  }
+  LOG("solid voxel count: " << solid_voxel_count);
+  return solid_voxels;
+}
+
+OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene)
 {
   // -------------------------------------------------------
   // declare user vox geometry type
@@ -161,18 +193,23 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const VoxelModel &mod
 
   LOG("building user geometries ...");
 
+  // Only handle first model for now.  TODO: handle instances and multiple models
+  assert(scene->num_models > 0);
+  const ogt_vox_model *vox_model = scene->models[0];
+  assert(vox_model);
+  std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
 
   // ------------------------------------------------------------------
   // VOX geom
   // ------------------------------------------------------------------
   OWLBuffer primBuffer 
-    = owlDeviceBufferCreate(context, OWL_UCHAR4, model.voxels.size(), model.voxels.data());
+    = owlDeviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
   OWLBuffer paletteBuffer
-    = owlDeviceBufferCreate(context, OWL_UCHAR4, 256, palette);
+    = owlDeviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
 
   OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
   
-  owlGeomSetPrimCount(voxGeom, model.voxels.size());
+  owlGeomSetPrimCount(voxGeom, voxdata.size());
 
   owlGeomSetBuffer(voxGeom, "prims", primBuffer);
   owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
@@ -187,11 +224,15 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const VoxelModel &mod
 
 
   // Normalize model using single instance transform
-  const vec3f dims(float(model.dims[0]), float(model.dims[1]), float(model.dims[2]));
+  const vec3f dims(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z));
   const float maxDim = owl::reduce_max(dims);
-  const float worldScale = 2.0f / maxDim;  // 2 here to match our triangle-based box
+  const float worldScale = 2.0f / maxDim;  // 2 here to match our triangle-based box which lies in [-1,1]
 
-  owl::affine3f transform = owl::affine3f::scale(worldScale) * owl::affine3f::translate(-dims*0.5f);
+  // object2world, read in right to left order:
+  owl::affine3f transform = owl::affine3f::scale(worldScale) *  // normalize 
+    owl::affine3f::rotate(vec3f(1,0,0), -0.5f*M_PI) *           // rotate Z-up to Y-up
+    owl::affine3f::translate(-dims*0.5f);                       // center about origin
+
   OWLGroup world = owlInstanceGroupCreate(context, 1);
   owlInstanceGroupSetChild(world, 0, userGeomGroup);
   owlInstanceGroupSetTransform(world, 0, (const float*)&transform, OWL_MATRIX_FORMAT_OWL); 
@@ -200,7 +241,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const VoxelModel &mod
 
 }
 
-OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const VoxelModel &model, uchar4 *palette)
+OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, const VoxelModel &model, uchar4 *palette)
 {
   // -------------------------------------------------------
   // declare triangle-based box geometry type
@@ -242,7 +283,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const Vo
   const int numInstances = model.voxels.size();
   std::vector<owl::vec3f> colors;
   colors.reserve(numInstances);
-  for (size_t i = 0; i < model.voxels.size(); ++i) {
+  for (int i = 0; i < numInstances; ++i) {
       uchar4 col = palette[model.voxels[i].w];
       colors.push_back({ col.x / 255.0f, col.y / 255.0f, col.z / 255.0f });
   }
@@ -288,15 +329,15 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const Vo
   
 }
 
-Viewer::Viewer(const VoxelModel &model, uchar4 *palette)
+Viewer::Viewer(const ogt_vox_scene *scene, const VoxelModel &model, uchar4 *palette)
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
   OWLModule module = owlModuleCreate(context,ptxCode);
 
   
-  //OWLGroup world = createInstancedTriangleGeometryScene(module, model, palette);
-  OWLGroup world = createUserGeometryScene(module, model, palette);
+  OWLGroup world = createInstancedTriangleGeometryScene(module, scene, model, palette);
+  //OWLGroup world = createUserGeometryScene(module, scene);
 
   owlGroupBuildAccel(world);
   
@@ -377,20 +418,33 @@ int main(int ac, char **av)
   const std::string infile(av[1]);
   std::vector<VoxelModel> models;
   uchar4 palette[256];
+  const ogt_vox_scene *scene = nullptr;
   try {
       readVox( infile.c_str(), models, palette );
+      scene = loadVoxSceneOGT(infile.c_str());
+
   } catch ( const std::exception& e ) {
-      std::cerr << "Caught exception while reading voxel model: " << infile << std::endl;
-      std::cerr << e.what() << std::endl;
+      LOG("Caught exception while reading voxel model: " << infile);
+      LOG(e.what());
+      exit(1);
+  }
+
+  if (!scene) {
+      LOG("Could not read vox file: " << infile.c_str() << ", exiting");
+      exit(1);
+  }
+  if (scene->num_models == 0) {
+      LOG("No voxel models found in file, exiting");
+      ogt_vox_destroy_scene(scene);
       exit(1);
   }
 
   if ( models.empty() ) {
-      std::cerr << "No voxels found in file, exiting\n" << std::endl;
+      LOG("No voxels found in file, exiting");
       exit(1);
   }
 
-  Viewer viewer(models[0], palette);
+  Viewer viewer(scene, models[0], palette);
   viewer.camera.setOrientation(init_lookFrom,
                                init_lookAt,
                                init_lookUp,
@@ -402,4 +456,6 @@ int main(int ac, char **av)
   // now that everything is ready: launch it ....
   // ##################################################################
   viewer.showAndRun();
+
+  ogt_vox_destroy_scene(scene);
 }
