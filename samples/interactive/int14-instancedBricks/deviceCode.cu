@@ -56,8 +56,11 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   const vec3f Nbox   = normalize(cross(B-A,C-A));
   const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
 
+  // Convert 8 bit color to float
   const unsigned int instanceID = optixGetInstanceId();
-  const vec3f color = self.colorPerInstance[instanceID];
+  const int ci = self.colorIndexPerInstance[instanceID];
+  uchar4 col = self.colorPalette[ci];
+  const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 
   const vec3f rayDir = optixGetWorldRayDirection();
   prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*color;

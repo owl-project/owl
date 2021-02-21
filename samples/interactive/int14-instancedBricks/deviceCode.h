@@ -25,7 +25,9 @@ using namespace owl;
 struct TrianglesGeomData
 {
   /*! base color we use for each instance, accessed with OptiX instanceID */
-  vec3f *colorPerInstance;
+  unsigned char *colorIndexPerInstance;
+  uchar4 *colorPalette;
+
   /*! array/buffer of vertex indices */
   vec3i *index;
   /*! array/buffer of vertex positions */

@@ -249,13 +249,15 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   OWLVarDecl trianglesGeomVars[] = {
     { "index",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,index)},
     { "vertex", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,vertex)},
-    { "colorPerInstance",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,colorPerInstance)}
+    { "colorIndexPerInstance",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,colorIndexPerInstance)},
+    { "colorPalette",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,colorPalette)},
+    { /* sentinel to mark end of list */ }
   };
   OWLGeomType trianglesGeomType
     = owlGeomTypeCreate(context,
                         OWL_TRIANGLES,
                         sizeof(TrianglesGeomData),
-                        trianglesGeomVars,3);
+                        trianglesGeomVars,-1);
   owlGeomTypeSetClosestHit(trianglesGeomType,0,
                            module,"TriangleMesh");
 
@@ -288,15 +290,18 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
 
   const int numInstances = voxdata.size();
-  std::vector<owl::vec3f> colors;
-  colors.reserve(numInstances);
+  std::vector<unsigned char> colorIndices;
+  colorIndices.reserve(numInstances);
   for (int i = 0; i < numInstances; ++i) {
-      ogt_vox_rgba col = scene->palette.color[voxdata[i].w];
-      colors.push_back({ col.r / 255.0f, col.g / 255.0f, col.b / 255.0f });
+      colorIndices.push_back(voxdata[i].w);
   }
-  OWLBuffer colorBuffer
-      = owlDeviceBufferCreate(context, OWL_FLOAT3, numInstances, colors.data());
-  owlGeomSetBuffer(trianglesGeom, "colorPerInstance", colorBuffer);
+  OWLBuffer colorIndexBuffer
+      = owlDeviceBufferCreate(context, OWL_UCHAR, numInstances, colorIndices.data());
+  owlGeomSetBuffer(trianglesGeom, "colorIndexPerInstance", colorIndexBuffer);
+
+  OWLBuffer paletteBuffer
+    = owlDeviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
+  owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
   
   // ------------------------------------------------------------------
   // the group/accel for that mesh
@@ -347,8 +352,8 @@ Viewer::Viewer(const ogt_vox_scene *scene)
   OWLModule module = owlModuleCreate(context,ptxCode);
 
   
-  //OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
-  OWLGroup world = createUserGeometryScene(module, scene);
+  OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
+  //OWLGroup world = createUserGeometryScene(module, scene);
 
   owlGroupBuildAccel(world);
   
