@@ -19,25 +19,120 @@
 
 #include <owl/common/math/random.h>
 
+__constant__ LaunchParams optixLaunchParams;
+
 
 typedef owl::common::LCG<4> Random;
+typedef owl::RayT<0, 2> RadianceRay;
+typedef owl::RayT<1, 2> ShadowRay;
 
+inline __device__
+vec3f missColor(const RadianceRay &ray)
+{
+  const vec2i pixelID = owl::getLaunchIndex();
+
+  const vec3f rayDir = normalize(ray.direction);
+  const float t = 0.5f*(rayDir.y + 1.0f);
+  const vec3f c = (1.0f - t)*vec3f(1.0f, 1.0f, 1.0f) + t * vec3f(0.5f, 0.7f, 1.0f);
+  return c;
+}
+
+OPTIX_MISS_PROGRAM(miss)()
+{
+  /* nothing to do */
+}
+
+OPTIX_MISS_PROGRAM(miss_shadow)()
+{
+  float &vis = owl::getPRD<float>();
+  vis = 1.f;
+}
+
+typedef enum {
+  /*! ray could get properly bounced, and is still alive */
+  rayGotBounced,
+  /*! ray could not get scattered, and should get cancelled */
+  rayGotCancelled,
+  /*! ray didn't hit anything, and went into the environment */
+  rayDidntHitAnything
+} ScatterEvent;
+
+
+struct PerRayData
+{
+  Random random;
+  struct {
+    ScatterEvent scatterEvent;
+    vec3f        scattered_origin;
+    vec3f        scattered_direction;
+    vec3f        attenuation;
+    vec3f        directLight;
+  } out;
+};
+
+inline __device__
+vec3f tracePath(const RayGenData &self,
+                RadianceRay &ray, PerRayData &prd)
+{
+  vec3f attenuation = 1.f;
+  vec3f directLight = 0.0f;
+  
+  /* iterative version of recursion, up to max depth */
+  for (int depth=0;depth<1;depth++) {
+    prd.out.scatterEvent = rayDidntHitAnything;
+    owl::traceRay(/*accel to trace against*/ optixLaunchParams.world,
+                  /*the ray to trace*/ ray,
+                  /*prd*/prd);
+
+    
+    if (prd.out.scatterEvent == rayDidntHitAnything)
+      /* ray got 'lost' to the environment - 'light' it with miss
+         shader */
+      return directLight + attenuation * missColor(ray);
+    else if (prd.out.scatterEvent == rayGotCancelled)
+      return vec3f(0.f);
+
+    else { // ray is still alive, and got properly bounced
+      attenuation *= prd.out.attenuation;
+      directLight += prd.out.directLight;
+      ray = RadianceRay(/* origin   : */ prd.out.scattered_origin,
+                     /* direction: */ prd.out.scattered_direction,
+                     /* tmin     : */ 1e-3f,
+                     /* tmax     : */ 1e10f);
+    }
+  }
+  // recursion did not terminate - cancel it but return direct lighting from any previous bounce
+  return directLight;
+}
+
+// returns a visibility term (1 for unshadowed)
+inline __device__
+float traceShadowRay(const OptixTraversableHandle &traversable,
+                  ShadowRay &ray)
+{
+  float vis = 0.f;
+  owl::traceRay(traversable, ray, vis, 
+                   OPTIX_RAY_FLAG_DISABLE_ANYHIT
+                   | OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT
+                   | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT);
+  return vis;
+}
 
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
   const RayGenData &self = owl::getProgramData<RayGenData>();
   const vec2i pixelID = owl::getLaunchIndex();
 
-  Random random;
-  random.init(pixelID.x,pixelID.y);
+  PerRayData prd;
+  prd.random.init(pixelID.x,pixelID.y);
 
   const int NUM_SAMPLES_PER_PIXEL = 12;  // TODO: jitter?
   vec3f accumColor = 0.f;
 
   for (int sampleID=0;sampleID<NUM_SAMPLES_PER_PIXEL;sampleID++) {
-    owl::Ray ray;
+    RadianceRay ray;
 
-    const vec2f pixelSample(random(), random());
+    const vec2f pixelSample(prd.random(), prd.random());
     const vec2f screen = (vec2f(pixelID)+pixelSample) / vec2f(self.fbSize);
 
     ray.origin = self.camera.pos;
@@ -46,11 +141,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
                   + screen.u * self.camera.dir_du
                   + screen.v * self.camera.dir_dv);
 
-    vec3f color = 0.f;
-    owl::traceRay(/*accel to trace against*/self.world,
-                  /*the ray to trace*/ray,
-                  /*prd*/ color);
-    accumColor += color;
+    accumColor += tracePath(self, ray, prd);
   }
     
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
@@ -60,7 +151,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
-  vec3f &prd = owl::getPRD<vec3f>();
+  PerRayData &prd = owl::getPRD<PerRayData>();
 
   const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
   
@@ -79,8 +170,23 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   uchar4 col = self.colorPalette[ci];
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 
-  const vec3f rayDir = optixGetWorldRayDirection();
-  prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*color;
+  // Get direct light
+  const vec3f dir   = optixGetWorldRayDirection();
+  const vec3f org   = optixGetWorldRayOrigin();
+  const float hit_t = optixGetRayTmax();
+  const vec3f hit_P = org + hit_t * dir;
+  const vec3f lightDir = {-1,1,1};
+  ShadowRay shadowRay(/* origin   : */ hit_P,
+                 /* light direction: */  lightDir,
+                 /* tmin     : */ 1e-3f,
+                 /* tmax     : */ 1e10f);
+
+  float vis = traceShadowRay(optixLaunchParams.world, shadowRay);  // TODO: jitter
+  prd.out.directLight = vis*color;  //debug
+
+  // Bounce
+  prd.out.attenuation = color;
+  prd.out.scatterEvent = rayGotBounced;
 }
 
 OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
@@ -142,7 +248,7 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
   const int primID = optixGetPrimitiveIndex();
   const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
 
-  vec3f &prd = owl::getPRD<vec3f>();
+  PerRayData &prd = owl::getPRD<PerRayData>();
 
   // Select normal for whichever face we hit
   const float3 Nbox = make_float3(
@@ -157,27 +263,10 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 
   const vec3f rayDir = optixGetWorldRayDirection();
-  prd = (.2f + .8f*fabs(dot(rayDir,Ng)))*color;
-
+  prd.out.directLight = (.2f + .8f*fabs(dot(rayDir,Ng)))*color;
+  prd.out.attenuation = color;
+  prd.out.scatterEvent = rayGotBounced;
 
 }
 
-OPTIX_MISS_PROGRAM(miss)()
-{
-  const vec2i pixelID = owl::getLaunchIndex();
-
-  vec3f &prd = owl::getPRD<vec3f>();
-  const vec3f rayDir  = normalize(vec3f(optixGetWorldRayDirection()));
-  const float t = 0.5f*(rayDir.y + 1.0f);
-  const vec3f c = (1.0f - t)*vec3f(1.0f, 1.0f, 1.0f) + t * vec3f(0.5f, 0.7f, 1.0f);
-  prd = c;;
-
-#if 0
-  const MissProgData &self = owl::getProgramData<MissProgData>();
-  
-  vec3f &prd = owl::getPRD<vec3f>();
-  int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
-  prd = (pattern&1) ? self.color1 : self.color0;
-#endif
-}
 

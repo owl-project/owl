@@ -21,6 +21,11 @@
 
 using namespace owl;
 
+struct LaunchParams
+{
+  OptixTraversableHandle world;
+};
+
 /* variables for the triangle mesh geometry */
 struct TrianglesGeomData
 {
@@ -46,7 +51,6 @@ struct RayGenData
 {
   uint32_t *fbPtr;
   vec2i  fbSize;
-  OptixTraversableHandle world;
 
   struct {
     vec3f pos;

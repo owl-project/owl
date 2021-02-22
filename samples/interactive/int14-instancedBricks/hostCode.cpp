@@ -104,6 +104,7 @@ struct Viewer : public owl::viewer::OWLViewer
 
   bool sbtDirty = true;
   OWLRayGen rayGen   { 0 };
+  OWLLaunchParams launchParams { 0 };
   OWLContext context { 0 };
 };
 
@@ -217,6 +218,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
   std::vector<owl::affine3f> instanceTransforms;
   instanceTransforms.reserve(scene->num_instances);
+  owl::box3f sceneBox;
   
   // Make instance transforms
   for (auto it : modelToInstances) {
@@ -246,22 +248,57 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
     owlGroupBuildAccel(userGeomGroup);
 
-    geomGroups.push_back(userGeomGroup);
 
+    LOG("adding (" << it.second.size() << ") instance transforms for model ...");
+    for (uint32_t instanceIndex : it.second) {
 
-    LOG("adding instance transform for model ...");
+      const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
 
-    // Temp: Normalize model using single instance transform
-    const vec3f dims(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z));
-    const float maxDim = owl::reduce_max(dims);
-    const float worldScale = 2.0f / maxDim;  // 2 here to match our triangle-based box which lies in [-1,1]
+      const std::string instanceName = vox_instance.name ? vox_instance.name : "(unnamed)";
+      if (vox_instance.hidden) {
+        LOG("skipping hidden VOX instance: " << instanceName );
+        continue;
+      } else {
+        LOG("building VOX instance: " << instanceName);
+      }
 
-    // object2world, read in right to left order:
-    owl::affine3f transform = owl::affine3f::scale(worldScale) *  // normalize 
-      owl::affine3f::translate(-dims*0.5f);                       // center model about origin
+      // VOX instance transform
+      const ogt_vox_transform &vox_transform = vox_instance.transform;
 
-    instanceTransforms.push_back(transform);
+      const owl::affine3f instanceTransform( 
+          vec3f( vox_transform.m00, vox_transform.m01, vox_transform.m02 ),  // column 0
+          vec3f( vox_transform.m10, vox_transform.m11, vox_transform.m12 ),  //  1
+          vec3f( vox_transform.m20, vox_transform.m21, vox_transform.m22 ),  //  2
+          vec3f( vox_transform.m30, vox_transform.m31, vox_transform.m32 )); //  3 
 
+      // This matrix translates model to its center (in integer coords!) and applies instance transform
+      const affine3f instanceMoveToCenterAndTransform = 
+        affine3f(instanceTransform) * 
+        affine3f::translate(-vec3f(float(vox_model->size_x/2),   // Note: snapping to int to match MV
+                                   float(vox_model->size_y/2), 
+                                   float(vox_model->size_z/2)));
+
+      sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform, vec3f(0.0f)));
+      sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform,  
+            vec3f(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z))));
+
+      instanceTransforms.push_back(instanceMoveToCenterAndTransform);
+
+      geomGroups.push_back(userGeomGroup);
+
+    }
+
+  }
+
+  // Apply final scene transform so we can use the same camera for every scene
+  const float maxSpan = owl::reduce_max(sceneBox.span());
+  const vec3f sceneCenter = sceneBox.center();
+  owl::affine3f worldTransform = 
+    owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
+    owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, 0.0f));  // center about (x,y) origin ,with Z up to match MV
+
+  for (size_t i = 0; i < instanceTransforms.size(); ++i) {
+    instanceTransforms[i] = worldTransform * instanceTransforms[i];
   }
   
   OWLGroup world = owlInstanceGroupCreate(context, instanceTransforms.size());
@@ -425,9 +462,10 @@ Viewer::Viewer(const ogt_vox_scene *scene)
   context = owlContextCreate(nullptr,1);
   OWLModule module = owlModuleCreate(context,ptxCode);
 
+  owlContextSetRayTypeCount(context, 2);  // primary, shadow
   
-  //OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
-  OWLGroup world = createUserGeometryScene(module, scene);
+  OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
+  //OWLGroup world = createUserGeometryScene(module, scene);
 
   owlGroupBuildAccel(world);
   
@@ -437,7 +475,7 @@ Viewer::Viewer(const ogt_vox_scene *scene)
   // ##################################################################
 
   // -------------------------------------------------------
-  // set up miss prog 
+  // set up miss progs
   // -------------------------------------------------------
   OWLVarDecl missProgVars[]
     = {
@@ -446,13 +484,18 @@ Viewer::Viewer(const ogt_vox_scene *scene)
     { /* sentinel to mark end of list */ }
   };
   // ----------- create object  ----------------------------
-  OWLMissProg missProg
-    = owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
-                        missProgVars,-1);
+  OWLMissProg missProg = 
+    owlMissProgCreate(context,module,"miss",sizeof(MissProgData), missProgVars,-1);
+  owlMissProgSet(context, 0, missProg);
   
   // ----------- set variables  ----------------------------
   owlMissProgSet3f(missProg,"color0",owl3f{.8f,0.f,0.f});
   owlMissProgSet3f(missProg,"color1",owl3f{.8f,.8f,.8f});
+
+  // Second program for shadow visibility
+  OWLMissProg shadowMissProg = 
+    owlMissProgCreate(context,module,"miss_shadow", 0u, nullptr,-1);
+  owlMissProgSet(context, 1, shadowMissProg);
 
   // -------------------------------------------------------
   // set up ray gen program
@@ -461,7 +504,6 @@ Viewer::Viewer(const ogt_vox_scene *scene)
     { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(RayGenData,fbPtr)},
     // { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
     { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
-    { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
     { "camera.pos",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.pos)},
     { "camera.dir_00", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_00)},
     { "camera.dir_du", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_du)},
@@ -475,7 +517,17 @@ Viewer::Viewer(const ogt_vox_scene *scene)
                       sizeof(RayGenData),
                       rayGenVars,-1);
   /* camera and frame buffer get set in resiez() and cameraChanged() */
-  owlRayGenSetGroup (rayGen,"world",        world);
+
+  // Launch params
+  OWLVarDecl launchVars[] = {
+    { "world",         OWL_GROUP,  OWL_OFFSETOF(LaunchParams,world)},
+    { /* sentinel to mark end of list */ }
+  };
+
+  launchParams = 
+    owlParamsCreate(context, sizeof(LaunchParams), launchVars, -1);
+
+  owlParamsSetGroup(launchParams, "world", world);
   
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -493,7 +545,9 @@ void Viewer::render()
     owlBuildSBT(context);
     sbtDirty = false;
   }
-  owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
+  //owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);
+  owlLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);
+  owlLaunchSync(launchParams);
 }
 
 
