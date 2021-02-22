@@ -42,17 +42,18 @@
 
 extern "C" char ptxCode[];
 
+// NOTE: the brick geometry here must lie in a unit bounding box in [0,1]x[0,1]x[0,1]
 const int NUM_VERTICES = 8;
 vec3f vertices[NUM_VERTICES] =
   {
-    { -1.f,-1.f,-1.f },
-    { +1.f,-1.f,-1.f },
-    { -1.f,+1.f,-1.f },
-    { +1.f,+1.f,-1.f },
-    { -1.f,-1.f,+1.f },
-    { +1.f,-1.f,+1.f },
-    { -1.f,+1.f,+1.f },
-    { +1.f,+1.f,+1.f }
+    { 0.f, 0.f, 0.f },
+    { 1.f, 0.f, 0.f },
+    { 0.f, 1.f, 0.f },
+    { 1.f, 1.f, 0.f },
+    { 0.f, 0.f, 1.f },
+    { 1.f, 0.f, 1.f },
+    { 0.f, 1.f, 1.f },
+    { 1.f, 1.f, 1.f }
   };
 
 const int NUM_INDICES = 12;
@@ -67,14 +68,16 @@ vec3i indices[NUM_INDICES] =
   };
 
 // const vec2i fbSize(800,600);
-const vec3f init_lookFrom = vec3f(-4.f,+3.f,-2.f)*0.6f;
-//const vec3f init_lookFrom(-4.f,+3.f,-2.f);
-const vec3f init_lookAt(0.f,0.f,0.f);
-const vec3f init_lookUp(0.f,1.f,0.f);
-const float init_cosFovy = 0.66f;
+const float isometricAngle = 35.564f * M_PI / 180.0f;
+const owl::affine3f cameraRotation = 
+  owl::affine3f::rotate(vec3f(0,0,1), M_PI/4.0f) *
+  owl::affine3f::rotate(vec3f(-1,0,0), isometricAngle);
 
+const vec3f init_lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
+const vec3f init_lookUp(0.f, 0.f, 1.f);
 
-
+const vec3f init_lookAt {0.0f};
+const float init_cosFovy = 0.10f;  // small fov to approach isometric
 
 
 
@@ -261,17 +264,11 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   owlGeomTypeSetClosestHit(trianglesGeomType,0,
                            module,"TriangleMesh");
 
-  LOG("building triangle geometries ...");
-
-  // Only handle first model for now.  TODO: handle instances and multiple models
-  assert(scene->num_models > 0);
-  const ogt_vox_model *vox_model = scene->models[0];
-  assert(vox_model);
-  std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
+  LOG("building triangle geometry for single brick ...");
 
 
   // ------------------------------------------------------------------
-  // triangle mesh
+  // triangle mesh for single unit brick
   // ------------------------------------------------------------------
   OWLBuffer vertexBuffer
     = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_VERTICES,vertices);
@@ -289,56 +286,103 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
 
-  const int numInstances = voxdata.size();
-  std::vector<unsigned char> colorIndices;
-  colorIndices.reserve(numInstances);
-  for (int i = 0; i < numInstances; ++i) {
-      colorIndices.push_back(voxdata[i].w);
-  }
-  OWLBuffer colorIndexBuffer
-      = owlDeviceBufferCreate(context, OWL_UCHAR, numInstances, colorIndices.data());
-  owlGeomSetBuffer(trianglesGeom, "colorIndexPerInstance", colorIndexBuffer);
-
   OWLBuffer paletteBuffer
     = owlDeviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
   owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
   
   // ------------------------------------------------------------------
-  // the group/accel for that mesh
+  // the group/accel for a brick
   // ------------------------------------------------------------------
   OWLGroup trianglesGroup
     = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
 
+
   // ------------------------------------------------------------------
-  // instances
+  // instance the brick for each Vox model in the scene, flattening any Vox instances
   // ------------------------------------------------------------------
 
-  std::vector<owl::affine3f> transforms;
-  transforms.reserve(numInstances);
-  
-  // Normalize model
-  const owl::vec3f dims(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z));
-  const float maxDim = owl::reduce_max(dims);
-  const float worldScale = 1.0f / maxDim;
+  LOG("building instances ...");
 
-  for (size_t i = 0; i < numInstances; ++i) {
-      uchar4 b = voxdata[i];
-      // Note: some unintuitive transforms here to account for our modeled box being 2 units
-      // long on each side, and centered about the origin.
-      owl::vec3f trans = owl::vec3f(b.x, b.y, b.z)*2.0f - dims + owl::vec3f(1.0f);
+  std::vector<owl::affine3f> transformsPerBrick;
+  std::vector<unsigned char> colorIndicesPerBrick;
+  owl::box3f sceneBox;
 
-      // object2world, read in right to left order:
-      transforms.push_back(owl::affine3f::scale(worldScale) *   // normalize
-          owl::affine3f::rotate(vec3f(1,0,0), -M_PI_2) *        // rotate Z-up to Y-up
-          owl::affine3f::translate(trans));                     // center model about origin
+  assert(scene->num_instances > 0);
+  assert(scene->num_models > 0);
+
+  for (uint32_t instanceIndex = 0; instanceIndex < scene->num_instances; instanceIndex++) {
+
+    const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
+
+    const std::string instanceName = vox_instance.name ? vox_instance.name : "(unnamed)";
+    if (vox_instance.hidden) {
+      LOG("skipping hidden VOX instance: " << instanceName );
+      continue;
+    } else {
+      LOG("building VOX instance: " << instanceName);
+    }
+
+    const ogt_vox_model *vox_model = scene->models[vox_instance.model_index];
+    assert(vox_model);
+
+    // Note: for scenes with many instances of a model, cache this or rearrange loop
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
+
+    // Color indices for this model
+    for (size_t i = 0; i < voxdata.size(); ++i) {
+        colorIndicesPerBrick.push_back(voxdata[i].w);
+    }
+
+    // VOX instance transform
+    const ogt_vox_transform &vox_transform = vox_instance.transform;
+
+    const owl::affine3f instanceTransform( 
+        vec3f( vox_transform.m00, vox_transform.m01, vox_transform.m02 ),  // column 0
+        vec3f( vox_transform.m10, vox_transform.m11, vox_transform.m12 ),  //  1
+        vec3f( vox_transform.m20, vox_transform.m21, vox_transform.m22 ),  //  2
+        vec3f( vox_transform.m30, vox_transform.m31, vox_transform.m32 )); //  3 
+
+    // This matrix translates model to its center (in integer coords!) and applies instance transform
+    const affine3f instanceMoveToCenterAndTransform = 
+      affine3f(instanceTransform) * 
+      affine3f::translate(-vec3f(float(vox_model->size_x/2),   // Note: snapping to int to match MV
+                                 float(vox_model->size_y/2), 
+                                 float(vox_model->size_z/2)));
+
+    sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform, vec3f(0.0f)));
+    sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform,  
+          vec3f(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z))));
+
+    for (size_t i = 0; i < voxdata.size(); ++i) {
+        uchar4 b = voxdata[i];
+        // Transform brick to its location in the scene
+        owl::affine3f trans = instanceMoveToCenterAndTransform * owl::affine3f::translate(vec3f(b.x, b.y, b.z));
+        transformsPerBrick.push_back(trans);
+    }
   }
 
-  OWLGroup world = owlInstanceGroupCreate(context, transforms.size());
+  // Apply final scene transform so we can use the same camera for every scene
+  const float maxSpan = owl::reduce_max(sceneBox.span());
+  const vec3f sceneCenter = sceneBox.center();
+  owl::affine3f worldTransform = 
+    owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
+    owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, 0.0f));  // center about (x,y) origin ,with Z up to match MV
 
-  for (int i = 0; i < int(transforms.size()); ++i) {
-    owlInstanceGroupSetChild(world, i, trianglesGroup);  // All instances point to the same geometry
-    owlInstanceGroupSetTransform(world, i, (const float*)&transforms[i], OWL_MATRIX_FORMAT_OWL);
+  for (size_t i = 0; i < transformsPerBrick.size(); ++i) {
+    transformsPerBrick[i] = worldTransform * transformsPerBrick[i];
+  }
+
+  // Set the color indices per brick now that the bricks have been fully instanced
+  OWLBuffer colorIndexBuffer
+      = owlDeviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
+  owlGeomSetBuffer(trianglesGeom, "colorIndexPerInstance", colorIndexBuffer);
+
+  OWLGroup world = owlInstanceGroupCreate(context, transformsPerBrick.size());
+
+  for (int i = 0; i < int(transformsPerBrick.size()); ++i) {
+    owlInstanceGroupSetChild(world, i, trianglesGroup);  // All instances point to the same brick 
+    owlInstanceGroupSetTransform(world, i, (const float*)&transformsPerBrick[i], OWL_MATRIX_FORMAT_OWL);
   }
 
   return world;
