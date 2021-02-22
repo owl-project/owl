@@ -17,28 +17,45 @@
 #include "deviceCode.h"
 #include <optix_device.h>
 
+#include <owl/common/math/random.h>
+
+
+typedef owl::common::LCG<4> Random;
+
+
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
   const RayGenData &self = owl::getProgramData<RayGenData>();
   const vec2i pixelID = owl::getLaunchIndex();
 
-  const vec2f screen = (vec2f(pixelID)+vec2f(.5f)) / vec2f(self.fbSize);
-  owl::Ray ray;
-  ray.origin    
-    = self.camera.pos;
-  ray.direction 
-    = normalize(self.camera.dir_00
-                + screen.u * self.camera.dir_du
-                + screen.v * self.camera.dir_dv);
+  Random random;
+  random.init(pixelID.x,pixelID.y);
 
-  vec3f color;
-  owl::traceRay(/*accel to trace against*/self.world,
-                /*the ray to trace*/ray,
-                /*prd*/color);
+  const int NUM_SAMPLES_PER_PIXEL = 12;  // TODO: jitter?
+  vec3f accumColor = 0.f;
+
+  for (int sampleID=0;sampleID<NUM_SAMPLES_PER_PIXEL;sampleID++) {
+    owl::Ray ray;
+
+    const vec2f pixelSample(random(), random());
+    const vec2f screen = (vec2f(pixelID)+pixelSample) / vec2f(self.fbSize);
+
+    ray.origin = self.camera.pos;
+    ray.direction 
+      = normalize(self.camera.dir_00
+                  + screen.u * self.camera.dir_du
+                  + screen.v * self.camera.dir_dv);
+
+    vec3f color = 0.f;
+    owl::traceRay(/*accel to trace against*/self.world,
+                  /*the ray to trace*/ray,
+                  /*prd*/ color);
+    accumColor += color;
+  }
     
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
-    = owl::make_rgba(color);
+    = owl::make_rgba(accumColor * (1.f / NUM_SAMPLES_PER_PIXEL));
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
@@ -149,10 +166,18 @@ OPTIX_MISS_PROGRAM(miss)()
 {
   const vec2i pixelID = owl::getLaunchIndex();
 
+  vec3f &prd = owl::getPRD<vec3f>();
+  const vec3f rayDir  = normalize(vec3f(optixGetWorldRayDirection()));
+  const float t = 0.5f*(rayDir.y + 1.0f);
+  const vec3f c = (1.0f - t)*vec3f(1.0f, 1.0f, 1.0f) + t * vec3f(0.5f, 0.7f, 1.0f);
+  prd = c;;
+
+#if 0
   const MissProgData &self = owl::getProgramData<MissProgData>();
   
   vec3f &prd = owl::getPRD<vec3f>();
   int pattern = (pixelID.x / 8) ^ (pixelID.y/8);
   prd = (pattern&1) ? self.color1 : self.color0;
+#endif
 }
 

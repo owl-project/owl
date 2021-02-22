@@ -30,6 +30,8 @@
 #include "ogt_vox.h"
 
 #include <cassert>
+#include <map>
+#include <vector>
 
 #define LOG(message)                                            \
   std::cout << OWL_TERMINAL_BLUE;                               \
@@ -68,9 +70,9 @@ vec3i indices[NUM_INDICES] =
   };
 
 // const vec2i fbSize(800,600);
-const float isometricAngle = 35.564f * M_PI / 180.0f;
+const float isometricAngle = 35.564f * float(M_PI) / 180.0f;
 const owl::affine3f cameraRotation = 
-  owl::affine3f::rotate(vec3f(0,0,1), M_PI/4.0f) *
+  owl::affine3f::rotate(vec3f(0,0,1), float(M_PI)/4.0f) *
   owl::affine3f::rotate(vec3f(-1,0,0), isometricAngle);
 
 const vec3f init_lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
@@ -194,50 +196,79 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
   // Do this before setting up user geometry, to compile bounds program
   owlBuildPrograms(context);
 
-  LOG("building user geometries ...");
-
-  // Only handle first model for now.  TODO: handle instances and multiple models
+  assert(scene->num_instances > 0);
   assert(scene->num_models > 0);
-  const ogt_vox_model *vox_model = scene->models[0];
-  assert(vox_model);
-  std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
 
-  // ------------------------------------------------------------------
-  // custom user primitive for single brick
-  // ------------------------------------------------------------------
-  OWLBuffer primBuffer 
-    = owlDeviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
+
+  // Palette buffer is global to scene
   OWLBuffer paletteBuffer
     = owlDeviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
 
-  OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
+  // Cluster instances together that use the same model
+  std::map<uint32_t, std::vector<uint32_t>> modelToInstances;
+
+  for (uint32_t instanceIndex = 0; instanceIndex < scene->num_instances; instanceIndex++) {
+    const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
+    modelToInstances[vox_instance.model_index].push_back(instanceIndex);
+  }
+
+  std::vector<OWLGroup> geomGroups;
+  geomGroups.reserve(scene->num_models);
+
+  std::vector<owl::affine3f> instanceTransforms;
+  instanceTransforms.reserve(scene->num_instances);
   
-  owlGeomSetPrimCount(voxGeom, voxdata.size());
+  // Make instance transforms
+  for (auto it : modelToInstances) {
 
-  owlGeomSetBuffer(voxGeom, "prims", primBuffer);
-  owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
+    const ogt_vox_model *vox_model = scene->models[it.first];
+    assert(vox_model);
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
+
+    LOG("building user geometry for model ...");
+
+    // ------------------------------------------------------------------
+    // set up user primitives for single vox model
+    // ------------------------------------------------------------------
+    OWLBuffer primBuffer 
+      = owlDeviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
+
+    OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
+    
+    owlGeomSetPrimCount(voxGeom, voxdata.size());
+
+    owlGeomSetBuffer(voxGeom, "prims", primBuffer);
+    owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
+
+    // ------------------------------------------------------------------
+    // bottom level group/accel
+    // ------------------------------------------------------------------
+    OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
+    owlGroupBuildAccel(userGeomGroup);
+
+    geomGroups.push_back(userGeomGroup);
 
 
-  // ------------------------------------------------------------------
-  // bottom level group/accel
-  // ------------------------------------------------------------------
-  OWLGroup userGeomGroup
-    = owlUserGeomGroupCreate(context,1,&voxGeom);
-  owlGroupBuildAccel(userGeomGroup);
+    LOG("adding instance transform for model ...");
 
+    // Temp: Normalize model using single instance transform
+    const vec3f dims(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z));
+    const float maxDim = owl::reduce_max(dims);
+    const float worldScale = 2.0f / maxDim;  // 2 here to match our triangle-based box which lies in [-1,1]
 
-  // Normalize model using single instance transform
-  const vec3f dims(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z));
-  const float maxDim = owl::reduce_max(dims);
-  const float worldScale = 2.0f / maxDim;  // 2 here to match our triangle-based box which lies in [-1,1]
+    // object2world, read in right to left order:
+    owl::affine3f transform = owl::affine3f::scale(worldScale) *  // normalize 
+      owl::affine3f::translate(-dims*0.5f);                       // center model about origin
 
-  // object2world, read in right to left order:
-  owl::affine3f transform = owl::affine3f::scale(worldScale) *  // normalize 
-    owl::affine3f::translate(-dims*0.5f);                       // center model about origin
+    instanceTransforms.push_back(transform);
 
-  OWLGroup world = owlInstanceGroupCreate(context, 1);
-  owlInstanceGroupSetChild(world, 0, userGeomGroup);
-  owlInstanceGroupSetTransform(world, 0, (const float*)&transform, OWL_MATRIX_FORMAT_OWL); 
+  }
+  
+  OWLGroup world = owlInstanceGroupCreate(context, instanceTransforms.size());
+  for (size_t i = 0; i < instanceTransforms.size(); ++i) {
+    owlInstanceGroupSetChild(world, i, geomGroups[i]);
+    owlInstanceGroupSetTransform(world, i, (const float*)&instanceTransforms[i], OWL_MATRIX_FORMAT_OWL); 
+  }
 
   return world;
 
