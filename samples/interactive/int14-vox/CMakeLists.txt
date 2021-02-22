@@ -17,14 +17,14 @@
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(int14-instancedBricks
+add_executable(int14-vox
   deviceCode.h
   hostCode.cpp
   readVoxOGT.cpp
   readVox.h
   ${ptxCode}
   )
-target_link_libraries(int14-instancedBricks
+target_link_libraries(int14-vox
   ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
   )
