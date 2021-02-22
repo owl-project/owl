@@ -203,7 +203,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
   std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
 
   // ------------------------------------------------------------------
-  // VOX geom
+  // custom user primitive for single brick
   // ------------------------------------------------------------------
   OWLBuffer primBuffer 
     = owlDeviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
@@ -233,7 +233,6 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
   // object2world, read in right to left order:
   owl::affine3f transform = owl::affine3f::scale(worldScale) *  // normalize 
-    owl::affine3f::rotate(vec3f(1,0,0), -M_PI_2) *              // rotate Z-up to Y-up
     owl::affine3f::translate(-dims*0.5f);                       // center model about origin
 
   OWLGroup world = owlInstanceGroupCreate(context, 1);
@@ -396,8 +395,8 @@ Viewer::Viewer(const ogt_vox_scene *scene)
   OWLModule module = owlModuleCreate(context,ptxCode);
 
   
-  OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
-  //OWLGroup world = createUserGeometryScene(module, scene);
+  //OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
+  OWLGroup world = createUserGeometryScene(module, scene);
 
   owlGroupBuildAccel(world);
   
