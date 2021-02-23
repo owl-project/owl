@@ -24,6 +24,7 @@ using namespace owl;
 struct LaunchParams
 {
   OptixTraversableHandle world;
+  vec3f sunDirection;  // pointing toward sun
 };
 
 /* variables for the triangle mesh geometry */

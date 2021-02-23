@@ -18,6 +18,7 @@
 #include <optix_device.h>
 
 #include <owl/common/math/random.h>
+#include <owl/common/math/LinearSpace.h>
 
 __constant__ LaunchParams optixLaunchParams;
 
@@ -149,6 +150,48 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     = owl::make_rgba(accumColor * (1.f / NUM_SAMPLES_PER_PIXEL));
 }
 
+// from OptiX 6 SDK
+#ifndef M_PI_4f
+#define M_PI_4f     0.785398163397448309616f
+#endif
+inline __device__ 
+float2 squareToDisk(const float2& sample)
+{
+  float phi, r;
+
+  const float a = 2.0f * sample.x - 1.0f;
+  const float b = 2.0f * sample.y - 1.0f;
+
+  if (a > -b)
+  {
+    if (a > b)
+    {
+      r = a;
+      phi = (float)M_PI_4f * (b/a);
+    }
+    else
+    {
+      r = b;
+      phi = (float)M_PI_4f * (2.0f - (a/b));
+    }
+  }
+  else
+  {
+    if (a < b)
+    {
+      r = -a;
+      phi = (float)M_PI_4f * (4.0f + (b/a));
+    }
+    else
+    {
+      r = -b;
+      phi = (b) ? (float)M_PI_4f * (6.0f - (a/b)) : 0.0f;
+    }
+  }
+
+  return make_float2( r * cosf(phi), r * sinf(phi) );
+}
+
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
   PerRayData &prd = owl::getPRD<PerRayData>();
@@ -163,6 +206,8 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   const vec3f &C     = self.vertex[index.z];
   const vec3f Nbox   = normalize(cross(B-A,C-A));
   const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
+  const float boxScaleInWorldSpace = owl::length(vec3f(optixTransformVectorFromObjectToWorldSpace(B-A)));
+  const float shadowBias = 1e-2f * boxScaleInWorldSpace;
 
   // Convert 8 bit color to float
   const unsigned int instanceID = optixGetInstanceId();
@@ -175,13 +220,25 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   const vec3f org   = optixGetWorldRayOrigin();
   const float hit_t = optixGetRayTmax();
   const vec3f hit_P = org + hit_t * dir;
-  const vec3f lightDir = {-1,1,1};
-  ShadowRay shadowRay(/* origin   : */ hit_P,
-                 /* light direction: */  lightDir,
-                 /* tmin     : */ 1e-3f,
-                 /* tmax     : */ 1e10f);
+  const vec3f hit_P_offset = hit_P + shadowBias*Ng;  // bias along normal to help with shadow acne
+  const vec3f lightDir = optixLaunchParams.sunDirection;
 
-  float vis = traceShadowRay(optixLaunchParams.world, shadowRay);  // TODO: jitter
+  // Build frame around light dir
+  const owl::LinearSpace3f lightFrame = owl::common::frame(normalize(lightDir));
+
+  // jitter light direction slightly
+  const float lightRadius = 0.01f;  // should be ok as a constant since our scenes are normalized
+  const vec3f lightCenter = hit_P_offset + lightFrame.vz;
+  const float2 sample = squareToDisk(make_float2(prd.random(), prd.random()));
+  const vec3f jitteredPos = lightCenter + lightRadius*(sample.x*lightFrame.vx + sample.y*lightFrame.vy);
+  const vec3f jitteredLightDir = jitteredPos - hit_P_offset;  // no need to normalize
+
+  ShadowRay shadowRay(hit_P_offset,      // origin
+                      jitteredLightDir,  // direction
+                      shadowBias,
+                      1e10f);
+
+  float vis = traceShadowRay(optixLaunchParams.world, shadowRay);
   prd.out.directLight = vis*color;  //debug
 
   // Bounce

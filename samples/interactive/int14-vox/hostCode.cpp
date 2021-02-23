@@ -45,6 +45,8 @@
 extern "C" char ptxCode[];
 
 // NOTE: the brick geometry here must lie in a unit bounding box in [0,1]x[0,1]x[0,1]
+// and have winding order so that normals point outward
+
 const int NUM_VERTICES = 8;
 vec3f vertices[NUM_VERTICES] =
   {
@@ -61,12 +63,12 @@ vec3f vertices[NUM_VERTICES] =
 const int NUM_INDICES = 12;
 vec3i indices[NUM_INDICES] =
   {
-    { 0,1,3 }, { 2,3,0 },
-    { 5,7,6 }, { 5,6,4 },
-    { 0,4,5 }, { 0,5,1 },
-    { 2,3,7 }, { 2,7,6 },
-    { 1,5,7 }, { 1,7,3 },
-    { 4,0,2 }, { 4,2,6 }
+    { 3,1,0 }, { 2,3,0 },
+    { 5,7,6 }, { 6,4,5 },
+    { 5,4,0 }, { 0,1,5 },
+    { 7,3,2 }, { 2,6,7 },
+    { 7,5,1 }, { 1,3,7 },
+    { 2,0,4 }, { 4,6,2 }
   };
 
 // const vec2i fbSize(800,600);
@@ -99,6 +101,9 @@ struct Viewer : public owl::viewer::OWLViewer
     updates the camera. gets called AFTER all values have been updated */
   void cameraChanged() override;
 
+
+  void key(char key, const vec2i &/*where*/) override;
+
   OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene);
   OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene);
 
@@ -106,6 +111,9 @@ struct Viewer : public owl::viewer::OWLViewer
   OWLRayGen rayGen   { 0 };
   OWLLaunchParams launchParams { 0 };
   OWLContext context { 0 };
+  float sunPhi   = 0.785398f;  // rotation about up axis
+  float sunTheta = 0.785398f;  // elevation angle, 0 at horizon
+  bool sunDirty = true;
 };
 
 /*! window notifies us that we got resized */     
@@ -143,6 +151,34 @@ void Viewer::cameraChanged()
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
   owlRayGenSet3f    (rayGen,"camera.dir_dv",(const owl3f&)camera_ddv);
   sbtDirty = true;
+}
+
+
+void Viewer::key(char key, const vec2i &where)
+{
+  switch (key) {
+    case '1':
+      sunTheta += 0.1f;
+      sunTheta = owl::clamp(sunTheta, 0.f, (float)M_PI/2);
+      sunDirty = true;
+      return;
+    case '2':
+      sunTheta -= 0.1f;
+      sunTheta = owl::clamp(sunTheta, 0.f, (float)M_PI/2);
+      sunDirty = true;
+      return;
+    case '3':
+      sunPhi += 0.1f;
+      if (sunPhi >= 2.0f*M_PI) sunPhi -= 2.0f*M_PI;
+      sunDirty = true;
+      return;
+    case '4':
+      sunPhi -= 0.1f;
+      if (sunPhi <= 0.0f) sunPhi += 2.0f*M_PI;
+      sunDirty = true;
+      return;
+  }
+  OWLViewer::key(key, where);
 }
 
 // Adapted from ogt demo code. 
@@ -302,7 +338,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
   }
   
   OWLGroup world = owlInstanceGroupCreate(context, instanceTransforms.size());
-  for (size_t i = 0; i < instanceTransforms.size(); ++i) {
+  for (int i = 0; i < int(instanceTransforms.size()); ++i) {
     owlInstanceGroupSetChild(world, i, geomGroups[i]);
     owlInstanceGroupSetTransform(world, i, (const float*)&instanceTransforms[i], OWL_MATRIX_FORMAT_OWL); 
   }
@@ -521,6 +557,7 @@ Viewer::Viewer(const ogt_vox_scene *scene)
   // Launch params
   OWLVarDecl launchVars[] = {
     { "world",         OWL_GROUP,  OWL_OFFSETOF(LaunchParams,world)},
+    { "sunDirection",  OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunDirection)},
     { /* sentinel to mark end of list */ }
   };
 
@@ -528,6 +565,7 @@ Viewer::Viewer(const ogt_vox_scene *scene)
     owlParamsCreate(context, sizeof(LaunchParams), launchVars, -1);
 
   owlParamsSetGroup(launchParams, "world", world);
+  // other params set at launch
   
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -544,6 +582,11 @@ void Viewer::render()
   if (sbtDirty) {
     owlBuildSBT(context);
     sbtDirty = false;
+  }
+  if (sunDirty) {
+      owl3f dir = { cos(sunPhi)*cos(sunTheta), sin(sunPhi)*cos(sunTheta), sin(sunTheta) };
+      owlParamsSet3f(launchParams, "sunDirection", dir); 
+      sunDirty = false;
   }
   //owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);
   owlLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);
