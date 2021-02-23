@@ -72,7 +72,8 @@ namespace owl {
 
       OWLViewer(const std::string &title = "OWL Sample Viewer",
                 const vec2i &initWindowSize=vec2i(1200,800),
-                      bool visible=true
+                      bool visible=true,
+                      bool enableVsync=true
                 // ,
                 // const vec3f &cameraInitFrom = vec3f(0,0,-1),
                 // const vec3f &cameraInitAt   = vec3f(0,0,0),
@@ -150,6 +151,11 @@ namespace owl {
                                 /* point of interest: */const vec3f &interest,
                                 /* up-vector        : */const vec3f &up,
                                 /* fovy, in degrees : */float fovyInDegrees);
+      
+      void getCameraOrientation(/* camera origin    : */vec3f &origin,
+                                /* point of interest: */vec3f &interest,
+                                /* up-vector        : */vec3f &up,
+                                /* fovy, in degrees : */float & fovyInDegrees);
 
       void setCameraOptions(float fovy,
                             float focalDistance);

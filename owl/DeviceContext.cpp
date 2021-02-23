@@ -247,21 +247,22 @@ namespace owl {
   }
   
   
-  void DeviceContext::configurePipelineOptions()
+  void DeviceContext::configurePipelineOptions(bool debug)
   {
     // ------------------------------------------------------------------
     // configure default module compile options
     // ------------------------------------------------------------------
-#if 1
+  if (!debug) {
     moduleCompileOptions.maxRegisterCount  = 50;
     moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
     moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_NONE;
-#else
+  } 
+  else {
     std::cout << "WARNING: RUNNING OPTIX PROGRAMS IN -O0 DEBUG MODE!!!" << std::endl;
-    moduleCompileOptions.maxRegisterCount  = 100;
-    moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
+    moduleCompileOptions.maxRegisterCount  = 50;
+    moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
     moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
-#endif
+  }
     
     // ------------------------------------------------------------------
     // configure default pipeline compile options

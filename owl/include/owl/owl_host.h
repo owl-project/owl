@@ -333,7 +333,7 @@ typedef struct _OWLMissProg      *OWLMissProg;
   all programs within a given launch */
 typedef struct _OWLLaunchParams  *OWLLaunchParams, *OWLParams, *OWLGlobals;
 
-OWL_API void owlBuildPrograms(OWLContext context);
+OWL_API void owlBuildPrograms(OWLContext context, bool debug = false);
 OWL_API void owlBuildPipeline(OWLContext context);
 OWL_API void owlBuildSBT(OWLContext context,
                          OWLBuildSBTFlags flags OWL_IF_CPP(=OWL_SBT_ALL));
@@ -958,7 +958,165 @@ OWL_API void owlParamsSet3bv(OWLParams var, const char *name, const bool *val);
 OWL_API void owlParamsSet4bv(OWLParams var, const char *name, const bool *val);
 #endif
 
+// ------------------------------------------------------------------
+// setters for variables of type "char"
+// ------------------------------------------------------------------
 
+// setters for variables on "RayGen"s
+OWL_API void owlRayGenSet1c(OWLRayGen obj, const char *name, char val);
+OWL_API void owlRayGenSet2c(OWLRayGen obj, const char *name, char x, char y);
+OWL_API void owlRayGenSet3c(OWLRayGen obj, const char *name, char x, char y, char z);
+OWL_API void owlRayGenSet4c(OWLRayGen obj, const char *name, char x, char y, char z, char w);
+OWL_API void owlRayGenSet2cv(OWLRayGen obj, const char *name, const char *val);
+OWL_API void owlRayGenSet3cv(OWLRayGen obj, const char *name, const char *val);
+OWL_API void owlRayGenSet4cv(OWLRayGen obj, const char *name, const char *val);
+
+// setters for variables on "MissProg"s
+OWL_API void owlMissProgSet1c(OWLMissProg obj, const char *name, char val);
+OWL_API void owlMissProgSet2c(OWLMissProg obj, const char *name, char x, char y);
+OWL_API void owlMissProgSet3c(OWLMissProg obj, const char *name, char x, char y, char z);
+OWL_API void owlMissProgSet4c(OWLMissProg obj, const char *name, char x, char y, char z, char w);
+OWL_API void owlMissProgSet2cv(OWLMissProg obj, const char *name, const char *val);
+OWL_API void owlMissProgSet3cv(OWLMissProg obj, const char *name, const char *val);
+OWL_API void owlMissProgSet4cv(OWLMissProg obj, const char *name, const char *val);
+
+// setters for variables on "Geom"s
+OWL_API void owlGeomSet1c(OWLGeom obj, const char *name, char val);
+OWL_API void owlGeomSet2c(OWLGeom obj, const char *name, char x, char y);
+OWL_API void owlGeomSet3c(OWLGeom obj, const char *name, char x, char y, char z);
+OWL_API void owlGeomSet4c(OWLGeom obj, const char *name, char x, char y, char z, char w);
+OWL_API void owlGeomSet2cv(OWLGeom obj, const char *name, const char *val);
+OWL_API void owlGeomSet3cv(OWLGeom obj, const char *name, const char *val);
+OWL_API void owlGeomSet4cv(OWLGeom obj, const char *name, const char *val);
+
+// setters for variables on "Params"s
+OWL_API void owlParamsSet1c(OWLParams obj, const char *name, char val);
+OWL_API void owlParamsSet2c(OWLParams obj, const char *name, char x, char y);
+OWL_API void owlParamsSet3c(OWLParams obj, const char *name, char x, char y, char z);
+OWL_API void owlParamsSet4c(OWLParams obj, const char *name, char x, char y, char z, char w);
+OWL_API void owlParamsSet2cv(OWLParams obj, const char *name, const char *val);
+OWL_API void owlParamsSet3cv(OWLParams obj, const char *name, const char *val);
+OWL_API void owlParamsSet4cv(OWLParams obj, const char *name, const char *val);
+
+// ------------------------------------------------------------------
+// setters for variables of type "uint8_t"
+// ------------------------------------------------------------------
+
+// setters for variables on "RayGen"s
+OWL_API void owlRayGenSet1uc(OWLRayGen obj, const char *name, uint8_t val);
+OWL_API void owlRayGenSet2uc(OWLRayGen obj, const char *name, uint8_t x, uint8_t y);
+OWL_API void owlRayGenSet3uc(OWLRayGen obj, const char *name, uint8_t x, uint8_t y, uint8_t z);
+OWL_API void owlRayGenSet4uc(OWLRayGen obj, const char *name, uint8_t x, uint8_t y, uint8_t z, uint8_t w);
+OWL_API void owlRayGenSet2ucv(OWLRayGen obj, const char *name, const uint8_t *val);
+OWL_API void owlRayGenSet3ucv(OWLRayGen obj, const char *name, const uint8_t *val);
+OWL_API void owlRayGenSet4ucv(OWLRayGen obj, const char *name, const uint8_t *val);
+
+// setters for variables on "MissProg"s
+OWL_API void owlMissProgSet1uc(OWLMissProg obj, const char *name, uint8_t val);
+OWL_API void owlMissProgSet2uc(OWLMissProg obj, const char *name, uint8_t x, uint8_t y);
+OWL_API void owlMissProgSet3uc(OWLMissProg obj, const char *name, uint8_t x, uint8_t y, uint8_t z);
+OWL_API void owlMissProgSet4uc(OWLMissProg obj, const char *name, uint8_t x, uint8_t y, uint8_t z, uint8_t w);
+OWL_API void owlMissProgSet2ucv(OWLMissProg obj, const char *name, const uint8_t *val);
+OWL_API void owlMissProgSet3ucv(OWLMissProg obj, const char *name, const uint8_t *val);
+OWL_API void owlMissProgSet4ucv(OWLMissProg obj, const char *name, const uint8_t *val);
+
+// setters for variables on "Geom"s
+OWL_API void owlGeomSet1uc(OWLGeom obj, const char *name, uint8_t val);
+OWL_API void owlGeomSet2uc(OWLGeom obj, const char *name, uint8_t x, uint8_t y);
+OWL_API void owlGeomSet3uc(OWLGeom obj, const char *name, uint8_t x, uint8_t y, uint8_t z);
+OWL_API void owlGeomSet4uc(OWLGeom obj, const char *name, uint8_t x, uint8_t y, uint8_t z, uint8_t w);
+OWL_API void owlGeomSet2ucv(OWLGeom obj, const char *name, const uint8_t *val);
+OWL_API void owlGeomSet3ucv(OWLGeom obj, const char *name, const uint8_t *val);
+OWL_API void owlGeomSet4ucv(OWLGeom obj, const char *name, const uint8_t *val);
+
+// setters for variables on "Params"s
+OWL_API void owlParamsSet1uc(OWLParams obj, const char *name, uint8_t val);
+OWL_API void owlParamsSet2uc(OWLParams obj, const char *name, uint8_t x, uint8_t y);
+OWL_API void owlParamsSet3uc(OWLParams obj, const char *name, uint8_t x, uint8_t y, uint8_t z);
+OWL_API void owlParamsSet4uc(OWLParams obj, const char *name, uint8_t x, uint8_t y, uint8_t z, uint8_t w);
+OWL_API void owlParamsSet2ucv(OWLParams obj, const char *name, const uint8_t *val);
+OWL_API void owlParamsSet3ucv(OWLParams obj, const char *name, const uint8_t *val);
+OWL_API void owlParamsSet4ucv(OWLParams obj, const char *name, const uint8_t *val);
+
+// ------------------------------------------------------------------
+// setters for variables of type "int16_t"
+// ------------------------------------------------------------------
+
+// setters for variables on "RayGen"s
+OWL_API void owlRayGenSet1s(OWLRayGen obj, const char *name, int16_t val);
+OWL_API void owlRayGenSet2s(OWLRayGen obj, const char *name, int16_t x, int16_t y);
+OWL_API void owlRayGenSet3s(OWLRayGen obj, const char *name, int16_t x, int16_t y, int16_t z);
+OWL_API void owlRayGenSet4s(OWLRayGen obj, const char *name, int16_t x, int16_t y, int16_t z, int16_t w);
+OWL_API void owlRayGenSet2sv(OWLRayGen obj, const char *name, const int16_t *val);
+OWL_API void owlRayGenSet3sv(OWLRayGen obj, const char *name, const int16_t *val);
+OWL_API void owlRayGenSet4sv(OWLRayGen obj, const char *name, const int16_t *val);
+
+// setters for variables on "MissProg"s
+OWL_API void owlMissProgSet1s(OWLMissProg obj, const char *name, int16_t val);
+OWL_API void owlMissProgSet2s(OWLMissProg obj, const char *name, int16_t x, int16_t y);
+OWL_API void owlMissProgSet3s(OWLMissProg obj, const char *name, int16_t x, int16_t y, int16_t z);
+OWL_API void owlMissProgSet4s(OWLMissProg obj, const char *name, int16_t x, int16_t y, int16_t z, int16_t w);
+OWL_API void owlMissProgSet2sv(OWLMissProg obj, const char *name, const int16_t *val);
+OWL_API void owlMissProgSet3sv(OWLMissProg obj, const char *name, const int16_t *val);
+OWL_API void owlMissProgSet4sv(OWLMissProg obj, const char *name, const int16_t *val);
+
+// setters for variables on "Geom"s
+OWL_API void owlGeomSet1s(OWLGeom obj, const char *name, int16_t val);
+OWL_API void owlGeomSet2s(OWLGeom obj, const char *name, int16_t x, int16_t y);
+OWL_API void owlGeomSet3s(OWLGeom obj, const char *name, int16_t x, int16_t y, int16_t z);
+OWL_API void owlGeomSet4s(OWLGeom obj, const char *name, int16_t x, int16_t y, int16_t z, int16_t w);
+OWL_API void owlGeomSet2sv(OWLGeom obj, const char *name, const int16_t *val);
+OWL_API void owlGeomSet3sv(OWLGeom obj, const char *name, const int16_t *val);
+OWL_API void owlGeomSet4sv(OWLGeom obj, const char *name, const int16_t *val);
+
+// setters for variables on "Params"s
+OWL_API void owlParamsSet1s(OWLParams obj, const char *name, int16_t val);
+OWL_API void owlParamsSet2s(OWLParams obj, const char *name, int16_t x, int16_t y);
+OWL_API void owlParamsSet3s(OWLParams obj, const char *name, int16_t x, int16_t y, int16_t z);
+OWL_API void owlParamsSet4s(OWLParams obj, const char *name, int16_t x, int16_t y, int16_t z, int16_t w);
+OWL_API void owlParamsSet2sv(OWLParams obj, const char *name, const int16_t *val);
+OWL_API void owlParamsSet3sv(OWLParams obj, const char *name, const int16_t *val);
+OWL_API void owlParamsSet4sv(OWLParams obj, const char *name, const int16_t *val);
+
+// ------------------------------------------------------------------
+// setters for variables of type "uint16_t"
+// ------------------------------------------------------------------
+
+// setters for variables on "RayGen"s
+OWL_API void owlRayGenSet1us(OWLRayGen obj, const char *name, uint16_t val);
+OWL_API void owlRayGenSet2us(OWLRayGen obj, const char *name, uint16_t x, uint16_t y);
+OWL_API void owlRayGenSet3us(OWLRayGen obj, const char *name, uint16_t x, uint16_t y, uint16_t z);
+OWL_API void owlRayGenSet4us(OWLRayGen obj, const char *name, uint16_t x, uint16_t y, uint16_t z, uint16_t w);
+OWL_API void owlRayGenSet2usv(OWLRayGen obj, const char *name, const uint16_t *val);
+OWL_API void owlRayGenSet3usv(OWLRayGen obj, const char *name, const uint16_t *val);
+OWL_API void owlRayGenSet4usv(OWLRayGen obj, const char *name, const uint16_t *val);
+
+// setters for variables on "MissProg"s
+OWL_API void owlMissProgSet1us(OWLMissProg obj, const char *name, uint16_t val);
+OWL_API void owlMissProgSet2us(OWLMissProg obj, const char *name, uint16_t x, uint16_t y);
+OWL_API void owlMissProgSet3us(OWLMissProg obj, const char *name, uint16_t x, uint16_t y, uint16_t z);
+OWL_API void owlMissProgSet4us(OWLMissProg obj, const char *name, uint16_t x, uint16_t y, uint16_t z, uint16_t w);
+OWL_API void owlMissProgSet2usv(OWLMissProg obj, const char *name, const uint16_t *val);
+OWL_API void owlMissProgSet3usv(OWLMissProg obj, const char *name, const uint16_t *val);
+OWL_API void owlMissProgSet4usv(OWLMissProg obj, const char *name, const uint16_t *val);
+
+// setters for variables on "Geom"s
+OWL_API void owlGeomSet1us(OWLGeom obj, const char *name, uint16_t val);
+OWL_API void owlGeomSet2us(OWLGeom obj, const char *name, uint16_t x, uint16_t y);
+OWL_API void owlGeomSet3us(OWLGeom obj, const char *name, uint16_t x, uint16_t y, uint16_t z);
+OWL_API void owlGeomSet4us(OWLGeom obj, const char *name, uint16_t x, uint16_t y, uint16_t z, uint16_t w);
+OWL_API void owlGeomSet2usv(OWLGeom obj, const char *name, const uint16_t *val);
+OWL_API void owlGeomSet3usv(OWLGeom obj, const char *name, const uint16_t *val);
+OWL_API void owlGeomSet4usv(OWLGeom obj, const char *name, const uint16_t *val);
+
+// setters for variables on "Params"s
+OWL_API void owlParamsSet1us(OWLParams obj, const char *name, uint16_t val);
+OWL_API void owlParamsSet2us(OWLParams obj, const char *name, uint16_t x, uint16_t y);
+OWL_API void owlParamsSet3us(OWLParams obj, const char *name, uint16_t x, uint16_t y, uint16_t z);
+OWL_API void owlParamsSet4us(OWLParams obj, const char *name, uint16_t x, uint16_t y, uint16_t z, uint16_t w);
+OWL_API void owlParamsSet2usv(OWLParams obj, const char *name, const uint16_t *val);
+OWL_API void owlParamsSet3usv(OWLParams obj, const char *name, const uint16_t *val);
+OWL_API void owlParamsSet4usv(OWLParams obj, const char *name, const uint16_t *val);
 
 // ------------------------------------------------------------------
 // setters for variables of type "int"
@@ -1080,8 +1238,6 @@ OWL_API void owlParamsSet2fv(OWLParams obj, const char *name, const float *val);
 OWL_API void owlParamsSet3fv(OWLParams obj, const char *name, const float *val);
 OWL_API void owlParamsSet4fv(OWLParams obj, const char *name, const float *val);
 
-
-
 // ------------------------------------------------------------------
 // setters for variables of type "double"
 // ------------------------------------------------------------------
@@ -1161,7 +1317,6 @@ OWL_API void owlParamsSet4l(OWLParams obj, const char *name, int64_t x, int64_t 
 OWL_API void owlParamsSet2lv(OWLParams obj, const char *name, const int64_t *val);
 OWL_API void owlParamsSet3lv(OWLParams obj, const char *name, const int64_t *val);
 OWL_API void owlParamsSet4lv(OWLParams obj, const char *name, const int64_t *val);
-
 
 // ------------------------------------------------------------------
 // setters for variables of type "uint64_t"
@@ -1354,13 +1509,3 @@ owlInstanceGroupSetTransform(OWLGroup group,
 }
 
 #endif
-
-
-
-
-
-
-
-
-
-

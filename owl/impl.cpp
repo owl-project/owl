@@ -132,10 +132,10 @@ namespace owl {
     checkGet(_context)->buildSBT(flags);
   }
 
-  OWL_API void owlBuildPrograms(OWLContext _context)
+  OWL_API void owlBuildPrograms(OWLContext _context, bool debug)
   {
     LOG_API_CALL();
-    checkGet(_context)->buildPrograms();
+    checkGet(_context)->buildPrograms(debug);
   }
   
   OWL_API void owlBuildPipeline(OWLContext _context)

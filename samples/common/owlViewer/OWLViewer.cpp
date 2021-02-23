@@ -89,7 +89,7 @@ namespace owl {
       if (alreadyInitialized) return;
       if (!glfwInit())
         exit(EXIT_FAILURE);
-      std::cout << "#owl.viewer: glfw initialized" << std::endl;
+      // std::cout << "#owl.viewer: glfw initialized" << std::endl;
       alreadyInitialized = true;
     }
     
@@ -408,7 +408,7 @@ namespace owl {
     
     OWLViewer::OWLViewer(const std::string &title,
                          const vec2i &initWindowSize,
-                         bool visible)
+                         bool visible, bool enableVsync)
     {
       glfwSetErrorCallback(glfw_error_callback);
 
@@ -427,7 +427,7 @@ namespace owl {
       
       glfwSetWindowUserPointer(handle, this);
       glfwMakeContextCurrent(handle);
-      glfwSwapInterval( 1 );
+      glfwSwapInterval( (enableVsync) ? 1 : 0 );
     }
 
 
@@ -529,6 +529,17 @@ namespace owl {
     {
       camera.setOrientation(origin,interest,up,fovyInDegrees,false);
       updateCamera();
+    }
+
+    void OWLViewer::getCameraOrientation(/* camera origin    : */vec3f &origin,
+                                         /* point of interest: */vec3f &interest,
+                                         /* up-vector        : */vec3f &up,
+                                         /* fovy, in degrees : */float & fovyInDegrees)
+    {
+      origin = camera.position;
+      interest = -camera.poiDistance * camera.frame.vz + camera.position;
+      up = camera.upVector;
+      fovyInDegrees = camera.fovyInDegrees;
     }
 
     

@@ -21,6 +21,8 @@
 
 namespace owl {
 
+  struct Group;
+  
   /*! base class for any sort of buffer type - pinned, device, managed, ... */
   struct Buffer : public RegisteredObject
   {
@@ -172,6 +174,26 @@ namespace owl {
     };
 
 
+    /*! device-data for a device buffer like other device buffers, but
+        containing buffers - ie, these are Buffer::SP on the host, but
+        get translated to buffer descriptors upon upload */
+    struct DeviceDataForGroups : public DeviceData {
+      DeviceDataForGroups(DeviceBuffer *parent, const DeviceContext::SP &device)
+        : DeviceData(parent,device)
+      {}
+      
+      void executeResize() override;
+      void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) override;
+      
+      /*! this is used only for buffers over object types (bufers of
+        textures, or buffers of buffers). For those buffers, we use this
+        vector to store host-side handles of the objects in this buffer,
+        to ensure proper recounting */
+      std::vector<std::shared_ptr<Group>> hostHandles;
+    };
+
+
+    
     /*! device-data for a device buffer that contains raw, copyable
         data (float, vec3f, etc) */
     struct DeviceDataForCopyableData : public DeviceData {

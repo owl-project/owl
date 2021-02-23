@@ -100,10 +100,10 @@ namespace owl {
     
     void buildSBT(OWLBuildSBTFlags flags);
     void buildPipeline();
-    void buildPrograms();
+    void buildPrograms(bool debug = false);
     /*! clearly destroy _pptix_ handles of all active programs */
     void destroyPrograms();
-    void buildModules();
+    void buildModules(bool debug = false);
     /*! clearly destroy _optix_ handles of all active modules */
     void destroyModules();
 
