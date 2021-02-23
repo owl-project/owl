@@ -30,7 +30,7 @@
 
 # Our initial guess will be within the SDK.
 if (WIN32)
-  if ($ENV{OptiX_INSTALL_DIR})
+  if (EXISTS "$ENV{OptiX_INSTALL_DIR}")
   set(OptiX_INSTALL_DIR $ENV{OptiX_INSTALL_DIR})
   else()
   set(OptiX_INSTALL_DIR "c:/ProgramData/NVIDIA Corporation/OptiX SDK 7.1.0")
