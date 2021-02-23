@@ -207,7 +207,10 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   const vec3f Nbox   = normalize(cross(B-A,C-A));
   const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
   const float boxScaleInWorldSpace = owl::length(vec3f(optixTransformVectorFromObjectToWorldSpace(B-A)));
-  const float shadowBias = 1e-2f * boxScaleInWorldSpace;
+
+
+  // Scale relative to a brick; handle large ground plane brick with a clamp
+  const float shadowBias = 1e-2f * fminf(1.f, boxScaleInWorldSpace);
 
   // Convert 8 bit color to float
   const unsigned int instanceID = optixGetInstanceId();

@@ -87,7 +87,7 @@ const float init_cosFovy = 0.10f;  // small fov to approach isometric
 
 struct Viewer : public owl::viewer::OWLViewer
 {
-  Viewer(const ogt_vox_scene *scene);
+  Viewer(const ogt_vox_scene *scene, bool enableGround);
   
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
@@ -114,6 +114,8 @@ struct Viewer : public owl::viewer::OWLViewer
   float sunPhi   = 0.785398f;  // rotation about up axis
   float sunTheta = 0.785398f;  // elevation angle, 0 at horizon
   bool sunDirty = true;
+  bool enableGround = true;
+  
 };
 
 /*! window notifies us that we got resized */     
@@ -465,9 +467,21 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
     }
   }
 
+  const vec3f sceneSpan = sceneBox.span();
+  const vec3f sceneCenter = sceneBox.center();
+
+  if (this->enableGround) {
+    // Extra scaled brick for ground plane
+    transformsPerBrick.push_back( 
+        owl::affine3f::translate(vec3f(sceneCenter.x, sceneCenter.y, sceneCenter.z - 1 - 0.5f*sceneSpan.z)) *
+        owl::affine3f::scale(vec3f(2*sceneSpan.x, 2*sceneSpan.y, 1.0f))*    // assume Z up
+        owl::affine3f::translate(vec3f(-0.5f, -0.5f, 0.0f))
+        );
+    colorIndicesPerBrick.push_back(249);  // grey in default palette
+  }
+
   // Apply final scene transform so we can use the same camera for every scene
   const float maxSpan = owl::reduce_max(sceneBox.span());
-  const vec3f sceneCenter = sceneBox.center();
   owl::affine3f worldTransform = 
     owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
     owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, 0.0f));  // center about (x,y) origin ,with Z up to match MV
@@ -492,7 +506,8 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   
 }
 
-Viewer::Viewer(const ogt_vox_scene *scene)
+Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
+  : enableGround(enableGround)
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
@@ -599,14 +614,23 @@ int main(int ac, char **av)
   LOG("owl::ng example '" << av[0] << "' starting up");
 
   if (ac < 2) {
-      LOG("missing expected argument for .vox file. Exiting");
+      LOG("need at least 1 expected argument for .vox file. Exiting");
       exit(1);
   }
-  const std::string infile(av[1]);
-  const ogt_vox_scene *scene = loadVoxSceneOGT(infile.c_str());
+  bool enableGround = true;
+  std::vector<std::string> infiles;
+  for (int i = 1; i < ac; ++i) {
+    std::string arg = av[i];
+    if (arg == "--no-ground") {
+      enableGround = false;
+    } else {
+      infiles.push_back(arg);  // assume all other args are file names
+    }
+  }
+  const ogt_vox_scene *scene = loadVoxSceneOGT(infiles[0].c_str());
 
   if (!scene) {
-      LOG("Could not read vox file: " << infile.c_str() << ", exiting");
+      LOG("Could not read vox file: " << infiles[0].c_str() << ", exiting");
       exit(1);
   }
   if (scene->num_models == 0) {
@@ -615,7 +639,7 @@ int main(int ac, char **av)
       exit(1);
   }
 
-  Viewer viewer(scene);
+  Viewer viewer(scene, enableGround);
   viewer.camera.setOrientation(init_lookFrom,
                                init_lookAt,
                                init_lookUp,
