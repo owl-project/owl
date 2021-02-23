@@ -329,9 +329,38 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
   }
 
+  const vec3f sceneCenter = sceneBox.center();
+  const vec3f sceneSpan = sceneBox.span();
+
+  if (this->enableGround) {
+    // ------------------------------------------------------------------
+    // set up vox data and accels for ground (single stretched brick)
+    // ------------------------------------------------------------------
+    
+    std::vector<uchar4> voxdata {make_uchar4(0,0,0, 249)};  // using color index of grey in default palette
+    OWLBuffer primBuffer 
+      = owlDeviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
+
+    OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
+    
+    owlGeomSetPrimCount(voxGeom, voxdata.size());
+
+    owlGeomSetBuffer(voxGeom, "prims", primBuffer);
+    owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
+
+    OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
+    owlGroupBuildAccel(userGeomGroup);
+    geomGroups.push_back(userGeomGroup);
+
+    instanceTransforms.push_back( 
+        owl::affine3f::translate(vec3f(sceneCenter.x, sceneCenter.y, sceneCenter.z - 1 - 0.5f*sceneSpan.z)) *
+        owl::affine3f::scale(vec3f(2*sceneSpan.x, 2*sceneSpan.y, 1.0f))*    // assume Z up
+        owl::affine3f::translate(vec3f(-0.5f, -0.5f, 0.0f))
+        );
+  }
+
   // Apply final scene transform so we can use the same camera for every scene
   const float maxSpan = owl::reduce_max(sceneBox.span());
-  const vec3f sceneCenter = sceneBox.center();
   owl::affine3f worldTransform = 
     owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
     owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, 0.0f));  // center about (x,y) origin ,with Z up to match MV
