@@ -25,6 +25,7 @@ struct LaunchParams
 {
   OptixTraversableHandle world;
   vec3f sunDirection;  // pointing toward sun
+  vec3f sunColor;
 };
 
 /* variables for the triangle mesh geometry */

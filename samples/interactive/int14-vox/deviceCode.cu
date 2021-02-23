@@ -192,32 +192,9 @@ float2 squareToDisk(const float2& sample)
   return make_float2( r * cosf(phi), r * sinf(phi) );
 }
 
-OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
+inline __device__
+vec3f sunlight(const vec3f &Ng, float shadowBias, Random &random)
 {
-  PerRayData &prd = owl::getPRD<PerRayData>();
-
-  const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
-  
-  // compute normal:
-  const int   primID = optixGetPrimitiveIndex();
-  const vec3i index  = self.index[primID];
-  const vec3f &A     = self.vertex[index.x];
-  const vec3f &B     = self.vertex[index.y];
-  const vec3f &C     = self.vertex[index.z];
-  const vec3f Nbox   = normalize(cross(B-A,C-A));
-  const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
-  const float boxScaleInWorldSpace = owl::length(vec3f(optixTransformVectorFromObjectToWorldSpace(B-A)));
-
-
-  // Scale relative to a brick; handle large ground plane brick with a clamp
-  const float shadowBias = 1e-2f * fminf(1.f, boxScaleInWorldSpace);
-
-  // Convert 8 bit color to float
-  const unsigned int instanceID = optixGetInstanceId();
-  const int ci = self.colorIndexPerInstance[instanceID];
-  uchar4 col = self.colorPalette[ci];
-  const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
-
   // Get direct light
   const vec3f dir   = optixGetWorldRayDirection();
   const vec3f org   = optixGetWorldRayOrigin();
@@ -232,7 +209,7 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   // jitter light direction slightly
   const float lightRadius = 0.01f;  // should be ok as a constant since our scenes are normalized
   const vec3f lightCenter = hit_P_offset + lightFrame.vz;
-  const float2 sample = squareToDisk(make_float2(prd.random(), prd.random()));
+  const float2 sample = squareToDisk(make_float2(random(), random()));
   const vec3f jitteredPos = lightCenter + lightRadius*(sample.x*lightFrame.vx + sample.y*lightFrame.vy);
   const vec3f jitteredLightDir = jitteredPos - hit_P_offset;  // no need to normalize
 
@@ -242,11 +219,41 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
                       1e10f);
 
   float vis = traceShadowRay(optixLaunchParams.world, shadowRay);
-  prd.out.directLight = vis*color;  //debug
+  return vis * optixLaunchParams.sunColor;
+
+}
+
+OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
+{
+  const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
+  
+  // compute normal:
+  const int   primID = optixGetPrimitiveIndex();
+  const vec3i index  = self.index[primID];
+  const vec3f &A     = self.vertex[index.x];
+  const vec3f &B     = self.vertex[index.y];
+  const vec3f &C     = self.vertex[index.z];
+  const vec3f Nbox   = normalize(cross(B-A,C-A));
+  const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
+  const float boxScaleInWorldSpace = owl::length(vec3f(optixTransformVectorFromObjectToWorldSpace(make_float3(0,0,1))));
+
+  // Bias value relative to a brick; handle large bricks with a clamp
+  const float shadowBias = 1e-2f * fminf(1.f, boxScaleInWorldSpace);
+
+  // Convert 8 bit color to float
+  const unsigned int instanceID = optixGetInstanceId();
+  const int ci = self.colorIndexPerInstance[instanceID];
+  uchar4 col = self.colorPalette[ci];
+  const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
+
+  PerRayData &prd = owl::getPRD<PerRayData>();
+  const vec3f directLight = sunlight(Ng, shadowBias, prd.random);
+  prd.out.directLight = directLight*color;  //debug
 
   // Bounce
   prd.out.attenuation = color;
   prd.out.scatterEvent = rayGotBounced;
+
 }
 
 OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
@@ -308,22 +315,27 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
   const int primID = optixGetPrimitiveIndex();
   const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
 
-  PerRayData &prd = owl::getPRD<PerRayData>();
-
   // Select normal for whichever face we hit
   const float3 Nbox = make_float3(
         int_as_float(optixGetAttribute_0()),
         int_as_float(optixGetAttribute_1()),
         int_as_float(optixGetAttribute_2()));
   const vec3f Ng = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
+  const float boxScaleInWorldSpace = owl::length(vec3f(optixTransformVectorFromObjectToWorldSpace(make_float3(0,0,1))));
+
+  // Bias value relative to a brick; handle large bricks with a clamp
+  const float shadowBias = 1e-2f * fminf(1.f, boxScaleInWorldSpace);
 
   // Convert 8 bit color to float
   const int ci = self.prims[primID].w;
   uchar4 col = self.colorPalette[ci];
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 
-  const vec3f rayDir = optixGetWorldRayDirection();
-  prd.out.directLight = (.2f + .8f*fabs(dot(rayDir,Ng)))*color;
+  PerRayData &prd = owl::getPRD<PerRayData>();
+  const vec3f directLight = sunlight(Ng, shadowBias, prd.random);
+  prd.out.directLight = directLight*color;  //debug
+
+  // Bounce
   prd.out.attenuation = color;
   prd.out.scatterEvent = rayGotBounced;
 

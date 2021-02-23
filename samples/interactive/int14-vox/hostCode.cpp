@@ -230,6 +230,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
                         voxGeomVars, -1);
   owlGeomTypeSetClosestHit(voxGeomType, 0, module, "VoxGeom");
   owlGeomTypeSetIntersectProg(voxGeomType, 0, module, "VoxGeom");
+  owlGeomTypeSetIntersectProg(voxGeomType, 1, module, "VoxGeom");  // for shadow rays
   owlGeomTypeSetBoundsProg(voxGeomType, module, "VoxGeom");
 
   // Do this before setting up user geometry, to compile bounds program
@@ -515,8 +516,8 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
 
   owlContextSetRayTypeCount(context, 2);  // primary, shadow
   
-  OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
-  //OWLGroup world = createUserGeometryScene(module, scene);
+  //OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
+  OWLGroup world = createUserGeometryScene(module, scene);
 
   owlGroupBuildAccel(world);
   
@@ -573,6 +574,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
   OWLVarDecl launchVars[] = {
     { "world",         OWL_GROUP,  OWL_OFFSETOF(LaunchParams,world)},
     { "sunDirection",  OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunDirection)},
+    { "sunColor",      OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunColor)},
     { /* sentinel to mark end of list */ }
   };
 
@@ -580,6 +582,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
     owlParamsCreate(context, sizeof(LaunchParams), launchVars, -1);
 
   owlParamsSetGroup(launchParams, "world", world);
+  owlParamsSet3f(launchParams, "sunColor", {1.f, 1.f, 1.f});
   // other params set at launch
   
   // ##################################################################
