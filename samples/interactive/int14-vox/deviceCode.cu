@@ -77,9 +77,11 @@ vec3f tracePath(const RayGenData &self,
 {
   vec3f attenuation = 1.f;
   vec3f directLight = 0.0f;
+
+  constexpr int MaxDepth = 2;
   
   /* iterative version of recursion, up to max depth */
-  for (int depth=0;depth<1;depth++) {
+  for (int depth=0;depth<MaxDepth;depth++) {
     prd.out.scatterEvent = rayDidntHitAnything;
     owl::traceRay(/*accel to trace against*/ optixLaunchParams.world,
                   /*the ray to trace*/ ray,
@@ -161,57 +163,37 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 }
 
 // from OptiX 6 SDK
-#ifndef M_PI_4f
-#define M_PI_4f     0.785398163397448309616f
+#ifndef M_PIf
+#define M_PIf       3.14159265358979323846f
 #endif
 inline __device__ 
-float2 squareToDisk(const float2& sample)
+float2 squareToDisk(float u1, float u2)
 {
-  float phi, r;
-
-  const float a = 2.0f * sample.x - 1.0f;
-  const float b = 2.0f * sample.y - 1.0f;
-
-  if (a > -b)
-  {
-    if (a > b)
-    {
-      r = a;
-      phi = (float)M_PI_4f * (b/a);
-    }
-    else
-    {
-      r = b;
-      phi = (float)M_PI_4f * (2.0f - (a/b));
-    }
-  }
-  else
-  {
-    if (a < b)
-    {
-      r = -a;
-      phi = (float)M_PI_4f * (4.0f + (b/a));
-    }
-    else
-    {
-      r = -b;
-      phi = (b) ? (float)M_PI_4f * (6.0f - (a/b)) : 0.0f;
-    }
-  }
-
-  return make_float2( r * cosf(phi), r * sinf(phi) );
+  // Uniformly sample disk.
+  const float r   = sqrtf( u1 );
+  const float phi = 2.0f*M_PIf * u2;
+  float2 p = {r * cosf( phi ), r * sinf( phi )};
+  return p;
 }
 
 inline __device__
-vec3f sunlight(const vec3f &Ng, float shadowBias, Random &random)
+vec3f cosineSampleHemisphere(float u1, float u2)
 {
-  // Get direct light
-  const vec3f dir   = optixGetWorldRayDirection();
-  const vec3f org   = optixGetWorldRayOrigin();
-  const float hit_t = optixGetRayTmax();
-  const vec3f hit_P = org + hit_t * dir;
-  const vec3f hit_P_offset = hit_P + shadowBias*Ng;  // bias along normal to help with shadow acne
+  float2 p = squareToDisk(u1, u2);
+
+  // Project up to hemisphere.
+  return vec3f(p.x, p.y, sqrtf( fmaxf( 0.0f, 1.0f - p.x*p.x - p.y*p.y ) ));
+}
+
+inline __device__
+vec3f sunlight(const vec3f &hit_P_offset, const vec3f &Ng, Random &random)
+{
   const vec3f lightDir = optixLaunchParams.sunDirection;
+
+  const float NdotL = dot(Ng, lightDir);
+  if (NdotL <= 0.f) {
+    return 0.f;  // below horizon
+  }
 
   // Build frame around light dir
   const owl::LinearSpace3f lightFrame = owl::common::frame(normalize(lightDir));
@@ -219,18 +201,30 @@ vec3f sunlight(const vec3f &Ng, float shadowBias, Random &random)
   // jitter light direction slightly
   const float lightRadius = 0.01f;  // should be ok as a constant since our scenes are normalized
   const vec3f lightCenter = hit_P_offset + lightFrame.vz;
-  const float2 sample = squareToDisk(make_float2(random(), random()));
+  const float2 sample = squareToDisk(random(), random());
   const vec3f jitteredPos = lightCenter + lightRadius*(sample.x*lightFrame.vx + sample.y*lightFrame.vy);
   const vec3f jitteredLightDir = jitteredPos - hit_P_offset;  // no need to normalize
 
   ShadowRay shadowRay(hit_P_offset,      // origin
                       jitteredLightDir,  // direction
-                      shadowBias,
+                      0.f,
                       1e10f);
 
   float vis = traceShadowRay(optixLaunchParams.world, shadowRay);
-  return vis * optixLaunchParams.sunColor;
+  return vis * optixLaunchParams.sunColor * NdotL; 
 
+}
+
+inline __device__ 
+vec3f scatterLambertian(const vec3f &Ng, Random &random)
+{
+  const owl::LinearSpace3f shadingFrame = owl::common::frame(Ng);
+  vec3f scatteredDirectionInShadingFrame = cosineSampleHemisphere(random(), random());
+  vec3f scatteredDirection = shadingFrame.vx * scatteredDirectionInShadingFrame.x +
+                             shadingFrame.vy * scatteredDirectionInShadingFrame.y +
+                             shadingFrame.vz * scatteredDirectionInShadingFrame.z;
+
+  return scatteredDirection;
 }
 
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
@@ -257,12 +251,23 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 
   PerRayData &prd = owl::getPRD<PerRayData>();
-  const vec3f directLight = sunlight(Ng, shadowBias, prd.random);
-  prd.out.directLight = directLight*color;  //debug
+  const vec3f dir   = optixGetWorldRayDirection();
+  const vec3f org   = optixGetWorldRayOrigin();
+  const float hit_t = optixGetRayTmax();
+  const vec3f hit_P = org + hit_t * dir;
+  const vec3f hit_P_offset = hit_P + shadowBias*Ng;  // bias along normal to help with shadow acne
+
+  // Direct
+  const vec3f directLight = sunlight(hit_P_offset, Ng, prd.random);
 
   // Bounce
+  vec3f scatteredDirection = scatterLambertian(Ng, prd.random);
+
+  prd.out.directLight = directLight*color;
   prd.out.attenuation = color;
   prd.out.scatterEvent = rayGotBounced;
+  prd.out.scattered_direction = scatteredDirection;
+  prd.out.scattered_origin = hit_P_offset;
 
 }
 
@@ -342,12 +347,23 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 
   PerRayData &prd = owl::getPRD<PerRayData>();
-  const vec3f directLight = sunlight(Ng, shadowBias, prd.random);
-  prd.out.directLight = directLight*color;  //debug
+  const vec3f dir   = optixGetWorldRayDirection();
+  const vec3f org   = optixGetWorldRayOrigin();
+  const float hit_t = optixGetRayTmax();
+  const vec3f hit_P = org + hit_t * dir;
+  const vec3f hit_P_offset = hit_P + shadowBias*Ng;  // bias along normal to help with shadow acne
+
+  // Direct
+  const vec3f directLight = sunlight(hit_P_offset, Ng, prd.random);
 
   // Bounce
+  vec3f scatteredDirection = scatterLambertian(Ng, prd.random);
+
+  prd.out.directLight = directLight*color;
   prd.out.attenuation = color;
   prd.out.scatterEvent = rayGotBounced;
+  prd.out.scattered_direction = scatteredDirection;
+  prd.out.scattered_origin = hit_P_offset;
 
 }
 
