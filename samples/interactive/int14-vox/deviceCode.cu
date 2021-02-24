@@ -20,12 +20,17 @@
 #include <owl/common/math/random.h>
 #include <owl/common/math/LinearSpace.h>
 
+// Until we have module specialization working... 
+// Set this to 0 to remove some code.
+#define ENABLE_TOON_OUTLINE 1
+
 __constant__ LaunchParams optixLaunchParams;
 
 
 typedef owl::common::LCG<4> Random;
-typedef owl::RayT<0, 2> RadianceRay;
-typedef owl::RayT<1, 2> ShadowRay;
+typedef owl::RayT<0, 3> RadianceRay;
+typedef owl::RayT<1, 3> ShadowRay;
+typedef owl::RayT<2, 3> OutlineShadowRay;
 
 inline __device__
 vec3f missColor(const RadianceRay &ray)
@@ -68,15 +73,21 @@ struct PerRayData
     vec3f        scattered_direction;
     vec3f        attenuation;
     vec3f        directLight;
+#if ENABLE_TOON_OUTLINE
+    float        hitDistance;
+#endif
   } out;
 };
 
 inline __device__
 vec3f tracePath(const RayGenData &self,
-                RadianceRay &ray, PerRayData &prd)
+                RadianceRay &ray, PerRayData &prd, float &firstHitDistance)
 {
   vec3f attenuation = 1.f;
   vec3f directLight = 0.0f;
+#if ENABLE_TOON_OUTLINE
+  firstHitDistance = 1e10f;
+#endif
 
   constexpr int MaxDepth = 2;
   
@@ -102,6 +113,11 @@ vec3f tracePath(const RayGenData &self,
                      /* direction: */ prd.out.scattered_direction,
                      /* tmin     : */ 1e-3f,
                      /* tmax     : */ 1e10f);
+#if ENABLE_TOON_OUTLINE
+      if (depth == 0) {
+        firstHitDistance = prd.out.hitDistance;
+      }
+#endif
     }
   }
   // recursion did not terminate - cancel it but return direct lighting from any previous bounce
@@ -116,6 +132,20 @@ float traceShadowRay(const OptixTraversableHandle &traversable,
   float vis = 0.f;
   owl::traceRay(traversable, ray, vis, 
                    OPTIX_RAY_FLAG_DISABLE_ANYHIT
+                   | OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT
+                   | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT);
+  return vis;
+}
+
+// returns a visibility term (1 for unshadowed)
+inline __device__
+float traceOutlineShadowRay(const OptixTraversableHandle &traversable,
+                  OutlineShadowRay &ray)
+{
+  float vis = 0.f;
+  owl::traceRay(traversable, ray, vis, 
+                   OPTIX_RAY_FLAG_DISABLE_ANYHIT
+                   | OPTIX_RAY_FLAG_CULL_FRONT_FACING_TRIANGLES
                    | OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT
                    | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT);
   return vis;
@@ -141,12 +171,32 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     const vec2f screen = (vec2f(pixelID)+pixelSample) / vec2f(fbSize);
 
     ray.origin = self.camera.pos;
-    ray.direction 
-      = normalize(self.camera.dir_00
+    vec3f rayDir = normalize(self.camera.dir_00
                   + screen.u * self.camera.dir_du
                   + screen.v * self.camera.dir_dv);
+    ray.direction  = rayDir;
 
-    accumColor += tracePath(self, ray, prd);
+    // needed later for outline shader
+    float firstHitDistance = 1e10f;
+
+
+    vec3f color = tracePath(self, ray, prd, firstHitDistance);
+
+#if ENABLE_TOON_OUTLINE
+    // TODO: ray visibility mask
+    if (optixLaunchParams.enableToonOutline) {
+      constexpr float outlineDepthBias = 0.05f;  // TODO: set from launch param
+      OutlineShadowRay outlineShadowRay(self.camera.pos,      // origin
+                      rayDir,  // same direction as eye ray
+                      0.f,
+                      firstHitDistance-outlineDepthBias);  // only show outline if it is in front of regular hit
+
+      float vis = traceOutlineShadowRay(optixLaunchParams.world, outlineShadowRay);
+      color *= vis;
+    }
+#endif // ENABLE_TOON_OUTLINE
+
+    accumColor += color;
   }
     
   vec4f rgba {accumColor / NUM_SAMPLES_PER_PIXEL, 1.0f};
@@ -268,6 +318,9 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   prd.out.scatterEvent = rayGotBounced;
   prd.out.scattered_direction = scatteredDirection;
   prd.out.scattered_origin = hit_P_offset;
+#if ENABLE_TOON_OUTLINE
+  prd.out.hitDistance = length(hit_P - org);
+#endif
 
 }
 
@@ -277,8 +330,17 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
 {
   const VoxGeomData &self = *(const VoxGeomData*)geomData;
   uchar4 indices = self.prims[primID];
-  const vec3f boxmin( indices.x, indices.y, indices.z );
-  const vec3f boxmax( 1+indices.x, 1+indices.y, 1+indices.z );
+  vec3f boxmin( indices.x, indices.y, indices.z );
+  vec3f boxmax( 1+indices.x, 1+indices.y, 1+indices.z );
+
+  if (self.enableToonOutline) {
+    // bloat the box slightly
+    const float scale = 1.2f;
+    const vec3f boxcenter (indices.x + 0.5f, indices.y + 0.5f, indices.z + 0.5f);
+    boxmin = boxcenter + scale*(boxmin-boxcenter);
+    boxmax = boxcenter + scale*(boxmax-boxcenter);
+  }
+  
   primBounds = box3f(boxmin, boxmax);
 }
 
@@ -324,6 +386,37 @@ OPTIX_INTERSECT_PROGRAM(VoxGeom)()
   }
 }
 
+// Used for toon outline 
+OPTIX_INTERSECT_PROGRAM(VoxGeomShadowCullFront)()
+{
+  // convert indices to 3d box
+  const int primID = optixGetPrimitiveIndex();
+  const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
+  uchar4 indices = self.prims[primID];
+  vec3f boxCenter(indices.x+0.5, indices.y+0.5, indices.z+0.5);
+
+  // Translate ray to local box space
+  const vec3f rayOrigin  = vec3f(optixGetObjectRayOrigin()) - boxCenter;
+  const vec3f rayDirection  = optixGetObjectRayDirection();  // assume no rotation
+  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
+
+  const float ray_tmax = optixGetRayTmax();
+  const float ray_tmin = optixGetRayTmin();
+
+  const float outlinePad = 1.2f;  // needs to match bounding box program
+  const vec3f boxRadius = vec3f(0.5f, 0.5f, 0.5f)*outlinePad;
+  vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
+  vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
+  float tnear = reduce_max(owl::min(t0, t1));
+  float tfar  = reduce_min(owl::max(t0, t1));
+
+  // Cull front face by using tfar for the hit
+
+  if (tnear <= tfar && tfar > ray_tmin && tfar < ray_tmax) {
+    optixReportIntersection( tfar, 0);
+  }
+}
+
 OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
 {
   // convert indices to 3d box
@@ -364,6 +457,9 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
   prd.out.scatterEvent = rayGotBounced;
   prd.out.scattered_direction = scatteredDirection;
   prd.out.scattered_origin = hit_P_offset;
+#if ENABLE_TOON_OUTLINE
+  prd.out.hitDistance = length(hit_P - org);
+#endif
 
 }
 

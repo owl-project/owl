@@ -26,6 +26,7 @@ struct LaunchParams
   OptixTraversableHandle world;
   vec3f sunDirection;  // pointing toward sun
   vec3f sunColor;
+  bool enableToonOutline;  // TODO: module specialization
 
   int frameID;
   float4   *fbAccumBuffer;
@@ -52,6 +53,7 @@ struct TrianglesGeomData
 struct VoxGeomData {
   uchar4 *prims;  // (xi, yi, zi, ci)
   uchar4 *colorPalette;
+  bool enableToonOutline;
 };
 
 /* variables for the ray generation program */

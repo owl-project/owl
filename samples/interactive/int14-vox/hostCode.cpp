@@ -117,6 +117,7 @@ struct Viewer : public owl::viewer::OWLViewer
   float sunTheta = 0.785398f;  // elevation angle, 0 at horizon
   bool sunDirty = true;
   bool enableGround = true;
+  bool enableToonOutline = true;
   
 };
 
@@ -230,6 +231,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
   OWLVarDecl voxGeomVars[] = {
     { "prims",  OWL_BUFPTR, OWL_OFFSETOF(VoxGeomData,prims)},
     { "colorPalette",  OWL_BUFPTR, OWL_OFFSETOF(VoxGeomData,colorPalette)},
+    { "enableToonOutline", OWL_BOOL, OWL_OFFSETOF(VoxGeomData, enableToonOutline)},
     { /* sentinel to mark end of list */ }
   };
   OWLGeomType voxGeomType
@@ -240,6 +242,9 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
   owlGeomTypeSetClosestHit(voxGeomType, 0, module, "VoxGeom");
   owlGeomTypeSetIntersectProg(voxGeomType, 0, module, "VoxGeom");
   owlGeomTypeSetIntersectProg(voxGeomType, 1, module, "VoxGeom");  // for shadow rays
+  if (this->enableToonOutline) {
+    owlGeomTypeSetIntersectProg(voxGeomType, 2, module, "VoxGeomShadowCullFront");
+  }
   owlGeomTypeSetBoundsProg(voxGeomType, module, "VoxGeom");
 
   // Do this before setting up user geometry, to compile bounds program
@@ -291,6 +296,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
     owlGeomSetBuffer(voxGeom, "prims", primBuffer);
     owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
+    owlGeomSet1b(voxGeom, "enableToonOutline", this->enableToonOutline);
 
     // ------------------------------------------------------------------
     // bottom level group/accel
@@ -362,6 +368,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
     owlGeomSetBuffer(voxGeom, "prims", primBuffer);
     owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
+    owlGeomSet1b(voxGeom, "enableToonOutline", false);  // no outline for ground because it's scaled
 
     OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
     owlGroupBuildAccel(userGeomGroup);
@@ -563,7 +570,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
   context = owlContextCreate(nullptr,1);
   OWLModule module = owlModuleCreate(context,ptxCode);
 
-  owlContextSetRayTypeCount(context, 2);  // primary, shadow
+  owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
   
   //OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
   OWLGroup world = createUserGeometryScene(module, scene);
@@ -598,6 +605,11 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
     owlMissProgCreate(context,module,"miss_shadow", 0u, nullptr,-1);
   owlMissProgSet(context, 1, shadowMissProg);
 
+  // Can also use this for toon outline
+  if (this->enableToonOutline) {
+    owlMissProgSet(context, 2, shadowMissProg);
+  }
+
   // -------------------------------------------------------
   // set up ray gen program
   // -------------------------------------------------------
@@ -626,6 +638,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
     { "world",         OWL_GROUP,  OWL_OFFSETOF(LaunchParams, world)},
     { "sunDirection",  OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunDirection)},
     { "sunColor",      OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunColor)},
+    { "enableToonOutline", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableToonOutline)},
     { /* sentinel to mark end of list */ }
   };
 
@@ -634,6 +647,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
 
   owlParamsSetGroup(launchParams, "world", world);
   owlParamsSet3f(launchParams, "sunColor", {1.f, 1.f, 1.f});
+  owlParamsSet1b(launchParams, "enableToonOutline", this->enableToonOutline);
   // other params set at launch or resize
   
   // ##################################################################
