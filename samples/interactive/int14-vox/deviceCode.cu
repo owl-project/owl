@@ -123,7 +123,8 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
   const RayGenData &self = owl::getProgramData<RayGenData>();
   const vec2i pixelID = owl::getLaunchIndex();
-  const int fbIndex = pixelID.x+self.fbSize.x*pixelID.y;
+  const vec2i fbSize = optixLaunchParams.fbSize;
+  const int fbIndex = pixelID.x+fbSize.x*pixelID.y;
 
   PerRayData prd;
   prd.random.init(fbIndex, optixLaunchParams.frameID);
@@ -135,7 +136,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     RadianceRay ray;
 
     const vec2f pixelSample(prd.random(), prd.random());
-    const vec2f screen = (vec2f(pixelID)+pixelSample) / vec2f(self.fbSize);
+    const vec2f screen = (vec2f(pixelID)+pixelSample) / vec2f(fbSize);
 
     ray.origin = self.camera.pos;
     ray.direction 
@@ -156,7 +157,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   }
 
   optixLaunchParams.fbAccumBuffer[fbIndex] = (float4)rgba;
-  self.fbPtr[fbIndex] = owl::make_rgba(rgba);
+  optixLaunchParams.fbPtr[fbIndex] = owl::make_rgba(rgba);
 }
 
 // from OptiX 6 SDK

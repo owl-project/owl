@@ -29,6 +29,9 @@ struct LaunchParams
 
   int frameID;
   float4   *fbAccumBuffer;
+  uint32_t *fbPtr;
+  vec2i  fbSize;
+
 };
 
 /* variables for the triangle mesh geometry */
@@ -54,9 +57,6 @@ struct VoxGeomData {
 /* variables for the ray generation program */
 struct RayGenData
 {
-  uint32_t *fbPtr;
-  vec2i  fbSize;
-
   struct {
     vec3f pos;
     vec3f dir_00;

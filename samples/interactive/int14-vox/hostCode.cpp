@@ -71,7 +71,6 @@ vec3i indices[NUM_INDICES] =
     { 2,0,4 }, { 4,6,2 }
   };
 
-// const vec2i fbSize(800,600);
 const float isometricAngle = 35.564f * float(M_PI) / 180.0f;
 const owl::affine3f cameraRotation = 
   owl::affine3f::rotate(vec3f(0,0,1), float(M_PI)/4.0f) *
@@ -155,9 +154,9 @@ void Viewer::cameraChanged()
   camera_d00 -= 0.5f * camera_ddv;
 
   // ----------- set variables  ----------------------------
-  owlRayGenSet1ul   (rayGen,"fbPtr",        (uint64_t)fbPointer);
-  // owlRayGenSetBuffer(rayGen,"fbPtr",        frameBuffer);
-  owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
+  owlParamsSet1ul(launchParams, "fbPtr",  (uint64_t)fbPointer);
+  owlParamsSet2i (launchParams, "fbSize", (const owl2i&)fbSize);
+
   owlRayGenSet3f    (rayGen,"camera.pos",   (const owl3f&)camera_pos);
   owlRayGenSet3f    (rayGen,"camera.dir_00",(const owl3f&)camera_d00);
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
@@ -592,9 +591,6 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
   // set up ray gen program
   // -------------------------------------------------------
   OWLVarDecl rayGenVars[] = {
-    { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(RayGenData,fbPtr)},
-    // { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
-    { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
     { "camera.pos",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.pos)},
     { "camera.dir_00", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_00)},
     { "camera.dir_du", OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.dir_du)},
@@ -613,6 +609,9 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
   OWLVarDecl launchVars[] = {
     { "frameID",       OWL_INT,    OWL_OFFSETOF(LaunchParams, frameID) }, 
     { "fbAccumBuffer", OWL_BUFPTR, OWL_OFFSETOF(LaunchParams, fbAccumBuffer) },
+    { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(LaunchParams, fbPtr) },
+    { "fbSize",        OWL_INT2,   OWL_OFFSETOF(LaunchParams, fbSize)},
+
     { "world",         OWL_GROUP,  OWL_OFFSETOF(LaunchParams, world)},
     { "sunDirection",  OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunDirection)},
     { "sunColor",      OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunColor)},
@@ -648,7 +647,6 @@ void Viewer::render()
       sunDirty = false;
       frameID = 0;
   }
-  //owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);
   owlParamsSet1i(launchParams, "frameID", frameID);
   frameID++;
   owlLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);
