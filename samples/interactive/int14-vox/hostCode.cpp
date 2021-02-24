@@ -267,6 +267,8 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
   std::vector<owl::affine3f> instanceTransforms;
   instanceTransforms.reserve(scene->num_instances);
   owl::box3f sceneBox;
+
+  size_t totalSolidVoxelCount = 0;
   
   // Make instance transforms
   for (auto it : modelToInstances) {
@@ -299,6 +301,8 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
     LOG("adding (" << it.second.size() << ") instance transforms for model ...");
     for (uint32_t instanceIndex : it.second) {
+
+      totalSolidVoxelCount += voxdata.size();
 
       const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
 
@@ -337,6 +341,8 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     }
 
   }
+
+  LOG("Total solid voxels in all instanced models: " << totalSolidVoxelCount);
 
   const vec3f sceneCenter = sceneBox.center();
   const vec3f sceneSpan = sceneBox.span();
@@ -455,6 +461,8 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   assert(scene->num_instances > 0);
   assert(scene->num_models > 0);
 
+  size_t totalSolidVoxelCount = 0;
+
   for (uint32_t instanceIndex = 0; instanceIndex < scene->num_instances; instanceIndex++) {
 
     const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
@@ -472,6 +480,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 
     // Note: for scenes with many instances of a model, cache this or rearrange loop
     std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
+    totalSolidVoxelCount += voxdata.size();
 
     // Color indices for this model
     for (size_t i = 0; i < voxdata.size(); ++i) {
@@ -505,6 +514,8 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
         transformsPerBrick.push_back(trans);
     }
   }
+
+  LOG("Total solid voxels in all instanced models: " << totalSolidVoxelCount);
 
   const vec3f sceneSpan = sceneBox.span();
   const vec3f sceneCenter = sceneBox.center();
