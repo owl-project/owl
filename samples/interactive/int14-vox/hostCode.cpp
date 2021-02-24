@@ -111,6 +111,9 @@ struct Viewer : public owl::viewer::OWLViewer
   OWLRayGen rayGen   { 0 };
   OWLLaunchParams launchParams { 0 };
   OWLContext context { 0 };
+  int frameID = 0;
+  OWLBuffer fbAccum = nullptr;
+
   float sunPhi   = 0.785398f;  // rotation about up axis
   float sunTheta = 0.785398f;  // elevation angle, 0 at horizon
   bool sunDirty = true;
@@ -122,12 +125,19 @@ struct Viewer : public owl::viewer::OWLViewer
 void Viewer::resize(const vec2i &newSize)
 {
   OWLViewer::resize(newSize);
+
+  if (fbAccum) {
+    owlBufferDestroy(fbAccum);
+  }
+  fbAccum = owlDeviceBufferCreate(context, OWL_FLOAT4, newSize.x*newSize.y, nullptr);
+  owlParamsSetBuffer(launchParams, "fbAccumBuffer", fbAccum);
   cameraChanged();
 }
 
 /*! window notifies us that the camera has changed */
 void Viewer::cameraChanged()
 {
+  frameID = 0; // reset accum
   const vec3f lookFrom = camera.getFrom();
   const vec3f lookAt = camera.getAt();
   const vec3f lookUp = camera.getUp();
@@ -601,7 +611,9 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
 
   // Launch params
   OWLVarDecl launchVars[] = {
-    { "world",         OWL_GROUP,  OWL_OFFSETOF(LaunchParams,world)},
+    { "frameID",       OWL_INT,    OWL_OFFSETOF(LaunchParams, frameID) }, 
+    { "fbAccumBuffer", OWL_BUFPTR, OWL_OFFSETOF(LaunchParams, fbAccumBuffer) },
+    { "world",         OWL_GROUP,  OWL_OFFSETOF(LaunchParams, world)},
     { "sunDirection",  OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunDirection)},
     { "sunColor",      OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunColor)},
     { /* sentinel to mark end of list */ }
@@ -612,7 +624,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
 
   owlParamsSetGroup(launchParams, "world", world);
   owlParamsSet3f(launchParams, "sunColor", {1.f, 1.f, 1.f});
-  // other params set at launch
+  // other params set at launch or resize
   
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -634,8 +646,11 @@ void Viewer::render()
       owl3f dir = { cos(sunPhi)*cos(sunTheta), sin(sunPhi)*cos(sunTheta), sin(sunTheta) };
       owlParamsSet3f(launchParams, "sunDirection", dir); 
       sunDirty = false;
+      frameID = 0;
   }
   //owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);
+  owlParamsSet1i(launchParams, "frameID", frameID);
+  frameID++;
   owlLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);
   owlLaunchSync(launchParams);
 }

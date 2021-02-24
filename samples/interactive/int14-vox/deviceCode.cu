@@ -123,11 +123,12 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
   const RayGenData &self = owl::getProgramData<RayGenData>();
   const vec2i pixelID = owl::getLaunchIndex();
+  const int fbIndex = pixelID.x+self.fbSize.x*pixelID.y;
 
   PerRayData prd;
-  prd.random.init(pixelID.x,pixelID.y);
+  prd.random.init(fbIndex, optixLaunchParams.frameID);
 
-  const int NUM_SAMPLES_PER_PIXEL = 12;  // TODO: jitter?
+  const int NUM_SAMPLES_PER_PIXEL = 4;
   vec3f accumColor = 0.f;
 
   for (int sampleID=0;sampleID<NUM_SAMPLES_PER_PIXEL;sampleID++) {
@@ -145,9 +146,17 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     accumColor += tracePath(self, ray, prd);
   }
     
-  const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
-  self.fbPtr[fbOfs]
-    = owl::make_rgba(accumColor * (1.f / NUM_SAMPLES_PER_PIXEL));
+  vec4f rgba {accumColor / NUM_SAMPLES_PER_PIXEL, 1.0f};
+
+  if (optixLaunchParams.frameID > 0) {
+    // Blend with accum buffer
+    const vec4f accum = optixLaunchParams.fbAccumBuffer[fbIndex];
+    rgba += float(optixLaunchParams.frameID) * accum; 
+    rgba /= (optixLaunchParams.frameID+1.f);
+  }
+
+  optixLaunchParams.fbAccumBuffer[fbIndex] = (float4)rgba;
+  self.fbPtr[fbIndex] = owl::make_rgba(rgba);
 }
 
 // from OptiX 6 SDK
