@@ -184,7 +184,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 
 #if ENABLE_TOON_OUTLINE
     // TODO: ray visibility mask
-    if (optixLaunchParams.enableToonOutline) {
+    if (1 /*optixLaunchParams.enableToonOutline*/ ) {
       constexpr float outlineDepthBias = 0.05f;  // TODO: set from launch param
       OutlineShadowRay outlineShadowRay(self.camera.pos,      // origin
                       rayDir,  // same direction as eye ray
@@ -333,6 +333,7 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
   vec3f boxmin( indices.x, indices.y, indices.z );
   vec3f boxmax( 1+indices.x, 1+indices.y, 1+indices.z );
 
+#if ENABLE_TOON_OUTLINE
   if (self.enableToonOutline) {
     // bloat the box slightly
     const float scale = 1.2f;
@@ -340,6 +341,7 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
     boxmin = boxcenter + scale*(boxmin-boxcenter);
     boxmax = boxcenter + scale*(boxmax-boxcenter);
   }
+#endif
   
   primBounds = box3f(boxmin, boxmax);
 }
@@ -392,6 +394,9 @@ OPTIX_INTERSECT_PROGRAM(VoxGeomShadowCullFront)()
   // convert indices to 3d box
   const int primID = optixGetPrimitiveIndex();
   const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
+  if (!self.enableToonOutline) {
+      return;
+  }
   uchar4 indices = self.prims[primID];
   vec3f boxCenter(indices.x+0.5, indices.y+0.5, indices.z+0.5);
 
