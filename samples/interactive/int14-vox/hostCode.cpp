@@ -385,7 +385,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
   const float maxSpan = owl::reduce_max(sceneBox.span());
   owl::affine3f worldTransform = 
     owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
-    owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, 0.0f));  // center about (x,y) origin ,with Z up to match MV
+    owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, -sceneBox.lower.z));  // center about (x,y) origin ,with Z up to match MV
 
   for (size_t i = 0; i < instanceTransforms.size(); ++i) {
     instanceTransforms[i] = worldTransform * instanceTransforms[i];
@@ -541,7 +541,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   const float maxSpan = owl::reduce_max(sceneBox.span());
   owl::affine3f worldTransform = 
     owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
-    owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, 0.0f));  // center about (x,y) origin ,with Z up to match MV
+    owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, -sceneBox.lower.z));  // center about (x,y) origin ,with Z up to match MV
 
   for (size_t i = 0; i < transformsPerBrick.size(); ++i) {
     transformsPerBrick[i] = worldTransform * transformsPerBrick[i];
