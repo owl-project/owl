@@ -38,8 +38,8 @@ struct LaunchParams
 /* variables for the triangle mesh geometry */
 struct TrianglesGeomData
 {
-  /*! base color we use for each instance, accessed with OptiX instanceID */
-  unsigned char *colorIndexPerInstance;
+  /*! base color we use for each brick */
+  unsigned char *colorIndexPerBrick;
   uchar4 *colorPalette;
 
   /*! array/buffer of vertex indices */

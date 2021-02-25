@@ -421,7 +421,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   OWLVarDecl trianglesGeomVars[] = {
     { "index",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,index)},
     { "vertex", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,vertex)},
-    { "colorIndexPerInstance",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,colorIndexPerInstance)},
+    { "colorIndexPerBrick",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,colorIndexPerBrick)},
     { "colorPalette",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,colorPalette)},
     { /* sentinel to mark end of list */ }
   };
@@ -562,7 +562,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   // Set the color indices per brick now that the bricks have been fully instanced
   OWLBuffer colorIndexBuffer
       = owlDeviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
-  owlGeomSetBuffer(trianglesGeom, "colorIndexPerInstance", colorIndexBuffer);
+  owlGeomSetBuffer(trianglesGeom, "colorIndexPerBrick", colorIndexBuffer);
 
   OWLGroup world = owlInstanceGroupCreate(context, transformsPerBrick.size());
 
