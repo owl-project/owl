@@ -31,6 +31,7 @@
 
 #include <cassert>
 #include <map>
+#include <tuple>
 #include <vector>
 
 // annoying stuff so we can list files in a directory later
@@ -59,7 +60,7 @@ extern "C" char ptxCode[];
 // NOTE: the brick geometry here must lie in a unit bounding box in [0,1]x[0,1]x[0,1]
 // and have winding order so that normals point outward
 
-const int NUM_VERTICES = 8;
+constexpr int NUM_VERTICES = 8;
 vec3f vertices[NUM_VERTICES] =
   {
     { 0.f, 0.f, 0.f },
@@ -72,7 +73,7 @@ vec3f vertices[NUM_VERTICES] =
     { 1.f, 1.f, 1.f }
   };
 
-const int NUM_INDICES = 12;
+constexpr int NUM_INDICES = 12;
 vec3i indices[NUM_INDICES] =
   {
     { 3,1,0 }, { 2,3,0 },
@@ -477,18 +478,46 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     std::vector<unsigned char> colorIndicesPerBrick;
     colorIndicesPerBrick.reserve(voxdata.size());
 
+    // Share vertices between voxels to save a little memory.  Only works for simple brick.
+    constexpr bool SHARE_BRICK_VERTICES = (NUM_VERTICES == 8 && NUM_INDICES == 12);
+    std::map<std::tuple<int, int, int>, int> brickVertexIndexToMeshVertexIndex;
+
     // Build mesh in object space where each brick is 1x1x1
+    std::vector<int> indexRemap(NUM_VERTICES);  // local brick vertex --> flat mesh vertex
     for (uchar4 voxel : voxdata) {
-      const vec3i indexOffset(int(meshVertices.size()));
-      const vec3f brickTranslation(float(voxel.x), float(voxel.y), (float(voxel.z)));
-      for (const vec3f &v : vertices) {
-        meshVertices.push_back(brickTranslation + v);
+      const vec3i brickTranslation(voxel.x, voxel.y, voxel.z);
+      for (int i = 0; i < NUM_VERTICES; ++i) {
+        const vec3f &v = vertices[i];
+        std::tuple<int,int,int> brickVertexIndex = std::make_tuple(
+            brickTranslation.x + int(v.x),
+            brickTranslation.y + int(v.y),
+            brickTranslation.z + int(v.z));
+        int vertexIndexInMesh = -1;
+        if (SHARE_BRICK_VERTICES) {
+          const auto it = brickVertexIndexToMeshVertexIndex.find(brickVertexIndex);
+          if (it != brickVertexIndexToMeshVertexIndex.end()) {
+            vertexIndexInMesh = it->second;
+          } else {
+            meshVertices.push_back(vec3f(brickTranslation) + v);
+            vertexIndexInMesh = meshVertices.size()-1;
+            brickVertexIndexToMeshVertexIndex[brickVertexIndex] = vertexIndexInMesh;
+          }
+        } else {
+          // do not share vertices
+          meshVertices.push_back(vec3f(brickTranslation) + v);
+          vertexIndexInMesh = meshVertices.size()-1;
+        }
+        indexRemap[i] = vertexIndexInMesh;  // brick vertex -> flat mesh vertex
       }
       for (const vec3i &index : indices) {
-        meshIndices.push_back(indexOffset + index);
+        vec3i meshIndex(indexRemap[index.x], indexRemap[index.y], indexRemap[index.z]);
+        meshIndices.push_back(meshIndex);
       }
       colorIndicesPerBrick.push_back(voxel.w);
     }
+
+    LOG("number of verts in mesh: " << meshVertices.size());
+    LOG("number of faces in mesh: " << meshIndices.size());
 
     OWLBuffer vertexBuffer
       = owlDeviceBufferCreate(context, OWL_FLOAT3, meshVertices.size(), meshVertices.data());
