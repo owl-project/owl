@@ -18,6 +18,7 @@ cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
 add_executable(int14-vox
+  constants.h
   deviceCode.h
   hostCode.cpp
   readVoxOGT.cpp

@@ -15,14 +15,12 @@
 // ======================================================================== //
 
 #include "deviceCode.h"
+#include "constants.h"
 #include <optix_device.h>
 
 #include <owl/common/math/random.h>
 #include <owl/common/math/LinearSpace.h>
 
-// Until we have module specialization working... 
-// Set this to 0 to remove some code.
-#define ENABLE_TOON_OUTLINE 1
 
 __constant__ LaunchParams optixLaunchParams;
 
@@ -212,10 +210,6 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   optixLaunchParams.fbPtr[fbIndex] = owl::make_rgba(rgba);
 }
 
-// from OptiX 6 SDK
-#ifndef M_PIf
-#define M_PIf       3.14159265358979323846f
-#endif
 inline __device__ 
 float2 squareToDisk(float u1, float u2)
 {

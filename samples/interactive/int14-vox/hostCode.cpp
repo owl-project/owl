@@ -25,9 +25,9 @@
 #include "owlViewer/OWLViewer.h"
 #include "owl/common/math/AffineSpace.h"
 
-// VOX file reader
-#include "readVox.h"
+#include "constants.h"
 #include "ogt_vox.h"
+#include "readVox.h"
 
 #include <cassert>
 #include <map>
@@ -71,9 +71,9 @@ vec3i indices[NUM_INDICES] =
     { 2,0,4 }, { 4,6,2 }
   };
 
-const float isometricAngle = 35.564f * float(M_PI) / 180.0f;
+const float isometricAngle = 35.564f * M_PIf/180.0f;
 const owl::affine3f cameraRotation = 
-  owl::affine3f::rotate(vec3f(0,0,1), float(M_PI)/4.0f) *
+  owl::affine3f::rotate(vec3f(0,0,1), M_PIf/4.0f) *
   owl::affine3f::rotate(vec3f(-1,0,0), isometricAngle);
 
 const vec3f init_lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
@@ -171,22 +171,22 @@ void Viewer::key(char key, const vec2i &where)
   switch (key) {
     case '1':
       sunTheta += 0.1f;
-      sunTheta = owl::clamp(sunTheta, 0.f, (float)M_PI/2);
+      sunTheta = owl::clamp(sunTheta, 0.f, M_PIf/2);
       sunDirty = true;
       return;
     case '2':
       sunTheta -= 0.1f;
-      sunTheta = owl::clamp(sunTheta, 0.f, (float)M_PI/2);
+      sunTheta = owl::clamp(sunTheta, 0.f, M_PIf/2);
       sunDirty = true;
       return;
     case '3':
       sunPhi += 0.1f;
-      if (sunPhi >= 2.0f*M_PI) sunPhi -= 2.0f*M_PI;
+      if (sunPhi >= 2.0f*M_PIf) sunPhi -= 2.0f*M_PIf;
       sunDirty = true;
       return;
     case '4':
       sunPhi -= 0.1f;
-      if (sunPhi <= 0.0f) sunPhi += 2.0f*M_PI;
+      if (sunPhi <= 0.0f) sunPhi += 2.0f*M_PIf;
       sunDirty = true;
       return;
   }
@@ -697,7 +697,7 @@ int main(int ac, char **av)
       infiles.push_back(arg);  // assume all other args are file names
     }
   }
-  const ogt_vox_scene *scene = loadVoxSceneOGT(infiles[0].c_str());
+  const ogt_vox_scene *scene = loadVoxScenes(infiles);
 
   if (!scene) {
       LOG("Could not read vox file: " << infiles[0].c_str() << ", exiting");
