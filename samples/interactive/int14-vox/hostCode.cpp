@@ -57,32 +57,6 @@ using filesystem = std::filesystem
 
 extern "C" char ptxCode[];
 
-// NOTE: the brick geometry here must lie in a unit bounding box in [0,1]x[0,1]x[0,1]
-// and have winding order so that normals point outward
-
-constexpr int NUM_BRICK_VERTICES = 8;
-vec3f brickVertices[NUM_BRICK_VERTICES] =
-  {
-    { 0.f, 0.f, 0.f },
-    { 1.f, 0.f, 0.f },
-    { 0.f, 1.f, 0.f },
-    { 1.f, 1.f, 0.f },
-    { 0.f, 0.f, 1.f },
-    { 1.f, 0.f, 1.f },
-    { 0.f, 1.f, 1.f },
-    { 1.f, 1.f, 1.f }
-  };
-
-constexpr int NUM_BRICK_INDICES = 12;
-vec3i brickIndices[NUM_BRICK_INDICES] =
-  {
-    { 3,1,0 }, { 2,3,0 },
-    { 5,7,6 }, { 6,4,5 },
-    { 5,4,0 }, { 0,1,5 },
-    { 7,3,2 }, { 2,6,7 },
-    { 7,5,1 }, { 1,3,7 },
-    { 2,0,4 }, { 4,6,2 }
-  };
 
 const float isometricAngle = 35.564f * M_PIf/180.0f;
 const owl::affine3f cameraRotation = 
@@ -499,13 +473,13 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
             vertexIndexInMesh = it->second;
           } else {
             meshVertices.push_back(vec3f(brickTranslation) + v);
-            vertexIndexInMesh = meshVertices.size()-1;
+            vertexIndexInMesh = int(meshVertices.size())-1;
             brickVertexIndexToMeshVertexIndex[brickVertexIndex] = vertexIndexInMesh;
           }
         } else {
           // do not share vertices
           meshVertices.push_back(vec3f(brickTranslation) + v);
-          vertexIndexInMesh = meshVertices.size()-1;
+          vertexIndexInMesh = int(meshVertices.size())-1;
         }
         indexRemap[i] = vertexIndexInMesh;  // brick vertex -> flat mesh vertex
       }
@@ -823,8 +797,8 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
 
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
   
-  OWLGroup world = createFlatTriangleGeometryScene(module, scene);
-  //OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
+  //OWLGroup world = createFlatTriangleGeometryScene(module, scene);
+  OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
   //OWLGroup world = createUserGeometryScene(module, scene);
 
   owlGroupBuildAccel(world);
