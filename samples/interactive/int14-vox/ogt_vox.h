@@ -1654,7 +1654,7 @@
                 // compute the instance transform, taking into account the group hierarchy.
                 ogt_vox_transform instance_transform = instance->transform;
                 uint32_t parent_group_index = instance->group_index;
-                while (parent_group_index != k_invalid_group_index) {
+                while (parent_group_index > 0 && parent_group_index != k_invalid_group_index) {
                     const ogt_vox_group* group = &scene->groups[parent_group_index];
                     instance_transform = _vox_transform_multiply(instance_transform, group->transform);
                     parent_group_index = group->parent_group_index;
@@ -1877,26 +1877,29 @@
             compute_scene_bounding_box_x(scene, scene_min_x, scene_max_x);
             float scene_offset_x = (float)(offset_x - scene_min_x);
 
-            // each scene has a root group, and it must the 0th group in its local groups[] array,
-            assert(scene->groups[0].parent_group_index == k_invalid_group_index);
-            // create copies of all groups into the merged scene (except the root group from each scene -- which is why we start group_index at 1 here)
-            for (uint32_t group_index = 1; group_index < scene->num_groups; group_index++) {
+            if (scene->groups) {
+              // if the scene has a root group, it must the 0th group in its local groups[] array,
+              assert(scene->groups[0].parent_group_index == k_invalid_group_index);
+              // create copies of all groups into the merged scene (except the root group from each scene -- which is why we start group_index at 1 here)
+              for (uint32_t group_index = 1; group_index < scene->num_groups; group_index++) {
                 const ogt_vox_group* src_group = &scene->groups[group_index];
                 assert(src_group->parent_group_index != k_invalid_group_index); // there can be only 1 root group per scene and it must be the 0th group.
                 ogt_vox_group dst_group = *src_group;
                 assert(dst_group.parent_group_index < scene->num_groups);
-                dst_group.layer_index        = 0;
+                dst_group.layer_index = 0;
                 dst_group.parent_group_index = (dst_group.parent_group_index == 0) ? global_root_group_index : base_group_index + (dst_group.parent_group_index - 1);
                 // if this group belongs to the global root group, it must be translated so it doesn't overlap with other scenes.
                 if (dst_group.parent_group_index == global_root_group_index)
-                    dst_group.transform.m30 += scene_offset_x;
+                  dst_group.transform.m30 += scene_offset_x;
                 groups[num_groups++] = dst_group;
+              }
             }
 
             // create copies of all instances (and bias them such that minimum on x starts at zero)
             for (uint32_t instance_index = 0; instance_index < scene->num_instances; instance_index++) {
                 const ogt_vox_instance* src_instance = &scene->instances[instance_index];
-                assert(src_instance->group_index < scene->num_groups);  // every instance must be mapped to a group.
+                if (scene->groups)
+                  assert(src_instance->group_index < scene->num_groups);  // every instance must be mapped to a group.
                 ogt_vox_instance* dst_instance = &instances[num_instances++];
                 *dst_instance = *src_instance;
                 dst_instance->layer_index = 0;
