@@ -60,8 +60,8 @@ extern "C" char ptxCode[];
 // NOTE: the brick geometry here must lie in a unit bounding box in [0,1]x[0,1]x[0,1]
 // and have winding order so that normals point outward
 
-constexpr int NUM_VERTICES = 8;
-vec3f vertices[NUM_VERTICES] =
+constexpr int NUM_BRICK_VERTICES = 8;
+vec3f brickVertices[NUM_BRICK_VERTICES] =
   {
     { 0.f, 0.f, 0.f },
     { 1.f, 0.f, 0.f },
@@ -73,8 +73,8 @@ vec3f vertices[NUM_VERTICES] =
     { 1.f, 1.f, 1.f }
   };
 
-constexpr int NUM_INDICES = 12;
-vec3i indices[NUM_INDICES] =
+constexpr int NUM_BRICK_INDICES = 12;
+vec3i brickIndices[NUM_BRICK_INDICES] =
   {
     { 3,1,0 }, { 2,3,0 },
     { 5,7,6 }, { 6,4,5 },
@@ -472,22 +472,22 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     LOG("building flat triangle geometry for model ...");
 
     std::vector<vec3f> meshVertices;
-    meshVertices.reserve(voxdata.size() * NUM_VERTICES);  // worst case
+    meshVertices.reserve(voxdata.size() * NUM_BRICK_VERTICES);  // worst case
     std::vector<vec3i> meshIndices;
-    meshIndices.reserve(voxdata.size() * NUM_INDICES);
+    meshIndices.reserve(voxdata.size() * NUM_BRICK_INDICES);
     std::vector<unsigned char> colorIndicesPerBrick;
     colorIndicesPerBrick.reserve(voxdata.size());
 
     // Share vertices between voxels to save a little memory.  Only works for simple brick.
-    constexpr bool SHARE_BRICK_VERTICES = (NUM_VERTICES == 8 && NUM_INDICES == 12);
+    constexpr bool SHARE_BRICK_VERTICES = (NUM_BRICK_VERTICES == 8 && NUM_BRICK_INDICES == 12);
     std::map<std::tuple<int, int, int>, int> brickVertexIndexToMeshVertexIndex;
 
     // Build mesh in object space where each brick is 1x1x1
-    std::vector<int> indexRemap(NUM_VERTICES);  // local brick vertex --> flat mesh vertex
+    std::vector<int> indexRemap(NUM_BRICK_VERTICES);  // local brick vertex --> flat mesh vertex
     for (uchar4 voxel : voxdata) {
       const vec3i brickTranslation(voxel.x, voxel.y, voxel.z);
-      for (int i = 0; i < NUM_VERTICES; ++i) {
-        const vec3f &v = vertices[i];
+      for (int i = 0; i < NUM_BRICK_VERTICES; ++i) {
+        const vec3f &v = brickVertices[i];
         std::tuple<int,int,int> brickVertexIndex = std::make_tuple(
             brickTranslation.x + int(v.x),
             brickTranslation.y + int(v.y),
@@ -509,7 +509,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
         }
         indexRemap[i] = vertexIndexInMesh;  // brick vertex -> flat mesh vertex
       }
-      for (const vec3i &index : indices) {
+      for (const vec3i &index : brickIndices) {
         vec3i meshIndex(indexRemap[index.x], indexRemap[index.y], indexRemap[index.z]);
         meshIndices.push_back(meshIndex);
       }
@@ -533,7 +533,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     owlGeomSetBuffer(trianglesGeom, "index", indexBuffer);
     owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
     owlGeomSet1b(trianglesGeom, "isFlat", true);
-    owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_INDICES);
+    owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_BRICK_INDICES);
 
     OWLBuffer colorIndexBuffer
       = owlDeviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
@@ -596,23 +596,23 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     // Extra scaled brick for ground plane
     
     OWLBuffer vertexBuffer
-      = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_VERTICES,vertices);
+      = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_BRICK_VERTICES,brickVertices);
     OWLBuffer indexBuffer
-      = owlDeviceBufferCreate(context,OWL_INT3,NUM_INDICES,indices);
+      = owlDeviceBufferCreate(context,OWL_INT3,NUM_BRICK_INDICES,brickIndices);
 
     OWLGeom trianglesGeom
       = owlGeomCreate(context,trianglesGeomType);
   
     owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
-        NUM_VERTICES,sizeof(vec3f),0);
+        NUM_BRICK_VERTICES,sizeof(vec3f),0);
     owlTrianglesSetIndices(trianglesGeom,indexBuffer,
-        NUM_INDICES,sizeof(vec3i),0);
+        NUM_BRICK_INDICES,sizeof(vec3i),0);
 
     owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
     owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
     owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
     owlGeomSet1b(trianglesGeom, "isFlat", true);
-    owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_INDICES);
+    owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_BRICK_INDICES);
 
     std::vector<unsigned char> colorIndicesPerBrick = {249}; // grey in default palette
     OWLBuffer colorIndexBuffer
@@ -679,17 +679,17 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   // triangle mesh for single unit brick
   // ------------------------------------------------------------------
   OWLBuffer vertexBuffer
-    = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_VERTICES,vertices);
+    = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_BRICK_VERTICES,brickVertices);
   OWLBuffer indexBuffer
-    = owlDeviceBufferCreate(context,OWL_INT3,NUM_INDICES,indices);
+    = owlDeviceBufferCreate(context,OWL_INT3,NUM_BRICK_INDICES,brickIndices);
 
   OWLGeom trianglesGeom
     = owlGeomCreate(context,trianglesGeomType);
   
   owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
-                          NUM_VERTICES,sizeof(vec3f),0);
+                          NUM_BRICK_VERTICES,sizeof(vec3f),0);
   owlTrianglesSetIndices(trianglesGeom,indexBuffer,
-                         NUM_INDICES,sizeof(vec3i),0);
+                         NUM_BRICK_INDICES,sizeof(vec3i),0);
   
   owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
