@@ -289,8 +289,8 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   const float shadowBias = 1e-2f * fminf(1.f, boxScaleInWorldSpace);
 
   // Convert 8 bit color to float
-  const unsigned int instanceID = optixGetInstanceId();
-  const int ci = self.colorIndexPerBrick[instanceID];
+  const unsigned int brickID = self.isFlat ? optixGetPrimitiveIndex() / self.primCountPerBrick : optixGetInstanceId();
+  const int ci = self.colorIndexPerBrick[brickID];
   uchar4 col = self.colorPalette[ci];
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 

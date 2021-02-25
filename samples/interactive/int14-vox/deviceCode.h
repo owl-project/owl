@@ -46,6 +46,11 @@ struct TrianglesGeomData
   vec3i *index;
   /*! array/buffer of vertex positions */
   vec3f *vertex;
+
+  // For flat meshes with multiple bricks per mesh
+  bool isFlat = false;
+  int primCountPerBrick;
+  
 };
 
 // A set of bricks in a 3d grid
