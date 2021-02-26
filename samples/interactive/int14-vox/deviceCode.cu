@@ -194,7 +194,10 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 
 #if ENABLE_TOON_OUTLINE
     if (1 /*optixLaunchParams.enableToonOutline*/ ) {
-      constexpr float outlineDepthBias = 0.05f;  // TODO: set from launch param
+
+      // Feature size control for outlines
+      const float outlineDepthBias = 5*optixLaunchParams.brickScale;
+
       OutlineShadowRay outlineShadowRay(self.camera.pos,      // origin
                       rayDir,  // same direction as eye ray
                       0.f,
@@ -296,10 +299,9 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   const vec3f &C     = self.vertex[index.z];
   const vec3f Nbox   = normalize(cross(B-A,C-A));
   const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
-  const float boxScaleInWorldSpace = owl::length(vec3f(optixTransformVectorFromObjectToWorldSpace(make_float3(0,0,1))));
 
-  // Bias value relative to a brick; handle large bricks with a clamp
-  const float shadowBias = 1e-2f * fminf(1.f, boxScaleInWorldSpace);
+  // Bias value relative to a brick
+  const float shadowBias = 1e-2f * fminf(1.f, optixLaunchParams.brickScale);
 
   // Convert 8 bit color to float
   const unsigned int brickID = self.isFlat ? optixGetPrimitiveIndex() / self.primCountPerBrick : optixGetInstanceId();
@@ -350,14 +352,6 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
 #endif
   
   primBounds = box3f(boxmin, boxmax);
-}
-
-inline __device__ int indexOfMaxComponent(vec3f v)
-{
-  if (v.x > v.y) 
-    return v.x > v.z ? 0 : 2;
-  else
-    return v.y > v.z ? 1 : 2;
 }
 
 OPTIX_INTERSECT_PROGRAM(VoxGeom)()
@@ -440,10 +434,9 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
         int_as_float(optixGetAttribute_1()),
         int_as_float(optixGetAttribute_2()));
   const vec3f Ng = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
-  const float boxScaleInWorldSpace = owl::length(vec3f(optixTransformVectorFromObjectToWorldSpace(make_float3(0,0,1))));
 
-  // Bias value relative to a brick; handle large bricks with a clamp
-  const float shadowBias = 1e-2f * fminf(1.f, boxScaleInWorldSpace);
+  // Bias value relative to brick scale
+  const float shadowBias = 1e-2f * fminf(1.f, optixLaunchParams.brickScale);
 
   // Convert 8 bit color to float
   const int ci = self.prims[primID].w;

@@ -26,6 +26,8 @@ struct LaunchParams
   OptixTraversableHandle world;
   vec3f sunDirection;  // pointing toward sun
   vec3f sunColor;
+  float brickScale;
+
   bool enableToonOutline;  // TODO: module specialization
 
   int frameID;
@@ -78,4 +80,13 @@ struct MissProgData
   vec3f  color0;
   vec3f  color1;
 };
+
+// Utility
+inline __host__ __device__ int indexOfMaxComponent(vec3f v)
+{
+  if (v.x > v.y) 
+    return v.x > v.z ? 0 : 2;
+  else
+    return v.y > v.z ? 1 : 2;
+}
 

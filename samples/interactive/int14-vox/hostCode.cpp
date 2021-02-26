@@ -90,9 +90,9 @@ struct Viewer : public owl::viewer::OWLViewer
 
   void key(char key, const vec2i &/*where*/) override;
 
-  OWLGroup createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene);
-  OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene);
-  OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene);
+  OWLGroup createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, owl::box3f &sceneBox);
+  OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, owl::box3f &sceneBox);
+  OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, owl::box3f &sceneBox);
 
   bool sbtDirty = true;
   OWLRayGen rayGen   { 0 };
@@ -210,7 +210,7 @@ std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model)
   return solid_voxels;
 }
 
-OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene)
+OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, box3f &sceneBox)
 {
   // -------------------------------------------------------
   // declare user vox geometry type
@@ -259,7 +259,6 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
   std::vector<owl::affine3f> instanceTransforms;
   instanceTransforms.reserve(scene->num_instances);
-  owl::box3f sceneBox;
 
   size_t totalSolidVoxelCount = 0;
   
@@ -390,7 +389,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 }
 
 // For performance comaparisons, this version flattens each vox model into a single triangle mesh, 
-OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene)
+OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, box3f &sceneBox)
 {
   // -------------------------------------------------------
   // declare triangle-based box geometry type
@@ -433,7 +432,6 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
   std::vector<owl::affine3f> instanceTransforms;
   instanceTransforms.reserve(scene->num_instances);
-  owl::box3f sceneBox;
 
   size_t totalSolidVoxelCount = 0;
 
@@ -626,7 +624,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
 }
 
-OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene)
+OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, /*out*/ owl::box3f &sceneBox)
 {
   // -------------------------------------------------------
   // declare triangle-based box geometry type
@@ -689,7 +687,6 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   std::vector<owl::affine3f> transformsPerBrick;
   std::vector<owl::affine3f> outlineTransformsPerBrick;
   std::vector<unsigned char> colorIndicesPerBrick;
-  owl::box3f sceneBox;
 
   assert(scene->num_instances > 0);
   assert(scene->num_models > 0);
@@ -825,9 +822,14 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
 
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
   
-  //OWLGroup world = createFlatTriangleGeometryScene(module, scene);
-  OWLGroup world = createInstancedTriangleGeometryScene(module, scene);
-  //OWLGroup world = createUserGeometryScene(module, scene);
+  owl::box3f sceneBox;  // in units of bricks
+  //OWLGroup world = createFlatTriangleGeometryScene(module, scene, sceneBox);
+  OWLGroup world = createInstancedTriangleGeometryScene(module, scene, sceneBox);
+  //OWLGroup world = createUserGeometryScene(module, scene, sceneBox);
+  
+  const vec3f sceneSpan = sceneBox.span();
+  const int sceneLongestDim = indexOfMaxComponent(sceneSpan);
+  const float brickScaleInWorldSpace = 1.f / sceneSpan[sceneLongestDim];
 
   owlGroupBuildAccel(world);
   
@@ -893,6 +895,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
     { "sunDirection",  OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunDirection)},
     { "sunColor",      OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunColor)},
     { "enableToonOutline", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableToonOutline)},
+    { "brickScale",     OWL_FLOAT, OWL_OFFSETOF(LaunchParams, brickScale)},
     { /* sentinel to mark end of list */ }
   };
 
@@ -901,6 +904,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
 
   owlParamsSetGroup(launchParams, "world", world);
   owlParamsSet3f(launchParams, "sunColor", {1.f, 1.f, 1.f});
+  owlParamsSet1f(launchParams, "brickScale", brickScaleInWorldSpace);
   owlParamsSet1b(launchParams, "enableToonOutline", this->enableToonOutline);
   // other params set at launch or resize
   
