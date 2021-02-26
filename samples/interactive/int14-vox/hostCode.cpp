@@ -58,17 +58,23 @@ using filesystem = std::filesystem
 extern "C" char ptxCode[];
 
 
+const vec3f init_lookAt {0.0f};
+const float init_cosFovy = 0.10f;  // small fov to approach isometric
+const vec3f init_lookUp(0.f, 0.f, 1.f);
+
+#if 1
 const float isometricAngle = 35.564f * M_PIf/180.0f;
 const owl::affine3f cameraRotation = 
   owl::affine3f::rotate(vec3f(0,0,1), M_PIf/4.0f) *
   owl::affine3f::rotate(vec3f(-1,0,0), isometricAngle);
 
 const vec3f init_lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
-const vec3f init_lookUp(0.f, 0.f, 1.f);
+#endif
 
-const vec3f init_lookAt {0.0f};
-const float init_cosFovy = 0.10f;  // small fov to approach isometric
-
+#if 0
+// mechanic2 scene from teaser
+const vec3f init_lookFrom(-6.92038,-9.00064,6.3322);
+#endif
 
 
 struct Viewer : public owl::viewer::OWLViewer
@@ -177,6 +183,11 @@ void Viewer::key(char key, const vec2i &where)
       if (sunPhi <= 0.0f) sunPhi += 2.0f*M_PIf;
       sunDirty = true;
       return;
+    case 'p':
+      const std::string filename = "D:\\screenshot.png";
+      LOG("Saving screenshot to: " << filename);
+      screenShot(filename);
+      break;
   }
   OWLViewer::key(key, where);
 }
