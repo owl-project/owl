@@ -105,7 +105,7 @@ struct Viewer : public owl::viewer::OWLViewer
   float sunTheta = 0.785398f;  // elevation angle, 0 at horizon
   bool sunDirty = true;
   bool enableGround = true;
-  bool enableToonOutline = true;
+  bool enableToonOutline = bool(ENABLE_TOON_OUTLINE);
   
 };
 
