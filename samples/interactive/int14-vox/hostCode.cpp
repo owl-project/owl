@@ -746,7 +746,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
         // Transform brick to its location in the scene
         owl::affine3f trans = instanceMoveToCenterAndTransform * owl::affine3f::translate(vec3f(b.x, b.y, b.z));
         transformsPerBrick.push_back(trans);
-        visibilityMasksPerBrick.push_back(VISIBILITY_RADIANCE);
+        visibilityMasksPerBrick.push_back(VISIBILITY_RADIANCE | VISIBILITY_SHADOW);
     }
   }
 
@@ -763,7 +763,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
         owl::affine3f::translate(vec3f(-0.5f, -0.5f, 0.0f))
         );
     colorIndicesPerBrick.push_back(249);  // grey in default palette
-    visibilityMasksPerBrick.push_back(VISIBILITY_RADIANCE);
+    visibilityMasksPerBrick.push_back(VISIBILITY_RADIANCE | VISIBILITY_SHADOW);
   }
 
   // Apply final scene transform so we can use the same camera for every scene

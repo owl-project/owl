@@ -11,7 +11,8 @@
 
 enum VisibilityMasks {
   VISIBILITY_RADIANCE = 1u << 0,
-  VISIBILITY_OUTLINE = 1u << 1,
+  VISIBILITY_SHADOW   = 1u << 1,
+  VISIBILITY_OUTLINE  = 1u << 2,
   VISIBILITY_ALL = 255
 };
 

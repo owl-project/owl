@@ -264,7 +264,8 @@ vec3f sunlight(const vec3f &hit_P_offset, const vec3f &Ng, Random &random)
   ShadowRay shadowRay(hit_P_offset,      // origin
                       jitteredLightDir,  // direction
                       0.f,
-                      1e10f);
+                      1e10f,
+                      VISIBILITY_SHADOW);
 
   float vis = traceShadowRay(optixLaunchParams.world, shadowRay);
   return vis * optixLaunchParams.sunColor * NdotL; 
