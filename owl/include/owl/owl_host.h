@@ -756,6 +756,11 @@ owlInstanceGroupSetInstanceIDs(OWLGroup group,
                                const uint32_t *instanceIDs);
 
 OWL_API void
+owlInstanceGroupSetVisibilityMasks(OWLGroup group,
+                               const uint8_t *visibilityMasks);
+
+
+OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,
                          int rayType,
                          OWLModule module,
