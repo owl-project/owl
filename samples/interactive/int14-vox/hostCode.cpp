@@ -687,6 +687,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   LOG("building instances ...");
 
   std::vector<owl::affine3f> transformsPerBrick;
+  std::vector<uint8_t> visibilityMasksPerBrick;  // for outline effect
   std::vector<unsigned char> colorIndicesPerBrick;
   owl::box3f sceneBox;
 
@@ -741,9 +742,11 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 
     for (size_t i = 0; i < voxdata.size(); ++i) {
         uchar4 b = voxdata[i];
+
         // Transform brick to its location in the scene
         owl::affine3f trans = instanceMoveToCenterAndTransform * owl::affine3f::translate(vec3f(b.x, b.y, b.z));
         transformsPerBrick.push_back(trans);
+        visibilityMasksPerBrick.push_back(VISIBILITY_RADIANCE);
     }
   }
 
@@ -760,6 +763,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
         owl::affine3f::translate(vec3f(-0.5f, -0.5f, 0.0f))
         );
     colorIndicesPerBrick.push_back(249);  // grey in default palette
+    visibilityMasksPerBrick.push_back(VISIBILITY_RADIANCE);
   }
 
   // Apply final scene transform so we can use the same camera for every scene
@@ -783,6 +787,8 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
     owlInstanceGroupSetChild(world, i, trianglesGroup);  // All instances point to the same brick 
     owlInstanceGroupSetTransform(world, i, (const float*)&transformsPerBrick[i], OWL_MATRIX_FORMAT_OWL);
   }
+
+  owlInstanceGroupSetVisibilityMasks(world, visibilityMasksPerBrick.data());
 
   return world;
   

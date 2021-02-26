@@ -7,8 +7,13 @@
 
 // Until we have module specialization working... 
 // Set this to 0 to remove some code.
-#define ENABLE_TOON_OUTLINE 1
+#define ENABLE_TOON_OUTLINE 0
 
+enum VisibilityMasks {
+  VISIBILITY_RADIANCE = 1u << 0,
+  VISIBILITY_OUTLINE = 1u << 1,
+  VISIBILITY_ALL = 255
+};
 
 // NOTE: the brick geometry here must lie in a unit bounding box in [0,1]x[0,1]x[0,1]
 // and have winding order so that normals point outward

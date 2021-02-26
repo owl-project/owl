@@ -78,6 +78,20 @@ struct PerRayData
 };
 
 inline __device__
+RadianceRay makeRadianceRay(const vec3f &origin, 
+                            const vec3f &direction,
+                            float tmin,
+                            float tmax)
+{
+  return RadianceRay(origin,
+                     direction,
+                     tmin,
+                     tmax,
+                     VISIBILITY_RADIANCE);
+}
+
+
+inline __device__
 vec3f tracePath(const RayGenData &self,
                 RadianceRay &ray, PerRayData &prd, float &firstHitDistance)
 {
@@ -107,7 +121,7 @@ vec3f tracePath(const RayGenData &self,
     else { // ray is still alive, and got properly bounced
       attenuation *= prd.out.attenuation;
       directLight += prd.out.directLight;
-      ray = RadianceRay(/* origin   : */ prd.out.scattered_origin,
+      ray = makeRadianceRay(/* origin   : */ prd.out.scattered_origin,
                      /* direction: */ prd.out.scattered_direction,
                      /* tmin     : */ 1e-3f,
                      /* tmax     : */ 1e10f);
@@ -163,31 +177,29 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   vec3f accumColor = 0.f;
 
   for (int sampleID=0;sampleID<NUM_SAMPLES_PER_PIXEL;sampleID++) {
-    RadianceRay ray;
 
     const vec2f pixelSample(prd.random(), prd.random());
     const vec2f screen = (vec2f(pixelID)+pixelSample) / vec2f(fbSize);
 
-    ray.origin = self.camera.pos;
-    vec3f rayDir = normalize(self.camera.dir_00
+    const vec3f rayDir = normalize(self.camera.dir_00
                   + screen.u * self.camera.dir_du
                   + screen.v * self.camera.dir_dv);
-    ray.direction  = rayDir;
+
+    RadianceRay ray = makeRadianceRay(self.camera.pos, rayDir, 0.f, 1e30f);
 
     // needed later for outline shader
     float firstHitDistance = 1e10f;
 
-
     vec3f color = tracePath(self, ray, prd, firstHitDistance);
 
 #if ENABLE_TOON_OUTLINE
-    // TODO: ray visibility mask
     if (1 /*optixLaunchParams.enableToonOutline*/ ) {
       constexpr float outlineDepthBias = 0.05f;  // TODO: set from launch param
       OutlineShadowRay outlineShadowRay(self.camera.pos,      // origin
                       rayDir,  // same direction as eye ray
                       0.f,
-                      firstHitDistance-outlineDepthBias);  // only show outline if it is in front of regular hit
+                      firstHitDistance-outlineDepthBias,  // only show outline if it is in front of regular hit
+                      VISIBILITY_OUTLINE);
 
       float vis = traceOutlineShadowRay(optixLaunchParams.world, outlineShadowRay);
       color *= vis;
