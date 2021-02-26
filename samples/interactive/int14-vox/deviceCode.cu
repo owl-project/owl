@@ -343,10 +343,9 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
 #if ENABLE_TOON_OUTLINE
   if (self.enableToonOutline) {
     // bloat the box slightly
-    const float scale = 1.2f;
     const vec3f boxcenter (indices.x + 0.5f, indices.y + 0.5f, indices.z + 0.5f);
-    boxmin = boxcenter + scale*(boxmin-boxcenter);
-    boxmax = boxcenter + scale*(boxmax-boxcenter);
+    boxmin = boxcenter + OUTLINE_SCALE*(boxmin-boxcenter);
+    boxmax = boxcenter + OUTLINE_SCALE*(boxmax-boxcenter);
   }
 #endif
   
