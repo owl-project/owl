@@ -7,7 +7,7 @@
 
 // Until we have module specialization working... 
 // Set this to 0 to remove some code.
-#define ENABLE_TOON_OUTLINE 1
+#define ENABLE_TOON_OUTLINE 0
 #define OUTLINE_SCALE 1.2f
 
 enum VisibilityMasks {

@@ -147,6 +147,8 @@
     #error some fixup needed for this platform?
 #endif
 
+#include <algorithm> // hack
+
     // denotes an invalid group index. Usually this is only applicable to the scene's root group's parent.
     static const uint32_t k_invalid_group_index = UINT32_MAX;
 
@@ -1642,13 +1644,17 @@
     }
 
     // compute the minimum and maximum x coordinate within the scene.
-    static void compute_scene_bounding_box_x(const ogt_vox_scene * scene, int32_t & out_min_x, int32_t & out_max_x) {
+    static void compute_scene_bounding_box_x(const ogt_vox_scene * scene, 
+        int32_t & out_min_x, int32_t & out_max_x, 
+        int32_t & out_min_y, int32_t & out_max_y) {
         if (scene->num_instances && scene->num_models)
         {
             // We don't apply orientation to the model dimensions and compute the exact min/max. 
             // Instead we just conservatively use the maximum dimension of the model.
             int32_t scene_min_x =  0x7ffffff;
             int32_t scene_max_x = -0x7ffffff;
+            int32_t scene_min_y =  0x7ffffff;
+            int32_t scene_max_y = -0x7ffffff;
             for (uint32_t instance_index = 0; instance_index < scene->num_instances; instance_index++) {
                 const ogt_vox_instance* instance = &scene->instances[instance_index];
                 // compute the instance transform, taking into account the group hierarchy.
@@ -1661,6 +1667,7 @@
                 }
 
                 const ogt_vox_model* model = scene->models[instance->model_index];
+
                 // the instance_transform can be rotated, so we try to figure out whether the 
                 // model's local x, y or z size is aligned along the world x axis.
                 // One of the column vectors of the transform must have a non-zero in its 
@@ -1669,18 +1676,31 @@
                                   instance_transform.m10 != 0.0f ? model->size_y :
                                   instance_transform.m20 != 0.0f ? model->size_z : model->size_x;
                 int32_t half_dim = max_dim / 2;
+
                 int32_t min_x = (int32_t)instance_transform.m30 - half_dim;
                 int32_t max_x = (int32_t)instance_transform.m30 + half_dim;
+
                 scene_min_x = min_x < scene_min_x ? min_x : scene_min_x;
                 scene_max_x = max_x > scene_max_x ? max_x : scene_max_x;
+
+                int32_t min_y = (int32_t)instance_transform.m31 - half_dim;
+                int32_t max_y = (int32_t)instance_transform.m31 + half_dim;
+
+                scene_min_y = min_y < scene_min_y ? min_y : scene_min_y;
+                scene_max_y = max_y > scene_max_y ? max_y : scene_max_y;
+
             }
             // pass out the dimensions.
             out_min_x = scene_min_x;
             out_max_x = scene_max_x;
+            out_min_y = scene_min_y;
+            out_max_y = scene_max_y;
         }
         else {
             out_min_x = 0;
             out_max_x = 0;
+            out_min_y = 0;
+            out_max_y = 0;
         }
     }
 
@@ -1831,11 +1851,48 @@
             groups[num_groups++] = root_group;
         }
 
+        // For GEMS paper:
+        // arrange scenes in a grid
+
+        struct SceneBox {
+            int32_t scene_min_x, scene_max_x;
+            int32_t scene_min_y, scene_max_y;
+        };
+
+        std::vector< std::pair<SceneBox, int> > sceneOrder;  // bbox  -> index in original array
+        for (uint32_t scene_index = 0; scene_index < scene_count; scene_index++) {
+            const ogt_vox_scene* scene = scenes[scene_index];
+            if (!scene) {
+              continue;
+            }
+            SceneBox box;
+            compute_scene_bounding_box_x(scene, 
+                box.scene_min_x, box.scene_max_x, box.scene_min_y, box.scene_max_y);
+            sceneOrder.push_back( std::make_pair(box, scene_index) );
+        }
+
+        std::sort(sceneOrder.begin(), sceneOrder.end(), 
+          [](const std::pair<SceneBox,int> &a, const std::pair<SceneBox, int> &b) -> bool
+          {
+            return (a.first.scene_max_y - a.first.scene_min_y) < (b.first.scene_max_y - b.first.scene_min_y);
+          }
+          );  
+
+        const int scenesPerRow = int(sqrt(float(sceneOrder.size())));
+
         // go ahead and do the merge now!
         size_t string_data_size = 0;
         int32_t offset_x = 0;
-        for (uint32_t scene_index = 0; scene_index < scene_count; scene_index++) {
-            const ogt_vox_scene* scene = scenes[scene_index];
+        int32_t offset_y = 0;
+        int sceneCount = 0;
+        //for (uint32_t scene_index = 0; scene_index < scene_count; scene_index++) {
+        for (const auto &sceneData : sceneOrder) {
+            
+            sceneCount++;
+
+            //const ogt_vox_scene* scene = scenes[scene_index];
+            const ogt_vox_scene* scene = scenes[sceneData.second];
+
             if (!scene)
                 continue;
 
@@ -1870,12 +1927,8 @@
                 models[num_models++] = override_model;
             }
 
-            // compute the scene bounding box on x dimension. this is used to offset instances 
-            // and groups in the merged model along X dimension such that they do not overlap 
-            // with instances from another scene in the merged model.
-            int32_t scene_min_x, scene_max_x;
-            compute_scene_bounding_box_x(scene, scene_min_x, scene_max_x);
-            float scene_offset_x = (float)(offset_x - scene_min_x);
+            float scene_offset_x = (float)(offset_x - sceneData.first.scene_min_x);
+            float scene_offset_y = (float)(offset_y - sceneData.first.scene_min_y);
 
             if (scene->groups) {
               // if the scene has a root group, it must the 0th group in its local groups[] array,
@@ -1889,8 +1942,10 @@
                 dst_group.layer_index = 0;
                 dst_group.parent_group_index = (dst_group.parent_group_index == 0) ? global_root_group_index : base_group_index + (dst_group.parent_group_index - 1);
                 // if this group belongs to the global root group, it must be translated so it doesn't overlap with other scenes.
-                if (dst_group.parent_group_index == global_root_group_index)
+                if (dst_group.parent_group_index == global_root_group_index) {
                   dst_group.transform.m30 += scene_offset_x;
+                  dst_group.transform.m31 += scene_offset_y;
+                }
                 groups[num_groups++] = dst_group;
               }
             }
@@ -1908,12 +1963,21 @@
                 if (dst_instance->name)
                     string_data_size += _vox_strlen(dst_instance->name) + 1; // + 1 for zero terminator
                 // if this instance belongs to the global rot group, it must be translated so it doesn't overlap with other scenes.
-                if (dst_instance->group_index == global_root_group_index)
+                if (dst_instance->group_index == global_root_group_index) {
                     dst_instance->transform.m30 += scene_offset_x;
+                    dst_instance->transform.m31 += scene_offset_y;
+                }
             }
 
-            offset_x += (scene_max_x - scene_min_x); // step the width of the scene in x dimension
+            offset_x += (sceneData.first.scene_max_x - sceneData.first.scene_min_x); // step the width of the scene in x dimension
             offset_x += 4;                           // a margin of this many voxels between scenes
+
+            if (sceneCount % scenesPerRow == 0) {
+              // next row
+              offset_y += (sceneData.first.scene_max_y - sceneData.first.scene_min_y);
+              offset_y += 4;
+              offset_x = 0;
+            }
         }
 
         // fill any unused master palette entries with purple/invalid color.

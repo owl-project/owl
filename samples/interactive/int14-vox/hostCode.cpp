@@ -58,11 +58,11 @@ using filesystem = std::filesystem
 extern "C" char ptxCode[];
 
 
-const vec3f init_lookAt {0.0f};
 const float init_cosFovy = 0.10f;  // small fov to approach isometric
 const vec3f init_lookUp(0.f, 0.f, 1.f);
 
-#if 1
+#if 0
+const vec3f init_lookAt {0.0f};
 const float isometricAngle = 35.564f * M_PIf/180.0f;
 const owl::affine3f cameraRotation = 
   owl::affine3f::rotate(vec3f(0,0,1), M_PIf/4.0f) *
@@ -73,7 +73,15 @@ const vec3f init_lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
 
 #if 0
 // mechanic2 scene from teaser
+const vec3f init_lookAt {0.0f};
 const vec3f init_lookFrom(-6.92038,-9.00064,6.3322);
+#endif
+
+#if 1
+// perf test with all scene*.vox files in a grid
+const vec3f init_lookFrom(7.93445,-2.90574,5.3478);
+const vec3f init_lookAt(0.0011816,0.0796928,0.0421057);
+
 #endif
 
 
@@ -835,8 +843,8 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
   
   owl::box3f sceneBox;  // in units of bricks
   //OWLGroup world = createFlatTriangleGeometryScene(module, scene, sceneBox);
-  OWLGroup world = createInstancedTriangleGeometryScene(module, scene, sceneBox);
-  //OWLGroup world = createUserGeometryScene(module, scene, sceneBox);
+  //OWLGroup world = createInstancedTriangleGeometryScene(module, scene, sceneBox);
+  OWLGroup world = createUserGeometryScene(module, scene, sceneBox);
   
   const vec3f sceneSpan = sceneBox.span();
   const int sceneLongestDim = indexOfMaxComponent(sceneSpan);
