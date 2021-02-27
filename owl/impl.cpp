@@ -901,6 +901,32 @@ namespace owl {
     group->buildAccel();
   }  
 
+  /*! returns the (device) memory used for this group's acceleration
+    structure (but _excluding_ the memory for the geometries
+    itself). "memFinal" is how much memory is used for the _final_
+    version of the BVH (after it is done building), "memPeak" is peak
+    memory used during construction. passing a NULL pointer to any
+    value is valid; these values will get ignored. */
+  OWL_API void owlGroupGetAccelSize(OWLGroup _group,
+                                    size_t *p_memFinal,
+                                    size_t *p_memPeak)
+  {
+    LOG_API_CALL();
+    
+    assert(_group);
+
+    Group::SP group
+      = ((APIHandle *)_group)->get<Group>();
+    assert(group);
+
+    size_t memFinal, memPeak;
+    group->getAccelSize(memFinal,memPeak);
+    
+    if (p_memFinal) *p_memFinal = memFinal;
+    if (p_memPeak)  *p_memPeak  = memPeak;
+  }
+
+  
   OWL_API void owlGroupRefitAccel(OWLGroup _group)
   {
     LOG_API_CALL();
@@ -1415,4 +1441,5 @@ namespace owl {
     group->setTransform(whichChild, xfm);
   }
 
+  
 } // ::owl

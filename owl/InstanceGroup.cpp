@@ -148,7 +148,13 @@ namespace owl {
     if (children.size() > maxInstsPerIAS)
       throw std::runtime_error("number of children in instance group exceeds "
                                "OptiX's MAX_INSTANCES_PER_IAS limit");
-      
+    
+    if (FULL_REBUILD) {
+      dd.memFinal = 0;
+      dd.memPeak = 0;
+    }
+   
+
     // ==================================================================
     // create instance build inputs
     // ==================================================================
@@ -247,8 +253,12 @@ namespace owl {
     DeviceMemory tempBuffer;
     tempBuffer.alloc(tempSize);
       
-    if (FULL_REBUILD)
+    if (FULL_REBUILD) {
       dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      dd.memPeak += tempBuffer.size();
+      dd.memPeak += dd.bvhMemory.size();
+      dd.memFinal = dd.bvhMemory.size();
+    }
       
     OPTIX_CHECK(optixAccelBuild(optixContext,
                                 /* todo: stream */0,
