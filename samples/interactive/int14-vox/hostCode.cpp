@@ -761,20 +761,24 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
       affine3f::translate(vec3f(0.5f)) * affine3f::scale(vec3f(OUTLINE_SCALE)) * affine3f::translate(vec3f(-0.5f));
 
     for (size_t i = 0; i < voxdata.size(); ++i) {
+      uchar4 b = voxdata[i];
+
+      // Transform brick to its location in the scene
+      owl::affine3f trans = instanceMoveToCenterAndTransform * owl::affine3f::translate(vec3f(b.x, b.y, b.z));
+      transformsPerBrick.push_back(trans);
+    }
+
+    if (this->enableToonOutline) {
+      for (size_t i = 0; i < voxdata.size(); ++i) {
         uchar4 b = voxdata[i];
 
-        // Transform brick to its location in the scene
-        {
-          owl::affine3f trans = instanceMoveToCenterAndTransform * owl::affine3f::translate(vec3f(b.x, b.y, b.z));
-          transformsPerBrick.push_back(trans);
-        }
-        // ... and outline it
-        {
-          owl::affine3f trans = instanceMoveToCenterAndTransform * 
-            owl::affine3f::translate(vec3f(b.x, b.y, b.z)) * instanceInflateOutline;
-          outlineTransformsPerBrick.push_back(trans);
-        }
+        // insert outline
+        owl::affine3f trans = instanceMoveToCenterAndTransform *
+          owl::affine3f::translate(vec3f(b.x, b.y, b.z)) * instanceInflateOutline;
+        outlineTransformsPerBrick.push_back(trans);
+      }
     }
+
   }
 
   LOG("Total solid voxels in all instanced models: " << totalSolidVoxelCount);
