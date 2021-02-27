@@ -16,9 +16,13 @@
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
 
-cuda_compile_and_embed(ptxCode
-  deviceCode.cu
-  )
+if(OWL_DEPRECATED_CMAKE)
+  cuda_compile_and_embed(ptxCode
+    deviceCode.cu
+    )
+else()
+  embed_ptx(ptxCode devicecode.cu)
+endif()
 
 add_executable(sample07-rtow-multiGPU
   hostCode.cpp

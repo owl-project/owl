@@ -19,25 +19,28 @@ set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
 include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
+if(OWL_DEPRECATED_CMAKE)
+	cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+	cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+endif()
 
 add_definitions(${OWL_CXX_FLAGS})
 
-
 set(INTERFACE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
-set(CUDA_SEPARABLE_COMPILATION ON)
-set(CUDA_VERBOSE_BUILD ON)
-if (NOT WIN32)
-set(CUDA_NVCC_FLAGS --compiler-options -fPIC)
+if(OWL_DEPRECATED_CMAKE)
+  set(CUDA_SEPARABLE_COMPILATION ON)
+  set(CUDA_VERBOSE_BUILD ON)
+  if (NOT WIN32)
+    set(CUDA_NVCC_FLAGS --compiler-options -fPIC)
+  endif()
 endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/)
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-
-cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+# lp: 2/24/21: These were already included above, is this intentional?
+#include_directories(${PROJECT_SOURCE_DIR}/owl/include)
+#cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
 set(OWL_SOURCES
 
@@ -116,12 +119,7 @@ set(OWL_SOURCES
   UserGeomGroup.cpp
 )
 
-cuda_add_library(owl_static
-  ${OWL_SOURCES}
-  STATIC
-  )
-
-
+if(OWL_DEPRECATED_CMAKE)
 # Nate: 11/3/20: I get "fatal error C1041: cannot open program database" 
 # on windows from this "owl" shared target being built in parallel against 
 # the "owl_static" target, as for some reason they seem to try to 
@@ -130,21 +128,43 @@ cuda_add_library(owl_static
 # cuda_add_library(owl
 #   ${OWL_SOURCES}
 #   )
+  cuda_add_library(owl_static
+    ${OWL_SOURCES}
+    STATIC
+  )
+else()
+# add_library(owl SHARED ${OWL_SOURCES})
+  add_library(owl_static STATIC ${OWL_SOURCES})
+endif()
 
+
+if(OWL_DEPRECATED_CMAKE)
 # target_link_libraries(owl
 #    ${CUDA_LIBRARIES}
 #    ${CUDA_CUDA_LIBRARY}
 #   )
-
-target_link_libraries(owl_static
-   ${CUDA_LIBRARIES}
-   ${CUDA_CUDA_LIBRARY}
+  target_link_libraries(owl_static
+    ${CUDA_LIBRARIES}
+    ${CUDA_CUDA_LIBRARY}
   )
+  #target_compile_options(owl_static PRIVATE -fPIC)
+endif()
 
-
-#set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
-#target_compile_options(owl_static PRIVATE -fPIC)
+set_target_properties(
+  #owl
+  owl_static 
+  PROPERTIES 
+  CUDA_SEPARABLE_COMPILATION ON
+  POSITION_INDEPENDENT_CODE ON
+)
+if(NOT OWL_DEPRECATED_CMAKE)
+  set_target_properties(
+    #owl
+    owl_static 
+    PROPERTIES 
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON
+  )
+endif()
 
 # -------------------------------------------------------
 # export those back to our parent:

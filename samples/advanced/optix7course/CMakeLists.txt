@@ -16,13 +16,23 @@
 
 include_directories(${OWL_VIEWER_INCLUDES})
 
-cuda_compile_and_embed(embedded_ptx_code devicePrograms.cu)
+if(OWL_DEPRECATED_CMAKE)
+  cuda_compile_and_embed(embedded_ptx_code
+    devicePrograms.cu
+    )
+else()
+  embed_ptx(embedded_ptx_code devicePrograms.cu)
+endif()
 
-cuda_add_library(toneMap STATIC
-  toneMap.cu)
-add_executable(adv_optix7course
+if(OWL_DEPRECATED_CMAKE)
+  cuda_add_library(toneMap STATIC
+	toneMap.cu)
+else()
+  add_library(toneMap STATIC toneMap.cu)
+endif()
+
+set(sourcefiles
   ${embedded_ptx_code}
-  devicePrograms.cu
   optix7.h
   CUDABuffer.h
   SampleRenderer.h
@@ -30,13 +40,27 @@ add_executable(adv_optix7course
   Model.cpp
   main.cpp
   )
+  
+# lp: 2/25/21: devicePrograms.cu should not be compiled and linked as a 
+# normal CUDA binary, the PTX intrinsics for e.g. optixGetSbtDataPointer
+# are not defined in normal CUDA kernels!
+if(OWL_DEPRECATED_CMAKE)
+  set(sourcefiles "${sourcefiles}" devicePrograms.cu)
+endif()
 
+add_executable(adv_optix7course
+  ${sourcefiles}
+  )
+
+#target_compile_options(adv_optix7course PRIVATE "--keep")
+
+if(OWL_DEPRECATED_CMAKE)
+  set(extra_cuda_libs ${CUDA_LIBRARIES} ${CUDA_CUDA_LIBRARY})
+endif()
 target_link_libraries(adv_optix7course
   toneMap
   # optix dependencies, for rendering
   ${optix_LIBRARY}
-  ${CUDA_LIBRARIES}
-  ${CUDA_CUDA_LIBRARY}
+  ${extra_cuda_libs}
   # owl viewer, and everything it requires
-  ${OWL_VIEWER_LIBRARIES}
-  )
+  ${OWL_VIEWER_LIBRARIES})
