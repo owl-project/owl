@@ -196,7 +196,7 @@ namespace owl {
         ? blasBufferSizes.tempSizeInBytes
         : blasBufferSizes.tempUpdateSizeInBytes;
     LOG("starting to build/refit "
-        << prettyNumber(userGeomInputs.size()) << " use geoms, "
+        << prettyNumber(userGeomInputs.size()) << " user geoms, "
         << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
         << prettyNumber(tempSize) << "B in temp data");
 
