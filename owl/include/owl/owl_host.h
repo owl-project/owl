@@ -653,24 +653,30 @@ owlBufferUpload(OWLBuffer buffer,
                 size_t offset OWL_IF_CPP(=0),
                 size_t numBytes OWL_IF_CPP(=size_t(-1)));
 
-/*! executes an optix lauch of given size, with given launch
+/*! executes an optix launch of given size, with given launch
   program. Note this is asynchronous, and may _not_ be
   completed by the time this function returns. */
 OWL_API void
 owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
-/*! perform a raygen launch with lauch parameters, in a *synchronous*
+/*! perform a raygen launch with launch parameters, in a *synchronous*
     way; it, by the time this function returns the launch is completed */
 OWL_API void
 owlLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
             OWLParams params);
 
-/*! perform a raygen launch with lauch parameters, in a *A*synchronous
+/*! perform a raygen launch with launch parameters, in a *A*synchronous
     way; it, this will only launch, but *NOT* wait for completion (see
     owlLaunchSync) */
 OWL_API void
 owlAsyncLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
                  OWLParams params);
+
+/*! perform a raygen launch with launch parameters, but only for a given device, 
+    and in an asynchronous way. This function is useful for dynamic load balancing. */
+OWL_API void
+owlAsyncLaunch2DOnDevice(OWLRayGen rayGen, int dims_x, int dims_y, 
+                        int deviceID, OWLParams params);
 
 
 OWL_API CUstream

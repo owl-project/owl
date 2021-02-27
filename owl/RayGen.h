@@ -101,6 +101,11 @@ namespace owl {
          wait for completion - this means the SBT shuld NOT be changed
          or rebuild until a launchParams->sync() has been done */
     void launchAsync(const vec2i &dims, const LaunchParams::SP &launchParams);
+
+    /*! *launch* this raygen prog with given launch params, but only for the 
+         given device, and do NOT wait for completion. Launches can be done
+         on a device by device basis for dynamic load balancing. */
+    void launchAsyncOnDevice(const vec2i &dims, uint32_t deviceID, const LaunchParams::SP &launchParams);
     
     /*! write the given SBT record, using the given device's
         corresponding device-side data represenataion */

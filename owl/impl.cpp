@@ -165,6 +165,27 @@ namespace owl {
     rayGen->launchAsync(vec2i(dims_x,dims_y),launchParams);
   }
 
+  OWL_API void owlAsyncLaunch2DOnDevice(OWLRayGen _rayGen,
+                                int dims_x,
+                                int dims_y,
+                                int deviceID,
+                                OWLLaunchParams _launchParams)
+  {
+    LOG_API_CALL();
+
+    assert(_rayGen);
+    RayGen::SP rayGen
+      = ((APIHandle *)_rayGen)->get<RayGen>();
+    assert(rayGen);
+
+    assert(_launchParams);
+    LaunchParams::SP launchParams
+      = ((APIHandle *)_launchParams)->get<LaunchParams>();
+    assert(launchParams);
+
+    rayGen->launchAsyncOnDevice(vec2i(dims_x,dims_y), deviceID,launchParams);
+  }
+
   OWL_API void owlLaunch2D(OWLRayGen _rayGen,
                            int dims_x,
                            int dims_y,
