@@ -21,8 +21,6 @@
 # OWL_LIBRARIES - list of libraries to link against when building owl programs
 
 set(OWL_INCLUDES
-  # owl needs cuda:
-  ${CUDA_TOOLKIT_ROOT_DIR}/include
   # owl needs optix:
   ${OptiX_INCLUDE}
   # public API
@@ -30,6 +28,11 @@ set(OWL_INCLUDES
   # device API and common currently still include non-public header files
   ${PROJECT_SOURCE_DIR}/
   )
+if(OWL_DEPRECATED_CMAKE)
+  # owl needs cuda:
+  set(OWL_INCLUDES ${CUDA_TOOLKIT_ROOT_DIR}/include ${OWL_INCLUDES})
+endif()
+
 set(OWL_LIBRARIES
   owl_static
   )

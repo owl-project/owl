@@ -85,8 +85,7 @@ endif()
 # ------------------------------------------------------------------
 set(owl_dir ${PROJECT_SOURCE_DIR})
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/cmake/")
-include(configure_owl)
-include(configure_tbb)
+
 # if not a subproject, set "Debug/Release flags and binary output dir
 # to <binaryDir>
 include(configure_build_type)
@@ -119,11 +118,9 @@ endif()
 #set(CMAKE_POSITION_INDEPENDENT_CODE ON) # moved to configure_cuda.cmake
 
 include(configure_cuda)
-include(configure_optix)
-# lp: 2/24/21: These three were already included above, is this intentional?
-#include(configure_owl) 
-#include(configure_build_type)
-#include(configure_tbb)
+include(configure_optix) # This must follow configure_cuda
+include(configure_owl) # This must follow configure_optix
+include(configure_tbb) # This must follow configure_owl
 
 include_directories(${OWL_INCLUDES})
 add_definitions(${OWL_CXX_FLAGS})
