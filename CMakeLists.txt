@@ -39,8 +39,12 @@ elseif(OWL_USE_MODERN_CMAKE)
   set(OWL_MODERN_CMAKE ON)
 else()
   # If none of these options are set, we need to guess which build you want.
-  if(OWL_IS_SUBPROJECT AND WIN32)
-    # OWL cannot be used as a subproject on Windows with the deprecated build.
+  if(CUDA_TOOLKIT_ROOT_DIR)
+    # Somebody called find_cuda--we're using the deprecated build.
+    set(OWL_DEPRECATED_CMAKE ON)
+  elseif(OWL_IS_SUBPROJECT AND WIN32)
+    # OWL cannot be used as a subproject on Windows with the deprecated build
+    # of a project which uses the intermediate or modern build.
     if(${CMAKE_VERSION} VERSION_LESS 3.18)
       set(OWL_INTERMEDIATE_CMAKE ON)
     else()
@@ -71,8 +75,12 @@ if(OWL_DEPRECATED_CMAKE)
 else()
   if(OWL_INTERMEDIATE_CMAKE)
     cmake_minimum_required(VERSION 3.8)
+    if(NOT ${CMAKE_VERSION} VERSION_LESS 3.18)
+      cmake_policy(SET CMP0104 OLD) # CUDA arch set manually by compiler flags
+    endif()
   else()
     cmake_minimum_required(VERSION 3.18)
+    cmake_policy(SET CMP0104 NEW) # CUDA_ARCHITECTURES must be specified
   endif()
   # project command is required to come after cmake_minimum_required command.
   project(Optix-OWL VERSION 1.0.6 LANGUAGES C CXX CUDA) # c language required for embed_ptx
