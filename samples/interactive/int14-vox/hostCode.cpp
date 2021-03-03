@@ -73,8 +73,7 @@ const vec3f init_lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
 
 #if 0
 // mechanic2 scene from teaser
-const vec3f init_lookAt {0.0f};
-const vec3f init_lookFrom(-6.92038,-9.00064,6.3322);
+const vec3f init_lookFrom(-6.92038f,-9.00064f,6.3322f);
 #endif
 
 #if 1
