@@ -103,9 +103,31 @@ struct Viewer : public owl::viewer::OWLViewer
 
   void key(char key, const vec2i &/*where*/) override;
 
-  OWLGroup createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, owl::box3f &sceneBox);
-  OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, owl::box3f &sceneBox);
-  OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, owl::box3f &sceneBox);
+
+  /// Geometry creation functions
+
+  // Simple memory tracker
+  struct BufferAllocator {
+    inline OWLBuffer deviceBufferCreate(OWLContext  context,
+                          OWLDataType type,
+                          size_t      count,
+                          const void *init)
+    {
+      OWLBuffer buf = owlDeviceBufferCreate(context, type, count, init);
+      bytesAllocated += owlBufferSizeInBytes(buf);
+      return buf;
+    }
+  
+    size_t bytesAllocated = 0u;
+  };
+
+  OWLGroup createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+      owl::box3f &sceneBox, BufferAllocator &allocator);
+  OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+      owl::box3f &sceneBox, BufferAllocator &allocator);
+  OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+      owl::box3f &sceneBox, BufferAllocator &allocator);
+
 
   bool sbtDirty = true;
   OWLRayGen rayGen   { 0 };
@@ -228,7 +250,8 @@ std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model)
   return solid_voxels;
 }
 
-OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, box3f &sceneBox)
+OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+    box3f &sceneBox, BufferAllocator &allocator)
 {
   // -------------------------------------------------------
   // declare user vox geometry type
@@ -262,7 +285,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
   // Palette buffer is global to scene
   OWLBuffer paletteBuffer
-    = owlDeviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
+    = allocator.deviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
 
   // Cluster instances together that use the same model
   std::map<uint32_t, std::vector<uint32_t>> modelToInstances;
@@ -293,7 +316,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     // set up user primitives for single vox model
     // ------------------------------------------------------------------
     OWLBuffer primBuffer 
-      = owlDeviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
+      = allocator.deviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
 
     OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
     
@@ -365,7 +388,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     
     std::vector<uchar4> voxdata {make_uchar4(0,0,0, 249)};  // using color index of grey in default palette
     OWLBuffer primBuffer 
-      = owlDeviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
+      = allocator.deviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
 
     OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
     
@@ -407,7 +430,8 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 }
 
 // For performance comaparisons, this version flattens each vox model into a single triangle mesh, 
-OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, box3f &sceneBox)
+OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+    box3f &sceneBox, BufferAllocator &allocator)
 {
   // -------------------------------------------------------
   // declare triangle-based box geometry type
@@ -435,7 +459,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
   // Palette buffer is global to scene
   OWLBuffer paletteBuffer
-    = owlDeviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
+    = allocator.deviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
 
   // Cluster instances together that use the same model
   std::map<uint32_t, std::vector<uint32_t>> modelToInstances;
@@ -470,7 +494,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
     // Share vertices between voxels to save a little memory.  Only works for simple brick.
     constexpr bool SHARE_BRICK_VERTICES = (NUM_BRICK_VERTICES == 8 && NUM_BRICK_INDICES == 12);
-    std::map<std::tuple<int, int, int>, int> brickVertexIndexToMeshVertexIndex;
+    std::map<std::tuple<int, int, int>, int> brickVertexToMeshVertexIndex;
 
     // Build mesh in object space where each brick is 1x1x1
     std::vector<int> indexRemap(NUM_BRICK_VERTICES);  // local brick vertex --> flat mesh vertex
@@ -478,19 +502,19 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
       const vec3i brickTranslation(voxel.x, voxel.y, voxel.z);
       for (int i = 0; i < NUM_BRICK_VERTICES; ++i) {
         const vec3f &v = brickVertices[i];
-        std::tuple<int,int,int> brickVertexIndex = std::make_tuple(
+        std::tuple<int,int,int> brickVertex = std::make_tuple(
             brickTranslation.x + int(v.x),
             brickTranslation.y + int(v.y),
             brickTranslation.z + int(v.z));
         int vertexIndexInMesh = -1;
         if (SHARE_BRICK_VERTICES) {
-          const auto it = brickVertexIndexToMeshVertexIndex.find(brickVertexIndex);
-          if (it != brickVertexIndexToMeshVertexIndex.end()) {
+          const auto it = brickVertexToMeshVertexIndex.find(brickVertex);
+          if (it != brickVertexToMeshVertexIndex.end()) {
             vertexIndexInMesh = it->second;
           } else {
             meshVertices.push_back(vec3f(brickTranslation) + v);
             vertexIndexInMesh = int(meshVertices.size())-1;
-            brickVertexIndexToMeshVertexIndex[brickVertexIndex] = vertexIndexInMesh;
+            brickVertexToMeshVertexIndex[brickVertex] = vertexIndexInMesh;
           }
         } else {
           // do not share vertices
@@ -506,13 +530,13 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
       colorIndicesPerBrick.push_back(voxel.w);
     }
 
-    LOG("number of verts in mesh: " << meshVertices.size());
-    LOG("number of faces in mesh: " << meshIndices.size());
+    LOG("Mesh vertex count: " << meshVertices.size());
+    LOG("Mesh face count: " << meshIndices.size());
 
     OWLBuffer vertexBuffer
-      = owlDeviceBufferCreate(context, OWL_FLOAT3, meshVertices.size(), meshVertices.data());
+      = allocator.deviceBufferCreate(context, OWL_FLOAT3, meshVertices.size(), meshVertices.data());
     OWLBuffer indexBuffer
-      = owlDeviceBufferCreate(context, OWL_INT3, meshIndices.size(), meshIndices.data());
+      = allocator.deviceBufferCreate(context, OWL_INT3, meshIndices.size(), meshIndices.data());
 
     OWLGeom trianglesGeom = owlGeomCreate(context, trianglesGeomType);
  
@@ -526,7 +550,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_BRICK_INDICES);
 
     OWLBuffer colorIndexBuffer
-      = owlDeviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
+      = allocator.deviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
     owlGeomSetBuffer(trianglesGeom, "colorIndexPerBrick", colorIndexBuffer);
 
     // ------------------------------------------------------------------
@@ -586,9 +610,9 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     // Extra scaled brick for ground plane
     
     OWLBuffer vertexBuffer
-      = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_BRICK_VERTICES,brickVertices);
+      = allocator.deviceBufferCreate(context,OWL_FLOAT3,NUM_BRICK_VERTICES,brickVertices);
     OWLBuffer indexBuffer
-      = owlDeviceBufferCreate(context,OWL_INT3,NUM_BRICK_INDICES,brickIndices);
+      = allocator.deviceBufferCreate(context,OWL_INT3,NUM_BRICK_INDICES,brickIndices);
 
     OWLGeom trianglesGeom
       = owlGeomCreate(context,trianglesGeomType);
@@ -606,7 +630,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
     std::vector<unsigned char> colorIndicesPerBrick = {249}; // grey in default palette
     OWLBuffer colorIndexBuffer
-      = owlDeviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
+      = allocator.deviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
     owlGeomSetBuffer(trianglesGeom, "colorIndexPerBrick", colorIndexBuffer);
 
     OWLGroup trianglesGroup
@@ -642,7 +666,8 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
 }
 
-OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, /*out*/ owl::box3f &sceneBox)
+OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+    owl::box3f &sceneBox, BufferAllocator &allocator)
 {
   // -------------------------------------------------------
   // declare triangle-based box geometry type
@@ -669,9 +694,9 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   // triangle mesh for single unit brick
   // ------------------------------------------------------------------
   OWLBuffer vertexBuffer
-    = owlDeviceBufferCreate(context,OWL_FLOAT3,NUM_BRICK_VERTICES,brickVertices);
+    = allocator.deviceBufferCreate(context,OWL_FLOAT3,NUM_BRICK_VERTICES,brickVertices);
   OWLBuffer indexBuffer
-    = owlDeviceBufferCreate(context,OWL_INT3,NUM_BRICK_INDICES,brickIndices);
+    = allocator.deviceBufferCreate(context,OWL_INT3,NUM_BRICK_INDICES,brickIndices);
 
   OWLGeom trianglesGeom
     = owlGeomCreate(context,trianglesGeomType);
@@ -685,7 +710,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
 
   OWLBuffer paletteBuffer
-    = owlDeviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
+    = allocator.deviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
   owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
   
   // ------------------------------------------------------------------
@@ -819,7 +844,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 
   // Set the color indices per brick now that the bricks have been fully instanced
   OWLBuffer colorIndexBuffer
-      = owlDeviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
+      = allocator.deviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
   owlGeomSetBuffer(trianglesGeom, "colorIndexPerBrick", colorIndexBuffer);
 
   OWLGroup world = owlInstanceGroupCreate(context, transformsPerBrick.size());
@@ -845,9 +870,12 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
   
   owl::box3f sceneBox;  // in units of bricks
-  //OWLGroup world = createFlatTriangleGeometryScene(module, scene, sceneBox);
-  //OWLGroup world = createInstancedTriangleGeometryScene(module, scene, sceneBox);
-  OWLGroup world = createUserGeometryScene(module, scene, sceneBox);
+  BufferAllocator allocator;
+  OWLGroup world = createFlatTriangleGeometryScene(module, scene, sceneBox, allocator);
+  //OWLGroup world = createInstancedTriangleGeometryScene(module, scene, sceneBox, allocator);
+  //OWLGroup world = createUserGeometryScene(module, scene, sceneBox, allocator);
+  
+  LOG("Scene buffer memory: " << owl::common::prettyNumber(allocator.bytesAllocated));
   
   const vec3f sceneSpan = sceneBox.span();
   const int sceneLongestDim = indexOfMaxComponent(sceneSpan);
