@@ -701,6 +701,16 @@ namespace owl {
     return buffer->resize(newItemCount);
   }
 
+  OWL_API size_t
+  owlBufferSizeInBytes(OWLBuffer _buffer)
+  {
+    LOG_API_CALL();
+    assert(_buffer);
+    Buffer::SP buffer = ((APIHandle *)_buffer)->get<Buffer>();
+    assert(buffer);
+    return buffer->sizeInBytes();
+  }
+
   OWL_API void 
   owlBufferUpload(OWLBuffer _buffer,
                   const void *hostPtr,

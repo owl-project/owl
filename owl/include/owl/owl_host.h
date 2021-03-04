@@ -647,6 +647,9 @@ owlGroupGetTraversable(OWLGroup group, int deviceID);
 OWL_API void 
 owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 
+OWL_API size_t
+owlBufferSizeInBytes(OWLBuffer buffer);
+
 /*! destroy the given buffer; this will both release the app's
   refcount on the given buffer handle, *and* the buffer itself; ie,
   even if some objects still hold variables that refer to the old
