@@ -76,11 +76,9 @@ const vec3f init_lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
 const vec3f init_lookFrom(-6.92038f,-9.00064f,6.3322f);
 #endif
 
-#if 1
-// perf test with all scene*.vox files in a grid
-const vec3f init_lookFrom(7.93445,-2.90574,5.3478);
-const vec3f init_lookAt(0.0011816,0.0796928,0.0421057);
-
+#if 0
+// fire truck for clipping plane image
+const vec3f init_lookFrom(-9.42654f,-19.2523f, 12.8643f);
 #endif
 
 
