@@ -20,7 +20,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 add_executable(sample09-motionBlurSimpleTriangles
   hostCode.cpp
@@ -30,5 +30,3 @@ target_link_libraries(sample09-motionBlurSimpleTriangles
   ${OWL_LIBRARIES}
   )
 add_test(sample09-motionBlurSimpleTriangles ${CMAKE_BINARY_DIR}/sample09-motionBlurSimpleTriangles)
-
-

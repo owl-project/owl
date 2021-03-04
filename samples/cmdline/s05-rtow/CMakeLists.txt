@@ -19,7 +19,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 
 add_executable(sample05-rtow
@@ -33,5 +33,3 @@ target_link_libraries(sample05-rtow
 
 add_test(sample05-rtow
   ${CMAKE_BINARY_DIR}/sample05-rtow)
-
-

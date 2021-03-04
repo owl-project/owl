@@ -20,7 +20,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 add_executable(sample01-simpleTriangles
   hostCode.cpp
@@ -30,5 +30,3 @@ target_link_libraries(sample01-simpleTriangles
   ${OWL_LIBRARIES}
   )
 add_test(sample01-simpleTriangles ${CMAKE_BINARY_DIR}/sample01-simpleTriangles)
-
-

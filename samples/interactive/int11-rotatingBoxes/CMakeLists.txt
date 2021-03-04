@@ -19,7 +19,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 add_executable(int11-rotatingBoxes
   hostCode.cpp
@@ -29,5 +29,3 @@ target_link_libraries(int11-rotatingBoxes
   ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
   )
-
-

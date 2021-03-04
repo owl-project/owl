@@ -21,7 +21,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 
 add_executable(test01-manySpheres
@@ -32,5 +32,3 @@ add_executable(test01-manySpheres
 target_link_libraries(test01-manySpheres
   ${OWL_LIBRARIES}
   )
-
-

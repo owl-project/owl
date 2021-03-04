@@ -27,7 +27,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 add_executable(int12-switchingTextureSets
   hostCode.cpp
@@ -37,5 +37,3 @@ target_link_libraries(int12-switchingTextureSets
   ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
   )
-
-

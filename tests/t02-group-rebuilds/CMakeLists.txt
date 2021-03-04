@@ -21,7 +21,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 
 add_executable(test02-group-rebuilds
@@ -35,6 +35,3 @@ target_link_libraries(test02-group-rebuilds
 
 add_test(test02-group-rebuilds
   ${CMAKE_BINARY_DIR}/test02-group-rebuilds)
-
-
-

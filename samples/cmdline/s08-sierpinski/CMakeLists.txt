@@ -20,7 +20,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 add_executable(sample08-sierpinski
   hostCode.cpp
@@ -30,5 +30,3 @@ target_link_libraries(sample08-sierpinski
   ${OWL_LIBRARIES}
   )
 add_test(sample08-sierpinski ${CMAKE_BINARY_DIR}/sample08-sierpinski)
-
-

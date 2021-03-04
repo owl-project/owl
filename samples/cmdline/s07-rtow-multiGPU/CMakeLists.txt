@@ -21,7 +21,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 
 add_executable(sample07-rtow-multiGPU
@@ -35,6 +35,3 @@ target_link_libraries(sample07-rtow-multiGPU
 
 add_test(sample07-rtow-multiGPU
   ${CMAKE_BINARY_DIR}/sample07-rtow-multiGPU)
-
-
-

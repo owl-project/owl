@@ -21,7 +21,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 
 add_executable(int06-rtow-mixedGeometries
@@ -32,7 +32,3 @@ add_executable(int06-rtow-mixedGeometries
 target_link_libraries(int06-rtow-mixedGeometries
   ${OWL_VIEWER_LIBRARIES}
   )
-
-
-
-

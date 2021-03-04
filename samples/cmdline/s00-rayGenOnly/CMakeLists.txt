@@ -19,7 +19,7 @@ if(OWL_DEPRECATED_CMAKE)
     deviceCode.cu
     )
 else()
-  embed_ptx(ptxCode devicecode.cu)
+  embed_ptx(ptxCode deviceCode.cu)
 endif()
 add_executable(sample00-rayGenOnly
   hostCode.cpp
@@ -29,5 +29,3 @@ target_link_libraries(sample00-rayGenOnly
   ${OWL_LIBRARIES}
   )
 add_test(sample00-rayGenOnly ${CMAKE_BINARY_DIR}/sample00-rayGenOnly)
-
-

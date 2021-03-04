@@ -51,4 +51,5 @@ else()
   endif()
 
   link_libraries(cuda)
+  include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}) # for C++
 endif()
