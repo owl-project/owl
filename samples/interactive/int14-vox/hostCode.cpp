@@ -485,12 +485,12 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     std::vector<vec3f> meshVertices;
     meshVertices.reserve(voxdata.size() * NUM_BRICK_VERTICES);  // worst case
     std::vector<vec3i> meshIndices;
-    meshIndices.reserve(voxdata.size() * NUM_BRICK_INDICES);
+    meshIndices.reserve(voxdata.size() * NUM_BRICK_FACES);
     std::vector<unsigned char> colorIndicesPerBrick;
     colorIndicesPerBrick.reserve(voxdata.size());
 
     // Share vertices between voxels to save a little memory.  Only works for simple brick.
-    constexpr bool SHARE_BRICK_VERTICES = (NUM_BRICK_VERTICES == 8 && NUM_BRICK_INDICES == 12);
+    constexpr bool SHARE_BRICK_VERTICES = (NUM_BRICK_VERTICES == 8 && NUM_BRICK_FACES == 12);
     std::map<std::tuple<int, int, int>, int> brickVertexToMeshVertexIndex;
 
     // Build mesh in object space where each brick is 1x1x1
@@ -521,8 +521,8 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
         indexRemap[i] = vertexIndexInMesh;  // brick vertex -> flat mesh vertex
       }
       for (const vec3i &index : brickIndices) {
-        vec3i meshIndex(indexRemap[index.x], indexRemap[index.y], indexRemap[index.z]);
-        meshIndices.push_back(meshIndex);
+        vec3i face(indexRemap[index.x], indexRemap[index.y], indexRemap[index.z]);
+        meshIndices.push_back(face);
       }
       colorIndicesPerBrick.push_back(voxel.w);
     }
@@ -544,7 +544,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     owlGeomSetBuffer(trianglesGeom, "index", indexBuffer);
     owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
     owlGeomSet1b(trianglesGeom, "isFlat", true);
-    owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_BRICK_INDICES);
+    owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_BRICK_FACES);
 
     OWLBuffer colorIndexBuffer
       = allocator.deviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
@@ -609,7 +609,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     OWLBuffer vertexBuffer
       = allocator.deviceBufferCreate(context,OWL_FLOAT3,NUM_BRICK_VERTICES,brickVertices);
     OWLBuffer indexBuffer
-      = allocator.deviceBufferCreate(context,OWL_INT3,NUM_BRICK_INDICES,brickIndices);
+      = allocator.deviceBufferCreate(context,OWL_INT3,NUM_BRICK_FACES,brickIndices);
 
     OWLGeom trianglesGeom
       = owlGeomCreate(context,trianglesGeomType);
@@ -617,13 +617,13 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
         NUM_BRICK_VERTICES,sizeof(vec3f),0);
     owlTrianglesSetIndices(trianglesGeom,indexBuffer,
-        NUM_BRICK_INDICES,sizeof(vec3i),0);
+        NUM_BRICK_FACES,sizeof(vec3i),0);
 
     owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
     owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
     owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
     owlGeomSet1b(trianglesGeom, "isFlat", true);
-    owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_BRICK_INDICES);
+    owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_BRICK_FACES);
 
     std::vector<unsigned char> colorIndicesPerBrick = {249}; // grey in default palette
     OWLBuffer colorIndexBuffer
@@ -693,7 +693,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   OWLBuffer vertexBuffer
     = allocator.deviceBufferCreate(context,OWL_FLOAT3,NUM_BRICK_VERTICES,brickVertices);
   OWLBuffer indexBuffer
-    = allocator.deviceBufferCreate(context,OWL_INT3,NUM_BRICK_INDICES,brickIndices);
+    = allocator.deviceBufferCreate(context,OWL_INT3,NUM_BRICK_FACES,brickIndices);
 
   OWLGeom trianglesGeom
     = owlGeomCreate(context,trianglesGeomType);
@@ -701,7 +701,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
                           NUM_BRICK_VERTICES,sizeof(vec3f),0);
   owlTrianglesSetIndices(trianglesGeom,indexBuffer,
-                         NUM_BRICK_INDICES,sizeof(vec3i),0);
+                         NUM_BRICK_FACES,sizeof(vec3i),0);
   
   owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);

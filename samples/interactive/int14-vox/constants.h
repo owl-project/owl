@@ -34,8 +34,8 @@ vec3f brickVertices[NUM_BRICK_VERTICES] =
     { 1.f, 1.f, 1.f }
   };
 
-constexpr int NUM_BRICK_INDICES = 12;
-vec3i brickIndices[NUM_BRICK_INDICES] =
+constexpr int NUM_BRICK_FACES = 12;
+vec3i brickIndices[NUM_BRICK_FACES] =
   {
     { 3,1,0 }, { 2,3,0 },
     { 5,7,6 }, { 6,4,5 },
@@ -77,8 +77,8 @@ vec3i brickIndices[NUM_BRICK_INDICES] =
     { 0.000000f, 0.050000f, 0.050000f }
   };
 
-constexpr int NUM_BRICK_INDICES = 44;
-vec3i brickIndices[NUM_BRICK_INDICES] =
+constexpr int NUM_BRICK_FACES = 44;
+vec3i brickIndices[NUM_BRICK_FACES] =
   {
     {3, 21, 17 },
     {18, 15, 23 },
