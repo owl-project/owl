@@ -136,6 +136,9 @@ struct Viewer : public owl::viewer::OWLViewer
   int frameID = 0;
   OWLBuffer fbAccum = nullptr;
 
+  owl::box3f sceneBox;  // in units of bricks
+  int clipHeight = 1000;
+  bool clipDirty = false;
   float sunPhi   = 0.785398f;  // rotation about up axis
   float sunTheta = 0.785398f;  // elevation angle, 0 at horizon
   bool sunDirty = true;
@@ -212,6 +215,19 @@ void Viewer::key(char key, const vec2i &where)
       if (sunPhi <= 0.0f) sunPhi += 2.0f*M_PIf;
       sunDirty = true;
       return;
+    case '[':
+      clipHeight -= 1;
+      if (clipHeight < 0) clipHeight = 0;
+      clipDirty = true;
+      return;
+    case ']':
+      clipHeight += 1;
+      if (clipHeight > int(sceneBox.span().z)+1) {
+        clipHeight = int(sceneBox.span().z)+1;
+      }
+      clipDirty = true;
+      return;
+
     case 'p':
       const std::string filename = "D:\\screenshot.png";
       LOG("Saving screenshot to: " << filename);
@@ -866,17 +882,17 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
 
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
   
-  owl::box3f sceneBox;  // in units of bricks
   BufferAllocator allocator;
-  //OWLGroup world = createFlatTriangleGeometryScene(module, scene, sceneBox, allocator);
-  OWLGroup world = createInstancedTriangleGeometryScene(module, scene, sceneBox, allocator);
-  //OWLGroup world = createUserGeometryScene(module, scene, sceneBox, allocator);
+  //OWLGroup world = createFlatTriangleGeometryScene(module, scene, this->sceneBox, allocator);
+  OWLGroup world = createInstancedTriangleGeometryScene(module, scene, this->sceneBox, allocator);
+  //OWLGroup world = createUserGeometryScene(module, scene, this->sceneBox, allocator);
   
   LOG("Scene buffer memory: " << owl::common::prettyNumber(allocator.bytesAllocated));
   
   const vec3f sceneSpan = sceneBox.span();
   const int sceneLongestDim = indexOfMaxComponent(sceneSpan);
   const float brickScaleInWorldSpace = 2.f / sceneSpan[sceneLongestDim];
+  this->clipHeight = int(sceneSpan.z) + 1;
 
   owlGroupBuildAccel(world);
   
@@ -943,6 +959,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
     { "sunColor",      OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunColor)},
     { "enableToonOutline", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableToonOutline)},
     { "brickScale",     OWL_FLOAT, OWL_OFFSETOF(LaunchParams, brickScale)},
+    { "clipHeight",     OWL_INT, OWL_OFFSETOF(LaunchParams, clipHeight)},
     { /* sentinel to mark end of list */ }
   };
 
@@ -952,6 +969,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
   owlParamsSetGroup(launchParams, "world", world);
   owlParamsSet3f(launchParams, "sunColor", {1.f, 1.f, 1.f});
   owlParamsSet1f(launchParams, "brickScale", brickScaleInWorldSpace);
+  owlParamsSet1i(launchParams, "clipHeight", clipHeight);
   owlParamsSet1b(launchParams, "enableToonOutline", this->enableToonOutline);
   // other params set at launch or resize
   
@@ -972,11 +990,17 @@ void Viewer::render()
     sbtDirty = false;
   }
   if (sunDirty) {
-      owl3f dir = { cos(sunPhi)*cos(sunTheta), sin(sunPhi)*cos(sunTheta), sin(sunTheta) };
-      owlParamsSet3f(launchParams, "sunDirection", dir); 
-      sunDirty = false;
-      frameID = 0;
+    owl3f dir = { cos(sunPhi)*cos(sunTheta), sin(sunPhi)*cos(sunTheta), sin(sunTheta) };
+    owlParamsSet3f(launchParams, "sunDirection", dir); 
+    sunDirty = false;
+    frameID = 0;
   }
+  if (clipDirty) {
+    owlParamsSet1i(launchParams, "clipHeight", this->clipHeight);
+    clipDirty = false;
+    frameID = 0;
+  }
+    
   owlParamsSet1i(launchParams, "frameID", frameID);
   frameID++;
   owlLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);

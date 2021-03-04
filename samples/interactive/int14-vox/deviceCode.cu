@@ -84,6 +84,18 @@ RayT makeRay(const vec3f &origin,
              float tmin,
              float tmax)
 {
+
+#if ENABLE_CLIPPING_PLANE
+  const float eps = 0.01f * optixLaunchParams.brickScale;
+  const float clipZ = optixLaunchParams.clipHeight * optixLaunchParams.brickScale;
+  const float t = (clipZ - origin.z) / direction.z;
+  if (direction.z < 0.f) {
+    tmin = owl::max(tmin, t-eps);
+  } else {
+    tmax = owl::min(tmax, t+eps);
+  }
+#endif
+
   return RayT(origin, direction, tmin, tmax, Mask);
 }
 
@@ -134,8 +146,8 @@ vec3f tracePath(const RayGenData &self,
     prd.out.scatterEvent = rayDidntHitAnything;
     owl::traceRay(/*accel to trace against*/ optixLaunchParams.world,
                   /*the ray to trace*/ ray,
-                  /*prd*/prd);
-
+                  /*prd*/prd,
+                  OPTIX_RAY_FLAG_CULL_BACK_FACING_TRIANGLES);
     
     if (prd.out.scatterEvent == rayDidntHitAnything)
       /* ray got 'lost' to the environment - 'light' it with miss
