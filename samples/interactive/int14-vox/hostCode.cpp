@@ -419,11 +419,8 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     instanceTransforms[i] = worldTransform * instanceTransforms[i];
   }
   
-  OWLGroup world = owlInstanceGroupCreate(context, instanceTransforms.size());
-  for (int i = 0; i < int(instanceTransforms.size()); ++i) {
-    owlInstanceGroupSetChild(world, i, geomGroups[i]);
-    owlInstanceGroupSetTransform(world, i, (const float*)&instanceTransforms[i], OWL_MATRIX_FORMAT_OWL); 
-  }
+  OWLGroup world = owlInstanceGroupCreate(context, instanceTransforms.size(),
+      geomGroups.data(), nullptr, (const float*)instanceTransforms.data(), OWL_MATRIX_FORMAT_OWL);
 
   return world;
 
@@ -656,11 +653,11 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     instanceTransforms[i] = worldTransform * instanceTransforms[i];
   }
   
-  OWLGroup world = owlInstanceGroupCreate(context, instanceTransforms.size());
-  for (int i = 0; i < int(instanceTransforms.size()); ++i) {
-    owlInstanceGroupSetChild(world, i, geomGroups[i]);
-    owlInstanceGroupSetTransform(world, i, (const float*)&instanceTransforms[i], OWL_MATRIX_FORMAT_OWL); 
-  }
+  OWLGroup world = owlInstanceGroupCreate(context, 
+      instanceTransforms.size(), 
+      geomGroups.data(), 
+      /*instanceIds*/ nullptr, 
+      (const float*)instanceTransforms.data(), OWL_MATRIX_FORMAT_OWL);
 
   return world;
 
@@ -847,11 +844,11 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
       = allocator.deviceBufferCreate(context, OWL_UCHAR, colorIndicesPerBrick.size(), colorIndicesPerBrick.data());
   owlGeomSetBuffer(trianglesGeom, "colorIndexPerBrick", colorIndexBuffer);
 
-  OWLGroup world = owlInstanceGroupCreate(context, transformsPerBrick.size());
+  OWLGroup world = owlInstanceGroupCreate(context, transformsPerBrick.size(),
+      nullptr, nullptr, (const float*)transformsPerBrick.data(), OWL_MATRIX_FORMAT_OWL);
 
   for (int i = 0; i < int(transformsPerBrick.size()); ++i) {
     owlInstanceGroupSetChild(world, i, trianglesGroup);  // All instances point to the same brick 
-    owlInstanceGroupSetTransform(world, i, (const float*)&transformsPerBrick[i], OWL_MATRIX_FORMAT_OWL);
   }
 
   owlInstanceGroupSetVisibilityMasks(world, visibilityMasks.data());
