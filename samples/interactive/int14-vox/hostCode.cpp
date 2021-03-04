@@ -868,15 +868,15 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
   
   owl::box3f sceneBox;  // in units of bricks
   BufferAllocator allocator;
-  OWLGroup world = createFlatTriangleGeometryScene(module, scene, sceneBox, allocator);
-  //OWLGroup world = createInstancedTriangleGeometryScene(module, scene, sceneBox, allocator);
+  //OWLGroup world = createFlatTriangleGeometryScene(module, scene, sceneBox, allocator);
+  OWLGroup world = createInstancedTriangleGeometryScene(module, scene, sceneBox, allocator);
   //OWLGroup world = createUserGeometryScene(module, scene, sceneBox, allocator);
   
   LOG("Scene buffer memory: " << owl::common::prettyNumber(allocator.bytesAllocated));
   
   const vec3f sceneSpan = sceneBox.span();
   const int sceneLongestDim = indexOfMaxComponent(sceneSpan);
-  const float brickScaleInWorldSpace = 1.f / sceneSpan[sceneLongestDim];
+  const float brickScaleInWorldSpace = 2.f / sceneSpan[sceneLongestDim];
 
   owlGroupBuildAccel(world);
   
