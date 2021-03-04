@@ -77,17 +77,43 @@ struct PerRayData
   } out;
 };
 
+template <typename RayT, int Mask>
+inline __device__
+RayT makeRay(const vec3f &origin,
+             const vec3f &direction,
+             float tmin,
+             float tmax)
+{
+  return RayT(origin, direction, tmin, tmax, Mask);
+}
+
+
+
 inline __device__
 RadianceRay makeRadianceRay(const vec3f &origin, 
                             const vec3f &direction,
                             float tmin,
                             float tmax)
 {
-  return RadianceRay(origin,
-                     direction,
-                     tmin,
-                     tmax,
-                     VISIBILITY_RADIANCE);
+  return makeRay<RadianceRay, VISIBILITY_RADIANCE>(origin, direction, tmin, tmax);
+}
+
+inline __device__
+ShadowRay makeShadowRay(const vec3f &origin, 
+                        const vec3f &direction,
+                        float tmin,
+                        float tmax)
+{
+  return makeRay<ShadowRay, VISIBILITY_SHADOW>(origin, direction, tmin, tmax);
+}
+
+inline __device__
+OutlineShadowRay makeOutlineShadowRay(const vec3f &origin, 
+                                      const vec3f &direction,
+                                      float tmin,
+                                      float tmax)
+{
+  return makeRay<OutlineShadowRay, VISIBILITY_OUTLINE>(origin, direction, tmin, tmax);
 }
 
 
@@ -197,13 +223,8 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 
       // Feature size control for outlines
       const float outlineDepthBias = 5*optixLaunchParams.brickScale;
-
-      OutlineShadowRay outlineShadowRay(self.camera.pos,      // origin
-                      rayDir,  // same direction as eye ray
-                      0.f,
-                      firstHitDistance-outlineDepthBias,  // only show outline if it is in front of regular hit
-                      VISIBILITY_OUTLINE);
-
+      OutlineShadowRay outlineShadowRay = makeOutlineShadowRay(self.camera.pos,
+          rayDir, 0.f, firstHitDistance-outlineDepthBias);
       float vis = traceOutlineShadowRay(optixLaunchParams.world, outlineShadowRay);
       color *= vis;
     }
@@ -264,12 +285,7 @@ vec3f sunlight(const vec3f &hit_P_offset, const vec3f &Ng, Random &random)
   const vec3f jitteredPos = lightCenter + lightRadius*(sample.x*lightFrame.vx + sample.y*lightFrame.vy);
   const vec3f jitteredLightDir = jitteredPos - hit_P_offset;  // no need to normalize
 
-  ShadowRay shadowRay(hit_P_offset,      // origin
-                      jitteredLightDir,  // direction
-                      0.f,
-                      1e10f,
-                      VISIBILITY_SHADOW);
-
+  ShadowRay shadowRay = makeShadowRay(hit_P_offset, jitteredLightDir, 0.f, 1e10f);
   float vis = traceShadowRay(optixLaunchParams.world, shadowRay);
   return vis * optixLaunchParams.sunColor * NdotL; 
 
