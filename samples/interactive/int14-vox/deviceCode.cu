@@ -80,7 +80,7 @@ RayT makeRay(const vec3f &origin,
              float tmin,
              float tmax)
 {
-  if (optixLaunchParams.enableClipping) {  // Note: bound value
+  if (optixLaunchParams.enableClipping) {
     const float eps = 0.01f * optixLaunchParams.brickScale;
     const float clipZ = optixLaunchParams.clipHeight * optixLaunchParams.brickScale;
     const float t = (clipZ - origin.z) / direction.z;

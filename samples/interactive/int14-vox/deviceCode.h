@@ -28,10 +28,11 @@ struct LaunchParams
   vec3f sunColor;
   float brickScale;
 
-  bool enableClipping;
   int clipHeight;  // in units of bricks
 
-  bool enableToonOutline;  // TODO: module specialization
+  // Note: these should be bound values
+  bool enableClipping;
+  bool enableToonOutline; 
 
   int frameID;
   float4   *fbAccumBuffer;

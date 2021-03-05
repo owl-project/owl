@@ -529,6 +529,7 @@ namespace owl {
 
   void Context::setBoundValues(const std::vector<OptixModuleCompileBoundValueEntry> &boundValues)
   {
+    // TODO: check that this is called before compiling programs
     this->boundValues = boundValues;
   }
 
