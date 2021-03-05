@@ -81,10 +81,16 @@ const vec3f init_lookFrom(-6.92038f,-9.00064f,6.3322f);
 const vec3f init_lookFrom(-9.42654f,-19.2523f, 12.8643f);
 #endif
 
+enum SceneType {
+  SCENE_TYPE_FLAT=1,
+  SCENE_TYPE_USER,
+  SCENE_TYPE_INSTANCED,
+  SCENE_TYPE_INVALID
+};
 
 struct Viewer : public owl::viewer::OWLViewer
 {
-  Viewer(const ogt_vox_scene *scene, bool enableGround);
+  Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGround);
   
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
@@ -912,7 +918,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   
 }
 
-Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
+Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGround)
   : enableGround(enableGround)
 {
   // create a context on the first device:
@@ -921,10 +927,14 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
 
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
   
-  //OWLGroup world = createFlatTriangleGeometryScene(module, scene, this->sceneBox);
-  OWLGroup world = createInstancedTriangleGeometryScene(module, scene, this->sceneBox);
-  //OWLGroup world = createUserGeometryScene(module, scene, this->sceneBox);
-  
+  OWLGroup world;
+  if (sceneType == SCENE_TYPE_FLAT) {
+    world = createFlatTriangleGeometryScene(module, scene, this->sceneBox);
+  } else if (sceneType == SCENE_TYPE_USER) {
+    world = createUserGeometryScene(module, scene, this->sceneBox);
+  } else {
+    world = createInstancedTriangleGeometryScene(module, scene, this->sceneBox);
+  }
   
   const vec3f sceneSpan = sceneBox.span();
   const int sceneLongestDim = indexOfMaxComponent(sceneSpan);
@@ -1042,6 +1052,18 @@ void Viewer::render()
   owlLaunchSync(launchParams);
 }
 
+SceneType stringToSceneType(const char *s)
+{
+  std::string arg(s);
+  if (arg == "flat") {
+    return SCENE_TYPE_FLAT;
+  } else if (arg == "user") {
+    return SCENE_TYPE_USER;
+  } else if (arg == "instanced") {
+    return SCENE_TYPE_INSTANCED;
+  }
+  return SCENE_TYPE_INVALID;
+}
 
 int main(int ac, char **av)
 {
@@ -1052,12 +1074,23 @@ int main(int ac, char **av)
       exit(1);
   }
   bool enableGround = true;
+  SceneType sceneType = SCENE_TYPE_INSTANCED;
   std::vector<std::string> infiles;
   for (int i = 1; i < ac; ++i) {
     std::string arg = av[i];
     if (arg == "--no-ground") {
       enableGround = false;
-    } else {
+    } 
+    else if (arg == "--scenetype") {
+      if (i+1 < ac) {
+        sceneType = stringToSceneType(av[i+1]);
+        if (sceneType == SCENE_TYPE_INVALID) {
+          LOG("Could not understand scene type: " << av[i+1] << ", exiting.");
+          exit(1);
+        }
+        i++;  // skip arg value
+      } 
+    }else {
       infiles.push_back(arg);  // assume all other args are file names
     }
   }
@@ -1083,7 +1116,7 @@ int main(int ac, char **av)
       exit(1);
   }
 
-  Viewer viewer(scene, enableGround);
+  Viewer viewer(scene, sceneType, enableGround);
   viewer.camera.setOrientation(init_lookFrom,
                                init_lookAt,
                                init_lookUp,
