@@ -27,6 +27,8 @@ struct LaunchParams
   vec3f sunDirection;  // pointing toward sun
   vec3f sunColor;
   float brickScale;
+
+  bool enableClipping;
   int clipHeight;  // in units of bricks
 
   bool enableToonOutline;  // TODO: module specialization

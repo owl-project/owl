@@ -79,7 +79,7 @@ enum SceneType {
 
 struct Viewer : public owl::viewer::OWLViewer
 {
-  Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGround);
+  Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGround, bool enableClipping);
   
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
@@ -121,6 +121,7 @@ struct Viewer : public owl::viewer::OWLViewer
   bool sunDirty = true;
   bool enableGround = true;
   bool enableToonOutline = bool(ENABLE_TOON_OUTLINE);
+  bool enableClipping = true;
   
 };
 
@@ -907,8 +908,8 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   
 }
 
-Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGround)
-  : enableGround(enableGround)
+Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGround, bool enableClipping)
+  : enableGround(enableGround), enableClipping(enableClipping)
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
@@ -992,6 +993,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGroun
     { "sunDirection",  OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunDirection)},
     { "sunColor",      OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunColor)},
     { "enableToonOutline", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableToonOutline)},
+    { "enableClipping", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableClipping)},
     { "brickScale",     OWL_FLOAT, OWL_OFFSETOF(LaunchParams, brickScale)},
     { "clipHeight",     OWL_INT, OWL_OFFSETOF(LaunchParams, clipHeight)},
     { /* sentinel to mark end of list */ }
@@ -1005,6 +1007,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGroun
   owlParamsSet1f(launchParams, "brickScale", brickScaleInWorldSpace);
   owlParamsSet1i(launchParams, "clipHeight", clipHeight);
   owlParamsSet1b(launchParams, "enableToonOutline", this->enableToonOutline);
+  owlParamsSet1b(launchParams, "enableClipping", enableClipping);
   // other params set at launch or resize
   
   // ##################################################################
@@ -1029,7 +1032,7 @@ void Viewer::render()
     sunDirty = false;
     frameID = 0;
   }
-  if (clipDirty) {
+  if (clipDirty && this->enableClipping) {
     owlParamsSet1i(launchParams, "clipHeight", this->clipHeight);
     clipDirty = false;
     frameID = 0;
@@ -1090,6 +1093,7 @@ int main(int ac, char **av)
       exit(1);
   }
   bool enableGround = true;
+  bool enableClipping = true;
   SceneType sceneType = SCENE_TYPE_INSTANCED;
   vec3f lookFrom = init_lookFrom;
   vec3f lookAt = init_lookAt;
@@ -1100,6 +1104,10 @@ int main(int ac, char **av)
     if (arg == "--no-ground") {
       enableGround = false;
     } 
+    else if (arg == "--no-clipping") {
+      // Might want to disable clipping in shader when measuring perf
+      enableClipping = false;
+    }
     else if (arg == "--scenetype") {
       if (i+1 >= ac) {
         LOG("Missing argument value for " << arg << ", exiting.");
@@ -1149,7 +1157,7 @@ int main(int ac, char **av)
       exit(1);
   }
 
-  Viewer viewer(scene, sceneType, enableGround);
+  Viewer viewer(scene, sceneType, enableGround, enableClipping);
   viewer.camera.setOrientation(lookFrom,
                                lookAt,
                                lookUp,

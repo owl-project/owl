@@ -84,13 +84,15 @@ RayT makeRay(const vec3f &origin,
 {
 
 #if ENABLE_CLIPPING_PLANE
-  const float eps = 0.01f * optixLaunchParams.brickScale;
-  const float clipZ = optixLaunchParams.clipHeight * optixLaunchParams.brickScale;
-  const float t = (clipZ - origin.z) / direction.z;
-  if (direction.z < 0.f) {
-    tmin = owl::max(tmin, t-eps);
-  } else {
-    tmax = owl::min(tmax, t+eps);
+  if (optixLaunchParams.enableClipping) {
+    const float eps = 0.01f * optixLaunchParams.brickScale;
+    const float clipZ = optixLaunchParams.clipHeight * optixLaunchParams.brickScale;
+    const float t = (clipZ - origin.z) / direction.z;
+    if (direction.z < 0.f) {
+      tmin = owl::max(tmin, t-eps);
+    } else {
+      tmax = owl::min(tmax, t+eps);
+    }
   }
 #endif
 
