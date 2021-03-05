@@ -101,30 +101,14 @@ struct Viewer : public owl::viewer::OWLViewer
 
   void key(char key, const vec2i &/*where*/) override;
 
-
   /// Geometry creation functions
 
-  // Simple memory tracker
-  struct BufferAllocator {
-    inline OWLBuffer deviceBufferCreate(OWLContext  context,
-                          OWLDataType type,
-                          size_t      count,
-                          const void *init)
-    {
-      OWLBuffer buf = owlDeviceBufferCreate(context, type, count, init);
-      bytesAllocated += owlBufferSizeInBytes(buf);
-      return buf;
-    }
-  
-    size_t bytesAllocated = 0u;
-  };
-
   OWLGroup createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-      owl::box3f &sceneBox, BufferAllocator &allocator);
+      owl::box3f &sceneBox);
   OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-      owl::box3f &sceneBox, BufferAllocator &allocator);
+      owl::box3f &sceneBox);
   OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-      owl::box3f &sceneBox, BufferAllocator &allocator);
+      owl::box3f &sceneBox);
 
 
   bool sbtDirty = true;
@@ -264,9 +248,40 @@ std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model)
   return solid_voxels;
 }
 
-OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-    box3f &sceneBox, BufferAllocator &allocator)
+// Simple memory tracker
+struct BufferAllocator {
+  inline OWLBuffer deviceBufferCreate(OWLContext  context,
+                        OWLDataType type,
+                        size_t      count,
+                        const void *init)
+  {
+    OWLBuffer buf = owlDeviceBufferCreate(context, type, count, init);
+    bytesAllocated += owlBufferSizeInBytes(buf);
+    return buf;
+  }
+
+  size_t bytesAllocated = 0u;
+};
+
+void logSceneMemory(size_t bottomLevelBvhSizeInBytes,
+                    size_t topLevelBvhSizeInBytes,
+                    const BufferAllocator &allocator)
 {
+  LOG("Scene GAS memory: " << owl::common::prettyNumber(bottomLevelBvhSizeInBytes));
+  LOG("Scene IAS memory: " << owl::common::prettyNumber(topLevelBvhSizeInBytes));
+  LOG("Scene buffer memory: " << owl::common::prettyNumber(allocator.bytesAllocated));
+
+  LOG("Scene total memory: " 
+      << owl::common::prettyNumber(
+        bottomLevelBvhSizeInBytes + topLevelBvhSizeInBytes + allocator.bytesAllocated));
+}
+
+
+OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+    box3f &sceneBox) 
+{
+  BufferAllocator allocator;
+
   // -------------------------------------------------------
   // declare user vox geometry type
   // -------------------------------------------------------
@@ -316,6 +331,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
   instanceTransforms.reserve(scene->num_instances);
 
   size_t totalSolidVoxelCount = 0;
+  size_t bottomLevelBvhSizeInBytes = 0;
   
   // Make instance transforms
   for (auto it : modelToInstances) {
@@ -345,7 +361,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     // ------------------------------------------------------------------
     OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
     owlGroupBuildAccel(userGeomGroup);
-
+    bottomLevelBvhSizeInBytes += owlGroupGetBvhSizeInBytes(userGeomGroup, 0);
 
     LOG("adding (" << it.second.size() << ") instance transforms for model ...");
     for (uint32_t instanceIndex : it.second) {
@@ -414,6 +430,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
     OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
     owlGroupBuildAccel(userGeomGroup);
+    bottomLevelBvhSizeInBytes += owlGroupGetBvhSizeInBytes(userGeomGroup, 0);
     geomGroups.push_back(userGeomGroup);
 
     instanceTransforms.push_back( 
@@ -436,14 +453,21 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
   OWLGroup world = owlInstanceGroupCreate(context, instanceTransforms.size(),
       geomGroups.data(), nullptr, (const float*)instanceTransforms.data(), OWL_MATRIX_FORMAT_OWL);
 
+  owlGroupBuildAccel(world);
+
+  uint64_t topLevelBvhSizeInBytes = owlGroupGetBvhSizeInBytes(world, 0);
+  logSceneMemory(bottomLevelBvhSizeInBytes, topLevelBvhSizeInBytes, allocator);
+
   return world;
 
 }
 
 // For performance comaparisons, this version flattens each vox model into a single triangle mesh, 
 OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-    box3f &sceneBox, BufferAllocator &allocator)
+    box3f &sceneBox )
 {
+  BufferAllocator allocator;
+
   // -------------------------------------------------------
   // declare triangle-based box geometry type
   // -------------------------------------------------------
@@ -487,6 +511,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
   instanceTransforms.reserve(scene->num_instances);
 
   size_t totalSolidVoxelCount = 0;
+  size_t bottomLevelBvhSizeInBytes = 0;
 
   // Make instance transforms
   for (auto it : modelToInstances) {
@@ -569,6 +594,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     // ------------------------------------------------------------------
     OWLGroup trianglesGroup = owlTrianglesGeomGroupCreate(context, 1, &trianglesGeom);
     owlGroupBuildAccel(trianglesGroup);
+    bottomLevelBvhSizeInBytes += owlGroupGetBvhSizeInBytes(trianglesGroup, 0);
 
     LOG("adding (" << it.second.size() << ") instance transforms for model ...");
     for (uint32_t instanceIndex : it.second) {
@@ -647,6 +673,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     OWLGroup trianglesGroup
       = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
     owlGroupBuildAccel(trianglesGroup);
+    bottomLevelBvhSizeInBytes += owlGroupGetBvhSizeInBytes(trianglesGroup, 0);
 
     geomGroups.push_back(trianglesGroup);
 
@@ -673,13 +700,21 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
       /*instanceIds*/ nullptr, 
       (const float*)instanceTransforms.data(), OWL_MATRIX_FORMAT_OWL);
 
+  owlGroupBuildAccel(world);
+
+  uint64_t topLevelBvhSizeInBytes = owlGroupGetBvhSizeInBytes(world, 0);
+  logSceneMemory(bottomLevelBvhSizeInBytes, topLevelBvhSizeInBytes, allocator);
+
   return world;
 
 }
 
 OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-    owl::box3f &sceneBox, BufferAllocator &allocator)
+    owl::box3f &sceneBox)
 {
+
+  BufferAllocator allocator;
+
   // -------------------------------------------------------
   // declare triangle-based box geometry type
   // -------------------------------------------------------
@@ -730,6 +765,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   OWLGroup trianglesGroup
     = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
+  uint64_t bottomLevelBvhSizeInBytes = owlGroupGetBvhSizeInBytes(trianglesGroup, 0);
 
 
   // ------------------------------------------------------------------
@@ -867,6 +903,11 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 
   owlInstanceGroupSetVisibilityMasks(world, visibilityMasks.data());
 
+  owlGroupBuildAccel(world);
+
+  uint64_t topLevelBvhSizeInBytes = owlGroupGetBvhSizeInBytes(world, 0);
+  logSceneMemory(bottomLevelBvhSizeInBytes, topLevelBvhSizeInBytes, allocator);
+
   return world;
   
 }
@@ -880,19 +921,15 @@ Viewer::Viewer(const ogt_vox_scene *scene, bool enableGround)
 
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
   
-  BufferAllocator allocator;
-  //OWLGroup world = createFlatTriangleGeometryScene(module, scene, this->sceneBox, allocator);
-  OWLGroup world = createInstancedTriangleGeometryScene(module, scene, this->sceneBox, allocator);
-  //OWLGroup world = createUserGeometryScene(module, scene, this->sceneBox, allocator);
+  //OWLGroup world = createFlatTriangleGeometryScene(module, scene, this->sceneBox);
+  OWLGroup world = createInstancedTriangleGeometryScene(module, scene, this->sceneBox);
+  //OWLGroup world = createUserGeometryScene(module, scene, this->sceneBox);
   
-  LOG("Scene buffer memory: " << owl::common::prettyNumber(allocator.bytesAllocated));
   
   const vec3f sceneSpan = sceneBox.span();
   const int sceneLongestDim = indexOfMaxComponent(sceneSpan);
   const float brickScaleInWorldSpace = 2.f / sceneSpan[sceneLongestDim];
   this->clipHeight = int(sceneSpan.z) + 1;
-
-  owlGroupBuildAccel(world);
   
 
   // ##################################################################
