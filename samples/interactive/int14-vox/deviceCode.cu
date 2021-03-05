@@ -82,9 +82,7 @@ RayT makeRay(const vec3f &origin,
              float tmin,
              float tmax)
 {
-
-#if ENABLE_CLIPPING_PLANE
-  if (optixLaunchParams.enableClipping) {
+  if (optixLaunchParams.enableClipping) {  // Note: bound value
     const float eps = 0.01f * optixLaunchParams.brickScale;
     const float clipZ = optixLaunchParams.clipHeight * optixLaunchParams.brickScale;
     const float t = (clipZ - origin.z) / direction.z;
@@ -94,7 +92,6 @@ RayT makeRay(const vec3f &origin,
       tmax = owl::min(tmax, t+eps);
     }
   }
-#endif
 
   return RayT(origin, direction, tmin, tmax, Mask);
 }

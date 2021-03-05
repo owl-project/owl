@@ -1010,6 +1010,14 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGroun
   owlParamsSet1b(launchParams, "enableClipping", enableClipping);
   // other params set at launch or resize
   
+  // Bind some launch parameters as constants
+  std::vector<OptixModuleCompileBoundValueEntry> boundValues;
+  boundValues.push_back( {
+      /*pipelineParamOffsetInBytes*/  OWL_OFFSETOF(LaunchParams, enableClipping),
+      /* sizeInBytes */               sizeof(bool),
+      /*boundValuePtr*/               &this->enableClipping });
+  owlContextSetBoundValues(context, boundValues.data(), boundValues.size());
+  
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################
