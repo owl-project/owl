@@ -915,7 +915,20 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGroun
   context = owlContextCreate(nullptr,1);
   OWLModule module = owlModuleCreate(context,ptxCode);
 
+  // Set context options that affect program compilation
+  // IMPORTANT: this needs to happen before any calls to owlBuildPrograms() !
+
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
+
+  // Bound values, used to specialize compilation
+  std::vector<OptixModuleCompileBoundValueEntry> boundValues;
+  boundValues.push_back( {
+      /*pipelineParamOffsetInBytes*/  OWL_OFFSETOF(LaunchParams, enableClipping),
+      /* sizeInBytes */               sizeof(bool),
+      /*boundValuePtr*/               &this->enableClipping });
+
+  owlContextSetBoundValues(context, boundValues.data(), boundValues.size());
+
   
   OWLGroup world;
   if (sceneType == SCENE_TYPE_FLAT) {
@@ -1008,16 +1021,9 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGroun
   owlParamsSet1i(launchParams, "clipHeight", clipHeight);
   owlParamsSet1b(launchParams, "enableToonOutline", this->enableToonOutline);
   owlParamsSet1b(launchParams, "enableClipping", enableClipping);
-  // other params set at launch or resize
-  
-  // Bind some launch parameters as constants
-  std::vector<OptixModuleCompileBoundValueEntry> boundValues;
-  boundValues.push_back( {
-      /*pipelineParamOffsetInBytes*/  OWL_OFFSETOF(LaunchParams, enableClipping),
-      /* sizeInBytes */               sizeof(bool),
-      /*boundValuePtr*/               &this->enableClipping });
-  owlContextSetBoundValues(context, boundValues.data(), boundValues.size());
-  
+  // other params set at launch or resize.  Some of these may have also been bound
+  // as constants earlier.
+    
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################
