@@ -79,7 +79,14 @@ enum SceneType {
 
 struct Viewer : public owl::viewer::OWLViewer
 {
-  Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGround, bool enableClipping);
+
+  struct GlobalOptions {
+    bool enableGround = true;
+    bool enableClipping = true;
+    bool enableToonOutline = true;
+  };
+
+  Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options);
   
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
@@ -120,8 +127,8 @@ struct Viewer : public owl::viewer::OWLViewer
   float sunTheta = 0.785398f;  // elevation angle, 0 at horizon
   bool sunDirty = true;
   bool enableGround = true;
-  bool enableToonOutline = bool(ENABLE_TOON_OUTLINE);
   bool enableClipping = true;
+  bool enableToonOutline = true;
   
 };
 
@@ -908,8 +915,10 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   
 }
 
-Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGround, bool enableClipping)
-  : enableGround(enableGround), enableClipping(enableClipping)
+Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options)
+  : enableGround(options.enableGround), 
+  enableClipping(options.enableClipping), 
+  enableToonOutline(options.enableToonOutline)
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
@@ -920,12 +929,12 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, bool enableGroun
 
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
 
-  // Bound values, used to specialize compilation
+  // Bind values that cannot change between frames, used to specialize compilation
   std::vector<OptixModuleCompileBoundValueEntry> boundValues;
-  boundValues.push_back( {
-      /*pipelineParamOffsetInBytes*/  OWL_OFFSETOF(LaunchParams, enableClipping),
-      /* sizeInBytes */               sizeof(bool),
-      /*boundValuePtr*/               &this->enableClipping });
+  boundValues.push_back( {OWL_OFFSETOF(LaunchParams, enableClipping),
+      sizeof(bool), &this->enableClipping });
+  boundValues.push_back( {OWL_OFFSETOF(LaunchParams, enableToonOutline),
+      sizeof(bool), &this->enableToonOutline });
 
   owlContextSetBoundValues(context, boundValues.data(), boundValues.size());
 
@@ -1106,8 +1115,7 @@ int main(int ac, char **av)
       LOG("need at least 1 expected argument for .vox file. Exiting");
       exit(1);
   }
-  bool enableGround = true;
-  bool enableClipping = true;
+  Viewer::GlobalOptions options;
   SceneType sceneType = SCENE_TYPE_INSTANCED;
   vec3f lookFrom = init_lookFrom;
   vec3f lookAt = init_lookAt;
@@ -1116,13 +1124,15 @@ int main(int ac, char **av)
   for (int i = 1; i < ac; ++i) {
     std::string arg = av[i];
     if (arg == "--no-ground") {
-      enableGround = false;
+      options.enableGround = false;
     } 
     else if (arg == "--no-clipping") {
       // Might want to disable clipping in shader when measuring perf
-      enableClipping = false;
+      options.enableClipping = false;
     }
-    else if (arg == "--scenetype") {
+    else if (arg == "--no-outlines") {
+      options.enableToonOutline = false;
+    }else if (arg == "--scenetype") {
       if (i+1 >= ac) {
         LOG("Missing argument value for " << arg << ", exiting.");
         exit(1);
@@ -1171,7 +1181,7 @@ int main(int ac, char **av)
       exit(1);
   }
 
-  Viewer viewer(scene, sceneType, enableGround, enableClipping);
+  Viewer viewer(scene, sceneType, options);
   viewer.camera.setOrientation(lookFrom,
                                lookAt,
                                lookUp,

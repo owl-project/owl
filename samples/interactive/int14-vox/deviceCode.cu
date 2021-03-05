@@ -69,9 +69,7 @@ struct PerRayData
     vec3f        scattered_direction;
     vec3f        attenuation;
     vec3f        directLight;
-#if ENABLE_TOON_OUTLINE
     float        hitDistance;
-#endif
   } out;
 };
 
@@ -129,9 +127,8 @@ inline __device__
 vec3f tracePrimaryRay(const RayGenData &self,
                 RadianceRay &ray, PerRayData &prd, float &firstHitDistance)
 {
-#if ENABLE_TOON_OUTLINE
-  firstHitDistance = 1e10f;
-#endif
+  if (optixLaunchParams.enableToonOutline)
+    firstHitDistance = 1e10f;
   
   prd.out.scatterEvent = rayDidntHitAnything;
   owl::traceRay(/*accel to trace against*/ optixLaunchParams.world,
@@ -148,9 +145,10 @@ vec3f tracePrimaryRay(const RayGenData &self,
                    /* direction: */ prd.out.scattered_direction,
                    /* tmin     : */ 1e-3f,
                    /* tmax     : */ 1e10f);
-#if ENABLE_TOON_OUTLINE
-    firstHitDistance = prd.out.hitDistance;
-#endif
+
+    if (optixLaunchParams.enableToonOutline) {
+      firstHitDistance = prd.out.hitDistance;
+    }
   }
   return prd.out.directLight;
 }
@@ -245,8 +243,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     vec3f color = tracePrimaryRay(self, ray, prd, firstHitDistance);
 
     float visibility = 1.f;
-#if ENABLE_TOON_OUTLINE
-    if (1 /*optixLaunchParams.enableToonOutline*/ ) {
+    if (optixLaunchParams.enableToonOutline) {
 
       // Feature size control for outlines
       const float outlineDepthBias = 5*optixLaunchParams.brickScale;
@@ -254,7 +251,6 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
           rayDir, 0.f, firstHitDistance-outlineDepthBias);
       visibility = traceOutlineShadowRay(optixLaunchParams.world, outlineShadowRay);
     }
-#endif // ENABLE_TOON_OUTLINE
     if (visibility > 0.f) {
       if (prd.out.scatterEvent == rayGotBounced) {
         color += traceBounces(self, ray, prd);
@@ -373,9 +369,10 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   prd.out.scatterEvent = rayGotBounced;
   prd.out.scattered_direction = scatteredDirection;
   prd.out.scattered_origin = hit_P_offset;
-#if ENABLE_TOON_OUTLINE
-  prd.out.hitDistance = length(hit_P - org);
-#endif
+
+  if (optixLaunchParams.enableToonOutline) {
+    prd.out.hitDistance = length(hit_P - org);
+  }
 
 }
 
@@ -388,14 +385,12 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
   vec3f boxmin( indices.x, indices.y, indices.z );
   vec3f boxmax( 1+indices.x, 1+indices.y, 1+indices.z );
 
-#if ENABLE_TOON_OUTLINE
   if (self.enableToonOutline) {
     // bloat the box slightly
     const vec3f boxcenter (indices.x + 0.5f, indices.y + 0.5f, indices.z + 0.5f);
     boxmin = boxcenter + OUTLINE_SCALE*(boxmin-boxcenter);
     boxmax = boxcenter + OUTLINE_SCALE*(boxmax-boxcenter);
   }
-#endif
   
   primBounds = box3f(boxmin, boxmax);
 }
@@ -507,9 +502,10 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
   prd.out.scatterEvent = rayGotBounced;
   prd.out.scattered_direction = scatteredDirection;
   prd.out.scattered_origin = hit_P_offset;
-#if ENABLE_TOON_OUTLINE
-  prd.out.hitDistance = length(hit_P - org);
-#endif
+
+  if (optixLaunchParams.enableToonOutline) {
+    prd.out.hitDistance = length(hit_P - org);
+  }
 
 }
 
