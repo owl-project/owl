@@ -301,7 +301,10 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
                         sizeof(VoxGeomData),
                         voxGeomVars, -1);
   owlGeomTypeSetClosestHit(voxGeomType, 0, module, "VoxGeom");
-  owlGeomTypeSetIntersectProg(voxGeomType, 0, module, "VoxGeom");
+
+  //owlGeomTypeSetIntersectProg(voxGeomType, 0, module, "VoxGeom");
+  owlGeomTypeSetIntersectProg(voxGeomType, 0, module, "VoxGeomMajercik");
+
   owlGeomTypeSetIntersectProg(voxGeomType, 1, module, "VoxGeom");  // for shadow rays
   if (this->enableToonOutline) {
     owlGeomTypeSetIntersectProg(voxGeomType, 2, module, "VoxGeomShadowCullFront");
