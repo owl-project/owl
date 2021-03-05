@@ -61,25 +61,13 @@ extern "C" char ptxCode[];
 const float init_cosFovy = 0.10f;  // small fov to approach isometric
 const vec3f init_lookUp(0.f, 0.f, 1.f);
 
-#if 0
-const vec3f init_lookAt {0.0f};
 const float isometricAngle = 35.564f * M_PIf/180.0f;
 const owl::affine3f cameraRotation = 
   owl::affine3f::rotate(vec3f(0,0,1), M_PIf/4.0f) *
   owl::affine3f::rotate(vec3f(-1,0,0), isometricAngle);
 
 const vec3f init_lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
-#endif
 
-#if 0
-// mechanic2 scene from teaser
-const vec3f init_lookFrom(-6.92038f,-9.00064f,6.3322f);
-#endif
-
-#if 0
-// fire truck for clipping plane image
-const vec3f init_lookFrom(-9.42654f,-19.2523f, 12.8643f);
-#endif
 
 enum SceneType {
   SCENE_TYPE_FLAT=1,
@@ -1065,6 +1053,33 @@ SceneType stringToSceneType(const char *s)
   return SCENE_TYPE_INVALID;
 }
 
+bool stringToCamera(const char *s, vec3f &lookFrom, vec3f &lookAt, vec3f &lookUp)
+{
+  float v[9];
+  if (sscanf_s(s, "%f %f %f  %f %f %f  %f %f %f", 
+        v, v+1, v+2, v+3, v+4, v+5, v+6, v+7, v+8) == 9)
+  {
+    lookFrom = vec3f(v[0], v[1], v[2]);
+    lookAt   = vec3f(v[3], v[4], v[5]);
+    lookUp   = vec3f(v[6], v[7], v[8]);
+    return true;
+  }
+  else if (sscanf_s(s, "%f %f %f  %f %f %f", 
+        v, v+1, v+2, v+3, v+4, v+5 ) == 6)
+  {
+    lookFrom = vec3f(v[0], v[1], v[2]);
+    lookAt   = vec3f(v[3], v[4], v[5]);
+    return true;
+  }
+  else if (sscanf_s(s, "%f %f %f", 
+        v, v+1, v+2) == 3)
+  {
+    lookFrom = vec3f(v[0], v[1], v[2]);
+    return true;
+  }
+  return false;
+}
+
 int main(int ac, char **av)
 {
   LOG("owl::ng example '" << av[0] << "' starting up");
@@ -1075,6 +1090,9 @@ int main(int ac, char **av)
   }
   bool enableGround = true;
   SceneType sceneType = SCENE_TYPE_INSTANCED;
+  vec3f lookFrom = init_lookFrom;
+  vec3f lookAt = init_lookAt;
+  vec3f lookUp = init_lookUp;
   std::vector<std::string> infiles;
   for (int i = 1; i < ac; ++i) {
     std::string arg = av[i];
@@ -1082,15 +1100,29 @@ int main(int ac, char **av)
       enableGround = false;
     } 
     else if (arg == "--scenetype") {
-      if (i+1 < ac) {
-        sceneType = stringToSceneType(av[i+1]);
-        if (sceneType == SCENE_TYPE_INVALID) {
-          LOG("Could not understand scene type: " << av[i+1] << ", exiting.");
-          exit(1);
-        }
-        i++;  // skip arg value
-      } 
-    }else {
+      if (i+1 >= ac) {
+        LOG("Missing argument value for " << arg << ", exiting.");
+        exit(1);
+      }
+      sceneType = stringToSceneType(av[i+1]);
+      if (sceneType == SCENE_TYPE_INVALID) {
+        LOG("Could not understand scene type: " << av[i+1] << ", exiting.");
+        exit(1);
+      }
+      i++;  // skip arg value
+    }
+    else if (arg == "--camera") {
+      if (i+1 >= ac) {
+        LOG("Missing argument value for " << arg << ", exiting.");
+        exit(1);
+      }
+      if (!stringToCamera(av[i+1], lookFrom, lookAt, lookUp)) {
+        LOG("Could not understand camera arguments, exiting.");
+        exit(1);
+      }
+      i++;  // skip arg value
+    }
+    else {
       infiles.push_back(arg);  // assume all other args are file names
     }
   }
@@ -1117,9 +1149,9 @@ int main(int ac, char **av)
   }
 
   Viewer viewer(scene, sceneType, enableGround);
-  viewer.camera.setOrientation(init_lookFrom,
-                               init_lookAt,
-                               init_lookUp,
+  viewer.camera.setOrientation(lookFrom,
+                               lookAt,
+                               lookUp,
                                owl::viewer::toDegrees(acosf(init_cosFovy)));
   viewer.enableFlyMode();
   viewer.enableInspectMode(owl::box3f(vec3f(-1.f),vec3f(+1.f)));
