@@ -55,8 +55,6 @@ OPTIX_MISS_PROGRAM(miss_shadow)()
 typedef enum {
   /*! ray could get properly bounced, and is still alive */
   rayGotBounced,
-  /*! ray could not get scattered, and should get cancelled */
-  rayGotCancelled,
   /*! ray didn't hit anything, and went into the environment */
   rayDidntHitAnything
 } ScatterEvent;
@@ -128,21 +126,47 @@ OutlineShadowRay makeOutlineShadowRay(const vec3f &origin,
   return makeRay<OutlineShadowRay, VISIBILITY_OUTLINE>(origin, direction, tmin, tmax);
 }
 
-
 inline __device__
-vec3f tracePath(const RayGenData &self,
+vec3f tracePrimaryRay(const RayGenData &self,
                 RadianceRay &ray, PerRayData &prd, float &firstHitDistance)
 {
-  vec3f attenuation = 1.f;
-  vec3f directLight = 0.0f;
 #if ENABLE_TOON_OUTLINE
   firstHitDistance = 1e10f;
 #endif
+  
+  prd.out.scatterEvent = rayDidntHitAnything;
+  owl::traceRay(/*accel to trace against*/ optixLaunchParams.world,
+                /*the ray to trace*/ ray,
+                /*prd*/prd,
+                OPTIX_RAY_FLAG_CULL_BACK_FACING_TRIANGLES);
+    
+  if (prd.out.scatterEvent == rayDidntHitAnything)
+    /* ray got 'lost' to the environment - 'light' it with miss
+       shader */
+    return missColor(ray);
+  else { // ray is still alive, and got properly bounced
+    ray = makeRadianceRay(/* origin   : */ prd.out.scattered_origin,
+                   /* direction: */ prd.out.scattered_direction,
+                   /* tmin     : */ 1e-3f,
+                   /* tmax     : */ 1e10f);
+#if ENABLE_TOON_OUTLINE
+    firstHitDistance = prd.out.hitDistance;
+#endif
+  }
+  return prd.out.directLight;
+}
+
+inline __device__
+vec3f traceBounces(const RayGenData &self,
+                RadianceRay &ray, PerRayData &prd)
+{
+  vec3f attenuation = prd.out.attenuation;
+  vec3f directLight = 0.f;
 
   constexpr int MaxDepth = 2;
   
   /* iterative version of recursion, up to max depth */
-  for (int depth=0;depth<MaxDepth;depth++) {
+  for (int depth=1;depth<MaxDepth;depth++) {
     prd.out.scatterEvent = rayDidntHitAnything;
     owl::traceRay(/*accel to trace against*/ optixLaunchParams.world,
                   /*the ray to trace*/ ray,
@@ -153,9 +177,6 @@ vec3f tracePath(const RayGenData &self,
       /* ray got 'lost' to the environment - 'light' it with miss
          shader */
       return directLight + attenuation * missColor(ray);
-    else if (prd.out.scatterEvent == rayGotCancelled)
-      return vec3f(0.f);
-
     else { // ray is still alive, and got properly bounced
       attenuation *= prd.out.attenuation;
       directLight += prd.out.directLight;
@@ -163,11 +184,7 @@ vec3f tracePath(const RayGenData &self,
                      /* direction: */ prd.out.scattered_direction,
                      /* tmin     : */ 1e-3f,
                      /* tmax     : */ 1e10f);
-#if ENABLE_TOON_OUTLINE
-      if (depth == 0) {
-        firstHitDistance = prd.out.hitDistance;
-      }
-#endif
+
     }
   }
   // recursion did not terminate - cancel it but return direct lighting from any previous bounce
@@ -225,11 +242,10 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 
     RadianceRay ray = makeRadianceRay(self.camera.pos, rayDir, 0.f, 1e30f);
 
-    // needed later for outline shader
     float firstHitDistance = 1e10f;
+    vec3f color = tracePrimaryRay(self, ray, prd, firstHitDistance);
 
-    vec3f color = tracePath(self, ray, prd, firstHitDistance);
-
+    float visibility = 1.f;
 #if ENABLE_TOON_OUTLINE
     if (1 /*optixLaunchParams.enableToonOutline*/ ) {
 
@@ -237,12 +253,15 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
       const float outlineDepthBias = 5*optixLaunchParams.brickScale;
       OutlineShadowRay outlineShadowRay = makeOutlineShadowRay(self.camera.pos,
           rayDir, 0.f, firstHitDistance-outlineDepthBias);
-      float vis = traceOutlineShadowRay(optixLaunchParams.world, outlineShadowRay);
-      color *= vis;
+      visibility = traceOutlineShadowRay(optixLaunchParams.world, outlineShadowRay);
     }
 #endif // ENABLE_TOON_OUTLINE
-
-    accumColor += color;
+    if (visibility > 0.f) {
+      if (prd.out.scatterEvent == rayGotBounced) {
+        color += traceBounces(self, ray, prd);
+      } 
+      accumColor += color*visibility;
+    }
   }
     
   vec4f rgba {accumColor / NUM_SAMPLES_PER_PIXEL, 1.0f};
