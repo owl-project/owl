@@ -58,6 +58,7 @@ using filesystem = std::filesystem
 extern "C" char ptxCode[];
 
 
+const vec3f init_lookAt {0.0f};
 const float init_cosFovy = 0.10f;  // small fov to approach isometric
 const vec3f init_lookUp(0.f, 0.f, 1.f);
 
