@@ -375,6 +375,16 @@ OWL_API void
 owlContextSetRayTypeCount(OWLContext context,
                           size_t numRayTypes);
 
+// ADVANCED:
+// This tells OWL/OptiX to specialize for fixed values of certain launch parameters
+// when compiling modules, rather than letting them vary at runtime.
+// See section 6.3.1 of the OptiX 7.2 programming guide.
+// OWL stores a copy of the array internally.
+OWL_API void
+owlContextSetBoundValues(OWLContext context,
+                         OptixModuleCompileBoundValueEntry *boundValues,
+                         size_t numBoundValues);
+
 /*! sets maximum instancing depth for the given context:
 
   '0' means 'no instancing allowed, only bottom-level accels; Note

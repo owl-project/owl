@@ -90,6 +90,15 @@ namespace owl {
     checkGet(_context)->setRayTypeCount(numRayTypes);
   }
 
+  OWL_API void
+  owlContextSetBoundValues(OWLContext _context,
+                         OptixModuleCompileBoundValueEntry *boundValues,
+                         size_t numBoundValues)
+  {
+    LOG_API_CALL();
+    checkGet(_context)->setBoundValues(boundValues, numBoundValues);
+  }
+
 
   /*! sets maximum instancing depth for the given context:
 

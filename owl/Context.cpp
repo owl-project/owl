@@ -527,6 +527,15 @@ namespace owl {
     this->numRayTypes = int(rayTypeCount);
   }
 
+  void Context::setBoundValues(OptixModuleCompileBoundValueEntry *boundValues,
+                              size_t numBoundValues)
+  {
+    this->boundValues.resize(numBoundValues);
+    for (size_t i = 0; i < numBoundValues; ++i) {
+      this->boundValues[i] = boundValues[i];
+    }
+  }
+
   /*! sets maximum instancing depth for the given context:
 
     '0' means 'no instancing allowed, only bottom-level accels; 

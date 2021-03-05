@@ -263,6 +263,10 @@ namespace owl {
     moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
     moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
   }
+
+    // Bound values of launch params
+    moduleCompileOptions.boundValues = parent->boundValues.data();
+    moduleCompileOptions.numBoundValues = (unsigned int)parent->boundValues.size();
     
     // ------------------------------------------------------------------
     // configure default pipeline compile options
