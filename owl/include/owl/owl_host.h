@@ -644,6 +644,9 @@ owlBufferGetPointer(OWLBuffer buffer, int deviceID);
 OWL_API OptixTraversableHandle 
 owlGroupGetTraversable(OWLGroup group, int deviceID);
 
+OWL_API uint64_t
+owlGroupGetBvhSizeInBytes(OWLGroup group, int deviceID);
+
 OWL_API void 
 owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 
