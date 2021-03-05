@@ -69,8 +69,7 @@ namespace owl {
       built */
     void setRayTypeCount(size_t rayTypeCount);
 
-    void setBoundValues(OptixModuleCompileBoundValueEntry *boundValues,
-                        size_t numBoundValues);
+    void setBoundValues(const std::vector<OptixModuleCompileBoundValueEntry> &boundValues);
     
     /*! enables motoin blur - should be done right after context
       creation, and before SBT and pipeline get built */

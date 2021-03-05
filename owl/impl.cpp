@@ -92,11 +92,20 @@ namespace owl {
 
   OWL_API void
   owlContextSetBoundValues(OWLContext _context,
-                         OptixModuleCompileBoundValueEntry *boundValues,
+                         const OptixModuleCompileBoundValueEntry *_boundValues,
                          size_t numBoundValues)
   {
     LOG_API_CALL();
-    checkGet(_context)->setBoundValues(boundValues, numBoundValues);
+    if (_boundValues == nullptr || numBoundValues == 0) 
+      return;
+
+    // check and pack into vector
+    for (size_t i = 0; i < numBoundValues; ++i) {
+      assert(_boundValues[i].boundValuePtr);
+    }
+    std::vector<OptixModuleCompileBoundValueEntry> boundValues(numBoundValues);
+    std::copy(_boundValues, _boundValues+numBoundValues, boundValues.begin());
+    checkGet(_context)->setBoundValues(boundValues);
   }
 
 

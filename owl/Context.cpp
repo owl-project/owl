@@ -527,13 +527,9 @@ namespace owl {
     this->numRayTypes = int(rayTypeCount);
   }
 
-  void Context::setBoundValues(OptixModuleCompileBoundValueEntry *boundValues,
-                              size_t numBoundValues)
+  void Context::setBoundValues(const std::vector<OptixModuleCompileBoundValueEntry> &boundValues)
   {
-    this->boundValues.resize(numBoundValues);
-    for (size_t i = 0; i < numBoundValues; ++i) {
-      this->boundValues[i] = boundValues[i];
-    }
+    this->boundValues = boundValues;
   }
 
   /*! sets maximum instancing depth for the given context:

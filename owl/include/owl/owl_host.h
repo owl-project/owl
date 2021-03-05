@@ -382,7 +382,7 @@ owlContextSetRayTypeCount(OWLContext context,
 // OWL stores a copy of the array internally.
 OWL_API void
 owlContextSetBoundValues(OWLContext context,
-                         OptixModuleCompileBoundValueEntry *boundValues,
+                         const OptixModuleCompileBoundValueEntry *boundValues,
                          size_t numBoundValues);
 
 /*! sets maximum instancing depth for the given context:
