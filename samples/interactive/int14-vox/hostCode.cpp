@@ -216,7 +216,7 @@ void Viewer::key(char key, const vec2i &where)
       return;
 
     case 'p':
-      const std::string filename = "D:\\screenshot.png";
+      const std::string filename = "screenshot.png";
       LOG("Saving screenshot to: " << filename);
       screenShot(filename);
       break;
@@ -290,9 +290,8 @@ void logSceneMemory(size_t bottomLevelBvhSizeInBytes,
   LOG("Scene IAS memory: " << owl::common::prettyNumber(topLevelBvhSizeInBytes));
   LOG("Scene buffer memory: " << owl::common::prettyNumber(allocator.bytesAllocated));
 
-  LOG("Scene total memory: " 
-      << owl::common::prettyNumber(
-        bottomLevelBvhSizeInBytes + topLevelBvhSizeInBytes + allocator.bytesAllocated));
+  size_t total = bottomLevelBvhSizeInBytes + topLevelBvhSizeInBytes + allocator.bytesAllocated;
+  LOG("Scene total memory: "  << total << " (" << owl::common::prettyNumber(total) << ")");
 }
 
 
@@ -1171,6 +1170,7 @@ int main(int ac, char **av)
     else if (arg == "--save") {
       checkArgValue(i, arg);
       outFileName = av[i+1];
+      i++;
     }
     else if (arg == "--scenetype") {
       checkArgValue(i, arg);
@@ -1231,9 +1231,9 @@ int main(int ac, char **av)
   // now that everything is ready: launch it ....
   // ##################################################################
   if (!outFileName.empty()) {
-    LOG("Rendering 100 frames and exiting");
+    LOG("Rendering frames and exiting");
     viewer.showAndRun([&viewer, outFileName]() {
-      if (viewer.frameID >= 100) {
+      if (viewer.frameID >= 300) {
         viewer.screenShot(outFileName);
         return false;
       }
