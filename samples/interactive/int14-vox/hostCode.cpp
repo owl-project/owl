@@ -84,6 +84,7 @@ struct Viewer : public owl::viewer::OWLViewer
     bool enableGround = true;
     bool enableClipping = true;
     bool enableToonOutline = true;
+    bool enableCulling = true;
   };
 
   Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options);
@@ -127,8 +128,9 @@ struct Viewer : public owl::viewer::OWLViewer
   float sunTheta = 0.785398f;  // elevation angle, 0 at horizon
   bool sunDirty = true;
   bool enableGround = true;
-  bool enableClipping = true;
+  bool enableClipping = true;  // enable clipping plane in shader
   bool enableToonOutline = true;
+  bool enableCulling = true;  // cull hidden bricks
   
 };
 
@@ -358,7 +360,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
     const ogt_vox_model *vox_model = scene->models[it.first];
     assert(vox_model);
-    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, !enableClipping);
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, enableCulling);
 
     LOG("building user geometry for model ...");
 
@@ -537,7 +539,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
   for (auto it : modelToInstances) {
     const ogt_vox_model *vox_model = scene->models[it.first];
     assert(vox_model);
-    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, !enableClipping);
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, enableCulling);
 
     LOG("building flat triangle geometry for model ...");
 
@@ -819,7 +821,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
     assert(vox_model);
 
     // Note: for scenes with many instances of a model, cache this or rearrange loop
-    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, !enableClipping);
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, enableCulling);
     totalSolidVoxelCount += voxdata.size();
 
     // Color indices for this model
@@ -935,7 +937,8 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options)
   : enableGround(options.enableGround), 
   enableClipping(options.enableClipping), 
-  enableToonOutline(options.enableToonOutline)
+  enableToonOutline(options.enableToonOutline),
+  enableCulling(options.enableCulling)
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
@@ -1149,7 +1152,11 @@ int main(int ac, char **av)
     }
     else if (arg == "--no-outlines") {
       options.enableToonOutline = false;
-    }else if (arg == "--scenetype") {
+    }
+    else if (arg == "--no-culling") {
+      options.enableCulling = false;
+    }
+    else if (arg == "--scenetype") {
       if (i+1 >= ac) {
         LOG("Missing argument value for " << arg << ", exiting.");
         exit(1);
