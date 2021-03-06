@@ -1135,12 +1135,24 @@ int main(int ac, char **av)
       LOG("need at least 1 expected argument for .vox file. Exiting");
       exit(1);
   }
+
+  auto checkArgValue = [ac](int k, const std::string& arg) {
+    if (k+1 >= ac) {
+      LOG("Missing argument value for " << arg << ", exiting.");
+      exit(1);
+    }
+  };
+
   Viewer::GlobalOptions options;
   SceneType sceneType = SCENE_TYPE_INSTANCED;
+
   vec3f lookFrom = init_lookFrom;
   vec3f lookAt = init_lookAt;
   vec3f lookUp = init_lookUp;
+
   std::vector<std::string> infiles;
+  std::string outFileName;
+
   for (int i = 1; i < ac; ++i) {
     std::string arg = av[i];
     if (arg == "--no-ground") {
@@ -1156,11 +1168,12 @@ int main(int ac, char **av)
     else if (arg == "--no-culling") {
       options.enableCulling = false;
     }
+    else if (arg == "--save") {
+      checkArgValue(i, arg);
+      outFileName = av[i+1];
+    }
     else if (arg == "--scenetype") {
-      if (i+1 >= ac) {
-        LOG("Missing argument value for " << arg << ", exiting.");
-        exit(1);
-      }
+      checkArgValue(i, arg);
       sceneType = stringToSceneType(av[i+1]);
       if (sceneType == SCENE_TYPE_INVALID) {
         LOG("Could not understand scene type: " << av[i+1] << ", exiting.");
@@ -1169,15 +1182,16 @@ int main(int ac, char **av)
       i++;  // skip arg value
     }
     else if (arg == "--camera") {
-      if (i+1 >= ac) {
-        LOG("Missing argument value for " << arg << ", exiting.");
-        exit(1);
-      }
+      checkArgValue(i, arg);
       if (!stringToCamera(av[i+1], lookFrom, lookAt, lookUp)) {
         LOG("Could not understand camera arguments, exiting.");
         exit(1);
       }
       i++;  // skip arg value
+    }
+    else if (arg[0] == '-') {
+      LOG("Unrecognized argument: " << arg << ", exiting.");
+      exit(1);
     }
     else {
       infiles.push_back(arg);  // assume all other args are file names
@@ -1216,7 +1230,17 @@ int main(int ac, char **av)
   // ##################################################################
   // now that everything is ready: launch it ....
   // ##################################################################
-  viewer.showAndRun();
+  if (!outFileName.empty()) {
+    LOG("Rendering 100 frames and exiting");
+    viewer.showAndRun([&viewer, outFileName]() {
+      if (viewer.frameID >= 100) {
+        viewer.screenShot(outFileName);
+        return false;
+      }
+      return true; });
+  } else {
+    viewer.showAndRun();
+  }
 
   ogt_vox_destroy_scene(scene);
 }
