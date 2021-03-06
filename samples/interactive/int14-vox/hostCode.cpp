@@ -225,29 +225,43 @@ void Viewer::key(char key, const vec2i &where)
 // Adapted from ogt demo code. 
 // The OGT format stores voxels as solid grids; we only need to store the nonempty entries on device.
 
-std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model)
+std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model, bool cullHidden)
 {
-  uint32_t solid_voxel_count = 0;
+  // is the voxel at the given index opaque?
+  auto isOpaque = [model](int x, int y, int z) -> bool {
+    if (x < 0 || x >= (int)model->size_x) return false;
+    if (y < 0 || y >= (int)model->size_y) return false;
+    if (z < 0 || z >= (int)model->size_z) return false;
+    int index = z*model->size_x*model->size_y + y*model->size_x + x;
+    uint8_t ci = model->voxel_data[index];
+    return ci != 0;
+  };
+
   uint32_t voxel_index = 0;
   std::vector<uchar4> solid_voxels;
   solid_voxels.reserve(model->size_z * model->size_y * model->size_x);
-  for (uint32_t z = 0; z < model->size_z; z++) {
-    for (uint32_t y = 0; y < model->size_y; y++) {
-      for (uint32_t x = 0; x < model->size_x; x++, voxel_index++) {
-        // if color index == 0, this voxel is empty, otherwise it is solid.
-        uint8_t color_index = model->voxel_data[voxel_index];
-        bool is_voxel_solid = (color_index != 0);
-        // add to our accumulator
-        solid_voxel_count += (is_voxel_solid ? 1 : 0);
-        if (is_voxel_solid) {
+  for (int z = 0; z < (int)model->size_z; z++) {
+    for (int y = 0; y < (int)model->size_y; y++) {
+      for (int x = 0; x < (int)model->size_x; x++, voxel_index++) {
+        uint8_t ci = model->voxel_data[voxel_index];
+        if (ci) {
+          if (cullHidden) {
+            if (isOpaque(x+1, y, z) && isOpaque(x-1, y, z) &&
+                isOpaque(x, y+1, z) && isOpaque(x, y-1, z) &&
+                isOpaque(x, y, z+1) && isOpaque(x, y, z-1)) 
+            {
+              // all 6 face-neighbors of the brick are visible, so this brick is hidden
+              continue;
+            }
+          }
           solid_voxels.push_back(
               // Switch to Y-up
-              make_uchar4(uint8_t(x), uint8_t(y), uint8_t(z), color_index));
+              make_uchar4(uint8_t(x), uint8_t(y), uint8_t(z), ci));
         }
       }
     }
   }
-  LOG("solid voxel count: " << solid_voxel_count);
+  LOG("solid voxel count: " << solid_voxels.size());
   return solid_voxels;
 }
 
@@ -344,7 +358,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
     const ogt_vox_model *vox_model = scene->models[it.first];
     assert(vox_model);
-    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, !enableClipping);
 
     LOG("building user geometry for model ...");
 
@@ -523,7 +537,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
   for (auto it : modelToInstances) {
     const ogt_vox_model *vox_model = scene->models[it.first];
     assert(vox_model);
-    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, !enableClipping);
 
     LOG("building flat triangle geometry for model ...");
 
@@ -805,7 +819,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
     assert(vox_model);
 
     // Note: for scenes with many instances of a model, cache this or rearrange loop
-    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, !enableClipping);
     totalSolidVoxelCount += voxdata.size();
 
     // Color indices for this model
