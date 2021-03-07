@@ -84,7 +84,7 @@ struct Viewer : public owl::viewer::OWLViewer
     bool enableGround = true;
     bool enableClipping = true;
     bool enableToonOutline = true;
-    bool enableCulling = true;
+    bool enableCulling = false;
   };
 
   Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options);
@@ -130,7 +130,7 @@ struct Viewer : public owl::viewer::OWLViewer
   bool enableGround = true;
   bool enableClipping = true;  // enable clipping plane in shader
   bool enableToonOutline = true;
-  bool enableCulling = true;  // cull hidden bricks
+  bool enableCulling = false;  // cull hidden bricks
   
 };
 
@@ -1164,8 +1164,8 @@ int main(int ac, char **av)
     else if (arg == "--no-outlines") {
       options.enableToonOutline = false;
     }
-    else if (arg == "--no-culling") {
-      options.enableCulling = false;
+    else if (arg == "--cull-hidden") {
+      options.enableCulling = true;
     }
     else if (arg == "--save") {
       checkArgValue(i, arg);
