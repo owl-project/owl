@@ -251,12 +251,12 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
           rayDir, 0.f, firstHitDistance-outlineDepthBias);
       visibility = traceOutlineShadowRay(optixLaunchParams.world, outlineShadowRay);
     }
-    if (visibility > 0.f) {
-      if (prd.out.scatterEvent == rayGotBounced) {
-        color += traceBounces(self, ray, prd);
-      } 
-      accumColor += color*visibility;
-    }
+    // Note: measurable speedup from tracing bounce rays unconditionally without
+    // checking visibility first.
+    if (prd.out.scatterEvent == rayGotBounced) {
+      color += traceBounces(self, ray, prd);
+    } 
+    accumColor += color*visibility;
   }
     
   vec4f rgba {accumColor / NUM_SAMPLES_PER_PIXEL, 1.0f};
