@@ -14,10 +14,13 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+include_directories(${OWL_VIEWER_INCLUDES})
+add_definitions(${OWL_CXX_FLAGS})
+
 cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
-add_executable(int14-vox
+add_executable(voxrender
   constants.h
   deviceCode.h
   hostCode.cpp
@@ -25,7 +28,7 @@ add_executable(int14-vox
   readVox.h
   ${ptxCode}
   )
-target_link_libraries(int14-vox
+target_link_libraries(voxrender
   ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
   )
