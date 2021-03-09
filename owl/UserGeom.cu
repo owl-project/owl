@@ -179,7 +179,8 @@ namespace owl {
     tempMem.alloc(geomType->varStructSize);
     
     DeviceData &dd = getDD(device);
-    dd.internalBufferForBoundsProgram.allocManaged(primCount*sizeof(box3f));
+    dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
+    // dd.internalBufferForBoundsProgram.allocManaged(primCount*sizeof(box3f));
 
     writeVariables(userGeomData.data(),device);
         
