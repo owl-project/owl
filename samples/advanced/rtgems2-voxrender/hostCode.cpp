@@ -1238,7 +1238,7 @@ int main(int ac, char **av)
   if (!outFileName.empty()) {
     LOG("Rendering frames and exiting");
     viewer.showAndRun([&viewer, outFileName]() {
-      if (viewer.frameID >= 300) {
+      if (viewer.frameID >= 4800) {
         viewer.screenShot(outFileName);
         return false;
       }
