@@ -1080,9 +1080,14 @@ void Viewer::render()
     frameID = 0;
   }
     
-  owlParamsSet1i(launchParams, "frameID", frameID);
-  frameID++;
-  owlLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);
+  // Since our progressive launches are faster than 60 fps on recent hardware, 
+  // we loop over multiple subpixels here per display update.
+  constexpr int NumSamples=4;
+  for (int i = 0; i < NumSamples; ++i) {
+    owlParamsSet1i(launchParams, "frameID", frameID);
+    frameID++;
+    owlLaunch2D(rayGen,fbSize.x,fbSize.y, launchParams);
+  }
   owlLaunchSync(launchParams);
 }
 

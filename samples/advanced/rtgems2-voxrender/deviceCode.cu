@@ -225,7 +225,9 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   PerRayData prd;
   prd.random.init(fbIndex, optixLaunchParams.frameID);
 
-  const int NUM_SAMPLES_PER_PIXEL = 4;
+  // Note: measured to be faster to keep the loop over subpixels at the launch level,
+  // not inside raygen.  Maybe a long tail effect?
+  constexpr int NUM_SAMPLES_PER_PIXEL = 1;
   vec3f accumColor = 0.f;
 
   for (int sampleID=0;sampleID<NUM_SAMPLES_PER_PIXEL;sampleID++) {
