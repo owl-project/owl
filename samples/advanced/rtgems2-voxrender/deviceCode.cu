@@ -125,30 +125,26 @@ OutlineShadowRay makeOutlineShadowRay(const vec3f &origin,
 
 inline __device__
 vec3f tracePrimaryRay(const RayGenData &self,
-                RadianceRay &ray, PerRayData &prd, float &firstHitDistance)
+                RadianceRay &ray, PerRayData &prd)
 {
-  if (optixLaunchParams.enableToonOutline)
-    firstHitDistance = 1e10f;
+  if (optixLaunchParams.enableToonOutline) {
+    prd.out.hitDistance = 1e10f;
+  }
   
   prd.out.scatterEvent = rayDidntHitAnything;
-  owl::traceRay(/*accel to trace against*/ optixLaunchParams.world,
-                /*the ray to trace*/ ray,
-                /*prd*/prd,
+  owl::traceRay(optixLaunchParams.world,
+                ray,
+                prd,
                 OPTIX_RAY_FLAG_CULL_BACK_FACING_TRIANGLES);
     
-  if (prd.out.scatterEvent == rayDidntHitAnything)
-    /* ray got 'lost' to the environment - 'light' it with miss
-       shader */
+  if (prd.out.scatterEvent == rayDidntHitAnything) {
     return missColor(ray);
+  }
   else { // ray is still alive, and got properly bounced
-    ray = makeRadianceRay(/* origin   : */ prd.out.scattered_origin,
-                   /* direction: */ prd.out.scattered_direction,
-                   /* tmin     : */ 1e-3f,
-                   /* tmax     : */ 1e10f);
-
-    if (optixLaunchParams.enableToonOutline) {
-      firstHitDistance = prd.out.hitDistance;
-    }
+    ray = makeRadianceRay(prd.out.scattered_origin,
+                          prd.out.scattered_direction,
+                          1e-3f,
+                          1e10f);
   }
   return prd.out.directLight;
 }
@@ -241,14 +237,14 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 
     RadianceRay ray = makeRadianceRay(self.camera.pos, rayDir, 0.f, 1e30f);
 
-    float firstHitDistance = 1e10f;
-    vec3f color = tracePrimaryRay(self, ray, prd, firstHitDistance);
+    vec3f color = tracePrimaryRay(self, ray, prd);
 
     float visibility = 1.f;
     if (optixLaunchParams.enableToonOutline) {
 
       // Feature size control for outlines
       const float outlineDepthBias = 5*optixLaunchParams.brickScale;
+      const float firstHitDistance = prd.out.hitDistance; // Note: dependency on primary ray
       OutlineShadowRay outlineShadowRay = makeOutlineShadowRay(self.camera.pos,
           rayDir, 0.f, firstHitDistance-outlineDepthBias);
       visibility = traceOutlineShadowRay(optixLaunchParams.world, outlineShadowRay);
