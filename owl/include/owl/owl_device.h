@@ -134,15 +134,18 @@ namespace owl {
     inline __device__ RayT(const vec3f &origin,
                           const vec3f &direction,
                           float tmin,
-                          float tmax)
+                          float tmax,
+                          OptixVisibilityMask visibilityMask=(OptixVisibilityMask)(-1))
       : origin(origin),
         direction(direction),
         tmin(tmin),
-        tmax(tmax)
+        tmax(tmax),
+        visibilityMask(visibilityMask)
     {}
     
     vec3f origin, direction;
     float tmin=0.f,tmax=1e30f,time=0.f;
+    OptixVisibilityMask visibilityMask=(OptixVisibilityMask)-1;
   };
   typedef RayT<0,1> Ray;
 
@@ -164,7 +167,7 @@ namespace owl {
                ray.tmin,
                ray.tmax,
                ray.time,
-               (OptixVisibilityMask)-1,
+               ray.visibilityMask,
                /*rayFlags     */rayFlags,
                /*SBToffset    */ray.rayType,
                /*SBTstride    */ray.numRayTypes,
@@ -191,7 +194,7 @@ namespace owl {
                ray.tmin,
                ray.tmax,
                ray.time,
-               (OptixVisibilityMask)-1,
+               ray.visibilityMask,
                /*rayFlags     */0u,
                /*SBToffset    */ray.rayType + numRayTypes*sbtOffset,
                /*SBTstride    */numRayTypes,

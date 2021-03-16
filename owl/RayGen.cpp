@@ -40,7 +40,8 @@ namespace owl {
                          const std::vector<OWLVarDecl> &varDecls)
     : SBTObjectType(context,context->rayGenTypes,varStructSize,varDecls),
       module(module),
-      progName(progName)
+      progName(progName),
+      annotatedProgName("__raygen__"+progName)
   {}
   
   /*! pretty-typecast into derived classes */

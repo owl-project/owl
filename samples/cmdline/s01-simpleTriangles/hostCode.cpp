@@ -200,7 +200,6 @@ int main(int ac, char **av)
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################
-  
   owlBuildPrograms(context);
   owlBuildPipeline(context);
   owlBuildSBT(context);
@@ -220,7 +219,6 @@ int main(int ac, char **av)
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   LOG_OK("written rendered frame buffer to file "<<outFileName);
-
   // ##################################################################
   // and finally, clean up
   // ##################################################################

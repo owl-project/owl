@@ -147,7 +147,11 @@ namespace owl {
 #else
     LOG("initializing optix 7");
 #endif
-    OPTIX_CHECK(optixInit());
+    static bool initialized = false;
+    if (!initialized) {
+      OPTIX_CHECK(optixInit());
+      initialized = true;
+    }
     
     // from here on, we need a non-empty list of requested device IDs
     assert(deviceIDs != nullptr && numDevices > 0);
@@ -204,6 +208,19 @@ namespace owl {
     OPTIX_CHECK(optixDeviceContextSetLogCallback
                 (optixContext,context_log_cb,this,4));
   }
+
+  DeviceContext::~DeviceContext()
+  {
+    destroyMissPrograms();
+    destroyRayGenPrograms();
+    destroyHitGroupPrograms();
+    destroyPrograms();
+    destroyPipeline();
+    
+    OPTIX_CHECK(optixDeviceContextDestroy(optixContext));
+    cudaStreamDestroy(stream);
+  }
+  
   
   /*! return CUDA's name string for given device */
   std::string DeviceContext::getDeviceName() const
@@ -371,10 +388,8 @@ namespace owl {
       OptixModule optixModule = module->getDD(shared_from_this()).module;
       assert(optixModule);
       
-      const std::string annotatedProgName
-        = std::string("__miss__")+prog->progName;
       pgDesc.miss.module            = optixModule;
-      pgDesc.miss.entryFunctionName = annotatedProgName.c_str();
+      pgDesc.miss.entryFunctionName = prog->annotatedProgName.c_str();
       
       char log[2048];
       size_t sizeof_log = sizeof( log );
@@ -422,10 +437,8 @@ namespace owl {
       assert(optixModule);
       
       pgDesc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
-      const std::string annotatedProgName
-        = std::string("__raygen__")+prog->progName;
       pgDesc.raygen.module            = optixModule;
-      pgDesc.raygen.entryFunctionName = annotatedProgName.c_str();
+      pgDesc.raygen.entryFunctionName = prog->annotatedProgName.c_str();
       
       char log[2048];
       size_t sizeof_log = sizeof( log );

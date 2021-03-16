@@ -15,6 +15,9 @@
 # ======================================================================== #
 
 OPTION(OWL_USE_TBB "Use TBB to parallelize host-side code?" ON)
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)
+endif()
 
 if (OWL_USE_TBB)
   find_package(TBB)

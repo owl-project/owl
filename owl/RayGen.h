@@ -61,6 +61,8 @@ namespace owl {
     
     /*! name of the program within this module */
     const std::string progName;
+    /*! the name, annotated wiht optix' "__raygen__" */
+    const std::string annotatedProgName;
   };
   
   /*! an actual instance of a raygen program - defined by its type and

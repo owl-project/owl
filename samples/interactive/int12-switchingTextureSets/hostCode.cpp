@@ -404,7 +404,7 @@ void Viewer::render()
   double t = animSpeed * (getCurrentTime() - t0);
   for (size_t i=0;i<boxTransforms.size();i++) {
     boxTransforms[i] = boxAnimStates[i].getTransform((float)t);
-    owlInstanceGroupSetTransform(world,i,
+    owlInstanceGroupSetTransform(world,(int)i,
                                  (const float*)&boxTransforms[i],
                                  OWL_MATRIX_FORMAT_OWL);
   }

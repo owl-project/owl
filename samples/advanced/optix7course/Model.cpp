@@ -209,7 +209,7 @@ namespace osc {
             if (idx.x < 0 || idx.x >= (int)mesh->vertex.size() ||
                 idx.y < 0 || idx.y >= (int)mesh->vertex.size() ||
                 idx.z < 0 || idx.z >= (int)mesh->vertex.size())
-              { PING; PRINT(idx); PRINT(mesh->vertex.size()); }
+              throw std::runtime_error("invalid triangle indices");
           }
           model->meshes.push_back(mesh);
         }
