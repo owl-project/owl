@@ -60,7 +60,7 @@ namespace owl {
                                    numRequestedDevices))
   {
     enablePeerAccess();
-    
+
     LaunchParamsType::SP emptyLPType
       = createLaunchParamsType(0,{});
     dummyLaunchParams = createLaunchParams(emptyLPType);
@@ -323,7 +323,7 @@ namespace owl {
 
   Module::SP Context::createModule(const std::string &ptxCode)
   {
-    Module::SP module = std::make_shared<Module>(this,ptxCode);//,modules.allocID());;
+    Module::SP module = std::make_shared<Module>(this,ptxCode);
     assert(module);
     module->createDeviceData(getDevices());
     return module;

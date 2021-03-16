@@ -544,6 +544,16 @@ owlInstanceGroupCreate(OWLContext context,
 OWL_API void owlGroupBuildAccel(OWLGroup group);
 OWL_API void owlGroupRefitAccel(OWLGroup group);
 
+/*! returns the (device) memory used for this group's acceleration
+    structure (but _excluding_ the memory for the geometries
+    itself). "memFinal" is how much memory is used for the _final_
+    version of the BVH (after it is done building), "memPeak" is peak
+    memory used during construction. passing a NULL pointer to any
+    value is valid; these values will get ignored. */
+OWL_API void owlGroupGetAccelSize(OWLGroup group,
+                                  size_t *p_memFinal,
+                                  size_t *p_memPeak);
+                                  
 OWL_API OWLGeomType
 owlGeomTypeCreate(OWLContext context,
                   OWLGeomKind kind,
@@ -750,6 +760,11 @@ owlInstanceGroupSetTransforms(OWLGroup group,
 OWL_API void
 owlInstanceGroupSetInstanceIDs(OWLGroup group,
                                const uint32_t *instanceIDs);
+
+OWL_API void
+owlInstanceGroupSetVisibilityMasks(OWLGroup group,
+                               const uint8_t *visibilityMasks);
+
 
 OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,
