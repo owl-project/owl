@@ -1394,9 +1394,6 @@ namespace owl {
     group->setTransforms(timeStep,floatsForThisStimeStep,matrixFormat);
   }
   
-  /*! this function allows to set up to N different arrays of trnsforms
-    for motion blur; the first such array is used as transforms for
-    t=0, the last one for t=1.  */
   OWL_API void
   owlInstanceGroupSetInstanceIDs(OWLGroup _group,
                                  const uint32_t *instanceIDs)
@@ -1408,6 +1405,19 @@ namespace owl {
     assert(group);
 
     group->setInstanceIDs(instanceIDs);
+  }
+
+  OWL_API void
+  owlInstanceGroupSetVisibilityMasks(OWLGroup _group,
+                                     const uint8_t *visibilityMasks)
+  {
+    LOG_API_CALL();
+
+    assert(_group);
+    InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+    assert(group);
+
+    group->setVisibilityMasks(visibilityMasks);
   }
   
   OWL_API void

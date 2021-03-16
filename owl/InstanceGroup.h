@@ -62,6 +62,10 @@ namespace owl {
     /* set instance IDs to use for the children - MUST be an array of
        children.size() items */
     void setInstanceIDs(const uint32_t *instanceIDs);
+
+    /* set visibility masks to use for the children - MUST be an array of
+       children.size() items */
+    void setVisibilityMasks(const uint8_t *visibilityMasks);
       
     void buildAccel() override;
     void refitAccel() override;
@@ -94,6 +98,12 @@ namespace owl {
       specified we/optix will fill in automatically using
       instanceID=childID */
     std::vector<uint32_t>   instanceIDs;
+
+    /*! vector of visibility masks to use for these instances - if not
+      specified we/optix will fill in automatically using
+      visibility=255 */
+    std::vector<uint8_t> visibilityMasks;
+
   };
 
   // ------------------------------------------------------------------

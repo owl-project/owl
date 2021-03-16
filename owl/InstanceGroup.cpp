@@ -98,7 +98,15 @@ namespace owl {
   /* set instance IDs to use for the children - MUST be an array of children.size() items */
   void InstanceGroup::setInstanceIDs(const uint32_t *_instanceIDs)
   {
+    instanceIDs.resize(children.size());
     std::copy(_instanceIDs,_instanceIDs+instanceIDs.size(),instanceIDs.data());
+  }
+
+  /* set visibility masks to use for the children - MUST be an array of children.size() items */
+  void InstanceGroup::setVisibilityMasks(const uint8_t *_visibilityMasks)
+  {
+    visibilityMasks.resize(children.size());
+    std::copy(_visibilityMasks,_visibilityMasks+visibilityMasks.size(),visibilityMasks.data());
   }
   
   void InstanceGroup::setChild(size_t childID, Group::SP child)
@@ -190,9 +198,8 @@ namespace owl {
         
       oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
       oi.instanceId        = (instanceIDs.empty())?uint32_t(childID):instanceIDs[childID];
-      oi.visibilityMask    = 255;
+      oi.visibilityMask    = (visibilityMasks.empty()) ? 255 : visibilityMasks[childID];
       oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
-      oi.visibilityMask    = 255;
       oi.traversableHandle = child->getTraversable(device);
       assert(oi.traversableHandle);
       
@@ -420,7 +427,7 @@ namespace owl {
       oi.flags             = OPTIX_INSTANCE_FLAG_NONE;
       oi.instanceId        = (instanceIDs.empty())?uint32_t(childID):instanceIDs[childID];
       oi.sbtOffset         = context->numRayTypes * child->getSBTOffset();
-      oi.visibilityMask    = 1; //255;
+      oi.visibilityMask    = (visibilityMasks.empty()) ? 255 : visibilityMasks[childID];
       oi.traversableHandle = childMotionHandle; 
       optixInstances[childID] = oi;
     }
