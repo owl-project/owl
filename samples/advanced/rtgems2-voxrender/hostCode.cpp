@@ -294,6 +294,13 @@ void logSceneMemory(size_t bottomLevelBvhSizeInBytes,
   LOG("Scene total memory: "  << total << " (" << owl::common::prettyNumber(total) << ")");
 }
 
+size_t getAccelSizeInBytes(OWLGroup group)
+{
+  size_t finalSize = 0u;
+  owlGroupGetAccelSize(group, &finalSize, nullptr);
+  return finalSize;
+}
+
 
 OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
     box3f &sceneBox) 
@@ -382,7 +389,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     // ------------------------------------------------------------------
     OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
     owlGroupBuildAccel(userGeomGroup);
-    bottomLevelBvhSizeInBytes += owlGroupGetBvhSizeInBytes(userGeomGroup, 0);
+    bottomLevelBvhSizeInBytes += getAccelSizeInBytes(userGeomGroup);
 
     LOG("adding (" << it.second.size() << ") instance transforms for model ...");
     for (uint32_t instanceIndex : it.second) {
@@ -451,7 +458,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
     OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
     owlGroupBuildAccel(userGeomGroup);
-    bottomLevelBvhSizeInBytes += owlGroupGetBvhSizeInBytes(userGeomGroup, 0);
+    bottomLevelBvhSizeInBytes += getAccelSizeInBytes(userGeomGroup);
     geomGroups.push_back(userGeomGroup);
 
     instanceTransforms.push_back( 
@@ -476,7 +483,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
   owlGroupBuildAccel(world);
 
-  uint64_t topLevelBvhSizeInBytes = owlGroupGetBvhSizeInBytes(world, 0);
+  uint64_t topLevelBvhSizeInBytes = getAccelSizeInBytes(world);
   logSceneMemory(bottomLevelBvhSizeInBytes, topLevelBvhSizeInBytes, allocator);
 
   return world;
@@ -615,7 +622,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     // ------------------------------------------------------------------
     OWLGroup trianglesGroup = owlTrianglesGeomGroupCreate(context, 1, &trianglesGeom);
     owlGroupBuildAccel(trianglesGroup);
-    bottomLevelBvhSizeInBytes += owlGroupGetBvhSizeInBytes(trianglesGroup, 0);
+    bottomLevelBvhSizeInBytes += getAccelSizeInBytes(trianglesGroup);
 
     LOG("adding (" << it.second.size() << ") instance transforms for model ...");
     for (uint32_t instanceIndex : it.second) {
@@ -694,7 +701,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     OWLGroup trianglesGroup
       = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
     owlGroupBuildAccel(trianglesGroup);
-    bottomLevelBvhSizeInBytes += owlGroupGetBvhSizeInBytes(trianglesGroup, 0);
+    bottomLevelBvhSizeInBytes += getAccelSizeInBytes(trianglesGroup);
 
     geomGroups.push_back(trianglesGroup);
 
@@ -723,7 +730,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
   owlGroupBuildAccel(world);
 
-  uint64_t topLevelBvhSizeInBytes = owlGroupGetBvhSizeInBytes(world, 0);
+  uint64_t topLevelBvhSizeInBytes = getAccelSizeInBytes(world);
   logSceneMemory(bottomLevelBvhSizeInBytes, topLevelBvhSizeInBytes, allocator);
 
   return world;
@@ -786,7 +793,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   OWLGroup trianglesGroup
     = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
   owlGroupBuildAccel(trianglesGroup);
-  uint64_t bottomLevelBvhSizeInBytes = owlGroupGetBvhSizeInBytes(trianglesGroup, 0);
+  uint64_t bottomLevelBvhSizeInBytes = getAccelSizeInBytes(trianglesGroup);
 
 
   // ------------------------------------------------------------------
@@ -926,7 +933,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 
   owlGroupBuildAccel(world);
 
-  uint64_t topLevelBvhSizeInBytes = owlGroupGetBvhSizeInBytes(world, 0);
+  uint64_t topLevelBvhSizeInBytes = getAccelSizeInBytes(world);
   logSceneMemory(bottomLevelBvhSizeInBytes, topLevelBvhSizeInBytes, allocator);
 
   return world;

@@ -699,16 +699,6 @@ namespace owl {
     return group->getTraversable(group->context->getDevice(deviceID));
   }
 
-  OWL_API uint64_t
-  owlGroupGetBvhSizeInBytes(OWLGroup _group, int deviceID)
-  {
-    LOG_API_CALL();
-    assert(_group);
-    Group::SP group = ((APIHandle *)_group)->get<Group>();
-    assert(group);
-    return group->getDD(group->context->getDevice(deviceID)).bvhMemory.size();
-  }
-
   OWL_API CUstream
   owlParamsGetCudaStream(OWLLaunchParams _lp, int deviceID)
   {
