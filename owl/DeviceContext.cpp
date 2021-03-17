@@ -142,7 +142,9 @@ namespace owl {
     // ------------------------------------------------------------------
     // init optix itself
     // ------------------------------------------------------------------
-#if OPTIX_VERSION >= 70100
+#if OPTIX_VERSION >= 70200
+    LOG("initializing optix 7.2");
+#elif OPTIX_VERSION >= 70100
     LOG("initializing optix 7.1");
 #else
     LOG("initializing optix 7");
