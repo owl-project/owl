@@ -69,7 +69,7 @@ namespace owl {
       built */
     void setRayTypeCount(size_t rayTypeCount);
 
-    void setBoundValues(const std::vector<OptixModuleCompileBoundValueEntry> &boundValues);
+    void setBoundLaunchParamValues(const std::vector<OWLBoundValueDecl> &boundValues);
     
     /*! enables motoin blur - should be done right after context
       creation, and before SBT and pipeline get built */
@@ -264,8 +264,10 @@ namespace owl {
     /*! number of ray types - change via setRayTypeCount() */
     int numRayTypes { 1 };
 
+#if OPTIX_VERSION >= 70200
     /*! bound values of launch params, for specializing modules during compile */
-    std::vector<OptixModuleCompileBoundValueEntry> boundValues;
+    std::vector<OptixModuleCompileBoundValueEntry> boundLaunchParamValues;
+#endif
     
     /*! by default motion blur is off, as it costs performacne - set
       via enableMotimBlur() */

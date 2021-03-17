@@ -955,15 +955,33 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
 
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
 
-  // Bind values that cannot change between frames, used to specialize compilation
-  std::vector<OptixModuleCompileBoundValueEntry> boundValues;
-  boundValues.push_back( {OWL_OFFSETOF(LaunchParams, enableClipping),
-      sizeof(bool), &this->enableClipping });
-  boundValues.push_back( {OWL_OFFSETOF(LaunchParams, enableToonOutline),
-      sizeof(bool), &this->enableToonOutline });
+  // Launch params
+  OWLVarDecl launchVars[] = {
 
-  owlContextSetBoundValues(context, boundValues.data(), boundValues.size());
+    { "enableToonOutline", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableToonOutline)},
+    { "enableClipping", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableClipping)},
 
+    { "frameID",       OWL_INT,    OWL_OFFSETOF(LaunchParams, frameID) }, 
+    { "fbAccumBuffer", OWL_BUFPTR, OWL_OFFSETOF(LaunchParams, fbAccumBuffer) },
+    { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(LaunchParams, fbPtr) },
+    { "fbSize",        OWL_INT2,   OWL_OFFSETOF(LaunchParams, fbSize)},
+
+    { "world",         OWL_GROUP,  OWL_OFFSETOF(LaunchParams, world)},
+    { "sunDirection",  OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunDirection)},
+    { "sunColor",      OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunColor)},
+    { "brickScale",     OWL_FLOAT, OWL_OFFSETOF(LaunchParams, brickScale)},
+    { "clipHeight",     OWL_INT, OWL_OFFSETOF(LaunchParams, clipHeight)},
+    { /* sentinel to mark end of list */ }
+  };
+
+  // Tell OptiX which launch params will be constant across all frames with given values, so 
+  // they can be specialized if possible during module compile.
+  OWLBoundValueDecl boundValues[] = {
+    { launchVars[0], &this->enableToonOutline},
+    { launchVars[1], &this->enableClipping},
+    { }
+  };
+  owlContextSetBoundLaunchParamValues(context, boundValues, -1);
   
   OWLGroup world;
   if (sceneType == SCENE_TYPE_FLAT) {
@@ -1028,25 +1046,8 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
     = owlRayGenCreate(context,module,"simpleRayGen",
                       sizeof(RayGenData),
                       rayGenVars,-1);
-  /* camera and frame buffer get set in resiez() and cameraChanged() */
-
-  // Launch params
-  OWLVarDecl launchVars[] = {
-    { "frameID",       OWL_INT,    OWL_OFFSETOF(LaunchParams, frameID) }, 
-    { "fbAccumBuffer", OWL_BUFPTR, OWL_OFFSETOF(LaunchParams, fbAccumBuffer) },
-    { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(LaunchParams, fbPtr) },
-    { "fbSize",        OWL_INT2,   OWL_OFFSETOF(LaunchParams, fbSize)},
-
-    { "world",         OWL_GROUP,  OWL_OFFSETOF(LaunchParams, world)},
-    { "sunDirection",  OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunDirection)},
-    { "sunColor",      OWL_FLOAT3, OWL_OFFSETOF(LaunchParams, sunColor)},
-    { "enableToonOutline", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableToonOutline)},
-    { "enableClipping", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableClipping)},
-    { "brickScale",     OWL_FLOAT, OWL_OFFSETOF(LaunchParams, brickScale)},
-    { "clipHeight",     OWL_INT, OWL_OFFSETOF(LaunchParams, clipHeight)},
-    { /* sentinel to mark end of list */ }
-  };
-
+  /* camera and frame buffer get set in resize() and cameraChanged() */
+  
   launchParams = 
     owlParamsCreate(context, sizeof(LaunchParams), launchVars, -1);
 
@@ -1054,8 +1055,11 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
   owlParamsSet3f(launchParams, "sunColor", {1.f, 1.f, 1.f});
   owlParamsSet1f(launchParams, "brickScale", brickScaleInWorldSpace);
   owlParamsSet1i(launchParams, "clipHeight", clipHeight);
+
+  // Also set runtime values for bound vars, just in case they can't be specialized
   owlParamsSet1b(launchParams, "enableToonOutline", this->enableToonOutline);
   owlParamsSet1b(launchParams, "enableClipping", enableClipping);
+
   // other params set at launch or resize.  Some of these may have also been bound
   // as constants earlier.
     

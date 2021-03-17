@@ -271,6 +271,11 @@ typedef struct _OWLVarDecl {
   uint32_t    offset;
 } OWLVarDecl;
 
+typedef struct _OWLBoundValueDecl {
+  OWLVarDecl var;
+  void *boundValuePtr;
+} OWLBoundValueDecl;
+
 
 /*! supported formats for texels in textures */
 typedef enum {
@@ -378,11 +383,13 @@ owlContextSetRayTypeCount(OWLContext context,
 /*! tells OptiX to specialize the values of certain launch parameters
   when compiling modules, and ignore their values at launch.
   See section 6.3.1 of the OptiX 7.2 programming guide.
+  This call is a no-op for OptiX versions < 7.2, and programs should not 
+  rely on it for correct behavior.
   OWL stores a copy of the array internally. */
 OWL_API void
-owlContextSetBoundValues(OWLContext context,
-                         const OptixModuleCompileBoundValueEntry *boundValues,
-                         size_t numBoundValues);
+owlContextSetBoundLaunchParamValues(OWLContext context,
+                                    const OWLBoundValueDecl *boundValues,
+                                    int numBoundValues);
 
 /*! sets maximum instancing depth for the given context:
 

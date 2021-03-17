@@ -91,21 +91,28 @@ namespace owl {
   }
 
   OWL_API void
-  owlContextSetBoundValues(OWLContext _context,
-                         const OptixModuleCompileBoundValueEntry *_boundValues,
-                         size_t numBoundValues)
+  owlContextSetBoundLaunchParamValues(OWLContext _context,
+                                      const OWLBoundValueDecl *_boundValues,
+                                      int numBoundValues)
   {
     LOG_API_CALL();
-    if (_boundValues == nullptr || numBoundValues == 0) 
+    if (_boundValues == nullptr && (numBoundValues == 0 || numBoundValues == -1)) 
       return;
+  
+    assert(_boundValues);
+    if (numBoundValues == -1) {
+      // list is null terminated
+      for (numBoundValues = 0; _boundValues[numBoundValues].var.name != nullptr; numBoundValues++);
+    }
+    if (numBoundValues <= 0) return;
 
     // check and pack into vector
-    for (size_t i = 0; i < numBoundValues; ++i) {
+    for (int i = 0; i < numBoundValues; ++i) {
       assert(_boundValues[i].boundValuePtr);
     }
-    std::vector<OptixModuleCompileBoundValueEntry> boundValues(numBoundValues);
+    std::vector<OWLBoundValueDecl> boundValues(numBoundValues);
     std::copy(_boundValues, _boundValues+numBoundValues, boundValues.begin());
-    checkGet(_context)->setBoundValues(boundValues);
+    checkGet(_context)->setBoundLaunchParamValues(boundValues);
   }
 
 

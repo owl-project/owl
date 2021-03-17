@@ -527,10 +527,20 @@ namespace owl {
     this->numRayTypes = int(rayTypeCount);
   }
 
-  void Context::setBoundValues(const std::vector<OptixModuleCompileBoundValueEntry> &boundValues)
+  void Context::setBoundLaunchParamValues(const std::vector<OWLBoundValueDecl> &boundValues)
   {
-    // TODO: check that this is called before compiling programs
-    this->boundValues = boundValues;
+#if OPTIX_VERSION >= 70200
+    this->boundLaunchParamValues.clear();
+    this->boundLaunchParamValues.reserve(boundValues.size());
+    for (const OWLBoundValueDecl &v : boundValues) {
+      this->boundLaunchParamValues.push_back( {
+        v.var.offset,
+        sizeOf(v.var.type),
+        v.boundValuePtr });
+    }
+#else
+    LOG("Ignoring bound launch params for old version of OptiX");
+#endif
   }
 
   /*! sets maximum instancing depth for the given context:
