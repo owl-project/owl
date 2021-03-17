@@ -393,41 +393,6 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
   primBounds = box3f(boxmin, boxmax);
 }
 
-// "Efficient slabs" method with normals
-OPTIX_INTERSECT_PROGRAM(VoxGeom)()
-{
-  // convert indices to 3d box
-  const int primID = optixGetPrimitiveIndex();
-  const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
-  uchar4 indices = self.prims[primID];
-  vec3f boxCenter(indices.x+0.5, indices.y+0.5, indices.z+0.5);
-
-  // Translate ray to local box space
-  const vec3f rayOrigin  = vec3f(optixGetObjectRayOrigin()) - boxCenter;
-  const vec3f rayDirection  = optixGetObjectRayDirection();  // assume no rotation
-  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
-
-  const float ray_tmax = optixGetRayTmax();
-  const float ray_tmin = optixGetRayTmin();
-
-  const vec3f boxRadius(0.5f, 0.5f, 0.5f);
-  vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
-  vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
-  float tnear = reduce_max(owl::min(t0, t1));
-  float tfar  = reduce_min(owl::max(t0, t1));
-
-  // Only handle the case where the ray starts outside the box
-
-  if (tnear <= tfar && tnear > ray_tmin && tnear < ray_tmax) {
-    // compute face normal at local hit point
-    vec3f V = rayOrigin + rayDirection*tnear;
-    vec3f N(0.0f);
-    int i = indexOfMaxComponent(abs(V));
-    N[i] = (V[i] >= 0.0f) ? 1 : -1;
-    optixReportIntersection( tnear, 0, float_as_int(N.x), float_as_int(N.y), float_as_int(N.z));
-  }
-}
-
 namespace {
   // temp swizzles
   inline __device__
@@ -461,8 +426,8 @@ OPTIX_INTERSECT_PROGRAM(VoxGeomMajercik)()
   const vec3f rayDirection  = optixGetObjectRayDirection();  // assume no rotation
   const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
 
-  // Negated sign function.  TODO: faster?
-  vec3f sgn( 
+  // Negated sign function
+  const vec3f sgn( 
       rayDirection.x > 0.f ? -1 : 1,
       rayDirection.y > 0.f ? -1 : 1,
       rayDirection.z > 0.f ? -1 : 1);
@@ -481,22 +446,51 @@ OPTIX_INTERSECT_PROGRAM(VoxGeomMajercik)()
     owl::all_less_than(owl::abs(xy(rayOrigin) + xy(rayDirection)*distanceToPlane.z), xy(boxRadius));
 
   const vec3b test(testX, testY, testZ);
-  sgn = test.x ? vec3f(sgn.x, 0.0, 0.0) : (test.y ? vec3f(0.0, sgn.y, 0.0) : vec3f(0.0, 0.0, test.z ? sgn.z : 0.0));    
-
-  if ( (sgn.x != 0) || (sgn.y != 0) || (sgn.z != 0) ) { // hit the box
-    float distance = (sgn.x != 0.0) ? distanceToPlane.x : ((sgn.y != 0.0) ? distanceToPlane.y : distanceToPlane.z);
+  if ( test.x || test.y || test.z ) { // hit the box
+    float distance = test.x ? distanceToPlane.x : (test.y ? distanceToPlane.y : distanceToPlane.z);
     const float ray_tmax = optixGetRayTmax();
     const float ray_tmin = optixGetRayTmin();
     if (distance > ray_tmin && distance < ray_tmax) {  // closer than existing hit
-      const vec3f N = sgn;
-      optixReportIntersection( distance, 0, float_as_int(N.x), float_as_int(N.y), float_as_int(N.z));
+      // Since N is something like [0,-1,0], encode it as sign (1 bit) and 3 components (3 bits): 000...SNNN
+      // This lets it fit in one attribute.
+      int signOfN = (sgn.x*test.x + sgn.y*test.y + sgn.z*test.z) > 0 ? 1 : 0;
+      int packedN = (signOfN << 3) | (test.z << 2) | (test.y << 1) | test.x;
+      optixReportIntersection(distance, 0, packedN);
     }
   }
-
 }
 
-// Used for toon outline where we don't need normals
-OPTIX_INTERSECT_PROGRAM(VoxGeomShadowCullFront)()
+// "Efficient slabs" method
+OPTIX_INTERSECT_PROGRAM(VoxGeomShadow)()
+{
+  // convert indices to 3d box
+  const int primID = optixGetPrimitiveIndex();
+  const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
+  uchar4 indices = self.prims[primID];
+  vec3f boxCenter(indices.x+0.5, indices.y+0.5, indices.z+0.5);
+
+  // Translate ray to local box space
+  const vec3f rayOrigin  = vec3f(optixGetObjectRayOrigin()) - boxCenter;
+  const vec3f rayDirection  = optixGetObjectRayDirection();  // assume no rotation
+  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
+
+  const float ray_tmax = optixGetRayTmax();
+  const float ray_tmin = optixGetRayTmin();
+
+  const vec3f boxRadius(0.5f, 0.5f, 0.5f);
+  vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
+  vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
+  float tnear = reduce_max(owl::min(t0, t1));
+  float tfar  = reduce_min(owl::max(t0, t1));
+  float distance = tnear > 0.f ? tnear : tfar;
+
+  if (tnear <= tfar && distance > ray_tmin && distance < ray_tmax) {
+    optixReportIntersection( distance, 0);
+  }
+}
+
+// Used for toon outline where we don't need normals, and cull front faces.
+OPTIX_INTERSECT_PROGRAM(VoxGeomOutlineShadow)()
 {
   // convert indices to 3d box
   const int primID = optixGetPrimitiveIndex();
@@ -515,8 +509,7 @@ OPTIX_INTERSECT_PROGRAM(VoxGeomShadowCullFront)()
   const float ray_tmax = optixGetRayTmax();
   const float ray_tmin = optixGetRayTmin();
 
-  const float outlinePad = 1.2f;  // needs to match bounding box program
-  const vec3f boxRadius = vec3f(0.5f, 0.5f, 0.5f)*outlinePad;
+  const vec3f boxRadius = vec3f(0.5f, 0.5f, 0.5f)*OUTLINE_SCALE;
   vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
   vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
   float tnear = reduce_max(owl::min(t0, t1));
@@ -536,10 +529,13 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
   const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
 
   // Select normal for whichever face we hit
+  const int packedN = optixGetAttribute_0();
+  const int sgnN = (packedN >> 3) ? 1 : -1;
   const float3 Nbox = make_float3(
-        int_as_float(optixGetAttribute_0()),
-        int_as_float(optixGetAttribute_1()),
-        int_as_float(optixGetAttribute_2()));
+    sgnN * ( packedN       & 1),
+    sgnN * ((packedN >> 1) & 1),
+    sgnN * ((packedN >> 2) & 1));
+
   const vec3f Ng = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
 
   // Bias value relative to brick scale
