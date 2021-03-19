@@ -600,6 +600,7 @@ OPTIX_BOUNDS_PROGRAM(VoxBlockGeom)(const void *geomData,
   primBounds = box3f(boxmin, boxmax);
 }
 
+#if 0
 // Ray-box intersection with normals from Majercik et al 2018
 OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
 {
@@ -607,7 +608,6 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
   const int primID = optixGetPrimitiveIndex();
   const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
   const int colorIndex = self.colorIndices[primID];  // TODO: should be for brick, not block
-  //if (colorIndex == 0) return; // empty brick
 
   uchar3 indices = self.prims[primID];
   float blockScale = self.bricksPerBlock;
@@ -651,39 +651,152 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
     }
   }
 }
+#endif
 
+__device__ inline
+bool intersectRayBox(const vec3f _rayOrigin, const vec3f rayDirection, vec3f boxCenter, vec3f boxRadius,
+    float &tnear, float &tfar)
+{
+  // Translate ray to local box space
+  const vec3f rayOrigin  = _rayOrigin - boxCenter;
+  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
+
+  vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
+  vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
+  tnear = reduce_max(owl::min(t0, t1));
+  tfar  = reduce_min(owl::max(t0, t1));
+  return tnear <= tfar;
+}
+
+// Ray-box intersection with normals from Majercik et al 2018
+__device__ inline
+bool intersectRayBoxWithNormals(const vec3f _rayOrigin, const vec3f rayDirection, float ray_tmin, float ray_tmax, vec3f boxCenter, vec3f boxRadius,
+    float &distance, int &packedNormal)
+{
+  // Translate ray to local box space
+  const vec3f rayOrigin  = _rayOrigin - boxCenter;
+  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
+
+  // Negated sign function
+  const vec3f sgn( 
+      rayDirection.x > 0.f ? -1 : 1,
+      rayDirection.y > 0.f ? -1 : 1,
+      rayDirection.z > 0.f ? -1 : 1);
+
+  vec3f distanceToPlane = boxRadius*sgn - rayOrigin;
+  distanceToPlane *= invRayDirection;
+
+  const bool testX = distanceToPlane.x >= 0.f && 
+    owl::all_less_than(owl::abs(yz(rayOrigin) + yz(rayDirection)*distanceToPlane.x), yz(boxRadius));
+
+  const bool testY = distanceToPlane.y >= 0.f &&
+    owl::all_less_than(owl::abs(zx(rayOrigin) + zx(rayDirection)*distanceToPlane.y), zx(boxRadius));
+
+  const bool testZ = distanceToPlane.z >= 0.f &&
+    owl::all_less_than(owl::abs(xy(rayOrigin) + xy(rayDirection)*distanceToPlane.z), xy(boxRadius));
+
+  const vec3b test(testX, testY, testZ);
+  if ( test.x || test.y || test.z ) { // hit the box
+    distance = test.x ? distanceToPlane.x : (test.y ? distanceToPlane.y : distanceToPlane.z);
+    if (distance >= ray_tmin && distance <= ray_tmax) {  // closer than existing hit
+      // Since N is something like [0,-1,0], encode it as sign (1 bit) and 3 components (3 bits): 000...SNNN
+      // This lets it fit in one attribute.
+      int signOfN = (sgn.x*test.x + sgn.y*test.y + sgn.z*test.z) > 0 ? 1 : 0;
+      packedNormal = (signOfN << 3) | (test.z << 2) | (test.y << 1) | test.x;
+      return true;
+    }
+  }
+  return false;
+}
+
+OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
+{
+  // convert indices to 3d box
+  const int primID = optixGetPrimitiveIndex();
+  const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
+  uchar3 blockOrigin = self.prims[primID];
+  float blockScale = self.bricksPerBlock;
+  const vec3f boxRadius(0.5f*blockScale);
+  vec3f boxCenter = vec3f(blockOrigin.x, blockOrigin.y, blockOrigin.z) + boxRadius;
+
+  // Does the ray hit the block?
+  float block_tnear, block_tfar;
+  if (intersectRayBox(optixGetObjectRayOrigin(), optixGetObjectRayDirection(), boxCenter, boxRadius, block_tnear, block_tfar)) {
+    
+    const float ray_tmin = optixGetRayTmin();
+    const float ray_tmax = optixGetRayTmax();
+    block_tnear = max(block_tnear, ray_tmin);
+    block_tfar = min(block_tfar, ray_tmax);
+
+    if (block_tnear <= block_tfar) {
+
+      const vec3f brickRadius(0.5f);
+      const vec3i blockOrigin3i(blockOrigin.x, blockOrigin.y, blockOrigin.z);
+      const vec3i brickDim(self.bricksPerBlock);
+
+      float tmax = block_tfar;  // can shrink in loop below
+      int packedNormalForClosestHit = 0;
+      int colorIndexForClosestHit = 0;
+
+      int brickIdx = primID*brickDim.x*brickDim.y*brickDim.z;
+      for (int z = 0; z < brickDim.z; z++) {
+        for (int y = 0; y < brickDim.y; y++) {
+          for (int x = 0; x < brickDim.x; x++, brickIdx++) {
+
+            int colorIndex = self.colorIndices[brickIdx];
+            if (colorIndex == 0) continue;
+
+            vec3i brickOrigin = blockOrigin3i + vec3i(x,y,z);
+            vec3f brickCenter = vec3f(brickOrigin.x, brickOrigin.y, brickOrigin.z) + brickRadius;
+
+            float distance;
+            int packedN;
+            if (intersectRayBoxWithNormals(optixGetObjectRayOrigin(), optixGetObjectRayDirection(), block_tnear, tmax,
+                  brickCenter, brickRadius, distance, packedN))
+            {
+              tmax = distance;
+              packedNormalForClosestHit = packedN;
+              colorIndexForClosestHit = colorIndex;
+            }
+          }
+        }
+      }  // end loop over bricks
+
+      if (colorIndexForClosestHit) {
+        optixReportIntersection(tmax, 0, packedNormalForClosestHit, colorIndexForClosestHit);
+      }
+
+    }
+  }
+}
+
+// TODO: need a version of the grid traversal above, but optimized for shadow rays
+// This version intersects blocks only
+#if 0
 OPTIX_INTERSECT_PROGRAM(VoxBlockGeomShadow)()
 {
   // convert indices to 3d box
   const int primID = optixGetPrimitiveIndex();
   const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
-  //const int colorIndex = self.colorIndices[primID];  // TODO: should be for brick, not block
-  //if (colorIndex == 0) return; // empty brick
-
   uchar3 indices = self.prims[primID];
-
   float blockScale = self.bricksPerBlock;
   const vec3f boxRadius(0.5f*blockScale);
   vec3f boxCenter = vec3f(indices.x, indices.y, indices.z) + boxRadius;
+  
+  float tnear, tfar;
+  if (intersectRayBox(optixGetObjectRayOrigin(), optixGetObjectRayDirection(), boxCenter, boxRadius, tnear, tfar)) {
 
-  // Translate ray to local box space
-  const vec3f rayOrigin  = vec3f(optixGetObjectRayOrigin()) - boxCenter;
-  const vec3f rayDirection  = optixGetObjectRayDirection();  // assume no rotation
-  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
+    const float ray_tmax = optixGetRayTmax();
+    const float ray_tmin = optixGetRayTmin();
+    
+    float distance = tnear > 0.f ? tnear : tfar;
 
-  const float ray_tmax = optixGetRayTmax();
-  const float ray_tmin = optixGetRayTmin();
-
-  vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
-  vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
-  float tnear = reduce_max(owl::min(t0, t1));
-  float tfar  = reduce_min(owl::max(t0, t1));
-  float distance = tnear > 0.f ? tnear : tfar;
-
-  if (tnear <= tfar && distance > ray_tmin && distance < ray_tmax) {
-    optixReportIntersection( distance, 0);
+    if (distance > ray_tmin && distance < ray_tmax) {
+      optixReportIntersection( distance, 0);
+    }
   }
 }
+#endif
 
 
 OPTIX_CLOSEST_HIT_PROGRAM(VoxBlockGeom)()
@@ -705,13 +818,10 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxBlockGeom)()
   // Bias value relative to brick scale
   const float shadowBias = 1e-2f * fminf(1.f, optixLaunchParams.brickScale);
 
-#if 0
   // Convert 8 bit color to float
   const int ci = optixGetAttribute_1();
   uchar4 col = self.colorPalette[ci];
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
-#endif
-  const vec3f color = vec3f(0.7f);
 
   PerRayData &prd = owl::getPRD<PerRayData>();
   const vec3f dir   = optixGetWorldRayDirection();

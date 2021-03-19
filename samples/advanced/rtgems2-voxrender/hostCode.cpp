@@ -598,7 +598,7 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
 
   owlGeomTypeSetClosestHit(voxGeomType, 0, module, "VoxBlockGeom");
   owlGeomTypeSetIntersectProg(voxGeomType, 0, module, "VoxBlockGeom");
-  owlGeomTypeSetIntersectProg(voxGeomType, 1, module, "VoxBlockGeomShadow");
+  owlGeomTypeSetIntersectProg(voxGeomType, 1, module, "VoxBlockGeom");  // TODO: special shadow function
   owlGeomTypeSetBoundsProg(voxGeomType, module, "VoxBlockGeom");
 
   // Do this before setting up user geometry, to compile bounds program
