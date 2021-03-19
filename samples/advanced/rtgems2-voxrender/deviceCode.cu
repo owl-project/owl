@@ -606,6 +606,9 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
   // convert indices to 3d box
   const int primID = optixGetPrimitiveIndex();
   const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
+  const int colorIndex = self.colorIndices[primID];  // TODO: should be for brick, not block
+  //if (colorIndex == 0) return; // empty brick
+
   uchar3 indices = self.prims[primID];
   float blockScale = self.bricksPerBlock;
   const vec3f boxRadius(0.5f*blockScale);
@@ -644,7 +647,6 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
       // This lets it fit in one attribute.
       int signOfN = (sgn.x*test.x + sgn.y*test.y + sgn.z*test.z) > 0 ? 1 : 0;
       int packedN = (signOfN << 3) | (test.z << 2) | (test.y << 1) | test.x;
-      int colorIndex = self.colorIndices[primID];  // TODO: should be for brick, not block
       optixReportIntersection(distance, 0, packedN, colorIndex);
     }
   }
@@ -655,6 +657,9 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeomShadow)()
   // convert indices to 3d box
   const int primID = optixGetPrimitiveIndex();
   const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
+  //const int colorIndex = self.colorIndices[primID];  // TODO: should be for brick, not block
+  //if (colorIndex == 0) return; // empty brick
+
   uchar3 indices = self.prims[primID];
 
   float blockScale = self.bricksPerBlock;
@@ -700,10 +705,13 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxBlockGeom)()
   // Bias value relative to brick scale
   const float shadowBias = 1e-2f * fminf(1.f, optixLaunchParams.brickScale);
 
+#if 0
   // Convert 8 bit color to float
   const int ci = optixGetAttribute_1();
   uchar4 col = self.colorPalette[ci];
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
+#endif
+  const vec3f color = vec3f(0.7f);
 
   PerRayData &prd = owl::getPRD<PerRayData>();
   const vec3f dir   = optixGetWorldRayDirection();

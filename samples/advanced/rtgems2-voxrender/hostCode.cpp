@@ -269,28 +269,84 @@ std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model, bool
   return solid_voxels;
 }
 
-void extractBlocksFromModel(const ogt_vox_model* model, bool /*cullHidden*/, int bricksPerBlock, 
-    std::vector<uchar3> &blocks, std::vector<unsigned char> &colorIndices)
+void extractBlocksFromModel(const ogt_vox_model* model, bool /*cullHidden*/, int bricksPerBlockDim,
+    std::vector<uchar3> &blockOriginsOut, std::vector<unsigned char> &colorIndicesOut)
 {
+  const vec3i blockDim(bricksPerBlockDim, bricksPerBlockDim, bricksPerBlockDim);
+  const int bricksPerBlock = blockDim.x * blockDim.y * blockDim.z;
 
-  uint32_t voxel_index = 0;
-  blocks.reserve( (model->size_z/bricksPerBlock) * (model->size_y/bricksPerBlock) * (model->size_x/bricksPerBlock));
-  colorIndices.reserve(model->size_z * model->size_y * model->size_x);
+  // Use CUDA notation to keep this straight:
+  //  block: an NxNxN cube of bricks (original voxels)
+  //  grid: a cube of blocks, however many needed to hold all voxels
+  vec3i gridDim(
+      (model->size_x + blockDim.x - 1)/blockDim.x,  // ceil(size_x/blockDim.x); using integer math
+      (model->size_y + blockDim.y - 1)/blockDim.y,
+      (model->size_z + blockDim.z - 1)/blockDim.z);
 
-  for (int z = 0; z < (int)model->size_z; z++) {
-    for (int y = 0; y < (int)model->size_y; y++) {
-      for (int x = 0; x < (int)model->size_x; x++, voxel_index++) {
-        uint8_t ci = model->voxel_data[voxel_index];
-        if (ci) {
-          
-          // Switch to Y-up
-          blocks.push_back(make_uchar3(uint8_t(x), uint8_t(y), uint8_t(z)));
-          colorIndices.push_back(ci);
+  std::vector<uchar3> blockOrigins(gridDim.x * gridDim.y * gridDim.z);
 
+  // Fill in block origins
+  {
+    int blockIdx = 0;
+    for (int gridZ = 0; gridZ < gridDim.z; ++gridZ) {
+      for (int gridY = 0; gridY < gridDim.y; ++gridY) {
+        for (int gridX = 0; gridX < gridDim.x; ++gridX) {
+
+          blockOrigins[blockIdx] = make_uchar3(gridX*blockDim.x, gridY*blockDim.y, gridZ*blockDim.z);
+          blockIdx++;
         }
       }
     }
   }
+
+  // iterate over the voxels and scatter color indices into block order
+  std::vector<unsigned char> colorIndices(blockOrigins.size()*bricksPerBlock, 0);
+
+  int voxel_index = 0;
+  for (int z = 0; z < (int)model->size_z; z++) {
+    for (int y = 0; y < (int)model->size_y; y++) {
+      for (int x = 0; x < (int)model->size_x; x++, voxel_index++) {
+        uint8_t ci = model->voxel_data[voxel_index];
+
+        // Note: some of this could be moved out of the innermost loop
+        vec3i blockIdx (x/blockDim.x, y/blockDim.y, z/blockDim.z);
+        int blockOffsetInGrid = blockIdx.x + blockIdx.y*gridDim.x + blockIdx.z*gridDim.x*gridDim.y;
+        int blockOffset = blockOffsetInGrid*bricksPerBlock;
+
+        // local brick coords inside a block
+        int bx = x - blockIdx.x*blockDim.x;
+        int by = y - blockIdx.y*blockDim.y;
+        int bz = z - blockIdx.z*blockDim.z;
+
+        int brickOffsetInBlock = bx + by*blockDim.x + bz*blockDim.x*blockDim.y;
+        int brickOffset = blockOffset + brickOffsetInBlock;
+
+        assert(brickOffset < colorIndices.size());
+        colorIndices[brickOffset] = ci;
+        
+      }
+    }
+  }
+
+  // Compact by removing empty blocks
+  blockOriginsOut.reserve(blockOrigins.size());
+  colorIndicesOut.reserve(colorIndices.size());
+  for (int blockIdx = 0; blockIdx < int(blockOrigins.size()); ++blockIdx) {
+    bool visible = false;
+    for (int i = blockIdx*bricksPerBlock, k = 0; k < bricksPerBlock; ++i, ++k) {
+      if (colorIndices[i] > 0) {
+        visible = true;
+        break;
+      }
+    }
+    if (visible) {
+      blockOriginsOut.push_back(blockOrigins[blockIdx]);
+      for (int i = blockIdx*bricksPerBlock, k = 0; k < bricksPerBlock; ++i, ++k) {
+        colorIndicesOut.push_back(colorIndices[i]);
+      }
+    }
+  }
+
 }
 
 // Simple memory tracker
@@ -521,7 +577,7 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
 {
   BufferAllocator allocator;
 
-  const int bricksPerBlock = 1;
+  const int bricksPerBlock = 3;  // per side
 
   // -------------------------------------------------------
   // declare user vox geometry type
@@ -578,10 +634,10 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
 
     const ogt_vox_model *vox_model = scene->models[it.first];
     assert(vox_model);
-    std::vector<uchar3> voxdata;
+    std::vector<uchar3> blockOrigins;
     std::vector<unsigned char> colorIndices;
 
-    extractBlocksFromModel(vox_model, enableCulling, bricksPerBlock, voxdata, colorIndices);
+    extractBlocksFromModel(vox_model, enableCulling, bricksPerBlock, blockOrigins, colorIndices);
 
     LOG("building user geometry for model ...");
 
@@ -589,13 +645,13 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
     // set up user primitives for single vox model
     // ------------------------------------------------------------------
     OWLBuffer primBuffer 
-      = allocator.deviceBufferCreate(context, OWL_UCHAR3, voxdata.size(), voxdata.data());
+      = allocator.deviceBufferCreate(context, OWL_UCHAR3, blockOrigins.size(), blockOrigins.data());
     OWLBuffer colorIndexBuffer
       = allocator.deviceBufferCreate(context, OWL_UCHAR, colorIndices.size(), colorIndices.data());
 
     OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
     
-    owlGeomSetPrimCount(voxGeom, voxdata.size());
+    owlGeomSetPrimCount(voxGeom, blockOrigins.size());
 
     owlGeomSetBuffer(voxGeom, "prims", primBuffer);
     owlGeomSetBuffer(voxGeom, "colorIndices", colorIndexBuffer);
@@ -612,7 +668,7 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
     LOG("adding (" << it.second.size() << ") instance transforms for model ...");
     for (uint32_t instanceIndex : it.second) {
 
-      totalPrimCount += voxdata.size();
+      totalPrimCount += blockOrigins.size();
 
       const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
 

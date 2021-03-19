@@ -68,12 +68,12 @@ struct VoxGeomData {
 };
 
 // A version of VoxGeom where primitives are larger than single bricks.
-// Each OptiiX prim is a block of NxNxN bricks (N==self.bricksPerBlock)
+// Each prim is a "block" of NxNxN bricks (N==self.bricksPerBlock)
 struct VoxBlockGeomData {
-  uchar3 *prims;  // xyz indices of LL corner of a block containing NxNxN bricks.
+  uchar3 *prims;  // xyz indices of LL corners of blocks.  Each block is a cube of bricks.
   unsigned char *colorIndices; 
   uchar4 *colorPalette;
-  int bricksPerBlock;  // cubed, should be in LaunchParams too
+  int bricksPerBlock;  // per side. TODO: also store in LaunchParams and specialize for IS and CH.
 
   // No toon outline for this mode
 };
