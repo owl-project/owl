@@ -112,6 +112,8 @@ struct Viewer : public owl::viewer::OWLViewer
       owl::box3f &sceneBox);
   OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
       owl::box3f &sceneBox);
+  OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+      owl::box3f &sceneBox) ;
 
 
   bool sbtDirty = true;
@@ -265,6 +267,30 @@ std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model, bool
   }
   LOG("solid voxel count: " << solid_voxels.size());
   return solid_voxels;
+}
+
+void extractBlocksFromModel(const ogt_vox_model* model, bool /*cullHidden*/, int bricksPerBlock, 
+    std::vector<uchar3> &blocks, std::vector<unsigned char> &colorIndices)
+{
+
+  uint32_t voxel_index = 0;
+  blocks.reserve( (model->size_z/bricksPerBlock) * (model->size_y/bricksPerBlock) * (model->size_x/bricksPerBlock));
+  colorIndices.reserve(model->size_z * model->size_y * model->size_x);
+
+  for (int z = 0; z < (int)model->size_z; z++) {
+    for (int y = 0; y < (int)model->size_y; y++) {
+      for (int x = 0; x < (int)model->size_x; x++, voxel_index++) {
+        uint8_t ci = model->voxel_data[voxel_index];
+        if (ci) {
+          
+          // Switch to Y-up
+          blocks.push_back(make_uchar3(uint8_t(x), uint8_t(y), uint8_t(z)));
+          colorIndices.push_back(ci);
+
+        }
+      }
+    }
+  }
 }
 
 // Simple memory tracker
@@ -466,6 +492,201 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
         owl::affine3f::translate(vec3f(-0.5f, -0.5f, 0.0f))
         );
   }
+
+  // Apply final scene transform so we can use the same camera for every scene
+  const float maxSpan = owl::reduce_max(sceneBox.span());
+  owl::affine3f worldTransform = 
+    owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
+    owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, -sceneBox.lower.z));  // center about (x,y) origin ,with Z up to match MV
+
+  for (size_t i = 0; i < instanceTransforms.size(); ++i) {
+    instanceTransforms[i] = worldTransform * instanceTransforms[i];
+  }
+  
+  OWLGroup world = owlInstanceGroupCreate(context, instanceTransforms.size(),
+      geomGroups.data(), nullptr, (const float*)instanceTransforms.data(), OWL_MATRIX_FORMAT_OWL);
+
+  owlGroupBuildAccel(world);
+
+  uint64_t topLevelBvhSizeInBytes = getAccelSizeInBytes(world);
+  logSceneMemory(bottomLevelBvhSizeInBytes, topLevelBvhSizeInBytes, allocator);
+
+  return world;
+
+}
+
+
+OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+    box3f &sceneBox) 
+{
+  BufferAllocator allocator;
+
+  const int bricksPerBlock = 1;
+
+  // -------------------------------------------------------
+  // declare user vox geometry type
+  // -------------------------------------------------------
+
+  OWLVarDecl voxGeomVars[] = {
+    { "prims",  OWL_BUFPTR, OWL_OFFSETOF(VoxBlockGeomData,prims)},
+    { "colorIndices",  OWL_BUFPTR, OWL_OFFSETOF(VoxBlockGeomData,colorIndices)},
+    { "colorPalette",  OWL_BUFPTR, OWL_OFFSETOF(VoxBlockGeomData,colorPalette)},
+    { "bricksPerBlock",  OWL_INT, OWL_OFFSETOF(VoxBlockGeomData,bricksPerBlock)},
+    { /* sentinel to mark end of list */ }
+  };
+  OWLGeomType voxGeomType
+    = owlGeomTypeCreate(context,
+                        OWL_GEOMETRY_USER,
+                        sizeof(VoxBlockGeomData),
+                        voxGeomVars, -1);
+
+  owlGeomTypeSetClosestHit(voxGeomType, 0, module, "VoxBlockGeom");
+  owlGeomTypeSetIntersectProg(voxGeomType, 0, module, "VoxBlockGeom");
+  owlGeomTypeSetIntersectProg(voxGeomType, 1, module, "VoxBlockGeomShadow");
+  owlGeomTypeSetBoundsProg(voxGeomType, module, "VoxBlockGeom");
+
+  // Do this before setting up user geometry, to compile bounds program
+  owlBuildPrograms(context);
+
+  assert(scene->num_instances > 0);
+  assert(scene->num_models > 0);
+
+
+  // Palette buffer is global to scene
+  OWLBuffer paletteBuffer
+    = allocator.deviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
+
+  // Cluster instances together that use the same model
+  std::map<uint32_t, std::vector<uint32_t>> modelToInstances;
+
+  for (uint32_t instanceIndex = 0; instanceIndex < scene->num_instances; instanceIndex++) {
+    const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
+    modelToInstances[vox_instance.model_index].push_back(instanceIndex);
+  }
+
+  std::vector<OWLGroup> geomGroups;
+  geomGroups.reserve(scene->num_models);
+
+  std::vector<owl::affine3f> instanceTransforms;
+  instanceTransforms.reserve(scene->num_instances);
+
+  size_t totalPrimCount = 0;
+  size_t bottomLevelBvhSizeInBytes = 0;
+  
+  // Make instance transforms
+  for (auto it : modelToInstances) {
+
+    const ogt_vox_model *vox_model = scene->models[it.first];
+    assert(vox_model);
+    std::vector<uchar3> voxdata;
+    std::vector<unsigned char> colorIndices;
+
+    extractBlocksFromModel(vox_model, enableCulling, bricksPerBlock, voxdata, colorIndices);
+
+    LOG("building user geometry for model ...");
+
+    // ------------------------------------------------------------------
+    // set up user primitives for single vox model
+    // ------------------------------------------------------------------
+    OWLBuffer primBuffer 
+      = allocator.deviceBufferCreate(context, OWL_UCHAR3, voxdata.size(), voxdata.data());
+    OWLBuffer colorIndexBuffer
+      = allocator.deviceBufferCreate(context, OWL_UCHAR, colorIndices.size(), colorIndices.data());
+
+    OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
+    
+    owlGeomSetPrimCount(voxGeom, voxdata.size());
+
+    owlGeomSetBuffer(voxGeom, "prims", primBuffer);
+    owlGeomSetBuffer(voxGeom, "colorIndices", colorIndexBuffer);
+    owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
+    owlGeomSet1i(voxGeom, "bricksPerBlock", bricksPerBlock);
+
+    // ------------------------------------------------------------------
+    // bottom level group/accel
+    // ------------------------------------------------------------------
+    OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
+    owlGroupBuildAccel(userGeomGroup);
+    bottomLevelBvhSizeInBytes += getAccelSizeInBytes(userGeomGroup);
+
+    LOG("adding (" << it.second.size() << ") instance transforms for model ...");
+    for (uint32_t instanceIndex : it.second) {
+
+      totalPrimCount += voxdata.size();
+
+      const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
+
+      const std::string instanceName = vox_instance.name ? vox_instance.name : "(unnamed)";
+      if (vox_instance.hidden) {
+        LOG("skipping hidden VOX instance: " << instanceName );
+        continue;
+      } else {
+        LOG("building VOX instance: " << instanceName);
+      }
+
+      // VOX instance transform
+      const ogt_vox_transform &vox_transform = vox_instance.transform;
+
+      const owl::affine3f instanceTransform( 
+          vec3f( vox_transform.m00, vox_transform.m01, vox_transform.m02 ),  // column 0
+          vec3f( vox_transform.m10, vox_transform.m11, vox_transform.m12 ),  //  1
+          vec3f( vox_transform.m20, vox_transform.m21, vox_transform.m22 ),  //  2
+          vec3f( vox_transform.m30, vox_transform.m31, vox_transform.m32 )); //  3 
+
+      // This matrix translates model to its center (in integer coords!) and applies instance transform
+      const affine3f instanceMoveToCenterAndTransform = 
+        affine3f(instanceTransform) * 
+        affine3f::translate(-vec3f(float(vox_model->size_x/2),   // Note: snapping to int to match MV
+                                   float(vox_model->size_y/2), 
+                                   float(vox_model->size_z/2)));
+
+      sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform, vec3f(0.0f)));
+      sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform,  
+            vec3f(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z))));
+
+      instanceTransforms.push_back(instanceMoveToCenterAndTransform);
+
+      geomGroups.push_back(userGeomGroup);
+
+    }
+
+  }
+
+  LOG("Total user prims in all instanced models: " << totalPrimCount);
+
+  const vec3f sceneCenter = sceneBox.center();
+  const vec3f sceneSpan = sceneBox.span();
+
+#if 0
+  if (this->enableGround) {
+    // ------------------------------------------------------------------
+    // set up vox data and accels for ground (single stretched brick)
+    // ------------------------------------------------------------------
+    
+    std::vector<uchar4> voxdata {make_uchar4(0,0,0, 249)};  // using color index of grey in default palette
+    OWLBuffer primBuffer 
+      = allocator.deviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
+
+    OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
+    
+    owlGeomSetPrimCount(voxGeom, voxdata.size());
+
+    owlGeomSetBuffer(voxGeom, "prims", primBuffer);
+    owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
+    owlGeomSet1b(voxGeom, "enableToonOutline", false);  // no outline for ground because it's scaled
+
+    OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
+    owlGroupBuildAccel(userGeomGroup);
+    bottomLevelBvhSizeInBytes += getAccelSizeInBytes(userGeomGroup);
+    geomGroups.push_back(userGeomGroup);
+
+    instanceTransforms.push_back( 
+        owl::affine3f::translate(vec3f(sceneCenter.x, sceneCenter.y, sceneCenter.z - 1 - 0.5f*sceneSpan.z)) *
+        owl::affine3f::scale(vec3f(2*sceneSpan.x, 2*sceneSpan.y, 1.0f))*    // assume Z up
+        owl::affine3f::translate(vec3f(-0.5f, -0.5f, 0.0f))
+        );
+  }
+#endif
 
   // Apply final scene transform so we can use the same camera for every scene
   const float maxSpan = owl::reduce_max(sceneBox.span());
@@ -986,7 +1207,8 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
   if (sceneType == SCENE_TYPE_FLAT) {
     world = createFlatTriangleGeometryScene(module, scene, this->sceneBox);
   } else if (sceneType == SCENE_TYPE_USER) {
-    world = createUserGeometryScene(module, scene, this->sceneBox);
+    //world = createUserGeometryScene(module, scene, this->sceneBox);
+    world = createBlockedUserGeometryScene(module, scene, this->sceneBox);
   } else {
     world = createInstancedTriangleGeometryScene(module, scene, this->sceneBox);
   }

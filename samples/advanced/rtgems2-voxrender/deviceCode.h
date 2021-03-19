@@ -67,6 +67,17 @@ struct VoxGeomData {
   bool enableToonOutline;
 };
 
+// A version of VoxGeom where primitives are larger than single bricks.
+// Each OptiiX prim is a block of NxNxN bricks (N==self.bricksPerBlock)
+struct VoxBlockGeomData {
+  uchar3 *prims;  // xyz indices of LL corner of a block containing NxNxN bricks.
+  unsigned char *colorIndices; 
+  uchar4 *colorPalette;
+  int bricksPerBlock;  // cubed, should be in LaunchParams too
+
+  // No toon outline for this mode
+};
+
 /* variables for the ray generation program */
 struct RayGenData
 {

@@ -393,6 +393,8 @@ OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
   primBounds = box3f(boxmin, boxmax);
 }
 
+
+
 namespace {
   // temp swizzles
   inline __device__
@@ -571,4 +573,160 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
 
 }
 
+
+// Experiment with VoxBlockGeom
+
+
+
+OPTIX_BOUNDS_PROGRAM(VoxBlockGeom)(const void *geomData,
+                              box3f &primBounds,
+                              const int primID)
+{
+  const VoxBlockGeomData &self = *(const VoxBlockGeomData*)geomData;
+  uchar3 indices = self.prims[primID];
+  vec3f boxmin( indices.x, indices.y, indices.z );
+  vec3f boxmax = boxmin + vec3f(self.bricksPerBlock);
+
+  // Not obvious how to toon outline
+  /*
+  if (self.enableToonOutline) {
+    // bloat the box slightly
+    const vec3f boxcenter (indices.x + 0.5f, indices.y + 0.5f, indices.z + 0.5f);
+    boxmin = boxcenter + OUTLINE_SCALE*(boxmin-boxcenter);
+    boxmax = boxcenter + OUTLINE_SCALE*(boxmax-boxcenter);
+  }
+  */
+  
+  primBounds = box3f(boxmin, boxmax);
+}
+
+// Ray-box intersection with normals from Majercik et al 2018
+OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
+{
+  // convert indices to 3d box
+  const int primID = optixGetPrimitiveIndex();
+  const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
+  uchar3 indices = self.prims[primID];
+  float blockScale = self.bricksPerBlock;
+  const vec3f boxRadius(0.5f*blockScale);
+  vec3f boxCenter = vec3f(indices.x, indices.y, indices.z) + boxRadius;
+
+  // Translate ray to local box space
+  const vec3f rayOrigin  = vec3f(optixGetObjectRayOrigin()) - boxCenter;
+  const vec3f rayDirection  = optixGetObjectRayDirection();  // assume no rotation
+  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
+
+  // Negated sign function
+  const vec3f sgn( 
+      rayDirection.x > 0.f ? -1 : 1,
+      rayDirection.y > 0.f ? -1 : 1,
+      rayDirection.z > 0.f ? -1 : 1);
+
+  vec3f distanceToPlane = boxRadius*sgn - rayOrigin;
+  distanceToPlane *= invRayDirection;
+
+  const bool testX = distanceToPlane.x >= 0.f && 
+    owl::all_less_than(owl::abs(yz(rayOrigin) + yz(rayDirection)*distanceToPlane.x), yz(boxRadius));
+
+  const bool testY = distanceToPlane.y >= 0.f &&
+    owl::all_less_than(owl::abs(zx(rayOrigin) + zx(rayDirection)*distanceToPlane.y), zx(boxRadius));
+
+  const bool testZ = distanceToPlane.z >= 0.f &&
+    owl::all_less_than(owl::abs(xy(rayOrigin) + xy(rayDirection)*distanceToPlane.z), xy(boxRadius));
+
+  const vec3b test(testX, testY, testZ);
+  if ( test.x || test.y || test.z ) { // hit the box
+    float distance = test.x ? distanceToPlane.x : (test.y ? distanceToPlane.y : distanceToPlane.z);
+    const float ray_tmax = optixGetRayTmax();
+    const float ray_tmin = optixGetRayTmin();
+    if (distance > ray_tmin && distance < ray_tmax) {  // closer than existing hit
+      // Since N is something like [0,-1,0], encode it as sign (1 bit) and 3 components (3 bits): 000...SNNN
+      // This lets it fit in one attribute.
+      int signOfN = (sgn.x*test.x + sgn.y*test.y + sgn.z*test.z) > 0 ? 1 : 0;
+      int packedN = (signOfN << 3) | (test.z << 2) | (test.y << 1) | test.x;
+      int colorIndex = self.colorIndices[primID];  // TODO: should be for brick, not block
+      optixReportIntersection(distance, 0, packedN, colorIndex);
+    }
+  }
+}
+
+OPTIX_INTERSECT_PROGRAM(VoxBlockGeomShadow)()
+{
+  // convert indices to 3d box
+  const int primID = optixGetPrimitiveIndex();
+  const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
+  uchar3 indices = self.prims[primID];
+
+  float blockScale = self.bricksPerBlock;
+  const vec3f boxRadius(0.5f*blockScale);
+  vec3f boxCenter = vec3f(indices.x, indices.y, indices.z) + boxRadius;
+
+  // Translate ray to local box space
+  const vec3f rayOrigin  = vec3f(optixGetObjectRayOrigin()) - boxCenter;
+  const vec3f rayDirection  = optixGetObjectRayDirection();  // assume no rotation
+  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
+
+  const float ray_tmax = optixGetRayTmax();
+  const float ray_tmin = optixGetRayTmin();
+
+  vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
+  vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
+  float tnear = reduce_max(owl::min(t0, t1));
+  float tfar  = reduce_min(owl::max(t0, t1));
+  float distance = tnear > 0.f ? tnear : tfar;
+
+  if (tnear <= tfar && distance > ray_tmin && distance < ray_tmax) {
+    optixReportIntersection( distance, 0);
+  }
+}
+
+
+OPTIX_CLOSEST_HIT_PROGRAM(VoxBlockGeom)()
+{
+  // convert indices to 3d box
+  const int primID = optixGetPrimitiveIndex();
+  const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
+
+  // Select normal for whichever face we hit
+  const int packedN = optixGetAttribute_0();
+  const int sgnN = (packedN >> 3) ? 1 : -1;
+  const float3 Nbox = make_float3(
+    sgnN * ( packedN       & 1),
+    sgnN * ((packedN >> 1) & 1),
+    sgnN * ((packedN >> 2) & 1));
+
+  const vec3f Ng = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
+
+  // Bias value relative to brick scale
+  const float shadowBias = 1e-2f * fminf(1.f, optixLaunchParams.brickScale);
+
+  // Convert 8 bit color to float
+  const int ci = optixGetAttribute_1();
+  uchar4 col = self.colorPalette[ci];
+  const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
+
+  PerRayData &prd = owl::getPRD<PerRayData>();
+  const vec3f dir   = optixGetWorldRayDirection();
+  const vec3f org   = optixGetWorldRayOrigin();
+  const float hit_t = optixGetRayTmax();
+  const vec3f hit_P = org + hit_t * dir;
+  const vec3f hit_P_offset = hit_P + shadowBias*Ng;  // bias along normal to help with shadow acne
+
+  // Direct
+  const vec3f directLight = sunlight(hit_P_offset, Ng, prd.random);
+
+  // Bounce
+  vec3f scatteredDirection = scatterLambertian(Ng, prd.random);
+
+  prd.out.directLight = directLight*color;
+  prd.out.attenuation = color;
+  prd.out.scatterEvent = rayGotBounced;
+  prd.out.scattered_direction = scatteredDirection;
+  prd.out.scattered_origin = hit_P_offset;
+
+  // Not used for BlockGeom
+  if (optixLaunchParams.enableToonOutline) {
+    prd.out.hitDistance = length(hit_P - org);
+  }
+}
 
