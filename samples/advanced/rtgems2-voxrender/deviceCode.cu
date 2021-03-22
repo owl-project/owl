@@ -679,99 +679,108 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
   // convert indices to 3d box
   const int primID = optixGetPrimitiveIndex();
   const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
-  uchar3 blockOrigin = self.prims[primID];
-  float blockScale = self.bricksPerBlock;
-  const vec3f boxRadius(0.5f*blockScale);
-  vec3f boxCenter = vec3f(blockOrigin.x, blockOrigin.y, blockOrigin.z) + boxRadius;
 
-  // Does the ray hit the block?
+  const uchar3 blockOrigin = self.prims[primID];
+  const vec3f blockRadius(0.5f*self.bricksPerBlock);
+  const vec3f blockCenter = vec3f(blockOrigin.x, blockOrigin.y, blockOrigin.z) + blockRadius;
+
   const vec3f rayOrigin = optixGetObjectRayOrigin();
   const vec3f rayDirection = optixGetObjectRayDirection();
   const float rayTmin = optixGetRayTmin();
   const float rayTmax = optixGetRayTmax();
-  float tnear;
-  if (intersectRayBox(rayOrigin, rayDirection, rayTmin, rayTmax, boxCenter, boxRadius, tnear)) {
-    
-    const vec3f blockOrigin3f(blockOrigin.x, blockOrigin.y, blockOrigin.z);
-    const vec3i blockDim(self.bricksPerBlock);
 
-    int packedNormalForClosestHit = 0;
-    int colorIndexForClosestHit = 0;
+  float tnear;    // init where ray enters block, and increases as we traverse cells
+  int axis = -1;  // axis we crossed most recently, which gives the normal
 
-    // DDA from PBRT/scratchapixel
-    
-    // initialization step
-    const vec3f cell3f = rayOrigin + tnear*rayDirection - blockOrigin3f;
-    vec3i cell (
-        clamp(int(cell3f.x), 0, blockDim.x-1),
-        clamp(int(cell3f.y), 0, blockDim.y-1),
-        clamp(int(cell3f.z), 0, blockDim.z-1));
+  const vec3f blockOrigin3f(blockOrigin.x, blockOrigin.y, blockOrigin.z);
+  vec3f cell3f = rayOrigin + rayTmin*rayDirection - blockOrigin3f;
+  if (owl::all(owl::lt( cell3f, vec3f(self.bricksPerBlock) ))) {
+    // Ray starts inside box
+    tnear = rayTmin;
+  } else {
+    if (intersectRayBox(rayOrigin, rayDirection, rayTmin, rayTmax, blockCenter, blockRadius, tnear)) {
+      // Ray starts outside and hits box
+      cell3f = rayOrigin + tnear*rayDirection - blockOrigin3f;
+      axis = indexOfMaxComponent(owl::abs(cell3f - blockRadius)); 
+    } else {
+      // Ray misses box
+      return;
+    }
+  }
 
-    const vec3f sgn( 
-        rayDirection.x > 0.f ? 1 : -1,
-        rayDirection.y > 0.f ? 1 : -1,
-        rayDirection.z > 0.f ? 1 : -1);
+  const vec3i blockDim(self.bricksPerBlock);
 
-    const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
 
-    const vec3f deltaT = sgn * invRayDirection;
-    const vec3i step (sgn.x, sgn.y, sgn.z);
-    const vec3i exitCell ( 
-        sgn.x < 0 ? -1 : blockDim.x,
-        sgn.y < 0 ? -1 : blockDim.y,
-        sgn.z < 0 ? -1 : blockDim.z);
+  // DDA from PBRT/scratchapixel
+  
+  // Constants during traversal
 
-    vec3f nextCrossingT (
-        tnear + ((sgn.x < 0 ? cell.x : cell.x+1) - cell3f.x) * invRayDirection.x,
-        tnear + ((sgn.y < 0 ? cell.y : cell.y+1) - cell3f.y) * invRayDirection.y,
-        tnear + ((sgn.z < 0 ? cell.z : cell.z+1) - cell3f.z) * invRayDirection.z);
+  const vec3f sgn( 
+      rayDirection.x > 0.f ? 1 : -1,
+      rayDirection.y > 0.f ? 1 : -1,
+      rayDirection.z > 0.f ? 1 : -1);
 
-    const int map[8] = {2, 1, 2, 1, 2, 2, 0, 0};   // TODO: const mem?
+  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
 
-    const int brickOffset = primID*blockDim.x*blockDim.y*blockDim.z;
+  const vec3f deltaT = sgn * invRayDirection;
+  const vec3i step (sgn.x, sgn.y, sgn.z);
+  const vec3i exitCell ( 
+      sgn.x < 0 ? -1 : blockDim.x,
+      sgn.y < 0 ? -1 : blockDim.y,
+      sgn.z < 0 ? -1 : blockDim.z);
 
-    // DDA
-    while(1) {
-      const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
+  const int map[8] = {2, 1, 2, 1, 2, 2, 0, 0};   // TODO: const mem?
+  const int brickOffset = primID*blockDim.x*blockDim.y*blockDim.z;
 
-      int colorIdx = self.colorIndices[brickIdx];
-      if (colorIdx > 0) {
 
-        // TODO: should not need to re-intersect box here
-        vec3f brickCenter = blockOrigin3f + vec3f(cell.x+0.5f, cell.y+0.5f, cell.z+0.5f);
-        vec3f brickRadius(0.5f);
-        float tmpDist; // not used
-        int packedNormal;
-        if (intersectRayBoxWithNormals(rayOrigin, rayDirection, rayTmin, rayTmax, brickCenter, brickRadius,
-          tmpDist, packedNormal ))
-          {
-            packedNormalForClosestHit = packedNormal;  // debug
-            colorIndexForClosestHit = colorIdx;
-            break;
-          }
-      }
+  // Things that change during traversal
 
-      // Advance to next cell along ray
+  vec3i cell (
+      clamp(int(cell3f.x), 0, blockDim.x-1),
+      clamp(int(cell3f.y), 0, blockDim.y-1),
+      clamp(int(cell3f.z), 0, blockDim.z-1));
 
-      // Lookup table method from scratchapixel, not measured for perf
-      const uint8_t k = ((nextCrossingT[0] < nextCrossingT[1]) << 2) + 
-                        ((nextCrossingT[0] < nextCrossingT[2]) << 1) + 
-                        ((nextCrossingT[1] < nextCrossingT[2])); 
+  vec3f nextCrossingT (
+      tnear + ((sgn.x < 0 ? cell.x : cell.x+1) - cell3f.x) * invRayDirection.x,
+      tnear + ((sgn.y < 0 ? cell.y : cell.y+1) - cell3f.y) * invRayDirection.y,
+      tnear + ((sgn.z < 0 ? cell.z : cell.z+1) - cell3f.z) * invRayDirection.z);
 
-      const uint8_t axis = map[k];
-      if (nextCrossingT[axis] >= rayTmax) break;
-      cell[axis] += step[axis];
-      if (cell[axis] == exitCell[axis]) break;
-      tnear = nextCrossingT[axis];
-      nextCrossingT[axis] += deltaT[axis];
+  int packedNormalForClosestHit = 0;
+  int colorIndexForClosestHit = 0;
 
+  // DDA traversal
+  while(1) {
+    const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
+
+    const int colorIdx = self.colorIndices[brickIdx];
+    if (colorIdx > 0 && axis >= 0) {
+      int signOfNormal = (rayDirection[axis] > 0.f) ? 0 : 1; // here 0 means negative, 1 means positive
+      int packedNormal = (signOfNormal << 3) | (1 << axis);
+      packedNormalForClosestHit = packedNormal;
+      colorIndexForClosestHit = colorIdx;
+      break;
     }
 
-    if (colorIndexForClosestHit) {
-      optixReportIntersection(tnear, 0, packedNormalForClosestHit, colorIndexForClosestHit);
-    }
+    // Advance to next cell along ray
+
+    // Lookup table method from scratchapixel, not measured for perf
+    const uint8_t k = ((nextCrossingT[0] < nextCrossingT[1]) << 2) + 
+                      ((nextCrossingT[0] < nextCrossingT[2]) << 1) + 
+                      ((nextCrossingT[1] < nextCrossingT[2])); 
+
+    axis = map[k];
+    if (nextCrossingT[axis] >= rayTmax) break;
+    cell[axis] += step[axis];
+    if (cell[axis] == exitCell[axis]) break;
+    tnear = nextCrossingT[axis];
+    nextCrossingT[axis] += deltaT[axis];
 
   }
+
+  if (colorIndexForClosestHit) {
+    optixReportIntersection(tnear, 0, packedNormalForClosestHit, colorIndexForClosestHit);
+  }
+
 }
 
 // TODO: need a version of the grid traversal above, but optimized for shadow rays
