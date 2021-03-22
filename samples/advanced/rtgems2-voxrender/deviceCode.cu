@@ -143,7 +143,7 @@ vec3f tracePrimaryRay(const RayGenData &self,
   else { // ray is still alive, and got properly bounced
     ray = makeRadianceRay(prd.out.scattered_origin,
                           prd.out.scattered_direction,
-                          1e-3f,
+                          0.f, // rely on hitP offset along normal
                           1e10f);
   }
   return prd.out.directLight;
@@ -175,7 +175,7 @@ vec3f traceBounces(const RayGenData &self,
       directLight += prd.out.directLight;
       ray = makeRadianceRay(/* origin   : */ prd.out.scattered_origin,
                      /* direction: */ prd.out.scattered_direction,
-                     /* tmin     : */ 1e-3f,
+                     /* tmin     : */ 0.f,  // rely on hitP offset along normal
                      /* tmax     : */ 1e10f);
 
     }
@@ -341,7 +341,7 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
 
   // Bias value relative to a brick
-  const float shadowBias = 1e-2f * fminf(1.f, optixLaunchParams.brickScale);
+  const float shadowBias = 0.01f * fminf(1.f, optixLaunchParams.brickScale);
 
   // Convert 8 bit color to float
   const unsigned int brickID = self.isFlat ? optixGetPrimitiveIndex() / self.primCountPerBrick : optixGetInstanceId();
@@ -577,7 +577,6 @@ OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
 // Experiment with VoxBlockGeom
 
 
-
 OPTIX_BOUNDS_PROGRAM(VoxBlockGeom)(const void *geomData,
                               box3f &primBounds,
                               const int primID)
@@ -600,10 +599,11 @@ OPTIX_BOUNDS_PROGRAM(VoxBlockGeom)(const void *geomData,
   primBounds = box3f(boxmin, boxmax);
 }
 
+// Note: ignore ray span here.
 __device__ inline
-bool intersectRayBox(const vec3f _rayOrigin, const vec3f rayDirection, float ray_tmin, float ray_tmax,
+bool intersectRayBox(const vec3f _rayOrigin, const vec3f rayDirection,
     vec3f boxCenter, vec3f boxRadius,
-    float &distance)
+    float &tnear, float &tfar)
 {
   // Translate ray to local box space
   const vec3f rayOrigin  = _rayOrigin - boxCenter;
@@ -611,67 +611,9 @@ bool intersectRayBox(const vec3f _rayOrigin, const vec3f rayDirection, float ray
 
   vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
   vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
-  float tnear = reduce_max(owl::min(t0, t1));
-  float tfar  = reduce_min(owl::max(t0, t1));
-  
-  if (tnear <= tfar && tnear >= ray_tmin && tnear <= ray_tmax) {
-    distance = tnear;
-    return true;
-  }
-  return false;
-}
-
-// Ray-box intersection with normals from Majercik et al 2018
-__device__ inline
-bool intersectRayBoxWithNormals(const vec3f _rayOrigin, const vec3f rayDirection, float ray_tmin, float ray_tmax, 
-  vec3f boxCenter, vec3f boxRadius,
-  float &distance, int &packedNormal)
-{
-  // Translate ray to local box space
-  const vec3f rayOrigin  = _rayOrigin - boxCenter;
-  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
-
-  // Negated sign function
-  const vec3f sgn( 
-      rayDirection.x > 0.f ? -1 : 1,
-      rayDirection.y > 0.f ? -1 : 1,
-      rayDirection.z > 0.f ? -1 : 1);
-
-  vec3f distanceToPlane = boxRadius*sgn - rayOrigin;
-  distanceToPlane *= invRayDirection;
-
-  const bool testX = distanceToPlane.x >= 0.f && 
-    owl::all_less_than(owl::abs(yz(rayOrigin) + yz(rayDirection)*distanceToPlane.x), yz(boxRadius));
-
-  const bool testY = distanceToPlane.y >= 0.f &&
-    owl::all_less_than(owl::abs(zx(rayOrigin) + zx(rayDirection)*distanceToPlane.y), zx(boxRadius));
-
-  const bool testZ = distanceToPlane.z >= 0.f &&
-    owl::all_less_than(owl::abs(xy(rayOrigin) + xy(rayDirection)*distanceToPlane.z), xy(boxRadius));
-
-  const vec3b test(testX, testY, testZ);
-  if ( test.x || test.y || test.z ) { // hit the box
-    distance = test.x ? distanceToPlane.x : (test.y ? distanceToPlane.y : distanceToPlane.z);
-    if (distance >= ray_tmin && distance <= ray_tmax) {  // closer than existing hit
-      // Since N is something like [0,-1,0], encode it as sign (1 bit) and 3 components (3 bits): 000...SNNN
-      // This lets it fit in one attribute.
-      int signOfN = (sgn.x*test.x + sgn.y*test.y + sgn.z*test.z) > 0 ? 1 : 0;
-      packedNormal = (signOfN << 3) | (test.z << 2) | (test.y << 1) | test.x;
-      return true;
-    }
-  }
-  return false;
-}
-
-inline __device__ 
-vec3f unpackNormal(int packedN)
-{
-  const int sgnN = (packedN >> 3) ? 1 : -1;
-  const float3 Nbox = make_float3(
-    sgnN * ( packedN       & 1),
-    sgnN * ((packedN >> 1) & 1),
-    sgnN * ((packedN >> 2) & 1));
-  return Nbox;
+  tnear = reduce_max(owl::min(t0, t1));
+  tfar  = reduce_min(owl::max(t0, t1));
+  return tnear <= tfar;
 }
 
 OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
@@ -689,31 +631,36 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
   const float rayTmin = optixGetRayTmin();
   const float rayTmax = optixGetRayTmax();
 
-  float tnear;    // init where ray enters block, and increases as we traverse cells
-  int axis = -1;  // axis we crossed most recently, which gives the normal
-
   const vec3f blockOrigin3f(blockOrigin.x, blockOrigin.y, blockOrigin.z);
-  vec3f cell3f = rayOrigin + rayTmin*rayDirection - blockOrigin3f;
-  if (owl::all(owl::lt( cell3f, vec3f(self.bricksPerBlock) ))) {
-    // Ray starts inside box
-    tnear = rayTmin;
-  } else {
-    if (intersectRayBox(rayOrigin, rayDirection, rayTmin, rayTmax, blockCenter, blockRadius, tnear)) {
-      // Ray starts outside and hits box
-      cell3f = rayOrigin + tnear*rayDirection - blockOrigin3f;
-      axis = indexOfMaxComponent(owl::abs(cell3f - blockRadius)); 
-    } else {
-      // Ray misses box
-      return;
-    }
+
+  int axis = -1;  // axis we crossed most recently, which gives the normal
+  vec3f cell3f;
+  float tnear;    // init where ray enters block, and increases as we traverse cells
+  float tfar;
+  if (!intersectRayBox(rayOrigin, rayDirection, blockCenter, blockRadius, tnear, tfar)) {
+    return;  // Ray line misses block (without considering ray span)
   }
 
-  const vec3i blockDim(self.bricksPerBlock);
+  // Apply ray span
+  if (tnear >= rayTmin && tnear <= rayTmax) {
+    // Ray starts outside and hits block
+    cell3f = rayOrigin + tnear*rayDirection - blockOrigin3f;
+    axis = indexOfMaxComponent(owl::abs(cell3f - blockRadius)); 
 
+  } else if (tnear < rayTmin && tfar > rayTmin) {
+    // Ray starts inside block
+    tnear = rayTmin;
+    cell3f = (rayOrigin + tnear*rayDirection) - blockOrigin3f;
+  } else {
+    // Ray does not intersect block within [min,max] span
+    return;
+  }
 
   // DDA from PBRT/scratchapixel
   
   // Constants during traversal
+
+  const vec3i blockDim(self.bricksPerBlock);
 
   const vec3f sgn( 
       rayDirection.x > 0.f ? 1 : -1,
@@ -751,8 +698,15 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
   // DDA traversal
   while(1) {
     const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
-
     const int colorIdx = self.colorIndices[brickIdx];
+
+    // Note: we might have a valid color here but not a valid axis (normal).  This happens when the origin of a bounce
+    // ray is pushed inside a neighbor brick due to biasing along the normal.  It is difficult to completely eliminate;
+    // even for a flat plane of bricks, the normals on the edges of bricks may point along the plane tangents
+    // (think of tiny bevels on the bricks).
+    //
+    // Extra check for axis >= 0 is a workaround for this.
+    
     if (colorIdx > 0 && axis >= 0) {
       int signOfNormal = (rayDirection[axis] > 0.f) ? 0 : 1; // here 0 means negative, 1 means positive
       int packedNormal = (signOfNormal << 3) | (1 << axis);
@@ -763,7 +717,7 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
 
     // Advance to next cell along ray
 
-    // Lookup table method from scratchapixel, not measured for perf
+    // Lookup table method from PBRT/scratchapixel, not measured for perf
     const uint8_t k = ((nextCrossingT[0] < nextCrossingT[1]) << 2) + 
                       ((nextCrossingT[0] < nextCrossingT[2]) << 1) + 
                       ((nextCrossingT[1] < nextCrossingT[2])); 
@@ -785,6 +739,16 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
 
 // TODO: need a version of the grid traversal above, but optimized for shadow rays
 
+inline __device__ 
+vec3f unpackNormal(int packedN)
+{
+  const int sgnN = (packedN >> 3) ? 1 : -1;
+  const float3 Nbox = make_float3(
+    sgnN * ( packedN       & 1),
+    sgnN * ((packedN >> 1) & 1),
+    sgnN * ((packedN >> 2) & 1));
+  return Nbox;
+}
 
 OPTIX_CLOSEST_HIT_PROGRAM(VoxBlockGeom)()
 {
