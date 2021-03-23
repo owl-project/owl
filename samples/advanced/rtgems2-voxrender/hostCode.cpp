@@ -709,23 +709,25 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
   const vec3f sceneCenter = sceneBox.center();
   const vec3f sceneSpan = sceneBox.span();
 
-#if 0
   if (this->enableGround) {
     // ------------------------------------------------------------------
-    // set up vox data and accels for ground (single stretched brick)
+    // set up block vox data and accels for ground (single stretched block of NxNxN bricks)
     // ------------------------------------------------------------------
     
-    std::vector<uchar4> voxdata {make_uchar4(0,0,0, 249)};  // using color index of grey in default palette
+    std::vector<uchar3> blockOrigins {make_uchar3(0,0,0)};
+    std::vector<unsigned char> colorIndices(BLOCKLEN*BLOCKLEN*BLOCKLEN, 249);
     OWLBuffer primBuffer 
-      = allocator.deviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
+      = allocator.deviceBufferCreate(context, OWL_UCHAR3, blockOrigins.size(), blockOrigins.data());
+    OWLBuffer colorIndexBuffer
+      = allocator.deviceBufferCreate(context, OWL_UCHAR, colorIndices.size(), colorIndices.data());
 
     OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
     
-    owlGeomSetPrimCount(voxGeom, voxdata.size());
+    owlGeomSetPrimCount(voxGeom, blockOrigins.size());
 
     owlGeomSetBuffer(voxGeom, "prims", primBuffer);
+    owlGeomSetBuffer(voxGeom, "colorIndices", colorIndexBuffer);
     owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
-    owlGeomSet1b(voxGeom, "enableToonOutline", false);  // no outline for ground because it's scaled
 
     OWLGroup userGeomGroup = owlUserGeomGroupCreate(context,1,&voxGeom);
     owlGroupBuildAccel(userGeomGroup);
@@ -734,11 +736,10 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
 
     instanceTransforms.push_back( 
         owl::affine3f::translate(vec3f(sceneCenter.x, sceneCenter.y, sceneCenter.z - 1 - 0.5f*sceneSpan.z)) *
-        owl::affine3f::scale(vec3f(2*sceneSpan.x, 2*sceneSpan.y, 1.0f))*    // assume Z up
-        owl::affine3f::translate(vec3f(-0.5f, -0.5f, 0.0f))
+        owl::affine3f::scale(vec3f(2*sceneSpan.x/BLOCKLEN, 2*sceneSpan.y/BLOCKLEN, 1.0f/BLOCKLEN))*    // assume Z up
+        owl::affine3f::translate(vec3f(-0.5f*BLOCKLEN, -0.5f*BLOCKLEN, 0.0f))
         );
   }
-#endif
 
   // Apply final scene transform so we can use the same camera for every scene
   const float maxSpan = owl::reduce_max(sceneBox.span());
