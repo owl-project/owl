@@ -73,6 +73,7 @@ const vec3f init_lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
 enum SceneType {
   SCENE_TYPE_FLAT=1,
   SCENE_TYPE_USER,
+  SCENE_TYPE_USERBLOCKS,
   SCENE_TYPE_INSTANCED,
   SCENE_TYPE_INVALID
 };
@@ -112,7 +113,7 @@ struct Viewer : public owl::viewer::OWLViewer
       owl::box3f &sceneBox);
   OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
       owl::box3f &sceneBox);
-  OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+  OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
       owl::box3f &sceneBox) ;
 
 
@@ -572,7 +573,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 }
 
 
-OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
     box3f &sceneBox) 
 {
   BufferAllocator allocator;
@@ -636,7 +637,7 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
 
     extractBlocksFromModel(vox_model, BLOCKLEN, blockOrigins, colorIndices);
 
-    LOG("building user geometry for model ...");
+    LOG("building user blocks (dda " << BLOCKLEN << "x" << BLOCKLEN << "x" << BLOCKLEN << ") geometry for model ...");
 
     // ------------------------------------------------------------------
     // set up user primitives for single vox model
@@ -1260,8 +1261,9 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
   if (sceneType == SCENE_TYPE_FLAT) {
     world = createFlatTriangleGeometryScene(module, scene, this->sceneBox);
   } else if (sceneType == SCENE_TYPE_USER) {
-    //world = createUserGeometryScene(module, scene, this->sceneBox);
-    world = createBlockedUserGeometryScene(module, scene, this->sceneBox);
+    world = createUserGeometryScene(module, scene, this->sceneBox);
+  } else if (sceneType == SCENE_TYPE_USERBLOCKS) {
+    world = createUserBlocksGeometryScene(module, scene, this->sceneBox);
   } else {
     world = createInstancedTriangleGeometryScene(module, scene, this->sceneBox);
   }
@@ -1383,6 +1385,8 @@ SceneType stringToSceneType(const char *s)
     return SCENE_TYPE_FLAT;
   } else if (arg == "user") {
     return SCENE_TYPE_USER;
+  } else if (arg == "userblocks") {
+    return SCENE_TYPE_USERBLOCKS;
   } else if (arg == "instanced") {
     return SCENE_TYPE_INSTANCED;
   }

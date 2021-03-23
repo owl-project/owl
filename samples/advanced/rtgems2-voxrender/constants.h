@@ -5,7 +5,7 @@
 #define M_PIf       3.14159265358979323846f
 #endif
 
-#define BLOCKLEN 3  // in bricks, per side
+#define BLOCKLEN 8  // in bricks, per side
 #define OUTLINE_SCALE 1.2f
 
 enum VisibilityMasks {
