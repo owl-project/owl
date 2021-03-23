@@ -584,7 +584,7 @@ OPTIX_BOUNDS_PROGRAM(VoxBlockGeom)(const void *geomData,
   const VoxBlockGeomData &self = *(const VoxBlockGeomData*)geomData;
   uchar3 indices = self.prims[primID];
   vec3f boxmin( indices.x, indices.y, indices.z );
-  vec3f boxmax = boxmin + vec3f(self.bricksPerBlock);
+  vec3f boxmax = boxmin + vec3f(BLOCKLEN);
 
   // Not obvious how to toon outline
   /*
@@ -623,7 +623,7 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
   const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
 
   const uchar3 blockOrigin = self.prims[primID];
-  const vec3f blockRadius(0.5f*self.bricksPerBlock);
+  const vec3f blockRadius(0.5f*BLOCKLEN);
   const vec3f blockCenter = vec3f(blockOrigin.x, blockOrigin.y, blockOrigin.z) + blockRadius;
 
   const vec3f rayOrigin = optixGetObjectRayOrigin();
@@ -660,7 +660,7 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
   
   // Constants during traversal
 
-  const vec3i blockDim(self.bricksPerBlock);
+  const vec3i blockDim(BLOCKLEN);
 
   const vec3f sgn( 
       rayDirection.x > 0.f ? 1 : -1,
@@ -745,7 +745,7 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeomShadow)()
   const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
 
   const uchar3 blockOrigin = self.prims[primID];
-  const vec3f blockRadius(0.5f*self.bricksPerBlock);
+  const vec3f blockRadius(0.5f*BLOCKLEN);
   const vec3f blockCenter = vec3f(blockOrigin.x, blockOrigin.y, blockOrigin.z) + blockRadius;
 
   const vec3f rayOrigin = optixGetObjectRayOrigin();
@@ -782,7 +782,7 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeomShadow)()
   
   // Constants during traversal
 
-  const vec3i blockDim(self.bricksPerBlock);
+  const vec3i blockDim(BLOCKLEN);
 
   const vec3f sgn( 
       rayDirection.x > 0.f ? 1 : -1,

@@ -269,10 +269,10 @@ std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model, bool
   return solid_voxels;
 }
 
-void extractBlocksFromModel(const ogt_vox_model* model, bool /*cullHidden*/, int bricksPerBlockDim,
+void extractBlocksFromModel(const ogt_vox_model* model, int blockLen,
     std::vector<uchar3> &blockOriginsOut, std::vector<unsigned char> &colorIndicesOut)
 {
-  const vec3i blockDim(bricksPerBlockDim, bricksPerBlockDim, bricksPerBlockDim);
+  const vec3i blockDim(blockLen);
   const int bricksPerBlock = blockDim.x * blockDim.y * blockDim.z;
 
   // Use CUDA notation to keep this straight:
@@ -577,8 +577,6 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
 {
   BufferAllocator allocator;
 
-  const int bricksPerBlock = 3;  // per side
-
   // -------------------------------------------------------
   // declare user vox geometry type
   // -------------------------------------------------------
@@ -587,7 +585,6 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
     { "prims",  OWL_BUFPTR, OWL_OFFSETOF(VoxBlockGeomData,prims)},
     { "colorIndices",  OWL_BUFPTR, OWL_OFFSETOF(VoxBlockGeomData,colorIndices)},
     { "colorPalette",  OWL_BUFPTR, OWL_OFFSETOF(VoxBlockGeomData,colorPalette)},
-    { "bricksPerBlock",  OWL_INT, OWL_OFFSETOF(VoxBlockGeomData,bricksPerBlock)},
     { /* sentinel to mark end of list */ }
   };
   OWLGeomType voxGeomType
@@ -637,7 +634,7 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
     std::vector<uchar3> blockOrigins;
     std::vector<unsigned char> colorIndices;
 
-    extractBlocksFromModel(vox_model, enableCulling, bricksPerBlock, blockOrigins, colorIndices);
+    extractBlocksFromModel(vox_model, BLOCKLEN, blockOrigins, colorIndices);
 
     LOG("building user geometry for model ...");
 
@@ -656,7 +653,6 @@ OWLGroup Viewer::createBlockedUserGeometryScene(OWLModule module, const ogt_vox_
     owlGeomSetBuffer(voxGeom, "prims", primBuffer);
     owlGeomSetBuffer(voxGeom, "colorIndices", colorIndexBuffer);
     owlGeomSetBuffer(voxGeom, "colorPalette", paletteBuffer);
-    owlGeomSet1i(voxGeom, "bricksPerBlock", bricksPerBlock);
 
     // ------------------------------------------------------------------
     // bottom level group/accel
