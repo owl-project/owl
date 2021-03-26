@@ -1283,18 +1283,12 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
   // -------------------------------------------------------
   OWLVarDecl missProgVars[]
     = {
-    { "color0", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color0)},
-    { "color1", OWL_FLOAT3, OWL_OFFSETOF(MissProgData,color1)},
     { /* sentinel to mark end of list */ }
   };
   // ----------- create object  ----------------------------
   OWLMissProg missProg = 
-    owlMissProgCreate(context,module,"miss",sizeof(MissProgData), missProgVars,-1);
+    owlMissProgCreate(context,module,"miss",/*sizeof(MissProgData)*/ 0, missProgVars,-1);
   owlMissProgSet(context, 0, missProg);
-  
-  // ----------- set variables  ----------------------------
-  owlMissProgSet3f(missProg,"color0",owl3f{.8f,0.f,0.f});
-  owlMissProgSet3f(missProg,"color1",owl3f{.8f,.8f,.8f});
 
   // Second program for shadow visibility
   OWLMissProg shadowMissProg = 

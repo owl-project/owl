@@ -88,12 +88,6 @@ struct RayGenData
   } camera;
 };
 
-/* variables for the miss program */
-struct MissProgData
-{
-  vec3f  color0;
-  vec3f  color1;
-};
 
 // Utility
 inline __host__ __device__ int indexOfMaxComponent(vec3f v)
