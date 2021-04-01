@@ -635,13 +635,14 @@ void intersectVoxBlockGeom()
 
   const vec3f blockOrigin3f(blockOrigin.x, blockOrigin.y, blockOrigin.z);
 
-  int axis = -1;  // axis we crossed most recently, which gives the normal
-  vec3f cell3f;
   float tnear;    // init where ray enters block, and increases as we traverse cells
   float tfar;
   if (!intersectRayBox(rayOrigin, rayDirection, blockCenter, blockRadius, tnear, tfar)) {
     return;  // Ray line misses block (without considering ray span)
   }
+
+  int axis = -1;  // axis crossed by the ray most recently, which gives the normal
+  vec3f cell3f;   // initial cell where ray enters or starts in the grid.
 
   // Apply ray span
   if (tnear >= rayTmin && tnear <= rayTmax) {
@@ -694,9 +695,6 @@ void intersectVoxBlockGeom()
       tnear + ((sgn.y < 0 ? cell.y : cell.y+1) - cell3f.y) * invRayDirection.y,
       tnear + ((sgn.z < 0 ? cell.z : cell.z+1) - cell3f.z) * invRayDirection.z);
 
-  int packedNormalForClosestHit = 0; // for radiance rays
-  int colorIndexForClosestHit = 0;
-
   // DDA traversal
   while(1) {
     const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
@@ -710,12 +708,13 @@ void intersectVoxBlockGeom()
     // Extra check for axis >= 0 is a workaround for this.
     
     if (colorIdx > 0 && axis >= 0) {
-      if (!IsShadowRay) {
+      if (IsShadowRay) {
+        optixReportIntersection(tnear, 0);
+      } else {
         int signOfNormal = (rayDirection[axis] > 0.f) ? 0 : 1; // here 0 means negative, 1 means positive
         int packedNormal = (signOfNormal << 3) | (1 << axis);
-        packedNormalForClosestHit = packedNormal;
+        optixReportIntersection(tnear, 0, packedNormal, colorIdx);
       }
-      colorIndexForClosestHit = colorIdx;
       break;
     }
 
@@ -727,20 +726,15 @@ void intersectVoxBlockGeom()
                       ((nextCrossingT[1] < nextCrossingT[2])); 
 
     axis = map[k];
-    if (nextCrossingT[axis] >= rayTmax) break;
+
+    // This is needed in general DDA, but can be skipped for our scenes.
+    //if (nextCrossingT[axis] >= rayTmax) break;
+    
     cell[axis] += step[axis];
     if (cell[axis] == exitCell[axis]) break;
     tnear = nextCrossingT[axis];
     nextCrossingT[axis] += deltaT[axis];
 
-  }
-
-  if (colorIndexForClosestHit) {
-    if (IsShadowRay) {
-      optixReportIntersection(tnear, 0);
-    } else {
-      optixReportIntersection(tnear, 0, packedNormalForClosestHit, colorIndexForClosestHit);
-    }
   }
 
 }
