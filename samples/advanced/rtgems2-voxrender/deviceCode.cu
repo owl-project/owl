@@ -616,7 +616,9 @@ bool intersectRayBox(const vec3f _rayOrigin, const vec3f rayDirection,
   return tnear <= tfar;
 }
 
-OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
+template <bool IsShadowRay>
+inline __device__ 
+void intersectVoxBlockGeom()
 {
   // convert indices to 3d box
   const int primID = optixGetPrimitiveIndex();
@@ -692,7 +694,7 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
       tnear + ((sgn.y < 0 ? cell.y : cell.y+1) - cell3f.y) * invRayDirection.y,
       tnear + ((sgn.z < 0 ? cell.z : cell.z+1) - cell3f.z) * invRayDirection.z);
 
-  int packedNormalForClosestHit = 0;
+  int packedNormalForClosestHit = 0; // for radiance rays
   int colorIndexForClosestHit = 0;
 
   // DDA traversal
@@ -708,9 +710,11 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
     // Extra check for axis >= 0 is a workaround for this.
     
     if (colorIdx > 0 && axis >= 0) {
-      int signOfNormal = (rayDirection[axis] > 0.f) ? 0 : 1; // here 0 means negative, 1 means positive
-      int packedNormal = (signOfNormal << 3) | (1 << axis);
-      packedNormalForClosestHit = packedNormal;
+      if (!IsShadowRay) {
+        int signOfNormal = (rayDirection[axis] > 0.f) ? 0 : 1; // here 0 means negative, 1 means positive
+        int packedNormal = (signOfNormal << 3) | (1 << axis);
+        packedNormalForClosestHit = packedNormal;
+      }
       colorIndexForClosestHit = colorIdx;
       break;
     }
@@ -732,127 +736,23 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
   }
 
   if (colorIndexForClosestHit) {
-    optixReportIntersection(tnear, 0, packedNormalForClosestHit, colorIndexForClosestHit);
+    if (IsShadowRay) {
+      optixReportIntersection(tnear, 0);
+    } else {
+      optixReportIntersection(tnear, 0, packedNormalForClosestHit, colorIndexForClosestHit);
+    }
   }
 
 }
 
-// Copy-paste with slight optimization for shadow rays to not compute the normal
+OPTIX_INTERSECT_PROGRAM(VoxBlockGeom)()
+{
+  intersectVoxBlockGeom</*IsShadow=*/ false>();
+}
+
 OPTIX_INTERSECT_PROGRAM(VoxBlockGeomShadow)()
 {
-  // convert indices to 3d box
-  const int primID = optixGetPrimitiveIndex();
-  const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
-
-  const uchar3 blockOrigin = self.prims[primID];
-  const vec3f blockRadius(0.5f*BLOCKLEN);
-  const vec3f blockCenter = vec3f(blockOrigin.x, blockOrigin.y, blockOrigin.z) + blockRadius;
-
-  const vec3f rayOrigin = optixGetObjectRayOrigin();
-  const vec3f rayDirection = optixGetObjectRayDirection();
-  const float rayTmin = optixGetRayTmin();
-  const float rayTmax = optixGetRayTmax();
-
-  const vec3f blockOrigin3f(blockOrigin.x, blockOrigin.y, blockOrigin.z);
-
-  int axis = -1;  // axis we crossed most recently, which gives the normal
-  vec3f cell3f;
-  float tnear;    // init where ray enters block, and increases as we traverse cells
-  float tfar;
-  if (!intersectRayBox(rayOrigin, rayDirection, blockCenter, blockRadius, tnear, tfar)) {
-    return;  // Ray line misses block (without considering ray span)
-  }
-
-  // Apply ray span
-  if (tnear >= rayTmin && tnear <= rayTmax) {
-    // Ray starts outside and hits block
-    cell3f = rayOrigin + tnear*rayDirection - blockOrigin3f;
-    axis = indexOfMaxComponent(owl::abs(cell3f - blockRadius)); 
-
-  } else if (tnear < rayTmin && tfar > rayTmin) {
-    // Ray starts inside block
-    tnear = rayTmin;
-    cell3f = (rayOrigin + tnear*rayDirection) - blockOrigin3f;
-  } else {
-    // Ray does not intersect block within [min,max] span
-    return;
-  }
-
-  // DDA from PBRT/scratchapixel
-  
-  // Constants during traversal
-
-  const vec3i blockDim(BLOCKLEN);
-
-  const vec3f sgn( 
-      rayDirection.x > 0.f ? 1 : -1,
-      rayDirection.y > 0.f ? 1 : -1,
-      rayDirection.z > 0.f ? 1 : -1);
-
-  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
-
-  const vec3f deltaT = sgn * invRayDirection;
-  const vec3i step (sgn.x, sgn.y, sgn.z);
-  const vec3i exitCell ( 
-      sgn.x < 0 ? -1 : blockDim.x,
-      sgn.y < 0 ? -1 : blockDim.y,
-      sgn.z < 0 ? -1 : blockDim.z);
-
-  const int map[8] = {2, 1, 2, 1, 2, 2, 0, 0};   // TODO: const mem?
-  const int brickOffset = primID*blockDim.x*blockDim.y*blockDim.z;
-
-
-  // Things that change during traversal
-
-  vec3i cell (
-      clamp(int(cell3f.x), 0, blockDim.x-1),
-      clamp(int(cell3f.y), 0, blockDim.y-1),
-      clamp(int(cell3f.z), 0, blockDim.z-1));
-
-  vec3f nextCrossingT (
-      tnear + ((sgn.x < 0 ? cell.x : cell.x+1) - cell3f.x) * invRayDirection.x,
-      tnear + ((sgn.y < 0 ? cell.y : cell.y+1) - cell3f.y) * invRayDirection.y,
-      tnear + ((sgn.z < 0 ? cell.z : cell.z+1) - cell3f.z) * invRayDirection.z);
-
-  int colorIndexForClosestHit = 0;
-
-  // DDA traversal
-  while(1) {
-    const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
-    const int colorIdx = self.colorIndices[brickIdx];
-
-    // Note: we might have a valid color here but not a valid axis (normal).  This happens when the origin of a bounce
-    // ray is pushed inside a neighbor brick due to biasing along the normal.  It is difficult to completely eliminate;
-    // even for a flat plane of bricks, the normals on the edges of bricks may point along the plane tangents
-    // (think of tiny bevels on the bricks).
-    //
-    // Extra check for axis >= 0 is a workaround for this.
-    
-    if (colorIdx > 0 && axis >= 0) {
-      colorIndexForClosestHit = colorIdx;
-      break;
-    }
-
-    // Advance to next cell along ray
-
-    // Lookup table method from PBRT/scratchapixel, not measured for perf
-    const uint8_t k = ((nextCrossingT[0] < nextCrossingT[1]) << 2) + 
-                      ((nextCrossingT[0] < nextCrossingT[2]) << 1) + 
-                      ((nextCrossingT[1] < nextCrossingT[2])); 
-
-    axis = map[k];
-    if (nextCrossingT[axis] >= rayTmax) break;
-    cell[axis] += step[axis];
-    if (cell[axis] == exitCell[axis]) break;
-    tnear = nextCrossingT[axis];
-    nextCrossingT[axis] += deltaT[axis];
-
-  }
-
-  if (colorIndexForClosestHit) {
-    optixReportIntersection(tnear, 0);
-  }
-
+  intersectVoxBlockGeom</*IsShadow=*/ true>();
 }
 
 inline __device__ 
