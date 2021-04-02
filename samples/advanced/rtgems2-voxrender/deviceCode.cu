@@ -412,6 +412,16 @@ namespace {
   {
     return vec2f(v.x, v.y);
   }
+  inline __device__
+  vec3f yzx(vec3f v)
+  {
+    return vec3f(v.y, v.z, v.x);
+  }
+  inline __device__
+  vec3i zxy(vec3i v)
+  {
+    return vec3i(v.z, v.x, v.y);
+  }
 }
 
 // Ray-box intersection with normals from Majercik et al 2018
@@ -616,6 +626,16 @@ bool intersectRayBox(const vec3f _rayOrigin, const vec3f rayDirection,
   return tnear <= tfar;
 }
 
+// TODO: remove
+inline __device__ 
+int indexOfMaxComponent(vec3i v)
+{
+  if (v.x > v.y) 
+    return v.x > v.z ? 0 : 2;
+  else
+    return v.y > v.z ? 1 : 2;
+}
+
 template <bool IsShadowRay>
 inline __device__ 
 void intersectVoxBlockGeom()
@@ -641,25 +661,29 @@ void intersectVoxBlockGeom()
     return;  // Ray line misses block (without considering ray span)
   }
 
-  int axis = -1;  // axis crossed by the ray most recently, which gives the normal
-  vec3f cell3f;   // initial cell where ray enters or starts in the grid.
+  vec3i axismask(0); // stores axis of most recent crossing
+  vec3f pos;   // local position in block where ray enters or starts
 
   // Apply ray span
   if (tnear >= rayTmin && tnear <= rayTmax) {
     // Ray starts outside and hits block
-    cell3f = rayOrigin + tnear*rayDirection - blockOrigin3f;
-    axis = indexOfMaxComponent(owl::abs(cell3f - blockRadius)); 
+    pos = rayOrigin + tnear*rayDirection - blockOrigin3f;
+
+    // Set axis that ray crosses as it enters the block
+    vec3f distFromCenter = owl::abs(pos - blockRadius);
+    const float maxDistFromCenter = owl::reduce_max(distFromCenter);
+    axismask = vec3i(owl::le(vec3f(maxDistFromCenter), distFromCenter));
 
   } else if (tnear < rayTmin && tfar > rayTmin) {
-    // Ray starts inside block
+    // Ray starts inside block and we don't know the normal
     tnear = rayTmin;
-    cell3f = (rayOrigin + tnear*rayDirection) - blockOrigin3f;
+    pos = (rayOrigin + tnear*rayDirection) - blockOrigin3f;
   } else {
     // Ray does not intersect block within [min,max] span
     return;
   }
 
-  // DDA from PBRT/scratchapixel
+  // DDA
   
   // Constants during traversal
 
@@ -679,62 +703,95 @@ void intersectVoxBlockGeom()
       sgn.y < 0 ? -1 : blockDim.y,
       sgn.z < 0 ? -1 : blockDim.z);
 
-  const int map[8] = {2, 1, 2, 1, 2, 2, 0, 0};   // TODO: const mem?
   const int brickOffset = primID*blockDim.x*blockDim.y*blockDim.z;
-
 
   // Things that change during traversal
 
   vec3i cell (
-      clamp(int(cell3f.x), 0, blockDim.x-1),
-      clamp(int(cell3f.y), 0, blockDim.y-1),
-      clamp(int(cell3f.z), 0, blockDim.z-1));
+      clamp(int(pos.x), 0, blockDim.x-1),
+      clamp(int(pos.y), 0, blockDim.y-1),
+      clamp(int(pos.z), 0, blockDim.z-1));
 
+#if 0
+  // PBRT version
+  const int map[8] = {2, 1, 2, 1, 2, 2, 0, 0};
   vec3f nextCrossingT (
-      tnear + ((sgn.x < 0 ? cell.x : cell.x+1) - cell3f.x) * invRayDirection.x,
-      tnear + ((sgn.y < 0 ? cell.y : cell.y+1) - cell3f.y) * invRayDirection.y,
-      tnear + ((sgn.z < 0 ? cell.z : cell.z+1) - cell3f.z) * invRayDirection.z);
+      tnear + ((sgn.x < 0 ? cell.x : cell.x+1) - pos.x) * invRayDirection.x,
+      tnear + ((sgn.y < 0 ? cell.y : cell.y+1) - pos.y) * invRayDirection.y,
+      tnear + ((sgn.z < 0 ? cell.z : cell.z+1) - pos.z) * invRayDirection.z);
+#endif
+  // Version from: https://www.shadertoy.com/view/MdBGRm
+  const vec3f corner = owl::max(sgn, vec3f(0.f));
+  vec3f nextCrossingT = vec3f(tnear) + (vec3f(cell.x, cell.y, cell.z) + corner - pos)  * invRayDirection;
+
+  vec3f crossingT(tnear);
+
+  // Note: we might have a valid color here but not a valid normal.  This happens when the origin of a bounce
+  // ray is pushed inside a neighbor brick due to biasing along the normal.  It is difficult to completely eliminate;
+  // even for a flat plane of bricks, the normals on the edges of bricks may point along the plane tangents
+  // (think of tiny bevels on the bricks).
+  //
+  // Extra check for axismask != 0 handles this.
+
+  int colorIdx = -1;
+  if (axismask != vec3i(0)) {
+    const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
+    colorIdx = self.colorIndices[brickIdx];
+  }
+
+  bool done = false;
 
   // DDA traversal
-  while(1) {
-    const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
-    const int colorIdx = self.colorIndices[brickIdx];
-
-    // Note: we might have a valid color here but not a valid axis (normal).  This happens when the origin of a bounce
-    // ray is pushed inside a neighbor brick due to biasing along the normal.  It is difficult to completely eliminate;
-    // even for a flat plane of bricks, the normals on the edges of bricks may point along the plane tangents
-    // (think of tiny bevels on the bricks).
-    //
-    // Extra check for axis >= 0 is a workaround for this.
+  //while(1) {
+  constexpr int MaxNumSteps = BLOCKLEN*BLOCKLEN;  // some upper bound
+  for (int i = 0; i < MaxNumSteps; ++i) {
     
-    if (colorIdx > 0 && axis >= 0) {
+    if (colorIdx > 0 || done) {
+      continue;  // finish the loop without changing anything.  TODO: faster than break?
+#if 0
+      tnear = owl::reduce_max(crossingT*vec3f(axismask));
       if (IsShadowRay) {
         optixReportIntersection(tnear, 0);
       } else {
-        int signOfNormal = (rayDirection[axis] > 0.f) ? 0 : 1; // here 0 means negative, 1 means positive
-        int packedNormal = (signOfNormal << 3) | (1 << axis);
+        int signOfNormal = owl::any(owl::lt(sgn*vec3f(axismask), vec3f(0.f)));
+        int packedNormal = (signOfNormal << 3) | (axismask.z << 2) | (axismask.y << 1) | axismask.x;
         optixReportIntersection(tnear, 0, packedNormal, colorIdx);
       }
       break;
+#endif
     }
 
     // Advance to next cell along ray
 
-    // Lookup table method from PBRT/scratchapixel, not measured for perf
-    const uint8_t k = ((nextCrossingT[0] < nextCrossingT[1]) << 2) + 
-                      ((nextCrossingT[0] < nextCrossingT[2]) << 1) + 
-                      ((nextCrossingT[1] < nextCrossingT[2])); 
-
-    axis = map[k];
+    vec3i cp = vec3i(owl::lt(nextCrossingT, yzx(nextCrossingT)));
+    axismask = cp * (vec3i(1) - zxy(cp));
 
     // This is needed in general DDA, but can be skipped for our scenes.
     //if (nextCrossingT[axis] >= rayTmax) break;
-    
-    cell[axis] += step[axis];
-    if (cell[axis] == exitCell[axis]) break;
-    tnear = nextCrossingT[axis];
-    nextCrossingT[axis] += deltaT[axis];
 
+    cell += step * axismask;
+    if (cell*axismask == exitCell*axismask) {
+      //break;
+      done = true;
+    } else {
+      crossingT = nextCrossingT;
+      nextCrossingT += deltaT*vec3f(axismask);
+
+      const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
+      colorIdx = self.colorIndices[brickIdx];
+    }
+  }
+
+  // Report intersection for shadow or radiance ray
+  if (colorIdx > 0) {
+    tnear = owl::reduce_max(crossingT*vec3f(axismask));
+    if (IsShadowRay) {
+      optixReportIntersection(tnear, 0);
+    } else {
+      int signOfNormal = owl::any(owl::lt(sgn*vec3f(axismask), vec3f(0.f)));
+      int packedNormal = (signOfNormal << 3) | (axismask.z << 2) | (axismask.y << 1) | axismask.x;
+      optixReportIntersection(tnear, 0, packedNormal, colorIdx);
+    }
   }
 
 }
