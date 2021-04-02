@@ -626,16 +626,6 @@ bool intersectRayBox(const vec3f _rayOrigin, const vec3f rayDirection,
   return tnear <= tfar;
 }
 
-// TODO: remove
-inline __device__ 
-int indexOfMaxComponent(vec3i v)
-{
-  if (v.x > v.y) 
-    return v.x > v.z ? 0 : 2;
-  else
-    return v.y > v.z ? 1 : 2;
-}
-
 template <bool IsShadowRay>
 inline __device__ 
 void intersectVoxBlockGeom()
@@ -655,35 +645,20 @@ void intersectVoxBlockGeom()
 
   const vec3f blockOrigin3f(blockOrigin.x, blockOrigin.y, blockOrigin.z);
 
+  // Intersect ray with block
+
   float tnear;    // init where ray enters block, and increases as we traverse cells
   float tfar;
   if (!intersectRayBox(rayOrigin, rayDirection, blockCenter, blockRadius, tnear, tfar)) {
     return;  // Ray line misses block (without considering ray span)
   }
 
-  vec3i axismask(0); // stores axis of most recent crossing
-  vec3f pos;   // local position in block where ray enters or starts
+  tnear = max(tnear, rayTmin);
+  tfar = min(tfar, rayTmax);
+  if (tnear > tfar) return;
 
-  // Apply ray span
-  if (tnear >= rayTmin && tnear <= rayTmax) {
-    // Ray starts outside and hits block
-    pos = rayOrigin + tnear*rayDirection - blockOrigin3f;
-
-    // Set axis that ray crosses as it enters the block
-    vec3f distFromCenter = owl::abs(pos - blockRadius);
-    const float maxDistFromCenter = owl::reduce_max(distFromCenter);
-    axismask = vec3i(owl::le(vec3f(maxDistFromCenter), distFromCenter));
-
-  } else if (tnear < rayTmin && tfar > rayTmin) {
-    // Ray starts inside block and we don't know the normal
-    tnear = rayTmin;
-    pos = (rayOrigin + tnear*rayDirection) - blockOrigin3f;
-  } else {
-    // Ray does not intersect block within [min,max] span
-    return;
-  }
-
-  // DDA
+  
+  // Set up DDA for the block grid
   
   // Constants during traversal
 
@@ -698,6 +673,7 @@ void intersectVoxBlockGeom()
 
   const vec3f deltaT = sgn * invRayDirection;
   const vec3i step (sgn.x, sgn.y, sgn.z);
+  //const vec3i exitCell = owl::max(vec3i(-1), vec3i(sgn)*blockDim);
   const vec3i exitCell ( 
       sgn.x < 0 ? -1 : blockDim.x,
       sgn.y < 0 ? -1 : blockDim.y,
@@ -705,36 +681,36 @@ void intersectVoxBlockGeom()
 
   const int brickOffset = primID*blockDim.x*blockDim.y*blockDim.z;
 
+
   // Things that change during traversal
 
-  vec3i cell (
-      clamp(int(pos.x), 0, blockDim.x-1),
-      clamp(int(pos.y), 0, blockDim.y-1),
-      clamp(int(pos.z), 0, blockDim.z-1));
+  // Current cell in grid
+  const vec3f pos = rayOrigin + tnear*rayDirection - blockOrigin3f;
+  vec3i cell = owl::clamp(vec3i(pos), vec3i(0), blockDim-vec3i(1));
 
-#if 0
-  // PBRT version
-  const int map[8] = {2, 1, 2, 1, 2, 2, 0, 0};
-  vec3f nextCrossingT (
-      tnear + ((sgn.x < 0 ? cell.x : cell.x+1) - pos.x) * invRayDirection.x,
-      tnear + ((sgn.y < 0 ? cell.y : cell.y+1) - pos.y) * invRayDirection.y,
-      tnear + ((sgn.z < 0 ? cell.z : cell.z+1) - pos.z) * invRayDirection.z);
-#endif
+  // T values where the ray crosses into the next "slab" along the x,y,z axes
   // Version from: https://www.shadertoy.com/view/MdBGRm
   const vec3f corner = owl::max(sgn, vec3f(0.f));
   vec3f nextCrossingT = vec3f(tnear) + (vec3f(cell.x, cell.y, cell.z) + corner - pos)  * invRayDirection;
 
+  // T values for the current slab
   vec3f crossingT(tnear);
 
-  // Note: we might have a valid color here but not a valid normal.  This happens when the origin of a bounce
-  // ray is pushed inside a neighbor brick due to biasing along the normal.  It is difficult to completely eliminate;
-  // even for a flat plane of bricks, the normals on the edges of bricks may point along the plane tangents
-  // (think of tiny bevels on the bricks).
-  //
-  // Extra check for axismask != 0 handles this.
+  // Which of the 3 possible slab T values was used for the current cell.
+  // Example: if the ray hits the +X or -X face of the block, then the axis mask would be (1,0,0).
+  // This and the ray direction give the normal for the cell.
+  vec3i axismask(0);
 
+  // Color at current cell, only set this initially if the ray started outside the block.
+  // Note: we ignore the case where a ray starts inside an opaque brick (probably due to shadow bias).
   int colorIdx = -1;
-  if (axismask != vec3i(0)) {
+
+  if (tnear > rayTmin) {
+    // Select the component furthest from the grid center.
+    const vec3f distFromCenter = owl::abs(pos - blockRadius);
+    const float maxDistFromCenter = owl::reduce_max(distFromCenter);
+    axismask = vec3i(owl::le(vec3f(maxDistFromCenter), distFromCenter));
+
     const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
     colorIdx = self.colorIndices[brickIdx];
   }
