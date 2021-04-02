@@ -673,7 +673,6 @@ void intersectVoxBlockGeom()
 
   const vec3f deltaT = sgn * invRayDirection;
   const vec3i step (sgn.x, sgn.y, sgn.z);
-  //const vec3i exitCell = owl::max(vec3i(-1), vec3i(sgn)*blockDim);
   const vec3i exitCell ( 
       sgn.x < 0 ? -1 : blockDim.x,
       sgn.y < 0 ? -1 : blockDim.y,
@@ -715,16 +714,13 @@ void intersectVoxBlockGeom()
     colorIdx = self.colorIndices[brickIdx];
   }
 
-  bool done = false;
-
   // DDA traversal
   //while(1) {
+  // Note: profiling shows small gain from using a fixed size loop here even though we always break.
   constexpr int MaxNumSteps = BLOCKLEN*BLOCKLEN;  // some upper bound
   for (int i = 0; i < MaxNumSteps; ++i) {
     
-    if (colorIdx > 0 || done) {
-      continue;  // finish the loop without changing anything.  TODO: faster than break?
-#if 0
+    if (colorIdx > 0) {
       tnear = owl::reduce_max(crossingT*vec3f(axismask));
       if (IsShadowRay) {
         optixReportIntersection(tnear, 0);
@@ -734,7 +730,6 @@ void intersectVoxBlockGeom()
         optixReportIntersection(tnear, 0, packedNormal, colorIdx);
       }
       break;
-#endif
     }
 
     // Advance to next cell along ray
@@ -747,27 +742,13 @@ void intersectVoxBlockGeom()
 
     cell += step * axismask;
     if (cell*axismask == exitCell*axismask) {
-      //break;
-      done = true;
-    } else {
-      crossingT = nextCrossingT;
-      nextCrossingT += deltaT*vec3f(axismask);
+      break;
+    } 
+    crossingT = nextCrossingT;
+    nextCrossingT += deltaT*vec3f(axismask);
 
-      const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
-      colorIdx = self.colorIndices[brickIdx];
-    }
-  }
-
-  // Report intersection for shadow or radiance ray
-  if (colorIdx > 0) {
-    tnear = owl::reduce_max(crossingT*vec3f(axismask));
-    if (IsShadowRay) {
-      optixReportIntersection(tnear, 0);
-    } else {
-      int signOfNormal = owl::any(owl::lt(sgn*vec3f(axismask), vec3f(0.f)));
-      int packedNormal = (signOfNormal << 3) | (axismask.z << 2) | (axismask.y << 1) | axismask.x;
-      optixReportIntersection(tnear, 0, packedNormal, colorIdx);
-    }
+    const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
+    colorIdx = self.colorIndices[brickIdx];
   }
 
 }
