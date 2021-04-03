@@ -715,13 +715,13 @@ void intersectVoxBlockGeom()
   }
 
   // DDA traversal
-  //while(1) {
   // Note: profiling shows small gain from using a fixed size loop here even though we always break.
   constexpr int MaxNumSteps = BLOCKLEN*BLOCKLEN;  // some upper bound
   for (int i = 0; i < MaxNumSteps; ++i) {
     
     if (colorIdx > 0) {
       tnear = owl::reduce_max(crossingT*vec3f(axismask));
+      //if (tnear >= rayTmax) break;  // Can be skipped for our scenes.
       if (IsShadowRay) {
         optixReportIntersection(tnear, 0);
       } else {
@@ -736,9 +736,6 @@ void intersectVoxBlockGeom()
 
     vec3i cp = vec3i(owl::lt(nextCrossingT, yzx(nextCrossingT)));
     axismask = cp * (vec3i(1) - zxy(cp));
-
-    // This is needed in general DDA, but can be skipped for our scenes.
-    //if (nextCrossingT[axis] >= rayTmax) break;
 
     cell += step * axismask;
     if (cell*axismask == exitCell*axismask) {
