@@ -692,9 +692,6 @@ void intersectVoxBlockGeom()
   const vec3f corner = owl::max(sgn, vec3f(0.f));
   vec3f nextCrossingT = vec3f(tnear) + (vec3f(cell.x, cell.y, cell.z) + corner - pos)  * invRayDirection;
 
-  // T values for the current slab
-  vec3f crossingT(tnear);
-
   // Which of the 3 possible slab T values was used for the current cell.
   // Example: if the ray hits the +X or -X face of the block, then the axis mask would be (1,0,0).
   // This and the ray direction give the normal for the cell.
@@ -705,7 +702,7 @@ void intersectVoxBlockGeom()
   int colorIdx = -1;
 
   if (tnear > rayTmin) {
-    // Select the component furthest from the grid center.
+    // Find the axis the ray crosses as it enters the grid
     const vec3f distFromCenter = owl::abs(pos - blockRadius);
     const float maxDistFromCenter = owl::reduce_max(distFromCenter);
     axismask = vec3i(owl::le(vec3f(maxDistFromCenter), distFromCenter));
@@ -716,11 +713,14 @@ void intersectVoxBlockGeom()
 
   // DDA traversal
   // Note: profiling shows small gain from using a fixed size loop here even though we always break.
-  constexpr int MaxNumSteps = BLOCKLEN*BLOCKLEN;  // some upper bound
+  // Theoretical length of diagonal: blocklen*sqrt(3).  Had to increase this empirically.
+  constexpr int MaxNumSteps = BLOCKLEN*3;
   for (int i = 0; i < MaxNumSteps; ++i) {
     
     if (colorIdx > 0) {
-      tnear = owl::reduce_max(crossingT*vec3f(axismask));
+      // previous t-crossing is the intersection t
+      const vec3f ct = nextCrossingT - deltaT;
+      tnear = owl::reduce_max(ct);
       //if (tnear >= rayTmax) break;  // Can be skipped for our scenes.
       if (IsShadowRay) {
         optixReportIntersection(tnear, 0);
@@ -741,7 +741,6 @@ void intersectVoxBlockGeom()
     if (cell*axismask == exitCell*axismask) {
       break;
     } 
-    crossingT = nextCrossingT;
     nextCrossingT += deltaT*vec3f(axismask);
 
     const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
