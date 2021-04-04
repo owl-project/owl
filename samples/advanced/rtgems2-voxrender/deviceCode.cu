@@ -609,11 +609,10 @@ OPTIX_BOUNDS_PROGRAM(VoxBlockGeom)(const void *geomData,
   primBounds = box3f(boxmin, boxmax);
 }
 
-// Note: ignore ray span here.
 __device__ inline
 bool intersectRayBox(const vec3f _rayOrigin, const vec3f rayDirection,
     vec3f boxCenter, vec3f boxRadius,
-    float &tnear, float &tfar)
+    float &tnear, float &tfar, vec3i &axismask)
 {
   // Translate ray to local box space
   const vec3f rayOrigin  = _rayOrigin - boxCenter;
@@ -621,8 +620,10 @@ bool intersectRayBox(const vec3f _rayOrigin, const vec3f rayDirection,
 
   vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
   vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
-  tnear = reduce_max(owl::min(t0, t1));
+  vec3f tnearPerAxis = owl::min(t0, t1);
+  tnear = reduce_max(tnearPerAxis);
   tfar  = reduce_min(owl::max(t0, t1));
+  axismask = vec3i(owl::ge(tnearPerAxis, vec3f(tnear)));
   return tnear <= tfar;
 }
 
@@ -646,10 +647,10 @@ void intersectVoxBlockGeom()
   const vec3f blockOrigin3f(blockOrigin.x, blockOrigin.y, blockOrigin.z);
 
   // Intersect ray with block
-
-  float tnear;    // init where ray enters block, and increases as we traverse cells
+  float tnear;       // initial t as ray enters block, updated during DDA
+  vec3i axismask(0); // initial axis mask (==abs(N)), updated during DDA
   float tfar;
-  if (!intersectRayBox(rayOrigin, rayDirection, blockCenter, blockRadius, tnear, tfar)) {
+  if (!intersectRayBox(rayOrigin, rayDirection, blockCenter, blockRadius, tnear, tfar, axismask)) {
     return;  // Ray line misses block (without considering ray span)
   }
 
@@ -692,24 +693,10 @@ void intersectVoxBlockGeom()
   const vec3f corner = owl::max(sgn, vec3f(0.f));
   vec3f nextCrossingT = vec3f(tnear) + (vec3f(cell.x, cell.y, cell.z) + corner - pos)  * invRayDirection;
 
-  // Which of the 3 possible slab T values was used for the current cell.
-  // Example: if the ray hits the +X or -X face of the block, then the axis mask would be (1,0,0).
-  // This and the ray direction give the normal for the cell.
-  vec3i axismask(0);
-
-  // Color at current cell, only set this initially if the ray started outside the block.
-  // Note: we ignore the case where a ray starts inside an opaque brick (probably due to shadow bias).
-  int colorIdx = -1;
-
-  if (tnear > rayTmin) {
-    // Find the axis the ray crosses as it enters the grid
-    const vec3f distFromCenter = owl::abs(pos - blockRadius);
-    const float maxDistFromCenter = owl::reduce_max(distFromCenter);
-    axismask = vec3i(owl::le(vec3f(maxDistFromCenter), distFromCenter));
-
-    const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
-    colorIdx = self.colorIndices[brickIdx];
-  }
+  // Color at entry cell, provided the ray started outside the block.  Updated during DDA.
+  // Note: we ignore the case where a ray starts inside an opaque cell (probably due to shadow bias).
+  int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
+  int colorIdx = tnear > rayTmin ? self.colorIndices[brickIdx] : -1;
 
   // DDA traversal
   // Note: profiling shows small gain from using a fixed size loop here even though we always break.
@@ -733,7 +720,7 @@ void intersectVoxBlockGeom()
     }
 
     // Advance to next cell along ray
-
+    // Version from: https://www.shadertoy.com/view/MdBGRm
     vec3i cp = vec3i(owl::lt(nextCrossingT, yzx(nextCrossingT)));
     axismask = cp * (vec3i(1) - zxy(cp));
 
@@ -743,7 +730,7 @@ void intersectVoxBlockGeom()
     } 
     nextCrossingT += deltaT*vec3f(axismask);
 
-    const int brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
+    brickIdx = brickOffset + cell.x + cell.y*blockDim.x + cell.z*blockDim.x*blockDim.y;
     colorIdx = self.colorIndices[brickIdx];
   }
 
