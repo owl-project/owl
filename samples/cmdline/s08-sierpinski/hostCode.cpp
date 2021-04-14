@@ -161,7 +161,7 @@ int main(int ac, char **av)
     = owlDeviceBufferCreate(owl,OWL_FLOAT3,
                             vertices.size(),vertices.data());
   OWLBuffer indexBuffer
-    = owlDeviceBufferCreate(owl,OWL_FLOAT3,
+    = owlDeviceBufferCreate(owl,OWL_INT3,
                             indices.size(),indices.data());
   OWLBuffer frameBuffer
     = owlHostPinnedBufferCreate(owl,OWL_UINT,fbSize.x*fbSize.y);
