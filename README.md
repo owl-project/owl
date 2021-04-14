@@ -67,7 +67,7 @@ debug, and maintain.
 	      = owlDeviceBufferCreate(ctx,OWL_FLOAT3,
 		                          vtx.size(),vtx.data());
 	   OWLBuffer idxBuffer
-	      = owlDeviceBufferCreate(ctx,OWL_FLOAT3,
+	      = owlDeviceBufferCreate(ctx,OWL_INT3,
 		                          idx.size(),idx.data());
 								  
 	   /* create triangle mesh geometry */
