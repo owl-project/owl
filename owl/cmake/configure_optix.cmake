@@ -53,7 +53,8 @@ macro(cuda_compile_and_embed output_var cuda_file)
       )
   else()
     cuda_compile_ptx(ptx_files
-      ${cuda_file}
+      ${cuda_file} 
+      OPTIONS --keep --generate-line-info
       )
   endif()
   list(GET ptx_files 0 ptx_file)
