@@ -136,10 +136,10 @@ using namespace owl;
     checkGet(_context)->buildSBT(flags);
   }
 
-  OWL_API void owlBuildPrograms(OWLContext _context)
+  OWL_API void owlBuildPrograms(OWLContext _context, bool debug)
   {
     LOG_API_CALL();
-    checkGet(_context)->buildPrograms();
+    checkGet(_context)->buildPrograms(debug);
   }
   
   OWL_API void owlBuildPipeline(OWLContext _context)
@@ -167,6 +167,27 @@ using namespace owl;
     assert(launchParams);
 
     rayGen->launchAsync(vec2i(dims_x,dims_y),launchParams);
+  }
+
+  OWL_API void owlAsyncLaunch2DOnDevice(OWLRayGen _rayGen,
+                                int dims_x,
+                                int dims_y,
+                                int deviceID,
+                                OWLLaunchParams _launchParams)
+  {
+    LOG_API_CALL();
+
+    assert(_rayGen);
+    RayGen::SP rayGen
+      = ((APIHandle *)_rayGen)->get<RayGen>();
+    assert(rayGen);
+
+    assert(_launchParams);
+    LaunchParams::SP launchParams
+      = ((APIHandle *)_launchParams)->get<LaunchParams>();
+    assert(launchParams);
+
+    rayGen->launchAsyncOnDevice(vec2i(dims_x,dims_y), deviceID,launchParams);
   }
 
   OWL_API void owlLaunch2D(OWLRayGen _rayGen,

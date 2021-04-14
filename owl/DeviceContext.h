@@ -85,7 +85,7 @@ namespace owl {
     /*! configures the optixPipeline link options and compile options,
         based on what values (motion blur on/off, multi-level
         instnacing, etc) are set in the context */
-    void configurePipelineOptions();
+    void configurePipelineOptions(bool debug = false);
       
     void buildPrograms();
     void buildMissPrograms();

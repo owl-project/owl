@@ -137,67 +137,72 @@ namespace owl {
     context->dummyLaunchParams->sync();
   }
 
-  /*! *launch* this raygen prog with given launch params, but do NOT
-    wait for completion - this means the SBT shuld NOT be changed or
-    rebuild until a launchParams->sync() has been done */
   void RayGen::launchAsync(const vec2i &dims,
                            const LaunchParams::SP &lp)
   {
+    for (int deviceID=0;deviceID<(int)deviceData.size();deviceID++) {
+      launchAsyncOnDevice(dims, deviceID, lp);
+    }
+  }
+
+  /*! *launch* this raygen prog with given launch params, but do NOT
+    wait for completion - this means the SBT shuld NOT be changed or
+    rebuild until a launchParams->sync() has been done */
+  void RayGen::launchAsyncOnDevice(const vec2i &dims, uint32_t deviceID, const LaunchParams::SP &lp)
+  {
     assert("check valid launch dims" && dims.x > 0);
     assert("check valid launch dims" && dims.y > 0);
-      
     assert(!deviceData.empty());
-    for (int deviceID=0;deviceID<(int)deviceData.size();deviceID++) {
-      DeviceContext::SP device = context->getDevice(deviceID);
-      SetActiveGPU forLifeTime(device);
-      
-      RayGen::DeviceData       &rgDD = getDD(device);
-      LaunchParams::DeviceData &lpDD = lp->getDD(device);
-      
-      lp->writeVariables(lpDD.hostMemory.data(),device);
-      lpDD.deviceMemory.uploadAsync(lpDD.hostMemory.data(),lpDD.stream);
 
-      auto &sbt = lpDD.sbt;
+    DeviceContext::SP device = context->getDevice(deviceID);
+    SetActiveGPU forLifeTime(device);
+    
+    RayGen::DeviceData       &rgDD = getDD(device);
+    LaunchParams::DeviceData &lpDD = lp->getDD(device);
+    
+    lp->writeVariables(lpDD.hostMemory.data(),device);
+    lpDD.deviceMemory.uploadAsync(lpDD.hostMemory.data(),lpDD.stream);
 
-      // -------------------------------------------------------
-      // set raygen part of SBT 
-      // -------------------------------------------------------
-      sbt.raygenRecord
-        = (CUdeviceptr)rgDD.sbtRecordBuffer.d_pointer;
-      assert(sbt.raygenRecord);
+    auto &sbt = lpDD.sbt;
 
-      // -------------------------------------------------------
-      // set miss progs part of SBT 
-      // -------------------------------------------------------
-      assert("check miss records built" && device->sbt.missProgRecordCount != 0);
-      sbt.missRecordBase
-        = (CUdeviceptr)device->sbt.missProgRecordsBuffer.get();
-      sbt.missRecordStrideInBytes
-        = (uint32_t)device->sbt.missProgRecordSize;
-      sbt.missRecordCount
-        = (uint32_t)device->sbt.missProgRecordCount;
-      
-      // -------------------------------------------------------
-      // set hit groups part of SBT 
-      // -------------------------------------------------------
-      assert("check hit records built" && device->sbt.hitGroupRecordCount != 0);
-      sbt.hitgroupRecordBase
-        = (CUdeviceptr)device->sbt.hitGroupRecordsBuffer.get();
-      sbt.hitgroupRecordStrideInBytes
-        = (uint32_t)device->sbt.hitGroupRecordSize;
-      sbt.hitgroupRecordCount
-        = (uint32_t)device->sbt.hitGroupRecordCount;
-      
-      OPTIX_CALL(Launch(device->pipeline,
-                        lpDD.stream,
-                        (CUdeviceptr)lpDD.deviceMemory.get(),
-                        lpDD.deviceMemory.sizeInBytes,
-                        &lpDD.sbt,
-                        dims.x,dims.y,1
-                        ));
+    // -------------------------------------------------------
+    // set raygen part of SBT 
+    // -------------------------------------------------------
+    sbt.raygenRecord
+      = (CUdeviceptr)rgDD.sbtRecordBuffer.d_pointer;
+    assert(sbt.raygenRecord);
 
-      /* note we do NOT sync here ! */
-    }
+    // -------------------------------------------------------
+    // set miss progs part of SBT 
+    // -------------------------------------------------------
+    assert("check miss records built" && device->sbt.missProgRecordCount != 0);
+    sbt.missRecordBase
+      = (CUdeviceptr)device->sbt.missProgRecordsBuffer.get();
+    sbt.missRecordStrideInBytes
+      = (uint32_t)device->sbt.missProgRecordSize;
+    sbt.missRecordCount
+      = (uint32_t)device->sbt.missProgRecordCount;
+    
+    // -------------------------------------------------------
+    // set hit groups part of SBT 
+    // -------------------------------------------------------
+    assert("check hit records built" && device->sbt.hitGroupRecordCount != 0);
+    sbt.hitgroupRecordBase
+      = (CUdeviceptr)device->sbt.hitGroupRecordsBuffer.get();
+    sbt.hitgroupRecordStrideInBytes
+      = (uint32_t)device->sbt.hitGroupRecordSize;
+    sbt.hitgroupRecordCount
+      = (uint32_t)device->sbt.hitGroupRecordCount;
+    
+    OPTIX_CALL(Launch(device->pipeline,
+                      lpDD.stream,
+                      (CUdeviceptr)lpDD.deviceMemory.get(),
+                      lpDD.deviceMemory.sizeInBytes,
+                      &lpDD.sbt,
+                      dims.x,dims.y,1
+                      ));
+
+    /* note we do NOT sync here ! */
   }
 
 } // ::owl
