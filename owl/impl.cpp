@@ -22,7 +22,11 @@
 #include "UserGeom.h"
 #include "InstanceGroup.h"
 
-namespace owl {
+#undef OWL_API
+#define OWL_API extern "C" OWL_DLL_EXPORT
+
+//namespace owl {
+using namespace owl;
 
 #if 1
 # define LOG_API_CALL() /* ignore */
@@ -431,7 +435,7 @@ namespace owl {
                            'numInstnaces', the i'th instnace in this
                            gorup will be an instance o the i'th
                            element in this list */
-                         const OWLGroup *_initGroups      OWL_IF_CPP(= nullptr),
+                         const OWLGroup *_initGroups,
 
                          /*! instance IDs to use for the instance in
                            this group; must be eithe rnull, or an
@@ -443,14 +447,14 @@ namespace owl {
                            what value 'optixGetInstanceID' will return
                            in a CH program that refers to the given
                            instance */
-                         const uint32_t *initInstanceIDs OWL_IF_CPP(= nullptr),
+                         const uint32_t *initInstanceIDs,
                        
                          /*! initial list of transforms that this
                            instance group will use; must be either
                            null, or an array of size numInstnaces, of
                            the format specified */
-                         const float    *initTransforms  OWL_IF_CPP(= nullptr),
-                         OWLMatrixFormat matrixFormat=OWL_MATRIX_FORMAT_OWL)
+                         const float    *initTransforms,
+                         OWLMatrixFormat matrixFormat)
   {
     LOG_API_CALL();
     std::vector<Group::SP> initGroups;
@@ -1452,4 +1456,4 @@ namespace owl {
   }
 
   
-} // ::owl
+//} // ::owl
