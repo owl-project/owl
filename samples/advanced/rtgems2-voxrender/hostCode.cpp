@@ -1214,6 +1214,14 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   
 }
 
+inline int indexOfMaxComponent(vec3f v)
+{
+  if (v.x > v.y) 
+    return v.x > v.z ? 0 : 2;
+  else
+    return v.y > v.z ? 1 : 2;
+}
+
 Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options)
   : enableGround(options.enableGround), 
   enableClipping(options.enableClipping), 

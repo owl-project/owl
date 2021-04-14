@@ -327,33 +327,15 @@ vec3f scatterLambertian(const vec3f &Ng, Random &random)
   return scatteredDirection;
 }
 
-OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
+inline __device__
+void shade(const vec3f &Ng, const vec3f &color)
 {
-  const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
-  
-  // compute normal:
-  const int   primID = optixGetPrimitiveIndex();
-  const vec3i index  = self.index[primID];
-  const vec3f &A     = self.vertex[index.x];
-  const vec3f &B     = self.vertex[index.y];
-  const vec3f &C     = self.vertex[index.z];
-  const vec3f Nbox   = normalize(cross(B-A,C-A));
-  const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
-
-  // Bias value relative to a brick
-  const float shadowBias = 0.01f * fminf(1.f, optixLaunchParams.brickScale);
-
-  // Convert 8 bit color to float
-  const unsigned int brickID = self.isFlat ? optixGetPrimitiveIndex() / self.primCountPerBrick : optixGetInstanceId();
-  const int ci = self.colorIndexPerBrick[brickID];
-  uchar4 col = self.colorPalette[ci];
-  const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
-
   PerRayData &prd = owl::getPRD<PerRayData>();
   const vec3f dir   = optixGetWorldRayDirection();
   const vec3f org   = optixGetWorldRayOrigin();
   const float hit_t = optixGetRayTmax();
   const vec3f hit_P = org + hit_t * dir;
+  const float shadowBias = 0.01f * fminf(1.f, optixLaunchParams.brickScale);
   const vec3f hit_P_offset = hit_P + shadowBias*Ng;  // bias along normal to help with shadow acne
 
   // Direct
@@ -371,7 +353,28 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   if (optixLaunchParams.enableToonOutline) {
     prd.out.hitDistance = length(hit_P - org);
   }
+}
 
+OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
+{
+  const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
+  
+  // Compute normal for triangle
+  const int   primID = optixGetPrimitiveIndex();
+  const vec3i index  = self.index[primID];
+  const vec3f &A     = self.vertex[index.x];
+  const vec3f &B     = self.vertex[index.y];
+  const vec3f &C     = self.vertex[index.z];
+  const vec3f Nbox   = normalize(cross(B-A,C-A));
+  const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
+
+  // Get brick color
+  const unsigned int brickID = self.isFlat ? optixGetPrimitiveIndex() / self.primCountPerBrick : optixGetInstanceId();
+  const int ci = self.colorIndexPerBrick[brickID];
+  uchar4 col = self.colorPalette[ci];
+  const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
+
+  shade(Ng, color);
 }
 
 OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
@@ -472,12 +475,20 @@ OPTIX_INTERSECT_PROGRAM(VoxGeomMajercik)()
   }
 }
 
-// "Efficient slabs" method
-OPTIX_INTERSECT_PROGRAM(VoxGeomShadow)()
+// Use the "efficient slabs" method for shadow rays where we don't need normals.
+template <bool IsOutline>
+inline __device__ 
+void intersectVoxGeomShadow()
 {
+  const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
+
+  // Per-brick outline control
+  if (IsOutline && !self.enableToonOutline) {
+      return;
+  }
+
   // convert indices to 3d box
   const int primID = optixGetPrimitiveIndex();
-  const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
   uchar4 indices = self.prims[primID];
   vec3f boxCenter(indices.x+0.5, indices.y+0.5, indices.z+0.5);
 
@@ -489,103 +500,59 @@ OPTIX_INTERSECT_PROGRAM(VoxGeomShadow)()
   const float ray_tmax = optixGetRayTmax();
   const float ray_tmin = optixGetRayTmin();
 
-  const vec3f boxRadius(0.5f, 0.5f, 0.5f);
+  constexpr float radius = IsOutline ? 0.5f*OUTLINE_SCALE : 0.5f;
+  const vec3f boxRadius(radius, radius, radius);
   vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
   vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
   float tnear = reduce_max(owl::min(t0, t1));
   float tfar  = reduce_min(owl::max(t0, t1));
-  float distance = tnear > 0.f ? tnear : tfar;
+  float distance = IsOutline ? tfar : (tnear > 0.f ? tnear : tfar);
 
   if (tnear <= tfar && distance > ray_tmin && distance < ray_tmax) {
     optixReportIntersection( distance, 0);
   }
 }
 
-// Used for toon outline where we don't need normals, and cull front faces.
-OPTIX_INTERSECT_PROGRAM(VoxGeomOutlineShadow)()
+OPTIX_INTERSECT_PROGRAM(VoxGeomShadow)()
 {
-  // convert indices to 3d box
-  const int primID = optixGetPrimitiveIndex();
-  const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
-  if (!self.enableToonOutline) {
-      return;
-  }
-  uchar4 indices = self.prims[primID];
-  vec3f boxCenter(indices.x+0.5, indices.y+0.5, indices.z+0.5);
-
-  // Translate ray to local box space
-  const vec3f rayOrigin  = vec3f(optixGetObjectRayOrigin()) - boxCenter;
-  const vec3f rayDirection  = optixGetObjectRayDirection();  // assume no rotation
-  const vec3f invRayDirection = vec3f(1.0f) / rayDirection;
-
-  const float ray_tmax = optixGetRayTmax();
-  const float ray_tmin = optixGetRayTmin();
-
-  const vec3f boxRadius = vec3f(0.5f, 0.5f, 0.5f)*OUTLINE_SCALE;
-  vec3f t0 = (-boxRadius - rayOrigin) * invRayDirection;
-  vec3f t1 = ( boxRadius - rayOrigin) * invRayDirection;
-  float tnear = reduce_max(owl::min(t0, t1));
-  float tfar  = reduce_min(owl::max(t0, t1));
-
-  // Cull front face by using tfar for the hit
-
-  if (tnear <= tfar && tfar > ray_tmin && tfar < ray_tmax) {
-    optixReportIntersection( tfar, 0);
-  }
+  return intersectVoxGeomShadow</*IsOutline=*/ false>();
 }
 
-OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
+OPTIX_INTERSECT_PROGRAM(VoxGeomOutlineShadow)()
 {
-  // convert indices to 3d box
-  const int primID = optixGetPrimitiveIndex();
-  const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
+  return intersectVoxGeomShadow</*IsOutline=*/ true>();
+}
 
-  // Select normal for whichever face we hit
-  const int packedN = optixGetAttribute_0();
+inline __device__ 
+vec3f unpackNormal(int packedN)
+{
   const int sgnN = (packedN >> 3) ? 1 : -1;
   const float3 Nbox = make_float3(
     sgnN * ( packedN       & 1),
     sgnN * ((packedN >> 1) & 1),
     sgnN * ((packedN >> 2) & 1));
+  return Nbox;
+}
 
+OPTIX_CLOSEST_HIT_PROGRAM(VoxGeom)()
+{
+  // Get normal for whichever face we hit
+  const int packedN = optixGetAttribute_0();
+  const vec3f Nbox = unpackNormal(packedN);
   const vec3f Ng = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
 
-  // Bias value relative to brick scale
-  const float shadowBias = 1e-2f * fminf(1.f, optixLaunchParams.brickScale);
-
-  // Convert 8 bit color to float
+  // Get brick color
+  const int primID = optixGetPrimitiveIndex();
+  const VoxGeomData &self = owl::getProgramData<VoxGeomData>();
   const int ci = self.prims[primID].w;
   uchar4 col = self.colorPalette[ci];
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 
-  PerRayData &prd = owl::getPRD<PerRayData>();
-  const vec3f dir   = optixGetWorldRayDirection();
-  const vec3f org   = optixGetWorldRayOrigin();
-  const float hit_t = optixGetRayTmax();
-  const vec3f hit_P = org + hit_t * dir;
-  const vec3f hit_P_offset = hit_P + shadowBias*Ng;  // bias along normal to help with shadow acne
-
-  // Direct
-  const vec3f directLight = sunlight(hit_P_offset, Ng, prd.random);
-
-  // Bounce
-  vec3f scatteredDirection = scatterLambertian(Ng, prd.random);
-
-  prd.out.directLight = directLight*color;
-  prd.out.attenuation = color;
-  prd.out.scatterEvent = rayGotBounced;
-  prd.out.scattered_direction = scatteredDirection;
-  prd.out.scattered_origin = hit_P_offset;
-
-  if (optixLaunchParams.enableToonOutline) {
-    prd.out.hitDistance = length(hit_P - org);
-  }
-
+  shade(Ng, color);
 }
 
 
-// Experiment with VoxBlockGeom
-
+// Experiment with "blocks" (small grids) of bricks
 
 OPTIX_BOUNDS_PROGRAM(VoxBlockGeom)(const void *geomData,
                               box3f &primBounds,
@@ -596,13 +563,10 @@ OPTIX_BOUNDS_PROGRAM(VoxBlockGeom)(const void *geomData,
   vec3f boxmin( indices.x, indices.y, indices.z );
   vec3f boxmax = boxmin + vec3f(BLOCKLEN);
 
-  // Not obvious how to toon outline
+  // Not obvious how to do toon outline for blocks
   /*
   if (self.enableToonOutline) {
-    // bloat the box slightly
-    const vec3f boxcenter (indices.x + 0.5f, indices.y + 0.5f, indices.z + 0.5f);
-    boxmin = boxcenter + OUTLINE_SCALE*(boxmin-boxcenter);
-    boxmax = boxcenter + OUTLINE_SCALE*(boxmax-boxcenter);
+    ... 
   }
   */
   
@@ -746,58 +710,19 @@ OPTIX_INTERSECT_PROGRAM(VoxBlockGeomShadow)()
   intersectVoxBlockGeom</*IsShadow=*/ true>();
 }
 
-inline __device__ 
-vec3f unpackNormal(int packedN)
-{
-  const int sgnN = (packedN >> 3) ? 1 : -1;
-  const float3 Nbox = make_float3(
-    sgnN * ( packedN       & 1),
-    sgnN * ((packedN >> 1) & 1),
-    sgnN * ((packedN >> 2) & 1));
-  return Nbox;
-}
-
 OPTIX_CLOSEST_HIT_PROGRAM(VoxBlockGeom)()
 {
-  // convert indices to 3d box
-  const int primID = optixGetPrimitiveIndex();
-  const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
-
-  // Select normal for whichever face we hit
+  // Get normal for whichever face we hit
   const int packedN = optixGetAttribute_0();
   const vec3f Nbox = unpackNormal(packedN);
   const vec3f Ng = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
 
-  // Bias value relative to brick scale
-  const float shadowBias = 1e-2f * fminf(1.f, optixLaunchParams.brickScale);
-
-  // Convert 8 bit color to float
+  // Get brick color
+  const VoxBlockGeomData &self = owl::getProgramData<VoxBlockGeomData>();
   const int ci = optixGetAttribute_1();
   uchar4 col = self.colorPalette[ci];
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 
-  PerRayData &prd = owl::getPRD<PerRayData>();
-  const vec3f dir   = optixGetWorldRayDirection();
-  const vec3f org   = optixGetWorldRayOrigin();
-  const float hit_t = optixGetRayTmax();
-  const vec3f hit_P = org + hit_t * dir;
-  const vec3f hit_P_offset = hit_P + shadowBias*Ng;  // bias along normal to help with shadow acne
-
-  // Direct
-  const vec3f directLight = sunlight(hit_P_offset, Ng, prd.random);
-
-  // Bounce
-  vec3f scatteredDirection = scatterLambertian(Ng, prd.random);
-
-  prd.out.directLight = directLight*color;
-  prd.out.attenuation = color;
-  prd.out.scatterEvent = rayGotBounced;
-  prd.out.scattered_direction = scatteredDirection;
-  prd.out.scattered_origin = hit_P_offset;
-
-  // Not used for BlockGeom
-  if (optixLaunchParams.enableToonOutline) {
-    prd.out.hitDistance = length(hit_P - org);
-  }
+  shade(Ng, color);
 }
 

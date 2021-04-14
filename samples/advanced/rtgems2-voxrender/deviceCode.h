@@ -89,12 +89,3 @@ struct RayGenData
 };
 
 
-// Utility
-inline __host__ __device__ int indexOfMaxComponent(vec3f v)
-{
-  if (v.x > v.y) 
-    return v.x > v.z ? 0 : 2;
-  else
-    return v.y > v.z ? 1 : 2;
-}
-
