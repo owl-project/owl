@@ -30,7 +30,7 @@ struct LaunchParams
 
   int clipHeight;  // in units of bricks
 
-  // Note: these should be bound values
+  // Note: these are also bound values
   bool enableClipping;
   bool enableToonOutline; 
 
@@ -41,20 +41,15 @@ struct LaunchParams
 
 };
 
-/* variables for the triangle mesh geometry */
 struct TrianglesGeomData
 {
-  /*! base color we use for each brick */
   unsigned char *colorIndexPerBrick;
   uchar4 *colorPalette;
 
-  /*! array/buffer of vertex indices */
   vec3i *index;
-  /*! array/buffer of vertex positions */
   vec3f *vertex;
 
-  // For flat meshes with multiple bricks per mesh
-  bool isFlat = false;
+  // For flat meshes, so we can get brickId from primId
   int primCountPerBrick;
   
 };

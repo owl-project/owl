@@ -778,7 +778,6 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     { "vertex", OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,vertex)},
     { "colorIndexPerBrick",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,colorIndexPerBrick)},
     { "colorPalette",  OWL_BUFPTR, OWL_OFFSETOF(TrianglesGeomData,colorPalette)},
-    { "isFlat",  OWL_BOOL, OWL_OFFSETOF(TrianglesGeomData,isFlat)},
     { "primCountPerBrick",  OWL_INT, OWL_OFFSETOF(TrianglesGeomData,primCountPerBrick)},
     { /* sentinel to mark end of list */ }
   };
@@ -884,7 +883,6 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     owlGeomSetBuffer(trianglesGeom, "vertex", vertexBuffer);
     owlGeomSetBuffer(trianglesGeom, "index", indexBuffer);
     owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
-    owlGeomSet1b(trianglesGeom, "isFlat", true);
     owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_BRICK_FACES);
 
     OWLBuffer colorIndexBuffer
@@ -964,7 +962,6 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
     owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
     owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
-    owlGeomSet1b(trianglesGeom, "isFlat", true);
     owlGeomSet1i(trianglesGeom, "primCountPerBrick", NUM_BRICK_FACES);
 
     std::vector<unsigned char> colorIndicesPerBrick = {249}; // grey in default palette
@@ -1033,7 +1030,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
                         sizeof(TrianglesGeomData),
                         trianglesGeomVars,-1);
   owlGeomTypeSetClosestHit(trianglesGeomType,0,
-                           module,"TriangleMesh");
+                           module,"InstancedTriangleMesh");
 
   LOG("building triangle geometry for single brick ...");
 

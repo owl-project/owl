@@ -327,6 +327,7 @@ vec3f scatterLambertian(const vec3f &Ng, Random &random)
   return scatteredDirection;
 }
 
+// Common reflectance function for all geometry
 inline __device__
 void shade(const vec3f &Ng, const vec3f &color)
 {
@@ -355,7 +356,8 @@ void shade(const vec3f &Ng, const vec3f &color)
   }
 }
 
-OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
+inline __device__
+void shadeTriangleOnBrick(unsigned int brickID)
 {
   const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
   
@@ -369,12 +371,24 @@ OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
   const vec3f Ng     = normalize(vec3f(optixTransformNormalFromObjectToWorldSpace(Nbox)));
 
   // Get brick color
-  const unsigned int brickID = self.isFlat ? optixGetPrimitiveIndex() / self.primCountPerBrick : optixGetInstanceId();
   const int ci = self.colorIndexPerBrick[brickID];
   uchar4 col = self.colorPalette[ci];
   const vec3f color = vec3f(col.x, col.y, col.z) * (1.0f/255.0f);
 
   shade(Ng, color);
+}
+
+OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
+{
+  const TrianglesGeomData &self = owl::getProgramData<TrianglesGeomData>();
+  unsigned int brickID = optixGetPrimitiveIndex() / self.primCountPerBrick;
+  shadeTriangleOnBrick(brickID);
+}
+
+OPTIX_CLOSEST_HIT_PROGRAM(InstancedTriangleMesh)()
+{
+  unsigned int brickID = optixGetInstanceId();
+  shadeTriangleOnBrick(brickID);
 }
 
 OPTIX_BOUNDS_PROGRAM(VoxGeom)(const void *geomData,
