@@ -33,17 +33,6 @@
 #include <tuple>
 #include <vector>
 
-// annoying stuff so we can list files in a directory later
-#if __cplusplus < 201703L   // i.e. not c++17
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#include <experimental/filesystem>
-namespace std {
-  namespace filesystem = experimental::filesystem;
-}
-#else
-#include <filesystem>
-using filesystem = std::filesystem
-#endif
 
 #define LOG(message)                                            \
   std::cout << OWL_TERMINAL_BLUE;                               \
@@ -1489,16 +1478,7 @@ int main(int ac, char **av)
       infiles.push_back(arg);  // assume all other args are file names
     }
   }
-  // Expand possible directory
-  if (infiles.size() == 1) {
-    std::vector<std::string> directoryFiles;
-    for (auto &p : std::filesystem::directory_iterator(infiles[0])) {
-      directoryFiles.push_back(p.path().u8string());
-    }
-    if (directoryFiles.size() > 0) {
-      infiles = std::move(directoryFiles);
-    }
-  }
+  
   const ogt_vox_scene *scene = loadVoxScenes(infiles);
 
   if (!scene) {
