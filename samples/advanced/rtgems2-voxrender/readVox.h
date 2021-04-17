@@ -22,7 +22,7 @@
 
 const ogt_vox_scene* loadVoxScene(const char *filename);
 
-// Load multiple scenes and merge into one
+// Load multiple scenes and merge
 const ogt_vox_scene* loadVoxScenes(const std::vector<std::string> &filenames);
 
 

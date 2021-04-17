@@ -1,17 +1,16 @@
-// ======================================================================== //
-//                                                                          //
-// Licensed under the Apache License, Version 2.0 (the "License");          //
-// you may not use this file except in compliance with the License.         //
-// You may obtain a copy of the License at                                  //
-//                                                                          //
-//     http://www.apache.org/licenses/LICENSE-2.0                           //
-//                                                                          //
-// Unless required by applicable law or agreed to in writing, software      //
-// distributed under the License is distributed on an "AS IS" BASIS,        //
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. //
-// See the License for the specific language governing permissions and      //
-// limitations under the License.                                           //
-// ======================================================================== //
+
+// Note: this code is based on demo_vox in the open game tools project.
+// The original comment for demo_vox follows.
+
+/*
+    demo_vox - MIT license - Justin Paver, Oct 2019
+
+    A demonstration program to show you how to use the MagicaVoxel scene reader,
+    writer, and merger from the open game tools project: https://github.com/jpaver/opengametools.
+
+    Please see the MIT license information at the end of this file, and please consider 
+    sharing any improvements you make.
+*/
 
 #include "readVox.h"
 
@@ -190,3 +189,23 @@ const ogt_vox_scene* loadVoxScenes(const std::vector<std::string> &filenames)
 
 }
 
+// Original license from demo_vox:
+
+/* -------------------------------------------------------------------------------------------------------------------------------------------------
+
+    MIT License
+
+    Copyright (c) 2019 Justin Paver
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+    IN THE SOFTWARE.
+
+------------------------------------------------------------------------------------------------------------------------------------------------- */

@@ -1,6 +1,10 @@
 /*
     opengametools vox file reader/writer - v0.6 - MIT license - Justin Paver, Oct 2019
 
+    *** dl: NOTE small tweak for the rtgems2 paper: changed ogt_vox_merge_scenes()
+    to arrange scenes in a 2d grid, to better fill the camera view.
+    *** 
+
     This is a single-header-file library that provides easy-to-use
     support for reading MagicaVoxel .vox files into structures that
     are easy to dereference and extract information from. It also
@@ -147,7 +151,7 @@
     #error some fixup needed for this platform?
 #endif
 
-#include <algorithm> // hack
+#include <algorithm>
 
     // denotes an invalid group index. Usually this is only applicable to the scene's root group's parent.
     static const uint32_t k_invalid_group_index = UINT32_MAX;
@@ -1851,8 +1855,8 @@
             groups[num_groups++] = root_group;
         }
 
-        // For GEMS paper:
-        // arrange scenes in a grid
+        // dl: for rtgems2 paper figure, arrange merged scenes in a 2d grid
+        // with some sorting to avoid overlap.
 
         struct SceneBox {
             int32_t scene_min_x, scene_max_x;
