@@ -25,6 +25,7 @@ add_executable(voxrender
   hostCode.cpp
   readVoxOGT.cpp
   readVox.h
+  resource.cpp
   ${ptxCode}
   )
 target_link_libraries(voxrender

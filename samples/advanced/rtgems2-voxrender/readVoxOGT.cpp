@@ -146,6 +146,12 @@ void logScene(const ogt_vox_scene *scene)
 
 }
 
+const ogt_vox_scene* loadVoxScene(const uint8_t *voxBuffer, size_t voxBufferLen)
+{
+  const ogt_vox_scene *scene = ogt_vox_read_scene_with_flags(voxBuffer, (uint32_t)voxBufferLen, k_read_scene_flags_groups);
+  return scene;
+}
+
 const ogt_vox_scene* loadVoxScene(const char *filename)
 {
   const ogt_vox_scene *scene = load_vox_scene_with_groups(filename);

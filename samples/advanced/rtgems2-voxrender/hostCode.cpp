@@ -13,8 +13,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// This program sets up a single geometric object, a mesh for a cube, and
-// its acceleration structure, then ray traces it.
+// This program reads a MagicaVoxel file and ray traces it.  Different types of
+// acceleration structures can be built with command line options.
 
 // public owl node-graph API
 #include "owl/owl.h"
@@ -29,6 +29,7 @@
 #include "readVox.h"
 
 #include <cassert>
+#include <cstdint>
 #include <map>
 #include <tuple>
 #include <vector>
@@ -45,6 +46,9 @@
 
 extern "C" char ptxCode[];
 
+// Small default vox file as byte buffer
+extern "C" const uint8_t voxBuffer[];
+extern "C" const size_t voxBufferLen;
 
 const vec3f init_lookAt {0.0f};
 const float init_cosFovy = 0.10f;  // small fov to approach isometric
@@ -1411,11 +1415,6 @@ int main(int ac, char **av)
 {
   LOG("owl::ng example '" << av[0] << "' starting up");
 
-  if (ac < 2) {
-      LOG("need at least 1 expected argument for .vox file. Exiting");
-      exit(1);
-  }
-
   auto checkArgValue = [ac](int k, const std::string& arg) {
     if (k+1 >= ac) {
       LOG("Missing argument value for " << arg << ", exiting.");
@@ -1479,14 +1478,14 @@ int main(int ac, char **av)
     }
   }
   
-  const ogt_vox_scene *scene = loadVoxScenes(infiles);
+  const ogt_vox_scene *scene = infiles.empty() ? loadVoxScene(voxBuffer, voxBufferLen) : loadVoxScenes(infiles);
 
   if (!scene) {
-      LOG("Could not read vox file: " << infiles[0].c_str() << ", exiting");
+      LOG("Could not load vox scene, exiting");
       exit(1);
   }
   if (scene->num_models == 0) {
-      LOG("No voxel models found in file, exiting");
+      LOG("No vox models found in file, exiting");
       ogt_vox_destroy_scene(scene);
       exit(1);
   }

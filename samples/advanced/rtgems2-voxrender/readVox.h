@@ -15,14 +15,19 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
 #include "ogt_vox.h"
 
+// Load from byte buffer
+const ogt_vox_scene* loadVoxScene(const uint8_t *voxBuffer, size_t voxBufferLen);
+
+// Load from file
 const ogt_vox_scene* loadVoxScene(const char *filename);
 
-// Load multiple scenes and merge
+// Load multiple files and merge into one scene
 const ogt_vox_scene* loadVoxScenes(const std::vector<std::string> &filenames);
 
 
