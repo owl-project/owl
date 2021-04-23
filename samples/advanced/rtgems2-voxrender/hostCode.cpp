@@ -262,6 +262,7 @@ std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model, bool
   return solid_voxels;
 }
 
+// Similar to above, but extract small dense grids ("blocks") of voxels.
 void extractBlocksFromModel(const ogt_vox_model* model, int blockLen,
     std::vector<uchar3> &blockOriginsOut, std::vector<unsigned char> &colorIndicesOut)
 {
@@ -1203,14 +1204,6 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   
 }
 
-inline int indexOfMaxComponent(vec3f v)
-{
-  if (v.x > v.y) 
-    return v.x > v.z ? 0 : 2;
-  else
-    return v.y > v.z ? 1 : 2;
-}
-
 Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options)
   : enableGround(options.enableGround), 
   enableClipping(options.enableClipping), 
@@ -1266,8 +1259,8 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
   }
   
   const vec3f sceneSpan = sceneBox.span();
-  const int sceneLongestDim = indexOfMaxComponent(sceneSpan);
-  const float brickScaleInWorldSpace = 2.f / sceneSpan[sceneLongestDim];
+  const float maxSpan = owl::reduce_max(sceneSpan);
+  const float brickScaleInWorldSpace = 2.f / maxSpan;
   this->clipHeight = int(sceneSpan.z) + 1;
   
 
