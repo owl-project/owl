@@ -378,6 +378,37 @@ size_t getAccelSizeInBytes(OWLGroup group)
 }
 
 
+// Helper function to extract vox instance transforms
+void appendInstanceTransforms(const ogt_vox_scene *scene, const ogt_vox_model *vox_model, const std::vector<uint32_t> &instances,
+    std::vector<owl::affine3f> &instanceTransforms, box3f &sceneBox)
+{
+  for (uint32_t instanceIndex : instances) {
+    const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
+    const ogt_vox_transform &vox_transform = vox_instance.transform;
+
+    const owl::affine3f instanceTransform( 
+        vec3f( vox_transform.m00, vox_transform.m01, vox_transform.m02 ),  // column 0
+        vec3f( vox_transform.m10, vox_transform.m11, vox_transform.m12 ),  //  1
+        vec3f( vox_transform.m20, vox_transform.m21, vox_transform.m22 ),  //  2
+        vec3f( vox_transform.m30, vox_transform.m31, vox_transform.m32 )); //  3 
+
+    // This matrix translates model to its center (in integer coords!) and applies instance transform
+    const affine3f instanceMoveToCenterAndTransform = 
+      affine3f(instanceTransform) * 
+      affine3f::translate(-vec3f(float(vox_model->size_x/2),   // Note: snapping to int to match MV
+                                 float(vox_model->size_y/2), 
+                                 float(vox_model->size_z/2)));
+
+    sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform, vec3f(0.0f)));
+    sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform,  
+          vec3f(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z))));
+
+    instanceTransforms.push_back(instanceMoveToCenterAndTransform);
+
+  }
+}
+
+
 OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
     box3f &sceneBox) 
 {
@@ -424,7 +455,9 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
   for (uint32_t instanceIndex = 0; instanceIndex < scene->num_instances; instanceIndex++) {
     const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
-    modelToInstances[vox_instance.model_index].push_back(instanceIndex);
+    if (!vox_instance.hidden) {
+      modelToInstances[vox_instance.model_index].push_back(instanceIndex);
+    }
   }
 
   std::vector<OWLGroup> geomGroups;
@@ -466,45 +499,12 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     owlGroupBuildAccel(userGeomGroup);
     bottomLevelBvhSizeInBytes += getAccelSizeInBytes(userGeomGroup);
 
+    totalSolidVoxelCount += voxdata.size() * it.second.size();
+
     LOG("adding (" << it.second.size() << ") instance transforms for model ...");
+    appendInstanceTransforms(scene, vox_model, it.second, instanceTransforms, sceneBox);
     for (uint32_t instanceIndex : it.second) {
-
-      totalSolidVoxelCount += voxdata.size();
-
-      const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
-
-      const std::string instanceName = vox_instance.name ? vox_instance.name : "(unnamed)";
-      if (vox_instance.hidden) {
-        LOG("skipping hidden VOX instance: " << instanceName );
-        continue;
-      } else {
-        LOG("building VOX instance: " << instanceName);
-      }
-
-      // VOX instance transform
-      const ogt_vox_transform &vox_transform = vox_instance.transform;
-
-      const owl::affine3f instanceTransform( 
-          vec3f( vox_transform.m00, vox_transform.m01, vox_transform.m02 ),  // column 0
-          vec3f( vox_transform.m10, vox_transform.m11, vox_transform.m12 ),  //  1
-          vec3f( vox_transform.m20, vox_transform.m21, vox_transform.m22 ),  //  2
-          vec3f( vox_transform.m30, vox_transform.m31, vox_transform.m32 )); //  3 
-
-      // This matrix translates model to its center (in integer coords!) and applies instance transform
-      const affine3f instanceMoveToCenterAndTransform = 
-        affine3f(instanceTransform) * 
-        affine3f::translate(-vec3f(float(vox_model->size_x/2),   // Note: snapping to int to match MV
-                                   float(vox_model->size_y/2), 
-                                   float(vox_model->size_z/2)));
-
-      sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform, vec3f(0.0f)));
-      sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform,  
-            vec3f(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z))));
-
-      instanceTransforms.push_back(instanceMoveToCenterAndTransform);
-
       geomGroups.push_back(userGeomGroup);
-
     }
 
   }
@@ -608,7 +608,9 @@ OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_s
 
   for (uint32_t instanceIndex = 0; instanceIndex < scene->num_instances; instanceIndex++) {
     const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
-    modelToInstances[vox_instance.model_index].push_back(instanceIndex);
+    if (!vox_instance.hidden) {
+      modelToInstances[vox_instance.model_index].push_back(instanceIndex);
+    }
   }
 
   std::vector<OWLGroup> geomGroups;
@@ -655,45 +657,12 @@ OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_s
     owlGroupBuildAccel(userGeomGroup);
     bottomLevelBvhSizeInBytes += getAccelSizeInBytes(userGeomGroup);
 
+    totalPrimCount += blockOrigins.size() * it.second.size();
+
     LOG("adding (" << it.second.size() << ") instance transforms for model ...");
+    appendInstanceTransforms(scene, vox_model, it.second, instanceTransforms, sceneBox);
     for (uint32_t instanceIndex : it.second) {
-
-      totalPrimCount += blockOrigins.size();
-
-      const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
-
-      const std::string instanceName = vox_instance.name ? vox_instance.name : "(unnamed)";
-      if (vox_instance.hidden) {
-        LOG("skipping hidden VOX instance: " << instanceName );
-        continue;
-      } else {
-        LOG("building VOX instance: " << instanceName);
-      }
-
-      // VOX instance transform
-      const ogt_vox_transform &vox_transform = vox_instance.transform;
-
-      const owl::affine3f instanceTransform( 
-          vec3f( vox_transform.m00, vox_transform.m01, vox_transform.m02 ),  // column 0
-          vec3f( vox_transform.m10, vox_transform.m11, vox_transform.m12 ),  //  1
-          vec3f( vox_transform.m20, vox_transform.m21, vox_transform.m22 ),  //  2
-          vec3f( vox_transform.m30, vox_transform.m31, vox_transform.m32 )); //  3 
-
-      // This matrix translates model to its center (in integer coords!) and applies instance transform
-      const affine3f instanceMoveToCenterAndTransform = 
-        affine3f(instanceTransform) * 
-        affine3f::translate(-vec3f(float(vox_model->size_x/2),   // Note: snapping to int to match MV
-                                   float(vox_model->size_y/2), 
-                                   float(vox_model->size_z/2)));
-
-      sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform, vec3f(0.0f)));
-      sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform,  
-            vec3f(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z))));
-
-      instanceTransforms.push_back(instanceMoveToCenterAndTransform);
-
       geomGroups.push_back(userGeomGroup);
-
     }
 
   }
@@ -705,7 +674,7 @@ OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_s
 
   if (this->enableGround) {
     // ------------------------------------------------------------------
-    // set up block vox data and accels for ground (single stretched block of NxNxN bricks)
+    // set up block vox data and accels for ground (single stretched block)
     // ------------------------------------------------------------------
     
     std::vector<uchar3> blockOrigins {make_uchar3(0,0,0)};
@@ -795,7 +764,9 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
   for (uint32_t instanceIndex = 0; instanceIndex < scene->num_instances; instanceIndex++) {
     const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
-    modelToInstances[vox_instance.model_index].push_back(instanceIndex);
+    if (!vox_instance.hidden) {
+      modelToInstances[vox_instance.model_index].push_back(instanceIndex);
+    }
   }
 
   std::vector<OWLGroup> geomGroups;
@@ -888,47 +859,15 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     OWLGroup trianglesGroup = owlTrianglesGeomGroupCreate(context, 1, &trianglesGeom);
     owlGroupBuildAccel(trianglesGroup);
     bottomLevelBvhSizeInBytes += getAccelSizeInBytes(trianglesGroup);
+      
+    totalSolidVoxelCount += voxdata.size() * it.second.size();
 
     LOG("adding (" << it.second.size() << ") instance transforms for model ...");
+    appendInstanceTransforms(scene, vox_model, it.second, instanceTransforms, sceneBox);
     for (uint32_t instanceIndex : it.second) {
-
-      totalSolidVoxelCount += voxdata.size();
-
-      const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
-
-      const std::string instanceName = vox_instance.name ? vox_instance.name : "(unnamed)";
-      if (vox_instance.hidden) {
-        LOG("skipping hidden VOX instance: " << instanceName );
-        continue;
-      } else {
-        LOG("building VOX instance: " << instanceName);
-      }
-
-      // VOX instance transform
-      const ogt_vox_transform &vox_transform = vox_instance.transform;
-
-      const owl::affine3f instanceTransform( 
-          vec3f( vox_transform.m00, vox_transform.m01, vox_transform.m02 ),  // column 0
-          vec3f( vox_transform.m10, vox_transform.m11, vox_transform.m12 ),  //  1
-          vec3f( vox_transform.m20, vox_transform.m21, vox_transform.m22 ),  //  2
-          vec3f( vox_transform.m30, vox_transform.m31, vox_transform.m32 )); //  3 
-
-      // This matrix translates model to its center (in integer coords!) and applies instance transform
-      const affine3f instanceMoveToCenterAndTransform = 
-        affine3f(instanceTransform) * 
-        affine3f::translate(-vec3f(float(vox_model->size_x/2),   // Note: snapping to int to match MV
-                                   float(vox_model->size_y/2), 
-                                   float(vox_model->size_z/2)));
-
-      sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform, vec3f(0.0f)));
-      sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform,  
-            vec3f(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z))));
-
-      instanceTransforms.push_back(instanceMoveToCenterAndTransform);
-
       geomGroups.push_back(trianglesGroup);
-
     }
+    
   }
 
   LOG("Total solid voxels in all instanced models: " << totalSolidVoxelCount);
@@ -1073,75 +1012,48 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   assert(scene->num_instances > 0);
   assert(scene->num_models > 0);
 
-  size_t totalSolidVoxelCount = 0;
+  // Cluster instances together that use the same model
+  std::map<uint32_t, std::vector<uint32_t>> modelToInstances;
 
   for (uint32_t instanceIndex = 0; instanceIndex < scene->num_instances; instanceIndex++) {
-
     const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
-
-    const std::string instanceName = vox_instance.name ? vox_instance.name : "(unnamed)";
-    if (vox_instance.hidden) {
-      LOG("skipping hidden VOX instance: " << instanceName );
-      continue;
-    } else {
-      LOG("building VOX instance: " << instanceName);
+    if (!vox_instance.hidden) {
+      modelToInstances[vox_instance.model_index].push_back(instanceIndex);
     }
+  }
 
-    const ogt_vox_model *vox_model = scene->models[vox_instance.model_index];
+  size_t totalSolidVoxelCount = 0;
+
+  const affine3f instanceInflateOutline =
+    affine3f::translate(vec3f(0.5f)) * affine3f::scale(vec3f(OUTLINE_SCALE)) * affine3f::translate(vec3f(-0.5f));
+
+  // Make instance transforms
+  for (auto it : modelToInstances) {
+    const ogt_vox_model *vox_model = scene->models[it.first];
     assert(vox_model);
-
-    // Note: for scenes with many instances of a model, cache this or rearrange loop
     std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, enableCulling);
-    totalSolidVoxelCount += voxdata.size();
+    totalSolidVoxelCount += voxdata.size() * it.second.size();
 
-    // Color indices for this model
-    for (size_t i = 0; i < voxdata.size(); ++i) {
-        colorIndicesPerBrick.push_back(voxdata[i].w);
-    }
+    std::vector<owl::affine3f> instanceTransforms;
+    LOG("adding (" << it.second.size() << ") instance transforms for model ...");
+    appendInstanceTransforms(scene, vox_model, it.second, instanceTransforms, sceneBox);
 
-    // VOX instance transform
-    const ogt_vox_transform &vox_transform = vox_instance.transform;
-
-    const owl::affine3f instanceTransform( 
-        vec3f( vox_transform.m00, vox_transform.m01, vox_transform.m02 ),  // column 0
-        vec3f( vox_transform.m10, vox_transform.m11, vox_transform.m12 ),  //  1
-        vec3f( vox_transform.m20, vox_transform.m21, vox_transform.m22 ),  //  2
-        vec3f( vox_transform.m30, vox_transform.m31, vox_transform.m32 )); //  3 
-
-    // This matrix translates model to its center (in integer coords!) and applies instance transform
-    const affine3f instanceMoveToCenterAndTransform = 
-      affine3f(instanceTransform) * 
-      affine3f::translate(-vec3f(float(vox_model->size_x/2),   // Note: snapping to int to match MV
-                                 float(vox_model->size_y/2), 
-                                 float(vox_model->size_z/2)));
-
-    sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform, vec3f(0.0f)));
-    sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform,  
-          vec3f(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z))));
-
-    // For outlines
-    const affine3f instanceInflateOutline =
-      affine3f::translate(vec3f(0.5f)) * affine3f::scale(vec3f(OUTLINE_SCALE)) * affine3f::translate(vec3f(-0.5f));
-
-    for (size_t i = 0; i < voxdata.size(); ++i) {
-      uchar4 b = voxdata[i];
-
-      // Transform brick to its location in the scene
-      owl::affine3f trans = instanceMoveToCenterAndTransform * owl::affine3f::translate(vec3f(b.x, b.y, b.z));
-      transformsPerBrick.push_back(trans);
-    }
-
-    if (this->enableToonOutline) {
+    // Flatten brick transform in model with vox instance transform
+    for (auto &instanceTransform : instanceTransforms) {
       for (size_t i = 0; i < voxdata.size(); ++i) {
-        uchar4 b = voxdata[i];
+        colorIndicesPerBrick.push_back(voxdata[i].w);
 
-        // insert outline
-        owl::affine3f trans = instanceMoveToCenterAndTransform *
-          owl::affine3f::translate(vec3f(b.x, b.y, b.z)) * instanceInflateOutline;
-        outlineTransformsPerBrick.push_back(trans);
+        uchar4 b = voxdata[i];
+        owl::affine3f trans = instanceTransform * owl::affine3f::translate(vec3f(b.x, b.y, b.z));
+        transformsPerBrick.push_back(trans);
+
+        if (this->enableToonOutline) {
+          owl::affine3f trans = instanceTransform *
+            owl::affine3f::translate(vec3f(b.x, b.y, b.z)) * instanceInflateOutline;
+          outlineTransformsPerBrick.push_back(trans);
+        }
       }
     }
-
   }
 
   LOG("Total solid voxels in all instanced models: " << totalSolidVoxelCount);
@@ -1159,6 +1071,15 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
     colorIndicesPerBrick.push_back(249);  // grey in default palette
   }
 
+  // Concat outline bricks onto regular bricks, with masks
+  std::vector<uint8_t> visibilityMasks(transformsPerBrick.size() + outlineTransformsPerBrick.size());
+  {
+    size_t count = transformsPerBrick.size();
+    transformsPerBrick.insert(transformsPerBrick.end(), outlineTransformsPerBrick.begin(), outlineTransformsPerBrick.end());
+    std::fill(visibilityMasks.begin(), visibilityMasks.begin() + count, VISIBILITY_RADIANCE | VISIBILITY_SHADOW);
+    std::fill(visibilityMasks.begin()+count, visibilityMasks.end(), VISIBILITY_OUTLINE);
+  }
+
   // Apply final scene transform so we can use the same camera for every scene
   const float maxSpan = owl::reduce_max(sceneBox.span());
   owl::affine3f worldTransform = 
@@ -1167,18 +1088,6 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 
   for (size_t i = 0; i < transformsPerBrick.size(); ++i) {
     transformsPerBrick[i] = worldTransform * transformsPerBrick[i];
-  }
-  for (size_t i = 0; i < outlineTransformsPerBrick.size(); ++i) {
-    outlineTransformsPerBrick[i] = worldTransform * outlineTransformsPerBrick[i];
-  }
-
-  // Concat outline bricks onto regular bricks
-  std::vector<uint8_t> visibilityMasks(transformsPerBrick.size() + outlineTransformsPerBrick.size());
-  {
-    size_t count = transformsPerBrick.size();
-    transformsPerBrick.insert(transformsPerBrick.end(), outlineTransformsPerBrick.begin(), outlineTransformsPerBrick.end());
-    std::fill(visibilityMasks.begin(), visibilityMasks.begin() + count, VISIBILITY_RADIANCE | VISIBILITY_SHADOW);
-    std::fill(visibilityMasks.begin()+count, visibilityMasks.end(), VISIBILITY_OUTLINE);
   }
 
   // Set the color indices per brick now that the bricks have been fully instanced
