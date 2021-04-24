@@ -50,18 +50,6 @@ extern "C" char ptxCode[];
 extern "C" const uint8_t voxBuffer[];
 extern "C" const size_t voxBufferLen;
 
-const vec3f init_lookAt {0.0f};
-const float init_cosFovy = 0.10f;  // small fov to approach isometric
-const vec3f init_lookUp(0.f, 0.f, 1.f);
-
-const float isometricAngle = 35.564f * M_PIf/180.0f;
-const owl::affine3f cameraRotation = 
-  owl::affine3f::rotate(vec3f(0,0,1), M_PIf/4.0f) *
-  owl::affine3f::rotate(vec3f(-1,0,0), isometricAngle);
-
-const vec3f init_lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
-
-
 enum SceneType {
   SCENE_TYPE_FLAT=1,
   SCENE_TYPE_USER,
@@ -77,7 +65,6 @@ struct Viewer : public owl::viewer::OWLViewer
     bool enableGround = true;
     bool enableClipping = true;
     bool enableToonOutline = true;
-    bool enableCulling = false;
   };
 
   Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options);
@@ -125,7 +112,6 @@ struct Viewer : public owl::viewer::OWLViewer
   bool enableGround = true;
   bool enableClipping = true;  // enable clipping plane in shader
   bool enableToonOutline = true;
-  bool enableCulling = false;  // cull hidden bricks
   
 };
 
@@ -222,7 +208,7 @@ void Viewer::key(char key, const vec2i &where)
 // Adapted from ogt demo code. 
 // The OGT format stores voxels as solid grids; we only need to store the nonempty entries on device.
 
-std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model, bool cullHidden)
+std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model)
 {
   // is the voxel at the given index opaque?
   auto isOpaque = [model](int x, int y, int z) -> bool {
@@ -242,15 +228,6 @@ std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model, bool
       for (int x = 0; x < (int)model->size_x; x++, voxel_index++) {
         uint8_t ci = model->voxel_data[voxel_index];
         if (ci) {
-          if (cullHidden) {
-            if (isOpaque(x+1, y, z) && isOpaque(x-1, y, z) &&
-                isOpaque(x, y+1, z) && isOpaque(x, y-1, z) &&
-                isOpaque(x, y, z+1) && isOpaque(x, y, z-1)) 
-            {
-              // all 6 face-neighbors of the brick are visible, so this brick is hidden
-              continue;
-            }
-          }
           solid_voxels.push_back(
               // Switch to Y-up
               make_uchar4(uint8_t(x), uint8_t(y), uint8_t(z), ci));
@@ -408,7 +385,10 @@ void appendInstanceTransforms(const ogt_vox_scene *scene, const ogt_vox_model *v
   }
 }
 
-
+// User scene type:
+//   * each brick is a user (custom) prim
+//   * each vox model is an OWL geom group
+//   * vox instances are an OWL instance group
 OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
     box3f &sceneBox) 
 {
@@ -474,7 +454,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
     const ogt_vox_model *vox_model = scene->models[it.first];
     assert(vox_model);
-    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, enableCulling);
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
 
     LOG("building user geometry for model ...");
 
@@ -566,6 +546,9 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 }
 
 
+// User block scene type:
+//   * each small block of NxNxN bricks is a user prim. 
+//   * otherwise the same as user scene type above.
 OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
     box3f &sceneBox) 
 {
@@ -726,7 +709,9 @@ OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_s
 
 }
 
-// For performance comaparisons, this version flattens each vox model into a single triangle mesh, 
+// Flat triangle scene type:
+//   * each vox model is a single flat triangle mesh.
+//   * vox instances are an OWL instance group
 OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
     box3f &sceneBox )
 {
@@ -782,7 +767,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
   for (auto it : modelToInstances) {
     const ogt_vox_model *vox_model = scene->models[it.first];
     assert(vox_model);
-    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, enableCulling);
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
 
     LOG("building flat triangle geometry for model ...");
 
@@ -940,6 +925,10 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
 }
 
+// Instanced triangle scene type:
+//   * there is only 1 brick geom group for the entire scene.  That brick is made of triangles.
+//   * vox models and instances are flattened into a single OWL instance group with many transforms
+//   (i.e., in a simple vox file, the OWL scene would have a transform per opaque voxel)
 OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
     owl::box3f &sceneBox)
 {
@@ -991,7 +980,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
   
   // ------------------------------------------------------------------
-  // the group/accel for a brick
+  // the group/accel for the one brick
   // ------------------------------------------------------------------
   OWLGroup trianglesGroup
     = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
@@ -1000,7 +989,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 
 
   // ------------------------------------------------------------------
-  // instance the brick for each Vox model in the scene, flattening any Vox instances
+  // instance the brick for each Vox model in the scene, flattening all Vox instance transforms
   // ------------------------------------------------------------------
 
   LOG("building instances ...");
@@ -1031,7 +1020,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   for (auto it : modelToInstances) {
     const ogt_vox_model *vox_model = scene->models[it.first];
     assert(vox_model);
-    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model, enableCulling);
+    std::vector<uchar4> voxdata = extractSolidVoxelsFromModel(vox_model);
     totalSolidVoxelCount += voxdata.size() * it.second.size();
 
     std::vector<owl::affine3f> instanceTransforms;
@@ -1071,7 +1060,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
     colorIndicesPerBrick.push_back(249);  // grey in default palette
   }
 
-  // Concat outline bricks onto regular bricks, with masks
+  // Concat outline bricks onto regular bricks and mark them with visibility masks
   std::vector<uint8_t> visibilityMasks(transformsPerBrick.size() + outlineTransformsPerBrick.size());
   {
     size_t count = transformsPerBrick.size();
@@ -1116,8 +1105,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options)
   : enableGround(options.enableGround), 
   enableClipping(options.enableClipping), 
-  enableToonOutline(options.enableToonOutline),
-  enableCulling(options.enableCulling)
+  enableToonOutline(options.enableToonOutline)
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
@@ -1229,7 +1217,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
   owlParamsSet1b(launchParams, "enableToonOutline", this->enableToonOutline);
   owlParamsSet1b(launchParams, "enableClipping", enableClipping);
 
-  // other params set at launch or resize.  Some of these may have also been bound
+  // other params are set at launch or resize.  Some of these may have also been bound
   // as constants earlier.
     
   // ##################################################################
@@ -1313,6 +1301,22 @@ bool stringToCamera(const char *s, vec3f &lookFrom, vec3f &lookAt, vec3f &lookUp
   return false;
 }
 
+void printUsageAndExit(const char *progName)
+{
+  std::cout << "Usage: " << progName << " [options] [file1.vox file2.vox ...]\n";
+  std::cout << "Options:\n"
+            << "   --camera <args>  : camera in OWL format as printed with C key\n"
+            << "   --no-ground      : disable ground plane \n"
+            << "   --no-clipping    : disable clipping plane controls \n"
+            << "   --no-outlines    : disable toon outlines \n"
+            << "   --save <out.png> : save an image with a lot of samples and exit.  For generating figures.\n"
+            << "   --scenetype <s>  : user, userblocks, instanced, flat.  Default is instanced.\n";
+
+  std::cout << "\n"
+            << "If no vox files are given then a small default scene is shown\n"
+            << "Check the key() function for supported hot keys to move lights, etc.\n";
+}
+
 int main(int ac, char **av)
 {
   LOG("owl::ng example '" << av[0] << "' starting up");
@@ -1327,15 +1331,24 @@ int main(int ac, char **av)
   Viewer::GlobalOptions options;
   SceneType sceneType = SCENE_TYPE_INSTANCED;
 
-  vec3f lookFrom = init_lookFrom;
-  vec3f lookAt = init_lookAt;
-  vec3f lookUp = init_lookUp;
+  // Set up isometric view 
+  const float isometricAngle = 35.564f * M_PIf/180.0f;
+  const owl::affine3f cameraRotation = 
+    owl::affine3f::rotate(vec3f(0,0,1), M_PIf/4.0f) *
+    owl::affine3f::rotate(vec3f(-1,0,0), isometricAngle);
+  
+  vec3f lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
+  vec3f lookAt {0.f};
+  vec3f lookUp {0.f, 0.f, 1.f};
 
   std::vector<std::string> infiles;
   std::string outFileName;
 
   for (int i = 1; i < ac; ++i) {
     std::string arg = av[i];
+    if (arg == "--help" || arg == "-h") {
+      printUsageAndExit(av[0]);
+    }
     if (arg == "--no-ground") {
       options.enableGround = false;
     } 
@@ -1345,9 +1358,6 @@ int main(int ac, char **av)
     }
     else if (arg == "--no-outlines") {
       options.enableToonOutline = false;
-    }
-    else if (arg == "--cull-hidden") {
-      options.enableCulling = true;
     }
     else if (arg == "--save") {
       checkArgValue(i, arg);
@@ -1396,7 +1406,7 @@ int main(int ac, char **av)
   viewer.camera.setOrientation(lookFrom,
                                lookAt,
                                lookUp,
-                               owl::viewer::toDegrees(acosf(init_cosFovy)));
+                               owl::viewer::toDegrees(acosf(0.1f)));
   viewer.enableFlyMode();
   viewer.enableInspectMode(owl::box3f(vec3f(-1.f),vec3f(+1.f)));
 
