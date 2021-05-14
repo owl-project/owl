@@ -45,20 +45,20 @@
 # define OWL_IF_CPP(a) /* drop it */
 #endif
 
-#if defined(OWL_DLL_INTERFACE)
-#  ifdef owl_EXPORTS
-#    define OWL_API OWL_DLL_EXPORT
-#  else
-#    define OWL_API OWL_DLL_IMPORT
-#  endif
-#else
+//#if defined(OWL_DLL_INTERFACE)
+//#  ifdef owl_EXPORTS
+//#    define OWL_API OWL_DLL_EXPORT
+//#  else
+//#    define OWL_API OWL_DLL_IMPORT
+//#  endif
+//#else
 #  ifdef __cplusplus
 #    define OWL_API extern "C" OWL_DLL_EXPORT
 #  else
 #    define OWL_API /* bla */
 #  endif
 //#  define OWL_API /*static lib*/
-#endif
+//#endif
 //#ifdef __cplusplus
 //# define OWL_API extern "C" OWL_DLL_EXPORT
 //#else

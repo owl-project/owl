@@ -27,21 +27,35 @@ namespace owl {
 
     template<typename T, int N> inline __both__
     bool any_less_than(const vec_t<T,N> &a, const vec_t<T,N> &b)
-    { return common::any(lt(a,b)); }
+    { //return common::any(lt(a,b)); 
+		for (int i = 0; i < N; i++) if (a[i] < b[i]) return true;
+		return false;
+	}
   
     template<typename T, int N> inline __both__
     bool all_less_than(const vec_t<T,N> &a, const vec_t<T,N> &b)
-    { return common::all(lt(a,b)); }
+    { //return common::all(lt(a,b)); 
+		for (int i = 0; i < N; i++) if (!(a[i] < b[i])) return false;
+		return true;
+	}
   
     template<typename T, int N> inline __both__
     bool any_greater_than(const vec_t<T,N> &a, const vec_t<T,N> &b)
-    { return common::any(gt(a,b)); }
+    { 
+		for (int i = 0; i < N; i++) if (a[i] > b[i]) return true;
+		return false;
+//		return common::any(gt(a,b)); 
+	}
 
     /*! particularly useful for doing some range testing as in "if
       (any_greater_or_equal(pixelID,frameBufferSize)" etc */
     template<typename T, int N> inline __both__
     bool any_greater_or_equal(const vec_t<T,N> &a, const vec_t<T,N> &b)
-    { return common::any(ge(a,b)); }
+    { 
+		for (int i = 0; i < N; i++) if ((a[i] >= b[i])) return true;
+		return false;
+//		return common::any(ge(a,b)); 
+	}
 
     // -------------------------------------------------------
     // unary functors
