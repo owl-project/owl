@@ -241,7 +241,7 @@ Some sample use projects/papers that recently used OWL:
 
 General Requirements:
 - OptiX 7 SDK (version 7.0, 7.1, or 7.2, will work with either)
-- CUDA verion 10 or 11
+- CUDA version 10 or 11
 - a C++11 capable compiler (regular gcc on CentOS and Linux should do, VS on Windows)
 
 Per-OS Instructions:
