@@ -21,6 +21,7 @@
     #include <io.h>
 #endif
 
+#include <cassert>
 #include <stdio.h>
 
 // a helper function to load a magica voxel scene given a filename.
@@ -44,7 +45,13 @@ const ogt_vox_scene* load_vox_scene(const char* filename, uint32_t scene_read_fl
 
     // load the file into a memory buffer
     uint8_t * buffer = new uint8_t[buffer_size];
-    fread(buffer, buffer_size, 1, fp);
+    size_t itemsread = fread(buffer, buffer_size, 1, fp);
+    assert(itemsread == 1);
+    if (itemsread < 1) {
+        delete[] buffer;
+        return NULL;
+    }
+
     fclose(fp);
 
     // construct the scene from the buffer
