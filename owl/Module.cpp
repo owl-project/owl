@@ -59,7 +59,9 @@ namespace owl {
 
     for (const char *s = orignalPtxCode; *s; ) {
       std::string line = getNextLine(s);
-      if (line.find(" _optix_") != line.npos)
+      if (line.find(" _optix_") != line.npos ||
+          line.find(",_optix_") != line.npos
+          )
         fixed << "//dropped: " << line;
       else
         fixed << line;
