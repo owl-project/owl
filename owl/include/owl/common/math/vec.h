@@ -406,7 +406,17 @@ namespace owl {
     _define_vec_types(double,d);
   
 #undef _define_vec_types
-  
+
+    inline __both__ vec_t<bool,3> ge(const vec3f &a, const vec3f &b)
+    { return { a.x >= b.x, a.y >= b.y, a.z >= b.z }; }
+    
+    inline __both__ vec_t<bool,3> lt(const vec3f &a, const vec3f &b)
+    { return { a.x < b.x, a.y < b.y, a.z < b.z }; }
+
+    inline __both__ bool any(vec_t<bool,3> v)
+    { return v.x | v.y | v.z; }
+    
+    
   } // ::owl::common
 
   using namespace owl::common;

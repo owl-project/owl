@@ -86,14 +86,18 @@ struct Viewer : public owl::viewer::OWLViewer
 
   /// Geometry creation functions
 
-  OWLGroup createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-      owl::box3f &sceneBox);
-  OWLGroup createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-      owl::box3f &sceneBox);
-  OWLGroup createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-      owl::box3f &sceneBox);
-  OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-      owl::box3f &sceneBox) ;
+  OWLGroup createFlatTriangleGeometryScene(OWLModule module,
+                                           const ogt_vox_scene *scene, 
+                                           owl::box3f &sceneBox);
+  OWLGroup createInstancedTriangleGeometryScene(OWLModule module,
+                                                const ogt_vox_scene *scene, 
+                                                owl::box3f &sceneBox);
+  OWLGroup createUserGeometryScene(OWLModule module,
+                                   const ogt_vox_scene *scene, 
+                                   owl::box3f &sceneBox);
+  OWLGroup createUserBlocksGeometryScene(OWLModule module,
+                                         const ogt_vox_scene *scene, 
+                                         owl::box3f &sceneBox) ;
 
 
   bool sbtDirty = true;
@@ -1277,7 +1281,7 @@ SceneType stringToSceneType(const char *s)
 bool stringToCamera(const char *s, vec3f &lookFrom, vec3f &lookAt, vec3f &lookUp)
 {
   float v[9];
-  if (sscanf_s(s, "%f %f %f  %f %f %f  %f %f %f", 
+  if (sscanf(s, "%f %f %f  %f %f %f  %f %f %f", 
         v, v+1, v+2, v+3, v+4, v+5, v+6, v+7, v+8) == 9)
   {
     lookFrom = vec3f(v[0], v[1], v[2]);
@@ -1285,14 +1289,14 @@ bool stringToCamera(const char *s, vec3f &lookFrom, vec3f &lookAt, vec3f &lookUp
     lookUp   = vec3f(v[6], v[7], v[8]);
     return true;
   }
-  else if (sscanf_s(s, "%f %f %f  %f %f %f", 
+  else if (sscanf(s, "%f %f %f  %f %f %f", 
         v, v+1, v+2, v+3, v+4, v+5 ) == 6)
   {
     lookFrom = vec3f(v[0], v[1], v[2]);
     lookAt   = vec3f(v[3], v[4], v[5]);
     return true;
   }
-  else if (sscanf_s(s, "%f %f %f", 
+  else if (sscanf(s, "%f %f %f", 
         v, v+1, v+2) == 3)
   {
     lookFrom = vec3f(v[0], v[1], v[2]);

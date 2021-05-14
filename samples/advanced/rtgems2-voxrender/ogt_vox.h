@@ -1,263 +1,264 @@
 /*
-    opengametools vox file reader/writer - v0.6 - MIT license - Justin Paver, Oct 2019
+  opengametools vox file reader/writer - v0.6 - MIT license - Justin Paver, Oct 2019
 
-    *** dl: NOTE small tweak for the rtgems2 paper: changed ogt_vox_merge_scenes()
-    to arrange scenes in a 2d grid, to better fill the camera view.
-    *** 
+  *** dl: NOTE small tweak for the rtgems2 paper: changed ogt_vox_merge_scenes()
+  to arrange scenes in a 2d grid, to better fill the camera view.
+  *** 
 
-    This is a single-header-file library that provides easy-to-use
-    support for reading MagicaVoxel .vox files into structures that
-    are easy to dereference and extract information from. It also
-    supports writing back out to .vox file from those structures.
+  This is a single-header-file library that provides easy-to-use
+  support for reading MagicaVoxel .vox files into structures that
+  are easy to dereference and extract information from. It also
+  supports writing back out to .vox file from those structures.
 
-    Please see the MIT license information at the end of this file.
+  Please see the MIT license information at the end of this file.
 
-    Also, please consider sharing any improvements you make.
+  Also, please consider sharing any improvements you make.
 
-    For more information and more tools, visit:
-      https://github.com/jpaver/opengametools
+  For more information and more tools, visit:
+  https://github.com/jpaver/opengametools
 
-    HOW TO COMPILE THIS LIBRARY
+  HOW TO COMPILE THIS LIBRARY
 
-    1.  To compile this library, do this in *one* C or C++ file:
-        #define OGT_VOX_IMPLEMENTATION
-        #include "ogt_vox.h"
+  1.  To compile this library, do this in *one* C or C++ file:
+  #define OGT_VOX_IMPLEMENTATION
+  #include "ogt_vox.h"
 
-    2. From any other module, it is sufficient to just #include this as usual:
-        #include "ogt_vox.h"
+  2. From any other module, it is sufficient to just #include this as usual:
+  #include "ogt_vox.h"
 
-    HOW TO READ A VOX SCENE (See demo_vox.cpp)
+  HOW TO READ A VOX SCENE (See demo_vox.cpp)
 
-    1. load a .vox file off disk into a memory buffer. 
+  1. load a .vox file off disk into a memory buffer. 
        
-    2. construct a scene from the memory buffer:
-       ogt_vox_scene* scene = ogt_vox_read_scene(buffer, buffer_size);
+  2. construct a scene from the memory buffer:
+  ogt_vox_scene* scene = ogt_vox_read_scene(buffer, buffer_size);
 
-    3. use the scene members to extract the information you need. eg.
-       printf("# of layers: %u\n", scene->num_layers );
+  3. use the scene members to extract the information you need. eg.
+  printf("# of layers: %u\n", scene->num_layers );
 
-    4. destroy the scene:
-       ogt_vox_destroy_scene(scene);
+  4. destroy the scene:
+  ogt_vox_destroy_scene(scene);
     
-    HOW TO MERGE MULTIPLE VOX SCENES (See merge_vox.cpp)
+  HOW TO MERGE MULTIPLE VOX SCENES (See merge_vox.cpp)
 
-    1. construct multiple scenes from files you want to merge. 
+  1. construct multiple scenes from files you want to merge. 
 
-        // read buffer1/buffer_size1 from "test1.vox"
-        // read buffer2/buffer_size2 from "test2.vox"
-        // read buffer3/buffer_size3 from "test3.vox"
-        ogt_vox_scene* scene1 = ogt_vox_read_scene(buffer1, buffer_size1);
-        ogt_vox_scene* scene2 = ogt_vox_read_scene(buffer2, buffer_size2);
-        ogt_vox_scene* scene3 = ogt_vox_read_scene(buffer3, buffer_size3);
+  // read buffer1/buffer_size1 from "test1.vox"
+  // read buffer2/buffer_size2 from "test2.vox"
+  // read buffer3/buffer_size3 from "test3.vox"
+  ogt_vox_scene* scene1 = ogt_vox_read_scene(buffer1, buffer_size1);
+  ogt_vox_scene* scene2 = ogt_vox_read_scene(buffer2, buffer_size2);
+  ogt_vox_scene* scene3 = ogt_vox_read_scene(buffer3, buffer_size3);
 
-    2. construct a merged scene
+  2. construct a merged scene
 
-        const ogt_vox_scene* scenes[] = {scene1, scene2, scene3};
-        ogt_vox_scene* merged_scene = ogt_vox_merge_scenes(scenes, 3, NULL, 0);
+  const ogt_vox_scene* scenes[] = {scene1, scene2, scene3};
+  ogt_vox_scene* merged_scene = ogt_vox_merge_scenes(scenes, 3, NULL, 0);
 
-    3. save out the merged scene
+  3. save out the merged scene
 
-        uint8_t* out_buffer = ogt_vox_write_scene(merged_scene, &out_buffer_size);
-        // save out_buffer to disk as a .vox file (it has length out_buffer_size)
+  uint8_t* out_buffer = ogt_vox_write_scene(merged_scene, &out_buffer_size);
+  // save out_buffer to disk as a .vox file (it has length out_buffer_size)
 
-    4. destroy the merged scene:
+  4. destroy the merged scene:
 
-        ogt_vox_destroy_scene(merged_scene);
+  ogt_vox_destroy_scene(merged_scene);
 
-    EXPLANATION OF SCENE ELEMENTS:
+  EXPLANATION OF SCENE ELEMENTS:
 
-    A ogt_vox_scene comprises primarily a set of instances, models, layers and a palette.
+  A ogt_vox_scene comprises primarily a set of instances, models, layers and a palette.
 
-    A ogt_vox_palette contains a set of 256 colors that is used for the scene.
-    Each color is represented by a 4-tuple called an ogt_vox_rgba which contains red,
-    green, blue and alpha values for the color.
+  A ogt_vox_palette contains a set of 256 colors that is used for the scene.
+  Each color is represented by a 4-tuple called an ogt_vox_rgba which contains red,
+  green, blue and alpha values for the color.
 
-    A ogt_vox_model is a 3-dimensional grid of voxels, where each of those voxels
-    is represented by an 8-bit color index. Voxels are arranged in order of increasing
-    X then increasing Y then increasing Z.
+  A ogt_vox_model is a 3-dimensional grid of voxels, where each of those voxels
+  is represented by an 8-bit color index. Voxels are arranged in order of increasing
+  X then increasing Y then increasing Z.
 
-    Given the x,y,z values for a voxel within the model dimensions, the voxels index
-    in the grid can be obtained as follows:
+  Given the x,y,z values for a voxel within the model dimensions, the voxels index
+  in the grid can be obtained as follows:
 
-        voxel_index = x + (y * model->size_x) + (z * model->size_x * model->size_y)
+  voxel_index = x + (y * model->size_x) + (z * model->size_x * model->size_y)
 
-    The index is only valid if the coordinate x,y,z satisfy the following conditions:
-            0 <= x < model->size_x -AND-
-            0 <= y < model->size_y -AND-
-            0 <= z < model->size_z
+  The index is only valid if the coordinate x,y,z satisfy the following conditions:
+  0 <= x < model->size_x -AND-
+  0 <= y < model->size_y -AND-
+  0 <= z < model->size_z
 
-    A voxels color index can be obtained as follows:
+  A voxels color index can be obtained as follows:
 
-        uint8_t color_index = model->voxel_data[voxel_index];
+  uint8_t color_index = model->voxel_data[voxel_index];
 
-    If color_index == 0, the voxel is not solid and can be skipped,
-    If color_index != 0, the voxel is solid and can be used to lookup the color in the palette:
+  If color_index == 0, the voxel is not solid and can be skipped,
+  If color_index != 0, the voxel is solid and can be used to lookup the color in the palette:
 
-        ogt_vox_rgba color = scene->palette.color[ color_index]
+  ogt_vox_rgba color = scene->palette.color[ color_index]
 
-    A ogt_vox_instance is an individual placement of a voxel model within the scene. Each
-    instance has a transform that determines its position and orientation within the scene,
-    but it also has an index that specifies which model the instance uses for its shape. It
-    is expected that there is a many-to-one mapping of instances to models.
+  A ogt_vox_instance is an individual placement of a voxel model within the scene. Each
+  instance has a transform that determines its position and orientation within the scene,
+  but it also has an index that specifies which model the instance uses for its shape. It
+  is expected that there is a many-to-one mapping of instances to models.
 
-    An ogt_vox_layer is used to conceptually group instances. Each instance indexes the
-    layer that it belongs to, but the layer itself has its own name and hidden/shown state.
+  An ogt_vox_layer is used to conceptually group instances. Each instance indexes the
+  layer that it belongs to, but the layer itself has its own name and hidden/shown state.
 
-    EXPLANATION OF MERGED SCENES:
+  EXPLANATION OF MERGED SCENES:
 
-    A merged scene contains all the models and all the scene instances from
-    each of the scenes that were passed into it.
+  A merged scene contains all the models and all the scene instances from
+  each of the scenes that were passed into it.
 
-    The merged scene will have a combined palette of all the source scene
-    palettes by trying to match existing colors exactly, and falling back
-    to an RGB-distance matched color when all 256 colors in the merged
-    scene palette has been allocated.
+  The merged scene will have a combined palette of all the source scene
+  palettes by trying to match existing colors exactly, and falling back
+  to an RGB-distance matched color when all 256 colors in the merged
+  scene palette has been allocated.
 
-    You can explicitly control up to 255 merge palette colors by providing 
-    those colors to ogt_vox_merge_scenes in the required_colors parameters eg.
+  You can explicitly control up to 255 merge palette colors by providing 
+  those colors to ogt_vox_merge_scenes in the required_colors parameters eg.
 
-        const ogt_vox_palette palette;  // load this via .vox or procedurally or whatever
-        const ogt_vox_scene* scenes[] = {scene1, scene2, scene3};
-        // palette.color[0] is always the empty color which is why we pass 255 colors starting from index 1 only:
-        ogt_vox_scene* merged_scene = ogt_vox_merge_scenes(scenes, 3, &palette.color[1], 255);
+  const ogt_vox_palette palette;  // load this via .vox or procedurally or whatever
+  const ogt_vox_scene* scenes[] = {scene1, scene2, scene3};
+  // palette.color[0] is always the empty color which is why we pass 255 colors starting from index 1 only:
+  ogt_vox_scene* merged_scene = ogt_vox_merge_scenes(scenes, 3, &palette.color[1], 255);
 */
 #ifndef OGT_VOX_H__
 #define OGT_VOX_H__
 
 #if _MSC_VER == 1400	
-    // VS2005 doesn't have inttypes or stdint so we just define what we need here.
-    typedef unsigned char uint8_t;
-    typedef signed int    int32_t;
-    typedef unsigned int  uint32_t;
-	#ifndef UINT32_MAX
-		#define UINT32_MAX	((uint32_t)0xFFFFFFFF)
-	#endif
-	#ifndef INT32_MAX
-		#define INT32_MAX	((int32_t)0x7FFFFFFF)
-	#endif
-	#ifndef UINT8_MAX
-		#define UINT8_MAX	((uint8_t)0xFF)
-	#endif
+// VS2005 doesn't have inttypes or stdint so we just define what we need here.
+typedef unsigned char uint8_t;
+typedef signed int    int32_t;
+typedef unsigned int  uint32_t;
+#ifndef UINT32_MAX
+#define UINT32_MAX	((uint32_t)0xFFFFFFFF)
+#endif
+#ifndef INT32_MAX
+#define INT32_MAX	((int32_t)0x7FFFFFFF)
+#endif
+#ifndef UINT8_MAX
+#define UINT8_MAX	((uint8_t)0xFF)
+#endif
 #elif defined(_MSC_VER)
-    // general VS* 
-    #include <inttypes.h>
+// general VS* 
+#include <inttypes.h>
 #elif __APPLE__
-    // general Apple compiler
+// general Apple compiler
 #elif defined(__GNUC__)
-    // any GCC*
-    #include <inttypes.h>
-    #include <stdlib.h> // for size_t
+// any GCC*
+#include <inttypes.h>
+#include <stdlib.h> // for size_t
 #else
-    #error some fixup needed for this platform?
+#error some fixup needed for this platform?
 #endif
 
 #include <algorithm>
+#include <cmath>
 
-    // denotes an invalid group index. Usually this is only applicable to the scene's root group's parent.
-    static const uint32_t k_invalid_group_index = UINT32_MAX;
+// denotes an invalid group index. Usually this is only applicable to the scene's root group's parent.
+static const uint32_t k_invalid_group_index = UINT32_MAX;
 
-    // color
-    typedef struct ogt_vox_rgba
-    {
-        uint8_t r,g,b,a;            // red, green, blue and alpha components of a color.
-    } ogt_vox_rgba;
+// color
+typedef struct ogt_vox_rgba
+{
+  uint8_t r,g,b,a;            // red, green, blue and alpha components of a color.
+} ogt_vox_rgba;
 
-    // column-major 4x4 matrix
-    typedef struct ogt_vox_transform
-    {
-        float m00, m01, m02, m03;   // column 0 of 4x4 matrix, 1st three elements = x axis vector, last element always 0.0
-        float m10, m11, m12, m13;   // column 1 of 4x4 matrix, 1st three elements = y axis vector, last element always 0.0
-        float m20, m21, m22, m23;   // column 2 of 4x4 matrix, 1st three elements = z axis vector, last element always 0.0
-        float m30, m31, m32, m33;   // column 3 of 4x4 matrix. 1st three elements = translation vector, last element always 1.0
-    } ogt_vox_transform;
+// column-major 4x4 matrix
+typedef struct ogt_vox_transform
+{
+  float m00, m01, m02, m03;   // column 0 of 4x4 matrix, 1st three elements = x axis vector, last element always 0.0
+  float m10, m11, m12, m13;   // column 1 of 4x4 matrix, 1st three elements = y axis vector, last element always 0.0
+  float m20, m21, m22, m23;   // column 2 of 4x4 matrix, 1st three elements = z axis vector, last element always 0.0
+  float m30, m31, m32, m33;   // column 3 of 4x4 matrix. 1st three elements = translation vector, last element always 1.0
+} ogt_vox_transform;
 
-    // a palette of colors
-    typedef struct ogt_vox_palette
-    {
-        ogt_vox_rgba color[256];      // palette of colors. use the voxel indices to lookup color from the palette.
-    } ogt_vox_palette;
+// a palette of colors
+typedef struct ogt_vox_palette
+{
+  ogt_vox_rgba color[256];      // palette of colors. use the voxel indices to lookup color from the palette.
+} ogt_vox_palette;
 
-    // a 3-dimensional model of voxels
-    typedef struct ogt_vox_model
-    {
-        uint32_t       size_x;        // number of voxels in the local x dimension
-        uint32_t       size_y;        // number of voxels in the local y dimension
-        uint32_t       size_z;        // number of voxels in the local z dimension
-        uint32_t       voxel_hash;    // hash of the content of the grid.
-        const uint8_t* voxel_data;    // grid of voxel data comprising color indices in x -> y -> z order. a color index of 0 means empty, all other indices mean solid and can be used to index the scene's palette to obtain the color for the voxel.
-    } ogt_vox_model;
+// a 3-dimensional model of voxels
+typedef struct ogt_vox_model
+{
+  uint32_t       size_x;        // number of voxels in the local x dimension
+  uint32_t       size_y;        // number of voxels in the local y dimension
+  uint32_t       size_z;        // number of voxels in the local z dimension
+  uint32_t       voxel_hash;    // hash of the content of the grid.
+  const uint8_t* voxel_data;    // grid of voxel data comprising color indices in x -> y -> z order. a color index of 0 means empty, all other indices mean solid and can be used to index the scene's palette to obtain the color for the voxel.
+} ogt_vox_model;
 
-    // an instance of a model within the scene
-    typedef struct ogt_vox_instance
-    {
-        const char*       name;         // name of the instance if there is one, will be NULL otherwise.
-        ogt_vox_transform transform;    // orientation and position of this instance within the scene. This is relative to its group local transform if group_index is not 0
-        uint32_t          model_index;  // index of the model used by this instance. used to lookup the model in the scene's models[] array.
-        uint32_t          layer_index;  // index of the layer used by this instance. used to lookup the layer in the scene's layers[] array.
-        uint32_t          group_index;  // this will be the index of the group in the scene's groups[] array. If group is zero it will be the scene root group and the instance transform will be a world-space transform, otherwise the transform is relative to the group.
-        bool              hidden;       // whether this instance is individually hidden or not. Note: the instance can also be hidden when its layer is hidden, or if it belongs to a group that is hidden.
-    } ogt_vox_instance;
+// an instance of a model within the scene
+typedef struct ogt_vox_instance
+{
+  const char*       name;         // name of the instance if there is one, will be NULL otherwise.
+  ogt_vox_transform transform;    // orientation and position of this instance within the scene. This is relative to its group local transform if group_index is not 0
+  uint32_t          model_index;  // index of the model used by this instance. used to lookup the model in the scene's models[] array.
+  uint32_t          layer_index;  // index of the layer used by this instance. used to lookup the layer in the scene's layers[] array.
+  uint32_t          group_index;  // this will be the index of the group in the scene's groups[] array. If group is zero it will be the scene root group and the instance transform will be a world-space transform, otherwise the transform is relative to the group.
+  bool              hidden;       // whether this instance is individually hidden or not. Note: the instance can also be hidden when its layer is hidden, or if it belongs to a group that is hidden.
+} ogt_vox_instance;
 
-    // describes a layer within the scene
-    typedef struct ogt_vox_layer
-    {
-        const char* name;               // name of this layer if there is one, will be NULL otherwise.
-        bool        hidden;             // whether this layer is hidden or not.
-    } ogt_vox_layer;
+// describes a layer within the scene
+typedef struct ogt_vox_layer
+{
+  const char* name;               // name of this layer if there is one, will be NULL otherwise.
+  bool        hidden;             // whether this layer is hidden or not.
+} ogt_vox_layer;
 
-    // describes a group within the scene
-    typedef struct ogt_vox_group
-    {
-        ogt_vox_transform transform;            // transform of this group relative to its parent group (if any), otherwise this will be relative to world-space.
-        uint32_t          parent_group_index;   // if this group is parented to another group, this will be the index of its parent in the scene's groups[] array, otherwise this group will be the scene root group and this value will be k_invalid_group_index
-        uint32_t          layer_index;          // which layer this group belongs to. used to lookup the layer in the scene's layers[] array.
-        bool              hidden;               // whether this group is hidden or not.
-    } ogt_vox_group;
+// describes a group within the scene
+typedef struct ogt_vox_group
+{
+  ogt_vox_transform transform;            // transform of this group relative to its parent group (if any), otherwise this will be relative to world-space.
+  uint32_t          parent_group_index;   // if this group is parented to another group, this will be the index of its parent in the scene's groups[] array, otherwise this group will be the scene root group and this value will be k_invalid_group_index
+  uint32_t          layer_index;          // which layer this group belongs to. used to lookup the layer in the scene's layers[] array.
+  bool              hidden;               // whether this group is hidden or not.
+} ogt_vox_group;
 
-    // the scene parsed from a .vox file.
-    typedef struct ogt_vox_scene
-    {
-        uint32_t                num_models;     // number of models within the scene.
-        uint32_t                num_instances;  // number of instances in the scene
-        uint32_t                num_layers;     // number of layers in the scene
-        uint32_t                num_groups;     // number of groups in the scene
-        const ogt_vox_model**   models;         // array of models. size is num_models
-        const ogt_vox_instance* instances;      // array of instances. size is num_instances
-        const ogt_vox_layer*    layers;         // array of layers. size is num_layers
-        const ogt_vox_group*    groups;         // array of groups. size is num_groups
-        ogt_vox_palette         palette;        // the palette for this scene
-    } ogt_vox_scene;
+// the scene parsed from a .vox file.
+typedef struct ogt_vox_scene
+{
+  uint32_t                num_models;     // number of models within the scene.
+  uint32_t                num_instances;  // number of instances in the scene
+  uint32_t                num_layers;     // number of layers in the scene
+  uint32_t                num_groups;     // number of groups in the scene
+  const ogt_vox_model**   models;         // array of models. size is num_models
+  const ogt_vox_instance* instances;      // array of instances. size is num_instances
+  const ogt_vox_layer*    layers;         // array of layers. size is num_layers
+  const ogt_vox_group*    groups;         // array of groups. size is num_groups
+  ogt_vox_palette         palette;        // the palette for this scene
+} ogt_vox_scene;
 
-    // allocate memory function interface. pass in size, and get a pointer to memory with at least that size available.
-    typedef void* (*ogt_vox_alloc_func)(size_t size);
+// allocate memory function interface. pass in size, and get a pointer to memory with at least that size available.
+typedef void* (*ogt_vox_alloc_func)(size_t size);
 
-    // free memory function interface. pass in a pointer previously allocated and it will be released back to the system managing memory.
-    typedef void  (*ogt_vox_free_func)(void* ptr);
+// free memory function interface. pass in a pointer previously allocated and it will be released back to the system managing memory.
+typedef void  (*ogt_vox_free_func)(void* ptr);
 
-    // override the default scene memory allocator if you need to control memory precisely.
-    void  ogt_vox_set_memory_allocator(ogt_vox_alloc_func alloc_func, ogt_vox_free_func free_func);
-    void* ogt_vox_malloc(size_t size);
-    void  ogt_vox_free(void* mem);
+// override the default scene memory allocator if you need to control memory precisely.
+void  ogt_vox_set_memory_allocator(ogt_vox_alloc_func alloc_func, ogt_vox_free_func free_func);
+void* ogt_vox_malloc(size_t size);
+void  ogt_vox_free(void* mem);
 
-    // flags for ogt_vox_read_scene_with_flags
-    static const uint32_t k_read_scene_flags_groups = 1 << 0; // if not specified, all instance transforms will be flattened into world space. If specified, will read group information and keep all transforms as local transform relative to the group they are in.
+// flags for ogt_vox_read_scene_with_flags
+static const uint32_t k_read_scene_flags_groups = 1 << 0; // if not specified, all instance transforms will be flattened into world space. If specified, will read group information and keep all transforms as local transform relative to the group they are in.
 
-    // creates a scene from a vox file within a memory buffer of a given size.
-    // you can destroy the input buffer once you have the scene as this function will allocate separate memory for the scene objecvt.
-    const ogt_vox_scene* ogt_vox_read_scene(const uint8_t* buffer, uint32_t buffer_size);
+// creates a scene from a vox file within a memory buffer of a given size.
+// you can destroy the input buffer once you have the scene as this function will allocate separate memory for the scene objecvt.
+const ogt_vox_scene* ogt_vox_read_scene(const uint8_t* buffer, uint32_t buffer_size);
 
-    // just like ogt_vox_read_scene, but you can additionally pass a union of k_read_scene_flags
-    const ogt_vox_scene* ogt_vox_read_scene_with_flags(const uint8_t* buffer, uint32_t buffer_size, uint32_t read_flags);
+// just like ogt_vox_read_scene, but you can additionally pass a union of k_read_scene_flags
+const ogt_vox_scene* ogt_vox_read_scene_with_flags(const uint8_t* buffer, uint32_t buffer_size, uint32_t read_flags);
 
-    // destroys a scene object to release its memory.
-    void ogt_vox_destroy_scene(const ogt_vox_scene* scene);
+// destroys a scene object to release its memory.
+void ogt_vox_destroy_scene(const ogt_vox_scene* scene);
 
-    // writes the scene to a new buffer and returns the buffer size. free the buffer with ogt_vox_free
-    uint8_t* ogt_vox_write_scene(const ogt_vox_scene* scene, uint32_t* buffer_size);
+// writes the scene to a new buffer and returns the buffer size. free the buffer with ogt_vox_free
+uint8_t* ogt_vox_write_scene(const ogt_vox_scene* scene, uint32_t* buffer_size);
 
-    // merges the specified scenes together to create a bigger scene. Merged scene can be destroyed using ogt_vox_destroy_scene
-    // If you require specific colors in the merged scene palette, provide up to and including 255 of them via required_colors/required_color_count.
-    ogt_vox_scene* ogt_vox_merge_scenes(const ogt_vox_scene** scenes, uint32_t scene_count, const ogt_vox_rgba* required_colors, const uint32_t required_color_count);
+// merges the specified scenes together to create a bigger scene. Merged scene can be destroyed using ogt_vox_destroy_scene
+// If you require specific colors in the merged scene palette, provide up to and including 255 of them via required_colors/required_color_count.
+ogt_vox_scene* ogt_vox_merge_scenes(const ogt_vox_scene** scenes, uint32_t scene_count, const ogt_vox_rgba* required_colors, const uint32_t required_color_count);
 
 #endif // OGT_VOX_H__
 
@@ -268,505 +269,505 @@
 //
 //-----------------------------------------------------------------------------------------------------------------
 #ifdef OGT_VOX_IMPLEMENTATION
-    #include <assert.h>
-    #include <stdlib.h>
-    #include <string.h>
-    #include <stdio.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
     
-    // MAKE_VOX_CHUNK_ID: used to construct a literal to describe a chunk in a .vox file.
-    #define MAKE_VOX_CHUNK_ID(c0,c1,c2,c3)     ( (c0<<0) | (c1<<8) | (c2<<16) | (c3<<24) )
+// MAKE_VOX_CHUNK_ID: used to construct a literal to describe a chunk in a .vox file.
+#define MAKE_VOX_CHUNK_ID(c0,c1,c2,c3)     ( (c0<<0) | (c1<<8) | (c2<<16) | (c3<<24) )
 
-    static const uint32_t CHUNK_ID_VOX_ = MAKE_VOX_CHUNK_ID('V','O','X',' ');
-    static const uint32_t CHUNK_ID_MAIN = MAKE_VOX_CHUNK_ID('M','A','I','N');
-    static const uint32_t CHUNK_ID_SIZE = MAKE_VOX_CHUNK_ID('S','I','Z','E');
-    static const uint32_t CHUNK_ID_XYZI = MAKE_VOX_CHUNK_ID('X','Y','Z','I');
-    static const uint32_t CHUNK_ID_RGBA = MAKE_VOX_CHUNK_ID('R','G','B','A');
-    static const uint32_t CHUNK_ID_nTRN = MAKE_VOX_CHUNK_ID('n','T','R','N');
-    static const uint32_t CHUNK_ID_nGRP = MAKE_VOX_CHUNK_ID('n','G','R','P');
-    static const uint32_t CHUNK_ID_nSHP = MAKE_VOX_CHUNK_ID('n','S','H','P');
-    static const uint32_t CHUNK_ID_IMAP = MAKE_VOX_CHUNK_ID('I','M','A','P');
-    static const uint32_t CHUNK_ID_LAYR = MAKE_VOX_CHUNK_ID('L','A','Y','R');
-    static const uint32_t CHUNK_ID_MATL = MAKE_VOX_CHUNK_ID('M','A','T','L');
-    static const uint32_t CHUNK_ID_MATT = MAKE_VOX_CHUNK_ID('M','A','T','T');
-    static const uint32_t CHUNK_ID_rOBJ = MAKE_VOX_CHUNK_ID('r','O','B','J');
+static const uint32_t CHUNK_ID_VOX_ = MAKE_VOX_CHUNK_ID('V','O','X',' ');
+static const uint32_t CHUNK_ID_MAIN = MAKE_VOX_CHUNK_ID('M','A','I','N');
+static const uint32_t CHUNK_ID_SIZE = MAKE_VOX_CHUNK_ID('S','I','Z','E');
+static const uint32_t CHUNK_ID_XYZI = MAKE_VOX_CHUNK_ID('X','Y','Z','I');
+static const uint32_t CHUNK_ID_RGBA = MAKE_VOX_CHUNK_ID('R','G','B','A');
+static const uint32_t CHUNK_ID_nTRN = MAKE_VOX_CHUNK_ID('n','T','R','N');
+static const uint32_t CHUNK_ID_nGRP = MAKE_VOX_CHUNK_ID('n','G','R','P');
+static const uint32_t CHUNK_ID_nSHP = MAKE_VOX_CHUNK_ID('n','S','H','P');
+static const uint32_t CHUNK_ID_IMAP = MAKE_VOX_CHUNK_ID('I','M','A','P');
+static const uint32_t CHUNK_ID_LAYR = MAKE_VOX_CHUNK_ID('L','A','Y','R');
+static const uint32_t CHUNK_ID_MATL = MAKE_VOX_CHUNK_ID('M','A','T','L');
+static const uint32_t CHUNK_ID_MATT = MAKE_VOX_CHUNK_ID('M','A','T','T');
+static const uint32_t CHUNK_ID_rOBJ = MAKE_VOX_CHUNK_ID('r','O','B','J');
 
-    // Some older .vox files will not store a palette, in which case the following palette will be used!
-    static const uint8_t k_default_vox_palette[256 * 4] = {
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xcc, 0xff, 0xff, 0xff, 0x99, 0xff, 0xff, 0xff, 0x66, 0xff, 0xff, 0xff, 0x33, 0xff, 0xff, 0xff, 0x00, 0xff, 0xff, 0xcc, 0xff, 0xff, 0xff, 0xcc, 0xcc, 0xff,
-        0xff, 0xcc, 0x99, 0xff, 0xff, 0xcc, 0x66, 0xff, 0xff, 0xcc, 0x33, 0xff, 0xff, 0xcc, 0x00, 0xff, 0xff, 0x99, 0xff, 0xff, 0xff, 0x99, 0xcc, 0xff, 0xff, 0x99, 0x99, 0xff, 0xff, 0x99, 0x66, 0xff,
-        0xff, 0x99, 0x33, 0xff, 0xff, 0x99, 0x00, 0xff, 0xff, 0x66, 0xff, 0xff, 0xff, 0x66, 0xcc, 0xff, 0xff, 0x66, 0x99, 0xff, 0xff, 0x66, 0x66, 0xff, 0xff, 0x66, 0x33, 0xff, 0xff, 0x66, 0x00, 0xff,
-        0xff, 0x33, 0xff, 0xff, 0xff, 0x33, 0xcc, 0xff, 0xff, 0x33, 0x99, 0xff, 0xff, 0x33, 0x66, 0xff, 0xff, 0x33, 0x33, 0xff, 0xff, 0x33, 0x00, 0xff, 0xff, 0x00, 0xff, 0xff, 0xff, 0x00, 0xcc, 0xff,
-        0xff, 0x00, 0x99, 0xff, 0xff, 0x00, 0x66, 0xff, 0xff, 0x00, 0x33, 0xff, 0xff, 0x00, 0x00, 0xff, 0xcc, 0xff, 0xff, 0xff, 0xcc, 0xff, 0xcc, 0xff, 0xcc, 0xff, 0x99, 0xff, 0xcc, 0xff, 0x66, 0xff,
-        0xcc, 0xff, 0x33, 0xff, 0xcc, 0xff, 0x00, 0xff, 0xcc, 0xcc, 0xff, 0xff, 0xcc, 0xcc, 0xcc, 0xff, 0xcc, 0xcc, 0x99, 0xff, 0xcc, 0xcc, 0x66, 0xff, 0xcc, 0xcc, 0x33, 0xff, 0xcc, 0xcc, 0x00, 0xff,
-        0xcc, 0x99, 0xff, 0xff, 0xcc, 0x99, 0xcc, 0xff, 0xcc, 0x99, 0x99, 0xff, 0xcc, 0x99, 0x66, 0xff, 0xcc, 0x99, 0x33, 0xff, 0xcc, 0x99, 0x00, 0xff, 0xcc, 0x66, 0xff, 0xff, 0xcc, 0x66, 0xcc, 0xff,
-        0xcc, 0x66, 0x99, 0xff, 0xcc, 0x66, 0x66, 0xff, 0xcc, 0x66, 0x33, 0xff, 0xcc, 0x66, 0x00, 0xff, 0xcc, 0x33, 0xff, 0xff, 0xcc, 0x33, 0xcc, 0xff, 0xcc, 0x33, 0x99, 0xff, 0xcc, 0x33, 0x66, 0xff,
-        0xcc, 0x33, 0x33, 0xff, 0xcc, 0x33, 0x00, 0xff, 0xcc, 0x00, 0xff, 0xff, 0xcc, 0x00, 0xcc, 0xff, 0xcc, 0x00, 0x99, 0xff, 0xcc, 0x00, 0x66, 0xff, 0xcc, 0x00, 0x33, 0xff, 0xcc, 0x00, 0x00, 0xff,
-        0x99, 0xff, 0xff, 0xff, 0x99, 0xff, 0xcc, 0xff, 0x99, 0xff, 0x99, 0xff, 0x99, 0xff, 0x66, 0xff, 0x99, 0xff, 0x33, 0xff, 0x99, 0xff, 0x00, 0xff, 0x99, 0xcc, 0xff, 0xff, 0x99, 0xcc, 0xcc, 0xff,
-        0x99, 0xcc, 0x99, 0xff, 0x99, 0xcc, 0x66, 0xff, 0x99, 0xcc, 0x33, 0xff, 0x99, 0xcc, 0x00, 0xff, 0x99, 0x99, 0xff, 0xff, 0x99, 0x99, 0xcc, 0xff, 0x99, 0x99, 0x99, 0xff, 0x99, 0x99, 0x66, 0xff,
-        0x99, 0x99, 0x33, 0xff, 0x99, 0x99, 0x00, 0xff, 0x99, 0x66, 0xff, 0xff, 0x99, 0x66, 0xcc, 0xff, 0x99, 0x66, 0x99, 0xff, 0x99, 0x66, 0x66, 0xff, 0x99, 0x66, 0x33, 0xff, 0x99, 0x66, 0x00, 0xff,
-        0x99, 0x33, 0xff, 0xff, 0x99, 0x33, 0xcc, 0xff, 0x99, 0x33, 0x99, 0xff, 0x99, 0x33, 0x66, 0xff, 0x99, 0x33, 0x33, 0xff, 0x99, 0x33, 0x00, 0xff, 0x99, 0x00, 0xff, 0xff, 0x99, 0x00, 0xcc, 0xff,
-        0x99, 0x00, 0x99, 0xff, 0x99, 0x00, 0x66, 0xff, 0x99, 0x00, 0x33, 0xff, 0x99, 0x00, 0x00, 0xff, 0x66, 0xff, 0xff, 0xff, 0x66, 0xff, 0xcc, 0xff, 0x66, 0xff, 0x99, 0xff, 0x66, 0xff, 0x66, 0xff,
-        0x66, 0xff, 0x33, 0xff, 0x66, 0xff, 0x00, 0xff, 0x66, 0xcc, 0xff, 0xff, 0x66, 0xcc, 0xcc, 0xff, 0x66, 0xcc, 0x99, 0xff, 0x66, 0xcc, 0x66, 0xff, 0x66, 0xcc, 0x33, 0xff, 0x66, 0xcc, 0x00, 0xff,
-        0x66, 0x99, 0xff, 0xff, 0x66, 0x99, 0xcc, 0xff, 0x66, 0x99, 0x99, 0xff, 0x66, 0x99, 0x66, 0xff, 0x66, 0x99, 0x33, 0xff, 0x66, 0x99, 0x00, 0xff, 0x66, 0x66, 0xff, 0xff, 0x66, 0x66, 0xcc, 0xff,
-        0x66, 0x66, 0x99, 0xff, 0x66, 0x66, 0x66, 0xff, 0x66, 0x66, 0x33, 0xff, 0x66, 0x66, 0x00, 0xff, 0x66, 0x33, 0xff, 0xff, 0x66, 0x33, 0xcc, 0xff, 0x66, 0x33, 0x99, 0xff, 0x66, 0x33, 0x66, 0xff,
-        0x66, 0x33, 0x33, 0xff, 0x66, 0x33, 0x00, 0xff, 0x66, 0x00, 0xff, 0xff, 0x66, 0x00, 0xcc, 0xff, 0x66, 0x00, 0x99, 0xff, 0x66, 0x00, 0x66, 0xff, 0x66, 0x00, 0x33, 0xff, 0x66, 0x00, 0x00, 0xff,
-        0x33, 0xff, 0xff, 0xff, 0x33, 0xff, 0xcc, 0xff, 0x33, 0xff, 0x99, 0xff, 0x33, 0xff, 0x66, 0xff, 0x33, 0xff, 0x33, 0xff, 0x33, 0xff, 0x00, 0xff, 0x33, 0xcc, 0xff, 0xff, 0x33, 0xcc, 0xcc, 0xff,
-        0x33, 0xcc, 0x99, 0xff, 0x33, 0xcc, 0x66, 0xff, 0x33, 0xcc, 0x33, 0xff, 0x33, 0xcc, 0x00, 0xff, 0x33, 0x99, 0xff, 0xff, 0x33, 0x99, 0xcc, 0xff, 0x33, 0x99, 0x99, 0xff, 0x33, 0x99, 0x66, 0xff,
-        0x33, 0x99, 0x33, 0xff, 0x33, 0x99, 0x00, 0xff, 0x33, 0x66, 0xff, 0xff, 0x33, 0x66, 0xcc, 0xff, 0x33, 0x66, 0x99, 0xff, 0x33, 0x66, 0x66, 0xff, 0x33, 0x66, 0x33, 0xff, 0x33, 0x66, 0x00, 0xff,
-        0x33, 0x33, 0xff, 0xff, 0x33, 0x33, 0xcc, 0xff, 0x33, 0x33, 0x99, 0xff, 0x33, 0x33, 0x66, 0xff, 0x33, 0x33, 0x33, 0xff, 0x33, 0x33, 0x00, 0xff, 0x33, 0x00, 0xff, 0xff, 0x33, 0x00, 0xcc, 0xff,
-        0x33, 0x00, 0x99, 0xff, 0x33, 0x00, 0x66, 0xff, 0x33, 0x00, 0x33, 0xff, 0x33, 0x00, 0x00, 0xff, 0x00, 0xff, 0xff, 0xff, 0x00, 0xff, 0xcc, 0xff, 0x00, 0xff, 0x99, 0xff, 0x00, 0xff, 0x66, 0xff,
-        0x00, 0xff, 0x33, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xcc, 0xff, 0xff, 0x00, 0xcc, 0xcc, 0xff, 0x00, 0xcc, 0x99, 0xff, 0x00, 0xcc, 0x66, 0xff, 0x00, 0xcc, 0x33, 0xff, 0x00, 0xcc, 0x00, 0xff,
-        0x00, 0x99, 0xff, 0xff, 0x00, 0x99, 0xcc, 0xff, 0x00, 0x99, 0x99, 0xff, 0x00, 0x99, 0x66, 0xff, 0x00, 0x99, 0x33, 0xff, 0x00, 0x99, 0x00, 0xff, 0x00, 0x66, 0xff, 0xff, 0x00, 0x66, 0xcc, 0xff,
-        0x00, 0x66, 0x99, 0xff, 0x00, 0x66, 0x66, 0xff, 0x00, 0x66, 0x33, 0xff, 0x00, 0x66, 0x00, 0xff, 0x00, 0x33, 0xff, 0xff, 0x00, 0x33, 0xcc, 0xff, 0x00, 0x33, 0x99, 0xff, 0x00, 0x33, 0x66, 0xff,
-        0x00, 0x33, 0x33, 0xff, 0x00, 0x33, 0x00, 0xff, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xcc, 0xff, 0x00, 0x00, 0x99, 0xff, 0x00, 0x00, 0x66, 0xff, 0x00, 0x00, 0x33, 0xff, 0xee, 0x00, 0x00, 0xff,
-        0xdd, 0x00, 0x00, 0xff, 0xbb, 0x00, 0x00, 0xff, 0xaa, 0x00, 0x00, 0xff, 0x88, 0x00, 0x00, 0xff, 0x77, 0x00, 0x00, 0xff, 0x55, 0x00, 0x00, 0xff, 0x44, 0x00, 0x00, 0xff, 0x22, 0x00, 0x00, 0xff,
-        0x11, 0x00, 0x00, 0xff, 0x00, 0xee, 0x00, 0xff, 0x00, 0xdd, 0x00, 0xff, 0x00, 0xbb, 0x00, 0xff, 0x00, 0xaa, 0x00, 0xff, 0x00, 0x88, 0x00, 0xff, 0x00, 0x77, 0x00, 0xff, 0x00, 0x55, 0x00, 0xff,
-        0x00, 0x44, 0x00, 0xff, 0x00, 0x22, 0x00, 0xff, 0x00, 0x11, 0x00, 0xff, 0x00, 0x00, 0xee, 0xff, 0x00, 0x00, 0xdd, 0xff, 0x00, 0x00, 0xbb, 0xff, 0x00, 0x00, 0xaa, 0xff, 0x00, 0x00, 0x88, 0xff,
-        0x00, 0x00, 0x77, 0xff, 0x00, 0x00, 0x55, 0xff, 0x00, 0x00, 0x44, 0xff, 0x00, 0x00, 0x22, 0xff, 0x00, 0x00, 0x11, 0xff, 0xee, 0xee, 0xee, 0xff, 0xdd, 0xdd, 0xdd, 0xff, 0xbb, 0xbb, 0xbb, 0xff,
-        0xaa, 0xaa, 0xaa, 0xff, 0x88, 0x88, 0x88, 0xff, 0x77, 0x77, 0x77, 0xff, 0x55, 0x55, 0x55, 0xff, 0x44, 0x44, 0x44, 0xff, 0x22, 0x22, 0x22, 0xff, 0x11, 0x11, 0x11, 0xff, 0x00, 0x00, 0x00, 0xff,
-    };
+// Some older .vox files will not store a palette, in which case the following palette will be used!
+static const uint8_t k_default_vox_palette[256 * 4] = {
+                                                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xcc, 0xff, 0xff, 0xff, 0x99, 0xff, 0xff, 0xff, 0x66, 0xff, 0xff, 0xff, 0x33, 0xff, 0xff, 0xff, 0x00, 0xff, 0xff, 0xcc, 0xff, 0xff, 0xff, 0xcc, 0xcc, 0xff,
+                                                       0xff, 0xcc, 0x99, 0xff, 0xff, 0xcc, 0x66, 0xff, 0xff, 0xcc, 0x33, 0xff, 0xff, 0xcc, 0x00, 0xff, 0xff, 0x99, 0xff, 0xff, 0xff, 0x99, 0xcc, 0xff, 0xff, 0x99, 0x99, 0xff, 0xff, 0x99, 0x66, 0xff,
+                                                       0xff, 0x99, 0x33, 0xff, 0xff, 0x99, 0x00, 0xff, 0xff, 0x66, 0xff, 0xff, 0xff, 0x66, 0xcc, 0xff, 0xff, 0x66, 0x99, 0xff, 0xff, 0x66, 0x66, 0xff, 0xff, 0x66, 0x33, 0xff, 0xff, 0x66, 0x00, 0xff,
+                                                       0xff, 0x33, 0xff, 0xff, 0xff, 0x33, 0xcc, 0xff, 0xff, 0x33, 0x99, 0xff, 0xff, 0x33, 0x66, 0xff, 0xff, 0x33, 0x33, 0xff, 0xff, 0x33, 0x00, 0xff, 0xff, 0x00, 0xff, 0xff, 0xff, 0x00, 0xcc, 0xff,
+                                                       0xff, 0x00, 0x99, 0xff, 0xff, 0x00, 0x66, 0xff, 0xff, 0x00, 0x33, 0xff, 0xff, 0x00, 0x00, 0xff, 0xcc, 0xff, 0xff, 0xff, 0xcc, 0xff, 0xcc, 0xff, 0xcc, 0xff, 0x99, 0xff, 0xcc, 0xff, 0x66, 0xff,
+                                                       0xcc, 0xff, 0x33, 0xff, 0xcc, 0xff, 0x00, 0xff, 0xcc, 0xcc, 0xff, 0xff, 0xcc, 0xcc, 0xcc, 0xff, 0xcc, 0xcc, 0x99, 0xff, 0xcc, 0xcc, 0x66, 0xff, 0xcc, 0xcc, 0x33, 0xff, 0xcc, 0xcc, 0x00, 0xff,
+                                                       0xcc, 0x99, 0xff, 0xff, 0xcc, 0x99, 0xcc, 0xff, 0xcc, 0x99, 0x99, 0xff, 0xcc, 0x99, 0x66, 0xff, 0xcc, 0x99, 0x33, 0xff, 0xcc, 0x99, 0x00, 0xff, 0xcc, 0x66, 0xff, 0xff, 0xcc, 0x66, 0xcc, 0xff,
+                                                       0xcc, 0x66, 0x99, 0xff, 0xcc, 0x66, 0x66, 0xff, 0xcc, 0x66, 0x33, 0xff, 0xcc, 0x66, 0x00, 0xff, 0xcc, 0x33, 0xff, 0xff, 0xcc, 0x33, 0xcc, 0xff, 0xcc, 0x33, 0x99, 0xff, 0xcc, 0x33, 0x66, 0xff,
+                                                       0xcc, 0x33, 0x33, 0xff, 0xcc, 0x33, 0x00, 0xff, 0xcc, 0x00, 0xff, 0xff, 0xcc, 0x00, 0xcc, 0xff, 0xcc, 0x00, 0x99, 0xff, 0xcc, 0x00, 0x66, 0xff, 0xcc, 0x00, 0x33, 0xff, 0xcc, 0x00, 0x00, 0xff,
+                                                       0x99, 0xff, 0xff, 0xff, 0x99, 0xff, 0xcc, 0xff, 0x99, 0xff, 0x99, 0xff, 0x99, 0xff, 0x66, 0xff, 0x99, 0xff, 0x33, 0xff, 0x99, 0xff, 0x00, 0xff, 0x99, 0xcc, 0xff, 0xff, 0x99, 0xcc, 0xcc, 0xff,
+                                                       0x99, 0xcc, 0x99, 0xff, 0x99, 0xcc, 0x66, 0xff, 0x99, 0xcc, 0x33, 0xff, 0x99, 0xcc, 0x00, 0xff, 0x99, 0x99, 0xff, 0xff, 0x99, 0x99, 0xcc, 0xff, 0x99, 0x99, 0x99, 0xff, 0x99, 0x99, 0x66, 0xff,
+                                                       0x99, 0x99, 0x33, 0xff, 0x99, 0x99, 0x00, 0xff, 0x99, 0x66, 0xff, 0xff, 0x99, 0x66, 0xcc, 0xff, 0x99, 0x66, 0x99, 0xff, 0x99, 0x66, 0x66, 0xff, 0x99, 0x66, 0x33, 0xff, 0x99, 0x66, 0x00, 0xff,
+                                                       0x99, 0x33, 0xff, 0xff, 0x99, 0x33, 0xcc, 0xff, 0x99, 0x33, 0x99, 0xff, 0x99, 0x33, 0x66, 0xff, 0x99, 0x33, 0x33, 0xff, 0x99, 0x33, 0x00, 0xff, 0x99, 0x00, 0xff, 0xff, 0x99, 0x00, 0xcc, 0xff,
+                                                       0x99, 0x00, 0x99, 0xff, 0x99, 0x00, 0x66, 0xff, 0x99, 0x00, 0x33, 0xff, 0x99, 0x00, 0x00, 0xff, 0x66, 0xff, 0xff, 0xff, 0x66, 0xff, 0xcc, 0xff, 0x66, 0xff, 0x99, 0xff, 0x66, 0xff, 0x66, 0xff,
+                                                       0x66, 0xff, 0x33, 0xff, 0x66, 0xff, 0x00, 0xff, 0x66, 0xcc, 0xff, 0xff, 0x66, 0xcc, 0xcc, 0xff, 0x66, 0xcc, 0x99, 0xff, 0x66, 0xcc, 0x66, 0xff, 0x66, 0xcc, 0x33, 0xff, 0x66, 0xcc, 0x00, 0xff,
+                                                       0x66, 0x99, 0xff, 0xff, 0x66, 0x99, 0xcc, 0xff, 0x66, 0x99, 0x99, 0xff, 0x66, 0x99, 0x66, 0xff, 0x66, 0x99, 0x33, 0xff, 0x66, 0x99, 0x00, 0xff, 0x66, 0x66, 0xff, 0xff, 0x66, 0x66, 0xcc, 0xff,
+                                                       0x66, 0x66, 0x99, 0xff, 0x66, 0x66, 0x66, 0xff, 0x66, 0x66, 0x33, 0xff, 0x66, 0x66, 0x00, 0xff, 0x66, 0x33, 0xff, 0xff, 0x66, 0x33, 0xcc, 0xff, 0x66, 0x33, 0x99, 0xff, 0x66, 0x33, 0x66, 0xff,
+                                                       0x66, 0x33, 0x33, 0xff, 0x66, 0x33, 0x00, 0xff, 0x66, 0x00, 0xff, 0xff, 0x66, 0x00, 0xcc, 0xff, 0x66, 0x00, 0x99, 0xff, 0x66, 0x00, 0x66, 0xff, 0x66, 0x00, 0x33, 0xff, 0x66, 0x00, 0x00, 0xff,
+                                                       0x33, 0xff, 0xff, 0xff, 0x33, 0xff, 0xcc, 0xff, 0x33, 0xff, 0x99, 0xff, 0x33, 0xff, 0x66, 0xff, 0x33, 0xff, 0x33, 0xff, 0x33, 0xff, 0x00, 0xff, 0x33, 0xcc, 0xff, 0xff, 0x33, 0xcc, 0xcc, 0xff,
+                                                       0x33, 0xcc, 0x99, 0xff, 0x33, 0xcc, 0x66, 0xff, 0x33, 0xcc, 0x33, 0xff, 0x33, 0xcc, 0x00, 0xff, 0x33, 0x99, 0xff, 0xff, 0x33, 0x99, 0xcc, 0xff, 0x33, 0x99, 0x99, 0xff, 0x33, 0x99, 0x66, 0xff,
+                                                       0x33, 0x99, 0x33, 0xff, 0x33, 0x99, 0x00, 0xff, 0x33, 0x66, 0xff, 0xff, 0x33, 0x66, 0xcc, 0xff, 0x33, 0x66, 0x99, 0xff, 0x33, 0x66, 0x66, 0xff, 0x33, 0x66, 0x33, 0xff, 0x33, 0x66, 0x00, 0xff,
+                                                       0x33, 0x33, 0xff, 0xff, 0x33, 0x33, 0xcc, 0xff, 0x33, 0x33, 0x99, 0xff, 0x33, 0x33, 0x66, 0xff, 0x33, 0x33, 0x33, 0xff, 0x33, 0x33, 0x00, 0xff, 0x33, 0x00, 0xff, 0xff, 0x33, 0x00, 0xcc, 0xff,
+                                                       0x33, 0x00, 0x99, 0xff, 0x33, 0x00, 0x66, 0xff, 0x33, 0x00, 0x33, 0xff, 0x33, 0x00, 0x00, 0xff, 0x00, 0xff, 0xff, 0xff, 0x00, 0xff, 0xcc, 0xff, 0x00, 0xff, 0x99, 0xff, 0x00, 0xff, 0x66, 0xff,
+                                                       0x00, 0xff, 0x33, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xcc, 0xff, 0xff, 0x00, 0xcc, 0xcc, 0xff, 0x00, 0xcc, 0x99, 0xff, 0x00, 0xcc, 0x66, 0xff, 0x00, 0xcc, 0x33, 0xff, 0x00, 0xcc, 0x00, 0xff,
+                                                       0x00, 0x99, 0xff, 0xff, 0x00, 0x99, 0xcc, 0xff, 0x00, 0x99, 0x99, 0xff, 0x00, 0x99, 0x66, 0xff, 0x00, 0x99, 0x33, 0xff, 0x00, 0x99, 0x00, 0xff, 0x00, 0x66, 0xff, 0xff, 0x00, 0x66, 0xcc, 0xff,
+                                                       0x00, 0x66, 0x99, 0xff, 0x00, 0x66, 0x66, 0xff, 0x00, 0x66, 0x33, 0xff, 0x00, 0x66, 0x00, 0xff, 0x00, 0x33, 0xff, 0xff, 0x00, 0x33, 0xcc, 0xff, 0x00, 0x33, 0x99, 0xff, 0x00, 0x33, 0x66, 0xff,
+                                                       0x00, 0x33, 0x33, 0xff, 0x00, 0x33, 0x00, 0xff, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xcc, 0xff, 0x00, 0x00, 0x99, 0xff, 0x00, 0x00, 0x66, 0xff, 0x00, 0x00, 0x33, 0xff, 0xee, 0x00, 0x00, 0xff,
+                                                       0xdd, 0x00, 0x00, 0xff, 0xbb, 0x00, 0x00, 0xff, 0xaa, 0x00, 0x00, 0xff, 0x88, 0x00, 0x00, 0xff, 0x77, 0x00, 0x00, 0xff, 0x55, 0x00, 0x00, 0xff, 0x44, 0x00, 0x00, 0xff, 0x22, 0x00, 0x00, 0xff,
+                                                       0x11, 0x00, 0x00, 0xff, 0x00, 0xee, 0x00, 0xff, 0x00, 0xdd, 0x00, 0xff, 0x00, 0xbb, 0x00, 0xff, 0x00, 0xaa, 0x00, 0xff, 0x00, 0x88, 0x00, 0xff, 0x00, 0x77, 0x00, 0xff, 0x00, 0x55, 0x00, 0xff,
+                                                       0x00, 0x44, 0x00, 0xff, 0x00, 0x22, 0x00, 0xff, 0x00, 0x11, 0x00, 0xff, 0x00, 0x00, 0xee, 0xff, 0x00, 0x00, 0xdd, 0xff, 0x00, 0x00, 0xbb, 0xff, 0x00, 0x00, 0xaa, 0xff, 0x00, 0x00, 0x88, 0xff,
+                                                       0x00, 0x00, 0x77, 0xff, 0x00, 0x00, 0x55, 0xff, 0x00, 0x00, 0x44, 0xff, 0x00, 0x00, 0x22, 0xff, 0x00, 0x00, 0x11, 0xff, 0xee, 0xee, 0xee, 0xff, 0xdd, 0xdd, 0xdd, 0xff, 0xbb, 0xbb, 0xbb, 0xff,
+                                                       0xaa, 0xaa, 0xaa, 0xff, 0x88, 0x88, 0x88, 0xff, 0x77, 0x77, 0x77, 0xff, 0x55, 0x55, 0x55, 0xff, 0x44, 0x44, 0x44, 0xff, 0x22, 0x22, 0x22, 0xff, 0x11, 0x11, 0x11, 0xff, 0x00, 0x00, 0x00, 0xff,
+};
 
-    // internal math/helper utilities
-    static inline uint32_t _vox_max(uint32_t a, uint32_t b) { 
-        return (a > b) ? a : b; 
+// internal math/helper utilities
+static inline uint32_t _vox_max(uint32_t a, uint32_t b) { 
+  return (a > b) ? a : b; 
+}
+static inline uint32_t _vox_min(uint32_t a, uint32_t b) { 
+  return (a < b) ? a : b; 
+}
+
+// string utilities
+#ifdef _MSC_VER
+#define _vox_str_scanf(str,...)      sscanf_s(str,__VA_ARGS__)
+#define _vox_strcpy_static(dst,src)  strcpy_s(dst,src)
+#define _vox_strcasecmp(a,b)         _stricmp(a,b)
+#define _vox_strcmp(a,b)             strcmp(a,b)
+#define _vox_strlen(a)               strlen(a)
+#define _vox_sprintf(str,str_max,fmt,...)    sprintf_s(str, str_max, fmt, __VA_ARGS__)
+#else
+#define _vox_str_scanf(str,...)      sscanf(str,__VA_ARGS__)
+#define _vox_strcpy_static(dst,src)  strcpy(dst,src)
+#define _vox_strcasecmp(a,b)         strcasecmp(a,b)
+#define _vox_strcmp(a,b)             strcmp(a,b)
+#define _vox_strlen(a)               strlen(a)
+#define _vox_sprintf(str,str_max,fmt,...)    snprintf(str, str_max, fmt, __VA_ARGS__)        
+#endif
+
+// 3d vector utilities
+struct vec3 {
+  float x, y, z;
+};
+static inline vec3 vec3_make(float x, float y, float z) { vec3 v; v.x = x; v.y = y; v.z = z; return v; }
+static inline vec3 vec3_negate(const vec3& v) { vec3 r; r.x = -v.x;  r.y = -v.y; r.z = -v.z; return r; }
+
+// API for emulating file transactions on an in-memory buffer of data.
+struct _vox_file {
+  const  uint8_t* buffer;       // source buffer data
+  const uint32_t  buffer_size;  // size of the data in the buffer
+  uint32_t        offset;       // current offset in the buffer data.
+};
+
+static bool _vox_file_read(_vox_file* fp, void* data, uint32_t data_size) {
+  size_t data_to_read = _vox_min(fp->buffer_size - fp->offset, data_size);
+  memcpy(data, &fp->buffer[fp->offset], data_to_read);
+  fp->offset += data_size;
+  return data_to_read == data_size;
+}
+
+static void _vox_file_seek_forwards(_vox_file* fp, uint32_t offset) {
+  fp->offset += offset;
+}
+
+static bool _vox_file_eof(const _vox_file* fp) {
+  return fp->offset >= fp->buffer_size;
+}
+
+static const void* _vox_file_data_pointer(const _vox_file* fp) {
+  return &fp->buffer[fp->offset];
+}
+
+// hash utilities
+static uint32_t _vox_hash(const uint8_t* data, uint32_t data_size) {
+  uint32_t hash = 0;
+  for (uint32_t i = 0; i < data_size; i++)
+    hash = data[i] + (hash * 65559);
+  return hash;
+}
+
+// memory allocation utils.
+static void* _ogt_priv_alloc_default(size_t size) { return malloc(size); }
+static void  _ogt_priv_free_default(void* ptr)    { free(ptr); }
+static ogt_vox_alloc_func g_alloc_func = _ogt_priv_alloc_default; // default function for allocating 
+static ogt_vox_free_func  g_free_func = _ogt_priv_free_default;   // default  function for freeing.
+
+// set the provided allocate/free functions if they are non-null, otherwise reset to default allocate/free functions
+void ogt_vox_set_memory_allocator(ogt_vox_alloc_func alloc_func, ogt_vox_free_func free_func)
+{
+  assert((alloc_func && free_func) ||      // both alloc/free must be non-NULL -OR-
+         (!alloc_func && !free_func));    // both alloc/free must be NULL. No mixing 'n matching.
+  if (alloc_func && free_func) {
+    g_alloc_func = alloc_func;
+    g_free_func = free_func;
+  }
+  else  {
+    // reset to default allocate/free functions.
+    g_alloc_func = _ogt_priv_alloc_default;
+    g_free_func = _ogt_priv_free_default;
+  }
+}
+
+static void* _vox_malloc(size_t size) {
+  return size ? g_alloc_func(size) : NULL;
+}
+
+static void* _vox_calloc(size_t size) {
+  void* pMem = _vox_malloc(size);
+  if (pMem)
+    memset(pMem, 0, size);
+  return pMem;
+}
+
+static void _vox_free(void* old_ptr) {
+  if (old_ptr)
+    g_free_func(old_ptr);
+}
+
+static void* _vox_realloc(void* old_ptr, size_t old_size, size_t new_size) {
+  // early out if new size is non-zero and no resize is required.
+  if (new_size && old_size >= new_size)
+    return old_ptr;
+
+  // memcpy from the old ptr only if both sides are valid.
+  void* new_ptr = _vox_malloc(new_size);
+  if (new_ptr) {
+    // copy any existing elements over
+    if (old_ptr && old_size)
+      memcpy(new_ptr, old_ptr, old_size);
+    // zero out any new tail elements
+    assert(new_size > old_size); // this should be guaranteed by the _vox_realloc early out case above.
+    uintptr_t new_tail_ptr = (uintptr_t)new_ptr + old_size;
+    memset((void*)new_tail_ptr, 0, new_size - old_size);
+  }
+  if (old_ptr)
+    _vox_free(old_ptr);
+  return new_ptr;
+}
+
+// std::vector-style allocator, which use client-provided allocation functions.
+template <class T> struct _vox_array {
+  _vox_array() : data(NULL), capacity(0), count(0) { }
+  ~_vox_array() {
+    _vox_free(data);
+    data = NULL;
+    count = 0;
+    capacity = 0;
+  }
+  void reserve(size_t new_capacity) {
+    data = (T*)_vox_realloc(data, capacity * sizeof(T), new_capacity * sizeof(T));
+    capacity = new_capacity;
+  }
+  void grow_to_fit_index(size_t index) {
+    if (index >= count)
+      resize(index + 1);
+  }
+  void resize(size_t new_count) {
+    if (new_count > capacity)
+      reserve(new_count);
+    count = new_count;
+  }
+  void push_back(const T & new_element) {
+    if (count == capacity) {
+      size_t new_capacity = capacity ? (capacity * 3) >> 1 : 2;   // grow by 50% each time, otherwise start at 2 elements.
+      reserve(new_capacity);
+      assert(capacity > count);
     }
-    static inline uint32_t _vox_min(uint32_t a, uint32_t b) { 
-        return (a < b) ? a : b; 
+    data[count++] = new_element;
+  }
+  void push_back_many(const T * new_elements, size_t num_elements) {
+    if (count + num_elements > capacity) {
+      size_t new_capacity = capacity + num_elements;
+      new_capacity = new_capacity ? (new_capacity * 3) >> 1 : 2;   // grow by 50% each time, otherwise start at 2 elements.
+      reserve(new_capacity);
+      assert(capacity >= (count + num_elements));
     }
+    for (size_t i = 0; i < num_elements; i++)
+      data[count + i] = new_elements[i];
+    count += num_elements;
+  }
+  size_t size() const {
+    return count;
+  }
+  T& operator[](size_t index) {
+    assert(index < count);
+    return data[index];
+  }
+  const T& operator[](size_t index) const {
+    assert(index < count);
+    return data[index];
+  }
+  T*     data;      // data for the array
+  size_t capacity;  // capacity of the array
+  size_t count;      // size of the array
+};
 
-    // string utilities
-    #ifdef _MSC_VER
-        #define _vox_str_scanf(str,...)      sscanf_s(str,__VA_ARGS__)
-        #define _vox_strcpy_static(dst,src)  strcpy_s(dst,src)
-        #define _vox_strcasecmp(a,b)         _stricmp(a,b)
-        #define _vox_strcmp(a,b)             strcmp(a,b)
-        #define _vox_strlen(a)               strlen(a)
-        #define _vox_sprintf(str,str_max,fmt,...)    sprintf_s(str, str_max, fmt, __VA_ARGS__)
-    #else
-        #define _vox_str_scanf(str,...)      sscanf(str,__VA_ARGS__)
-        #define _vox_strcpy_static(dst,src)  strcpy(dst,src)
-        #define _vox_strcasecmp(a,b)         strcasecmp(a,b)
-        #define _vox_strcmp(a,b)             strcmp(a,b)
-        #define _vox_strlen(a)               strlen(a)
-        #define _vox_sprintf(str,str_max,fmt,...)    snprintf(str, str_max, fmt, __VA_ARGS__)        
-    #endif
+// matrix utilities
+static ogt_vox_transform _vox_transform_identity() {
+  ogt_vox_transform t;
+  t.m00 = 1.0f; t.m01 = 0.0f; t.m02 = 0.0f; t.m03 = 0.0f;
+  t.m10 = 0.0f; t.m11 = 1.0f; t.m12 = 0.0f; t.m13 = 0.0f;
+  t.m20 = 0.0f; t.m21 = 0.0f; t.m22 = 1.0f; t.m23 = 0.0f;
+  t.m30 = 0.0f; t.m31 = 0.0f; t.m32 = 0.0f; t.m33 = 1.0f;
+  return t;
+}
 
-    // 3d vector utilities
-    struct vec3 {
-        float x, y, z;
-    };
-    static inline vec3 vec3_make(float x, float y, float z) { vec3 v; v.x = x; v.y = y; v.z = z; return v; }
-    static inline vec3 vec3_negate(const vec3& v) { vec3 r; r.x = -v.x;  r.y = -v.y; r.z = -v.z; return r; }
+static ogt_vox_transform _vox_transform_multiply(const ogt_vox_transform& a, const ogt_vox_transform& b) {
+  ogt_vox_transform r;
+  r.m00 = (a.m00 * b.m00) + (a.m01 * b.m10) + (a.m02 * b.m20) + (a.m03 * b.m30);
+  r.m01 = (a.m00 * b.m01) + (a.m01 * b.m11) + (a.m02 * b.m21) + (a.m03 * b.m31);
+  r.m02 = (a.m00 * b.m02) + (a.m01 * b.m12) + (a.m02 * b.m22) + (a.m03 * b.m32);
+  r.m03 = (a.m00 * b.m03) + (a.m01 * b.m13) + (a.m02 * b.m23) + (a.m03 * b.m33);
+  r.m10 = (a.m10 * b.m00) + (a.m11 * b.m10) + (a.m12 * b.m20) + (a.m13 * b.m30);
+  r.m11 = (a.m10 * b.m01) + (a.m11 * b.m11) + (a.m12 * b.m21) + (a.m13 * b.m31);
+  r.m12 = (a.m10 * b.m02) + (a.m11 * b.m12) + (a.m12 * b.m22) + (a.m13 * b.m32);
+  r.m13 = (a.m10 * b.m03) + (a.m11 * b.m13) + (a.m12 * b.m23) + (a.m13 * b.m33);
+  r.m20 = (a.m20 * b.m00) + (a.m21 * b.m10) + (a.m22 * b.m20) + (a.m23 * b.m30);
+  r.m21 = (a.m20 * b.m01) + (a.m21 * b.m11) + (a.m22 * b.m21) + (a.m23 * b.m31);
+  r.m22 = (a.m20 * b.m02) + (a.m21 * b.m12) + (a.m22 * b.m22) + (a.m23 * b.m32);
+  r.m23 = (a.m20 * b.m03) + (a.m21 * b.m13) + (a.m22 * b.m23) + (a.m23 * b.m33);
+  r.m30 = (a.m30 * b.m00) + (a.m31 * b.m10) + (a.m32 * b.m20) + (a.m33 * b.m30);
+  r.m31 = (a.m30 * b.m01) + (a.m31 * b.m11) + (a.m32 * b.m21) + (a.m33 * b.m31);
+  r.m32 = (a.m30 * b.m02) + (a.m31 * b.m12) + (a.m32 * b.m22) + (a.m33 * b.m32);
+  r.m33 = (a.m30 * b.m03) + (a.m31 * b.m13) + (a.m32 * b.m23) + (a.m33 * b.m33);
+  return r;
+}
 
-    // API for emulating file transactions on an in-memory buffer of data.
-    struct _vox_file {
-        const  uint8_t* buffer;       // source buffer data
-        const uint32_t  buffer_size;  // size of the data in the buffer
-        uint32_t        offset;       // current offset in the buffer data.
-    };
+// dictionary utilities
+static const uint32_t k_vox_max_dict_buffer_size = 4096;
+static const uint32_t k_vox_max_dict_key_value_pairs = 256;
+struct _vox_dictionary {
+  const char* keys[k_vox_max_dict_key_value_pairs];
+  const char* values[k_vox_max_dict_key_value_pairs];
+  uint32_t    num_key_value_pairs;
+  char        buffer[k_vox_max_dict_buffer_size + 4];    // max 4096, +4 for safety
+  uint32_t    buffer_mem_used;
+};
 
-    static bool _vox_file_read(_vox_file* fp, void* data, uint32_t data_size) {
-        size_t data_to_read = _vox_min(fp->buffer_size - fp->offset, data_size);
-        memcpy(data, &fp->buffer[fp->offset], data_to_read);
-        fp->offset += data_size;
-        return data_to_read == data_size;
-    }
+static bool _vox_file_read_dict(_vox_dictionary * dict, _vox_file * fp) {
+  uint32_t num_pairs_to_read = 0;
+  _vox_file_read(fp, &num_pairs_to_read, sizeof(uint32_t));
+  assert(num_pairs_to_read <= k_vox_max_dict_key_value_pairs);
 
-    static void _vox_file_seek_forwards(_vox_file* fp, uint32_t offset) {
-        fp->offset += offset;
-    }
+  dict->buffer_mem_used = 0;
+  dict->num_key_value_pairs = 0;
+  for (uint32_t i = 0; i < num_pairs_to_read; i++) {
+    // get the size of the key string
+    uint32_t key_string_size = 0;
+    _vox_file_read(fp, &key_string_size, sizeof(uint32_t));
+    // allocate space for the key, and read it in.
+    if (dict->buffer_mem_used + key_string_size > k_vox_max_dict_buffer_size)
+      return false;
+    char* key = &dict->buffer[dict->buffer_mem_used];
+    dict->buffer_mem_used += key_string_size + 1;    // + 1 for zero terminator
+    _vox_file_read(fp, key, key_string_size);
+    key[key_string_size] = 0;    // zero-terminate
+    assert(_vox_strlen(key) == key_string_size);    // sanity check
 
-    static bool _vox_file_eof(const _vox_file* fp) {
-        return fp->offset >= fp->buffer_size;
-    }
+    // get the size of the value string
+    uint32_t value_string_size = 0;
+    _vox_file_read(fp, &value_string_size, sizeof(uint32_t));
+    // allocate space for the value, and read it in.
+    if (dict->buffer_mem_used + value_string_size > k_vox_max_dict_buffer_size)
+      return (false);
+    char* value = &dict->buffer[dict->buffer_mem_used];
+    dict->buffer_mem_used += value_string_size + 1;    // + 1 for zero terminator
+    _vox_file_read(fp, value, value_string_size);
+    value[value_string_size] = 0;    // zero-terminate
+    assert(_vox_strlen(value) == value_string_size);    // sanity check
+    // now assign it in the dictionary
+    dict->keys[dict->num_key_value_pairs] = key;
+    dict->values[dict->num_key_value_pairs] = value;
+    dict->num_key_value_pairs++;
+  }
 
-    static const void* _vox_file_data_pointer(const _vox_file* fp) {
-        return &fp->buffer[fp->offset];
-    }
+  return true;
+}
 
-    // hash utilities
-    static uint32_t _vox_hash(const uint8_t* data, uint32_t data_size) {
-        uint32_t hash = 0;
-        for (uint32_t i = 0; i < data_size; i++)
-            hash = data[i] + (hash * 65559);
-        return hash;
-    }
+// helper for looking up in the dictionary
+static const char* _vox_dict_get_value_as_string(const _vox_dictionary* dict, const char* key_to_find, const char* default_value = NULL) {
+  for (uint32_t i = 0; i < dict->num_key_value_pairs; i++)
+    if (_vox_strcasecmp(dict->keys[i], key_to_find) == 0)
+      return dict->values[i];
+  return default_value;
+}
 
-    // memory allocation utils.
-    static void* _ogt_priv_alloc_default(size_t size) { return malloc(size); }
-    static void  _ogt_priv_free_default(void* ptr)    { free(ptr); }
-    static ogt_vox_alloc_func g_alloc_func = _ogt_priv_alloc_default; // default function for allocating 
-    static ogt_vox_free_func  g_free_func = _ogt_priv_free_default;   // default  function for freeing.
+// lookup table for _vox_make_transform_from_dict_strings
+static const vec3 k_vectors[4] = {
+                                  vec3_make(1.0f, 0.0f, 0.0f),
+                                  vec3_make(0.0f, 1.0f, 0.0f),
+                                  vec3_make(0.0f, 0.0f, 1.0f),
+                                  vec3_make(0.0f, 0.0f, 0.0f)    // invalid!
+};
 
-    // set the provided allocate/free functions if they are non-null, otherwise reset to default allocate/free functions
-    void ogt_vox_set_memory_allocator(ogt_vox_alloc_func alloc_func, ogt_vox_free_func free_func)
+// lookup table for _vox_make_transform_from_dict_strings
+static const uint32_t k_row2_index[] = { UINT32_MAX, UINT32_MAX, UINT32_MAX, 2, UINT32_MAX, 1, 0, UINT32_MAX };
+
+
+static ogt_vox_transform _vox_make_transform_from_dict_strings(const char* rotation_string, const char* translation_string) {
+  ogt_vox_transform transform = _vox_transform_identity();
+
+  if (rotation_string != NULL) {
+    // compute the per-row indexes into k_vectors[] array.
+    // unpack rotation bits. 
+    //  bits  : meaning
+    //  0 - 1 : index of the non-zero entry in the first row
+    //  2 - 3 : index of the non-zero entry in the second row
+    uint32_t packed_rotation_bits = atoi(rotation_string);
+    uint32_t row0_vec_index = (packed_rotation_bits >> 0) & 3;
+    uint32_t row1_vec_index = (packed_rotation_bits >> 2) & 3;
+    uint32_t row2_vec_index = k_row2_index[(1 << row0_vec_index) | (1 << row1_vec_index)];    // process of elimination to determine row 2 index based on row0/row1 being one of {0,1,2} choose 2.
+    assert(row2_vec_index != UINT32_MAX); // if you hit this, you probably have invalid indices for row0_vec_index/row1_vec_index.
+
+    // unpack rotation bits for vector signs
+    //  bits  : meaning
+    //  4     : the sign in the first row  (0 : positive; 1 : negative)
+    //  5     : the sign in the second row (0 : positive; 1 : negative)
+    //  6     : the sign in the third row  (0 : positive; 1 : negative)
+    vec3 row0 = k_vectors[row0_vec_index];
+    vec3 row1 = k_vectors[row1_vec_index];
+    vec3 row2 = k_vectors[row2_vec_index];
+    if (packed_rotation_bits & (1 << 4))
+      row0 = vec3_negate(row0);
+    if (packed_rotation_bits & (1 << 5))
+      row1 = vec3_negate(row1);
+    if (packed_rotation_bits & (1 << 6))
+      row2 = vec3_negate(row2);
+
+    // magicavoxel stores rows, we need columns, so we do the swizzle here into columns
+    transform.m00 = row0.x; transform.m01 = row1.x; transform.m02 = row2.x;
+    transform.m10 = row0.y; transform.m11 = row1.y; transform.m12 = row2.y;
+    transform.m20 = row0.z; transform.m21 = row1.z; transform.m22 = row2.z;
+  }
+
+  if (translation_string != NULL) {
+    int32_t x = 0;
+    int32_t y = 0;
+    int32_t z = 0;
+    _vox_str_scanf(translation_string, "%i %i %i", &x, &y, &z);
+    transform.m30 = (float)x;
+    transform.m31 = (float)y;
+    transform.m32 = (float)z;
+  }
+  return transform;
+}
+
+enum _vox_scene_node_type
+  {
+   k_nodetype_invalid   = 0,    // has not been parsed yet.
+   k_nodetype_group     = 1,
+   k_nodetype_transform = 2,
+   k_nodetype_shape     = 3,
+  };
+
+struct _vox_scene_node_ {
+  _vox_scene_node_type node_type;    // only gets assigned when this has been parsed, otherwise will be k_nodetype_invalid
+  union {
+    // used only when node_type == k_nodetype_transform
+    struct {
+      char              name[64];    // max name size is 64
+      ogt_vox_transform transform;
+      uint32_t          child_node_id;
+      uint32_t          layer_id;
+      bool              hidden;
+    } transform;
+    // used only when node_type == k_nodetype_group
+    struct {
+      uint32_t first_child_node_id_index; // the index of the first child node ID within the ChildNodeID array
+      uint32_t num_child_nodes;           // number of child node IDs starting at the first index
+    } group;
+    // used only when node_type == k_nodetype_shape
+    struct {
+      uint32_t model_id;                  // will be UINT32_MAX if there is no model. Unlikely, there should always be a model.
+    } shape;
+  } u;
+};
+
+static void generate_instances_for_node(
+                                        const _vox_array<_vox_scene_node_> & nodes, uint32_t node_index, const _vox_array<uint32_t> & child_id_array, uint32_t layer_index,
+                                        const ogt_vox_transform& transform, const _vox_array<ogt_vox_model*> & model_ptrs, const char* transform_last_name, bool transform_last_hidden,
+                                        _vox_array<ogt_vox_instance> & instances, _vox_array<char> & string_data, _vox_array<ogt_vox_group>& groups, uint32_t group_index, bool generate_groups)
+{
+  const _vox_scene_node_* node = &nodes[node_index];
+  assert(node);
+  switch (node->node_type) 
     {
-        assert((alloc_func && free_func) ||      // both alloc/free must be non-NULL -OR-
-            (!alloc_func && !free_func));    // both alloc/free must be NULL. No mixing 'n matching.
-        if (alloc_func && free_func) {
-            g_alloc_func = alloc_func;
-            g_free_func = free_func;
+    case k_nodetype_transform: 
+      {
+        ogt_vox_transform new_transform = (generate_groups) ? node->u.transform.transform  // don't multiply by the parent transform. caller wants the group-relative transform
+          : _vox_transform_multiply(node->u.transform.transform, transform);         // flatten the transform if we're not generating groups: child transform * parent transform
+        const char* new_transform_name = node->u.transform.name[0] ? node->u.transform.name : NULL;
+        transform_last_name = new_transform_name ? new_transform_name : transform_last_name;    // if this node has a name, use it instead of our parent name
+        generate_instances_for_node(nodes, node->u.transform.child_node_id, child_id_array, node->u.transform.layer_id, new_transform, model_ptrs, transform_last_name, node->u.transform.hidden, instances, string_data, groups, group_index, generate_groups);
+        break;
+      }
+    case k_nodetype_group: 
+      {
+        // create a new group only if we're generating groups.
+        uint32_t next_group_index = 0;
+        if (generate_groups) {
+          next_group_index = (uint32_t)groups.size();
+          ogt_vox_group group;
+          group.parent_group_index = group_index;
+          group.transform          = transform;
+          group.hidden             = transform_last_hidden;
+          group.layer_index        = layer_index;
+          groups.push_back(group);
         }
-        else  {
-            // reset to default allocate/free functions.
-            g_alloc_func = _ogt_priv_alloc_default;
-            g_free_func = _ogt_priv_free_default;
-        }
-    }
+        // child nodes will only be hidden if their immediate transform is hidden.
+        transform_last_hidden = false;
 
-    static void* _vox_malloc(size_t size) {
-        return size ? g_alloc_func(size) : NULL;
-    }
-
-    static void* _vox_calloc(size_t size) {
-        void* pMem = _vox_malloc(size);
-        if (pMem)
-            memset(pMem, 0, size);
-        return pMem;
-    }
-
-    static void _vox_free(void* old_ptr) {
-        if (old_ptr)
-            g_free_func(old_ptr);
-    }
-
-    static void* _vox_realloc(void* old_ptr, size_t old_size, size_t new_size) {
-        // early out if new size is non-zero and no resize is required.
-        if (new_size && old_size >= new_size)
-            return old_ptr;
-
-        // memcpy from the old ptr only if both sides are valid.
-        void* new_ptr = _vox_malloc(new_size);
-        if (new_ptr) {
-            // copy any existing elements over
-            if (old_ptr && old_size)
-                memcpy(new_ptr, old_ptr, old_size);
-            // zero out any new tail elements
-            assert(new_size > old_size); // this should be guaranteed by the _vox_realloc early out case above.
-            uintptr_t new_tail_ptr = (uintptr_t)new_ptr + old_size;
-            memset((void*)new_tail_ptr, 0, new_size - old_size);
+        const uint32_t* child_node_ids = (const uint32_t*)& child_id_array[node->u.group.first_child_node_id_index];
+        for (uint32_t i = 0; i < node->u.group.num_child_nodes; i++) {
+          generate_instances_for_node(nodes, child_node_ids[i], child_id_array, layer_index, transform, model_ptrs, transform_last_name, transform_last_hidden, instances, string_data, groups, next_group_index, generate_groups);
         }
-        if (old_ptr)
-            _vox_free(old_ptr);
-        return new_ptr;
-    }
-
-    // std::vector-style allocator, which use client-provided allocation functions.
-    template <class T> struct _vox_array {
-        _vox_array() : data(NULL), capacity(0), count(0) { }
-        ~_vox_array() {
-            _vox_free(data);
-            data = NULL;
-            count = 0;
-            capacity = 0;
-        }
-        void reserve(size_t new_capacity) {
-            data = (T*)_vox_realloc(data, capacity * sizeof(T), new_capacity * sizeof(T));
-            capacity = new_capacity;
-        }
-        void grow_to_fit_index(size_t index) {
-            if (index >= count)
-                resize(index + 1);
-        }
-        void resize(size_t new_count) {
-            if (new_count > capacity)
-                reserve(new_count);
-            count = new_count;
-        }
-        void push_back(const T & new_element) {
-            if (count == capacity) {
-                size_t new_capacity = capacity ? (capacity * 3) >> 1 : 2;   // grow by 50% each time, otherwise start at 2 elements.
-                reserve(new_capacity);
-                assert(capacity > count);
+        break;
+      }
+    case k_nodetype_shape: 
+      {
+        assert(node->u.shape.model_id < model_ptrs.size());
+        if (node->u.shape.model_id < model_ptrs.size() &&    // model ID is valid
+            model_ptrs[node->u.shape.model_id] != NULL )     // model is non-NULL.   
+          {
+            assert(generate_groups || group_index == 0);     // if we're not generating groups, group_index should be zero to map to the root group.
+            ogt_vox_instance new_instance;
+            new_instance.model_index = node->u.shape.model_id;
+            new_instance.transform   = transform;
+            new_instance.layer_index = layer_index;
+            new_instance.group_index = group_index;
+            new_instance.hidden      = transform_last_hidden;
+            // if we got a transform name, allocate space in string_data for it and keep track of the index 
+            // within string data. This will be patched to a real pointer at the very end.
+            new_instance.name = 0;
+            if (transform_last_name && transform_last_name[0]) {
+              new_instance.name = (const char*)(string_data.size());
+              size_t name_size = _vox_strlen(transform_last_name) + 1;       // +1 for terminator
+              string_data.push_back_many(transform_last_name, name_size);
             }
-            data[count++] = new_element;
-        }
-        void push_back_many(const T * new_elements, size_t num_elements) {
-            if (count + num_elements > capacity) {
-                size_t new_capacity = capacity + num_elements;
-                new_capacity = new_capacity ? (new_capacity * 3) >> 1 : 2;   // grow by 50% each time, otherwise start at 2 elements.
-                reserve(new_capacity);
-                assert(capacity >= (count + num_elements));
-            }
-            for (size_t i = 0; i < num_elements; i++)
-                data[count + i] = new_elements[i];
-            count += num_elements;
-        }
-        size_t size() const {
-            return count;
-        }
-        T& operator[](size_t index) {
-            assert(index < count);
-            return data[index];
-        }
-        const T& operator[](size_t index) const {
-            assert(index < count);
-            return data[index];
-        }
-        T*     data;      // data for the array
-        size_t capacity;  // capacity of the array
-        size_t count;      // size of the array
-    };
-
-    // matrix utilities
-    static ogt_vox_transform _vox_transform_identity() {
-        ogt_vox_transform t;
-        t.m00 = 1.0f; t.m01 = 0.0f; t.m02 = 0.0f; t.m03 = 0.0f;
-        t.m10 = 0.0f; t.m11 = 1.0f; t.m12 = 0.0f; t.m13 = 0.0f;
-        t.m20 = 0.0f; t.m21 = 0.0f; t.m22 = 1.0f; t.m23 = 0.0f;
-        t.m30 = 0.0f; t.m31 = 0.0f; t.m32 = 0.0f; t.m33 = 1.0f;
-        return t;
+            // create the instance
+            instances.push_back(new_instance);
+          }
+        break;
+      }
+    default:
+      {
+        assert(0); // unhandled node type!
+      }
     }
+}
 
-    static ogt_vox_transform _vox_transform_multiply(const ogt_vox_transform& a, const ogt_vox_transform& b) {
-        ogt_vox_transform r;
-        r.m00 = (a.m00 * b.m00) + (a.m01 * b.m10) + (a.m02 * b.m20) + (a.m03 * b.m30);
-        r.m01 = (a.m00 * b.m01) + (a.m01 * b.m11) + (a.m02 * b.m21) + (a.m03 * b.m31);
-        r.m02 = (a.m00 * b.m02) + (a.m01 * b.m12) + (a.m02 * b.m22) + (a.m03 * b.m32);
-        r.m03 = (a.m00 * b.m03) + (a.m01 * b.m13) + (a.m02 * b.m23) + (a.m03 * b.m33);
-        r.m10 = (a.m10 * b.m00) + (a.m11 * b.m10) + (a.m12 * b.m20) + (a.m13 * b.m30);
-        r.m11 = (a.m10 * b.m01) + (a.m11 * b.m11) + (a.m12 * b.m21) + (a.m13 * b.m31);
-        r.m12 = (a.m10 * b.m02) + (a.m11 * b.m12) + (a.m12 * b.m22) + (a.m13 * b.m32);
-        r.m13 = (a.m10 * b.m03) + (a.m11 * b.m13) + (a.m12 * b.m23) + (a.m13 * b.m33);
-        r.m20 = (a.m20 * b.m00) + (a.m21 * b.m10) + (a.m22 * b.m20) + (a.m23 * b.m30);
-        r.m21 = (a.m20 * b.m01) + (a.m21 * b.m11) + (a.m22 * b.m21) + (a.m23 * b.m31);
-        r.m22 = (a.m20 * b.m02) + (a.m21 * b.m12) + (a.m22 * b.m22) + (a.m23 * b.m32);
-        r.m23 = (a.m20 * b.m03) + (a.m21 * b.m13) + (a.m22 * b.m23) + (a.m23 * b.m33);
-        r.m30 = (a.m30 * b.m00) + (a.m31 * b.m10) + (a.m32 * b.m20) + (a.m33 * b.m30);
-        r.m31 = (a.m30 * b.m01) + (a.m31 * b.m11) + (a.m32 * b.m21) + (a.m33 * b.m31);
-        r.m32 = (a.m30 * b.m02) + (a.m31 * b.m12) + (a.m32 * b.m22) + (a.m33 * b.m32);
-        r.m33 = (a.m30 * b.m03) + (a.m31 * b.m13) + (a.m32 * b.m23) + (a.m33 * b.m33);
-        return r;
-    }
-
-    // dictionary utilities
-    static const uint32_t k_vox_max_dict_buffer_size = 4096;
-    static const uint32_t k_vox_max_dict_key_value_pairs = 256;
-    struct _vox_dictionary {
-        const char* keys[k_vox_max_dict_key_value_pairs];
-        const char* values[k_vox_max_dict_key_value_pairs];
-        uint32_t    num_key_value_pairs;
-        char        buffer[k_vox_max_dict_buffer_size + 4];    // max 4096, +4 for safety
-        uint32_t    buffer_mem_used;
-    };
-
-    static bool _vox_file_read_dict(_vox_dictionary * dict, _vox_file * fp) {
-        uint32_t num_pairs_to_read = 0;
-        _vox_file_read(fp, &num_pairs_to_read, sizeof(uint32_t));
-        assert(num_pairs_to_read <= k_vox_max_dict_key_value_pairs);
-
-        dict->buffer_mem_used = 0;
-        dict->num_key_value_pairs = 0;
-        for (uint32_t i = 0; i < num_pairs_to_read; i++) {
-            // get the size of the key string
-            uint32_t key_string_size = 0;
-            _vox_file_read(fp, &key_string_size, sizeof(uint32_t));
-            // allocate space for the key, and read it in.
-            if (dict->buffer_mem_used + key_string_size > k_vox_max_dict_buffer_size)
-                return false;
-            char* key = &dict->buffer[dict->buffer_mem_used];
-            dict->buffer_mem_used += key_string_size + 1;    // + 1 for zero terminator
-            _vox_file_read(fp, key, key_string_size);
-            key[key_string_size] = 0;    // zero-terminate
-            assert(_vox_strlen(key) == key_string_size);    // sanity check
-
-            // get the size of the value string
-            uint32_t value_string_size = 0;
-            _vox_file_read(fp, &value_string_size, sizeof(uint32_t));
-            // allocate space for the value, and read it in.
-            if (dict->buffer_mem_used + value_string_size > k_vox_max_dict_buffer_size)
-                return (false);
-            char* value = &dict->buffer[dict->buffer_mem_used];
-            dict->buffer_mem_used += value_string_size + 1;    // + 1 for zero terminator
-            _vox_file_read(fp, value, value_string_size);
-            value[value_string_size] = 0;    // zero-terminate
-            assert(_vox_strlen(value) == value_string_size);    // sanity check
-            // now assign it in the dictionary
-            dict->keys[dict->num_key_value_pairs] = key;
-            dict->values[dict->num_key_value_pairs] = value;
-            dict->num_key_value_pairs++;
-        }
-
-        return true;
-    }
-
-    // helper for looking up in the dictionary
-    static const char* _vox_dict_get_value_as_string(const _vox_dictionary* dict, const char* key_to_find, const char* default_value = NULL) {
-        for (uint32_t i = 0; i < dict->num_key_value_pairs; i++)
-            if (_vox_strcasecmp(dict->keys[i], key_to_find) == 0)
-                return dict->values[i];
-        return default_value;
-    }
-
-    // lookup table for _vox_make_transform_from_dict_strings
-    static const vec3 k_vectors[4] = {
-	vec3_make(1.0f, 0.0f, 0.0f),
-	vec3_make(0.0f, 1.0f, 0.0f),
-	vec3_make(0.0f, 0.0f, 1.0f),
-	vec3_make(0.0f, 0.0f, 0.0f)    // invalid!
-    };
-
-    // lookup table for _vox_make_transform_from_dict_strings
-    static const uint32_t k_row2_index[] = { UINT32_MAX, UINT32_MAX, UINT32_MAX, 2, UINT32_MAX, 1, 0, UINT32_MAX };
-
-
-    static ogt_vox_transform _vox_make_transform_from_dict_strings(const char* rotation_string, const char* translation_string) {
-        ogt_vox_transform transform = _vox_transform_identity();
-
-        if (rotation_string != NULL) {
-            // compute the per-row indexes into k_vectors[] array.
-            // unpack rotation bits. 
-            //  bits  : meaning
-            //  0 - 1 : index of the non-zero entry in the first row
-            //  2 - 3 : index of the non-zero entry in the second row
-            uint32_t packed_rotation_bits = atoi(rotation_string);
-            uint32_t row0_vec_index = (packed_rotation_bits >> 0) & 3;
-            uint32_t row1_vec_index = (packed_rotation_bits >> 2) & 3;
-            uint32_t row2_vec_index = k_row2_index[(1 << row0_vec_index) | (1 << row1_vec_index)];    // process of elimination to determine row 2 index based on row0/row1 being one of {0,1,2} choose 2.
-            assert(row2_vec_index != UINT32_MAX); // if you hit this, you probably have invalid indices for row0_vec_index/row1_vec_index.
-
-            // unpack rotation bits for vector signs
-            //  bits  : meaning
-            //  4     : the sign in the first row  (0 : positive; 1 : negative)
-            //  5     : the sign in the second row (0 : positive; 1 : negative)
-            //  6     : the sign in the third row  (0 : positive; 1 : negative)
-            vec3 row0 = k_vectors[row0_vec_index];
-            vec3 row1 = k_vectors[row1_vec_index];
-            vec3 row2 = k_vectors[row2_vec_index];
-            if (packed_rotation_bits & (1 << 4))
-                row0 = vec3_negate(row0);
-            if (packed_rotation_bits & (1 << 5))
-                row1 = vec3_negate(row1);
-            if (packed_rotation_bits & (1 << 6))
-                row2 = vec3_negate(row2);
-
-            // magicavoxel stores rows, we need columns, so we do the swizzle here into columns
-            transform.m00 = row0.x; transform.m01 = row1.x; transform.m02 = row2.x;
-            transform.m10 = row0.y; transform.m11 = row1.y; transform.m12 = row2.y;
-            transform.m20 = row0.z; transform.m21 = row1.z; transform.m22 = row2.z;
-        }
-
-        if (translation_string != NULL) {
-            int32_t x = 0;
-            int32_t y = 0;
-            int32_t z = 0;
-            _vox_str_scanf(translation_string, "%i %i %i", &x, &y, &z);
-            transform.m30 = (float)x;
-            transform.m31 = (float)y;
-            transform.m32 = (float)z;
-        }
-        return transform;
-    }
-
-    enum _vox_scene_node_type
-    {
-        k_nodetype_invalid   = 0,    // has not been parsed yet.
-        k_nodetype_group     = 1,
-        k_nodetype_transform = 2,
-        k_nodetype_shape     = 3,
-    };
-
-    struct _vox_scene_node_ {
-        _vox_scene_node_type node_type;    // only gets assigned when this has been parsed, otherwise will be k_nodetype_invalid
-        union {
-            // used only when node_type == k_nodetype_transform
-            struct {
-                char              name[64];    // max name size is 64
-                ogt_vox_transform transform;
-                uint32_t          child_node_id;
-                uint32_t          layer_id;
-                bool              hidden;
-            } transform;
-            // used only when node_type == k_nodetype_group
-            struct {
-                uint32_t first_child_node_id_index; // the index of the first child node ID within the ChildNodeID array
-                uint32_t num_child_nodes;           // number of child node IDs starting at the first index
-            } group;
-            // used only when node_type == k_nodetype_shape
-            struct {
-                uint32_t model_id;                  // will be UINT32_MAX if there is no model. Unlikely, there should always be a model.
-            } shape;
-        } u;
-    };
-
-    static void generate_instances_for_node(
-        const _vox_array<_vox_scene_node_> & nodes, uint32_t node_index, const _vox_array<uint32_t> & child_id_array, uint32_t layer_index,
-        const ogt_vox_transform& transform, const _vox_array<ogt_vox_model*> & model_ptrs, const char* transform_last_name, bool transform_last_hidden,
-        _vox_array<ogt_vox_instance> & instances, _vox_array<char> & string_data, _vox_array<ogt_vox_group>& groups, uint32_t group_index, bool generate_groups)
-    {
-        const _vox_scene_node_* node = &nodes[node_index];
-        assert(node);
-        switch (node->node_type) 
-        {
-            case k_nodetype_transform: 
-            {
-                ogt_vox_transform new_transform = (generate_groups) ? node->u.transform.transform  // don't multiply by the parent transform. caller wants the group-relative transform
-                        : _vox_transform_multiply(node->u.transform.transform, transform);         // flatten the transform if we're not generating groups: child transform * parent transform
-                const char* new_transform_name = node->u.transform.name[0] ? node->u.transform.name : NULL;
-                transform_last_name = new_transform_name ? new_transform_name : transform_last_name;    // if this node has a name, use it instead of our parent name
-                generate_instances_for_node(nodes, node->u.transform.child_node_id, child_id_array, node->u.transform.layer_id, new_transform, model_ptrs, transform_last_name, node->u.transform.hidden, instances, string_data, groups, group_index, generate_groups);
-                break;
-            }
-            case k_nodetype_group: 
-            {
-                // create a new group only if we're generating groups.
-                uint32_t next_group_index = 0;
-                if (generate_groups) {
-                    next_group_index = (uint32_t)groups.size();
-                    ogt_vox_group group;
-                    group.parent_group_index = group_index;
-                    group.transform          = transform;
-                    group.hidden             = transform_last_hidden;
-                    group.layer_index        = layer_index;
-                    groups.push_back(group);
-                }
-                // child nodes will only be hidden if their immediate transform is hidden.
-                transform_last_hidden = false;
-
-                const uint32_t* child_node_ids = (const uint32_t*)& child_id_array[node->u.group.first_child_node_id_index];
-                for (uint32_t i = 0; i < node->u.group.num_child_nodes; i++) {
-                    generate_instances_for_node(nodes, child_node_ids[i], child_id_array, layer_index, transform, model_ptrs, transform_last_name, transform_last_hidden, instances, string_data, groups, next_group_index, generate_groups);
-                }
-                break;
-            }
-            case k_nodetype_shape: 
-            {
-                assert(node->u.shape.model_id < model_ptrs.size());
-                if (node->u.shape.model_id < model_ptrs.size() &&    // model ID is valid
-                    model_ptrs[node->u.shape.model_id] != NULL )     // model is non-NULL.   
-                {
-                    assert(generate_groups || group_index == 0);     // if we're not generating groups, group_index should be zero to map to the root group.
-                    ogt_vox_instance new_instance;
-                    new_instance.model_index = node->u.shape.model_id;
-                    new_instance.transform   = transform;
-                    new_instance.layer_index = layer_index;
-                    new_instance.group_index = group_index;
-                    new_instance.hidden      = transform_last_hidden;
-                    // if we got a transform name, allocate space in string_data for it and keep track of the index 
-                    // within string data. This will be patched to a real pointer at the very end.
-                    new_instance.name = 0;
-                    if (transform_last_name && transform_last_name[0]) {
-                        new_instance.name = (const char*)(string_data.size());
-                        size_t name_size = _vox_strlen(transform_last_name) + 1;       // +1 for terminator
-                        string_data.push_back_many(transform_last_name, name_size);
-                    }
-                    // create the instance
-                    instances.push_back(new_instance);
-                }
-                break;
-            }
-            default:
-            {
-                assert(0); // unhandled node type!
-            }
-        }
-    }
-
-    // ensure instances are ordered in order of increasing model_index
-    static int _vox_ordered_compare_instance(const void* _lhs, const void* _rhs) {
-        const ogt_vox_instance* lhs = (const ogt_vox_instance*)_lhs;
-        const ogt_vox_instance* rhs = (const ogt_vox_instance*)_rhs;
-        return lhs->model_index < rhs->model_index ? -1 :
+// ensure instances are ordered in order of increasing model_index
+static int _vox_ordered_compare_instance(const void* _lhs, const void* _rhs) {
+  const ogt_vox_instance* lhs = (const ogt_vox_instance*)_lhs;
+  const ogt_vox_instance* rhs = (const ogt_vox_instance*)_rhs;
+  return lhs->model_index < rhs->model_index ? -1 :
                lhs->model_index > rhs->model_index ?  1 : 0;
     }
     
@@ -1882,7 +1883,7 @@
           }
           );  
 
-        const int scenesPerRow = int(sqrt(float(sceneOrder.size())));
+        const int scenesPerRow = int(sqrtf(float(sceneOrder.size())));
 
         // go ahead and do the merge now!
         size_t string_data_size = 0;
