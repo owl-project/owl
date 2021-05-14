@@ -542,9 +542,12 @@ namespace owl {
       fovyInDegrees = camera.fovyInDegrees;
     }
 
-    
-
     void OWLViewer::showAndRun()
+    {
+      showAndRun([]() {return true; }); // run until closed manually
+    }
+
+    void OWLViewer::showAndRun(std::function<bool()> keepgoing)
     {
       int width, height;
       glfwGetFramebufferSize(handle, &width, &height);
@@ -556,7 +559,7 @@ namespace owl {
       glfwSetCharCallback(handle, glfwindow_char_cb);
       glfwSetCursorPosCallback(handle, glfwindow_mouseMotion_cb);
     
-      while (!glfwWindowShouldClose(handle)) {
+      while (!glfwWindowShouldClose(handle) && keepgoing()) {
         static double lastCameraUpdate = -1.f;
         if (camera.lastModified != lastCameraUpdate) {
           cameraChanged();
@@ -568,6 +571,9 @@ namespace owl {
         glfwSwapBuffers(handle);
         glfwPollEvents();
       }
+
+      glfwDestroyWindow(handle);
+      glfwTerminate();
     }
 
     /*! tell GLFW to set desired active window size (GLFW my choose
