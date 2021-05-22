@@ -172,6 +172,7 @@ cuda_add_library(owl_static
 target_link_libraries(owl_static
    ${CUDA_LIBRARIES}
    ${CUDA_CUDA_LIBRARY}
+   ${CMAKE_THREAD_LIBS_INIT}
   )
 
 
