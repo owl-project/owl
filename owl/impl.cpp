@@ -94,6 +94,31 @@ using namespace owl;
     checkGet(_context)->setRayTypeCount(numRayTypes);
   }
 
+  OWL_API void
+  owlContextSetBoundLaunchParamValues(OWLContext _context,
+                                      const OWLBoundValueDecl *_boundValues,
+                                      int numBoundValues)
+  {
+    LOG_API_CALL();
+    if (_boundValues == nullptr && (numBoundValues == 0 || numBoundValues == -1)) 
+      return;
+  
+    assert(_boundValues);
+    if (numBoundValues == -1) {
+      // list is null terminated
+      for (numBoundValues = 0; _boundValues[numBoundValues].var.name != nullptr; numBoundValues++);
+    }
+    if (numBoundValues <= 0) return;
+
+    // check and pack into vector
+    for (int i = 0; i < numBoundValues; ++i) {
+      assert(_boundValues[i].boundValuePtr);
+    }
+    std::vector<OWLBoundValueDecl> boundValues(numBoundValues);
+    std::copy(_boundValues, _boundValues+numBoundValues, boundValues.begin());
+    checkGet(_context)->setBoundLaunchParamValues(boundValues);
+  }
+
 
   /*! sets maximum instancing depth for the given context:
 
@@ -703,6 +728,16 @@ using namespace owl;
     Buffer::SP buffer = ((APIHandle *)_buffer)->get<Buffer>();
     assert(buffer);
     return buffer->resize(newItemCount);
+  }
+
+  OWL_API size_t
+  owlBufferSizeInBytes(OWLBuffer _buffer)
+  {
+    LOG_API_CALL();
+    assert(_buffer);
+    Buffer::SP buffer = ((APIHandle *)_buffer)->get<Buffer>();
+    assert(buffer);
+    return buffer->sizeInBytes();
   }
 
   OWL_API void 
