@@ -115,7 +115,7 @@ namespace owl {
     cudaFree(0);
     
     int totalNumDevicesAvailable = 0;
-    cudaGetDeviceCount(&totalNumDevicesAvailable);
+    CUDA_CALL(GetDeviceCount(&totalNumDevicesAvailable));
     if (totalNumDevicesAvailable == 0)
       throw std::runtime_error("#owl: no CUDA capable devices found!");
     LOG_OK("found " << totalNumDevicesAvailable << " CUDA device(s)");
@@ -142,7 +142,9 @@ namespace owl {
     // ------------------------------------------------------------------
     // init optix itself
     // ------------------------------------------------------------------
-#if OPTIX_VERSION >= 70200
+#if OPTIX_VERSION >= 70300
+    LOG("initializing optix 7.3");
+#elif OPTIX_VERSION >= 70200
     LOG("initializing optix 7.2");
 #elif OPTIX_VERSION >= 70100
     LOG("initializing optix 7.1");
