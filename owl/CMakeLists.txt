@@ -48,29 +48,29 @@ set(OWL_SOURCES
   include/owl/owl_host.h
   include/owl/owl_device.h
   include/owl/common/arrayND/array2D.h
-include/owl/common/arrayND/array3D.h
-include/owl/common/math/AffineSpace.h
-include/owl/common/math/box.h
-include/owl/common/math/constants.h
-include/owl/common/math/fixedpoint.h
-include/owl/common/math/LinearSpace.h
-include/owl/common/math/Quaternion.h
-include/owl/common/math/random.h
-include/owl/common/math/vec/compare.h
-include/owl/common/math/vec/functors.h
-include/owl/common/math/vec/rotate.h
-include/owl/common/math/vec.h
-include/owl/common/owl-common.h
-include/owl/common/parallel/parallel_for.h
-include/owl/owl.h
-include/owl/owl_device.h
-include/owl/owl_device_buffer.h
-include/owl/owl_host.h
-helper/cuda.h
-helper/optix.h
-common.h
+  include/owl/common/arrayND/array3D.h
+  include/owl/common/math/AffineSpace.h
+  include/owl/common/math/box.h
+  include/owl/common/math/constants.h
+  include/owl/common/math/fixedpoint.h
+  include/owl/common/math/LinearSpace.h
+  include/owl/common/math/Quaternion.h
+  include/owl/common/math/random.h
+  include/owl/common/math/vec/compare.h
+  include/owl/common/math/vec/functors.h
+  include/owl/common/math/vec/rotate.h
+  include/owl/common/math/vec.h
+  include/owl/common/owl-common.h
+  include/owl/common/parallel/parallel_for.h
+  include/owl/owl.h
+  include/owl/owl_device.h
+  include/owl/owl_device_buffer.h
+  include/owl/owl_host.h
+  helper/cuda.h
+  helper/optix.h
+  common.h
 
-cmake/configure_tbb.cmake
+  cmake/configure_tbb.cmake
   cmake/configure_owl.cmake
   cmake/configure_optix.cmake
   cmake/configure_glfw.cmake
@@ -128,31 +128,34 @@ cmake/configure_tbb.cmake
   # -------------------------------------------------------
   # geometries
   # -------------------------------------------------------
-Geometry.h
+  Geometry.h
   Geometry.cpp
-Triangles.h
+  Triangles.h
   Triangles.cu
-UserGeom.h
+  UserGeom.h
   UserGeom.cu
 
 
   # -------------------------------------------------------
   # accel structures
   # -------------------------------------------------------
-Group.h
+  Group.h
   Group.cpp
-InstanceGroup.h
+  InstanceGroup.h
   InstanceGroup.cpp
-TrianglesGeomGroup.h
+  TrianglesGeomGroup.h
   TrianglesGeomGroup.cpp
-UserGeomGroup.h
+  UserGeomGroup.h
   UserGeomGroup.cpp
 )
 
-cuda_add_library(owl_static
-  ${OWL_SOURCES}
-  STATIC
-  )
+# Nate: 05/31/21: cuda_add_library for some reason is always out of date on 
+# windows, causing owl and all dependencies to rebuild every compile...
+# This rebuild issue doesn't seem to happen with native CUDA language support, 
+# so I'm switching over to that.
+add_library(owl_static STATIC
+  ${OWL_SOURCES} 
+)
 
 
 # Nate: 11/3/20: I get "fatal error C1041: cannot open program database" 

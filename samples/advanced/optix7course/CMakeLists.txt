@@ -18,7 +18,7 @@ include_directories(${OWL_VIEWER_INCLUDES})
 
 cuda_compile_and_embed(embedded_ptx_code devicePrograms.cu)
 
-cuda_add_library(toneMap STATIC
+add_library(toneMap STATIC
   toneMap.cu)
 add_executable(adv_optix7course
   ${embedded_ptx_code}
