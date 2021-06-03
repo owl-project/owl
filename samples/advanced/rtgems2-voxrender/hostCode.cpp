@@ -1120,6 +1120,8 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
 
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
 
+  owlContextSetNumAttributeValues(context, 2);
+
   // Launch params
   OWLVarDecl launchVars[] = {
 

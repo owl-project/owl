@@ -583,6 +583,15 @@ namespace owl {
     motionBlurEnabled = true;
   }
 
+  void Context::setNumAttributeValues(size_t numAttributeValues)
+  {
+    for (auto device : getDevices()) {
+      assert("check programs have not been built"
+             && device->allActivePrograms.empty());
+    }
+    this->numAttributeValues = (int)numAttributeValues;
+  }
+
   void Context::buildPrograms(bool debug)
   {
     buildModules(debug);
