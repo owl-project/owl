@@ -336,11 +336,18 @@ namespace owl {
 
     /*! vector cross product */
     template<typename T>
+    inline __both__ T dot(const vec_t<T,2> &a, const vec_t<T,2> &b)
+    {
+      return a.x*b.x + a.y*b.y;
+    }
+
+    /*! vector cross product */
+    template<typename T>
     inline __both__ T dot(const vec_t<T,3> &a, const vec_t<T,3> &b)
     {
       return a.x*b.x + a.y*b.y + a.z*b.z;
     }
-
+    
     /*! vector cross product */
     template<typename T>
     inline __both__ vec_t<T,3> normalize(const vec_t<T,3> &v)
