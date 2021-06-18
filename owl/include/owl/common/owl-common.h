@@ -30,7 +30,9 @@
 #include <math.h>
 #include <cmath>
 #include <algorithm>
+#include <sstream>
 #ifdef __GNUC__
+#include <execinfo.h>
 #include <sys/time.h>
 #endif
 
@@ -112,6 +114,31 @@
 #endif
 
 namespace detail {
+static std::string backtrace()
+{
+#ifdef __GNUC__
+    static const int max_frames = 16;
+
+    void* buffer[max_frames] = { 0 };
+    int cnt = ::backtrace(buffer,max_frames);
+
+    char** symbols = backtrace_symbols(buffer,cnt);
+
+    if (symbols) {
+      std::stringstream str;
+      for (int n = 1; n < cnt; ++n) // skip the 1st entry (address of this function)
+      {
+        str << symbols[n] << '\n';
+      }
+      free(symbols);
+      return str.str();
+    }
+    return "";
+#else
+    return "not implemented yet";
+#endif
+}
+
 inline void owlRaise_impl(std::string str)
 {
   fprintf(stderr,"%s\n",str.c_str());
@@ -121,6 +148,10 @@ inline void owlRaise_impl(std::string str)
   else
     throw std::runtime_error(MSG);
 #else
+#ifndef NDEBUG
+  std::string bt = detail::backtrace();
+  fprintf(stderr,"%s\n",bt.c_str());
+#endif
   raise(SIGINT);
 #endif
 }
