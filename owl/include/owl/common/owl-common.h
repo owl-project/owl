@@ -47,6 +47,9 @@
 #endif
 #endif
 
+#if !defined(WIN32)
+#include <signal.h>
+#endif
 
 #if defined(_MSC_VER)
 #  define OWL_DLL_EXPORT __declspec(dllexport)
@@ -108,7 +111,22 @@
 #define MAYBE_UNUSED
 #endif
 
+namespace detail {
+inline void owlRaise_impl(std::string str)
+{
+  fprintf(stderr,"%s\n",str.c_str());
+#ifdef WIN32
+  if (IsDebuggerPresent())
+    DebugBreak();
+  else
+    throw std::runtime_error(MSG);
+#else
+  raise(SIGINT);
+#endif
+}
+}
 
+#define OWL_RAISE(MSG) detail::owlRaise_impl(MSG);
 
 
 #define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" not implemented")

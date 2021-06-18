@@ -270,8 +270,8 @@ using namespace owl;
     assert(obj);
 
     if (!obj->hasVariable(varName))
-      throw std::runtime_error("Trying to get reference to variable '"+std::string(varName)+
-                               "' on object that does not have such a variable");
+      OWL_RAISE("Trying to get reference to variable '"+std::string(varName)+
+                "' on object that does not have such a variable");
     
     Variable::SP var = obj->getVariable(varName);
     assert(var);

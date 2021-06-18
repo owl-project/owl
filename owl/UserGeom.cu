@@ -212,9 +212,9 @@ namespace owl {
     CUstream stream = device->stream;
     UserGeomType::DeviceData &typeDD = getTypeDD(device);
     if (!typeDD.boundsFuncKernel)
-      throw std::runtime_error("bounds kernel set, but not yet compiled - "
-                               "did you forget to call BuildPrograms() before"
-                               " (User)GroupAccelBuild()!?");
+      OWL_RAISE("bounds kernel set, but not yet compiled - "
+                "did you forget to call BuildPrograms() before"
+                " (User)GroupAccelBuild()!?");
         
     CUresult rc
       = cuLaunchKernel(typeDD.boundsFuncKernel,
@@ -224,8 +224,8 @@ namespace owl {
     if (rc) {
       const char *errName = 0;
       cuGetErrorName(rc,&errName);
-      throw std::runtime_error("unknown CUDA error in calling bounds function kernel: "
-                               +std::string(errName));
+      OWL_RAISE("unknown CUDA error in calling bounds function kernel: "
+                +std::string(errName));
     }
     
     tempMem.free();
@@ -281,14 +281,14 @@ namespace owl {
         LOG_OK("found bounds function " << annotatedProgName << " ... perfect!");
         break;
       case CUDA_ERROR_NOT_FOUND:
-        throw std::runtime_error("in "+std::string(__PRETTY_FUNCTION__)
-                                 +": could not find OPTIX_BOUNDS_PROGRAM("
-                                 +boundsProg.progName+")");
+        OWL_RAISE("in "+std::string(__PRETTY_FUNCTION__)
+                  +": could not find OPTIX_BOUNDS_PROGRAM("
+                  +boundsProg.progName+")");
       default:
         const char *errName = 0;
         cuGetErrorName(rc,&errName);
-        throw std::runtime_error("unknown CUDA error when building bounds program kernel"
-                                 +std::string(errName));
+        OWL_RAISE("unknown CUDA error when building bounds program kernel"
+                  +std::string(errName));
       }
     }
   }

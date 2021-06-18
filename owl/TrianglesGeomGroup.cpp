@@ -126,9 +126,9 @@ namespace owl {
       assert(tris);
       
       if (tris->vertex.buffers.size() != (size_t)numKeys)
-        throw std::runtime_error("invalid combination of meshes with "
-                                 "different motion keys in the same "
-                                 "triangles geom group");
+        OWL_RAISE("invalid combination of meshes with "
+                  "different motion keys in the same "
+                  "triangles geom group");
       TrianglesGeom::DeviceData &trisDD = tris->getDD(device);
       
       CUdeviceptr     *d_vertices    = trisDD.vertexPointers.data();
@@ -168,8 +168,8 @@ namespace owl {
     }
     
     if (sumPrims > maxPrimsPerGAS) 
-      throw std::runtime_error("number of prim in user geom group exceeds "
-                               "OptiX's MAX_PRIMITIVES_PER_GAS limit");
+      OWL_RAISE("number of prim in user geom group exceeds "
+                "OptiX's MAX_PRIMITIVES_PER_GAS limit");
     
     // ==================================================================
     // BLAS setup: buildinputs set up, build the blas

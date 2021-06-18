@@ -29,7 +29,7 @@ namespace owl {
     case OWL_TEXEL_FORMAT_R32F:
       return sizeof(float);
     default:
-      throw std::runtime_error("texel format not implemented");
+      OWL_RAISE("texel format not implemented");
     };
   }
   

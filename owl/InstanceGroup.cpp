@@ -90,8 +90,8 @@ namespace owl {
              children.size()*sizeof(affine3f));
     } break;
     default:
-      throw std::runtime_error("used matrix format not yet implmeneted for"
-                               " InstanceGroup::setTransforms");
+      OWL_RAISE("used matrix format not yet implmeneted for"
+                " InstanceGroup::setTransforms");
     };
   }
 

@@ -26,7 +26,7 @@
       fprintf(stderr,                                                   \
               "CUDA call (%s) failed with code %d (line %d): %s\n",     \
               #call, rc, __LINE__, cudaGetErrorString(rc));             \
-      throw std::runtime_error("fatal cuda error");                     \
+      OWL_RAISE("fatal cuda error");                                    \
     }                                                                   \
   }
 
@@ -43,7 +43,7 @@
       fprintf(stderr,                                                   \
               "CUDA call (%s) failed with code %d (line %d): %s\n",     \
               #call, rc, __LINE__, cudaGetErrorString(rc));             \
-      throw std::runtime_error("fatal cuda error");                     \
+      OWL_RAISE("fatal cuda error");                                    \
     }                                                                   \
   }
 
@@ -54,7 +54,7 @@
     if (rc != cudaSuccess) {                                    \
       fprintf(stderr, "error (%s: line %d): %s\n",              \
               __FILE__, __LINE__, cudaGetErrorString(rc));      \
-      throw std::runtime_error("fatal cuda error");             \
+      OWL_RAISE("fatal cuda error");                            \
     }                                                           \
   }
 
