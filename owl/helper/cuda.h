@@ -84,7 +84,7 @@
       fprintf(stderr,                                                   \
               "CUDA call (%s) failed with code %d (line %d): %s\n",     \
               #call, rc, __LINE__, cudaGetErrorString(rc));             \
-      throw std::runtime_error("fatal cuda error");                     \
+      exit(2);                                                          \
     }                                                                   \
   }
 
