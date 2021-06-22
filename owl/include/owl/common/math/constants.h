@@ -200,6 +200,24 @@ namespace owl {
     template<> inline __both__ int32_t open_range_upper<int32_t>() 
     { return int32_t(INT_MAX); }
 
+    template<> inline __both__ uint64_t empty_bounds_lower<uint64_t>() 
+    { return uint64_t(ULONG_MAX); }
+    template<> inline __both__ uint64_t empty_bounds_upper<uint64_t>() 
+    { return uint64_t(0); }
+    template<> inline __both__ uint64_t open_range_lower<uint64_t>() 
+    { return uint64_t(0); }
+    template<> inline __both__ uint64_t open_range_upper<uint64_t>() 
+    { return uint64_t(ULONG_MAX); }
+
+    template<> inline __both__ int64_t empty_bounds_lower<int64_t>() 
+    { return int64_t(LONG_MAX); }
+    template<> inline __both__ int64_t empty_bounds_upper<int64_t>() 
+    { return int64_t(LONG_MIN); }
+    template<> inline __both__ int64_t open_range_lower<int64_t>() 
+    { return int64_t(LONG_MIN); }
+    template<> inline __both__ int64_t open_range_upper<int64_t>() 
+    { return int64_t(LONG_MAX); }
+
 
     template<> inline __both__ uint16_t empty_bounds_lower<uint16_t>() 
     { return uint16_t(USHRT_MAX); }

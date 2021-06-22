@@ -271,6 +271,11 @@ typedef struct _OWLVarDecl {
   uint32_t    offset;
 } OWLVarDecl;
 
+typedef struct _OWLBoundValueDecl {
+  OWLVarDecl var;
+  void *boundValuePtr;
+} OWLBoundValueDecl;
+
 
 /*! supported formats for texels in textures */
 typedef enum {
@@ -374,6 +379,17 @@ owlEnableMotionBlur(OWLContext _context);
 OWL_API void
 owlContextSetRayTypeCount(OWLContext context,
                           size_t numRayTypes);
+
+/*! tells OptiX to specialize the values of certain launch parameters
+  when compiling modules, and ignore their values at launch.
+  See section 6.3.1 of the OptiX 7.2 programming guide.
+  This call is a no-op for OptiX versions < 7.2, and programs should not 
+  rely on it for correct behavior.
+  OWL stores a copy of the array internally. */
+OWL_API void
+owlContextSetBoundLaunchParamValues(OWLContext context,
+                                    const OWLBoundValueDecl *boundValues,
+                                    int numBoundValues);
 
 /*! sets maximum instancing depth for the given context:
 
@@ -646,6 +662,9 @@ owlGroupGetTraversable(OWLGroup group, int deviceID);
 
 OWL_API void 
 owlBufferResize(OWLBuffer buffer, size_t newItemCount);
+
+OWL_API size_t
+owlBufferSizeInBytes(OWLBuffer buffer);
 
 /*! destroy the given buffer; this will both release the app's
   refcount on the given buffer handle, *and* the buffer itself; ie,

@@ -191,6 +191,15 @@ namespace owl {
     // compacted size in
     // ------------------------------------------------------------------
       
+    const size_t tempSize
+        = FULL_REBUILD
+        ? blasBufferSizes.tempSizeInBytes
+        : blasBufferSizes.tempUpdateSizeInBytes;
+    LOG("starting to build/refit "
+        << prettyNumber(userGeomInputs.size()) << " user geoms, "
+        << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
+        << prettyNumber(tempSize) << "B in temp data");
+
     // temp memory:
     DeviceMemory tempBuffer;
     tempBuffer.alloc
