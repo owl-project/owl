@@ -95,6 +95,13 @@ using namespace owl;
   }
 
   OWL_API void
+  owlContextSetNumAttributeValues(OWLContext _context, size_t numAttributeValues)
+  {
+    LOG_API_CALL();
+    checkGet(_context)->setNumAttributeValues(numAttributeValues);
+  }
+
+  OWL_API void
   owlContextSetBoundLaunchParamValues(OWLContext _context,
                                       const OWLBoundValueDecl *_boundValues,
                                       int numBoundValues)
@@ -145,7 +152,7 @@ using namespace owl;
     LOG_API_CALL();
     checkGet(_context)->setMaxInstancingDepth(maxInstanceDepth);
   }
-  
+
 
   OWL_API void
   owlEnableMotionBlur(OWLContext _context)

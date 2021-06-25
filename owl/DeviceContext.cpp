@@ -298,7 +298,7 @@ namespace owl {
     }
     pipelineCompileOptions.usesMotionBlur     = parent->motionBlurEnabled;
     pipelineCompileOptions.numPayloadValues   = 2;
-    pipelineCompileOptions.numAttributeValues = 2;
+    pipelineCompileOptions.numAttributeValues = parent->numAttributeValues;
     pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
     pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
     

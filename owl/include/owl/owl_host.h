@@ -380,6 +380,12 @@ OWL_API void
 owlContextSetRayTypeCount(OWLContext context,
                           size_t numRayTypes);
 
+/* Set number of attributes for passing data from custom Intersection programs
+   to ClosestHit programs.  Default 2.  Has no effect once programs are built.*/
+OWL_API void
+owlContextSetNumAttributeValues(OWLContext context,
+                                size_t numAttributeValues);
+
 /*! tells OptiX to specialize the values of certain launch parameters
   when compiling modules, and ignore their values at launch.
   See section 6.3.1 of the OptiX 7.2 programming guide.
@@ -416,7 +422,7 @@ owlContextSetBoundLaunchParamValues(OWLContext context,
 OWL_API void
 owlSetMaxInstancingDepth(OWLContext context,
                          int32_t maxInstanceDepth);
-  
+
 
 OWL_API void
 owlContextDestroy(OWLContext context);

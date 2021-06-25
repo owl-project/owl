@@ -95,6 +95,10 @@ namespace owl {
       instances) */
     void setMaxInstancingDepth(int32_t maxInstanceDepth);
 
+    /* Set number of attributes for passing data from custom Intersection programs
+       to ClosestHit programs.  Default 2.  Has no effect once programs are built.*/
+    void setNumAttributeValues(size_t numAttributeValues);
+
 
     // ------------------------------------------------------------------
     // internal mechanichs/plumbling that do the actual work
@@ -272,6 +276,9 @@ namespace owl {
     /*! by default motion blur is off, as it costs performacne - set
       via enableMotimBlur() */
     bool motionBlurEnabled = false;
+
+    /* Number of attributes for writing data between Intersection and ClosestHit */
+    int numAttributeValues = 2;
 
     /*! a set of dummy (ie, empty) launch params. allows us for always
       using the same launch code, *with* launch params, even if th
