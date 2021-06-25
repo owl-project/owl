@@ -62,10 +62,10 @@ namespace owl {
       const std::string objectTypeID = typeid(*object.get()).name();
 	
       const std::string tTypeID = typeid(T).name();
-      throw std::runtime_error("could not convert APIHandle of type "
-                               + objectTypeID
-                               + " to object of type "
-                               + tTypeID);
+      OWL_RAISE("could not convert APIHandle of type "
+                + objectTypeID
+                + " to object of type "
+                + tTypeID);
     }
     assert(asT);
     return asT;

@@ -117,7 +117,7 @@ namespace owl {
     int totalNumDevicesAvailable = 0;
     CUDA_CALL(GetDeviceCount(&totalNumDevicesAvailable));
     if (totalNumDevicesAvailable == 0)
-      throw std::runtime_error("#owl: no CUDA capable devices found!");
+      OWL_RAISE("#owl: no CUDA capable devices found!");
     LOG_OK("found " << totalNumDevicesAvailable << " CUDA device(s)");
 
 
@@ -182,7 +182,7 @@ namespace owl {
     // one device...
     // ------------------------------------------------------------------
     if (devices.empty())
-      throw std::runtime_error("fatal error - could not find/create any optix devices");
+      OWL_RAISE("fatal error - could not find/create any optix devices");
     
     LOG_OK("successfully created device group with " << devices.size() << " devices");
     return devices;
@@ -206,7 +206,7 @@ namespace owl {
     
     CUresult  cuRes = cuCtxGetCurrent(&cudaContext);
     if (cuRes != CUDA_SUCCESS) 
-      throw std::runtime_error("Error querying current CUDA context...");
+      OWL_RAISE("Error querying current CUDA context...");
     
     OPTIX_CHECK(optixDeviceContextCreate(cudaContext, 0, &optixContext));
     OPTIX_CHECK(optixDeviceContextSetLogCallback
@@ -316,7 +316,7 @@ namespace owl {
     
     auto &allPGs = allActivePrograms;
     if (allPGs.empty())
-      throw std::runtime_error("trying to create a pipeline w/ 0 programs!?");
+      OWL_RAISE("trying to create a pipeline w/ 0 programs!?");
     
     char log[2048];
     size_t sizeof_log = sizeof( log );
@@ -337,7 +337,7 @@ namespace owl {
        &maxAllowedByOptix,
        sizeof(maxAllowedByOptix));
     if (uint32_t(parent->maxInstancingDepth+1) > maxAllowedByOptix)
-      throw std::runtime_error
+      OWL_RAISE
         ("error when building pipeline: "
          "attempting to set max instancing depth to "
          "value that exceeds OptiX's MAX_TRAVERSABLE_GRAPH_DEPTH limit");
