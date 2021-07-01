@@ -145,6 +145,7 @@ namespace owl {
       OWL_RAISE(std::string(__PRETTY_FUNCTION__)
                 +": not yet implemented for type #"
                 +std::to_string((int)type));
+      return 0;
     }
   }
 
@@ -292,6 +293,7 @@ namespace owl {
         OWL_RAISE(std::string(__PRETTY_FUNCTION__)
                   +": not yet implemented for type #"
                   +std::to_string((int)type));
+      return "";
     }
   }
 

@@ -114,6 +114,7 @@ namespace owl {
       return std::make_shared<DeviceBuffer::DeviceDataForTextures>(this,device);
 
     OWL_RAISE("unsupported element type for device buffer");
+    return nullptr;
   }
   
   void DeviceBuffer::upload(const void *hostPtr, size_t offset, int64_t count)

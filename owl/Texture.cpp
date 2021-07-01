@@ -30,6 +30,7 @@ namespace owl {
       return sizeof(float);
     default:
       OWL_RAISE("texel format not implemented");
+      return 0;
     };
   }
   
