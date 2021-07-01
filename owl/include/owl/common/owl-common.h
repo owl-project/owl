@@ -146,7 +146,7 @@ inline void owlRaise_impl(std::string str)
   if (IsDebuggerPresent())
     DebugBreak();
   else
-    throw std::runtime_error(MSG);
+    throw std::runtime_error(str);
 #else
 #ifndef NDEBUG
   std::string bt = detail::backtrace();
