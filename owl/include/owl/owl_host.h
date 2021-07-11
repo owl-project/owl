@@ -67,9 +67,9 @@
 
 
 
-#define OWL_OFFSETOF(type,member)               \
-  ((char *)(&((struct type *)0)-> member )      \
-   -                                            \
+#define OWL_OFFSETOF(type,member)                       \
+   (uint32_t)((char *)(&((struct type *)0)-> member )   \
+   -                                                    \
    (char *)(((struct type *)0)))
   
   
