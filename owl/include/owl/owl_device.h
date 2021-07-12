@@ -26,7 +26,7 @@
 // actual device-side "API" built-ins.
 // ==================================================================
 
-#ifndef __CUDACC__
+#if !defined(__CUDACC__) && !defined(FAKE_OWL_VERSION)
 #  error "this file should only ever get included on the device side"
 #endif
 
@@ -225,7 +225,13 @@ namespace owl {
   extern "C" __global__ \
   void __miss__##programName
 
+#ifdef FAKE_OWL_VERSION
 
+#define OPTIX_BOUNDS_PROGRAM(programName) \
+  extern "C" __global__ \
+  void __boundsFunc__##programName
+
+#else
 
 /* defines the wrapper stuff to actually launch all the bounds
    programs from the host - todo: move to deviceAPI.h once working */
@@ -258,4 +264,5 @@ namespace owl {
   inline __device__ void __boundsFunc__##progName                       \
   /* program args and body supplied by user ... */
   
+ #endif
   

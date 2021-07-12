@@ -24,7 +24,7 @@
 
 /* since the device API contains CUDA types such as float4 etc we'll
    include this only for files compiles with nvcc */
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(FAKE_OWL_VERSION)
 # include "owl_device.h"
 #endif
 
