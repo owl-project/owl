@@ -20,12 +20,12 @@ cuda_compile_and_embed(ptxCode
   deviceCode.cu
   )
 
-add_executable(int06-rtow-mixedGeometries
+add_executable(int07-whitted
   hostCode.cpp
   ${ptxCode}
   )
 
-target_link_libraries(int06-rtow-mixedGeometries
+target_link_libraries(int07-whitted
   ${OWL_VIEWER_LIBRARIES}
   )
 

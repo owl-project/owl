@@ -1,4 +1,4 @@
-// ======================================================================== //
+   // ======================================================================== //
 // Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
@@ -39,25 +39,16 @@
 extern "C" char ptxCode[];
 
 const vec2i init_fbSize(1600,800);
-const vec3f init_lookFrom(13, 2, 3);
-const vec3f init_lookAt(0, 0, 0);
-const vec3f init_lookUp(0.f,1.f,0.f);
+const vec3f init_lookFrom(8.0f, 2.0f, -4.0f);
+const vec3f init_lookAt(4.0f, 2.3f, -4.0f);
+const vec3f init_lookUp(0.0f, 1.0f, 0.0f);
 const float init_fovy = 20.f;
 
 std::vector<DielectricSphere> dielectricSpheres;
 std::vector<LambertianSphere> lambertianSpheres;
 std::vector<MetalSphere>      metalSpheres;
 
-struct {
-  std::vector<vec3f> vertices;
-  std::vector<vec3i> indices;
-  std::vector<Dielectric> materials;
-} dielectricBoxes;
-struct {
-  std::vector<vec3f> vertices;
-  std::vector<vec3i> indices;
-  std::vector<Metal> materials;
-} metalBoxes;
+
 struct {
   std::vector<vec3f> vertices;
   std::vector<vec3i> indices;
@@ -73,19 +64,14 @@ inline float rnd()
 
 inline vec3f rnd3f() { return vec3f(rnd(),rnd(),rnd()); }
 
-inline vec3f randomPointInUnitSphere()
-{
-  vec3f p;
-  do {
-    p = 2.f*vec3f(rnd(),rnd(),rnd()) - vec3f(1.f);
-  } while (dot(p,p) >= 1.f);
-  return p;
-}
+
 
 template<typename BoxArray, typename Material>
-void addRandomBox(BoxArray &boxes,
+void addBox(BoxArray &boxes,
                   const vec3f &center,
-                  const float size,
+                  const vec3f size,
+                  const vec3f axis, 
+                  const float angle,
                   const Material &material)
 {
   const int NUM_VERTICES = 8;
@@ -101,7 +87,7 @@ void addRandomBox(BoxArray &boxes,
       {-1.f, -1.f, +1.f},
     };
 
-  const int NUM_INDICES = 12;
+  const int NUM_INDICES = 12; 
   static const vec3i unitBoxIndices[NUM_INDICES] =
     {
       {0, 2, 1}, //face front
@@ -118,15 +104,17 @@ void addRandomBox(BoxArray &boxes,
       {0, 1, 6}
     };
 
-  const vec3f U = normalize(randomPointInUnitSphere());
-  owl::affine3f xfm = owl::frame(U);
-  xfm = owl::affine3f(owl::linear3f::rotate(U,rnd())) * xfm;
-  xfm = owl::affine3f(owl::linear3f::scale(.7f*size)) * xfm;
+ 
+  owl::affine3f xfm;
+
+  xfm = owl::affine3f(owl::linear3f::scale(size)) * xfm;
+  xfm = owl::affine3f(owl::linear3f::rotate(axis, angle)) * xfm;
+
   xfm = owl::affine3f(owl::affine3f::translate(center)) * xfm;
-  
+
   const int startIndex = (int)boxes.vertices.size();
   for (int i=0;i<NUM_VERTICES;i++)
-    boxes.vertices.push_back(owl::xfmPoint(xfm,unitBoxVertices[i]));
+    boxes.vertices.push_back(owl::xfmPoint(xfm, unitBoxVertices[i]));
   for (int i=0;i<NUM_INDICES;i++)
     boxes.indices.push_back(unitBoxIndices[i]+vec3i(startIndex));
   boxes.materials.push_back(material);
@@ -134,48 +122,20 @@ void addRandomBox(BoxArray &boxes,
 
 void createScene()
 {
-  lambertianSpheres.push_back({Sphere{vec3f(0.f, -1000.0f, -1.f), 1000.f},
-        Lambertian{vec3f(0.5f, 0.5f, 0.5f)}});
-  
-  for (int a = -11; a < 11; a++) {
-    for (int b = -11; b < 11; b++) {
-      float choose_mat = rnd();
-      float choose_shape = rnd();
-      vec3f center(a + rnd(), 0.2f, b + rnd());
-      if (choose_mat < 0.8f) {
-        if (choose_shape > .5f) {
-          addRandomBox(lambertianBoxes,center,.2f,
-                       Lambertian{rnd3f()*rnd3f()});
-        } else
-          lambertianSpheres.push_back({Sphere{center, 0.2f},
-                Lambertian{rnd3f()*rnd3f()}});
-      } else if (choose_mat < 0.95f) {
-        if (choose_shape > .5f) {
-          addRandomBox(metalBoxes,center,.2f,
-                       Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()});
-        } else
-          metalSpheres.push_back({Sphere{center, 0.2f},
-                Metal{0.5f*(1.f+rnd3f()),0.5f*rnd()}});
-      } else {
-        if (choose_shape > .5f) {
-          addRandomBox(dielectricBoxes,center,.2f,
-                       Dielectric{1.5f});
-        } else
-          dielectricSpheres.push_back({Sphere{center, 0.2f},
-                Dielectric{1.5f}});
-      }
-    }
-  }
-  dielectricSpheres.push_back({Sphere{vec3f(0.f, 1.f, 0.f), 1.f},
-        Dielectric{1.5f}});
-  lambertianSpheres.push_back({Sphere{vec3f(-4.f,1.f, 0.f), 1.f},
-        Lambertian{vec3f(0.4f, 0.2f, 0.1f)}});
-  metalSpheres.push_back({Sphere{vec3f(4.f, 1.f, 0.f), 1.f},
+    addBox(lambertianBoxes, { 0.f, 0.f, 0.f }, { 5.f, 1.f, 5.f }, { 1.f, 0.f, 0.f }, { 3.14f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    //addBox(lambertianBoxes, { 3.f, 0.f, 0.f }, { 2.f, 1.f, 1.f }, { 1.f, 0.f, 0.f }, { 3.14f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+ 
+
+   dielectricSpheres.push_back({ Sphere{vec3f(0.f, 3.f, 0.f), 1.f},
+         Dielectric{1.5f} });
+ 
+
+  metalSpheres.push_back({Sphere{vec3f(0.f, 2.f, -3.f), 1.f},
         Metal{vec3f(0.7f, 0.6f, 0.5f), 0.0f}});
 }
   
-
-
 
 
 struct Viewer : public owl::viewer::OWLViewer
@@ -185,7 +145,7 @@ struct Viewer : public owl::viewer::OWLViewer
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
   
-      /*! window notifies us that we got resized. We HAVE to override
+      /*! window notifies us that we got resized. We HAVE to override  
           this to know our actual render dimensions, and get pointer
           to the device frame buffer that the viewer cated for us */     
   void resize(const vec2i &newSize) override;
@@ -305,33 +265,18 @@ Viewer::Viewer()
     { /* sentinel to mark end of list */ }
   };
   OWLGeomType dielectricSpheresGeomType
-    = owlGeomTypeCreate(context,
-                        OWL_GEOMETRY_USER,
-                        sizeof(DielectricSpheresGeom),
-                        dielectricSpheresGeomVars,-1);
-  owlGeomTypeSetClosestHit(dielectricSpheresGeomType,0,
-                           module,"DielectricSpheres");
-  owlGeomTypeSetIntersectProg(dielectricSpheresGeomType,0,
-                              module,"DielectricSpheres");
+      = owlGeomTypeCreate(context,
+          OWL_GEOMETRY_USER,
+          sizeof(DielectricSpheresGeom),
+          dielectricSpheresGeomVars, -1);
+  owlGeomTypeSetClosestHit(dielectricSpheresGeomType, 0,
+      module, "DielectricSpheres");
+  owlGeomTypeSetIntersectProg(dielectricSpheresGeomType, 0,
+      module, "DielectricSpheres");
   owlGeomTypeSetBoundsProg(dielectricSpheresGeomType,
-                           module,"DielectricSpheres");
+      module, "DielectricSpheres");
 
-  // ----------- lambertian -----------
-  OWLVarDecl lambertianSpheresGeomVars[] = {
-    { "prims",  OWL_BUFPTR, OWL_OFFSETOF(LambertianSpheresGeom,prims)},
-    { /* sentinel to mark end of list */ }
-  };
-  OWLGeomType lambertianSpheresGeomType
-    = owlGeomTypeCreate(context,
-                        OWL_GEOMETRY_USER,
-                        sizeof(LambertianSpheresGeom),
-                        lambertianSpheresGeomVars,-1);
-  owlGeomTypeSetClosestHit(lambertianSpheresGeomType,0,
-                           module,"LambertianSpheres");
-  owlGeomTypeSetIntersectProg(lambertianSpheresGeomType,0,
-                              module,"LambertianSpheres");
-  owlGeomTypeSetBoundsProg(lambertianSpheresGeomType,
-                           module,"LambertianSpheres");
+
 
 
 
@@ -339,35 +284,9 @@ Viewer::Viewer()
   // declare *boxes* geometry type(s)
   // -------------------------------------------------------
 
-  // ----------- metal -----------
-  OWLVarDecl metalBoxesGeomVars[] = {
-    { "perBoxMaterial", OWL_BUFPTR, OWL_OFFSETOF(MetalBoxesGeom,perBoxMaterial)},
-    { "vertex",         OWL_BUFPTR, OWL_OFFSETOF(MetalBoxesGeom,vertex)},
-    { "index",          OWL_BUFPTR, OWL_OFFSETOF(MetalBoxesGeom,index)},
-    { /* sentinel to mark end of list */ }
-  };
-  OWLGeomType metalBoxesGeomType
-    = owlGeomTypeCreate(context,
-                        OWL_GEOMETRY_TRIANGLES,
-                        sizeof(MetalBoxesGeom),
-                        metalBoxesGeomVars,-1);
-  owlGeomTypeSetClosestHit(metalBoxesGeomType,0,
-                           module,"MetalBoxes");
 
-  // ----------- dielectric -----------
-  OWLVarDecl dielectricBoxesGeomVars[] = {
-    { "perBoxMaterial", OWL_BUFPTR, OWL_OFFSETOF(DielectricBoxesGeom,perBoxMaterial)},
-    { "vertex",         OWL_BUFPTR, OWL_OFFSETOF(DielectricBoxesGeom,vertex)},
-    { "index",          OWL_BUFPTR, OWL_OFFSETOF(DielectricBoxesGeom,index)},
-    { /* sentinel to mark end of list */ }
-  };
-  OWLGeomType dielectricBoxesGeomType
-    = owlGeomTypeCreate(context,
-                        OWL_GEOMETRY_TRIANGLES,
-                        sizeof(DielectricBoxesGeom),
-                        dielectricBoxesGeomVars,-1);
-  owlGeomTypeSetClosestHit(dielectricBoxesGeomType,0,
-                           module,"DielectricBoxes");
+
+
 
   // ----------- lambertian -----------
   OWLVarDecl lambertianBoxesGeomVars[] = {
@@ -414,53 +333,20 @@ Viewer::Viewer()
   owlGeomSetPrimCount(metalSpheresGeom,metalSpheres.size());
   owlGeomSetBuffer(metalSpheresGeom,"prims",metalSpheresBuffer);
 
-  // ----------- lambertian -----------
-  OWLBuffer lambertianSpheresBuffer
-    = owlDeviceBufferCreate(context,OWL_USER_TYPE(lambertianSpheres[0]),
-                            lambertianSpheres.size(),lambertianSpheres.data());
-  OWLGeom lambertianSpheresGeom
-    = owlGeomCreate(context,lambertianSpheresGeomType);
-  owlGeomSetPrimCount(lambertianSpheresGeom,lambertianSpheres.size());
-  owlGeomSetBuffer(lambertianSpheresGeom,"prims",lambertianSpheresBuffer);
 
   // ----------- dielectric -----------
   OWLBuffer dielectricSpheresBuffer
-    = owlDeviceBufferCreate(context,OWL_USER_TYPE(dielectricSpheres[0]),
-                            dielectricSpheres.size(),dielectricSpheres.data());
+      = owlDeviceBufferCreate(context, OWL_USER_TYPE(dielectricSpheres[0]),
+          dielectricSpheres.size(), dielectricSpheres.data());
   OWLGeom dielectricSpheresGeom
-    = owlGeomCreate(context,dielectricSpheresGeomType);
-  owlGeomSetPrimCount(dielectricSpheresGeom,dielectricSpheres.size());
-  owlGeomSetBuffer(dielectricSpheresGeom,"prims",dielectricSpheresBuffer);
-
+      = owlGeomCreate(context, dielectricSpheresGeomType);
+  owlGeomSetPrimCount(dielectricSpheresGeom, dielectricSpheres.size());
+  owlGeomSetBuffer(dielectricSpheresGeom, "prims", dielectricSpheresBuffer);
 
 
   // ====================== BOXES ======================
   
-  // ----------- metal -----------
-  OWLBuffer metalMaterialsBuffer
-    = owlDeviceBufferCreate(context,OWL_USER_TYPE(metalBoxes.materials[0]),
-                            metalBoxes.materials.size(),
-                            metalBoxes.materials.data());
-  OWLBuffer metalVerticesBuffer
-    = owlDeviceBufferCreate(context,OWL_FLOAT3,
-                            metalBoxes.vertices.size(),
-                            metalBoxes.vertices.data());
-  OWLBuffer metalIndicesBuffer
-    = owlDeviceBufferCreate(context,OWL_INT3,
-                            metalBoxes.indices.size(),
-                            metalBoxes.indices.data());
-  OWLGeom metalBoxesGeom
-    = owlGeomCreate(context,metalBoxesGeomType);
-  owlTrianglesSetVertices(metalBoxesGeom,metalVerticesBuffer,
-                          metalBoxes.vertices.size(),
-                          sizeof(metalBoxes.vertices[0]),0);
-  owlTrianglesSetIndices(metalBoxesGeom,metalIndicesBuffer,
-                         metalBoxes.indices.size(),
-                         sizeof(metalBoxes.indices[0]),0);
-  owlGeomSetBuffer(metalBoxesGeom,"perBoxMaterial",metalMaterialsBuffer);
-  owlGeomSetBuffer(metalBoxesGeom,"vertex",metalVerticesBuffer);
-  owlGeomSetBuffer(metalBoxesGeom,"index",metalIndicesBuffer);
-  
+
   // ----------- lambertian -----------
   OWLBuffer lambertianMaterialsBuffer
     = owlDeviceBufferCreate(context,OWL_USER_TYPE(lambertianBoxes.materials[0]),
@@ -486,30 +372,7 @@ Viewer::Viewer()
   owlGeomSetBuffer(lambertianBoxesGeom,"vertex",lambertianVerticesBuffer);
   owlGeomSetBuffer(lambertianBoxesGeom,"index",lambertianIndicesBuffer);
   
-  // ----------- dielectric -----------
-  OWLBuffer dielectricMaterialsBuffer
-    = owlDeviceBufferCreate(context,OWL_USER_TYPE(dielectricBoxes.materials[0]),
-                            dielectricBoxes.materials.size(),
-                            dielectricBoxes.materials.data());
-  OWLBuffer dielectricVerticesBuffer
-    = owlDeviceBufferCreate(context,OWL_FLOAT3,
-                            dielectricBoxes.vertices.size(),
-                            dielectricBoxes.vertices.data());
-  OWLBuffer dielectricIndicesBuffer
-    = owlDeviceBufferCreate(context,OWL_INT3,
-                            dielectricBoxes.indices.size(),
-                            dielectricBoxes.indices.data());
-  OWLGeom dielectricBoxesGeom
-    = owlGeomCreate(context,dielectricBoxesGeomType);
-  owlTrianglesSetVertices(dielectricBoxesGeom,dielectricVerticesBuffer,
-                          dielectricBoxes.vertices.size(),
-                          sizeof(dielectricBoxes.vertices[0]),0);
-  owlTrianglesSetIndices(dielectricBoxesGeom,dielectricIndicesBuffer,
-                         dielectricBoxes.indices.size(),
-                         sizeof(dielectricBoxes.indices[0]),0);
-  owlGeomSetBuffer(dielectricBoxesGeom,"perBoxMaterial",dielectricMaterialsBuffer);
-  owlGeomSetBuffer(dielectricBoxesGeom,"vertex",dielectricVerticesBuffer);
-  owlGeomSetBuffer(dielectricBoxesGeom,"index",dielectricIndicesBuffer);
+
   
   // ##################################################################
   // set up all *ACCELS* we need to trace into those groups
@@ -519,12 +382,12 @@ Viewer::Viewer()
   /* (note these are user geoms, so have to be in another group than the triangle
      meshes) */
   OWLGeom  userGeoms[] = {
-    lambertianSpheresGeom,
     metalSpheresGeom,
-    dielectricSpheresGeom
+     dielectricSpheresGeom
+    
   };
   OWLGroup userGeomGroup
-    = owlUserGeomGroupCreate(context,3,userGeoms);
+    = owlUserGeomGroupCreate(context,2,userGeoms);
   owlGroupBuildAccel(userGeomGroup);
 
   // ----------- one group for the boxes -----------
@@ -532,11 +395,10 @@ Viewer::Viewer()
      than the sphere geoms) */
   OWLGeom  triangleGeoms[] = {
     lambertianBoxesGeom,
-    metalBoxesGeom,
-    dielectricBoxesGeom
+
   };
   OWLGroup triangleGeomGroup
-    = owlTrianglesGeomGroupCreate(context,3,triangleGeoms);
+    = owlTrianglesGeomGroupCreate(context,1,triangleGeoms);
   owlGroupBuildAccel(triangleGeomGroup);
 
   // ----------- one final group with one instance each -----------
