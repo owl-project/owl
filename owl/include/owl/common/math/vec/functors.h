@@ -341,16 +341,28 @@ namespace owl {
 
     // less, for std::set, std::map, etc
     template<typename T>
+    __both__ bool operator<(const vec_t<T,2> &a, const vec_t<T,2> &b)
+    {
+      if (a.x < b.x) return true;
+      if (a.x == b.x && a.y < b.y) return true;
+      return false;
+    }
+    template<typename T>
     __both__ bool operator<(const vec_t<T,3> &a, const vec_t<T,3> &b)
     {
       if (a.x < b.x) return true;
       if (a.x == b.x && a.y < b.y) return true;
       if (a.x == b.x && a.y == b.y && a.z < b.z) return true;
       return false;
-      // return
-      //   (a.x < b.x) |
-      //   ((a.x == b.x) & ((a.y < b.y) |
-      //                    ((a.y == b.y) & (a.z < b.z))));
+    }
+    template<typename T>
+    __both__ bool operator<(const vec_t<T,4> &a, const vec_t<T,4> &b)
+    {
+      if (a.x < b.x) return true;
+      if (a.x == b.x && a.y < b.y) return true;
+      if (a.x == b.x && a.y == b.y && a.z < b.z) return true;
+      if (a.x == b.x && a.y == b.y && a.z == b.z && a.w < b.w) return true;
+      return false;
     }
 
     /*! helper function that creates a semi-random color from an ID */
