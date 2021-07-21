@@ -122,9 +122,199 @@ void addBox(BoxArray &boxes,
 
 void createScene()
 {
-    addBox(lambertianBoxes, { 0.f, 0.f, 0.f }, { 5.f, 1.f, 5.f }, { 1.f, 0.f, 0.f }, { 3.14f }, Lambertian{ {1.f, 0.f, 0.f} });
+    addBox(lambertianBoxes, { 0.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
 
-    //addBox(lambertianBoxes, { 3.f, 0.f, 0.f }, { 2.f, 1.f, 1.f }, { 1.f, 0.f, 0.f }, { 3.14f }, Lambertian{ {1.f, 1.f, 0.f} });
+    addBox(lambertianBoxes, { 2.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });  
+
+    addBox(lambertianBoxes, { 4.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 6.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 8.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 10.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 12.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 14.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 16.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 18.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+    
+    addBox(lambertianBoxes, { 20.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 22.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 24.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 26.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    
+    
+    addBox(lambertianBoxes, { 0.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 2.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 4.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 6.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 8.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 10.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 12.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 14.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 16.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 18.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 20.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 22.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 24.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 26.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+
+
+
+    addBox(lambertianBoxes, { 0.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 2.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 4.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 6.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 8.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 10.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 12.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 14.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 16.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 18.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 20.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+   
+    addBox(lambertianBoxes, { 22.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 24.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+    
+    addBox(lambertianBoxes, { 26.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+
+
+
+
+
+
+
+
+    addBox(lambertianBoxes, { 0.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 2.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 4.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 6.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 8.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 10.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 12.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 14.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 16.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+   
+    addBox(lambertianBoxes, { 18.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 20.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+    
+    addBox(lambertianBoxes, { 22.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 24.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+    
+    addBox(lambertianBoxes, { 26.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+  
+
+
+
+
+    addBox(lambertianBoxes, { 0.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 2.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 4.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 6.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 8.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 10.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 12.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 14.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 16.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+    
+    addBox(lambertianBoxes, { 18.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 20.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 22.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 24.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 26.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+
+
+    addBox(lambertianBoxes, { 0.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 2.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 4.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 6.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 8.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 10.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 12.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 14.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 16.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 18.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 20.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 22.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+    addBox(lambertianBoxes, { 24.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+
+    addBox(lambertianBoxes, { 26.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+
+
+
+
+
+
 
  
 
