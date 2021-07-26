@@ -1,4 +1,4 @@
-   // ======================================================================== //
+// ======================================================================== //
 // Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
@@ -38,7 +38,7 @@
 
 extern "C" char ptxCode[];
 
-const vec2i init_fbSize(1600,800);
+const vec2i init_fbSize(1600, 800);
 const vec3f init_lookFrom(8.0f, 2.0f, -4.0f);
 const vec3f init_lookAt(4.0f, 2.3f, -4.0f);
 const vec3f init_lookUp(0.0f, 1.0f, 0.0f);
@@ -50,32 +50,32 @@ std::vector<MetalSphere>      metalSpheres;
 
 
 struct {
-  std::vector<vec3f> vertices;
-  std::vector<vec3i> indices;
-  std::vector<Lambertian> materials;
+    std::vector<vec3f> vertices;
+    std::vector<vec3i> indices;
+    std::vector<Lambertian> materials;
 } lambertianBoxes;
 
 inline float rnd()
 {
-  static std::mt19937 gen(0); //Standard mersenne_twister_engine seeded with rd()
-  static std::uniform_real_distribution<float> dis(0.f, 1.f);
-  return dis(gen);
+    static std::mt19937 gen(0); //Standard mersenne_twister_engine seeded with rd()
+    static std::uniform_real_distribution<float> dis(0.f, 1.f);
+    return dis(gen);
 }
 
-inline vec3f rnd3f() { return vec3f(rnd(),rnd(),rnd()); }
+inline vec3f rnd3f() { return vec3f(rnd(), rnd(), rnd()); }
 
 
 
 template<typename BoxArray, typename Material>
-void addBox(BoxArray &boxes,
-                  const vec3f &center,
-                  const vec3f size,
-                  const vec3f axis, 
-                  const float angle,
-                  const Material &material)
+void addBox(BoxArray& boxes,
+    const vec3f& center,
+    const vec3f size,
+    const vec3f axis,
+    const float angle,
+    const Material& material)
 {
-  const int NUM_VERTICES = 8;
-  static const vec3f unitBoxVertices[NUM_VERTICES] =
+    const int NUM_VERTICES = 8;
+    static const vec3f unitBoxVertices[NUM_VERTICES] =
     {
       {-1.f, -1.f, -1.f},
       {+1.f, -1.f, -1.f},
@@ -87,8 +87,8 @@ void addBox(BoxArray &boxes,
       {-1.f, -1.f, +1.f},
     };
 
-  const int NUM_INDICES = 12; 
-  static const vec3i unitBoxIndices[NUM_INDICES] =
+    const int NUM_INDICES = 12;
+    static const vec3i unitBoxIndices[NUM_INDICES] =
     {
       {0, 2, 1}, //face front
       {0, 3, 2},
@@ -104,582 +104,401 @@ void addBox(BoxArray &boxes,
       {0, 1, 6}
     };
 
- 
-  owl::affine3f xfm;
 
-  xfm = owl::affine3f(owl::linear3f::scale(size)) * xfm;
-  xfm = owl::affine3f(owl::linear3f::rotate(axis, angle)) * xfm;
+    owl::affine3f xfm;
 
-  xfm = owl::affine3f(owl::affine3f::translate(center)) * xfm;
+    xfm = owl::affine3f(owl::linear3f::scale(size)) * xfm;
+    xfm = owl::affine3f(owl::linear3f::rotate(axis, angle)) * xfm;
 
-  const int startIndex = (int)boxes.vertices.size();
-  for (int i=0;i<NUM_VERTICES;i++)
-    boxes.vertices.push_back(owl::xfmPoint(xfm, unitBoxVertices[i]));
-  for (int i=0;i<NUM_INDICES;i++)
-    boxes.indices.push_back(unitBoxIndices[i]+vec3i(startIndex));
-  boxes.materials.push_back(material);
+    xfm = owl::affine3f(owl::affine3f::translate(center)) * xfm;
+
+    const int startIndex = (int)boxes.vertices.size();
+    for (int i = 0; i < NUM_VERTICES; i++)
+        boxes.vertices.push_back(owl::xfmPoint(xfm, unitBoxVertices[i]));
+    for (int i = 0; i < NUM_INDICES; i++)
+        boxes.indices.push_back(unitBoxIndices[i] + vec3i(startIndex));
+    boxes.materials.push_back(material);
 }
 
 void createScene()
 {
-    addBox(lambertianBoxes, { 0.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
 
-    addBox(lambertianBoxes, { 2.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });  
 
-    addBox(lambertianBoxes, { 4.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
 
-    addBox(lambertianBoxes, { 6.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
+    for (int i = 0; i < 13; i++) {
+        for (int j = 0; j < 13; j++) {
+            bool odd =  ((i + j) % 2) == 1;
+            vec3f color = (odd) ? vec3f(1.f, 0.f, 0.f) : vec3f(1.f, 1.f, 0.f); // <- use this instead
 
-    addBox(lambertianBoxes, { 8.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+            float x = j * 2;
+            float z = i * 2 - 13; // note, you might need to change 13 here to something else
+            addBox(lambertianBoxes, { x, 0.f, z }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ color });
+        }
+    }
 
-    addBox(lambertianBoxes, { 10.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
 
-    addBox(lambertianBoxes, { 12.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
+    dielectricSpheres.push_back({ Sphere{vec3f(0.f, 3.f, 0.f), 1.f},
+          Dielectric{1.5f} });
 
-    addBox(lambertianBoxes, { 14.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
 
-    addBox(lambertianBoxes, { 16.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 18.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-    
-    addBox(lambertianBoxes, { 20.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 22.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 24.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 26.f, 0.f, 0.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    
-    
-    addBox(lambertianBoxes, { 0.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 2.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 4.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 6.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 8.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 10.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 12.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 14.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 16.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 18.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 20.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 22.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 24.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 26.f, 0.f, -2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-
-
-
-    addBox(lambertianBoxes, { 0.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 2.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 4.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 6.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 8.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 10.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 12.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 14.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 16.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 18.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 20.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-   
-    addBox(lambertianBoxes, { 22.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 24.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-    
-    addBox(lambertianBoxes, { 26.f, 0.f, -4.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-
-
-
-
-
-
-
-
-    addBox(lambertianBoxes, { 0.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 2.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 4.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 6.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 8.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 10.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 12.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 14.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 16.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-   
-    addBox(lambertianBoxes, { 18.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 20.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-    
-    addBox(lambertianBoxes, { 22.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 24.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-    
-    addBox(lambertianBoxes, { 26.f, 0.f, -6.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-  
-
-
-
-
-    addBox(lambertianBoxes, { 0.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 2.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 4.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 6.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 8.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 10.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 12.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 14.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 16.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-    
-    addBox(lambertianBoxes, { 18.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 20.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 22.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 24.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 26.f, 0.f, -8.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-
-
-    addBox(lambertianBoxes, { 0.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 2.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 4.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 6.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 8.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 10.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 12.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 14.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 16.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 18.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 20.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 22.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-    addBox(lambertianBoxes, { 24.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 1.f, 0.f} });
-
-    addBox(lambertianBoxes, { 26.f, 0.f, 2.f }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ {1.f, 0.f, 0.f} });
-
-
-
-
-
-
-
- 
-
-   dielectricSpheres.push_back({ Sphere{vec3f(0.f, 3.f, 0.f), 1.f},
-         Dielectric{1.5f} });
- 
-
-  metalSpheres.push_back({Sphere{vec3f(0.f, 2.f, -3.f), 1.f},
-        Metal{vec3f(0.7f, 0.6f, 0.5f), 0.0f}});
+    metalSpheres.push_back({ Sphere{vec3f(0.f, 2.f, -3.f), 1.f},
+          Metal{vec3f(0.7f, 0.6f, 0.5f), 0.0f} });
 }
-  
+
 
 
 struct Viewer : public owl::viewer::OWLViewer
 {
-  Viewer();
-  
-  /*! gets called whenever the viewer needs us to re-render out widget */
-  void render() override;
-  
-      /*! window notifies us that we got resized. We HAVE to override  
-          this to know our actual render dimensions, and get pointer
-          to the device frame buffer that the viewer cated for us */     
-  void resize(const vec2i &newSize) override;
+    Viewer();
 
-  /*! this function gets called whenever any camera manipulator
-    updates the camera. gets called AFTER all values have been updated */
-  void cameraChanged() override;
-  
-  OWLRayGen  rayGen  { 0 };
-  OWLContext context { 0 };
-  OWLGroup   world   { 0 };
-  OWLBuffer  accumBuffer { 0 };
-  int        accumID     { 0 };
+    /*! gets called whenever the viewer needs us to re-render out widget */
+    void render() override;
+
+    /*! window notifies us that we got resized. We HAVE to override
+        this to know our actual render dimensions, and get pointer
+        to the device frame buffer that the viewer cated for us */
+    void resize(const vec2i& newSize) override;
+
+    /*! this function gets called whenever any camera manipulator
+      updates the camera. gets called AFTER all values have been updated */
+    void cameraChanged() override;
+
+    OWLRayGen  rayGen{ 0 };
+    OWLContext context{ 0 };
+    OWLGroup   world{ 0 };
+    OWLBuffer  accumBuffer{ 0 };
+    int        accumID{ 0 };
 };
 
 
 /*! window notifies us that the camera has changed */
 void Viewer::cameraChanged()
 {
-  const vec3f lookFrom = camera.getFrom();
-  const vec3f lookAt = camera.getAt();
-  const vec3f lookUp = camera.getUp();
-  const float cosFovy = camera.getCosFovy();
-  const float vfov = owl::viewer::toDegrees(acosf(cosFovy));
-  // ........... compute variable values  ..................
-  const vec3f vup = lookUp;
-  const float aspect = fbSize.x / float(fbSize.y);
-  const float theta = vfov * ((float)M_PI) / 180.0f;
-  const float half_height = tanf(theta / 2.0f);
-  const float half_width = aspect * half_height;
-  const float focusDist = 10.f;
-  const vec3f origin = lookFrom;
-  const vec3f w = normalize(lookFrom - lookAt);
-  const vec3f u = normalize(cross(vup, w));
-  const vec3f v = cross(w, u);
-  const vec3f lower_left_corner
-    = origin - half_width * focusDist*u - half_height * focusDist*v - focusDist * w;
-  const vec3f horizontal = 2.0f*half_width*focusDist*u;
-  const vec3f vertical = 2.0f*half_height*focusDist*v;
+    const vec3f lookFrom = camera.getFrom();
+    const vec3f lookAt = camera.getAt();
+    const vec3f lookUp = camera.getUp();
+    const float cosFovy = camera.getCosFovy();
+    const float vfov = owl::viewer::toDegrees(acosf(cosFovy));
+    // ........... compute variable values  ..................
+    const vec3f vup = lookUp;
+    const float aspect = fbSize.x / float(fbSize.y);
+    const float theta = vfov * ((float)M_PI) / 180.0f;
+    const float half_height = tanf(theta / 2.0f);
+    const float half_width = aspect * half_height;
+    const float focusDist = 10.f;
+    const vec3f origin = lookFrom;
+    const vec3f w = normalize(lookFrom - lookAt);
+    const vec3f u = normalize(cross(vup, w));
+    const vec3f v = cross(w, u);
+    const vec3f lower_left_corner
+        = origin - half_width * focusDist * u - half_height * focusDist * v - focusDist * w;
+    const vec3f horizontal = 2.0f * half_width * focusDist * u;
+    const vec3f vertical = 2.0f * half_height * focusDist * v;
 
-  accumID = 0;
-  
-  // ----------- set variables  ----------------------------
-  owlRayGenSetGroup (rayGen,"world",        world);
-  owlRayGenSet3f    (rayGen,"camera.org",   (const owl3f&)origin);
-  owlRayGenSet3f    (rayGen,"camera.llc",   (const owl3f&)lower_left_corner);
-  owlRayGenSet3f    (rayGen,"camera.horiz", (const owl3f&)horizontal);
-  owlRayGenSet3f    (rayGen,"camera.vert",  (const owl3f&)vertical);
+    accumID = 0;
+
+    // ----------- set variables  ----------------------------
+    owlRayGenSetGroup(rayGen, "world", world);
+    owlRayGenSet3f(rayGen, "camera.org", (const owl3f&)origin);
+    owlRayGenSet3f(rayGen, "camera.llc", (const owl3f&)lower_left_corner);
+    owlRayGenSet3f(rayGen, "camera.horiz", (const owl3f&)horizontal);
+    owlRayGenSet3f(rayGen, "camera.vert", (const owl3f&)vertical);
 }
 
 void Viewer::render()
 {
-  owlRayGenSet1i(rayGen,"accumID",accumID);
-  accumID++;
-  owlBuildSBT(context);
-  owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
+    owlRayGenSet1i(rayGen, "accumID", accumID);
+    accumID++;
+    owlBuildSBT(context);
+    owlRayGenLaunch2D(rayGen, fbSize.x, fbSize.y);
 }
 
 
-/*! window notifies us that we got resized */     
-void Viewer::resize(const vec2i &newSize)
+/*! window notifies us that we got resized */
+void Viewer::resize(const vec2i& newSize)
 {
-  OWLViewer::resize(newSize);
-  cameraChanged();
-  
-  if (accumBuffer)
-    owlBufferResize(accumBuffer,newSize.x*newSize.y*sizeof(float4));
-  else
-    accumBuffer = owlDeviceBufferCreate(context,OWL_FLOAT4,
-                                        newSize.x*newSize.y,nullptr);
-  
-  owlRayGenSetBuffer(rayGen,"accumBuffer",  accumBuffer);
-  owlRayGenSet1ul   (rayGen,"fbPtr",        (uint64_t)fbPointer);
-  owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
+    OWLViewer::resize(newSize);
+    cameraChanged();
+
+    if (accumBuffer)
+        owlBufferResize(accumBuffer, newSize.x * newSize.y * sizeof(float4));
+    else
+        accumBuffer = owlDeviceBufferCreate(context, OWL_FLOAT4,
+            newSize.x * newSize.y, nullptr);
+
+    owlRayGenSetBuffer(rayGen, "accumBuffer", accumBuffer);
+    owlRayGenSet1ul(rayGen, "fbPtr", (uint64_t)fbPointer);
+    owlRayGenSet2i(rayGen, "fbSize", (const owl2i&)fbSize);
 
 }
 
 Viewer::Viewer()
-  : OWLViewer("RTOW on OWL (mixed geometries)",
-              init_fbSize)
+    : OWLViewer("RTOW on OWL (mixed geometries)",
+        init_fbSize)
 {
-  // ##################################################################
-  // init owl
-  // ##################################################################
+    // ##################################################################
+    // init owl
+    // ##################################################################
 
-  context = owlContextCreate(nullptr,1);
-  OWLModule  module  = owlModuleCreate(context,ptxCode);
-  
-  // ##################################################################
-  // set up all the *GEOMETRY* graph we want to render
-  // ##################################################################
+    context = owlContextCreate(nullptr, 1);
+    OWLModule  module = owlModuleCreate(context, ptxCode);
 
-  // -------------------------------------------------------
-  // declare *sphere* geometry type(s)
-  // -------------------------------------------------------
+    // ##################################################################
+    // set up all the *GEOMETRY* graph we want to render
+    // ##################################################################
 
-  // ----------- metal -----------
-  OWLVarDecl metalSpheresGeomVars[] = {
-    { "prims",  OWL_BUFPTR, OWL_OFFSETOF(MetalSpheresGeom,prims)},
-    { /* sentinel to mark end of list */ }
-  };
-  OWLGeomType metalSpheresGeomType
-    = owlGeomTypeCreate(context,
-                        OWL_GEOMETRY_USER,
-                        sizeof(MetalSpheresGeom),
-                        metalSpheresGeomVars,-1);
-  owlGeomTypeSetClosestHit(metalSpheresGeomType,0,
-                           module,"MetalSpheres");
-  owlGeomTypeSetIntersectProg(metalSpheresGeomType,0,
-                              module,"MetalSpheres");
-  owlGeomTypeSetBoundsProg(metalSpheresGeomType,
-                           module,"MetalSpheres");
+    // -------------------------------------------------------
+    // declare *sphere* geometry type(s)
+    // -------------------------------------------------------
 
-  // ----------- dielectric -----------
-  OWLVarDecl dielectricSpheresGeomVars[] = {
-    { "prims",  OWL_BUFPTR, OWL_OFFSETOF(DielectricSpheresGeom,prims)},
-    { /* sentinel to mark end of list */ }
-  };
-  OWLGeomType dielectricSpheresGeomType
-      = owlGeomTypeCreate(context,
-          OWL_GEOMETRY_USER,
-          sizeof(DielectricSpheresGeom),
-          dielectricSpheresGeomVars, -1);
-  owlGeomTypeSetClosestHit(dielectricSpheresGeomType, 0,
-      module, "DielectricSpheres");
-  owlGeomTypeSetIntersectProg(dielectricSpheresGeomType, 0,
-      module, "DielectricSpheres");
-  owlGeomTypeSetBoundsProg(dielectricSpheresGeomType,
-      module, "DielectricSpheres");
+    // ----------- metal -----------
+    OWLVarDecl metalSpheresGeomVars[] = {
+      { "prims",  OWL_BUFPTR, OWL_OFFSETOF(MetalSpheresGeom,prims)},
+      { /* sentinel to mark end of list */ }
+    };
+    OWLGeomType metalSpheresGeomType
+        = owlGeomTypeCreate(context,
+            OWL_GEOMETRY_USER,
+            sizeof(MetalSpheresGeom),
+            metalSpheresGeomVars, -1);
+    owlGeomTypeSetClosestHit(metalSpheresGeomType, 0,
+        module, "MetalSpheres");
+    owlGeomTypeSetIntersectProg(metalSpheresGeomType, 0,
+        module, "MetalSpheres");
+    owlGeomTypeSetBoundsProg(metalSpheresGeomType,
+        module, "MetalSpheres");
 
-
-
-
-
-  // -------------------------------------------------------
-  // declare *boxes* geometry type(s)
-  // -------------------------------------------------------
+    // ----------- dielectric -----------
+    OWLVarDecl dielectricSpheresGeomVars[] = {
+      { "prims",  OWL_BUFPTR, OWL_OFFSETOF(DielectricSpheresGeom,prims)},
+      { /* sentinel to mark end of list */ }
+    };
+    OWLGeomType dielectricSpheresGeomType
+        = owlGeomTypeCreate(context,
+            OWL_GEOMETRY_USER,
+            sizeof(DielectricSpheresGeom),
+            dielectricSpheresGeomVars, -1);
+    owlGeomTypeSetClosestHit(dielectricSpheresGeomType, 0,
+        module, "DielectricSpheres");
+    owlGeomTypeSetIntersectProg(dielectricSpheresGeomType, 0,
+        module, "DielectricSpheres");
+    owlGeomTypeSetBoundsProg(dielectricSpheresGeomType,
+        module, "DielectricSpheres");
 
 
 
 
 
-  // ----------- lambertian -----------
-  OWLVarDecl lambertianBoxesGeomVars[] = {
-    { "perBoxMaterial", OWL_BUFPTR, OWL_OFFSETOF(LambertianBoxesGeom,perBoxMaterial)},
-    { "vertex",         OWL_BUFPTR, OWL_OFFSETOF(LambertianBoxesGeom,vertex)},
-    { "index",          OWL_BUFPTR, OWL_OFFSETOF(LambertianBoxesGeom,index)},
-    { /* sentinel to mark end of list */ }
-  };
-  OWLGeomType lambertianBoxesGeomType
-    = owlGeomTypeCreate(context,
-                        OWL_GEOMETRY_TRIANGLES,
-                        sizeof(LambertianBoxesGeom),
-                        lambertianBoxesGeomVars,-1);
-  owlGeomTypeSetClosestHit(lambertianBoxesGeomType,0,
-                           module,"LambertianBoxes");
-  
-
-  // -------------------------------------------------------
-  // make sure to do that *before* setting up the geometry, since the
-  // user geometry group will need the compiled bounds programs upon
-  // accelBuild()
-  // -------------------------------------------------------
-  owlBuildPrograms(context);
+    // -------------------------------------------------------
+    // declare *boxes* geometry type(s)
+    // -------------------------------------------------------
 
 
 
 
 
-
-  // ##################################################################
-  // set up all the *GEOMS* we want to run that code on
-  // ##################################################################
-
-  LOG("building geometries ...");
-
-  // ====================== SPHERES ======================
-  
-  // ----------- metal -----------
-  OWLBuffer metalSpheresBuffer
-    = owlDeviceBufferCreate(context,OWL_USER_TYPE(metalSpheres[0]),
-                            metalSpheres.size(),metalSpheres.data());
-  OWLGeom metalSpheresGeom
-    = owlGeomCreate(context,metalSpheresGeomType);
-  owlGeomSetPrimCount(metalSpheresGeom,metalSpheres.size());
-  owlGeomSetBuffer(metalSpheresGeom,"prims",metalSpheresBuffer);
+    // ----------- lambertian -----------
+    OWLVarDecl lambertianBoxesGeomVars[] = {
+      { "perBoxMaterial", OWL_BUFPTR, OWL_OFFSETOF(LambertianBoxesGeom,perBoxMaterial)},
+      { "vertex",         OWL_BUFPTR, OWL_OFFSETOF(LambertianBoxesGeom,vertex)},
+      { "index",          OWL_BUFPTR, OWL_OFFSETOF(LambertianBoxesGeom,index)},
+      { /* sentinel to mark end of list */ }
+    };
+    OWLGeomType lambertianBoxesGeomType
+        = owlGeomTypeCreate(context,
+            OWL_GEOMETRY_TRIANGLES,
+            sizeof(LambertianBoxesGeom),
+            lambertianBoxesGeomVars, -1);
+    owlGeomTypeSetClosestHit(lambertianBoxesGeomType, 0,
+        module, "LambertianBoxes");
 
 
-  // ----------- dielectric -----------
-  OWLBuffer dielectricSpheresBuffer
-      = owlDeviceBufferCreate(context, OWL_USER_TYPE(dielectricSpheres[0]),
-          dielectricSpheres.size(), dielectricSpheres.data());
-  OWLGeom dielectricSpheresGeom
-      = owlGeomCreate(context, dielectricSpheresGeomType);
-  owlGeomSetPrimCount(dielectricSpheresGeom, dielectricSpheres.size());
-  owlGeomSetBuffer(dielectricSpheresGeom, "prims", dielectricSpheresBuffer);
+    // -------------------------------------------------------
+    // make sure to do that *before* setting up the geometry, since the
+    // user geometry group will need the compiled bounds programs upon
+    // accelBuild()
+    // -------------------------------------------------------
+    owlBuildPrograms(context);
 
 
-  // ====================== BOXES ======================
-  
 
-  // ----------- lambertian -----------
-  OWLBuffer lambertianMaterialsBuffer
-    = owlDeviceBufferCreate(context,OWL_USER_TYPE(lambertianBoxes.materials[0]),
-                            lambertianBoxes.materials.size(),
-                            lambertianBoxes.materials.data());
-  OWLBuffer lambertianVerticesBuffer
-    = owlDeviceBufferCreate(context,OWL_FLOAT3,
-                            lambertianBoxes.vertices.size(),
-                            lambertianBoxes.vertices.data());
-  OWLBuffer lambertianIndicesBuffer
-    = owlDeviceBufferCreate(context,OWL_INT3,
-                            lambertianBoxes.indices.size(),
-                            lambertianBoxes.indices.data());
-  OWLGeom lambertianBoxesGeom
-    = owlGeomCreate(context,lambertianBoxesGeomType);
-  owlTrianglesSetVertices(lambertianBoxesGeom,lambertianVerticesBuffer,
-                          lambertianBoxes.vertices.size(),
-                          sizeof(lambertianBoxes.vertices[0]),0);
-  owlTrianglesSetIndices(lambertianBoxesGeom,lambertianIndicesBuffer,
-                         lambertianBoxes.indices.size(),
-                         sizeof(lambertianBoxes.indices[0]),0);
-  owlGeomSetBuffer(lambertianBoxesGeom,"perBoxMaterial",lambertianMaterialsBuffer);
-  owlGeomSetBuffer(lambertianBoxesGeom,"vertex",lambertianVerticesBuffer);
-  owlGeomSetBuffer(lambertianBoxesGeom,"index",lambertianIndicesBuffer);
-  
 
-  
-  // ##################################################################
-  // set up all *ACCELS* we need to trace into those groups
-  // ##################################################################
 
-  // ----------- one group for the spheres -----------
-  /* (note these are user geoms, so have to be in another group than the triangle
-     meshes) */
-  OWLGeom  userGeoms[] = {
-    metalSpheresGeom,
-     dielectricSpheresGeom
-    
-  };
-  OWLGroup userGeomGroup
-    = owlUserGeomGroupCreate(context,2,userGeoms);
-  owlGroupBuildAccel(userGeomGroup);
 
-  // ----------- one group for the boxes -----------
-  /* (note these are made of triangles, so have to be in another group
-     than the sphere geoms) */
-  OWLGeom  triangleGeoms[] = {
-    lambertianBoxesGeom,
+    // ##################################################################
+    // set up all the *GEOMS* we want to run that code on
+    // ##################################################################
 
-  };
-  OWLGroup triangleGeomGroup
-    = owlTrianglesGeomGroupCreate(context,1,triangleGeoms);
-  owlGroupBuildAccel(triangleGeomGroup);
+    LOG("building geometries ...");
 
-  // ----------- one final group with one instance each -----------
-  /* (this is just the simplest way of creating triangular with
-  non-triangular geometry: create one separate instance each, and
-  combine them in a instance group) */
-  world =
-    owlInstanceGroupCreate(context,2);
-  owlInstanceGroupSetChild(world,0,userGeomGroup);
-  owlInstanceGroupSetChild(world,1,triangleGeomGroup);
-  owlGroupBuildAccel(world);
+    // ====================== SPHERES ======================
 
-  // ##################################################################
-  // set miss and raygen programs
-  // ##################################################################
-  
-  // -------------------------------------------------------
-  // set up miss prog 
-  // -------------------------------------------------------
-  OWLVarDecl missProgVars[] = {
-    { /* sentinel to mark end of list */ }
-  };
-  // ........... create object  ............................
-  OWLMissProg missProg
-    = owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
-                        missProgVars,-1);
-  owlMissProgSet(context,0,missProg);
-  
-  // ........... set variables  ............................
-  /* nothing to set */
+    // ----------- metal -----------
+    OWLBuffer metalSpheresBuffer
+        = owlDeviceBufferCreate(context, OWL_USER_TYPE(metalSpheres[0]),
+            metalSpheres.size(), metalSpheres.data());
+    OWLGeom metalSpheresGeom
+        = owlGeomCreate(context, metalSpheresGeomType);
+    owlGeomSetPrimCount(metalSpheresGeom, metalSpheres.size());
+    owlGeomSetBuffer(metalSpheresGeom, "prims", metalSpheresBuffer);
 
-  // -------------------------------------------------------
-  // set up ray gen program
-  // -------------------------------------------------------
-  OWLVarDecl rayGenVars[] = {
-    { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(RayGenData,fbPtr)},
-    { "accumBuffer",   OWL_BUFPTR, OWL_OFFSETOF(RayGenData,accumBuffer)},
-    { "accumID",       OWL_INT,    OWL_OFFSETOF(RayGenData,accumID)},
-    { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
-    { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
-    { "camera.org",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.origin)},
-    { "camera.llc",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.lower_left_corner)},
-    { "camera.horiz",  OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.horizontal)},
-    { "camera.vert",   OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.vertical)},
-    { /* sentinel to mark end of list */ }
-  };
 
-  // ........... create object  ............................
-  rayGen
-    = owlRayGenCreate(context,module,"rayGen",
-                      sizeof(RayGenData),
-                      rayGenVars,-1);
-  
-  // ##################################################################
-  // build *SBT* required to trace the groups
-  // ##################################################################
+    // ----------- dielectric -----------
+    OWLBuffer dielectricSpheresBuffer
+        = owlDeviceBufferCreate(context, OWL_USER_TYPE(dielectricSpheres[0]),
+            dielectricSpheres.size(), dielectricSpheres.data());
+    OWLGeom dielectricSpheresGeom
+        = owlGeomCreate(context, dielectricSpheresGeomType);
+    owlGeomSetPrimCount(dielectricSpheresGeom, dielectricSpheres.size());
+    owlGeomSetBuffer(dielectricSpheresGeom, "prims", dielectricSpheresBuffer);
 
-  // programs have been built before, but have to rebuild raygen and
-  // miss progs
-  owlBuildPrograms(context);
-  owlBuildPipeline(context);
-  owlBuildSBT(context);
+
+    // ====================== BOXES ======================
+
+
+    // ----------- lambertian -----------
+    OWLBuffer lambertianMaterialsBuffer
+        = owlDeviceBufferCreate(context, OWL_USER_TYPE(lambertianBoxes.materials[0]),
+            lambertianBoxes.materials.size(),
+            lambertianBoxes.materials.data());
+    OWLBuffer lambertianVerticesBuffer
+        = owlDeviceBufferCreate(context, OWL_FLOAT3,
+            lambertianBoxes.vertices.size(),
+            lambertianBoxes.vertices.data());
+    OWLBuffer lambertianIndicesBuffer
+        = owlDeviceBufferCreate(context, OWL_INT3,
+            lambertianBoxes.indices.size(),
+            lambertianBoxes.indices.data());
+    OWLGeom lambertianBoxesGeom
+        = owlGeomCreate(context, lambertianBoxesGeomType);
+    owlTrianglesSetVertices(lambertianBoxesGeom, lambertianVerticesBuffer,
+        lambertianBoxes.vertices.size(),
+        sizeof(lambertianBoxes.vertices[0]), 0);
+    owlTrianglesSetIndices(lambertianBoxesGeom, lambertianIndicesBuffer,
+        lambertianBoxes.indices.size(),
+        sizeof(lambertianBoxes.indices[0]), 0);
+    owlGeomSetBuffer(lambertianBoxesGeom, "perBoxMaterial", lambertianMaterialsBuffer);
+    owlGeomSetBuffer(lambertianBoxesGeom, "vertex", lambertianVerticesBuffer);
+    owlGeomSetBuffer(lambertianBoxesGeom, "index", lambertianIndicesBuffer);
+
+
+
+    // ##################################################################
+    // set up all *ACCELS* we need to trace into those groups
+    // ##################################################################
+
+    // ----------- one group for the spheres -----------
+    /* (note these are user geoms, so have to be in another group than the triangle
+       meshes) */
+    OWLGeom  userGeoms[] = {
+      metalSpheresGeom,
+       dielectricSpheresGeom
+
+    };
+    OWLGroup userGeomGroup
+        = owlUserGeomGroupCreate(context, 2, userGeoms);
+    owlGroupBuildAccel(userGeomGroup);
+
+    // ----------- one group for the boxes -----------
+    /* (note these are made of triangles, so have to be in another group
+       than the sphere geoms) */
+    OWLGeom  triangleGeoms[] = {
+      lambertianBoxesGeom,
+
+    };
+    OWLGroup triangleGeomGroup
+        = owlTrianglesGeomGroupCreate(context, 1, triangleGeoms);
+    owlGroupBuildAccel(triangleGeomGroup);
+
+    // ----------- one final group with one instance each -----------
+    /* (this is just the simplest way of creating triangular with
+    non-triangular geometry: create one separate instance each, and
+    combine them in a instance group) */
+    world =
+        owlInstanceGroupCreate(context, 2);
+    owlInstanceGroupSetChild(world, 0, userGeomGroup);
+    owlInstanceGroupSetChild(world, 1, triangleGeomGroup);
+    owlGroupBuildAccel(world);
+
+    // ##################################################################
+    // set miss and raygen programs
+    // ##################################################################
+
+    // -------------------------------------------------------
+    // set up miss prog
+    // -------------------------------------------------------
+    OWLVarDecl missProgVars[] = {
+      { /* sentinel to mark end of list */ }
+    };
+    // ........... create object  ............................
+    OWLMissProg missProg
+        = owlMissProgCreate(context, module, "miss", sizeof(MissProgData),
+            missProgVars, -1);
+    owlMissProgSet(context, 0, missProg);
+
+    // ........... set variables  ............................
+    /* nothing to set */
+
+    // -------------------------------------------------------
+    // set up ray gen program
+    // -------------------------------------------------------
+    OWLVarDecl rayGenVars[] = {
+      { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(RayGenData,fbPtr)},
+      { "accumBuffer",   OWL_BUFPTR, OWL_OFFSETOF(RayGenData,accumBuffer)},
+      { "accumID",       OWL_INT,    OWL_OFFSETOF(RayGenData,accumID)},
+      { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
+      { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
+      { "camera.org",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.origin)},
+      { "camera.llc",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.lower_left_corner)},
+      { "camera.horiz",  OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.horizontal)},
+      { "camera.vert",   OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.vertical)},
+      { /* sentinel to mark end of list */ }
+    };
+
+    // ........... create object  ............................
+    rayGen
+        = owlRayGenCreate(context, module, "rayGen",
+            sizeof(RayGenData),
+            rayGenVars, -1);
+
+    // ##################################################################
+    // build *SBT* required to trace the groups
+    // ##################################################################
+
+    // programs have been built before, but have to rebuild raygen and
+    // miss progs
+    owlBuildPrograms(context);
+    owlBuildPipeline(context);
+    owlBuildSBT(context);
 }
 
-int main(int ac, char **av)
+int main(int ac, char** av)
 {
-  // ##################################################################
-  // pre-owl host-side set-up
-  // ##################################################################
+    // ##################################################################
+    // pre-owl host-side set-up
+    // ##################################################################
 
-  LOG("owl example '" << av[0] << "' starting up");
+    LOG("owl example '" << av[0] << "' starting up");
 
-  LOG("creating the scene ...");
-  createScene();
-  LOG_OK("created scene:");
-  LOG_OK(" num lambertian spheres: " << lambertianSpheres.size());
-  LOG_OK(" num dielectric spheres: " << dielectricSpheres.size());
-  LOG_OK(" num metal spheres     : " << metalSpheres.size());
+    LOG("creating the scene ...");
+    createScene();
+    LOG_OK("created scene:");
+    LOG_OK(" num lambertian spheres: " << lambertianSpheres.size());
+    LOG_OK(" num dielectric spheres: " << dielectricSpheres.size());
+    LOG_OK(" num metal spheres     : " << metalSpheres.size());
 
-  Viewer viewer;
-  viewer.camera.setOrientation(init_lookFrom,
-                               init_lookAt,
-                               init_lookUp,
-                               init_fovy);
-  viewer.enableFlyMode();
-  viewer.enableInspectMode(/* the big sphere in the middle: */
-                           owl::box3f(vec3f(-1,0,-1),vec3f(1,2,1)));
-  viewer.showAndRun();
-  
-  LOG("destroying devicegroup ...");
-  owlContextDestroy(viewer.context);
-  
-  LOG_OK("seems all went OK; app is done, this should be the last output ...");
+    Viewer viewer;
+    viewer.camera.setOrientation(init_lookFrom,
+        init_lookAt,
+        init_lookUp,
+        init_fovy);
+    viewer.enableFlyMode();
+    viewer.enableInspectMode(/* the big sphere in the middle: */
+        owl::box3f(vec3f(-1, 0, -1), vec3f(1, 2, 1)));
+    viewer.showAndRun();
+
+    LOG("destroying devicegroup ...");
+    owlContextDestroy(viewer.context);
+
+    LOG_OK("seems all went OK; app is done, this should be the last output ...");
 }
