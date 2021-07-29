@@ -202,12 +202,26 @@ OPTIX_CLOSEST_HIT_PROGRAM(DielectricBoxes)()
 inline __device__
 vec3f missColor(const Ray &ray)
 {
-  const vec2i pixelID = owl::getLaunchIndex();
+   const vec2i pixelID = owl::getLaunchIndex();
 
   const vec3f rayDir = normalize(ray.direction);
   const float t = 0.5f*(rayDir.y + 1.0f);
   const vec3f c = (1.0f - t)*vec3f(1.0f, 1.0f, 1.0f) + t * vec3f(0.5f, 0.7f, 1.0f);
   return c;
+
+  
+  /*
+  if (depth == 0)
+      return desiredBackgroundColor;
+
+  if (dot(ray.dir.desiredLightDirection) > .98f) 
+      return desiredLightColor());
+
+  else
+      return desiredAmbientColor;
+
+  */
+  
 }
 
 OPTIX_MISS_PROGRAM(miss)()

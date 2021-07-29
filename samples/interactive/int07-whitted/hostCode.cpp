@@ -39,10 +39,10 @@
 extern "C" char ptxCode[];
 
 const vec2i init_fbSize(1600, 800);
-const vec3f init_lookFrom(8.0f, 2.0f, -4.0f);
-const vec3f init_lookAt(4.0f, 2.3f, -4.0f);
+const vec3f init_lookFrom(-4.3f, 3.3f, -5.0f);
+const vec3f init_lookAt(15.0f, 2.f, -5.0f);
 const vec3f init_lookUp(0.0f, 1.0f, 0.0f);
-const float init_fovy = 20.f;
+const float init_fovy = 60.f;
 
 std::vector<DielectricSphere> dielectricSpheres;
 std::vector<LambertianSphere> lambertianSpheres;
@@ -124,25 +124,25 @@ void createScene()
 {
 
 
-
-    for (int i = 0; i < 13; i++) {
-        for (int j = 0; j < 13; j++) {
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 32; j++) {
             bool odd =  ((i + j) % 2) == 1;
-            vec3f color = (odd) ? vec3f(1.f, 0.f, 0.f) : vec3f(1.f, 1.f, 0.f); // <- use this instead
+            vec3f color = (odd) ? vec3f(1.f, 0.f, 0.f) : vec3f(1.f, 1.f, 0.f); 
 
-            float x = j * 2;
-            float z = i * 2 - 13; // note, you might need to change 13 here to something else
-            addBox(lambertianBoxes, { x, 0.f, z }, { 1.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ color });
+            float x = j * 1.4;
+            float z = i - 16 ; 
+            addBox(lambertianBoxes, { x, 0.f, z }, { 0.7f, 0.f, 0.5f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ color });
         }
     }
+ 
+ 
 
-
-    dielectricSpheres.push_back({ Sphere{vec3f(0.f, 3.f, 0.f), 1.f},
+    dielectricSpheres.push_back({ Sphere{vec3f(2.8f, 3.3f, -4.9f), 1.7f},
           Dielectric{1.5f} });
 
 
-    metalSpheres.push_back({ Sphere{vec3f(0.f, 2.f, -3.f), 1.f},
-          Metal{vec3f(0.7f, 0.6f, 0.5f), 0.0f} });
+    metalSpheres.push_back({ Sphere{vec3f(5.5f, 2.f, -7.7f), 1.6f},
+          Metal{vec3f(1.f, 1.f, 1.f), 0.1f} });
 }
 
 
