@@ -200,19 +200,17 @@ OPTIX_CLOSEST_HIT_PROGRAM(DielectricBoxes)()
 // ==================================================================
 
 inline __device__
-vec3f missColor(const Ray &ray, int depth){
+vec3f missColor(const Ray &ray){
         
-        vec3f desiredBackgroundColor = vec3f{ 0.f, 0.f, 1.f };
-        vec3f desiredLightIntensity = (10.f);
-        vec3f desiredAmbientColor = { 0.4f };
+        vec3f desiredBackgroundColor = {50.f / 255.f, 150.f / 255.f, 203.f / 255.f };
+        vec3f desiredLightIntensity = (20.f);
         vec3f lightDirection = {0.f, 1.f, 0.f};
 
-        if (depth == 0)
-            return desiredBackgroundColor;
-        if (dot(normalize(ray.direction), normalize(lightDirection)) > .98f)
-            return desiredLightIntensity;
+   
+       if (dot(normalize(ray.direction), normalize(lightDirection)) > .98f)
+           return desiredLightIntensity;
         else
-            return desiredAmbientColor;
+            return desiredBackgroundColor;
     }
 
 OPTIX_MISS_PROGRAM(miss)()
@@ -226,21 +224,29 @@ inline __device__
 vec3f tracePath(const RayGenData &self,
                 owl::Ray &ray, PerRayData &prd)
 {
+
   vec3f attenuation = 1.f;
+  
+ 
   
   /* iterative version of recursion, up to depth 50 */
   for (int depth=0;depth<50;depth++) {
     prd.out.scatterEvent = rayDidntHitAnything;
+ 
     owl::traceRay(/*accel to trace against*/self.world,
                   /*the ray to trace*/ ray,
                   /*prd*/prd);
 
-    if (prd.out.scatterEvent == rayDidntHitAnything)
+    if (prd.out.scatterEvent == rayDidntHitAnything) {
+        return attenuation * missColor(ray);
+    }
+       
+   
       /* ray got 'lost' to the environment - 'light' it with miss
          shader */
-      return attenuation * missColor(ray, depth);
     else if (prd.out.scatterEvent == rayGotCancelled)
-      return vec3f(0.f);
+      
+    return vec3f(0.f);
 
     else { // ray is still alive, and got properly bounced
       attenuation *= prd.out.attenuation;
@@ -249,7 +255,10 @@ vec3f tracePath(const RayGenData &self,
                      /* tmin     : */ 1e-3f,
                      /* tmax     : */ 1e10f);
     }
+
+ 
   }
+  
   // recursion did not terminate - cancel it
   return vec3f(0.f);
 }
