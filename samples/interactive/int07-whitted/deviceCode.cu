@@ -19,7 +19,7 @@
 
 using namespace owl;
 
-#define NUM_SAMPLES_PER_PIXEL 1
+#define NUM_SAMPLES_PER_PIXEL 32
 
 // ==================================================================
 // bounding box programs - since these don't actually use the material
@@ -200,29 +200,20 @@ OPTIX_CLOSEST_HIT_PROGRAM(DielectricBoxes)()
 // ==================================================================
 
 inline __device__
-vec3f missColor(const Ray &ray)
-{
-   const vec2i pixelID = owl::getLaunchIndex();
+vec3f missColor(const Ray &ray, int depth){
+        
+        vec3f desiredBackgroundColor = vec3f{ 0.f, 0.f, 1.f };
+        vec3f desiredLightIntensity = (10.f);
+        vec3f desiredAmbientColor = { 0.4f };
+        vec3f lightDirection = {0.f, 1.f, 0.f};
 
-  const vec3f rayDir = normalize(ray.direction);
-  const float t = 0.5f*(rayDir.y + 1.0f);
-  const vec3f c = (1.0f - t)*vec3f(1.0f, 1.0f, 1.0f) + t * vec3f(0.5f, 0.7f, 1.0f);
-  return c;
-
-  
-  /*
-  if (depth == 0)
-      return desiredBackgroundColor;
-
-  if (dot(ray.dir.desiredLightDirection) > .98f) 
-      return desiredLightColor());
-
-  else
-      return desiredAmbientColor;
-
-  */
-  
-}
+        if (depth == 0)
+            return desiredBackgroundColor;
+        if (dot(normalize(ray.direction), normalize(lightDirection)) > .98f)
+            return desiredLightIntensity;
+        else
+            return desiredAmbientColor;
+    }
 
 OPTIX_MISS_PROGRAM(miss)()
 {
@@ -247,7 +238,7 @@ vec3f tracePath(const RayGenData &self,
     if (prd.out.scatterEvent == rayDidntHitAnything)
       /* ray got 'lost' to the environment - 'light' it with miss
          shader */
-      return attenuation * missColor(ray);
+      return attenuation * missColor(ray, depth);
     else if (prd.out.scatterEvent == rayGotCancelled)
       return vec3f(0.f);
 
