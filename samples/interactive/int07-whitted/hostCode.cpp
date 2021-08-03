@@ -233,7 +233,7 @@ void Viewer::resize(const vec2i& newSize)
 }
 
 Viewer::Viewer()
-    : OWLViewer("RTOW on OWL (mixed geometries)",
+    : OWLViewer("OWL Whitted Sample",
         init_fbSize)
 {
     // ##################################################################
