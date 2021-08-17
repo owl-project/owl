@@ -395,10 +395,6 @@ OPTIX_CLOSEST_HIT_PROGRAM(PoolBall)()
                     /*the ray to trace*/refl_ray,
                     /*prd*/new_prd,
                     /*only CH*/OPTIX_RAY_FLAG_DISABLE_ANYHIT);
-      owl::traceRay(/*accel to trace against*/optixLaunchParams.world,
-                    /*the ray to trace*/refl_ray,
-                    /*prd*/new_prd,
-                    /*only CH*/OPTIX_RAY_FLAG_DISABLE_ANYHIT);
       color = new_prd.radiance.result;
     }
     result += reflection * self.material.reflection_color * color;
