@@ -225,7 +225,6 @@ Viewer::Viewer(Viewer::Setup stp)
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
   owlContextSetRayTypeCount(context,2);
-  owlEnableMotionBlur(context);
   OWLModule module = owlModuleCreate(context,ptxCode);
   
   // ##################################################################

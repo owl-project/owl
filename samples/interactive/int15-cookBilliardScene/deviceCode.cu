@@ -72,8 +72,6 @@ OPTIX_INTERSECT_PROGRAM(Parallelogram)()
   const auto &self
     = owl::getProgramData<ParallelogramGeomData>();
 
-  PRD &prd = owl::getPRD<PRD>();
-
   RadianceRay ray;
   ray.origin = optixGetObjectRayOrigin();
   ray.direction = optixGetObjectRayDirection();
@@ -90,12 +88,7 @@ OPTIX_INTERSECT_PROGRAM(Parallelogram)()
     if(a1 >= 0 && a1 <= 1){
       float a2 = dot(self.v2, vi);
       if(a2 >= 0 && a2 <= 1){
-        if( optixReportIntersection(t,0) ) {
-          prd.t_hit = t;
-          prd.sn = prd.gn = n;
-          prd.texCoord = vec3f(a1,a2,0);
-          // lgt_idx = lgt_instance;
-        }
+        if( optixReportIntersection(t,0,*(unsigned*)&a1,*(unsigned*)&a2) ) {}
       }
     }
   }
@@ -206,6 +199,15 @@ OPTIX_CLOSEST_HIT_PROGRAM(Parallelogram)()
   ray.tmin = optixGetRayTmin();
   ray.tmax = optixGetRayTmax();
 
+  unsigned attr0 = optixGetAttribute_0();
+  unsigned attr1 = optixGetAttribute_1();
+
+  float a1 = *(float*)&attr0;
+  float a2 = *(float*)&attr1;
+  prd.t_hit = optixGetRayTmax();
+  prd.sn = prd.gn = vec3f(self.plane);
+  prd.texCoord = vec3f(a1,a2,0);
+
   vec3f uvw = prd.texCoord; // testing
 
   float4 sampKa, sampKd, sampKs;
@@ -263,8 +265,6 @@ OPTIX_INTERSECT_PROGRAM(PoolBall)()
   const auto &self
     = owl::getProgramData<PoolBallsGeomData>();
 
-  PRD &prd = owl::getPRD<PRD>();
-
   RadianceRay ray;
   ray.origin = optixGetObjectRayOrigin();
   ray.direction = optixGetObjectRayDirection();
@@ -275,7 +275,6 @@ OPTIX_INTERSECT_PROGRAM(PoolBall)()
   vec3f O = ray.origin - center;
   vec3f D = ray.direction;
   float radius = self.radius;
-  linear3f rotation = self.rotation[primID];
 
   float b = dot(O, D);
   float c = dot(O, O)-radius*radius;
@@ -285,33 +284,11 @@ OPTIX_INTERSECT_PROGRAM(PoolBall)()
     float root1 = (-b - sdisc);
     bool check_second = true;
     if( optixReportIntersection(root1,0) ) {
-      prd.t_hit = root1;
-      prd.sn = prd.gn = (O + root1*D)/radius;
-
-      vec3f polar;
-      polar.x = dot(rotation.vx, prd.gn);
-      polar.y = dot(rotation.vy, prd.gn);
-      polar.z = dot(rotation.vz, prd.gn);
-      polar = cart_to_pol(polar);
-
-      prd.texCoord = vec3f( polar.x*0.5f*M_1_PIf, (polar.y+M_PI_2f)*M_1_PIf, polar.z/radius );
-
       check_second = false;
     } 
     if(check_second) {
       float root2 = (-b + sdisc);
-      if( optixReportIntersection(root2,0) ) {
-        prd.t_hit = root2;
-        prd.sn = prd.gn = (O + root2*D)/radius;
-
-        vec3f polar;
-        polar.x = dot(rotation.vx, prd.gn);
-        polar.y = dot(rotation.vy, prd.gn);
-        polar.z = dot(rotation.vz, prd.gn);
-        polar = cart_to_pol(polar);
-
-        prd.texCoord = vec3f( polar.x*0.5f*M_1_PIf, (polar.y+M_PI_2f)*M_1_PIf, polar.z/radius );
-      }
+      if( optixReportIntersection(root2,0) ) {}
     }
   }
 }
@@ -330,6 +307,23 @@ OPTIX_CLOSEST_HIT_PROGRAM(PoolBall)()
   ray.direction = optixGetWorldRayDirection();
   ray.tmin = optixGetRayTmin();
   ray.tmax = optixGetRayTmax();
+
+  vec3f center = self.center[primID];
+  vec3f O = ray.origin - center;
+  vec3f D = ray.direction;
+  float radius = self.radius;
+  linear3f rotation = self.rotation[primID];
+
+  prd.t_hit = optixGetRayTmax();
+  prd.sn = prd.gn = (O + prd.t_hit*D)/radius;
+
+  vec3f polar;
+  polar.x = dot(rotation.vx, prd.gn);
+  polar.y = dot(rotation.vy, prd.gn);
+  polar.z = dot(rotation.vz, prd.gn);
+  polar = cart_to_pol(polar);
+
+  prd.texCoord = vec3f( polar.x*0.5f*M_1_PIf, (polar.y+M_PI_2f)*M_1_PIf, polar.z/radius );
 
   // intersection vectors
   const vec3f hit = ray.origin + prd.t_hit * ray.direction;            // hitpoint
@@ -391,10 +385,6 @@ OPTIX_CLOSEST_HIT_PROGRAM(PoolBall)()
       new_prd.radiance.depth = depth+1;
       new_prd.radiance.importance = importance;
       RadianceRay refl_ray(hit,R,optixLaunchParams.scene_epsilon,1e30f);
-      owl::traceRay(/*accel to trace against*/optixLaunchParams.world,
-                    /*the ray to trace*/refl_ray,
-                    /*prd*/new_prd,
-                    /*only CH*/OPTIX_RAY_FLAG_DISABLE_ANYHIT);
       owl::traceRay(/*accel to trace against*/optixLaunchParams.world,
                     /*the ray to trace*/refl_ray,
                     /*prd*/new_prd,
