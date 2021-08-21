@@ -338,7 +338,7 @@ typedef struct _OWLMissProg      *OWLMissProg;
   all programs within a given launch */
 typedef struct _OWLLaunchParams  *OWLLaunchParams, *OWLParams, *OWLGlobals;
 
-OWL_API void owlBuildPrograms(OWLContext context, bool debug = false);
+OWL_API void owlBuildPrograms(OWLContext context);
 OWL_API void owlBuildPipeline(OWLContext context);
 OWL_API void owlBuildSBT(OWLContext context,
                          OWLBuildSBTFlags flags OWL_IF_CPP(=OWL_SBT_ALL));
