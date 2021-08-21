@@ -42,6 +42,9 @@ namespace owl {
 #endif
     }
 
+    /*! pretty-printer, for printf-debugging */
+    virtual std::string toString() const override { return "owl::Context"; }
+
     /*! creates a context with the given device IDs. If list of device
       is nullptr, and number requested devices is > 1, then the
       first N devices will get used; invalid device IDs in the list

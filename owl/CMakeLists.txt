@@ -93,7 +93,6 @@ set(OWL_SOURCES
   Texture.h
   Texture.cpp
 
-  
   # -------------------------------------------------------
   # base classes
   # -------------------------------------------------------
@@ -135,7 +134,6 @@ set(OWL_SOURCES
   UserGeom.h
   UserGeom.cu
 
-
   # -------------------------------------------------------
   # accel structures
   # -------------------------------------------------------
@@ -157,21 +155,6 @@ add_library(owl_static STATIC
   ${OWL_SOURCES} 
 )
 
-
-# Nate: 11/3/20: I get "fatal error C1041: cannot open program database" 
-# on windows from this "owl" shared target being built in parallel against 
-# the "owl_static" target, as for some reason they seem to try to 
-# write to the same .pdb file simultaneously.
-
-# cuda_add_library(owl
-#   ${OWL_SOURCES}
-#   )
-
-# target_link_libraries(owl
-#    ${CUDA_LIBRARIES}
-#    ${CUDA_CUDA_LIBRARY}
-#   )
-
 target_link_libraries(owl_static
    ${CUDA_LIBRARIES}
    ${CUDA_CUDA_LIBRARY}
@@ -179,9 +162,7 @@ target_link_libraries(owl_static
   )
 
 
-#set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
-#target_compile_options(owl_static PRIVATE -fPIC)
 
 # -------------------------------------------------------
 # export those back to our parent:

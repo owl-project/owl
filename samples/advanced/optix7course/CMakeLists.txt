@@ -20,23 +20,26 @@ cuda_compile_and_embed(embedded_ptx_code devicePrograms.cu)
 
 add_library(toneMap STATIC
   toneMap.cu)
+
 add_executable(adv_optix7course
+  # the file with embedded PTX string for the device programs:
   ${embedded_ptx_code}
-  devicePrograms.cu
-  optix7.h
-  CUDABuffer.h
+  devicePrograms.cu # <-- note this doesn't actually get compiled in, only as string of PTX instrucions (see comile_and_embed above); this is only here for Visual Studio GUI to show it as an input
+
   SampleRenderer.h
   SampleRenderer.cpp
+  Model.h
   Model.cpp
+  LaunchParams.h
   main.cpp
   )
 
 target_link_libraries(adv_optix7course
-  toneMap
   # optix dependencies, for rendering
   ${optix_LIBRARY}
   ${CUDA_LIBRARIES}
   ${CUDA_CUDA_LIBRARY}
-  # owl viewer, and everything it requires
+  # owl and owl viewer, and everything these require
+  ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
   )
