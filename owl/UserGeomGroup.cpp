@@ -118,8 +118,8 @@ namespace owl {
 
       sumPrims += child->primCount;
       if (sumPrims > maxPrimsPerGAS) 
-        throw std::runtime_error("number of prim in user geom group exceeds "
-                                 "OptiX's MAX_PRIMITIVES_PER_GAS limit");
+        OWL_RAISE("number of prim in user geom group exceeds "
+                  "OptiX's MAX_PRIMITIVES_PER_GAS limit");
 
       UserGeom::DeviceData &ugDD = child->getDD(device);
       

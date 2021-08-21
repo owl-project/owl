@@ -1120,6 +1120,8 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
 
   owlContextSetRayTypeCount(context, 3);  // primary, shadow, toon outline
 
+  owlContextSetNumAttributeValues(context, 2);
+
   // Launch params
   OWLVarDecl launchVars[] = {
 
@@ -1139,6 +1141,12 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
     { /* sentinel to mark end of list */ }
   };
 
+
+  // Disable bound values as a workaround for an Aug 2021 NVIDIA driver bug that may
+  // cause optixModuleCreateFromPTX to fail when there is more than one bound value.
+  // This will be fixed in a future driver release.
+
+#if 0
   // Tell OptiX which launch params will be constant across all frames with given values, so 
   // they can be specialized if possible during module compile.
   OWLBoundValueDecl boundValues[] = {
@@ -1147,6 +1155,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
     { }
   };
   owlContextSetBoundLaunchParamValues(context, boundValues, -1);
+#endif
   
   OWLGroup world;
   if (sceneType == SCENE_TYPE_FLAT) {

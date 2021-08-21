@@ -97,8 +97,8 @@ namespace owl {
           int canAccessPeer = 0;
           cudaError_t rc = cudaDeviceCanAccessPeer(&canAccessPeer, cuda_i,cuda_j);
           if (rc != cudaSuccess)
-            throw std::runtime_error("cuda error in cudaDeviceCanAccessPeer: "
-                                     +std::to_string(rc));
+            OWL_RAISE("cuda error in cudaDeviceCanAccessPeer: "
+                      +std::to_string(rc));
           if (!canAccessPeer) {
             // huh. this can happen if you have differnt device
             // types (in my case, a 2070 and a rtx 8000).
@@ -110,8 +110,8 @@ namespace owl {
           
           rc = cudaDeviceEnablePeerAccess(cuda_j,0);
           if (rc != cudaSuccess)
-            throw std::runtime_error("cuda error in cudaDeviceEnablePeerAccess: "
-                                     +std::to_string(rc));
+            OWL_RAISE("cuda error in cudaDeviceEnablePeerAccess: "
+                      +std::to_string(rc));
           ss << " +";
         }
       }
@@ -566,7 +566,7 @@ namespace owl {
     this->maxInstancingDepth = maxInstanceDepth;
     
     if (maxInstancingDepth < 1)
-      throw std::runtime_error
+      OWL_RAISE
         ("a instancing depth of < 1 isnt' currently supported in OWL; "
          "please see comments on owlSetMaxInstancingDepth() (owl/owl_host.h)");
     
@@ -581,6 +581,15 @@ namespace owl {
   void Context::enableMotionBlur()
   {
     motionBlurEnabled = true;
+  }
+
+  void Context::setNumAttributeValues(size_t numAttributeValues)
+  {
+    for (auto device : getDevices()) {
+      assert("check programs have not been built"
+             && device->allActivePrograms.empty());
+    }
+    this->numAttributeValues = (int)numAttributeValues;
   }
 
   void Context::buildPrograms(bool debug)

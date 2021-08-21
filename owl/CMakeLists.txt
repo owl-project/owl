@@ -48,29 +48,29 @@ set(OWL_SOURCES
   include/owl/owl_host.h
   include/owl/owl_device.h
   include/owl/common/arrayND/array2D.h
-include/owl/common/arrayND/array3D.h
-include/owl/common/math/AffineSpace.h
-include/owl/common/math/box.h
-include/owl/common/math/constants.h
-include/owl/common/math/fixedpoint.h
-include/owl/common/math/LinearSpace.h
-include/owl/common/math/Quaternion.h
-include/owl/common/math/random.h
-include/owl/common/math/vec/compare.h
-include/owl/common/math/vec/functors.h
-include/owl/common/math/vec/rotate.h
-include/owl/common/math/vec.h
-include/owl/common/owl-common.h
-include/owl/common/parallel/parallel_for.h
-include/owl/owl.h
-include/owl/owl_device.h
-include/owl/owl_device_buffer.h
-include/owl/owl_host.h
-helper/cuda.h
-helper/optix.h
-common.h
+  include/owl/common/arrayND/array3D.h
+  include/owl/common/math/AffineSpace.h
+  include/owl/common/math/box.h
+  include/owl/common/math/constants.h
+  include/owl/common/math/fixedpoint.h
+  include/owl/common/math/LinearSpace.h
+  include/owl/common/math/Quaternion.h
+  include/owl/common/math/random.h
+  include/owl/common/math/vec/compare.h
+  include/owl/common/math/vec/functors.h
+  include/owl/common/math/vec/rotate.h
+  include/owl/common/math/vec.h
+  include/owl/common/owl-common.h
+  include/owl/common/parallel/parallel_for.h
+  include/owl/owl.h
+  include/owl/owl_device.h
+  include/owl/owl_device_buffer.h
+  include/owl/owl_host.h
+  helper/cuda.h
+  helper/optix.h
+  common.h
 
-cmake/configure_tbb.cmake
+  cmake/configure_tbb.cmake
   cmake/configure_owl.cmake
   cmake/configure_optix.cmake
   cmake/configure_glfw.cmake
@@ -147,10 +147,13 @@ cmake/configure_tbb.cmake
   UserGeomGroup.cpp
 )
 
-cuda_add_library(owl_static
-  ${OWL_SOURCES}
-  STATIC
-  )
+# Nate: 05/31/21: cuda_add_library for some reason is always out of date on 
+# windows, causing owl and all dependencies to rebuild every compile...
+# This rebuild issue doesn't seem to happen with native CUDA language support, 
+# so I'm switching over to that.
+add_library(owl_static STATIC
+  ${OWL_SOURCES} 
+)
 
 target_link_libraries(owl_static
    ${CUDA_LIBRARIES}
