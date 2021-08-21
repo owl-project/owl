@@ -53,7 +53,7 @@ namespace cameraTriangle {
 namespace camera1984 {
   const vec3f init_lookFrom(3.73523f,4.59409f,12.5919f);
   const vec3f init_lookAt(4.84884f,4.50512f,0.984944f);
-  const vec3f init_lookUp(0.174625,0.984592,0.00920686);
+  const vec3f init_lookUp(0.174625f,0.984592f,0.00920686f);
   const float init_cosFovy = 0.66f;
 }
 
