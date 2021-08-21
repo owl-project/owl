@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2019 Ingo Wald                                            //
+// Copyright 2018-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -29,18 +29,14 @@ namespace osc {
   SampleRenderer::SampleRenderer(const Model *model, const QuadLight &light)
     : model(model)
   {
-    // createContext();
     std::cout << "for now, create exactly one device" << std::endl;
     context = owlContextCreate(nullptr,1);
     owlContextSetRayTypeCount(context,2);
     
-    // createModule();
     module = owlModuleCreate(context,embedded_ptx_code);
-    // createRaygenPrograms();
     rayGen
       = owlRayGenCreate(context,module,"renderFrame",
                         /* no sbt data: */0,nullptr,-1);
-    // createMissPrograms();
     missProgRadiance
       = owlMissProgCreate(context,module,"radiance",
                           /* no sbt data: */0,nullptr,-1);
@@ -63,12 +59,13 @@ namespace osc {
       { "light.du",    OWL_FLOAT3, OWL_OFFSETOF(LaunchParams,light.du)},
       { "light.dv",    OWL_FLOAT3, OWL_OFFSETOF(LaunchParams,light.dv)},
       { "light.power",    OWL_FLOAT3, OWL_OFFSETOF(LaunchParams,light.power)},
+
       // camera settings:
       { "camera.position", OWL_FLOAT3, OWL_OFFSETOF(LaunchParams,camera.position)},
       { "camera.direction", OWL_FLOAT3, OWL_OFFSETOF(LaunchParams,camera.direction)},
       { "camera.horizontal", OWL_FLOAT3, OWL_OFFSETOF(LaunchParams,camera.horizontal)},
       { "camera.vertical", OWL_FLOAT3, OWL_OFFSETOF(LaunchParams,camera.vertical)},
-      { /* sentinel to mark end of list */ }
+      { nullptr /* sentinel to mark end of list */ }
     };
     launchParams
       = owlParamsCreate(context,sizeof(LaunchParams),
@@ -82,28 +79,22 @@ namespace osc {
     owlBuildSBT(context);
     
     owlParamsSet3f(launchParams,"light.origin",(const owl3f&)light.origin);
-    owlParamsSet3f(launchParams,"light.du",(const owl3f&)light.du);
-    owlParamsSet3f(launchParams,"light.dv",(const owl3f&)light.dv);
-    owlParamsSet3f(launchParams,"light.power",(const owl3f&)light.power);
+    owlParamsSet3f(launchParams,"light.du",    (const owl3f&)light.du);
+    owlParamsSet3f(launchParams,"light.dv",    (const owl3f&)light.dv);
+    owlParamsSet3f(launchParams,"light.power", (const owl3f&)light.power);
   }
 
   void SampleRenderer::createTextures()
   {
     int numTextures = (int)model->textures.size();
 
-#if OWL_TEXTURES
     textures.resize(numTextures);
-#else
-    textureArrays.resize(numTextures);
-    textureObjects.resize(numTextures);
-#endif
     
     for (int textureID=0;textureID<numTextures;textureID++) {
       auto texture = model->textures[textureID];
 
       int32_t width  = texture->resolution.x;
       int32_t height = texture->resolution.y;
-#if OWL_TEXTURES
       this->textures[textureID]
         = owlTexture2DCreate(context,
                              OWL_TEXEL_FORMAT_RGBA8,
@@ -112,46 +103,6 @@ namespace osc {
                              texture->pixel,
                              OWL_TEXTURE_LINEAR,
                              OWL_TEXTURE_CLAMP);
-#else
-      int32_t numComponents = 4;
-      int32_t pitch  = int(width*numComponents*sizeof(uint8_t));
-      cudaResourceDesc res_desc = {};
-      
-      cudaChannelFormatDesc channel_desc;
-      channel_desc = cudaCreateChannelDesc<uchar4>();
-      
-      cudaArray_t   &pixelArray = textureArrays[textureID];
-      CUDA_CHECK(MallocArray(&pixelArray,
-                             &channel_desc,
-                             width,height));
-      
-      CUDA_CHECK(Memcpy2DToArray(pixelArray,
-                                 /* offset */0,0,
-                                 texture->pixel,
-                                 pitch,pitch,height,
-                                 cudaMemcpyHostToDevice));
-      
-      res_desc.resType          = cudaResourceTypeArray;
-      res_desc.res.array.array  = pixelArray;
-      
-      cudaTextureDesc tex_desc     = {};
-      tex_desc.addressMode[0]      = cudaAddressModeWrap;
-      tex_desc.addressMode[1]      = cudaAddressModeWrap;
-      tex_desc.filterMode          = cudaFilterModeLinear;
-      tex_desc.readMode            = cudaReadModeNormalizedFloat;
-      tex_desc.normalizedCoords    = 1;
-      tex_desc.maxAnisotropy       = 1;
-      tex_desc.maxMipmapLevelClamp = 99;
-      tex_desc.minMipmapLevelClamp = 0;
-      tex_desc.mipmapFilterMode    = cudaFilterModePoint;
-      tex_desc.borderColor[0]      = 1.0f;
-      tex_desc.sRGB                = 0;
-      
-      // Create texture object
-      cudaTextureObject_t cuda_tex = 0;
-      CUDA_CHECK(CreateTextureObject(&cuda_tex, &res_desc, &tex_desc, nullptr));
-      textureObjects[textureID] = cuda_tex;
-#endif
     }
   }
   
@@ -184,17 +135,6 @@ namespace osc {
       // upload the model to the device: the builder
       TriangleMesh &mesh = *model->meshes[meshID];
 
-// #if 0
-//       char fileName[1000];
-//       sprintf(fileName,"repro_%03i.obj",meshID);
-//       std::ofstream out(fileName);
-//       for (auto v : mesh.vertex)
-//         out << "v " << v.x << " "  << v.y << " "  << v.z << std::endl;
-//       for (auto idx : mesh.index) {
-//         vec3i v = idx+1;
-//         out << "f " << v.x << " "  << v.y << " "  << v.z << std::endl;
-//       }
-// #endif
       OWLBuffer vertexBuffer 
         = owlDeviceBufferCreate(context,OWL_FLOAT3,mesh.vertex.size(),
                                 mesh.vertex.data());
@@ -260,12 +200,6 @@ namespace osc {
     frameID++;
 
     owlLaunch2D(rayGen,fbSize.x,fbSize.y,launchParams);
-    
-    // sync - make sure the frame is rendered before we download and
-    // display (obviously, for a high-performance application you
-    // want to use streams and double-buffering, but for this simple
-    // example, this will have to do)
-    CUDA_SYNC_CHECK();
   }
 
   /*! set camera to render with */

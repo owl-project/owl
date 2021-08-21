@@ -93,7 +93,6 @@ cmake/configure_tbb.cmake
   Texture.h
   Texture.cpp
 
-  
   # -------------------------------------------------------
   # base classes
   # -------------------------------------------------------
@@ -128,24 +127,23 @@ cmake/configure_tbb.cmake
   # -------------------------------------------------------
   # geometries
   # -------------------------------------------------------
-Geometry.h
+  Geometry.h
   Geometry.cpp
-Triangles.h
+  Triangles.h
   Triangles.cu
-UserGeom.h
+  UserGeom.h
   UserGeom.cu
-
 
   # -------------------------------------------------------
   # accel structures
   # -------------------------------------------------------
-Group.h
+  Group.h
   Group.cpp
-InstanceGroup.h
+  InstanceGroup.h
   InstanceGroup.cpp
-TrianglesGeomGroup.h
+  TrianglesGeomGroup.h
   TrianglesGeomGroup.cpp
-UserGeomGroup.h
+  UserGeomGroup.h
   UserGeomGroup.cpp
 )
 
@@ -154,21 +152,6 @@ cuda_add_library(owl_static
   STATIC
   )
 
-
-# Nate: 11/3/20: I get "fatal error C1041: cannot open program database" 
-# on windows from this "owl" shared target being built in parallel against 
-# the "owl_static" target, as for some reason they seem to try to 
-# write to the same .pdb file simultaneously.
-
-# cuda_add_library(owl
-#   ${OWL_SOURCES}
-#   )
-
-# target_link_libraries(owl
-#    ${CUDA_LIBRARIES}
-#    ${CUDA_CUDA_LIBRARY}
-#   )
-
 target_link_libraries(owl_static
    ${CUDA_LIBRARIES}
    ${CUDA_CUDA_LIBRARY}
@@ -176,9 +159,7 @@ target_link_libraries(owl_static
   )
 
 
-#set_target_properties(owl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
-#target_compile_options(owl_static PRIVATE -fPIC)
 
 # -------------------------------------------------------
 # export those back to our parent:

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2019 Ingo Wald                                            //
+// Copyright 2018-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -90,11 +90,7 @@ namespace osc {
       OWLViewer::key(key,where);
     }
     
-    // vec2i                 fbSize;
-    // GLuint                fbTexture {0};
-    // cudaGraphicsResource_t cuDisplayTexture;
     SampleRenderer        sample;
-    // std::vector<uint32_t> pixels;
   };
   
   
