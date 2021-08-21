@@ -59,12 +59,12 @@ namespace camera1984 {
 
 inline float deg_to_rad( float degrees )
 {
-  return degrees * M_PI / 180.0f;
+  return degrees * (float)M_PI / 180.0f;
 }
 
 inline float rad_to_deg( float radians )
 {
-  return radians * 180.0f / M_PI;
+  return radians * 180.0f / (float)M_PI;
 }
 
 inline float random1()
