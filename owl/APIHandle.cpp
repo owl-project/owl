@@ -32,7 +32,8 @@ namespace owl {
 
   APIHandle::~APIHandle()
   {
-    context->forget(this);
+    // iw: every active handle _should_ have a context, but if context itself is killing off remaining handles this pointer may already be null.
+    if (context) context->forget(this);
     object  = nullptr;
     context = nullptr;
   }
