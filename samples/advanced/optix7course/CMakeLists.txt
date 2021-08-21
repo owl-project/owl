@@ -18,9 +18,6 @@ include_directories(${OWL_VIEWER_INCLUDES})
 
 cuda_compile_and_embed(embedded_ptx_code devicePrograms.cu)
 
-add_library(toneMap STATIC
-  toneMap.cu)
-
 add_executable(adv_optix7course
   # the file with embedded PTX string for the device programs:
   ${embedded_ptx_code}
@@ -35,10 +32,6 @@ add_executable(adv_optix7course
   )
 
 target_link_libraries(adv_optix7course
-  # optix dependencies, for rendering
-  ${optix_LIBRARY}
-  ${CUDA_LIBRARIES}
-  ${CUDA_CUDA_LIBRARY}
   # owl and owl viewer, and everything these require
   ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
