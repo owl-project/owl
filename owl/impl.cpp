@@ -168,9 +168,10 @@ using namespace owl;
     checkGet(_context)->buildSBT(flags);
   }
 
-  OWL_API void owlBuildPrograms(OWLContext _context, bool debug)
+  OWL_API void owlBuildPrograms(OWLContext _context)
   {
     LOG_API_CALL();
+    bool debug = false;
     checkGet(_context)->buildPrograms(debug);
   }
   
