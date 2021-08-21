@@ -23,7 +23,6 @@ add_executable(adv_optix7course
   ${embedded_ptx_code}
   devicePrograms.cu # <-- note this doesn't actually get compiled in, only as string of PTX instrucions (see comile_and_embed above); this is only here for Visual Studio GUI to show it as an input
 
-  optix7.h
   SampleRenderer.h
   SampleRenderer.cpp
   Model.h
