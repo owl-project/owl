@@ -695,14 +695,17 @@ OWL_API void
 owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
 /*! perform a raygen launch with launch parameters, in a *synchronous*
-    way; it, by the time this function returns the launch is completed */
+    way; it, by the time this function returns the launch is
+    completed. Both rayGen and params must be valid handles; it is
+    valid to have a empty params, but it may not be null */
 OWL_API void
 owlLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
             OWLParams params);
 
 /*! perform a raygen launch with launch parameters, in a *A*synchronous
     way; it, this will only launch, but *NOT* wait for completion (see
-    owlLaunchSync) */
+    owlLaunchSync). Both rayGen and params must be valid handles; it is
+    valid to have a empty params, but it may not be null */
 OWL_API void
 owlAsyncLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
                  OWLParams params);
