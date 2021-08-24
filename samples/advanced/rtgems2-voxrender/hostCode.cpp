@@ -139,16 +139,16 @@ void Viewer::cameraChanged()
   const vec3f lookFrom = camera.getFrom();
   const vec3f lookAt = camera.getAt();
   const vec3f lookUp = camera.getUp();
-  const float cosFovy = camera.getCosFovy();
+  const float tanHalfAngle = tanf(owl::viewer::toRadian(0.5f*camera.getFovyInDegrees()));
   // ----------- compute variable values  ------------------
   vec3f camera_pos = lookFrom;
   vec3f camera_d00
     = normalize(lookAt-lookFrom);
   float aspect = fbSize.x / float(fbSize.y);
   vec3f camera_ddu
-    = cosFovy * aspect * normalize(cross(camera_d00,lookUp));
+    = tanHalfAngle * aspect * normalize(cross(camera_d00,lookUp));
   vec3f camera_ddv
-    = cosFovy * normalize(cross(camera_ddu,camera_d00));
+    = tanHalfAngle * normalize(cross(camera_ddu,camera_d00));
   camera_d00 -= 0.5f * camera_ddu;
   camera_d00 -= 0.5f * camera_ddv;
 
@@ -1318,7 +1318,7 @@ void printUsageAndExit(const char *progName)
 {
   std::cout << "Usage: " << progName << " [options] [file1.vox file2.vox ...]\n";
   std::cout << "Options:\n"
-            << "   --camera <args>  : camera in OWL format as printed with C key\n"
+            << "   --camera <args>  : camera in OWL format as printed with Shift+C key\n"
             << "   --no-ground      : disable ground plane \n"
             << "   --no-clipping    : disable clipping plane controls \n"
             << "   --no-outlines    : disable toon outlines \n"
@@ -1328,6 +1328,7 @@ void printUsageAndExit(const char *progName)
   std::cout << "\n"
             << "If no vox files are given then a small default scene is shown\n"
             << "Check the key() function for supported hot keys to move lights, etc.\n";
+  exit(1);
 }
 
 int main(int ac, char **av)
@@ -1416,10 +1417,12 @@ int main(int ac, char **av)
   }
 
   Viewer viewer(scene, sceneType, options);
+  constexpr float fovyInDegrees = 11.42f;  // legacy default from paper
   viewer.camera.setOrientation(lookFrom,
                                lookAt,
                                lookUp,
-                               owl::viewer::toDegrees(acosf(0.1f)));
+                               fovyInDegrees);
+
   viewer.enableFlyMode();
   viewer.enableInspectMode(owl::box3f(vec3f(-1.f),vec3f(+1.f)));
 
