@@ -46,15 +46,15 @@ find_program(BIN2C bin2c
 #    'output_var', which can then be added to cmake targets.
 macro(cuda_compile_and_embed output_var cuda_file)
   set(c_var_name ${output_var})
-  if(${CMAKE_BUILD_TYPE} MATCHES "Release")
+  if(${CMAKE_BUILD_TYPE} MATCHES "Rel.*")
     cuda_compile_ptx(ptx_files
       ${cuda_file}
-      OPTIONS -O3 -DNDEBUG=1 --use_fast_math
+      OPTIONS -O3 -DNDEBUG=1 --keep --generate-line-info --use_fast_math
       )
   else()
     cuda_compile_ptx(ptx_files
       ${cuda_file} 
-      OPTIONS --keep --generate-line-info
+      OPTIONS --keep --generate-line-info --use_fast_math
       )
   endif()
   list(GET ptx_files 0 ptx_file)
