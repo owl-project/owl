@@ -14,13 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-if(OWL_DEPRECATED_CMAKE)
-  cuda_compile_and_embed(ptxCode
-    deviceCode.cu
-    )
-else()
-  embed_ptx(ptxCode deviceCode.cu)
-endif()
+embed_ptx(ptxCode deviceCode.cu)
+
 add_executable(sample00-rayGenOnly
   hostCode.cpp
   ${ptxCode}

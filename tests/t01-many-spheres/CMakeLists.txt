@@ -16,13 +16,7 @@
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
 
-if(OWL_DEPRECATED_CMAKE)
-  cuda_compile_and_embed(ptxCode
-    deviceCode.cu
-    )
-else()
-  embed_ptx(ptxCode deviceCode.cu)
-endif()
+embed_ptx(ptxCode deviceCode.cu)
 
 add_executable(test01-manySpheres
   hostCode.cpp

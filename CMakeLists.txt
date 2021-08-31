@@ -14,8 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# If using this option, you have no control over the target CUDA architecture.
-option(OWL_USE_DEPRECATED_CMAKE "(CMake <= 3.7) Use find_cuda based CMake build, deprecated since 2018" OFF)
 # If using this option, set OWL_CUDA_ARCH to a single value like 61 or 86.
 option(OWL_USE_INTERMEDIATE_CMAKE "(3.8 <= CMake <= 3.17) Use first-class CUDA CMake build but before CMAKE_CUDA_ARCHITECTURES was introduced" OFF)
 # If using this option, set CMAKE_CUDA_ARCHITECTURES to a single value like 61 or 86.
@@ -31,28 +29,27 @@ else()
   SET(OWL_IS_SUBPROJECT OFF)
 endif()
 
-if(OWL_USE_DEPRECATED_CMAKE)
-  set(OWL_DEPRECATED_CMAKE ON)
-elseif(OWL_USE_INTERMEDIATE_CMAKE)
+if(CUDA_TOOLKIT_ROOT_DIR)
+  # Somebody called find_cuda--they are trying to use the deprecated build.
+  message(ERROR "A parent project has called find_cuda. This is deprecated and "
+      "not supported by OWL. The parent project must use CUDA first-class "
+      "language support (project(foo LANGUAGES CXX CUDA)) and not call any "
+      "of the deprecated CUDA functions.")
+endif()
+
+if(OWL_USE_INTERMEDIATE_CMAKE)
   set(OWL_INTERMEDIATE_CMAKE ON)
 elseif(OWL_USE_MODERN_CMAKE)
   set(OWL_MODERN_CMAKE ON)
 else()
   # If none of these options are set, we need to guess which build you want.
-  if(CUDA_TOOLKIT_ROOT_DIR)
-    # Somebody called find_cuda--we're using the deprecated build.
-    set(OWL_DEPRECATED_CMAKE ON)
-  elseif(OWL_IS_SUBPROJECT AND WIN32)
-    # OWL cannot be used as a subproject on Windows with the deprecated build
-    # of a project which uses the intermediate or modern build.
-    if(${CMAKE_VERSION} VERSION_LESS 3.18)
-      set(OWL_INTERMEDIATE_CMAKE ON)
-    else()
-      set(OWL_MODERN_CMAKE ON)
-    endif()
+  if(${CMAKE_VERSION} VERSION_LESS 3.18)
+    set(OWL_INTERMEDIATE_CMAKE ON)
   else()
-    # For compatibility, default to deprecated build.
-    set(OWL_DEPRECATED_CMAKE ON)
+    message(STATUS "Defaulting to modern CMake (CMAKE_CUDA_ARCHITECTURES required) "
+      "as you are running CMake >= 3.18. If this is not desired, set "
+      "OWL_USE_INTERMEDIATE_CMAKE.")
+    set(OWL_MODERN_CMAKE ON)
   endif()
 endif()
 
@@ -60,31 +57,17 @@ if (POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW) # Setting version in project command
 endif()
 
-if(OWL_DEPRECATED_CMAKE)
-  project(Optix-OWL VERSION 1.0.6)
-  cmake_minimum_required(VERSION 2.8)
-  set(warning_msg "Building OWL in deprecated CMake mode. Please")
-  if(${CMAKE_VERSION} VERSION_LESS 3.18)
-    set(warning_msg "${warning_msg} upgrade to CMake 3.18 or higher and")
+if(OWL_INTERMEDIATE_CMAKE)
+  cmake_minimum_required(VERSION 3.8)
+  if(NOT ${CMAKE_VERSION} VERSION_LESS 3.18)
+    cmake_policy(SET CMP0104 OLD) # CUDA arch set manually by compiler flags
   endif()
-  set(warning_msg "${warning_msg} set OWL_USE_MODERN_CMAKE")
-  if(OWL_IS_SUBPROJECT)
-    set(warning_msg "${warning_msg}, and upgrade your parent project to use modern CMake")
-  endif()
-  message(WARNING "${warning_msg}.")
 else()
-  if(OWL_INTERMEDIATE_CMAKE)
-    cmake_minimum_required(VERSION 3.8)
-    if(NOT ${CMAKE_VERSION} VERSION_LESS 3.18)
-      cmake_policy(SET CMP0104 OLD) # CUDA arch set manually by compiler flags
-    endif()
-  else()
-    cmake_minimum_required(VERSION 3.18)
-    cmake_policy(SET CMP0104 NEW) # CUDA_ARCHITECTURES must be specified
-  endif()
-  # project command is required to come after cmake_minimum_required command.
-  project(Optix-OWL VERSION 1.0.6 LANGUAGES C CXX CUDA) # c language required for embed_ptx
+  cmake_minimum_required(VERSION 3.18)
+  cmake_policy(SET CMP0104 NEW) # CUDA_ARCHITECTURES must be specified
 endif()
+# project command is required to come after cmake_minimum_required command.
+project(Optix-OWL VERSION 1.0.6 LANGUAGES C CXX CUDA) # c language required for embed_ptx
 
 
 # ------------------------------------------------------------------
@@ -101,12 +84,6 @@ include(configure_build_type)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(OWL_CXX_FLAGS "")
-if(OWL_DEPRECATED_CMAKE)
-  if (NOT WIN32)
-    set (CMAKE_CXX_FLAGS "--std=c++11")
-    set (CUDA_PROPAGATE_HOST_FLAGS ON)
-  endif()
-endif()
 
 if (WIN32)
   # Nate: 11/3/20: I get "fatal error C1041: cannot open program database" 
