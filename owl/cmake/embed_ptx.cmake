@@ -54,6 +54,51 @@
 # and you will get "undefined reference to myPtxProgram" or "unresolved external
 # symbol myPtxProgram" from the linker.
 
+# Replaces list(TRANSFORM ... PREPEND ...) which isn't available in 3.8.
+# From https://github.com/flutter/flutter/pull/57515/files
+# Copyright 2014 The Flutter Authors. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without modification,
+# are permitted provided that the following conditions are met:
+# 
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above
+#       copyright notice, this list of conditions and the following
+#       disclaimer in the documentation and/or other materials provided
+#       with the distribution.
+#     * Neither the name of Google Inc. nor the names of its
+#       contributors may be used to endorse or promote products derived
+#       from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+function(list_prepend LIST_NAME PREFIX)
+  set(NEW_LIST "")
+  foreach(element ${${LIST_NAME}})
+    list(APPEND NEW_LIST "${PREFIX}${element}")
+  endforeach(element)
+  set(${LIST_NAME} "${NEW_LIST}" PARENT_SCOPE)
+endfunction()
+
+# Replaces list(TRANSFORM ... REPLACE ...)
+function(list_replace LIST_NAME FINDREGEX REPLACEWITH)
+  set(NEW_LIST "")
+  foreach(element ${${LIST_NAME}})
+    string(REGEX REPLACE "${FINDREGEX}" "${REPLACEWITH}" elementout "${element}")
+    list(APPEND NEW_LIST "${elementout}")
+  endforeach(element)
+  set(${LIST_NAME} "${NEW_LIST}" PARENT_SCOPE)
+endfunction()
+
 function(embed_ptx c_embed_name cu_file)
   # Initial setup
   set(ptxfile "${CMAKE_CURRENT_BINARY_DIR}/${c_embed_name}.ptx")
@@ -98,20 +143,20 @@ function(embed_ptx c_embed_name cu_file)
     string(STRIP "${quotedcontents}" quotedcontents)
     string(STRIP "${quoteprefix}" quoteprefix)
     string(REPLACE " " ";" quotedargs "${quotedcontents}")
-    list(TRANSFORM quotedargs PREPEND "${quoteprefix} ")
+    list_prepend(quotedargs "${quoteprefix} ")
     string(REPLACE ";" " " quotedargs "${quotedargs}")
     set(manualcudaflags "${beforequotes} ${quotedargs} ${afterquotes}")
   endwhile()
   # Includes manipulation
   get_property(includes DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
   if(WIN32)
-    list(TRANSFORM includes REPLACE " " "\\\\ ")
+    list_replace(includes " " "\\\\ ")
   endif()
-  list(TRANSFORM includes PREPEND "-I ")
+  list_prepend(includes "-I ")
   string(REPLACE ";" " " includes "${includes}")
   # Final flags manipulation
   set(allcudaflags "${manualcudaflags} ${archflags} ${includes}")
-  #message(STATUS "All CUDA flags for embed_ptx of ${cu_file}:\n${allcudaflags}")
+  message(STATUS "All CUDA flags for embed_ptx of ${cu_file}:\n${allcudaflags}")
   separate_arguments(allcudaflags)
   #message(STATUS "embed_ptx build command 1: ${CMAKE_CUDA_COMPILER} ${allcudaflags} -ptx ${cu_file_frombin} -o ${ptxfile}")
   #message(STATUS "embed_ptx build command 2: ${BIN2C} -c --padd 0 --type char --name ${c_embed_name} ${ptxfile} > ${embedfile}")
