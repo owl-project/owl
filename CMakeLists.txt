@@ -102,18 +102,10 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(OWL_CXX_FLAGS "")
 if(OWL_DEPRECATED_CMAKE)
-  # iw, 1/3/20: yes, i know this is 'old' cmake style, but on CentOS7
-  # this is the only way that works, since the 'correct' way of setting
-  # the cxx11 standard doesnt propagate those flags to nvcc for the cuda
-  # programs. TODO: check to see if this can be fixed in the
-  # configure_cuda script instead.
   if (NOT WIN32)
     set (CMAKE_CXX_FLAGS "--std=c++11")
     set (CUDA_PROPAGATE_HOST_FLAGS ON)
   endif()
-  # lp, 2/24/21: the 'correct' way of setting the cxx11 standard *does*
-  # propagate those flags to nvcc for the cuda programs, when using 
-  # any version of CMake which natively supports CUDA, i.e. >= 3.8.
 endif()
 
 if (WIN32)
