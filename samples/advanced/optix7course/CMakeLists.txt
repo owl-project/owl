@@ -18,8 +18,6 @@ include_directories(${OWL_VIEWER_INCLUDES})
 
 embed_ptx(embedded_ptx_code devicePrograms.cu)
 
-add_library(toneMap STATIC toneMap.cu)
-
 add_executable(adv_optix7course
   # the file with embedded PTX string for the device programs:
   ${embedded_ptx_code}

@@ -137,8 +137,6 @@ set(OWL_SOURCES
   UserGeomGroup.cpp
 )
 
-<<<<<<< HEAD
-# add_library(owl SHARED ${OWL_SOURCES})
 add_library(owl_static STATIC ${OWL_SOURCES})
 
 set_target_properties(
@@ -149,24 +147,12 @@ set_target_properties(
   POSITION_INDEPENDENT_CODE ON
   CUDA_RESOLVE_DEVICE_SYMBOLS ON
 )
-=======
-# Nate: 05/31/21: cuda_add_library for some reason is always out of date on 
-# windows, causing owl and all dependencies to rebuild every compile...
-# This rebuild issue doesn't seem to happen with native CUDA language support, 
-# so I'm switching over to that.
-add_library(owl_static STATIC
-  ${OWL_SOURCES} 
-)
 
-target_link_libraries(owl_static
-   ${CUDA_LIBRARIES}
-   ${CUDA_CUDA_LIBRARY}
-   ${CMAKE_THREAD_LIBS_INIT}
-  )
-
-
-set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
->>>>>>> upstream/devel
+# target_link_libraries(owl_static
+#    ${CUDA_LIBRARIES}
+#    ${CUDA_CUDA_LIBRARY}
+#    ${CMAKE_THREAD_LIBS_INIT}
+#   )
 
 # -------------------------------------------------------
 # export those back to our parent:
