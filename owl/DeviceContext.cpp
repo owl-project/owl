@@ -115,9 +115,9 @@ namespace owl {
     cudaFree(0);
     
     int totalNumDevicesAvailable = 0;
-    cudaGetDeviceCount(&totalNumDevicesAvailable);
+    CUDA_CALL(GetDeviceCount(&totalNumDevicesAvailable));
     if (totalNumDevicesAvailable == 0)
-      throw std::runtime_error("#owl: no CUDA capable devices found!");
+      OWL_RAISE("#owl: no CUDA capable devices found!");
     LOG_OK("found " << totalNumDevicesAvailable << " CUDA device(s)");
 
 
@@ -142,7 +142,11 @@ namespace owl {
     // ------------------------------------------------------------------
     // init optix itself
     // ------------------------------------------------------------------
-#if OPTIX_VERSION >= 70100
+#if OPTIX_VERSION >= 70300
+    LOG("initializing optix 7.3");
+#elif OPTIX_VERSION >= 70200
+    LOG("initializing optix 7.2");
+#elif OPTIX_VERSION >= 70100
     LOG("initializing optix 7.1");
 #else
     LOG("initializing optix 7");
@@ -178,7 +182,7 @@ namespace owl {
     // one device...
     // ------------------------------------------------------------------
     if (devices.empty())
-      throw std::runtime_error("fatal error - could not find/create any optix devices");
+      OWL_RAISE("fatal error - could not find/create any optix devices");
     
     LOG_OK("successfully created device group with " << devices.size() << " devices");
     return devices;
@@ -202,7 +206,7 @@ namespace owl {
     
     CUresult  cuRes = cuCtxGetCurrent(&cudaContext);
     if (cuRes != CUDA_SUCCESS) 
-      throw std::runtime_error("Error querying current CUDA context...");
+      OWL_RAISE("Error querying current CUDA context...");
     
     OPTIX_CHECK(optixDeviceContextCreate(cudaContext, 0, &optixContext));
     OPTIX_CHECK(optixDeviceContextSetLogCallback
@@ -253,16 +257,22 @@ namespace owl {
     // configure default module compile options
     // ------------------------------------------------------------------
   if (!debug) {
-    moduleCompileOptions.maxRegisterCount  = 50;
+    moduleCompileOptions.maxRegisterCount  = OPTIX_COMPILE_DEFAULT_MAX_REGISTER_COUNT ;
     moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
-    moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_NONE;
+    moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
   } 
   else {
     std::cout << "WARNING: RUNNING OPTIX PROGRAMS IN -O0 DEBUG MODE!!!" << std::endl;
-    moduleCompileOptions.maxRegisterCount  = 50;
-    moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
+    moduleCompileOptions.maxRegisterCount  = OPTIX_COMPILE_DEFAULT_MAX_REGISTER_COUNT ;
+    moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
     moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
   }
+
+#if OPTIX_VERSION >= 70200
+    // Bound values of launch params
+    moduleCompileOptions.boundValues = parent->boundLaunchParamValues.data();
+    moduleCompileOptions.numBoundValues = (unsigned int)parent->boundLaunchParamValues.size();
+#endif
     
     // ------------------------------------------------------------------
     // configure default pipeline compile options
@@ -288,7 +298,7 @@ namespace owl {
     }
     pipelineCompileOptions.usesMotionBlur     = parent->motionBlurEnabled;
     pipelineCompileOptions.numPayloadValues   = 2;
-    pipelineCompileOptions.numAttributeValues = 2;
+    pipelineCompileOptions.numAttributeValues = parent->numAttributeValues;
     pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
     pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
     
@@ -306,7 +316,7 @@ namespace owl {
     
     auto &allPGs = allActivePrograms;
     if (allPGs.empty())
-      throw std::runtime_error("trying to create a pipeline w/ 0 programs!?");
+      OWL_RAISE("trying to create a pipeline w/ 0 programs!?");
     
     char log[2048];
     size_t sizeof_log = sizeof( log );
@@ -327,7 +337,7 @@ namespace owl {
        &maxAllowedByOptix,
        sizeof(maxAllowedByOptix));
     if (uint32_t(parent->maxInstancingDepth+1) > maxAllowedByOptix)
-      throw std::runtime_error
+      OWL_RAISE
         ("error when building pipeline: "
          "attempting to set max instancing depth to "
          "value that exceeds OptiX's MAX_TRAVERSABLE_GRAPH_DEPTH limit");

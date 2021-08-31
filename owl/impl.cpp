@@ -22,7 +22,11 @@
 #include "UserGeom.h"
 #include "InstanceGroup.h"
 
-namespace owl {
+#undef OWL_API
+#define OWL_API extern "C" OWL_DLL_EXPORT
+
+//namespace owl {
+using namespace owl;
 
 #if 1
 # define LOG_API_CALL() /* ignore */
@@ -90,6 +94,38 @@ namespace owl {
     checkGet(_context)->setRayTypeCount(numRayTypes);
   }
 
+  OWL_API void
+  owlContextSetNumAttributeValues(OWLContext _context, size_t numAttributeValues)
+  {
+    LOG_API_CALL();
+    checkGet(_context)->setNumAttributeValues(numAttributeValues);
+  }
+
+  OWL_API void
+  owlContextSetBoundLaunchParamValues(OWLContext _context,
+                                      const OWLBoundValueDecl *_boundValues,
+                                      int numBoundValues)
+  {
+    LOG_API_CALL();
+    if (_boundValues == nullptr && (numBoundValues == 0 || numBoundValues == -1)) 
+      return;
+  
+    assert(_boundValues);
+    if (numBoundValues == -1) {
+      // list is null terminated
+      for (numBoundValues = 0; _boundValues[numBoundValues].var.name != nullptr; numBoundValues++);
+    }
+    if (numBoundValues <= 0) return;
+
+    // check and pack into vector
+    for (int i = 0; i < numBoundValues; ++i) {
+      assert(_boundValues[i].boundValuePtr);
+    }
+    std::vector<OWLBoundValueDecl> boundValues(numBoundValues);
+    std::copy(_boundValues, _boundValues+numBoundValues, boundValues.begin());
+    checkGet(_context)->setBoundLaunchParamValues(boundValues);
+  }
+
 
   /*! sets maximum instancing depth for the given context:
 
@@ -116,7 +152,7 @@ namespace owl {
     LOG_API_CALL();
     checkGet(_context)->setMaxInstancingDepth(maxInstanceDepth);
   }
-  
+
 
   OWL_API void
   owlEnableMotionBlur(OWLContext _context)
@@ -132,9 +168,10 @@ namespace owl {
     checkGet(_context)->buildSBT(flags);
   }
 
-  OWL_API void owlBuildPrograms(OWLContext _context, bool debug)
+  OWL_API void owlBuildPrograms(OWLContext _context)
   {
     LOG_API_CALL();
+    bool debug = false;
     checkGet(_context)->buildPrograms(debug);
   }
   
@@ -163,6 +200,27 @@ namespace owl {
     assert(launchParams);
 
     rayGen->launchAsync(vec2i(dims_x,dims_y),launchParams);
+  }
+
+  OWL_API void owlAsyncLaunch2DOnDevice(OWLRayGen _rayGen,
+                                int dims_x,
+                                int dims_y,
+                                int deviceID,
+                                OWLLaunchParams _launchParams)
+  {
+    LOG_API_CALL();
+
+    assert(_rayGen);
+    RayGen::SP rayGen
+      = ((APIHandle *)_rayGen)->get<RayGen>();
+    assert(rayGen);
+
+    assert(_launchParams);
+    LaunchParams::SP launchParams
+      = ((APIHandle *)_launchParams)->get<LaunchParams>();
+    assert(launchParams);
+
+    rayGen->launchAsyncOnDevice(vec2i(dims_x,dims_y), deviceID,launchParams);
   }
 
   OWL_API void owlLaunch2D(OWLRayGen _rayGen,
@@ -220,8 +278,8 @@ namespace owl {
     assert(obj);
 
     if (!obj->hasVariable(varName))
-      throw std::runtime_error("Trying to get reference to variable '"+std::string(varName)+
-                               "' on object that does not have such a variable");
+      OWL_RAISE("Trying to get reference to variable '"+std::string(varName)+
+                "' on object that does not have such a variable");
     
     Variable::SP var = obj->getVariable(varName);
     assert(var);
@@ -431,7 +489,7 @@ namespace owl {
                            'numInstnaces', the i'th instnace in this
                            gorup will be an instance o the i'th
                            element in this list */
-                         const OWLGroup *_initGroups      OWL_IF_CPP(= nullptr),
+                         const OWLGroup *_initGroups,
 
                          /*! instance IDs to use for the instance in
                            this group; must be eithe rnull, or an
@@ -443,14 +501,14 @@ namespace owl {
                            what value 'optixGetInstanceID' will return
                            in a CH program that refers to the given
                            instance */
-                         const uint32_t *initInstanceIDs OWL_IF_CPP(= nullptr),
+                         const uint32_t *initInstanceIDs,
                        
                          /*! initial list of transforms that this
                            instance group will use; must be either
                            null, or an array of size numInstnaces, of
                            the format specified */
-                         const float    *initTransforms  OWL_IF_CPP(= nullptr),
-                         OWLMatrixFormat matrixFormat=OWL_MATRIX_FORMAT_OWL)
+                         const float    *initTransforms,
+                         OWLMatrixFormat matrixFormat)
   {
     LOG_API_CALL();
     std::vector<Group::SP> initGroups;
@@ -680,6 +738,16 @@ namespace owl {
     return buffer->resize(newItemCount);
   }
 
+  OWL_API size_t
+  owlBufferSizeInBytes(OWLBuffer _buffer)
+  {
+    LOG_API_CALL();
+    assert(_buffer);
+    Buffer::SP buffer = ((APIHandle *)_buffer)->get<Buffer>();
+    assert(buffer);
+    return buffer->sizeInBytes();
+  }
+
   OWL_API void 
   owlBufferUpload(OWLBuffer _buffer,
                   const void *hostPtr,
@@ -901,6 +969,32 @@ namespace owl {
     group->buildAccel();
   }  
 
+  /*! returns the (device) memory used for this group's acceleration
+    structure (but _excluding_ the memory for the geometries
+    itself). "memFinal" is how much memory is used for the _final_
+    version of the BVH (after it is done building), "memPeak" is peak
+    memory used during construction. passing a NULL pointer to any
+    value is valid; these values will get ignored. */
+  OWL_API void owlGroupGetAccelSize(OWLGroup _group,
+                                    size_t *p_memFinal,
+                                    size_t *p_memPeak)
+  {
+    LOG_API_CALL();
+    
+    assert(_group);
+
+    Group::SP group
+      = ((APIHandle *)_group)->get<Group>();
+    assert(group);
+
+    size_t memFinal, memPeak;
+    group->getAccelSize(memFinal,memPeak);
+    
+    if (p_memFinal) *p_memFinal = memFinal;
+    if (p_memPeak)  *p_memPeak  = memPeak;
+  }
+
+  
   OWL_API void owlGroupRefitAccel(OWLGroup _group)
   {
     LOG_API_CALL();
@@ -1368,9 +1462,6 @@ namespace owl {
     group->setTransforms(timeStep,floatsForThisStimeStep,matrixFormat);
   }
   
-  /*! this function allows to set up to N different arrays of trnsforms
-    for motion blur; the first such array is used as transforms for
-    t=0, the last one for t=1.  */
   OWL_API void
   owlInstanceGroupSetInstanceIDs(OWLGroup _group,
                                  const uint32_t *instanceIDs)
@@ -1382,6 +1473,19 @@ namespace owl {
     assert(group);
 
     group->setInstanceIDs(instanceIDs);
+  }
+
+  OWL_API void
+  owlInstanceGroupSetVisibilityMasks(OWLGroup _group,
+                                     const uint8_t *visibilityMasks)
+  {
+    LOG_API_CALL();
+
+    assert(_group);
+    InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+    assert(group);
+
+    group->setVisibilityMasks(visibilityMasks);
   }
   
   OWL_API void
@@ -1415,4 +1519,5 @@ namespace owl {
     group->setTransform(whichChild, xfm);
   }
 
-} // ::owl
+  
+//} // ::owl

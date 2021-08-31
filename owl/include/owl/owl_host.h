@@ -45,20 +45,20 @@
 # define OWL_IF_CPP(a) /* drop it */
 #endif
 
-#if defined(OWL_DLL_INTERFACE)
-#  ifdef owl_EXPORTS
-#    define OWL_API OWL_DLL_EXPORT
-#  else
-#    define OWL_API OWL_DLL_IMPORT
-#  endif
-#else
+//#if defined(OWL_DLL_INTERFACE)
+//#  ifdef owl_EXPORTS
+//#    define OWL_API OWL_DLL_EXPORT
+//#  else
+//#    define OWL_API OWL_DLL_IMPORT
+//#  endif
+//#else
 #  ifdef __cplusplus
 #    define OWL_API extern "C" OWL_DLL_EXPORT
 #  else
 #    define OWL_API /* bla */
 #  endif
 //#  define OWL_API /*static lib*/
-#endif
+//#endif
 //#ifdef __cplusplus
 //# define OWL_API extern "C" OWL_DLL_EXPORT
 //#else
@@ -67,9 +67,9 @@
 
 
 
-#define OWL_OFFSETOF(type,member)               \
-  ((char *)(&((struct type *)0)-> member )      \
-   -                                            \
+#define OWL_OFFSETOF(type,member)                       \
+   (uint32_t)((char *)(&((struct type *)0)-> member )   \
+   -                                                    \
    (char *)(((struct type *)0)))
   
   
@@ -271,6 +271,11 @@ typedef struct _OWLVarDecl {
   uint32_t    offset;
 } OWLVarDecl;
 
+typedef struct _OWLBoundValueDecl {
+  OWLVarDecl var;
+  void *boundValuePtr;
+} OWLBoundValueDecl;
+
 
 /*! supported formats for texels in textures */
 typedef enum {
@@ -333,7 +338,7 @@ typedef struct _OWLMissProg      *OWLMissProg;
   all programs within a given launch */
 typedef struct _OWLLaunchParams  *OWLLaunchParams, *OWLParams, *OWLGlobals;
 
-OWL_API void owlBuildPrograms(OWLContext context, bool debug = false);
+OWL_API void owlBuildPrograms(OWLContext context);
 OWL_API void owlBuildPipeline(OWLContext context);
 OWL_API void owlBuildSBT(OWLContext context,
                          OWLBuildSBTFlags flags OWL_IF_CPP(=OWL_SBT_ALL));
@@ -375,6 +380,23 @@ OWL_API void
 owlContextSetRayTypeCount(OWLContext context,
                           size_t numRayTypes);
 
+/* Set number of attributes for passing data from custom Intersection programs
+   to ClosestHit programs.  Default 2.  Has no effect once programs are built.*/
+OWL_API void
+owlContextSetNumAttributeValues(OWLContext context,
+                                size_t numAttributeValues);
+
+/*! tells OptiX to specialize the values of certain launch parameters
+  when compiling modules, and ignore their values at launch.
+  See section 6.3.1 of the OptiX 7.2 programming guide.
+  This call is a no-op for OptiX versions < 7.2, and programs should not 
+  rely on it for correct behavior.
+  OWL stores a copy of the array internally. */
+OWL_API void
+owlContextSetBoundLaunchParamValues(OWLContext context,
+                                    const OWLBoundValueDecl *boundValues,
+                                    int numBoundValues);
+
 /*! sets maximum instancing depth for the given context:
 
   '0' means 'no instancing allowed, only bottom-level accels; Note
@@ -400,7 +422,7 @@ owlContextSetRayTypeCount(OWLContext context,
 OWL_API void
 owlSetMaxInstancingDepth(OWLContext context,
                          int32_t maxInstanceDepth);
-  
+
 
 OWL_API void
 owlContextDestroy(OWLContext context);
@@ -544,6 +566,16 @@ owlInstanceGroupCreate(OWLContext context,
 OWL_API void owlGroupBuildAccel(OWLGroup group);
 OWL_API void owlGroupRefitAccel(OWLGroup group);
 
+/*! returns the (device) memory used for this group's acceleration
+    structure (but _excluding_ the memory for the geometries
+    itself). "memFinal" is how much memory is used for the _final_
+    version of the BVH (after it is done building), "memPeak" is peak
+    memory used during construction. passing a NULL pointer to any
+    value is valid; these values will get ignored. */
+OWL_API void owlGroupGetAccelSize(OWLGroup group,
+                                  size_t *p_memFinal,
+                                  size_t *p_memPeak);
+                                  
 OWL_API OWLGeomType
 owlGeomTypeCreate(OWLContext context,
                   OWLGeomKind kind,
@@ -637,6 +669,9 @@ owlGroupGetTraversable(OWLGroup group, int deviceID);
 OWL_API void 
 owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 
+OWL_API size_t
+owlBufferSizeInBytes(OWLBuffer buffer);
+
 /*! destroy the given buffer; this will both release the app's
   refcount on the given buffer handle, *and* the buffer itself; ie,
   even if some objects still hold variables that refer to the old
@@ -653,24 +688,30 @@ owlBufferUpload(OWLBuffer buffer,
                 size_t offset OWL_IF_CPP(=0),
                 size_t numBytes OWL_IF_CPP(=size_t(-1)));
 
-/*! executes an optix lauch of given size, with given launch
+/*! executes an optix launch of given size, with given launch
   program. Note this is asynchronous, and may _not_ be
   completed by the time this function returns. */
 OWL_API void
 owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
-/*! perform a raygen launch with lauch parameters, in a *synchronous*
+/*! perform a raygen launch with launch parameters, in a *synchronous*
     way; it, by the time this function returns the launch is completed */
 OWL_API void
 owlLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
             OWLParams params);
 
-/*! perform a raygen launch with lauch parameters, in a *A*synchronous
+/*! perform a raygen launch with launch parameters, in a *A*synchronous
     way; it, this will only launch, but *NOT* wait for completion (see
     owlLaunchSync) */
 OWL_API void
 owlAsyncLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
                  OWLParams params);
+
+/*! perform a raygen launch with launch parameters, but only for a given device, 
+    and in an asynchronous way. This function is useful for dynamic load balancing. */
+OWL_API void
+owlAsyncLaunch2DOnDevice(OWLRayGen rayGen, int dims_x, int dims_y, 
+                        int deviceID, OWLParams params);
 
 
 OWL_API CUstream
@@ -744,6 +785,11 @@ owlInstanceGroupSetTransforms(OWLGroup group,
 OWL_API void
 owlInstanceGroupSetInstanceIDs(OWLGroup group,
                                const uint32_t *instanceIDs);
+
+OWL_API void
+owlInstanceGroupSetVisibilityMasks(OWLGroup group,
+                               const uint8_t *visibilityMasks);
+
 
 OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,

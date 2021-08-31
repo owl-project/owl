@@ -113,7 +113,8 @@ namespace owl {
     if (type == OWL_TEXTURE)
       return std::make_shared<DeviceBuffer::DeviceDataForTextures>(this,device);
 
-    throw std::runtime_error("unsupported element type for device buffer");
+    OWL_RAISE("unsupported element type for device buffer");
+    return nullptr;
   }
   
   void DeviceBuffer::upload(const void *hostPtr, size_t offset, int64_t count)
@@ -335,8 +336,8 @@ namespace owl {
   
   void HostPinnedBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count)
   {
-    throw std::runtime_error("uploading to specific device doesn't "
-                             "make sense for host pinned buffers");
+    OWL_RAISE("uploading to specific device doesn't "
+              "make sense for host pinned buffers");
   }
   
   // ------------------------------------------------------------------
@@ -412,8 +413,8 @@ namespace owl {
   void ManagedMemoryBuffer::upload(const int deviceID,
                                    const void *hostPtr, size_t offset, int64_t count)
   {
-    throw std::runtime_error("copying to a specific device doesn't"
-                             " make sense for a managed mem buffer");
+    OWL_RAISE("copying to a specific device doesn't"
+              " make sense for a managed mem buffer");
   }
 
   // ------------------------------------------------------------------
@@ -439,12 +440,12 @@ namespace owl {
 
   void GraphicsBuffer::upload(const void *hostPtr, size_t offset, int64_t count)
   {
-    throw std::runtime_error("Buffer::upload doesn' tmake sense for graphics buffers");
+    OWL_RAISE("Buffer::upload doesn' tmake sense for graphics buffers");
   }
   
   void GraphicsBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) 
   {
-    throw std::runtime_error("Buffer::upload doesn' tmake sense for graphics buffers");
+    OWL_RAISE("Buffer::upload doesn' tmake sense for graphics buffers");
   }
   
   void GraphicsBuffer::map(const int deviceID, CUstream stream)

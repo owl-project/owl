@@ -35,6 +35,31 @@ set(OWL_SOURCES
   # infrastructure
   # -------------------------------------------------------
   include/owl/owl.h
+  include/owl/owl_host.h
+  include/owl/owl_device.h
+  include/owl/common/arrayND/array2D.h
+  include/owl/common/arrayND/array3D.h
+  include/owl/common/math/AffineSpace.h
+  include/owl/common/math/box.h
+  include/owl/common/math/constants.h
+  include/owl/common/math/fixedpoint.h
+  include/owl/common/math/LinearSpace.h
+  include/owl/common/math/Quaternion.h
+  include/owl/common/math/random.h
+  include/owl/common/math/vec/compare.h
+  include/owl/common/math/vec/functors.h
+  include/owl/common/math/vec/rotate.h
+  include/owl/common/math/vec.h
+  include/owl/common/owl-common.h
+  include/owl/common/parallel/parallel_for.h
+  include/owl/owl.h
+  include/owl/owl_device.h
+  include/owl/owl_device_buffer.h
+  include/owl/owl_host.h
+  helper/cuda.h
+  helper/optix.h
+  common.h
+
   cmake/configure_tbb.cmake
   cmake/configure_owl.cmake
   cmake/configure_optix.cmake
@@ -58,7 +83,6 @@ set(OWL_SOURCES
   Texture.h
   Texture.cpp
 
-  
   # -------------------------------------------------------
   # base classes
   # -------------------------------------------------------
@@ -93,19 +117,27 @@ set(OWL_SOURCES
   # -------------------------------------------------------
   # geometries
   # -------------------------------------------------------
+  Geometry.h
   Geometry.cpp
+  Triangles.h
   Triangles.cu
+  UserGeom.h
   UserGeom.cu
-  
+
   # -------------------------------------------------------
   # accel structures
   # -------------------------------------------------------
+  Group.h
   Group.cpp
+  InstanceGroup.h
   InstanceGroup.cpp
+  TrianglesGeomGroup.h
   TrianglesGeomGroup.cpp
+  UserGeomGroup.h
   UserGeomGroup.cpp
 )
 
+<<<<<<< HEAD
 # add_library(owl SHARED ${OWL_SOURCES})
 add_library(owl_static STATIC ${OWL_SOURCES})
 
@@ -117,6 +149,24 @@ set_target_properties(
   POSITION_INDEPENDENT_CODE ON
   CUDA_RESOLVE_DEVICE_SYMBOLS ON
 )
+=======
+# Nate: 05/31/21: cuda_add_library for some reason is always out of date on 
+# windows, causing owl and all dependencies to rebuild every compile...
+# This rebuild issue doesn't seem to happen with native CUDA language support, 
+# so I'm switching over to that.
+add_library(owl_static STATIC
+  ${OWL_SOURCES} 
+)
+
+target_link_libraries(owl_static
+   ${CUDA_LIBRARIES}
+   ${CUDA_CUDA_LIBRARY}
+   ${CMAKE_THREAD_LIBS_INIT}
+  )
+
+
+set_target_properties(owl_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
+>>>>>>> upstream/devel
 
 # -------------------------------------------------------
 # export those back to our parent:

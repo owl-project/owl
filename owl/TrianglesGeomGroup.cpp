@@ -85,16 +85,16 @@ namespace owl {
 
     if (!FULL_REBUILD && dd.bvhMemory.empty())
       throw std::runtime_error("trying to refit an accel struct that has not been previously built");
-    // assert("check does not yet exist" && dd.traversable == 0);
-    // if (FULL_REBUILD)
-    //   assert("check does not yet exist on first build" && dd.bvhMemory.empty());
-    // else
-    //   assert("check DOES exist on refit" && !dd.bvhMemory.empty());
-      
+
+    if (FULL_REBUILD) {
+      dd.memFinal = 0;
+      dd.memPeak = 0;
+    }
+   
     SetActiveGPU forLifeTime(device);
     LOG("building triangles accel over "
         << geometries.size() << " geometries");
-    size_t sumPrims = 0;
+    size_t   sumPrims = 0;
     uint32_t maxPrimsPerGAS = 0;
     optixDeviceContextGetProperty
       (device->optixContext,
@@ -126,9 +126,9 @@ namespace owl {
       assert(tris);
       
       if (tris->vertex.buffers.size() != (size_t)numKeys)
-        throw std::runtime_error("invalid combination of meshes with "
-                                 "different motion keys in the same "
-                                 "triangles geom group");
+        OWL_RAISE("invalid combination of meshes with "
+                  "different motion keys in the same "
+                  "triangles geom group");
       TrianglesGeom::DeviceData &trisDD = tris->getDD(device);
       
       CUdeviceptr     *d_vertices    = trisDD.vertexPointers.data();
@@ -168,8 +168,8 @@ namespace owl {
     }
     
     if (sumPrims > maxPrimsPerGAS) 
-      throw std::runtime_error("number of prim in user geom group exceeds "
-                               "OptiX's MAX_PRIMITIVES_PER_GAS limit");
+      OWL_RAISE("number of prim in user geom group exceeds "
+                "OptiX's MAX_PRIMITIVES_PER_GAS limit");
     
     // ==================================================================
     // BLAS setup: buildinputs set up, build the blas
@@ -208,20 +208,34 @@ namespace owl {
     // compacted size in
     // ------------------------------------------------------------------
 
+    const size_t tempSize
+        = FULL_REBUILD
+        ? blasBufferSizes.tempSizeInBytes
+        : blasBufferSizes.tempUpdateSizeInBytes;
+    LOG("starting to build/refit "
+        << prettyNumber(triangleInputs.size()) << " triangle geom groups, "
+        << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
+        << prettyNumber(tempSize) << "B in temp data");
+
     // temp memory:
     DeviceMemory tempBuffer;
     tempBuffer.alloc(FULL_REBUILD
                      ?blasBufferSizes.tempSizeInBytes
                      :blasBufferSizes.tempUpdateSizeInBytes);
-
+    
     // buffer for initial, uncompacted bvh
     DeviceMemory outputBuffer;
     outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
 
     // single size-t buffer to store compacted size in
     DeviceMemory compactedSizeBuffer;
-    if (FULL_REBUILD)
+    if (FULL_REBUILD) {
       compactedSizeBuffer.alloc(sizeof(uint64_t));
+      // this is only 8 bytes, so woon't matter... but still
+      dd.memPeak += tempBuffer.size();
+      dd.memPeak += outputBuffer.size();
+      dd.memPeak += compactedSizeBuffer.size();
+    } 
       
     // ------------------------------------------------------------------
     // now execute initial, uncompacted build
@@ -288,6 +302,8 @@ namespace owl {
                               (CUdeviceptr)dd.bvhMemory.get(),
                               dd.bvhMemory.size(),
                               &dd.traversable));
+      dd.memPeak += dd.bvhMemory.size();
+      dd.memFinal = dd.bvhMemory.size();
     }
     CUDA_SYNC_CHECK();
       

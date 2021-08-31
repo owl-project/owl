@@ -25,5 +25,6 @@
 # ---------------------------------------------------------------------------
 #include_directories(${OWL_VIEWER_INCLUDES})
 add_subdirectory(optix7course)
+add_subdirectory(rtgems2-voxrender)
 
 

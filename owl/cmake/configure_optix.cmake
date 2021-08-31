@@ -20,7 +20,6 @@
 #  )
 
 include(configure_cuda)
-#find_package(CUDA REQUIRED)
 find_package(OptiX REQUIRED VERSION 7)
 
 include_directories(${OptiX_INCLUDE})

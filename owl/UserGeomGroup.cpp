@@ -72,6 +72,11 @@ namespace owl {
     if (FULL_REBUILD && !dd.bvhMemory.empty())
       dd.bvhMemory.free();
 
+    if (FULL_REBUILD) {
+      dd.memFinal = 0;
+      dd.memPeak = 0;
+    }
+
     if (!FULL_REBUILD && dd.bvhMemory.empty())
       throw std::runtime_error("trying to refit an accel struct that has not been previously built");
     // // assert("check does not yet exist" && dd.traversable == 0);
@@ -113,8 +118,8 @@ namespace owl {
 
       sumPrims += child->primCount;
       if (sumPrims > maxPrimsPerGAS) 
-        throw std::runtime_error("number of prim in user geom group exceeds "
-                                 "OptiX's MAX_PRIMITIVES_PER_GAS limit");
+        OWL_RAISE("number of prim in user geom group exceeds "
+                  "OptiX's MAX_PRIMITIVES_PER_GAS limit");
 
       UserGeom::DeviceData &ugDD = child->getDD(device);
       
@@ -186,6 +191,15 @@ namespace owl {
     // compacted size in
     // ------------------------------------------------------------------
       
+    const size_t tempSize
+        = FULL_REBUILD
+        ? blasBufferSizes.tempSizeInBytes
+        : blasBufferSizes.tempUpdateSizeInBytes;
+    LOG("starting to build/refit "
+        << prettyNumber(userGeomInputs.size()) << " user geoms, "
+        << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
+        << prettyNumber(tempSize) << "B in temp data");
+
     // temp memory:
     DeviceMemory tempBuffer;
     tempBuffer.alloc
@@ -193,9 +207,13 @@ namespace owl {
        ? blasBufferSizes.tempSizeInBytes
        : blasBufferSizes.tempUpdateSizeInBytes);
 
-    if (FULL_REBUILD)
+    if (FULL_REBUILD) {
+      dd.memPeak += tempBuffer.size();
       // alloc only on first rebuild
       dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      dd.memPeak += dd.bvhMemory.size();
+      dd.memFinal = dd.bvhMemory.size();
+    }
     OPTIX_CHECK(optixAccelBuild(optixContext,
                                 /* todo: stream */0,
                                 &accelOptions,
@@ -236,6 +254,8 @@ namespace owl {
       if (ugDD.internalBufferForBoundsProgram.alloced())
         ugDD.internalBufferForBoundsProgram.free();
     }
+    if (FULL_REBUILD)
+      dd.memPeak += sumBoundsMem;
 
     CUDA_SYNC_CHECK();
   }
