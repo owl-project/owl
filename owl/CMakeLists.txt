@@ -25,9 +25,6 @@ set(INTERFACE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
 include_directories(${PROJECT_SOURCE_DIR}/)
-# lp: 2/24/21: These were already included above, is this intentional?
-#include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-#cuda_include_directories(${PROJECT_SOURCE_DIR}/owl/include)
 
 set(OWL_SOURCES
 
