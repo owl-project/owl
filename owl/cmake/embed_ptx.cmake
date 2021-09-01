@@ -156,7 +156,7 @@ function(embed_ptx c_embed_name cu_file)
   string(REPLACE ";" " " includes "${includes}")
   # Final flags manipulation
   set(allcudaflags "${manualcudaflags} ${archflags} ${includes}")
-  message(STATUS "All CUDA flags for embed_ptx of ${cu_file}:\n${allcudaflags}")
+  #message(STATUS "All CUDA flags for embed_ptx of ${cu_file}:\n${allcudaflags}")
   separate_arguments(allcudaflags)
   #message(STATUS "embed_ptx build command 1: ${CMAKE_CUDA_COMPILER} ${allcudaflags} -ptx ${cu_file_frombin} -o ${ptxfile}")
   #message(STATUS "embed_ptx build command 2: ${BIN2C} -c --padd 0 --type char --name ${c_embed_name} ${ptxfile} > ${embedfile}")
