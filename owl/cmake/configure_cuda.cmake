@@ -22,33 +22,45 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON) # moved from main CMakeLists.txt
 
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
+include(get_gpu_arch)
+get_gpu_arch(YOUR_GPU_ARCH)
+message(STATUS "Your GPU architecture(s): ${YOUR_GPU_ARCH}")
+
 if(OWL_INTERMEDIATE_CMAKE)
-  if(NOT OWL_CUDA_ARCH)
-    message(WARNING "OWL_CUDA_ARCH defaulting to 75 (Turing / RTX 20X0). "
-      "If your GPU is older than this, the embedded PTX may not work. "
-      "If it is newer, the embedded PTX may be less efficient than if it "
-      "was compiled for the correct architecture. (OWL_CUDA_ARCH is "
-      "needed because you are using intermediate CMake CUDA.)"
-    )
-    set(OWL_CUDA_ARCH 75)
-  endif()
-  string(STRIP "${OWL_CUDA_ARCH}" OWL_CUDA_ARCH)
-  string(LENGTH "${OWL_CUDA_ARCH}" strlen)
-  if((NOT strlen EQUAL 2) OR (NOT OWL_CUDA_ARCH GREATER 30))
-    message(FATAL_ERROR "OWL_CUDA_ARCH is not a valid value \"${OWL_CUDA_ARCH}\", should be a number like 61 or 86!")
+  if(OWL_CUDA_ARCH)
+    string(STRIP "${OWL_CUDA_ARCH}" OWL_CUDA_ARCH)
+    string(LENGTH "${OWL_CUDA_ARCH}" strlen)
+    if((OWL_CUDA_ARCH MATCHES ";") OR (NOT strlen EQUAL 2 AND NOT strlen EQUAL 3) OR (NOT OWL_CUDA_ARCH GREATER 30))
+      message(FATAL_ERROR "OWL_CUDA_ARCH is not a valid value \"${OWL_CUDA_ARCH}\", should be a number like 61 or 86!")
+    endif()
+  else()
+    if(YOUR_GPU_ARCH)
+      list(GET YOUR_GPU_ARCH 0 OWL_CUDA_ARCH)
+    else()
+      set(OWL_CUDA_ARCH 75)
+    endif()
+    message(STATUS "OWL_CUDA_ARCH not specified, defaulting to ${OWL_CUDA_ARCH}")
   endif()
   set(CMAKE_CUDA_FLAGS "-gencode arch=compute_${OWL_CUDA_ARCH},code=sm_${OWL_CUDA_ARCH} ${CMAKE_CUDA_FLAGS}")
   set(EMBED_PTX_ARCH "${OWL_CUDA_ARCH}")
 elseif(OWL_MODERN_CMAKE)
   if(NOT CMAKE_CUDA_ARCHITECTURES)
-    message(FATAL_ERROR "You are using modern CMake CUDA, so "
-      "CMAKE_CUDA_ARCHITECTURES must be set!"
-    )
+    if(YOUR_GPU_ARCH)
+      set(CMAKE_CUDA_ARCHITECTURES "${YOUR_GPU_ARCH}")
+      message(STATUS "CMAKE_CUDA_ARCHITECTURES not specified, defaulting to "
+        "your GPU architecture(s) ${CMAKE_CUDA_ARCHITECTURES}"
+      )
+    else()
+      message(FATAL_ERROR "CMAKE_CUDA_ARCHITECTURES not specified (required for "
+        "modern CMake CUDA), and could not be detected automatically from your hardware"
+      )
+    endif()
   endif()
 else()
   set(error_message "Please modify your parent project not to include "
     "configure_cuda.cmake or any other internal CMake files from OWL. "
-    "The one exception is embed_ptx.cmake which you can (and usually need to) include."
+    "Exceptions: embed_ptx.cmake and get_gpu_arch.cmake, which you may "
+    "need or want to use."
   )
   if(NOT CMAKE_CUDA_ARCHITECTURES)
     set(error_message "${error_message} Please see that file for info on how to specify the architecture.")

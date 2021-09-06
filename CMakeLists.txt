@@ -69,7 +69,6 @@ endif()
 # project command is required to come after cmake_minimum_required command.
 project(Optix-OWL VERSION 1.0.6 LANGUAGES C CXX CUDA) # c language required for embed_ptx
 
-
 # ------------------------------------------------------------------
 # first, include gdt project to do some general configuration stuff
 # (build modes, glut, optix, etc)
