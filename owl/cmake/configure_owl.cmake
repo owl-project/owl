@@ -20,6 +20,14 @@
 #
 # OWL_LIBRARIES - list of libraries to link against when building owl programs
 
+if(NOT OWL_INTERMEDIATE_CMAKE AND NOT OWL_MODERN_CMAKE)
+  message(FATAL_ERROR "Please modify your parent project not to include "
+    "configure_owl.cmake or any other internal CMake files from OWL. "
+    "The one exception is embed_ptx.cmake which you can include. "
+    "Please see that file for info on how to specify the architecture."
+  )
+endif()
+
 set(OWL_INCLUDES
   # owl needs optix:
   ${OptiX_INCLUDE}

@@ -28,8 +28,10 @@
 # if CMAKE_CUDA_ARCHITECTURES is set, uses the oldest (lowest-numbered)
 # architecture set in CMAKE_CUDA_ARCHITECTURES. Otherwise, it will issue a
 # warning and use the NVCC default. 
-# Flags are propagated from CMAKE_CUDA_FLAGS, and includes are also propagated
-# from the current source directory.
+# Flags are propagated from CMAKE_CUDA_FLAGS, and includes and defines are also
+# propagated from the current source directory (i.e. include_directories() and
+# add_definitions() in parent CMakeLists.txt files or in the current file but
+# before the embed_ptx() call).
 # 
 # @param c_embed_name This argument serves two functions.
 # First, it is the name of the character array containing the PTX source.
@@ -54,6 +56,7 @@
 # and you will get "undefined reference to myPtxProgram" or "unresolved external
 # symbol myPtxProgram" from the linker.
 
+# ------------------------------------------------------------------------------
 # Replaces list(TRANSFORM ... PREPEND ...) which isn't available in 3.8.
 # From https://github.com/flutter/flutter/pull/57515/files
 # Copyright 2014 The Flutter Authors. All rights reserved.
