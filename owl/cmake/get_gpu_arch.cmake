@@ -21,10 +21,11 @@
 # get_gpu_arch.cmake
 # ^^^^^^^^^^^^^^^^^^
 # 
-# Returns a list of CUDA-compatible GPU architectures on the current machine.
+# Returns a list of CUDA-compatible GPU architectures on the current machine,
+# in increasing order of compute capability.
 # Examples:
 #   52      (if you have a GTX 980)
-#   86;61   (if you have an RTX 3080 and a GTX 1080)
+#   61;86   (if you have an RTX 3080 and a GTX 1080)
 # If the query fails or there are no CUDA-compatible GPUs, returns an empty string.
 # The return value is set in a variable named [whatever you pass in OUT_VAR].
 

@@ -47,14 +47,10 @@ elseif(OWL_MODERN_CMAKE)
   if(NOT CMAKE_CUDA_ARCHITECTURES)
     if(YOUR_GPU_ARCH)
       set(CMAKE_CUDA_ARCHITECTURES "${YOUR_GPU_ARCH}")
-      message(STATUS "CMAKE_CUDA_ARCHITECTURES not specified, defaulting to "
-        "your GPU architecture(s) ${CMAKE_CUDA_ARCHITECTURES}"
-      )
     else()
-      message(FATAL_ERROR "CMAKE_CUDA_ARCHITECTURES not specified (required for "
-        "modern CMake CUDA), and could not be detected automatically from your hardware"
-      )
+      set(CMAKE_CUDA_ARCHITECTURES 75)
     endif()
+    message(STATUS "CMAKE_CUDA_ARCHITECTURES not specified, defaulting to ${CMAKE_CUDA_ARCHITECTURES}"
   endif()
 else()
   set(error_message "Please modify your parent project not to include "
