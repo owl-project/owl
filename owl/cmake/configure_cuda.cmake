@@ -50,7 +50,7 @@ elseif(OWL_MODERN_CMAKE)
     else()
       set(CMAKE_CUDA_ARCHITECTURES 75)
     endif()
-    message(STATUS "CMAKE_CUDA_ARCHITECTURES not specified, defaulting to ${CMAKE_CUDA_ARCHITECTURES}"
+    message(STATUS "CMAKE_CUDA_ARCHITECTURES not specified, defaulting to ${CMAKE_CUDA_ARCHITECTURES}")
   endif()
 else()
   set(error_message "Please modify your parent project not to include "

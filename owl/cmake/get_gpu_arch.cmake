@@ -45,19 +45,27 @@ int main(){
   set(sourcefile "${CMAKE_CURRENT_BINARY_DIR}/get_gpu_arch.cu")
   file(WRITE ${sourcefile} "${test_prog_source}")
   set(cudaflags "")
-  if(CMAKE_CUDA_HOST_COMPILER)
-    set(cudaflags "-ccbin ${CMAKE_CUDA_HOST_COMPILER} ${cudaflags}")
+  if(NOT WIN32 AND CMAKE_CUDA_HOST_COMPILER)
+    set(cudaflags "-ccbin ${CMAKE_CUDA_HOST_COMPILER}")
   endif()
   set(binfile "${CMAKE_CURRENT_BINARY_DIR}/get_gpu_arch")
   if(WIN32)
     set(binfile "${binfile}.exe")
   endif()
-  message(STATUS "Building: ${CMAKE_CUDA_COMPILER} ${cudaflags} ${sourcefile} -o ${binfile}")
-  execute_process(
-    COMMAND ${CMAKE_CUDA_COMPILER} ${cudaflags} ${sourcefile} -o ${binfile}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    RESULT_VARIABLE compile_result
-  )
+  if(WIN32)
+    message(STATUS "Compile command: ${CMAKE_CUDA_COMPILER} -ccbin ${CMAKE_CXX_COMPILER} ${sourcefile} -o ${binfile}")
+    execute_process(
+      COMMAND ${CMAKE_CUDA_COMPILER} -ccbin ${CMAKE_CXX_COMPILER} ${sourcefile} -o ${binfile}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      RESULT_VARIABLE compile_result
+    )
+  else()
+    execute_process(
+      COMMAND ${CMAKE_CUDA_COMPILER} ${cudaflags} ${sourcefile} -o ${binfile}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      RESULT_VARIABLE compile_result
+    )
+  endif()
   set(final_result "")
   if(NOT ${compile_result} EQUAL "0")
     message(STATUS "get_gpu_arch compile failed, could not determine your GPU architecture")
@@ -74,10 +82,10 @@ int main(){
     elseif(output EQUAL "0")
       message(STATUS "No CUDA capable GPUs found")
     else()
-      list(SORT output CASE INSENSITIVE)
+      list(SORT output)
       set(final_result "${output}")
     endif()
   endif()
-  message(STATUS "final_result: ${final_result}")
+  #message(STATUS "final_result: ${final_result}")
   set(${OUT_VAR} "${final_result}" PARENT_SCOPE)
 endfunction()
