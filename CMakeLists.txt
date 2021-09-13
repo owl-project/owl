@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019-2020 Ingo Wald                                            #
+# Copyright 2019-2021 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -87,15 +87,6 @@ include(configure_build_type)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(OWL_CXX_FLAGS "")
-
-if (WIN32)
-  # Nate: 11/3/20: I get "fatal error C1041: cannot open program database" 
-  # on windows from multiple targets writing to the same .pdb file simultaneously.
-  # This flag doesn't seem to fix it.
-  # set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "/FS")
-endif()
-
-#set(CMAKE_POSITION_INDEPENDENT_CODE ON) # moved to configure_cuda.cmake
 
 include(configure_cuda)
 include(configure_optix) # This must follow configure_cuda
