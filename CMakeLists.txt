@@ -31,10 +31,14 @@ endif()
 
 if(CUDA_TOOLKIT_ROOT_DIR)
   # Somebody called find_cuda--they are trying to use the deprecated build.
-  message(ERROR "A parent project has called find_cuda. This is deprecated and "
-      "not supported by OWL. The parent project must use CUDA first-class "
-      "language support (project(foo LANGUAGES CXX CUDA)) and not call any "
-      "of the deprecated CUDA functions.")
+  message(#SEND_ERROR
+    WARNING
+    "CUDA_TOOLKIT_ROOT_DIR is set. "
+    "This usually means that a parent project has called find_cuda, which "
+    "is deprecated and not supported by this 'modern cmake' version of OWL. "
+    "Instead, the parent project should use modern cmake methodology, too,"
+    "with CUDA first-class language support (i.e., project(foo LANGUAGES CXX CUDA))"
+    )
 endif()
 
 if(OWL_USE_INTERMEDIATE_CMAKE)
