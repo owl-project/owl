@@ -14,9 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-cuda_compile_and_embed(ptxCode
-  deviceCode.cu
-  )
+embed_ptx(ptxCode deviceCode.cu)
+
 add_executable(sample00-rayGenOnly
   hostCode.cpp
   ${ptxCode}
@@ -25,5 +24,3 @@ target_link_libraries(sample00-rayGenOnly
   ${OWL_LIBRARIES}
   )
 add_test(sample00-rayGenOnly ${CMAKE_BINARY_DIR}/sample00-rayGenOnly)
-
-

@@ -15,9 +15,7 @@
 # ======================================================================== #
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
-cuda_compile_and_embed(ptxCode
-  deviceCode.cu
-  )
+embed_ptx(ptxCode deviceCode.cu)
 add_executable(sample09-motionBlurSimpleTriangles
   hostCode.cpp
   ${ptxCode}
@@ -26,5 +24,3 @@ target_link_libraries(sample09-motionBlurSimpleTriangles
   ${OWL_LIBRARIES}
   )
 add_test(sample09-motionBlurSimpleTriangles ${CMAKE_BINARY_DIR}/sample09-motionBlurSimpleTriangles)
-
-

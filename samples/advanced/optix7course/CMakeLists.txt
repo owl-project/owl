@@ -16,13 +16,11 @@
 
 include_directories(${OWL_VIEWER_INCLUDES})
 
-cuda_compile_and_embed(embedded_ptx_code devicePrograms.cu)
+embed_ptx(embedded_ptx_code devicePrograms.cu)
 
 add_executable(adv_optix7course
   # the file with embedded PTX string for the device programs:
   ${embedded_ptx_code}
-  devicePrograms.cu # <-- note this doesn't actually get compiled in, only as string of PTX instrucions (see comile_and_embed above); this is only here for Visual Studio GUI to show it as an input
-
   SampleRenderer.h
   SampleRenderer.cpp
   Model.h
@@ -30,6 +28,8 @@ add_executable(adv_optix7course
   LaunchParams.h
   main.cpp
   )
+
+#target_compile_options(adv_optix7course PRIVATE "--keep")
 
 target_link_libraries(adv_optix7course
   # owl and owl viewer, and everything these require

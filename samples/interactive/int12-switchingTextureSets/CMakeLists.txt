@@ -22,9 +22,7 @@
 # time to cycle through those texture sets. Ie, each box stores one
 # one buffer of N buffers of 6 textures each
 
-cuda_compile_and_embed(ptxCode
-  deviceCode.cu
-  )
+embed_ptx(ptxCode deviceCode.cu)
 add_executable(int12-switchingTextureSets
   hostCode.cpp
   ${ptxCode}
@@ -33,5 +31,3 @@ target_link_libraries(int12-switchingTextureSets
   ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
   )
-
-

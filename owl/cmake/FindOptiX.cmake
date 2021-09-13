@@ -30,7 +30,7 @@
 
 if (NOT DEFINED OptiX_INCLUDE)
   # optix include not defined on cmdline, try to find ....
-  if (DEFINED(OptiX_INSTALL_DIR))
+  if (DEFINED OptiX_INSTALL_DIR)
     message(STATUS "going to look for OptiX_INCLUDE in OptiX_INSTALL_DIR=${OptiX_INSTALL_DIR}")
     set(OptiX_INCLUDE_SEARCH_PATH ${OptiX_INSTALL_DIR}/include)
   elseif (EXISTS "$ENV{OptiX_INSTALL_DIR}")

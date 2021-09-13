@@ -14,7 +14,7 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-cuda_compile_and_embed(ptxCode
+embed_ptx(ptxCode
   deviceCode.cu
   )
 add_definitions(-DDATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data")
@@ -26,5 +26,3 @@ target_link_libraries(int15-cookBilliardScene
   ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
   )
-
-

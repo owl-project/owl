@@ -16,9 +16,7 @@
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
 
-cuda_compile_and_embed(ptxCode
-  deviceCode.cu
-  )
+embed_ptx(ptxCode deviceCode.cu)
 
 add_executable(int06-rtow-mixedGeometries
   hostCode.cpp
@@ -28,7 +26,3 @@ add_executable(int06-rtow-mixedGeometries
 target_link_libraries(int06-rtow-mixedGeometries
   ${OWL_VIEWER_LIBRARIES}
   )
-
-
-
-
