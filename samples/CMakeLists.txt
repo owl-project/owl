@@ -51,5 +51,6 @@ endif()
 # -------------------------------------------------------
 set(OWL_VIEWER_INCLUDES  ${OWL_VIEWER_INCLUDES}  PARENT_SCOPE)
 set(OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES} PARENT_SCOPE)
+# lp: 2/24/21: why is this being forwarded to parent from here?
 set(OWL_HAVE_TBB         ${OWL_HAVE_TBB}         PARENT_SCOPE)
 

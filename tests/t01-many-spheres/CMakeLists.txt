@@ -16,9 +16,7 @@
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
 
-cuda_compile_and_embed(ptxCode
-  deviceCode.cu
-  )
+embed_ptx(ptxCode deviceCode.cu)
 
 add_executable(test01-manySpheres
   hostCode.cpp
@@ -28,5 +26,3 @@ add_executable(test01-manySpheres
 target_link_libraries(test01-manySpheres
   ${OWL_LIBRARIES}
   )
-
-

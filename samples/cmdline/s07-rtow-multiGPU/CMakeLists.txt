@@ -16,9 +16,7 @@
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
 
-cuda_compile_and_embed(ptxCode
-  deviceCode.cu
-  )
+embed_ptx(ptxCode deviceCode.cu)
 
 add_executable(sample07-rtow-multiGPU
   hostCode.cpp
@@ -31,6 +29,3 @@ target_link_libraries(sample07-rtow-multiGPU
 
 add_test(sample07-rtow-multiGPU
   ${CMAKE_BINARY_DIR}/sample07-rtow-multiGPU)
-
-
-
