@@ -210,12 +210,12 @@ using namespace owl;
   {
     LOG_API_CALL();
 
-    assert(_rayGen);
+    if (!_rayGen) OWL_RAISE("invalid null rayGen program handle");
     RayGen::SP rayGen
       = ((APIHandle *)_rayGen)->get<RayGen>();
     assert(rayGen);
 
-    assert(_launchParams);
+    if (!_launchParams) OWL_RAISE("invalid null launch parameters handle (you can have an _empty_ launch params, but not a null one)");
     LaunchParams::SP launchParams
       = ((APIHandle *)_launchParams)->get<LaunchParams>();
     assert(launchParams);
@@ -229,6 +229,7 @@ using namespace owl;
                            OWLLaunchParams _launchParams)
   {
     LOG_API_CALL();
+    if (!_rayGen) OWL_RAISE("invalid null rayGen program handle");
     owlAsyncLaunch2D(_rayGen,dims_x,dims_y,_launchParams);
     owlLaunchSync(_launchParams);
   }

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -52,16 +52,12 @@ namespace owl {
     for (auto handle : activeHandles)
       LOG(" - " + handle->toString());
 
-#if 1
     // create one reference that won't get removed when removing all API handles (caller should actually have one, but just in case)
     std::shared_ptr<APIContext> self = shared_from_this()->as<APIContext>();
-    PING;
     std::vector<APIHandle*> handlesToFree;
     for (auto &it : activeHandles) {
         if (it && it->object //&& it->object.get() != this
             ) {
-            std::cout << "deleting object:" << std::flush;
-            std::cout << it->object->toString() << std::endl;
             it->object = {};
             it->context = {};
             handlesToFree.push_back(it);
@@ -69,30 +65,7 @@ namespace owl {
     }
     activeHandles.clear();
     for (auto handle : handlesToFree)
-        delete handle;
-#else
-    // create a COPY of the handles we need to destroy, else
-    // destroying the handles modifies the std::set while we're
-    // iterating through it!
-    // nm: This still doesnt work on windows. 
-    // I'm getting double frees.
-    std::set<APIHandle *> stillActiveHandles = activeHandles;    
-    activeHandles.clear();
-    PING;
-    while (!stillActiveHandles.empty()) {
-        PING;
-      auto it = stillActiveHandles.begin();
-      PING;
-      stillActiveHandles.erase(it);
-      // nm: not sure why, but sometimes API Handles don't have objects, 
-      // and so deleting causes undefined behavior
-      PING;
-      if ((*it)->object) delete *it;
-    }
-    PING;
-    assert(activeHandles.empty());
-    PING;
-#endif
+      delete handle;
   }
   
   void APIContext::track(APIHandle *object)

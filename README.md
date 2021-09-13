@@ -153,7 +153,7 @@ buffers, refitting, textures, or motion blur. Some features will still
 need adding (e.g., curves, which got added to OptiX 7.1 but are not yet
 exposed in OWL); however, we consider the current release to be
 sufficiently stable to finally have given it the long-awaited "version
-1.0.0".
+1.x".
 
 <!--- ------------------------------------------------------- -->
 # Sample Use Cases
@@ -311,6 +311,13 @@ directory.
 <!--- ------------------------------------------------------- -->
 # Latest Progress/Revision History
 
+v1.1 - Switched to "modern cmake" technology (kudos lpisha)
+----------------------------------------------------------------------
+
+*1.0.0*: first release with louis pisha's 'modern cmake' version of the build system.
+	Also includes several new samples, including the voxel renderer
+	from the "ray tracing gems2" article.
+	
 v1.0.x - First "considered to be complete" version
 ----------------------------------------------------------------------
 
