@@ -23,7 +23,7 @@ OPTION(OWL_BUILD_SAMPLES "Build the Samples?" ON)
 OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 OPTION(OWL_USE_TBB "Use TBB to parallelize computation?" ON)
 
-if (NOT (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_HOME_DIRECTORY}))
+if (NOT (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR}))
   SET(OWL_IS_SUBPROJECT ON)
 else()
   SET(OWL_IS_SUBPROJECT OFF)
@@ -31,13 +31,14 @@ endif()
 
 if(CUDA_TOOLKIT_ROOT_DIR)
   # Somebody called find_cuda--they are trying to use the deprecated build.
-  message(#SEND_ERROR
-    WARNING
-    "CUDA_TOOLKIT_ROOT_DIR is set. "
+  message(WARNING "CUDA_TOOLKIT_ROOT_DIR is set. "
     "This usually means that a parent project has called find_cuda, which "
-    "is deprecated and not supported by this 'modern cmake' version of OWL. "
-    "Instead, the parent project should use modern cmake methodology, too,"
-    "with CUDA first-class language support (i.e., project(foo LANGUAGES CXX CUDA))"
+    "has been deprecated in CMake since 2018 and is no longer supported by OWL. "
+    "Instead, the parent project is required to use 'intermediate' or 'modern' "
+    "CMake CUDA style with first-class CUDA language support (i.e., "
+    "project(foo LANGUAGES C CXX CUDA)). "
+    "See OWL's CMakeLists.txt and owl/cmake/configure_cuda.cmake for more info "
+    "about the differences between 'intermediate' and 'modern' style."
     )
 endif()
 
