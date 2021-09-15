@@ -17,9 +17,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-#
+
+
+# -----------------------------------------------------------------------------
 # embed_ptx.cmake
-# ^^^^^^^^^^^^^^^
+# -----------------------------------------------------------------------------
 # Compiles a CUDA source file to PTX, and creates a C file containing a
 # character array of the text of the PTX.
 # 
@@ -182,4 +184,96 @@ function(embed_ptx c_embed_name cu_file)
     VERBATIM
   )
   set(${c_embed_name} ${embedfile} PARENT_SCOPE)
+endfunction()
+
+
+
+
+#c_embed_name
+function(owl_compile_to_ptx ptx_result_name cu_file)
+  # Initial setup
+  #  set(ptxfile "${CMAKE_CURRENT_BINARY_DIR}/${ptx_result_name}.ptx")
+  set(ptxfile ${ptx_result_name})
+  file(RELATIVE_PATH cu_file_frombin ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${cu_file})
+  # Find bin2c
+  if(NOT BIN2C)
+    get_filename_component(cudabindir ${CMAKE_CUDA_COMPILER} DIRECTORY)
+    if(WIN32)
+      set(BIN2C "${cudabindir}/bin2c.exe")
+    else()
+      set(BIN2C "${cudabindir}/bin2c")
+    endif()
+    if(NOT EXISTS ${BIN2C})
+      message(FATAL_ERROR "Could not find bin2c at ${BIN2C}!")
+    endif()
+  endif()
+  # Architecture
+  if(EMBED_PTX_ARCH)
+    set(archflags "-gencode arch=compute_${EMBED_PTX_ARCH},code=compute_${EMBED_PTX_ARCH}")
+  elseif(CMAKE_CUDA_ARCHITECTURES)
+    set(archflags ${CMAKE_CUDA_ARCHITECTURES})
+    list(SORT archflags CASE INSENSITIVE)
+    list(GET archflags 0 archflags)
+    string(REPLACE "-real" "" archflags ${archflags})
+    string(REPLACE "-virtual" "" archflags ${archflags})
+    set(archflags "-gencode arch=compute_${archflags},code=compute_${archflags}")
+  else()
+    set(archflags "")
+    message(WARNING "embed_ptx: no EMBED_PTX_ARCH or CMAKE_CUDA_ARCHITECTURES specified, using compiler default")
+  endif()
+  # Flags manipulation
+  string(REGEX REPLACE " -gencode arch=[A-Za-z0-9_,=]+" "" manualcudaflags "${CMAKE_CUDA_FLAGS}")
+  while(manualcudaflags MATCHES ".*\".*")
+    if(NOT manualcudaflags MATCHES ".*\".*\".*")
+      message(FATAL_ERROR "CUDA flags for embed PTX only contain one quotation mark: ${manualcudaflags}")
+    endif()
+    string(REGEX REPLACE "[^\"]*\"([^\"]*)\".*" "\\1" quotedcontents "${manualcudaflags}")
+    string(REGEX REPLACE "[^\"]* ([-A-Za-z]*)=? ?\".*" "\\1" quoteprefix "${manualcudaflags}")
+    string(REGEX REPLACE "([^\"]*) [-A-Za-z]*=? ?\".*" "\\1" beforequotes "${manualcudaflags}")
+    string(REGEX REPLACE "[^\"]*\"[^\"]*\"(.*)" "\\1" afterquotes "${manualcudaflags}")
+    string(STRIP "${quotedcontents}" quotedcontents)
+    string(STRIP "${quoteprefix}" quoteprefix)
+    string(REPLACE " " ";" quotedargs "${quotedcontents}")
+    list_prepend(quotedargs "${quoteprefix} ")
+    string(REPLACE ";" " " quotedargs "${quotedargs}")
+    set(manualcudaflags "${beforequotes} ${quotedargs} ${afterquotes}")
+  endwhile()
+  # Includes manipulation
+  get_property(includes DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+  if(WIN32)
+    list_replace(includes " " "\\\\ ")
+  endif()
+  list_prepend(includes "-I ")
+  string(REPLACE ";" " " includes "${includes}")
+  # Defines manipulation
+  get_property(defines DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY COMPILE_DEFINITIONS)
+  list_prepend(defines "-D")
+  string(REPLACE ";" " " defines "${defines}")
+  # Final flags manipulation
+  if(CMAKE_CUDA_HOST_COMPILER)
+      set(manualcudaflags "-ccbin ${CMAKE_CUDA_HOST_COMPILER} ${manualcudaflags}")
+  endif()
+  set(allcudaflags "${manualcudaflags} ${archflags} ${defines} ${includes}")
+  #message(STATUS "All CUDA flags for embed_ptx of ${cu_file}:\n${allcudaflags}")
+  separate_arguments(allcudaflags)
+  #message(STATUS "embed_ptx build command 1: ${CMAKE_CUDA_COMPILER} ${allcudaflags} -ptx ${cu_file_frombin} -o ${ptxfile}")
+  #message(STATUS "embed_ptx build command 2: ${BIN2C} -c --padd 0 --type char --name ${ptx_result_name} ${ptxfile} > ${embedfile}")
+  # Ending
+  message(STATUS "ptxfile ${ptxfile}")
+  message(STATUS "cu_file ${cu_file}")
+  add_custom_target(
+    ${ptxfile} ALL
+    ${CMAKE_CUDA_COMPILER} ${allcudaflags} -ptx ${cu_file_frombin} -o ${ptxfile}
+    DEPENDS ${cu_file}
+    COMMENT "Compiling device program(s) to PTX (${cu_file})"
+    )
+  # add_custom_command(
+  #   OUTPUT ${ptxfile}
+  #   COMMAND echo ${CMAKE_CUDA_COMPILER} ${allcudaflags} -ptx ${cu_file_frombin} -o ${ptxfile}
+  #   COMMAND ${CMAKE_CUDA_COMPILER} ${allcudaflags} -ptx ${cu_file_frombin} -o ${ptxfile}
+  #   COMMAND echo ${BIN2C} -c --padd 0 --type char --name ${ptx_result_name} ${ptxfile} > ${embedfile}
+  #   DEPENDS ${cu_file}
+  #   COMMENT "Building embedded PTX source ${embedfile}"
+  #   VERBATIM
+  #   )
 endfunction()
