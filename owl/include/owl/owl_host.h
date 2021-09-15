@@ -365,6 +365,9 @@ owlGetDeviceCount(OWLContext context);
 OWL_API OWLContext
 owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
                  int numDevices OWL_IF_CPP(=0));
+                 
+OWL_API void
+owlContextDestroy(OWLContext context);
 
 /*! enable motion blur for this context. this _has_ to be called
     before creating any geometries, groups, etc, and before the
@@ -423,10 +426,6 @@ OWL_API void
 owlSetMaxInstancingDepth(OWLContext context,
                          int32_t maxInstanceDepth);
 
-
-OWL_API void
-owlContextDestroy(OWLContext context);
-
 /* return the cuda stream associated with the given device. */
 OWL_API CUstream
 owlContextGetStream(OWLContext context, int deviceID);
@@ -438,10 +437,16 @@ owlContextGetOptixContext(OWLContext context, int deviceID);
 OWL_API OWLModule
 owlModuleCreate(OWLContext  context,
                 const char *ptxCode);
+                
+OWL_API void
+owlModuleRelease(OWLModule module);
 
 OWL_API OWLGeom
 owlGeomCreate(OWLContext  context,
               OWLGeomType type);
+              
+OWL_API void 
+owlGeomRelease(OWLGeom geometry);
 
 OWL_API OWLParams
 owlParamsCreate(OWLContext  context,
@@ -456,6 +461,9 @@ owlRayGenCreate(OWLContext  context,
                 size_t      sizeOfVarStruct,
                 OWLVarDecl *vars,
                 int         numVars);
+                
+OWL_API void 
+owlRayGenRelease(OWLRayGen rayGen);
 
 /*! creates a miss program with given function name (in given module)
     and given variables. Note due to backwards compatibility this will
@@ -516,16 +524,19 @@ owlTrianglesGeomGroupCreate(OWLContext context,
 // ------------------------------------------------------------------
 /*! create a new instance group with given number of instances. The
   child groups and their instance IDs and/or transforms can either
-  be specified "in bulk" as part of this call, or can be set lateron
-  with inviidaul calls to \see owlInstanceGroupSetChild and \see
+  be specified "in bulk" as part of this call, or can be set later on
+  with individual calls to \see owlInstanceGroupSetChild and \see
   owlInstanceGroupSetTransform. Note however, that in the case of
   having millions of instances in a group it will be *much* more
   efficient to set them in bulk open creation, than in millions of
   inidiviual API calls.
 
   Either or all of initGroups, initTranforms, or initInstanceIDs may
-  be null, in which case the values used for the 'th child will be a
-  null group, a unit transform, and 'i', respectively.
+  be null, in which case the values used for the 'th child will be an
+  uninitialized (invalid) group, a unit transform, and 'i', respectively.
+  If initGroups was null, make sure to set all of the child groups
+  with \see owlInstanceGroupSetChild before using this group, or
+  it will crash.
 */
 OWL_API OWLGroup
 owlInstanceGroupCreate(OWLContext context,
@@ -536,9 +547,11 @@ owlInstanceGroupCreate(OWLContext context,
                        /*! the initial list of owl groups to use by
                          the instances in this group; must be either
                          null, or an array of the size
-                         'numInstnaces', the i'th instnace in this
-                         gorup will be an instance o the i'th
-                         element in this list */
+                         'numInstances', the i'th instance in this
+                         group will be an instance of the i'th
+                         element in this list. If null, you must
+                         set all the children individually before
+                         using this group. */
                        const OWLGroup *initGroups      OWL_IF_CPP(= nullptr),
 
                        /*! instance IDs to use for the instance in
@@ -561,7 +574,9 @@ owlInstanceGroupCreate(OWLContext context,
                        OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL)
                        );
 
-
+                       
+OWL_API void
+owlGroupRelease(OWLGroup group);
 
 OWL_API void owlGroupBuildAccel(OWLGroup group);
 OWL_API void owlGroupRefitAccel(OWLGroup group);
@@ -572,9 +587,10 @@ OWL_API void owlGroupRefitAccel(OWLGroup group);
     version of the BVH (after it is done building), "memPeak" is peak
     memory used during construction. passing a NULL pointer to any
     value is valid; these values will get ignored. */
-OWL_API void owlGroupGetAccelSize(OWLGroup group,
-                                  size_t *p_memFinal,
-                                  size_t *p_memPeak);
+OWL_API void
+owlGroupGetAccelSize(OWLGroup group,
+                     size_t *p_memFinal,
+                     size_t *p_memPeak);
                                   
 OWL_API OWLGeomType
 owlGeomTypeCreate(OWLContext context,
@@ -603,15 +619,16 @@ owlTexture2DCreate(OWLContext context,
                      the next; '0' means 'size_x * sizeof(texel)' */
                    uint32_t linePitchInBytes       OWL_IF_CPP(=0)
                    );
+                   
+/*! destroy the given texture; after this call any accesses to the 
+   given texture are invalid */
+OWL_API void
+owlTexture2DDestroy(OWLTexture texture);
 
 /*! returns the device handle of the given texture for the given
     device ID. Useful for custom texture object arrays. */
 OWL_API CUtexObject
 owlTextureGetObject(OWLTexture texture, int deviceID);
-
-/*! destroy the given texture; after this call any accesses to the given texture are invalid */
-OWL_API void
-owlTexture2DDestroy(OWLTexture texture);
 
 /*! creates a device buffer where every device has its own local copy
   of the given buffer */
@@ -646,6 +663,19 @@ owlGraphicsBufferCreate(OWLContext             context,
                         size_t                 count,
                         cudaGraphicsResource_t resource);
 
+/*! OWL objects are reference-counted. This will release the
+  reference to the buffer, and free it if it was the last
+  reference. */
+OWL_API void
+owlBufferRelease(OWLBuffer buffer);
+
+/*! destroy the given buffer; this will both release the app's
+  refcount on the given buffer handle, *and* the buffer itself; ie,
+  even if some objects still hold variables that refer to the old
+  handle the buffer itself will be freed */
+OWL_API void 
+owlBufferDestroy(OWLBuffer buffer);
+
 OWL_API void
 owlGraphicsBufferMap(OWLBuffer buffer);
 
@@ -671,13 +701,6 @@ owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 
 OWL_API size_t
 owlBufferSizeInBytes(OWLBuffer buffer);
-
-/*! destroy the given buffer; this will both release the app's
-  refcount on the given buffer handle, *and* the buffer itself; ie,
-  even if some objects still hold variables that refer to the old
-  handle the buffer itself will be freed */
-OWL_API void 
-owlBufferDestroy(OWLBuffer buffer);
 
 /*! uploads data from given host poiner to given device. offset refers
     to the offset (in bytes) on the device. \param numbytes is the
@@ -823,17 +846,6 @@ OWL_API void
 owlGeomSetPrimCount(OWLGeom geom,
                     size_t  primCount);
 
-
-// -------------------------------------------------------
-// Release for the various types
-// -------------------------------------------------------
-OWL_API void owlGeomRelease(OWLGeom geometry);
-OWL_API void owlVariableRelease(OWLVariable variable);
-OWL_API void owlModuleRelease(OWLModule module);
-OWL_API void owlBufferRelease(OWLBuffer buffer);
-OWL_API void owlRayGenRelease(OWLRayGen rayGen);
-OWL_API void owlGroupRelease(OWLGroup group);
-
 // -------------------------------------------------------
 // VariableGet for the various types
 // -------------------------------------------------------
@@ -852,6 +864,9 @@ owlMissProgGetVariable(OWLMissProg geom,
 OWL_API OWLVariable
 owlParamsGetVariable(OWLParams object,
                      const char *varName);
+                     
+OWL_API void
+owlVariableRelease(OWLVariable variable);
 
 // -------------------------------------------------------
 // VariableSet for different variable types
