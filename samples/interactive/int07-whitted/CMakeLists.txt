@@ -16,7 +16,7 @@
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
 
-cuda_compile_and_embed(ptxCode
+embed_ptx(ptxCode
   deviceCode.cu
   )
 
@@ -28,7 +28,3 @@ add_executable(int07-whitted
 target_link_libraries(int07-whitted
   ${OWL_VIEWER_LIBRARIES}
   )
-
-
-
-

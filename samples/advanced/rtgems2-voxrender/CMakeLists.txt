@@ -16,7 +16,7 @@
 include_directories(${OWL_VIEWER_INCLUDES})
 add_definitions(${OWL_CXX_FLAGS})
 
-cuda_compile_and_embed(ptxCode
+embed_ptx(ptxCode
   deviceCode.cu
   )
 add_executable(voxrender
@@ -32,5 +32,3 @@ target_link_libraries(voxrender
   ${OWL_LIBRARIES}
   ${OWL_VIEWER_LIBRARIES}
   )
-
-

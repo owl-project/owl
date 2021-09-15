@@ -20,9 +20,15 @@
 #
 # OWL_LIBRARIES - list of libraries to link against when building owl programs
 
+if(NOT OWL_INTERMEDIATE_CMAKE AND NOT OWL_MODERN_CMAKE)
+  message(FATAL_ERROR "Please modify your parent project not to include "
+    "configure_owl.cmake or any other internal CMake files from OWL. "
+    "Exceptions: embed_ptx.cmake and get_gpu_arch.cmake, which you may "
+    "need or want to use."
+  )
+endif()
+
 set(OWL_INCLUDES
-  # owl needs cuda:
-  ${CUDA_TOOLKIT_ROOT_DIR}/include
   # owl needs optix:
   ${OptiX_INCLUDE}
   # public API
@@ -30,7 +36,7 @@ set(OWL_INCLUDES
   # device API and common currently still include non-public header files
   ${PROJECT_SOURCE_DIR}/
   )
+
 set(OWL_LIBRARIES
   owl_static
   )
-

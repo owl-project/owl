@@ -15,9 +15,7 @@
 # ======================================================================== #
 
 include_directories(${PROJECT_SOURCE_DIR}/owl)
-cuda_compile_and_embed(ptxCode
-  deviceCode.cu
-  )
+embed_ptx(ptxCode deviceCode.cu)
 add_executable(sample08-sierpinski
   hostCode.cpp
   ${ptxCode}
@@ -26,5 +24,3 @@ target_link_libraries(sample08-sierpinski
   ${OWL_LIBRARIES}
   )
 add_test(sample08-sierpinski ${CMAKE_BINARY_DIR}/sample08-sierpinski)
-
-
