@@ -195,6 +195,16 @@ OWL_API void owlAsyncLaunch2D(OWLRayGen _rayGen,
                               OWLLaunchParams _launchParams)
 {
   LOG_API_CALL();
+  owlAsyncLaunch3D(_rayGen,dims_x,dims_y,1,_launchParams);
+}
+
+OWL_API void owlAsyncLaunch3D(OWLRayGen _rayGen,
+                              int dims_x,
+                              int dims_y,
+                              int dims_z,
+                              OWLLaunchParams _launchParams)
+{
+  LOG_API_CALL();
 
   assert(_rayGen);
   RayGen::SP rayGen
@@ -206,7 +216,7 @@ OWL_API void owlAsyncLaunch2D(OWLRayGen _rayGen,
     = ((APIHandle *)_launchParams)->get<LaunchParams>();
   assert(launchParams);
 
-  rayGen->launchAsync(vec2i(dims_x,dims_y),launchParams);
+  rayGen->launchAsync(vec3i(dims_x,dims_y,dims_z),launchParams);
 }
 
 OWL_API void owlAsyncLaunch2DOnDevice(OWLRayGen _rayGen,
@@ -227,7 +237,7 @@ OWL_API void owlAsyncLaunch2DOnDevice(OWLRayGen _rayGen,
     = ((APIHandle *)_launchParams)->get<LaunchParams>();
   assert(launchParams);
 
-  rayGen->launchAsyncOnDevice(vec2i(dims_x,dims_y), deviceID,launchParams);
+  rayGen->launchAsyncOnDevice(vec3i(dims_x,dims_y,1), deviceID,launchParams);
 }
 
 OWL_API void owlLaunch2D(OWLRayGen _rayGen,
@@ -238,6 +248,18 @@ OWL_API void owlLaunch2D(OWLRayGen _rayGen,
   LOG_API_CALL();
   if (!_rayGen) OWL_RAISE("invalid null rayGen program handle");
   owlAsyncLaunch2D(_rayGen,dims_x,dims_y,_launchParams);
+  owlLaunchSync(_launchParams);
+}
+
+OWL_API void owlLaunch3D(OWLRayGen _rayGen,
+                         int dims_x,
+                         int dims_y,
+                         int dims_z,
+                         OWLLaunchParams _launchParams)
+{
+  LOG_API_CALL();
+  if (!_rayGen) OWL_RAISE("invalid null rayGen program handle");
+  owlAsyncLaunch3D(_rayGen,dims_x,dims_y,dims_z,_launchParams);
   owlLaunchSync(_launchParams);
 }
 
@@ -252,14 +274,21 @@ owlLaunchSync(OWLLaunchParams _launchParams)
   launchParams->sync();
 }
 
-OWL_API void owlRayGenLaunch2D(OWLRayGen _rayGen,
-                               int dims_x, int dims_y)
+OWL_API void owlRayGenLaunch3D(OWLRayGen _rayGen,
+                               int dims_x, int dims_y, int dims_z)
 {
   LOG_API_CALL();
 
   assert(_rayGen);
   RayGen::SP rayGen = ((APIHandle *)_rayGen)->get<RayGen>();
-  rayGen->launch(vec2i(dims_x,dims_y));
+  rayGen->launch(vec3i(dims_x,dims_y,dims_z));
+}
+
+OWL_API void owlRayGenLaunch2D(OWLRayGen _rayGen,
+                               int dims_x, int dims_y)
+{
+  LOG_API_CALL();
+  owlRayGenLaunch3D(_rayGen,dims_x,dims_y,1);
 }
 
 

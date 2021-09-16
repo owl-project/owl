@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -723,6 +723,10 @@ owlBufferClear(OWLBuffer buffer);
 OWL_API void
 owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
 
+/*! 3D-launch variant of \see owlRayGenLaunch2D */
+OWL_API void
+owlRayGenLaunch3D(OWLRayGen rayGen, int dims_x, int dims_y, int dims_z);
+
 /*! perform a raygen launch with launch parameters, in a *synchronous*
     way; it, by the time this function returns the launch is
     completed. Both rayGen and params must be valid handles; it is
@@ -731,12 +735,22 @@ OWL_API void
 owlLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
             OWLParams params);
 
+/*! 3D launch variant of owlLaunch2D */
+OWL_API void
+owlLaunch3D(OWLRayGen rayGen, int dims_x, int dims_y, int dims_z,
+            OWLParams params);
+
 /*! perform a raygen launch with launch parameters, in a *A*synchronous
     way; it, this will only launch, but *NOT* wait for completion (see
     owlLaunchSync). Both rayGen and params must be valid handles; it is
     valid to have a empty params, but it may not be null */
 OWL_API void
 owlAsyncLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
+                 OWLParams params);
+
+/*! 3D-launch equivalent of \see owlAsyncLaunch2D */
+OWL_API void
+owlAsyncLaunch3D(OWLRayGen rayGen, int dims_x, int dims_y, int dims_z,
                  OWLParams params);
 
 /*! perform a raygen launch with launch parameters, but only for a given device, 

@@ -14,15 +14,16 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# ---------------------------------------------------------------------------
-# the default "tutorial-style" samples that intoduce, step by step,
-# individual capabililies like creating a raygen (s00), creating a
-# triangle mesh (s01), ... instancing (s08), etc.
-# ---------------------------------------------------------------------------
-file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
+embed_ptx(ptxCode deviceCode.cu)
 
-foreach(sample ${samples})
-  add_subdirectory(${sample})
-endforeach()
+add_executable(sample10-launch3D
+  hostCode.cu
+  ${ptxCode}
+  )
 
+target_link_libraries(sample10-launch3D
+  ${OWL_LIBRARIES}
+  )
 
+add_test(sample10-launch3D
+  ${CMAKE_BINARY_DIR}/sample10-launch3D)

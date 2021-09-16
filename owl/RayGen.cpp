@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -131,13 +131,13 @@ namespace owl {
 
   /*! execute a *synchronous* launch of this raygen program, of given
     dimensions - this will wait for the program to complete */
-  void RayGen::launch(const vec2i &dims)
+  void RayGen::launch(const vec3i &dims)
   {
     launchAsync(dims,context->dummyLaunchParams);
     context->dummyLaunchParams->sync();
   }
 
-  void RayGen::launchAsync(const vec2i &dims,
+  void RayGen::launchAsync(const vec3i &dims,
                            const LaunchParams::SP &lp)
   {
     for (int deviceID=0;deviceID<(int)deviceData.size();deviceID++) {
@@ -148,10 +148,13 @@ namespace owl {
   /*! *launch* this raygen prog with given launch params, but do NOT
     wait for completion - this means the SBT shuld NOT be changed or
     rebuild until a launchParams->sync() has been done */
-  void RayGen::launchAsyncOnDevice(const vec2i &dims, uint32_t deviceID, const LaunchParams::SP &lp)
+  void RayGen::launchAsyncOnDevice(const vec3i &dims,
+                                   uint32_t deviceID,
+                                   const LaunchParams::SP &lp)
   {
     assert("check valid launch dims" && dims.x > 0);
     assert("check valid launch dims" && dims.y > 0);
+    assert("check valid launch dims" && dims.z > 0);
     assert(!deviceData.empty());
 
     DeviceContext::SP device = context->getDevice(deviceID);
@@ -199,7 +202,7 @@ namespace owl {
                       (CUdeviceptr)lpDD.deviceMemory.get(),
                       lpDD.deviceMemory.sizeInBytes,
                       &lpDD.sbt,
-                      dims.x,dims.y,1
+                      dims.x,dims.y,dims.z
                       ));
 
     /* note we do NOT sync here ! */
