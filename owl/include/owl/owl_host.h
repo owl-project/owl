@@ -711,6 +711,12 @@ owlBufferUpload(OWLBuffer buffer,
                 size_t offset OWL_IF_CPP(=0),
                 size_t numBytes OWL_IF_CPP(=size_t(-1)));
 
+/*! clears a buffer in the sense that it sets the entire memory region
+    to zeroes. Note this is currently implemneted only for buffers of
+    copyable data (ie, not buffers of objects). */
+OWL_API void 
+owlBufferClear(OWLBuffer buffer);
+
 /*! executes an optix launch of given size, with given launch
   program. Note this is asynchronous, and may _not_ be
   completed by the time this function returns. */

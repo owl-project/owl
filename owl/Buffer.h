@@ -64,6 +64,8 @@ namespace owl {
         of device types) */
     inline size_t sizeInBytes() const { return elementCount * sizeOf(type); }
     
+    /*! clear the buffer by setting its contents to zero */
+    virtual void clear() = 0;
     
     /*! resize buffer to new num elements */
     virtual void resize(size_t newElementCount) = 0;
@@ -127,12 +129,12 @@ namespace owl {
           for the upload to complete, so an explicit cuda sync has to
           be done to ensure no race conditiosn will occur */
       virtual void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) = 0;
-
-      // DeviceContext::SP const device;
+      
+      /*! clear the buffer by setting its contents to zero */
+      virtual void clear() = 0;
+    
       DeviceBuffer *const parent;
     };
-
-
 
     
     /*! device-data for a device buffer like other device buffers, but
@@ -145,6 +147,9 @@ namespace owl {
       {}
       void executeResize() override;
       void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) override;
+      
+      /*! clear the buffer by setting its contents to zero */
+      void clear() override;
     
       /*! this is used only for buffers over object types (bufers of
         textures, or buffers of buffers). For those buffers, we use this
@@ -166,6 +171,9 @@ namespace owl {
       void executeResize() override;
       void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) override;
       
+      /*! clear the buffer by setting its contents to zero */
+      void clear() override;
+    
       /*! this is used only for buffers over object types (bufers of
         textures, or buffers of buffers). For those buffers, we use this
         vector to store host-side handles of the objects in this buffer,
@@ -185,6 +193,9 @@ namespace owl {
       void executeResize() override;
       void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) override;
       
+      /*! clear the buffer by setting its contents to zero */
+      void clear() override;
+      
       /*! this is used only for buffers over object types (bufers of
         textures, or buffers of buffers). For those buffers, we use this
         vector to store host-side handles of the objects in this buffer,
@@ -202,6 +213,9 @@ namespace owl {
       {}
       void executeResize() override;
       void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) override;
+      
+      /*! clear the buffer by setting its contents to zero */
+      void clear() override;
     };
 
     /*! contructor - creates the right device data type based on content type */
@@ -221,6 +235,9 @@ namespace owl {
     
     /*! upload to only ONE device - only makes sense for device buffers */
     void upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) override;
+      
+    /*! clear the buffer by setting its contents to zero */
+    void clear() override;
     
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
@@ -241,6 +258,9 @@ namespace owl {
     void resize(size_t newElementCount) override;
     void upload(const void *hostPtr, size_t offset, int64_t count) override;
     void upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) override;
+      
+    /*! clear the buffer by setting its contents to zero */
+    void clear() override;
 
     /*! pointer to the (shared) cuda pinned mem - this gets alloced
         once and is valid on both host and devices */
@@ -264,6 +284,9 @@ namespace owl {
 
     /*! pretty-printer, for debugging */
     std::string toString() const override;
+      
+    /*! clear the buffer by setting its contents to zero */
+    void clear() override;
 
     /*! pointer to the (shared) cuda managed mem - this gets alloced
         once and is valid on both host and devices */
@@ -286,6 +309,9 @@ namespace owl {
     void resize(size_t newElementCount) override;
     void upload(const void *hostPtr, size_t offset, int64_t count) override;
     void upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) override;
+      
+    /*! clear the buffer by setting its contents to zero */
+    void clear() override;
 
     /*! the cuda graphics resource to map to - note that this is
         probably valid on only one GPU */
