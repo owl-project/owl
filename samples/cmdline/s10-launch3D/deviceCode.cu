@@ -228,7 +228,6 @@ OPTIX_RAYGEN_PROGRAM(rayGen)()
   PerRayData prd;
   prd.random.init(pixelID.x*self.fbSize.x*pixelID.y,sampleID);
   
-  // for (int sampleID=0;sampleID<NUM_SAMPLES_PER_PIXEL;sampleID++) {
   owl::Ray ray;
   
   const vec2f pixelSample(prd.random(),prd.random());
