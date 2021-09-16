@@ -92,8 +92,9 @@ __global__ void convertToRGBA(uint32_t    *rgba,
                               int          numPixels)
 {
   int tid = threadIdx.x+blockIdx.x*blockDim.x;
-  if (tid < numPixels)
+  if (tid < numPixels) {
     rgba[tid] = owl::make_rgba(floatFB[tid]);
+  }
 }
 
 int main(int ac, char **av)
@@ -321,14 +322,23 @@ int main(int ac, char **av)
   owlRayGenLaunch3D(rayGen,fbSize.x,fbSize.y,NUM_SAMPLES_PER_PIXEL);
   
   LOG("done with launch, calling CUDA kernel to convert from float3 to rgba8 ...");
+
+  // ------------------------------------------------------------------
+  // since we did atomics during rndering we used a float3
+  // framebuffer, so still need to convert to rgba8; let's do this
+  // with a simple CUDA kernel here, this also demonstrates how easy
+  // it is to od owl-cuda interop.
+  // ------------------------------------------------------------------
   uint32_t *fb = 0;
   cudaMallocManaged(&fb,fbSize.x*fbSize.y*sizeof(uint32_t));
   int numPixels = fbSize.x*fbSize.y;
-  convertToRGBA<<<numPixels,divRoundUp(numPixels,1024)>>>
+  convertToRGBA<<<divRoundUp(numPixels,1024),1024>>>
     (fb,(const vec3f*)owlBufferGetPointer(frameBuffer,0),numPixels);
-  // for host pinned mem it doesn't matter which device we query...
-  // const uint32_t *fb
-  //   = (const uint32_t*)owlBufferGetPointer(frameBuffer,0);
+  cudaDeviceSynchronize();
+
+  // ------------------------------------------------------------------
+  // frame buffer not in png friendly form, let's write it
+  // ------------------------------------------------------------------
   stbi_write_png(outFileName,fbSize.x,fbSize.y,4,
                  fb,fbSize.x*sizeof(uint32_t));
   cudaFree(fb);

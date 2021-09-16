@@ -223,11 +223,11 @@ OPTIX_RAYGEN_PROGRAM(rayGen)()
   const vec2i pixelID = owl::getLaunchIndex();
   
   const int pixelIdx = pixelID.x+self.fbSize.x*(self.fbSize.y-1-pixelID.y);
+  int sampleID = optixGetLaunchIndex().z;
 
   PerRayData prd;
-  prd.random.init(pixelID.x,pixelID.y);
+  prd.random.init(pixelID.x*self.fbSize.x*pixelID.y,sampleID);
   
-  int sampleID = optixGetLaunchIndex().z;
   // for (int sampleID=0;sampleID<NUM_SAMPLES_PER_PIXEL;sampleID++) {
   owl::Ray ray;
   
@@ -247,13 +247,11 @@ OPTIX_RAYGEN_PROGRAM(rayGen)()
   ray.direction = direction;
   
   vec3f color = tracePath(self, ray, prd) * (1.f/NUM_SAMPLES_PER_PIXEL);
-  // }
 
   vec3f &fbColor = self.fbPtr[pixelIdx];
   atomicAdd(&fbColor.x,color.x);
   atomicAdd(&fbColor.y,color.y);
   atomicAdd(&fbColor.z,color.z);
-    // = owl::make_rgba(color * (1.f / NUM_SAMPLES_PER_PIXEL));
 }
 
 
