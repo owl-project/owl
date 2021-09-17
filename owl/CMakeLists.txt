@@ -136,7 +136,7 @@ target_link_libraries(owl PUBLIC OptiX::OptiX)
 
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.17)
   find_package(CUDAToolkit REQUIRED)
-  target_link_libraries(owl PUBLIC CUDA::cuda_driver)
+  target_link_libraries(owl PUBLIC CUDA::cuda_driver CUDA::cudart_static)
 else()
   target_link_libraries(owl PUBLIC cuda)
 endif()

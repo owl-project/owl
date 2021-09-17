@@ -75,6 +75,11 @@ if (OWL_IS_SUBPROJECT)
   return()
 endif()
 
+include(CTest)
+if (BUILD_TESTING)
+  enable_testing()
+endif()
+
 option(OWL_BUILD_SAMPLES "Build the Samples?" ON)
 option(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 

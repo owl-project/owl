@@ -14,8 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-enable_testing()
-
 # ---------------------------------------------------------------------------
 # the default "tutorial-style" samples that intoduce, step by step,
 # individual capabililies like creating a raygen (s00), creating a

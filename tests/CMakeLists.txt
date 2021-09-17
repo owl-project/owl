@@ -14,8 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-enable_testing()
-
 file(GLOB tests RELATIVE ${CMAKE_CURRENT_LIST_DIR} "t??-*")
 foreach(test ${tests})
   add_subdirectory(${test})
