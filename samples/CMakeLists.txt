@@ -22,6 +22,7 @@ include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
 # ------------------------------------------------------------------
 add_subdirectory(cmdline)
 
+return()
 
 # ------------------------------------------------------------------
 # advanced sapmles and interactive samples require the interative
