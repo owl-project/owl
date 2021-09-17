@@ -14,7 +14,7 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "int??-*")
+file(GLOB samples RELATIVE ${CMAKE_CURRENT_LIST_DIR} "int??-*")
 foreach(sample ${samples})
   add_subdirectory(${sample})
 endforeach()

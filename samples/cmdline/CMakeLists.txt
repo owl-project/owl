@@ -21,7 +21,7 @@ enable_testing()
 # individual capabililies like creating a raygen (s00), creating a
 # triangle mesh (s01), ... instancing (s08), etc.
 # ---------------------------------------------------------------------------
-file(GLOB samples RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "s??-*")
+file(GLOB samples RELATIVE ${CMAKE_CURRENT_LIST_DIR} "s??-*")
 
 foreach(sample ${samples})
   add_subdirectory(${sample})

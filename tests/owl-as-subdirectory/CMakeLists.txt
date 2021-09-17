@@ -14,25 +14,33 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-enable_testing()
+cmake_minimum_required(VERSION 3.9)
 
-file(GLOB tests RELATIVE ${CMAKE_CURRENT_LIST_DIR} "t??-*")
-foreach(test ${tests})
-  add_subdirectory(${test})
-endforeach()
+cmake_policy(SET CMP0104 NEW) # CUDA_ARCHITECTURES must be specified
 
-include(ExternalProject)
-string(REPLACE ";" "|" CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}")
-ExternalProject_Add(owl_as_subdirectory
-  PREFIX owl_as_submodule
-  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/owl-as-subdirectory
-  LIST_SEPARATOR | # Use the alternate list separator substituted above
-  CMAKE_ARGS
-    -DCMAKE_BUILD_TYPE=Release
-    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-    -DCMAKE_CUDA_HOST_COMPLER=${CMAKE_CUDA_HOST_COMPILER}
-    -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
-  INSTALL_COMMAND ""
-  BUILD_ALWAYS OFF
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+project(owlSubmoduleTest LANGUAGES C CXX CUDA)
+
+# This is the same as someone calling add_subdirectory(path/to/OWL) submodule
+add_subdirectory(
+  ${CMAKE_SOURCE_DIR}/../..
+  ${CMAKE_BINARY_DIR}/owl
+)
+
+# Parent projects must include embed_ptx.cmake in order to use it
+include(embed_ptx)
+
+# NOTE(jda) - Hack here to get stb_image...would be provided by parent project
+#             normally.
+add_subdirectory(
+  ${CMAKE_SOURCE_DIR}/../../3rdParty/stb_image
+  ${CMAKE_BINARY_DIR}/stb_image
+)
+
+# Build the many-spheres test to verify things work
+add_subdirectory(
+  ${CMAKE_CURRENT_LIST_DIR}/../t01-many-spheres
+  ${CMAKE_BINARY_DIR}/t01-many-spheres
 )

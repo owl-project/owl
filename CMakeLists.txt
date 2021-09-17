@@ -16,7 +16,6 @@
 
 cmake_minimum_required(VERSION 3.9)
 
-cmake_policy(SET CMP0048 NEW) # Setting version in project command
 #cmake_policy(SET CMP0104 OLD) # CUDA arch set manually by compiler flags
 cmake_policy(SET CMP0104 NEW) # CUDA_ARCHITECTURES must be specified
 
@@ -39,18 +38,27 @@ if(CUDA_TOOLKIT_ROOT_DIR)
     )
 endif()
 
+set(CMAKE_BUILD_TYPE_INIT "Release")
+
 # project command is required to come after cmake_minimum_required command.
 project(Optix-OWL VERSION 1.1.0 LANGUAGES C CXX CUDA)
+
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
+
+if (NOT OWL_IS_SUBPROJECT)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+endif()
 
 # ------------------------------------------------------------------
 # first, include gdt project to do some general configuration stuff
 # (build modes, glut, optix, etc)
 # ------------------------------------------------------------------
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/owl/cmake/")
-
-# if not a subproject, set "Debug/Release flags and binary output dir
-# to <binaryDir>
-include(configure_build_type)
+if (OWL_IS_SUBPROJECT)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
+endif()
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

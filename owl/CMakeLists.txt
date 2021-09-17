@@ -138,7 +138,7 @@ target_link_libraries(owl_static PUBLIC OptiX::OptiX CUDA::cuda_driver)
 target_include_directories(owl_static
   PUBLIC
     ${PROJECT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_LIST_DIR}/include
 )
 
 if (WIN32)
