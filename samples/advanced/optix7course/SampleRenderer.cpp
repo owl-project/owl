@@ -22,7 +22,7 @@
 /*! \namespace osc - Optix Siggraph Course */
 namespace osc {
 
-  extern "C" char embedded_ptx_code[];
+  extern "C" char devicePrograms[];
 
   /*! constructor - performs all setup, including initializing
     optix, creates module, pipeline, programs, SBT, etc. */
@@ -32,8 +32,8 @@ namespace osc {
     std::cout << "for now, create exactly one device" << std::endl;
     context = owlContextCreate(nullptr,1);
     owlContextSetRayTypeCount(context,2);
-    
-    module = owlModuleCreate(context,embedded_ptx_code);
+
+    module = owlModuleCreate(context,devicePrograms);
     rayGen
       = owlRayGenCreate(context,module,"renderFrame",
                         /* no sbt data: */0,nullptr,-1);
@@ -46,9 +46,9 @@ namespace osc {
 
     OWLVarDecl launchParamsVars[] = {
       { "world", OWL_GROUP, OWL_OFFSETOF(LaunchParams,traversable)},
-      
+
       { "numPixelSamples", OWL_INT,    OWL_OFFSETOF(LaunchParams,numPixelSamples)},
-      
+
       { "frame.frameID", OWL_INT,    OWL_OFFSETOF(LaunchParams,frame.frameID)},
       { "frame.fbColor",OWL_BUFPTR,OWL_OFFSETOF(LaunchParams,frame.fbColor)},
       { "frame.fbFinal",OWL_RAW_POINTER,OWL_OFFSETOF(LaunchParams,frame.fbFinal)},
@@ -73,11 +73,11 @@ namespace osc {
 
     createTextures();
     buildAccel();
-    
+
     owlBuildPrograms(context);
     owlBuildPipeline(context);
     owlBuildSBT(context);
-    
+
     owlParamsSet3f(launchParams,"light.origin",(const owl3f&)light.origin);
     owlParamsSet3f(launchParams,"light.du",    (const owl3f&)light.du);
     owlParamsSet3f(launchParams,"light.dv",    (const owl3f&)light.dv);
@@ -89,7 +89,7 @@ namespace osc {
     int numTextures = (int)model->textures.size();
 
     textures.resize(numTextures);
-    
+
     for (int textureID=0;textureID<numTextures;textureID++) {
       auto texture = model->textures[textureID];
 
@@ -105,7 +105,7 @@ namespace osc {
                              OWL_TEXTURE_CLAMP);
     }
   }
-  
+
   void SampleRenderer::buildAccel()
   {
     const int numMeshes = (int)model->meshes.size();
@@ -135,13 +135,13 @@ namespace osc {
       // upload the model to the device: the builder
       TriangleMesh &mesh = *model->meshes[meshID];
 
-      OWLBuffer vertexBuffer 
+      OWLBuffer vertexBuffer
         = owlDeviceBufferCreate(context,OWL_FLOAT3,mesh.vertex.size(),
                                 mesh.vertex.data());
-      OWLBuffer indexBuffer  
+      OWLBuffer indexBuffer
         = owlDeviceBufferCreate(context,OWL_INT3,mesh.index.size(),
                                 mesh.index.data());
-      OWLBuffer normalBuffer 
+      OWLBuffer normalBuffer
         = mesh.normal.empty()
         ? nullptr
         : owlDeviceBufferCreate(context,OWL_FLOAT3,mesh.normal.size(),
@@ -211,7 +211,7 @@ namespace osc {
     owlParamsSet1i(launchParams,"frame.frameID",frameID);
     const vec3f position  = camera.from;
     const vec3f direction = normalize(camera.at-camera.from);
-    
+
     const float cosFovy = 0.66f;
     const float aspect
       = float(fbSize.x)
@@ -228,7 +228,7 @@ namespace osc {
     owlParamsSet3f(launchParams,"camera.vertical",(const owl3f&)vertical);
     owlParamsSet3f(launchParams,"camera.horizontal",(const owl3f&)horizontal);
   }
-  
+
   /*! resize frame buffer to given resolution */
   void SampleRenderer::resize(void *fbPointer, const vec2i &newSize)
   {
@@ -246,5 +246,5 @@ namespace osc {
     // and re-set the camera, since aspect may have changed
     setCamera(lastSetCamera);
   }
-  
+
 } // ::osc

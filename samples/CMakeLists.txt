@@ -35,7 +35,7 @@ if (TARGET owl_viewer)
   add_subdirectory(interactive)
 
   # advanced samples (these will try to open windows)
-  #add_subdirectory(advanced)
+  add_subdirectory(advanced)
 
 else()
   message(WARNING "#owl.cmake: could not build owl_viewer library; skipping advanced samples")

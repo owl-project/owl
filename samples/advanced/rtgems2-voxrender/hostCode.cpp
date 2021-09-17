@@ -44,7 +44,7 @@
   std::cout << "#owl.sample(main): " << message << std::endl;   \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char ptxCode[];
+extern "C" char deviceCode[];
 
 // Small default vox file as byte buffer
 extern "C" const uint8_t voxBuffer[];
@@ -68,13 +68,13 @@ struct Viewer : public owl::viewer::OWLViewer
   };
 
   Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options);
-  
+
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
-  
+
       /*! window notifies us that we got resized. We HAVE to override
           this to know our actual render dimensions, and get pointer
-          to the device frame buffer that the viewer cated for us */     
+          to the device frame buffer that the viewer cated for us */
   void resize(const vec2i &newSize) override;
 
   /*! this function gets called whenever any camera manipulator
@@ -87,16 +87,16 @@ struct Viewer : public owl::viewer::OWLViewer
   /// Geometry creation functions
 
   OWLGroup createFlatTriangleGeometryScene(OWLModule module,
-                                           const ogt_vox_scene *scene, 
+                                           const ogt_vox_scene *scene,
                                            owl::box3f &sceneBox);
   OWLGroup createInstancedTriangleGeometryScene(OWLModule module,
-                                                const ogt_vox_scene *scene, 
+                                                const ogt_vox_scene *scene,
                                                 owl::box3f &sceneBox);
   OWLGroup createUserGeometryScene(OWLModule module,
-                                   const ogt_vox_scene *scene, 
+                                   const ogt_vox_scene *scene,
                                    owl::box3f &sceneBox);
   OWLGroup createUserBlocksGeometryScene(OWLModule module,
-                                         const ogt_vox_scene *scene, 
+                                         const ogt_vox_scene *scene,
                                          owl::box3f &sceneBox) ;
 
 
@@ -116,10 +116,10 @@ struct Viewer : public owl::viewer::OWLViewer
   bool enableGround = true;
   bool enableClipping = true;  // enable clipping plane in shader
   bool enableToonOutline = true;
-  
+
 };
 
-/*! window notifies us that we got resized */     
+/*! window notifies us that we got resized */
 void Viewer::resize(const vec2i &newSize)
 {
   OWLViewer::resize(newSize);
@@ -209,7 +209,7 @@ void Viewer::key(char key, const vec2i &where)
   OWLViewer::key(key, where);
 }
 
-// Adapted from ogt demo code. 
+// Adapted from ogt demo code.
 // The OGT format stores voxels as solid grids; we only need to store the nonempty entries on device.
 
 std::vector<uchar4> extractSolidVoxelsFromModel(const ogt_vox_model* model)
@@ -298,7 +298,7 @@ void extractBlocksFromModel(const ogt_vox_model* model, int blockLen,
 
         assert(brickOffset < colorIndices.size());
         colorIndices[brickOffset] = ci;
-        
+
       }
     }
   }
@@ -367,21 +367,21 @@ void appendInstanceTransforms(const ogt_vox_scene *scene, const ogt_vox_model *v
     const ogt_vox_instance &vox_instance = scene->instances[instanceIndex];
     const ogt_vox_transform &vox_transform = vox_instance.transform;
 
-    const owl::affine3f instanceTransform( 
+    const owl::affine3f instanceTransform(
         vec3f( vox_transform.m00, vox_transform.m01, vox_transform.m02 ),  // column 0
         vec3f( vox_transform.m10, vox_transform.m11, vox_transform.m12 ),  //  1
         vec3f( vox_transform.m20, vox_transform.m21, vox_transform.m22 ),  //  2
-        vec3f( vox_transform.m30, vox_transform.m31, vox_transform.m32 )); //  3 
+        vec3f( vox_transform.m30, vox_transform.m31, vox_transform.m32 )); //  3
 
     // This matrix translates model to its center (in integer coords!) and applies instance transform
-    const affine3f instanceMoveToCenterAndTransform = 
-      affine3f(instanceTransform) * 
+    const affine3f instanceMoveToCenterAndTransform =
+      affine3f(instanceTransform) *
       affine3f::translate(-vec3f(float(vox_model->size_x/2),   // Note: snapping to int to match MV
-                                 float(vox_model->size_y/2), 
+                                 float(vox_model->size_y/2),
                                  float(vox_model->size_z/2)));
 
     sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform, vec3f(0.0f)));
-    sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform,  
+    sceneBox.extend(xfmPoint(instanceMoveToCenterAndTransform,
           vec3f(float(vox_model->size_x), float(vox_model->size_y), float(vox_model->size_z))));
 
     instanceTransforms.push_back(instanceMoveToCenterAndTransform);
@@ -393,8 +393,8 @@ void appendInstanceTransforms(const ogt_vox_scene *scene, const ogt_vox_model *v
 //   * each brick is a user (custom) prim
 //   * each vox model is an OWL geom group
 //   * vox instances are an OWL instance group
-OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-    box3f &sceneBox) 
+OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *scene,
+    box3f &sceneBox)
 {
   BufferAllocator allocator;
 
@@ -452,7 +452,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
   size_t totalSolidVoxelCount = 0;
   size_t bottomLevelBvhSizeInBytes = 0;
-  
+
   // Make instance transforms
   for (auto it : modelToInstances) {
 
@@ -465,11 +465,11 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     // ------------------------------------------------------------------
     // set up user primitives for single vox model
     // ------------------------------------------------------------------
-    OWLBuffer primBuffer 
+    OWLBuffer primBuffer
       = allocator.deviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
 
     OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
-    
+
     owlGeomSetPrimCount(voxGeom, voxdata.size());
 
     owlGeomSetBuffer(voxGeom, "prims", primBuffer);
@@ -502,13 +502,13 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     // ------------------------------------------------------------------
     // set up vox data and accels for ground (single stretched brick)
     // ------------------------------------------------------------------
-    
+
     std::vector<uchar4> voxdata {make_uchar4(0,0,0, 249)};  // using color index of grey in default palette
-    OWLBuffer primBuffer 
+    OWLBuffer primBuffer
       = allocator.deviceBufferCreate(context, OWL_UCHAR4, voxdata.size(), voxdata.data());
 
     OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
-    
+
     owlGeomSetPrimCount(voxGeom, voxdata.size());
 
     owlGeomSetBuffer(voxGeom, "prims", primBuffer);
@@ -520,7 +520,7 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
     bottomLevelBvhSizeInBytes += getAccelSizeInBytes(userGeomGroup);
     geomGroups.push_back(userGeomGroup);
 
-    instanceTransforms.push_back( 
+    instanceTransforms.push_back(
         owl::affine3f::translate(vec3f(sceneCenter.x, sceneCenter.y, sceneCenter.z - 1 - 0.5f*sceneSpan.z)) *
         owl::affine3f::scale(vec3f(2*sceneSpan.x, 2*sceneSpan.y, 1.0f))*    // assume Z up
         owl::affine3f::translate(vec3f(-0.5f, -0.5f, 0.0f))
@@ -529,14 +529,14 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
   // Apply final scene transform so we can use the same camera for every scene
   const float maxSpan = owl::reduce_max(sceneBox.span());
-  owl::affine3f worldTransform = 
+  owl::affine3f worldTransform =
     owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
     owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, -sceneBox.lower.z));  // center about (x,y) origin ,with Z up to match MV
 
   for (size_t i = 0; i < instanceTransforms.size(); ++i) {
     instanceTransforms[i] = worldTransform * instanceTransforms[i];
   }
-  
+
   OWLGroup world = owlInstanceGroupCreate(context, instanceTransforms.size(),
       geomGroups.data(), nullptr, (const float*)instanceTransforms.data(), OWL_MATRIX_FORMAT_OWL);
 
@@ -551,10 +551,10 @@ OWLGroup Viewer::createUserGeometryScene(OWLModule module, const ogt_vox_scene *
 
 
 // User block scene type:
-//   * each small block of NxNxN bricks is a user prim. 
+//   * each small block of NxNxN bricks is a user prim.
 //   * otherwise the same as user scene type above.
-OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
-    box3f &sceneBox) 
+OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_scene *scene,
+    box3f &sceneBox)
 {
   BufferAllocator allocator;
 
@@ -608,7 +608,7 @@ OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_s
 
   size_t totalPrimCount = 0;
   size_t bottomLevelBvhSizeInBytes = 0;
-  
+
   // Make instance transforms
   for (auto it : modelToInstances) {
 
@@ -624,13 +624,13 @@ OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_s
     // ------------------------------------------------------------------
     // set up user primitives for single vox model
     // ------------------------------------------------------------------
-    OWLBuffer primBuffer 
+    OWLBuffer primBuffer
       = allocator.deviceBufferCreate(context, OWL_UCHAR3, blockOrigins.size(), blockOrigins.data());
     OWLBuffer colorIndexBuffer
       = allocator.deviceBufferCreate(context, OWL_UCHAR, colorIndices.size(), colorIndices.data());
 
     OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
-    
+
     owlGeomSetPrimCount(voxGeom, blockOrigins.size());
 
     owlGeomSetBuffer(voxGeom, "prims", primBuffer);
@@ -663,16 +663,16 @@ OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_s
     // ------------------------------------------------------------------
     // set up block vox data and accels for ground (single stretched block)
     // ------------------------------------------------------------------
-    
+
     std::vector<uchar3> blockOrigins {make_uchar3(0,0,0)};
     std::vector<unsigned char> colorIndices(BLOCKLEN*BLOCKLEN*BLOCKLEN, 249);
-    OWLBuffer primBuffer 
+    OWLBuffer primBuffer
       = allocator.deviceBufferCreate(context, OWL_UCHAR3, blockOrigins.size(), blockOrigins.data());
     OWLBuffer colorIndexBuffer
       = allocator.deviceBufferCreate(context, OWL_UCHAR, colorIndices.size(), colorIndices.data());
 
     OWLGeom voxGeom = owlGeomCreate(context, voxGeomType);
-    
+
     owlGeomSetPrimCount(voxGeom, blockOrigins.size());
 
     owlGeomSetBuffer(voxGeom, "prims", primBuffer);
@@ -684,7 +684,7 @@ OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_s
     bottomLevelBvhSizeInBytes += getAccelSizeInBytes(userGeomGroup);
     geomGroups.push_back(userGeomGroup);
 
-    instanceTransforms.push_back( 
+    instanceTransforms.push_back(
         owl::affine3f::translate(vec3f(sceneCenter.x, sceneCenter.y, sceneCenter.z - 1 - 0.5f*sceneSpan.z)) *
         owl::affine3f::scale(vec3f(2*sceneSpan.x/BLOCKLEN, 2*sceneSpan.y/BLOCKLEN, 1.0f/BLOCKLEN))*    // assume Z up
         owl::affine3f::translate(vec3f(-0.5f*BLOCKLEN, -0.5f*BLOCKLEN, 0.0f))
@@ -693,14 +693,14 @@ OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_s
 
   // Apply final scene transform so we can use the same camera for every scene
   const float maxSpan = owl::reduce_max(sceneBox.span());
-  owl::affine3f worldTransform = 
+  owl::affine3f worldTransform =
     owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
     owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, -sceneBox.lower.z));  // center about (x,y) origin ,with Z up to match MV
 
   for (size_t i = 0; i < instanceTransforms.size(); ++i) {
     instanceTransforms[i] = worldTransform * instanceTransforms[i];
   }
-  
+
   OWLGroup world = owlInstanceGroupCreate(context, instanceTransforms.size(),
       geomGroups.data(), nullptr, (const float*)instanceTransforms.data(), OWL_MATRIX_FORMAT_OWL);
 
@@ -716,7 +716,7 @@ OWLGroup Viewer::createUserBlocksGeometryScene(OWLModule module, const ogt_vox_s
 // Flat triangle scene type:
 //   * each vox model is a single flat triangle mesh.
 //   * vox instances are an OWL instance group
-OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene,
     box3f &sceneBox )
 {
   BufferAllocator allocator;
@@ -829,7 +829,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
       = allocator.deviceBufferCreate(context, OWL_INT3, meshIndices.size(), meshIndices.data());
 
     OWLGeom trianglesGeom = owlGeomCreate(context, trianglesGeomType);
- 
+
     owlTrianglesSetVertices(trianglesGeom, vertexBuffer, meshVertices.size(), sizeof(vec3f), 0);
     owlTrianglesSetIndices(trianglesGeom, indexBuffer, meshIndices.size(), sizeof(vec3i), 0);
 
@@ -848,7 +848,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     OWLGroup trianglesGroup = owlTrianglesGeomGroupCreate(context, 1, &trianglesGeom);
     owlGroupBuildAccel(trianglesGroup);
     bottomLevelBvhSizeInBytes += getAccelSizeInBytes(trianglesGroup);
-      
+
     totalSolidVoxelCount += voxdata.size() * it.second.size();
 
     LOG("adding (" << it.second.size() << ") instance transforms for model ...");
@@ -856,7 +856,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
     for (uint32_t instanceIndex : it.second) {
       geomGroups.push_back(trianglesGroup);
     }
-    
+
   }
 
   LOG("Total solid voxels in all instanced models: " << totalSolidVoxelCount);
@@ -866,7 +866,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
   if (this->enableGround) {
     // Extra scaled brick for ground plane
-    
+
     OWLBuffer vertexBuffer
       = allocator.deviceBufferCreate(context,OWL_FLOAT3,NUM_BRICK_VERTICES,brickVertices);
     OWLBuffer indexBuffer
@@ -874,7 +874,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
     OWLGeom trianglesGeom
       = owlGeomCreate(context,trianglesGeomType);
-  
+
     owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
         NUM_BRICK_VERTICES,sizeof(vec3f),0);
     owlTrianglesSetIndices(trianglesGeom,indexBuffer,
@@ -897,7 +897,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
     geomGroups.push_back(trianglesGroup);
 
-    instanceTransforms.push_back( 
+    instanceTransforms.push_back(
         owl::affine3f::translate(vec3f(sceneCenter.x, sceneCenter.y, sceneCenter.z - 1 - 0.5f*sceneSpan.z)) *
         owl::affine3f::scale(vec3f(2*sceneSpan.x, 2*sceneSpan.y, 1.0f))*    // assume Z up
         owl::affine3f::translate(vec3f(-0.5f, -0.5f, 0.0f))
@@ -906,18 +906,18 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 
   // Apply final scene transform so we can use the same camera for every scene
   const float maxSpan = owl::reduce_max(sceneBox.span());
-  owl::affine3f worldTransform = 
+  owl::affine3f worldTransform =
     owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
     owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, -sceneBox.lower.z));  // center about (x,y) origin ,with Z up to match MV
 
   for (size_t i = 0; i < instanceTransforms.size(); ++i) {
     instanceTransforms[i] = worldTransform * instanceTransforms[i];
   }
-  
-  OWLGroup world = owlInstanceGroupCreate(context, 
-      instanceTransforms.size(), 
-      geomGroups.data(), 
-      /*instanceIds*/ nullptr, 
+
+  OWLGroup world = owlInstanceGroupCreate(context,
+      instanceTransforms.size(),
+      geomGroups.data(),
+      /*instanceIds*/ nullptr,
       (const float*)instanceTransforms.data(), OWL_MATRIX_FORMAT_OWL);
 
   owlGroupBuildAccel(world);
@@ -933,7 +933,7 @@ OWLGroup Viewer::createFlatTriangleGeometryScene(OWLModule module, const ogt_vox
 //   * there is only 1 brick geom group for the entire scene.  That brick is made of triangles.
 //   * vox models and instances are flattened into a single OWL instance group with many transforms
 //   (i.e., in a simple vox file, the OWL scene would have a transform per opaque voxel)
-OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene, 
+OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const ogt_vox_scene *scene,
     owl::box3f &sceneBox)
 {
 
@@ -970,19 +970,19 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 
   OWLGeom trianglesGeom
     = owlGeomCreate(context,trianglesGeomType);
-  
+
   owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
                           NUM_BRICK_VERTICES,sizeof(vec3f),0);
   owlTrianglesSetIndices(trianglesGeom,indexBuffer,
                          NUM_BRICK_FACES,sizeof(vec3i),0);
-  
+
   owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
   owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
 
   OWLBuffer paletteBuffer
     = allocator.deviceBufferCreate(context, OWL_UCHAR4, 256, scene->palette.color);
   owlGeomSetBuffer(trianglesGeom, "colorPalette", paletteBuffer);
-  
+
   // ------------------------------------------------------------------
   // the group/accel for the one brick
   // ------------------------------------------------------------------
@@ -1056,7 +1056,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 
   if (this->enableGround) {
     // Extra scaled brick for ground plane
-    transformsPerBrick.push_back( 
+    transformsPerBrick.push_back(
         owl::affine3f::translate(vec3f(sceneCenter.x, sceneCenter.y, sceneCenter.z - 1 - 0.5f*sceneSpan.z)) *
         owl::affine3f::scale(vec3f(2*sceneSpan.x, 2*sceneSpan.y, 1.0f))*    // assume Z up
         owl::affine3f::translate(vec3f(-0.5f, -0.5f, 0.0f))
@@ -1075,7 +1075,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
 
   // Apply final scene transform so we can use the same camera for every scene
   const float maxSpan = owl::reduce_max(sceneBox.span());
-  owl::affine3f worldTransform = 
+  owl::affine3f worldTransform =
     owl::affine3f::scale(2.0f/maxSpan) *                                    // normalize
     owl::affine3f::translate(vec3f(-sceneCenter.x, -sceneCenter.y, -sceneBox.lower.z));  // center about (x,y) origin ,with Z up to match MV
 
@@ -1092,7 +1092,7 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
       nullptr, nullptr, (const float*)transformsPerBrick.data(), OWL_MATRIX_FORMAT_OWL);
 
   for (int i = 0; i < int(transformsPerBrick.size()); ++i) {
-    owlInstanceGroupSetChild(world, i, trianglesGroup);  // All instances point to the same brick 
+    owlInstanceGroupSetChild(world, i, trianglesGroup);  // All instances point to the same brick
   }
 
   owlInstanceGroupSetVisibilityMasks(world, visibilityMasks.data());
@@ -1103,17 +1103,17 @@ OWLGroup Viewer::createInstancedTriangleGeometryScene(OWLModule module, const og
   logSceneMemory(bottomLevelBvhSizeInBytes, topLevelBvhSizeInBytes, allocator);
 
   return world;
-  
+
 }
 
 Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOptions &options)
-  : enableGround(options.enableGround), 
-  enableClipping(options.enableClipping), 
+  : enableGround(options.enableGround),
+  enableClipping(options.enableClipping),
   enableToonOutline(options.enableToonOutline)
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
-  OWLModule module = owlModuleCreate(context,ptxCode);
+  OWLModule module = owlModuleCreate(context,deviceCode);
 
   // Set context options that affect program compilation
   // IMPORTANT: this needs to happen before any calls to owlBuildPrograms() !
@@ -1128,7 +1128,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
     { "enableToonOutline", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableToonOutline)},
     { "enableClipping", OWL_BOOL, OWL_OFFSETOF(LaunchParams, enableClipping)},
 
-    { "frameID",       OWL_INT,    OWL_OFFSETOF(LaunchParams, frameID) }, 
+    { "frameID",       OWL_INT,    OWL_OFFSETOF(LaunchParams, frameID) },
     { "fbAccumBuffer", OWL_BUFPTR, OWL_OFFSETOF(LaunchParams, fbAccumBuffer) },
     { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(LaunchParams, fbPtr) },
     { "fbSize",        OWL_INT2,   OWL_OFFSETOF(LaunchParams, fbSize)},
@@ -1147,7 +1147,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
   // This will be fixed in a future driver release.
 
 #if 0
-  // Tell OptiX which launch params will be constant across all frames with given values, so 
+  // Tell OptiX which launch params will be constant across all frames with given values, so
   // they can be specialized if possible during module compile.
   OWLBoundValueDecl boundValues[] = {
     { launchVars[0], &this->enableToonOutline},
@@ -1156,7 +1156,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
   };
   owlContextSetBoundLaunchParamValues(context, boundValues, -1);
 #endif
-  
+
   OWLGroup world;
   if (sceneType == SCENE_TYPE_FLAT) {
     world = createFlatTriangleGeometryScene(module, scene, this->sceneBox);
@@ -1167,12 +1167,12 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
   } else {
     world = createInstancedTriangleGeometryScene(module, scene, this->sceneBox);
   }
-  
+
   const vec3f sceneSpan = sceneBox.span();
   const float maxSpan = owl::reduce_max(sceneSpan);
   const float brickScaleInWorldSpace = 2.f / maxSpan;
   this->clipHeight = int(sceneSpan.z) + 1;
-  
+
 
   // ##################################################################
   // set miss and raygen program required for SBT
@@ -1186,12 +1186,12 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
     { /* sentinel to mark end of list */ }
   };
   // ----------- create object  ----------------------------
-  OWLMissProg missProg = 
+  OWLMissProg missProg =
     owlMissProgCreate(context,module,"miss",/*sizeof(MissProgData)*/ 0, missProgVars,-1);
   owlMissProgSet(context, 0, missProg);
 
   // Second program for shadow visibility
-  OWLMissProg shadowMissProg = 
+  OWLMissProg shadowMissProg =
     owlMissProgCreate(context,module,"miss_shadow", 0u, nullptr,-1);
   owlMissProgSet(context, 1, shadowMissProg);
 
@@ -1217,8 +1217,8 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
                       sizeof(RayGenData),
                       rayGenVars,-1);
   /* camera and frame buffer get set in resize() and cameraChanged() */
-  
-  launchParams = 
+
+  launchParams =
     owlParamsCreate(context, sizeof(LaunchParams), launchVars, -1);
 
   owlParamsSetGroup(launchParams, "world", world);
@@ -1232,11 +1232,11 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
 
   // other params are set at launch or resize.  Some of these may have also been bound
   // as constants earlier.
-    
+
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################
-  
+
   // Build all programs again, even if they have been built already for bounds program
   owlBuildPrograms(context);
   owlBuildPipeline(context);
@@ -1251,7 +1251,7 @@ void Viewer::render()
   }
   if (sunDirty) {
     owl3f dir = { cos(sunPhi)*cos(sunTheta), sin(sunPhi)*cos(sunTheta), sin(sunTheta) };
-    owlParamsSet3f(launchParams, "sunDirection", dir); 
+    owlParamsSet3f(launchParams, "sunDirection", dir);
     sunDirty = false;
     frameID = 0;
   }
@@ -1260,8 +1260,8 @@ void Viewer::render()
     clipDirty = false;
     frameID = 0;
   }
-    
-  // Since our progressive launches are faster than 60 fps on recent hardware, 
+
+  // Since our progressive launches are faster than 60 fps on recent hardware,
   // we loop over multiple subpixels here per display update.
   constexpr int NumSamples=4;
   for (int i = 0; i < NumSamples; ++i) {
@@ -1290,7 +1290,7 @@ SceneType stringToSceneType(const char *s)
 bool stringToCamera(const char *s, vec3f &lookFrom, vec3f &lookAt, vec3f &lookUp)
 {
   float v[9];
-  if (sscanf(s, "%f %f %f  %f %f %f  %f %f %f", 
+  if (sscanf(s, "%f %f %f  %f %f %f  %f %f %f",
         v, v+1, v+2, v+3, v+4, v+5, v+6, v+7, v+8) == 9)
   {
     lookFrom = vec3f(v[0], v[1], v[2]);
@@ -1298,14 +1298,14 @@ bool stringToCamera(const char *s, vec3f &lookFrom, vec3f &lookAt, vec3f &lookUp
     lookUp   = vec3f(v[6], v[7], v[8]);
     return true;
   }
-  else if (sscanf(s, "%f %f %f  %f %f %f", 
+  else if (sscanf(s, "%f %f %f  %f %f %f",
         v, v+1, v+2, v+3, v+4, v+5 ) == 6)
   {
     lookFrom = vec3f(v[0], v[1], v[2]);
     lookAt   = vec3f(v[3], v[4], v[5]);
     return true;
   }
-  else if (sscanf(s, "%f %f %f", 
+  else if (sscanf(s, "%f %f %f",
         v, v+1, v+2) == 3)
   {
     lookFrom = vec3f(v[0], v[1], v[2]);
@@ -1345,12 +1345,12 @@ int main(int ac, char **av)
   Viewer::GlobalOptions options;
   SceneType sceneType = SCENE_TYPE_INSTANCED;
 
-  // Set up isometric view 
+  // Set up isometric view
   const float isometricAngle = 35.564f * M_PIf/180.0f;
-  const owl::affine3f cameraRotation = 
+  const owl::affine3f cameraRotation =
     owl::affine3f::rotate(vec3f(0,0,1), M_PIf/4.0f) *
     owl::affine3f::rotate(vec3f(-1,0,0), isometricAngle);
-  
+
   vec3f lookFrom = xfmPoint(cameraRotation, vec3f(0, -30.f, 0));
   vec3f lookAt {0.f};
   vec3f lookUp {0.f, 0.f, 1.f};
@@ -1365,7 +1365,7 @@ int main(int ac, char **av)
     }
     if (arg == "--no-ground") {
       options.enableGround = false;
-    } 
+    }
     else if (arg == "--no-clipping") {
       // Might want to disable clipping in shader when measuring perf
       options.enableClipping = false;
@@ -1403,7 +1403,7 @@ int main(int ac, char **av)
       infiles.push_back(arg);  // assume all other args are file names
     }
   }
-  
+
   const ogt_vox_scene *scene = infiles.empty() ? loadVoxScene(voxBuffer, voxBufferLen) : loadVoxScenes(infiles);
 
   if (!scene) {

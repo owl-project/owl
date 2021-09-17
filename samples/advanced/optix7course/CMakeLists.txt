@@ -14,25 +14,23 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${OWL_VIEWER_INCLUDES})
-
-embed_ptx(embedded_ptx_code devicePrograms.cu)
+embed_ptx(
+  OUTPUT_TARGET
+    adv_optix7course-ptx
+  PTX_LINK_LIBRARIES
+    owl::owl
+  SOURCES
+    devicePrograms.cu
+)
 
 add_executable(adv_optix7course
   # the file with embedded PTX string for the device programs:
-  ${embedded_ptx_code}
   SampleRenderer.h
   SampleRenderer.cpp
   Model.h
   Model.cpp
   LaunchParams.h
   main.cpp
-  )
+)
 
-#target_compile_options(adv_optix7course PRIVATE "--keep")
-
-target_link_libraries(adv_optix7course
-  # owl and owl viewer, and everything these require
-  owl::owl
-  ${OWL_VIEWER_LIBRARIES}
-  )
+target_link_libraries(adv_optix7course PRIVATE adv_optix7course-ptx owl_viewer)
