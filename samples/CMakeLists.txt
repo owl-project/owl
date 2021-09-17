@@ -22,8 +22,6 @@ include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
 # ------------------------------------------------------------------
 add_subdirectory(cmdline)
 
-return()
-
 # ------------------------------------------------------------------
 # advanced sapmles and interactive samples require the interative
 # viewer widget. try building this, and include those only if tihs
@@ -31,25 +29,14 @@ return()
 # ------------------------------------------------------------------
 add_subdirectory(common/owlViewer)
 
-if (OWL_HAVE_VIEWER)
+if (TARGET owl_viewer)
 
   # interactive tutorial-style samples (these will try to open windows)
   add_subdirectory(interactive)
 
   # advanced samples (these will try to open windows)
-  add_subdirectory(advanced)
+  #add_subdirectory(advanced)
 
 else()
-  message(WARNING "#owl.cmake: could not build owlViewer library; skipping advanced samples")
+  message(WARNING "#owl.cmake: could not build owl_viewer library; skipping advanced samples")
 endif()
-
-
-
-# -------------------------------------------------------
-# export those back to our parent
-# -------------------------------------------------------
-set(OWL_VIEWER_INCLUDES  ${OWL_VIEWER_INCLUDES}  PARENT_SCOPE)
-set(OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES} PARENT_SCOPE)
-# lp: 2/24/21: why is this being forwarded to parent from here?
-set(OWL_HAVE_TBB         ${OWL_HAVE_TBB}         PARENT_SCOPE)
-
