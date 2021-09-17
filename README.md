@@ -249,7 +249,7 @@ Per-OS Instructions:
 - Ubuntu 18, 19, and 20 (automatically tested on 18, mostly developed on 20)
     - Requires: `sudo apt install cmake-curses-gui`
 	- Build:
-	```
+	```bash
 	mkdir build
 	cd build
 	cmake ..
@@ -258,7 +258,7 @@ Per-OS Instructions:
 - CentOS 7:
     - Requires: `sudo yum install cmake3`
 	- Build:
-	```
+	```bash
 	mkdir build
 	cd build
 	cmake3 ..
@@ -280,8 +280,10 @@ to use OWL as a git submodule, using CMake to configure and build this
 submodule. In particular, the suggested procedure is to first
 do a `add_subdirectory` with the owl submodules as such:
 
-    set(owl_dir ${PROJECT_SOURCE_DIR}/whereeverYourOWLSubmoduleIs)
-    add_subdirectory(${owl_dir} EXCLUDE_FROM_ALL)
+```cmake
+set(owl_dir ${PROJECT_SOURCE_DIR}/whereeverYourOWLSubmoduleIs)
+add_subdirectory(${owl_dir} EXCLUDE_FROM_ALL)
+```
 
 (the `EXCLUDE_FROM_ALL` makes sure that your main project won't automatically
 build any owl samples or test cases unless you explicitly request so).
@@ -290,7 +292,9 @@ Once your project has called `add_subdirectory` on owl, it only has to link the
 `owl::owl` target in order to bring in all includes, linked libraries, etc. to
 fully use it. This might look like:
 
-    target_link_libraries(myOwlApp PRIVATE owl::owl)
+```cmake
+target_link_libraries(myOwlApp PRIVATE owl::owl)
+```
 
 OptiX will need to be in a place that can be found by CMake. Point CMake at your
 OptiX directory by adding it to `CMAKE_PREFIX_PATH` (where it works on all
