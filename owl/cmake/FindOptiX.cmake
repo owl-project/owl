@@ -26,39 +26,34 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Locate the OptiX distribution. As of OptiX 7 we only need to find the header file
+if (TARGET OptiX::OptiX)
+  return()
+endif()
 
-if (NOT DEFINED OptiX_INCLUDE)
-  # optix include not defined on cmdline, try to find ....
-  if (DEFINED OptiX_INSTALL_DIR)
-    message(STATUS "going to look for OptiX_INCLUDE in OptiX_INSTALL_DIR=${OptiX_INSTALL_DIR}")
-    set(OptiX_INCLUDE_SEARCH_PATH ${OptiX_INSTALL_DIR}/include)
-  elseif (EXISTS "$ENV{OptiX_INSTALL_DIR}")
-    set(OptiX_INCLUDE_SEARCH_PATH $ENV{OptiX_INSTALL_DIR}/include)
-    message(STATUS "going to look for OptiX_INCLUDE in OptiX_INSTALL_DIR=$ENV{OptiX_INSTALL_DIR} (from environment variable)")
-  else ()
-    message(STATUS "OptiX_INSTALL_DIR not defined in either cmake or environment.... please define this, or set OptiX_INCLUDE manually in your cmake GUI")
-    set(Optix_INCLUDE_SEARCH_PATH)
-  endif ()
-  find_path(OptiX_INCLUDE
-    NAMES optix.h
-    PATHS "${OptiX_INCLUDE_SEARCH_PATH}"
-    #NO_DEFAULT_PATH
-  )
-
-# Check to make sure we found what we were looking for
-function(OptiX_report_error error_message required)
-  if(OptiX_FIND_REQUIRED AND required)
-    message(FATAL_ERROR "${error_message}")
-  else()
-    if(NOT OptiX_FIND_QUIETLY)
-      message(STATUS "${error_message}")
-    endif(NOT OptiX_FIND_QUIETLY)
+macro(OptiX_config_message)
+  if (NOT DEFINED OptiX_FIND_QUIETLY)
+    message(${ARGN})
   endif()
-endfunction()
+endmacro()
 
-if(NOT OptiX_INCLUDE)
-  OptiX_report_error("OptiX headers (optix.h and friends) not found.  Please locate before proceeding." TRUE)
+find_path(OptiX_ROOT_DIR NAMES include/optix.h)
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(OptiX
+  FOUND_VAR OptiX_FOUND
+  REQUIRED_VARS
+    OptiX_ROOT_DIR
+  REASON_FAILURE_MESSAGE "OptiX installation not found on CMAKE_PREFIX_PATH (include/optix.h)"
+)
+
+if (NOT OptiX_FOUND)
+  set(OptiX_NOT_FOUND_MESSAGE "Unable to find OptiX, please add your OptiX installation to CMAKE_PREFIX_PATH")
+  return()
 endif()
 
-endif()
+set(OptiX_INCLUDE_DIR ${OptiX_ROOT_DIR}/include)
+set(OptiX_INCLUDE_DIRS ${OptiX_INCLUDE_DIR})
+
+add_library(OptiX::OptiX INTERFACE IMPORTED)
+target_include_directories(OptiX::OptiX INTERFACE ${OptiX_INCLUDE_DIR})
+OptiX_config_message(STATUS "Found OptiX: ${OptiX_ROOT_DIR}")

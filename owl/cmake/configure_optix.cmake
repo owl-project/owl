@@ -14,14 +14,7 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-#set(CMAKE_MODULE_PATH
-#  "${CMAKE_CURRENT_SOURCE_DIR}/../cmake"
-#  ${CMAKE_MODULE_PATH}
-#  )
-
-find_package(OptiX REQUIRED VERSION 7)
-
-include_directories(${OptiX_INCLUDE})
+find_package(OptiX REQUIRED)
 
 if (WIN32)
   add_definitions(-DNOMINMAX)

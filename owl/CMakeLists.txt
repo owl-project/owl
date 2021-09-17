@@ -14,20 +14,9 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
+add_library(owl_static STATIC)
 
-include_directories(${PROJECT_SOURCE_DIR}/owl/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-add_definitions(${OWL_CXX_FLAGS})
-
-set(INTERFACE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
-
-include_directories(${PROJECT_SOURCE_DIR}/)
-
-set(OWL_SOURCES
-
+target_sources(owl_static PRIVATE
   # -------------------------------------------------------
   # infrastructure
   # -------------------------------------------------------
@@ -71,7 +60,7 @@ set(OWL_SOURCES
   APIHandle.h
   APIHandle.cpp
   impl.cpp
-  
+
   # -------------------------------------------------------
   # data handling
   # -------------------------------------------------------
@@ -91,7 +80,7 @@ set(OWL_SOURCES
   RegisteredObject.cpp
   DeviceContext.h
   DeviceContext.cpp
-  
+
   ObjectRegistry.h
   ObjectRegistry.cpp
   Context.h
@@ -110,7 +99,7 @@ set(OWL_SOURCES
   MissProg.cpp
   Variable.h
   Variable.cpp
-  
+
   # -------------------------------------------------------
   # geometries
   # -------------------------------------------------------
@@ -134,25 +123,21 @@ set(OWL_SOURCES
   UserGeomGroup.cpp
 )
 
-add_library(owl_static STATIC ${OWL_SOURCES})
-
 set_target_properties(
   #owl
-  owl_static 
-  PROPERTIES 
+  owl_static
+  PROPERTIES
   CUDA_SEPARABLE_COMPILATION ON
   POSITION_INDEPENDENT_CODE ON
   CUDA_RESOLVE_DEVICE_SYMBOLS ON
+  CUDA_USE_STATIC_CUDA_RUNTIME ON
 )
 
-# target_link_libraries(owl_static
-#    ${CUDA_LIBRARIES}
-#    ${CUDA_CUDA_LIBRARY}
-#    ${CMAKE_THREAD_LIBS_INIT}
-#   )
+target_link_libraries(owl_static PUBLIC OptiX::OptiX)
 
-# -------------------------------------------------------
-# export those back to our parent:
-# -------------------------------------------------------
-set(OWL_INCLUDES ${OWL_INCLUDES} PARENT_SCOPE)
-set(OWL_LIBRARIES ${OWL_LIBRARIES} PARENT_SCOPE)
+target_include_directories(owl_static PUBLIC
+  ${PROJECT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+add_library(owl::owl ALIAS owl_static)

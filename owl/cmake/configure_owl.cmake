@@ -28,15 +28,4 @@ if(NOT OWL_INTERMEDIATE_CMAKE AND NOT OWL_MODERN_CMAKE)
   )
 endif()
 
-set(OWL_INCLUDES
-  # owl needs optix:
-  ${OptiX_INCLUDE}
-  # public API
-  ${PROJECT_SOURCE_DIR}/owl/include
-  # device API and common currently still include non-public header files
-  ${PROJECT_SOURCE_DIR}/
-  )
-
-set(OWL_LIBRARIES
-  owl_static
-  )
+set(OWL_LIBRARIES owl::owl)
