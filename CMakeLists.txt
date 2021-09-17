@@ -68,6 +68,8 @@ include(embed_ptx)
 # ------------------------------------------------------------------
 # owl library itself, including owl-common
 # ------------------------------------------------------------------
+option(OWL_BUILD_SHARED "Build OWL as a shared library? (otherwise static)" OFF)
+set(BUILD_SHARED_LIBS ${OWL_BUILD_SHARED}) # use 'OWL_' naming convention
 add_subdirectory(owl)
 
 if (OWL_IS_SUBPROJECT)

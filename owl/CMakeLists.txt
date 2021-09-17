@@ -17,9 +17,9 @@
 find_package(CUDAToolkit REQUIRED)
 find_package(OptiX REQUIRED)
 
-add_library(owl_static STATIC)
+add_library(owl)
 
-target_sources(owl_static PRIVATE
+target_sources(owl PRIVATE
   # -------------------------------------------------------
   # infrastructure
   # -------------------------------------------------------
@@ -125,7 +125,7 @@ target_sources(owl_static PRIVATE
 
 set_target_properties(
   #owl
-  owl_static
+  owl
   PROPERTIES
   CUDA_SEPARABLE_COMPILATION ON
   POSITION_INDEPENDENT_CODE ON
@@ -133,16 +133,16 @@ set_target_properties(
   CUDA_USE_STATIC_CUDA_RUNTIME ON
 )
 
-target_link_libraries(owl_static PUBLIC OptiX::OptiX CUDA::cuda_driver)
+target_link_libraries(owl PUBLIC OptiX::OptiX CUDA::cuda_driver)
 
-target_include_directories(owl_static
+target_include_directories(owl
   PUBLIC
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
 
 if (WIN32)
-  target_compile_definitions(owl_static PUBLIC -DNOMINMAX)
+  target_compile_definitions(owl PUBLIC -DNOMINMAX)
 endif()
 
-add_library(owl::owl ALIAS owl_static)
+add_library(owl::owl ALIAS owl)
