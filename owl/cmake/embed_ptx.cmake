@@ -29,6 +29,7 @@ function(embed_ptx)
 
   set(CMAKE_PREFIX_PATH ${CMAKE_MODULE_PATH})
   find_file(EMBED_PTX_RUN run_bin2c.cmake)
+  mark_as_advanced(EMBED_PTX_RUN)
   if(NOT EMBED_PTX_RUN)
     message(FATAL_ERROR "embed_ptx.cmake and run_bin2c.cmake must be on CMAKE_MODULE_PATH\n")
   endif()
