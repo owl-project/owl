@@ -16,8 +16,6 @@
 
 # for STB image read/write
 include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
-# for public OWL API:
-include_directories(${OWL_INCLUDES})
 
 # ------------------------------------------------------------------
 #cmdline-only samples, also used for 'make test'
@@ -33,7 +31,7 @@ add_subdirectory(cmdline)
 add_subdirectory(common/owlViewer)
 
 if (OWL_HAVE_VIEWER)
-  
+
   # interactive tutorial-style samples (these will try to open windows)
   add_subdirectory(interactive)
 

@@ -14,6 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+find_package(CUDAToolkit REQUIRED)
+
 add_library(owl_static STATIC)
 
 target_sources(owl_static PRIVATE
@@ -133,11 +135,12 @@ set_target_properties(
   CUDA_USE_STATIC_CUDA_RUNTIME ON
 )
 
-target_link_libraries(owl_static PUBLIC OptiX::OptiX)
+target_link_libraries(owl_static PUBLIC OptiX::OptiX CUDA::cuda_driver)
 
-target_include_directories(owl_static PUBLIC
-  ${PROJECT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
+target_include_directories(owl_static
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 add_library(owl::owl ALIAS owl_static)

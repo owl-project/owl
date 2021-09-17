@@ -79,7 +79,7 @@ project(Optix-OWL VERSION 1.1.0 LANGUAGES C CXX CUDA) # c language required for 
 # (build modes, glut, optix, etc)
 # ------------------------------------------------------------------
 set(owl_dir ${PROJECT_SOURCE_DIR})
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/cmake/")
+list(APPEND CMAKE_MODULE_PATH "${owl_dir}/owl/cmake/")
 
 # if not a subproject, set "Debug/Release flags and binary output dir
 # to <binaryDir>
@@ -89,13 +89,14 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(OWL_CXX_FLAGS "")
 
-include(configure_cuda)
-include(configure_optix) # This must follow configure_cuda
-include(configure_owl) # This must follow configure_optix
-include(configure_tbb) # This must follow configure_owl
+find_package(OptiX REQUIRED)
 
-include_directories(${OWL_INCLUDES})
-add_definitions(${OWL_CXX_FLAGS})
+if (WIN32)
+  add_definitions(-DNOMINMAX)
+endif()
+
+include(embed_ptx)
+include(configure_tbb) # This must follow configure_owl
 
 # ------------------------------------------------------------------
 # owl library itself, including owl-common

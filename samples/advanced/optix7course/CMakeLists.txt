@@ -33,6 +33,6 @@ add_executable(adv_optix7course
 
 target_link_libraries(adv_optix7course
   # owl and owl viewer, and everything these require
-  ${OWL_LIBRARIES}
+  owl::owl
   ${OWL_VIEWER_LIBRARIES}
   )

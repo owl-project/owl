@@ -15,10 +15,7 @@
 
 include_directories(${OWL_VIEWER_INCLUDES})
 add_definitions(${OWL_CXX_FLAGS})
-
-embed_ptx(ptxCode
-  deviceCode.cu
-  )
+embed_ptx(ptxCode deviceCode.cu)
 add_executable(voxrender
   constants.h
   deviceCode.h
@@ -27,8 +24,5 @@ add_executable(voxrender
   readVox.h
   resource.cpp
   ${ptxCode}
-  )
-target_link_libraries(voxrender
-  ${OWL_LIBRARIES}
-  ${OWL_VIEWER_LIBRARIES}
-  )
+)
+target_link_libraries(voxrender owl::owl ${OWL_VIEWER_LIBRARIES})

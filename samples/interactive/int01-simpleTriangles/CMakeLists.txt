@@ -20,6 +20,6 @@ add_executable(int01-simpleTriangles
   ${ptxCode}
   )
 target_link_libraries(int01-simpleTriangles
-  ${OWL_LIBRARIES}
+  owl::owl
   ${OWL_VIEWER_LIBRARIES}
   )

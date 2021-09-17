@@ -20,6 +20,6 @@ add_executable(int13-motionBlurBoxes
   ${ptxCode}
   )
 target_link_libraries(int13-motionBlurBoxes
-  ${OWL_LIBRARIES}
+  owl::owl
   ${OWL_VIEWER_LIBRARIES}
   )

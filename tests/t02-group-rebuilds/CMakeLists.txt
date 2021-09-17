@@ -14,18 +14,19 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl)
+embed_ptx(
+  OUTPUT_TARGET
+    test02-group-rebuilds-ptx
+  PTX_LINK_LIBRARIES
+    owl::owl
+  SOURCES
+    deviceCode.cu
+)
 
-embed_ptx(ptxCode deviceCode.cu)
-
-add_executable(test02-group-rebuilds
-  hostCode.cpp
-  ${ptxCode}
-  )
-
+add_executable(test02-group-rebuilds hostCode.cpp)
 target_link_libraries(test02-group-rebuilds
-  ${OWL_LIBRARIES}
-  )
-
-add_test(test02-group-rebuilds
-  ${CMAKE_BINARY_DIR}/test02-group-rebuilds)
+  PRIVATE
+    test02-group-rebuilds-ptx
+    owl::owl
+)
+add_test(test02-group-rebuilds ${CMAKE_BINARY_DIR}/test02-group-rebuilds)

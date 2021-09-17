@@ -24,5 +24,6 @@ add_executable(int06-rtow-mixedGeometries
   )
 
 target_link_libraries(int06-rtow-mixedGeometries
+  owl::owl
   ${OWL_VIEWER_LIBRARIES}
   )
