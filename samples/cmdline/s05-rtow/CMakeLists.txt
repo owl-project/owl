@@ -28,6 +28,7 @@ target_link_libraries(sample05-rtow
   PRIVATE
     sample05-rtow-ptx
     owl::owl
+    stb_image
 )
 add_test(sample05-rtow
   ${CMAKE_BINARY_DIR}/sample05-rtow)

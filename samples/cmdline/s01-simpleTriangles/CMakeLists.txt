@@ -28,5 +28,6 @@ target_link_libraries(sample01-simpleTriangles
   PRIVATE
     sample01-simpleTriangles-ptx
     owl::owl
+    stb_image
 )
 add_test(sample01-simpleTriangles ${CMAKE_BINARY_DIR}/sample01-simpleTriangles)

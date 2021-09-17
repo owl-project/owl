@@ -28,6 +28,7 @@ target_link_libraries(sample06-rtow-mixedGeometries
   PRIVATE
     sample06-rtow-mixedGeometries-ptx
     owl::owl
+    stb_image
 )
 add_test(sample06-rtow-mixedGeometries
   ${CMAKE_BINARY_DIR}/sample06-rtow-mixedGeometries)

@@ -14,11 +14,8 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(configure_glfw)
-
-if (NOT OWL_HAVE_GLFW)
-  return()
-endif()
+set(OpenGL_GL_PREFERENCE "LEGACY")
+find_package(OpenGL QUIET)
 
 add_library(owl_viewer STATIC)
 
@@ -38,12 +35,10 @@ target_sources(owl_viewer PRIVATE
 
 target_link_libraries(owl_viewer
   PUBLIC
+    OpenGL::OpenGL
     owl::owl
-    ${OWL_GLFW_LIBRARIES}
+    glfw
+    stb_image
 )
 
-target_include_directories(owl_viewer
-  PUBLIC
-    ${OWL_GLFW_INCLUDES}
-    ${owl_dir}/samples/common
-)
+target_include_directories(owl_viewer PUBLIC ${CMAKE_CURRENT_LIST_DIR}/..)

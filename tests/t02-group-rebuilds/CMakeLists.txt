@@ -28,5 +28,6 @@ target_link_libraries(test02-group-rebuilds
   PRIVATE
     test02-group-rebuilds-ptx
     owl::owl
+    stb_image
 )
 add_test(test02-group-rebuilds ${CMAKE_BINARY_DIR}/test02-group-rebuilds)

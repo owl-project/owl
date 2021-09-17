@@ -14,20 +14,13 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# for STB image read/write
-include_directories(${PROJECT_SOURCE_DIR}/samples/common/3rdParty)
+# support libraries
+add_subdirectory(common)
 
 # ------------------------------------------------------------------
 #cmdline-only samples, also used for 'make test'
 # ------------------------------------------------------------------
 add_subdirectory(cmdline)
-
-# ------------------------------------------------------------------
-# advanced sapmles and interactive samples require the interative
-# viewer widget. try building this, and include those only if tihs
-# worked (it may fail if liiraries like opengl, glfw, etc are missing)
-# ------------------------------------------------------------------
-add_subdirectory(common/owlViewer)
 
 if (TARGET owl_viewer)
 

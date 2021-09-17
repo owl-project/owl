@@ -28,5 +28,6 @@ target_link_libraries(sample08-sierpinski
   PRIVATE
     sample08-sierpinski-ptx
     owl::owl
+    stb_image
 )
 add_test(sample08-sierpinski ${CMAKE_BINARY_DIR}/sample08-sierpinski)

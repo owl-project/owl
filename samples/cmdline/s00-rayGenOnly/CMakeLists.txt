@@ -28,5 +28,6 @@ target_link_libraries(sample00-rayGenOnly
   PRIVATE
     sample00-rayGenOnly-ptx
     owl::owl
+    stb_image
 )
 add_test(sample00-rayGenOnly ${CMAKE_BINARY_DIR}/sample00-rayGenOnly)

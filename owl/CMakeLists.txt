@@ -15,6 +15,7 @@
 # ======================================================================== #
 
 find_package(CUDAToolkit REQUIRED)
+find_package(OptiX REQUIRED)
 
 add_library(owl_static STATIC)
 
@@ -49,9 +50,6 @@ target_sources(owl_static PRIVATE
   common.h
 
   cmake/configure_tbb.cmake
-  cmake/configure_owl.cmake
-  cmake/configure_optix.cmake
-  cmake/configure_glfw.cmake
   cmake/FindOptiX.cmake
 
   # -------------------------------------------------------
@@ -142,5 +140,9 @@ target_include_directories(owl_static
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+if (WIN32)
+  target_compile_definitions(owl_static PUBLIC -DNOMINMAX)
+endif()
 
 add_library(owl::owl ALIAS owl_static)

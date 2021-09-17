@@ -28,4 +28,5 @@ target_link_libraries(test01-manySpheres
   PRIVATE
     test01-manySpheres-ptx
     owl::owl
+    stb_image
 )

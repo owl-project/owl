@@ -28,6 +28,7 @@ target_link_libraries(sample09-motionBlurSimpleTriangles
   PRIVATE
     sample09-motionBlurSimpleTriangles-ptx
     owl::owl
+    stb_image
 )
 add_test(sample09-motionBlurSimpleTriangles
   ${CMAKE_BINARY_DIR}/sample09-motionBlurSimpleTriangles)
