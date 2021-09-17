@@ -14,15 +14,16 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.12)
 
-#cmake_policy(SET CMP0104 OLD) # CUDA arch set manually by compiler flags
-cmake_policy(SET CMP0104 NEW) # CUDA_ARCHITECTURES must be specified
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+  cmake_policy(SET CMP0104 NEW)
+endif()
 
 if (NOT (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR}))
-  SET(OWL_IS_SUBPROJECT ON)
+  set(OWL_IS_SUBPROJECT ON)
 else()
-  SET(OWL_IS_SUBPROJECT OFF)
+  set(OWL_IS_SUBPROJECT OFF)
 endif()
 
 if(CUDA_TOOLKIT_ROOT_DIR)
@@ -33,9 +34,7 @@ if(CUDA_TOOLKIT_ROOT_DIR)
     "Instead, the parent project is required to use 'intermediate' or 'modern' "
     "CMake CUDA style with first-class CUDA language support (i.e., "
     "project(foo LANGUAGES C CXX CUDA)). "
-    "See OWL's CMakeLists.txt and owl/cmake/configure_cuda.cmake for more info "
-    "about the differences between 'intermediate' and 'modern' style."
-    )
+  )
 endif()
 
 set(CMAKE_BUILD_TYPE_INIT "Release")

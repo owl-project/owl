@@ -30,12 +30,6 @@ if (TARGET OptiX::OptiX)
   return()
 endif()
 
-macro(OptiX_config_message)
-  if (NOT DEFINED OptiX_FIND_QUIETLY)
-    message(${ARGN})
-  endif()
-endmacro()
-
 find_path(OptiX_ROOT_DIR NAMES include/optix.h)
 
 include(FindPackageHandleStandardArgs)
@@ -43,17 +37,7 @@ find_package_handle_standard_args(OptiX
   FOUND_VAR OptiX_FOUND
   REQUIRED_VARS
     OptiX_ROOT_DIR
-  REASON_FAILURE_MESSAGE "OptiX installation not found on CMAKE_PREFIX_PATH (include/optix.h)"
 )
 
-if (NOT OptiX_FOUND)
-  set(OptiX_NOT_FOUND_MESSAGE "Unable to find OptiX, please add your OptiX installation to CMAKE_PREFIX_PATH")
-  return()
-endif()
-
-set(OptiX_INCLUDE_DIR ${OptiX_ROOT_DIR}/include)
-set(OptiX_INCLUDE_DIRS ${OptiX_INCLUDE_DIR})
-
 add_library(OptiX::OptiX INTERFACE IMPORTED)
-target_include_directories(OptiX::OptiX INTERFACE ${OptiX_INCLUDE_DIR})
-OptiX_config_message(STATUS "Found OptiX: ${OptiX_ROOT_DIR}")
+target_include_directories(OptiX::OptiX INTERFACE ${OptiX_ROOT_DIR}/include)

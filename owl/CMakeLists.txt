@@ -14,7 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-find_package(CUDAToolkit REQUIRED)
 find_package(OptiX REQUIRED)
 
 add_library(owl)
@@ -133,7 +132,14 @@ set_target_properties(
   CUDA_USE_STATIC_CUDA_RUNTIME ON
 )
 
-target_link_libraries(owl PUBLIC OptiX::OptiX CUDA::cuda_driver)
+target_link_libraries(owl PUBLIC OptiX::OptiX)
+
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.17)
+  find_package(CUDAToolkit REQUIRED)
+  target_link_libraries(owl PUBLIC CUDA::cuda_driver)
+else()
+  target_link_libraries(owl PUBLIC cuda)
+endif()
 
 target_include_directories(owl
   PUBLIC

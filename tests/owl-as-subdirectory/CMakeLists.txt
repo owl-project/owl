@@ -14,9 +14,11 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.12)
 
-cmake_policy(SET CMP0104 NEW) # CUDA_ARCHITECTURES must be specified
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+  cmake_policy(SET CMP0104 NEW)
+endif()
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
