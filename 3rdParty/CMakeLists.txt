@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018-2019 Ingo Wald                                            #
+# Copyright 2021-2021 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,6 +14,17 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-#message("embree backend currently disabled")
+add_subdirectory(stb_image)
 
-find_package(embree 3.0 REQUIRED)
+if (OWL_BUILD_SAMPLES)
+  find_package(glfw3 QUIET)
+  set(OpenGL_GL_PREFERENCE "LEGACY")
+  #find_package(OpenGL QUIET)
+  find_package(OpenGL REQUIRED)
+  if (NOT TARGET glfw)
+    if (OpenGL_FOUND)
+      message(STATUS "found opengl, building glfw")
+      add_subdirectory(glfw)
+    endif()
+  endif()
+endif()

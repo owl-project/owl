@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018-2019 Ingo Wald                                            #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,40 +14,35 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-#if (WIN32)
-#set(OPENGL_DEPENDENCY "")
-#else()
-#set(OpenGL_GL_PREFERENCE "LEGACY")
-#find_package(OpenGL QUIET)
-#set(OPENGL_DEPENDENCY OpenGL::OpenGL)
-#endif()
-#find_package(OpenGL QUIET)
+cmake_minimum_required(VERSION 3.12)
 
-set(OpenGL_GL_PREFERENCE "LEGACY")
-find_package(OpenGL REQUIRED)
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+  cmake_policy(SET CMP0104 NEW)
+endif()
 
-add_library(owl_viewer STATIC)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-target_sources(owl_viewer PRIVATE
-  # add header files, so visual studio will properly show them as part of the solution
-  OWLViewer.h
-  Camera.h
-  InspectMode.h
-  FlyMode.h
+project(owlSubmoduleTest LANGUAGES C CXX CUDA)
 
-  # the actual source files
-  OWLViewer.cpp
-  Camera.cpp
-  InspectMode.cpp
-  FlyMode.cpp
+# This is the same as someone calling add_subdirectory(path/to/OWL) submodule
+add_subdirectory(
+  ${CMAKE_SOURCE_DIR}/../..
+  ${CMAKE_BINARY_DIR}/owl
 )
 
-target_link_libraries(owl_viewer
-  PUBLIC
-    owl::owl
-    glfw
-    OpenGL::GL
-    stb_image
+# Parent projects must include embed_ptx.cmake in order to use it
+include(embed_ptx)
+
+# NOTE(jda) - Hack here to get stb_image...would be provided by parent project
+#             normally.
+add_subdirectory(
+  ${CMAKE_SOURCE_DIR}/../../3rdParty/stb_image
+  ${CMAKE_BINARY_DIR}/stb_image
 )
 
-target_include_directories(owl_viewer PUBLIC ${CMAKE_CURRENT_LIST_DIR}/..)
+# Build the many-spheres test to verify things work
+add_subdirectory(
+  ${CMAKE_CURRENT_LIST_DIR}/../t01-many-spheres
+  ${CMAKE_BINARY_DIR}/t01-many-spheres
+)

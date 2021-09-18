@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018-2020 Ingo Wald                                            #
+# Copyright 2021-2021 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,17 +14,4 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-#set(CMAKE_MODULE_PATH
-#  "${CMAKE_CURRENT_SOURCE_DIR}/../cmake"
-#  ${CMAKE_MODULE_PATH}
-#  )
-
-find_package(OptiX REQUIRED VERSION 7)
-
-include_directories(${OptiX_INCLUDE})
-
-if (WIN32)
-  add_definitions(-DNOMINMAX)
-endif()
-
-include(embed_ptx)
+add_subdirectory(owlViewer)

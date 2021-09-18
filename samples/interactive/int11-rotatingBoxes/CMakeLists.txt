@@ -14,12 +14,18 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-embed_ptx(ptxCode deviceCode.cu)
-add_executable(int11-rotatingBoxes
-  hostCode.cpp
-  ${ptxCode}
-  )
+embed_ptx(
+  OUTPUT_TARGET
+    int11-rotatingBoxes-ptx
+  PTX_LINK_LIBRARIES
+    owl::owl
+  SOURCES
+    deviceCode.cu
+)
+
+add_executable(int11-rotatingBoxes hostCode.cpp)
 target_link_libraries(int11-rotatingBoxes
-  ${OWL_LIBRARIES}
-  ${OWL_VIEWER_LIBRARIES}
-  )
+  PRIVATE
+    int11-rotatingBoxes-ptx
+    owl_viewer
+)

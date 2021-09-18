@@ -14,17 +14,14 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include_directories(${PROJECT_SOURCE_DIR}/owl)
+embed_ptx(
+  OUTPUT_TARGET
+    int07-whitted-ptx
+  PTX_LINK_LIBRARIES
+    owl::owl
+  SOURCES
+    deviceCode.cu
+)
 
-embed_ptx(ptxCode
-  deviceCode.cu
-  )
-
-add_executable(int07-whitted
-  hostCode.cpp
-  ${ptxCode}
-  )
-
-target_link_libraries(int07-whitted
-  ${OWL_VIEWER_LIBRARIES}
-  )
+add_executable(int07-whitted hostCode.cpp)
+target_link_libraries(int07-whitted PRIVATE int07-whitted-ptx owl_viewer)
