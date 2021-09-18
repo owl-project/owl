@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019-2020 Ingo Wald                                            #
+# Copyright 2019-2021 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -139,10 +139,14 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.17)
   target_link_libraries(owl PUBLIC CUDA::cuda_driver CUDA::cudart_static)
 else()
   target_link_libraries(owl PUBLIC cuda)
+  # iw - this is not clean; needs fixing.
+  find_path(cuda_h_dir NAMES cuda.h HINTS /usr/local/cuda/include)
+  target_include_directories(owl PUBLIC ${cuda_h_dir})
 endif()
 
 target_include_directories(owl
   PUBLIC
+    /usr/local/cuda/include/
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
