@@ -64,7 +64,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/owl/cmake/")
 if (OWL_IS_SUBPROJECT)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
 endif()
-include(configure_tbb)
+#include(configure_tbb)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -78,19 +78,10 @@ option(OWL_BUILD_SHARED "Build OWL as a shared library? (otherwise static)" OFF)
 set(BUILD_SHARED_LIBS ${OWL_BUILD_SHARED}) # use 'OWL_' naming convention
 add_subdirectory(owl)
 
-if (OWL_IS_SUBPROJECT)
-  return()
-endif()
-
-include(CTest)
-if (BUILD_TESTING)
-  enable_testing()
-endif()
+add_subdirectory(3rdParty)
 
 option(OWL_BUILD_SAMPLES "Build the Samples?" ON)
 option(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
-
-add_subdirectory(3rdParty)
 
 # ------------------------------------------------------------------
 # tutorial/samples
@@ -99,6 +90,14 @@ if (OWL_BUILD_SAMPLES)
   add_subdirectory(samples)
 endif()
 
+if (OWL_IS_SUBPROJECT)
+  return()
+endif()
+
+include(CTest)
+if (BUILD_TESTING)
+  enable_testing()
+endif()
 # ------------------------------------------------------------------
 # some basic testing
 # ------------------------------------------------------------------
