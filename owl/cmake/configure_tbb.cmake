@@ -31,7 +31,7 @@ if (OWL_USE_TBB)
   set(OWL_HAVE_TBB OFF)
   if (TBB_FOUND)
     #    include_directories(${TBB_INCLUDE_DIR})
-    set(OWL_CXX_FLAGS "${OWL_CXX_FLAGS} -DOWL_HAVE_TBB=1")
+#    set(OWL_CXX_FLAGS "${OWL_CXX_FLAGS} -DOWL_HAVE_TBB=1")
     set(OWL_HAVE_TBB ON)
     
     if (TBB_FOUND)

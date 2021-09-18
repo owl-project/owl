@@ -125,7 +125,6 @@ target_sources(owl PRIVATE
 )
 
 set_target_properties(
-  #owl
   owl
   PROPERTIES
   CUDA_SEPARABLE_COMPILATION ON
@@ -135,12 +134,11 @@ set_target_properties(
 )
 
 target_link_libraries(owl PUBLIC OptiX::OptiX)
-#if (TBB_FOUND)
+if (OWL_HAVE_TBB)
   target_link_libraries(owl PUBLIC ${TBB_LIBRARIES})
   target_include_directories(owl PUBLIC ${TBB_INCLUDES})
-  #      set(OWL_INCLUDES ${OWL_INCLUDES} ${TBB_INCLUDE_DIR})
-  #      set(OWL_LIBRARIES ${OWL_LIBRARIES} ${TBB_LIBRARIES})
-#endif()
+  target_compile_definitions(owl PUBLIC -DOWL_HAVE_TBB=1)
+endif()
 
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.17)
   find_package(CUDAToolkit REQUIRED)
