@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2020 Ingo Wald                                                 #
+# Copyright 2021-2021 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,18 +14,5 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-embed_ptx(
-  OUTPUT_TARGET
-    int11-rotatingBoxes-ptx
-  PTX_LINK_LIBRARIES
-    owl::owl
-  SOURCES
-    deviceCode.cu
-)
-
-add_executable(int11-rotatingBoxes hostCode.cpp)
-target_link_libraries(int11-rotatingBoxes
-  PRIVATE
-    int11-rotatingBoxes-ptx
-    owl_viewer
-)
+add_library(stb_image INTERFACE)
+target_include_directories(stb_image INTERFACE ${CMAKE_CURRENT_LIST_DIR})

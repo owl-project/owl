@@ -14,15 +14,22 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-embed_ptx(ptxCode
-  deviceCode.cu
-  )
-add_definitions(-DDATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data")
-add_executable(int15-cookBilliardScene
-  hostCode.cpp
-  ${ptxCode}
-  )
+embed_ptx(
+  OUTPUT_TARGET
+    int15-cookBilliardScene-ptx
+  PTX_LINK_LIBRARIES
+    owl::owl
+  SOURCES
+    deviceCode.cu
+)
+
+add_executable(int15-cookBilliardScene hostCode.cpp)
 target_link_libraries(int15-cookBilliardScene
-  ${OWL_LIBRARIES}
-  ${OWL_VIEWER_LIBRARIES}
-  )
+  PRIVATE
+    int15-cookBilliardScene-ptx
+    owl_viewer
+)
+target_compile_definitions(int15-cookBilliardScene
+  PRIVATE
+    DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data"
+)

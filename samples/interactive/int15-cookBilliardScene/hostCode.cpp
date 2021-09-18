@@ -41,7 +41,7 @@ using namespace owl::common;
   std::cout << "#owl.sample(main): " << message << std::endl;   \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char ptxCode[];
+extern "C" char deviceCode[];
 
 namespace cameraTriangle {
   const vec3f init_lookFrom(0.216657f,-9.58095f,3.37295f);
@@ -128,13 +128,13 @@ struct Viewer : public owl::viewer::OWLViewer
   enum Setup { SETUP_1984, SETUP_TRIANGLE };
 
   Viewer(Setup stp = SETUP_TRIANGLE);
-  
+
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
-  
+
       /*! window notifies us that we got resized. We HAVE to override
           this to know our actual render dimensions, and get pointer
-          to the device frame buffer that the viewer cated for us */     
+          to the device frame buffer that the viewer cated for us */
   void resize(const vec2i &newSize) override;
 
   /*! this function gets called whenever any camera manipulator
@@ -168,7 +168,7 @@ struct Viewer : public owl::viewer::OWLViewer
   int accumID { 0 };
 };
 
-/*! window notifies us that we got resized */     
+/*! window notifies us that we got resized */
 void Viewer::resize(const vec2i &newSize)
 {
   if (!accumBuffer)
@@ -225,8 +225,8 @@ Viewer::Viewer(Viewer::Setup stp)
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
   owlContextSetRayTypeCount(context,2);
-  OWLModule module = owlModuleCreate(context,ptxCode);
-  
+  OWLModule module = owlModuleCreate(context,deviceCode);
+
   // ##################################################################
   // set up all the *GEOMETRY* graph we want to render
   // ##################################################################
@@ -552,13 +552,13 @@ Viewer::Viewer(Viewer::Setup stp)
                              nullptr,
                              OWL_MATRIX_FORMAT_OWL);
   owlGroupBuildAccel(world);
-  
+
   // ##################################################################
   // set miss and raygen program required for SBT
   // ##################################################################
 
   // -------------------------------------------------------
-  // set up miss prog 
+  // set up miss prog
   // -------------------------------------------------------
   OWLVarDecl missProgVars[]
     = {
@@ -569,7 +569,7 @@ Viewer::Viewer(Viewer::Setup stp)
   OWLMissProg missProg
     = owlMissProgCreate(context,module,"miss",sizeof(MissProgData),
                         missProgVars,-1);
-  
+
   // ----------- set variables  ----------------------------
   owlMissProgSet3f(missProg,"bg_color",owl3f{.34f,.55f,.85f});
 
@@ -594,7 +594,7 @@ Viewer::Viewer(Viewer::Setup stp)
 
   /* light sources */
   owlParamsSet1i(lp,"numLights",2);
-  BasicLight lights[] = { 
+  BasicLight lights[] = {
     { vec3f( -30.0f, -10.0f, 80.0f ), vec3f( 1.0f, 1.0f, 1.0f ), 1 },
     { vec3f(  10.0f,  30.0f, 20.0f ), vec3f( 1.0f, 1.0f, 1.0f ), 1 }
   };
@@ -629,11 +629,11 @@ Viewer::Viewer(Viewer::Setup stp)
 
   /* camera and frame buffer get set in resiez() and cameraChanged() */
   owlRayGenSetGroup (rayGen,"world",        world);
-  
+
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################
-  
+
   owlBuildPrograms(context);
   owlBuildPipeline(context);
   owlBuildSBT(context);
@@ -651,7 +651,7 @@ void Viewer::render()
     owlGroupBuildAccel(groups[0]);
     owlGroupBuildAccel(world);
   }
-	
+
   if (sbtDirty) {
     owlBuildSBT(context);
     sbtDirty = false;

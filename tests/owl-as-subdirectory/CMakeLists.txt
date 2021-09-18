@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2020 Ingo Wald                                                 #
+# Copyright 2019-2020 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,18 +14,35 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-embed_ptx(
-  OUTPUT_TARGET
-    int11-rotatingBoxes-ptx
-  PTX_LINK_LIBRARIES
-    owl::owl
-  SOURCES
-    deviceCode.cu
+cmake_minimum_required(VERSION 3.12)
+
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+  cmake_policy(SET CMP0104 NEW)
+endif()
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+project(owlSubmoduleTest LANGUAGES C CXX CUDA)
+
+# This is the same as someone calling add_subdirectory(path/to/OWL) submodule
+add_subdirectory(
+  ${CMAKE_SOURCE_DIR}/../..
+  ${CMAKE_BINARY_DIR}/owl
 )
 
-add_executable(int11-rotatingBoxes hostCode.cpp)
-target_link_libraries(int11-rotatingBoxes
-  PRIVATE
-    int11-rotatingBoxes-ptx
-    owl_viewer
+# Parent projects must include embed_ptx.cmake in order to use it
+include(embed_ptx)
+
+# NOTE(jda) - Hack here to get stb_image...would be provided by parent project
+#             normally.
+add_subdirectory(
+  ${CMAKE_SOURCE_DIR}/../../3rdParty/stb_image
+  ${CMAKE_BINARY_DIR}/stb_image
+)
+
+# Build the many-spheres test to verify things work
+add_subdirectory(
+  ${CMAKE_CURRENT_LIST_DIR}/../t01-many-spheres
+  ${CMAKE_BINARY_DIR}/t01-many-spheres
 )

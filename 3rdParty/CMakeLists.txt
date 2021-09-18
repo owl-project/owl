@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2018-2020 Ingo Wald                                            #
+# Copyright 2021-2021 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,29 +14,15 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# this helper script sets the following variables:
-#
-# OWL_INCLUDES - list of directories required to compile progs using owl
-#
-# OWL_LIBRARIES - list of libraries to link against when building owl programs
+add_subdirectory(stb_image)
 
-if(NOT OWL_INTERMEDIATE_CMAKE AND NOT OWL_MODERN_CMAKE)
-  message(FATAL_ERROR "Please modify your parent project not to include "
-    "configure_owl.cmake or any other internal CMake files from OWL. "
-    "Exceptions: embed_ptx.cmake and get_gpu_arch.cmake, which you may "
-    "need or want to use."
-  )
+if (OWL_BUILD_SAMPLES)
+  find_package(glfw3 QUIET)
+  set(OpenGL_GL_PREFERENCE "LEGACY")
+  find_package(OpenGL QUIET)
+  if (NOT TARGET glfw)
+    if (OpenGL_FOUND)
+      add_subdirectory(glfw)
+    endif()
+  endif()
 endif()
-
-set(OWL_INCLUDES
-  # owl needs optix:
-  ${OptiX_INCLUDE}
-  # public API
-  ${PROJECT_SOURCE_DIR}/owl/include
-  # device API and common currently still include non-public header files
-  ${PROJECT_SOURCE_DIR}/
-  )
-
-set(OWL_LIBRARIES
-  owl_static
-  )

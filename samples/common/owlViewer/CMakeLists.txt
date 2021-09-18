@@ -14,55 +14,31 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-include(configure_glfw)
+set(OpenGL_GL_PREFERENCE "LEGACY")
+find_package(OpenGL QUIET)
 
-if (OWL_HAVE_GLFW)
-  
-  set(owl_viewer_sources
-    # add header files, so visual studio will properly show them as part of the solution
-    OWLViewer.h
-    Camera.h
-    InspectMode.h
-    FlyMode.h
+add_library(owl_viewer STATIC)
 
-    # the actual source files
-    OWLViewer.cpp
-    Camera.cpp
-    InspectMode.cpp
-    FlyMode.cpp
-    )
+target_sources(owl_viewer PRIVATE
+  # add header files, so visual studio will properly show them as part of the solution
+  OWLViewer.h
+  Camera.h
+  InspectMode.h
+  FlyMode.h
 
-  # this is doing the same using OptiX
-  add_library(owl_viewer STATIC ${owl_viewer_sources})
-  
-  target_link_libraries(owl_viewer
-    ${OWL_GLFW_LIBRARIES}
-    ${OWL_LIBRARIES}
-    )
+  # the actual source files
+  OWLViewer.cpp
+  Camera.cpp
+  InspectMode.cpp
+  FlyMode.cpp
+)
 
-  set(OWL_VIEWER_LIBRARIES
-    owl_viewer
-    ${OWL_GLFW_LIBRARIES}
-    ${OWL_LIBRARIES}
-    )
-
-  set(OWL_HAVE_VIEWER ON)
-  set(OWL_VIEWER_INCLUDES
-    ${OWL_GLFW_INCLUDES}
-    ${owl_dir}/samples/common/
-    )
-  set(OWL_VIEWER_LIBRARIES
-    owl_viewer
-    ${OWL_LIBRARIES}
-    ${OWL_GLFW_LIBRARIES}
+target_link_libraries(owl_viewer
+  PUBLIC
+    OpenGL::OpenGL
+    owl::owl
     glfw
-    )
-else()
-  set(OWL_HAVE_VIEWER OFF)
-endif()
+    stb_image
+)
 
-# export those to whoever included this:
-set(OWL_HAVE_VIEWER ${OWL_HAVE_VIEWER} PARENT_SCOPE)
-set(OWL_VIEWER_INCLUDES ${OWL_VIEWER_INCLUDES} PARENT_SCOPE)
-set(OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES} PARENT_SCOPE)
-
+target_include_directories(owl_viewer PUBLIC ${CMAKE_CURRENT_LIST_DIR}/..)
