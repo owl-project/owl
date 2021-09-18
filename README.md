@@ -308,7 +308,12 @@ a CMake variable when you run CMake on your project.
 v1.1 - Switched to "modern cmake" technology (kudos lpisha)
 ----------------------------------------------------------------------
 
-*1.0.0*: first release with louis pisha's 'modern cmake' version of the build system.
+*1.1.1*: various fixes for the 'modern cmake' version, with a pretty
+   big re-vamp of the entire build system. projects using owl as a
+   submodule need to update how they use cmake accordingly; pls
+   consult the samples for how to cleanly do that.
+
+*1.1.0*: first release with louis pisha's 'modern cmake' version of the build system.
 	Also includes several new samples, including the voxel renderer
 	from the "ray tracing gems2" article.
 
