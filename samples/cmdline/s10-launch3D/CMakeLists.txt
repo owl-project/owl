@@ -14,15 +14,25 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-embed_ptx(ptxCode deviceCode.cu)
+embed_ptx(
+  OUTPUT_TARGET
+  sample10-launch3D-ptx
+  
+  PTX_LINK_LIBRARIES
+  owl::owl
+  
+  SOURCES
+  deviceCode.cu)
 
 add_executable(sample10-launch3D
   hostCode.cu
-  ${ptxCode}
   )
 
 target_link_libraries(sample10-launch3D
-  ${OWL_LIBRARIES}
+  PRIVATE
+  sample10-launch3D-ptx
+  owl
+  stb_image
   )
 
 add_test(sample10-launch3D

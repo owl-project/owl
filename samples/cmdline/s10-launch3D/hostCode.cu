@@ -37,7 +37,7 @@
   std::cout << "#owl.sample(main): " << message << std::endl;    \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char ptxCode[];
+extern "C" char deviceCode[];
 
 const char *outFileName = "s10-launch3D.png";
 const vec2i fbSize(1600,800);
@@ -117,7 +117,7 @@ int main(int ac, char **av)
   // ##################################################################
 
   OWLContext context = owlContextCreate(nullptr,1);
-  OWLModule  module  = owlModuleCreate(context,ptxCode);
+  OWLModule  module  = owlModuleCreate(context,deviceCode);
   
   // ##################################################################
   // set up all the *GEOMETRY* graph we want to render
