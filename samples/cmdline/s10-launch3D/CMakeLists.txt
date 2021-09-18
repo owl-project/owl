@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2020-2021 Ingo Wald                                            #
+# Copyright 2019-2021 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -16,16 +16,24 @@
 
 embed_ptx(
   OUTPUT_TARGET
-    int10-texturedTriangles-ptx
+  sample10-launch3D-ptx
+  
   PTX_LINK_LIBRARIES
-    owl::owl
+  owl::owl
+  
   SOURCES
-    deviceCode.cu
-)
+  deviceCode.cu)
 
-add_executable(int10-texturedTriangles hostCode.cpp)
-target_link_libraries(int10-texturedTriangles
+add_executable(sample10-launch3D
+  hostCode.cu
+  )
+
+target_link_libraries(sample10-launch3D
   PRIVATE
-    int10-texturedTriangles-ptx
-    owl_viewer
-)
+  sample10-launch3D-ptx
+  owl
+  stb_image
+  )
+
+add_test(sample10-launch3D
+  ${CMAKE_BINARY_DIR}/sample10-launch3D)

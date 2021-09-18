@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -118,8 +118,6 @@ namespace owl {
       LOG(ss.str()); 
     }
   }
-  
-  
   
   /*! creates a buffer that uses CUDA host pinned memory; that
     memory is pinned on the host and accessive to all devices in the

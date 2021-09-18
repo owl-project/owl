@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -117,6 +117,13 @@ namespace owl {
     return nullptr;
   }
   
+  void DeviceBuffer::clear()
+  {
+    for (auto dd : deviceData)
+      dd->as<DeviceBuffer::DeviceData>().clear();
+    CUDA_SYNC_CHECK();
+  }
+  
   void DeviceBuffer::upload(const void *hostPtr, size_t offset, int64_t count)
   {
     assert(deviceData.size() == context->deviceCount());
@@ -154,7 +161,11 @@ namespace owl {
 
     if (parent->elementCount)
       CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(cudaTextureObject_t)));
-    
+  }
+
+  void DeviceBuffer::DeviceDataForTextures::clear() 
+  {
+    throw std::runtime_error("owlBufferClear() not implmemented for buffers of textures");
   }
   
   void DeviceBuffer::DeviceDataForTextures::uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) 
@@ -178,6 +189,11 @@ namespace owl {
                           devRep.size()*sizeof(devRep[0]),
                           cudaMemcpyDefault,
                           device->getStream()));
+  }
+  
+  void DeviceBuffer::DeviceDataForBuffers::clear() 
+  {
+    throw std::runtime_error("owlBufferClear() not implmemented for buffers of buffers");
   }
   
   void DeviceBuffer::DeviceDataForBuffers::executeResize() 
@@ -226,6 +242,11 @@ namespace owl {
 
 
 
+  void DeviceBuffer::DeviceDataForGroups::clear() 
+  {
+    throw std::runtime_error("owlBufferClear() not implmemented for buffers of groups");
+  }
+  
 
   void DeviceBuffer::DeviceDataForGroups::executeResize() 
   {
@@ -268,6 +289,15 @@ namespace owl {
   }
 
 
+  void DeviceBuffer::DeviceDataForCopyableData::clear() 
+  {
+    SetActiveGPU forLifeTime(device);
+    
+    if (parent->elementCount) {
+      CUDA_CALL(Memset(d_pointer,0,parent->elementCount*sizeOf(parent->type)));
+    }
+  }
+  
 
   
   void DeviceBuffer::DeviceDataForCopyableData::executeResize() 
@@ -326,6 +356,12 @@ namespace owl {
     for (auto device : context->getDevices()) {
       getDD(device).d_pointer = cudaHostPinnedMem;
     }
+  }
+  
+  void HostPinnedBuffer::clear()
+  {
+    assert(cudaHostPinnedMem);
+    memset((char*)cudaHostPinnedMem, 0, sizeInBytes());
   }
   
   void HostPinnedBuffer::upload(const void *sourcePtr, size_t offset, int64_t count)
@@ -403,6 +439,12 @@ namespace owl {
       getDD(device).d_pointer = cudaManagedMem;
   }
   
+  void ManagedMemoryBuffer::clear()
+  {
+    assert(cudaManagedMem);
+    CUDA_CALL(Memset((char*)cudaManagedMem, 0, sizeInBytes()));
+  }
+  
   void ManagedMemoryBuffer::upload(const void *hostPtr, size_t offset, int64_t count)
   {
     assert(cudaManagedMem);
@@ -433,6 +475,11 @@ namespace owl {
     : Buffer(context, type)
   {}
 
+  void GraphicsBuffer::clear()
+  {
+    throw std::runtime_error("graphics buffers are not a valid target for owlBufferClear()");
+  }
+  
   void GraphicsBuffer::resize(size_t newElementCount)
   {
     elementCount = newElementCount;
