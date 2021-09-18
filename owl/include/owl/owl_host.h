@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -711,11 +711,21 @@ owlBufferUpload(OWLBuffer buffer,
                 size_t offset OWL_IF_CPP(=0),
                 size_t numBytes OWL_IF_CPP(=size_t(-1)));
 
+/*! clears a buffer in the sense that it sets the entire memory region
+    to zeroes. Note this is currently implemneted only for buffers of
+    copyable data (ie, not buffers of objects). */
+OWL_API void 
+owlBufferClear(OWLBuffer buffer);
+
 /*! executes an optix launch of given size, with given launch
   program. Note this is asynchronous, and may _not_ be
   completed by the time this function returns. */
 OWL_API void
 owlRayGenLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y);
+
+/*! 3D-launch variant of \see owlRayGenLaunch2D */
+OWL_API void
+owlRayGenLaunch3D(OWLRayGen rayGen, int dims_x, int dims_y, int dims_z);
 
 /*! perform a raygen launch with launch parameters, in a *synchronous*
     way; it, by the time this function returns the launch is
@@ -725,12 +735,22 @@ OWL_API void
 owlLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
             OWLParams params);
 
+/*! 3D launch variant of owlLaunch2D */
+OWL_API void
+owlLaunch3D(OWLRayGen rayGen, int dims_x, int dims_y, int dims_z,
+            OWLParams params);
+
 /*! perform a raygen launch with launch parameters, in a *A*synchronous
     way; it, this will only launch, but *NOT* wait for completion (see
     owlLaunchSync). Both rayGen and params must be valid handles; it is
     valid to have a empty params, but it may not be null */
 OWL_API void
 owlAsyncLaunch2D(OWLRayGen rayGen, int dims_x, int dims_y,
+                 OWLParams params);
+
+/*! 3D-launch equivalent of \see owlAsyncLaunch2D */
+OWL_API void
+owlAsyncLaunch3D(OWLRayGen rayGen, int dims_x, int dims_y, int dims_z,
                  OWLParams params);
 
 /*! perform a raygen launch with launch parameters, but only for a given device, 
