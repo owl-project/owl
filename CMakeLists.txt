@@ -14,19 +14,16 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# If using this option, set OWL_CUDA_ARCH to a single value like 61 or 86.
-option(OWL_USE_INTERMEDIATE_CMAKE "(3.8 <= CMake <= 3.17) Use first-class CUDA CMake build but before CMAKE_CUDA_ARCHITECTURES was introduced" OFF)
-# If using this option, set CMAKE_CUDA_ARCHITECTURES to a single value like 61 or 86.
-option(OWL_USE_MODERN_CMAKE "(CMake >= 3.18) Use modern first-class CUDA CMake build" OFF)
+cmake_minimum_required(VERSION 3.12)
 
-OPTION(OWL_BUILD_SAMPLES "Build the Samples?" ON)
-OPTION(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
-OPTION(OWL_USE_TBB "Use TBB to parallelize computation?" ON)
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+  cmake_policy(SET CMP0104 NEW)
+endif()
 
 if (NOT (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR}))
-  SET(OWL_IS_SUBPROJECT ON)
+  set(OWL_IS_SUBPROJECT ON)
 else()
-  SET(OWL_IS_SUBPROJECT OFF)
+  set(OWL_IS_SUBPROJECT OFF)
 endif()
 
 if(CUDA_TOOLKIT_ROOT_DIR)
@@ -37,98 +34,74 @@ if(CUDA_TOOLKIT_ROOT_DIR)
     "Instead, the parent project is required to use 'intermediate' or 'modern' "
     "CMake CUDA style with first-class CUDA language support (i.e., "
     "project(foo LANGUAGES C CXX CUDA)). "
-    "See OWL's CMakeLists.txt and owl/cmake/configure_cuda.cmake for more info "
-    "about the differences between 'intermediate' and 'modern' style."
-    )
+  )
 endif()
 
-if(OWL_USE_INTERMEDIATE_CMAKE)
-  set(OWL_INTERMEDIATE_CMAKE ON)
-elseif(OWL_USE_MODERN_CMAKE)
-  set(OWL_MODERN_CMAKE ON)
-else()
-  # If none of these options are set, we need to guess which build you want.
-  if(${CMAKE_VERSION} VERSION_LESS 3.18)
-    set(OWL_INTERMEDIATE_CMAKE ON)
-  else()
-    message(STATUS "Defaulting to modern CMake (CMAKE_CUDA_ARCHITECTURES required) "
-      "as you are running CMake >= 3.18. If this is not desired, set "
-      "OWL_USE_INTERMEDIATE_CMAKE.")
-    set(OWL_MODERN_CMAKE ON)
-  endif()
-endif()
+set(CMAKE_BUILD_TYPE_INIT "Release")
 
-if (POLICY CMP0048)
-  cmake_policy(SET CMP0048 NEW) # Setting version in project command
-endif()
-
-if(OWL_INTERMEDIATE_CMAKE)
-  cmake_minimum_required(VERSION 3.8)
-  if(NOT ${CMAKE_VERSION} VERSION_LESS 3.18)
-    cmake_policy(SET CMP0104 OLD) # CUDA arch set manually by compiler flags
-  endif()
-else()
-  cmake_minimum_required(VERSION 3.18)
-  cmake_policy(SET CMP0104 NEW) # CUDA_ARCHITECTURES must be specified
-endif()
 # project command is required to come after cmake_minimum_required command.
-project(Optix-OWL VERSION 1.1.0 LANGUAGES C CXX CUDA) # c language required for embed_ptx
+project(Optix-OWL VERSION 1.1.0 LANGUAGES C CXX CUDA)
+
+#set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Debug' as none was specified.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+    "MinSizeRel" "RelWithDebInfo")
+endif()
+if (NOT OWL_IS_SUBPROJECT)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+endif()
 
 # ------------------------------------------------------------------
 # first, include gdt project to do some general configuration stuff
 # (build modes, glut, optix, etc)
 # ------------------------------------------------------------------
-set(owl_dir ${PROJECT_SOURCE_DIR})
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/cmake/")
-
-# if not a subproject, set "Debug/Release flags and binary output dir
-# to <binaryDir>
-include(configure_build_type)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/owl/cmake/")
+if (OWL_IS_SUBPROJECT)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
+endif()
+include(configure_tbb)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(OWL_CXX_FLAGS "")
 
-include(configure_cuda)
-include(configure_optix) # This must follow configure_cuda
-include(configure_owl) # This must follow configure_optix
-include(configure_tbb) # This must follow configure_owl
-
-include_directories(${OWL_INCLUDES})
-add_definitions(${OWL_CXX_FLAGS})
+include(embed_ptx)
 
 # ------------------------------------------------------------------
 # owl library itself, including owl-common
 # ------------------------------------------------------------------
+option(OWL_BUILD_SHARED "Build OWL as a shared library? (otherwise static)" OFF)
+set(BUILD_SHARED_LIBS ${OWL_BUILD_SHARED}) # use 'OWL_' naming convention
 add_subdirectory(owl)
+
+if (OWL_IS_SUBPROJECT)
+  return()
+endif()
+
+include(CTest)
+if (BUILD_TESTING)
+  enable_testing()
+endif()
+
+option(OWL_BUILD_SAMPLES "Build the Samples?" ON)
+option(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
+
+add_subdirectory(3rdParty)
 
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
 if (OWL_BUILD_SAMPLES)
-  enable_testing()
   add_subdirectory(samples)
 endif()
 
 # ------------------------------------------------------------------
 # some basic testing
 # ------------------------------------------------------------------
-if (NOT OWL_IS_SUBPROJECT)
-  if (OWL_BUILD_ADVANCED_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-  endif()
-endif()
-
-# ------------------------------------------------------------------
-# check if this is included as a submodule, and if so, export some
-# variables to the parent
-# ------------------------------------------------------------------
-if (OWL_IS_SUBPROJECT)
-  set(OWL_INCLUDES ${OWL_INCLUDES} PARENT_SCOPE)
-  set(OWL_VIEWER_INCLUDES ${OWL_VIEWER_INCLUDES} PARENT_SCOPE)
-  set(OWL_LIBRARIES ${OWL_LIBRARIES} PARENT_SCOPE)
-  set(OWL_VIEWER_LIBRARIES ${OWL_VIEWER_LIBRARIES} PARENT_SCOPE)
-  set(OWL_HAVE_TBB ${OWL_HAVE_TBB} PARENT_SCOPE)
-  set(OWL_CXX_FLAGS ${OWL_CXX_FLAGS} PARENT_SCOPE)
+if (OWL_BUILD_ADVANCED_TESTS)
+  add_subdirectory(tests)
 endif()

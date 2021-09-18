@@ -14,7 +14,13 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-OPTION(OWL_USE_TBB "Use TBB to parallelize host-side code?" ON)
+OPTION(OWL_DISABLE_TBB "DISABLE TBB in OWL, even if it could be found" OFF)
+if (OWL_DSABLE_TBB)
+  set(OWL_USE_TBB OFF)
+else()
+  OPTION(OWL_USE_TBB "Use TBB to parallelize host-side code?" ON)
+endif()
+
 if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()

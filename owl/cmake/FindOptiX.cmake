@@ -26,39 +26,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Locate the OptiX distribution. As of OptiX 7 we only need to find the header file
-
-if (NOT DEFINED OptiX_INCLUDE)
-  # optix include not defined on cmdline, try to find ....
-  if (DEFINED OptiX_INSTALL_DIR)
-    message(STATUS "going to look for OptiX_INCLUDE in OptiX_INSTALL_DIR=${OptiX_INSTALL_DIR}")
-    set(OptiX_INCLUDE_SEARCH_PATH ${OptiX_INSTALL_DIR}/include)
-  elseif (EXISTS "$ENV{OptiX_INSTALL_DIR}")
-    set(OptiX_INCLUDE_SEARCH_PATH $ENV{OptiX_INSTALL_DIR}/include)
-    message(STATUS "going to look for OptiX_INCLUDE in OptiX_INSTALL_DIR=$ENV{OptiX_INSTALL_DIR} (from environment variable)")
-  else ()
-    message(STATUS "OptiX_INSTALL_DIR not defined in either cmake or environment.... please define this, or set OptiX_INCLUDE manually in your cmake GUI")
-    set(Optix_INCLUDE_SEARCH_PATH)
-  endif ()
-  find_path(OptiX_INCLUDE
-    NAMES optix.h
-    PATHS "${OptiX_INCLUDE_SEARCH_PATH}"
-    #NO_DEFAULT_PATH
-  )
-
-# Check to make sure we found what we were looking for
-function(OptiX_report_error error_message required)
-  if(OptiX_FIND_REQUIRED AND required)
-    message(FATAL_ERROR "${error_message}")
-  else()
-    if(NOT OptiX_FIND_QUIETLY)
-      message(STATUS "${error_message}")
-    endif(NOT OptiX_FIND_QUIETLY)
-  endif()
-endfunction()
-
-if(NOT OptiX_INCLUDE)
-  OptiX_report_error("OptiX headers (optix.h and friends) not found.  Please locate before proceeding." TRUE)
+if (TARGET OptiX::OptiX)
+  return()
 endif()
 
+if (DEFINED ENV{OptiX_INSTALL_DIR})
+  message(STATUS "Detected the OptiX_INSTALL_DIR env variable (pointing to $ENV{OptiX_INSTALL_DIR}; going to use this for finding optix.h")
+  find_path(OptiX_ROOT_DIR NAMES include/optix.h PATHS $ENV{OptiX_INSTALL_DIR})
+else()
+  find_path(OptiX_ROOT_DIR NAMES include/optix.h)
 endif()
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(OptiX
+  FOUND_VAR OptiX_FOUND
+  REQUIRED_VARS
+    OptiX_ROOT_DIR
+)
+
+add_library(OptiX::OptiX INTERFACE IMPORTED)
+target_include_directories(OptiX::OptiX INTERFACE ${OptiX_ROOT_DIR}/include)

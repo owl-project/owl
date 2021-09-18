@@ -36,7 +36,7 @@
   std::cout << "#owl.sample(main): " << message << std::endl;    \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char ptxCode[];
+extern "C" char deviceCode[];
 
 const vec2i init_fbSize(1600, 800);
 const vec3f init_lookFrom(-4.3f, 3.3f, -5.0f);
@@ -127,15 +127,15 @@ void createScene()
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 32; j++) {
             bool odd =  ((i + j) % 2) == 1;
-            vec3f color = (odd) ? vec3f(1.f, 0.f, 0.f) : vec3f(1.f, 1.f, 0.f); 
+            vec3f color = (odd) ? vec3f(1.f, 0.f, 0.f) : vec3f(1.f, 1.f, 0.f);
 
             float x = j * 1.4;
-            float z = i - 16 ; 
+            float z = i - 16 ;
             addBox(lambertianBoxes, { x, 0.f, z }, { 0.7f, 0.f, 0.5f }, { 1.f, 0.f, 0.f }, { 0.f }, Lambertian{ color });
         }
     }
- 
- 
+
+
 
     dielectricSpheres.push_back({ Sphere{vec3f(2.8f, 3.3f, -4.9f), 1.7f},
           Dielectric{1.5f} });
@@ -241,7 +241,7 @@ Viewer::Viewer()
     // ##################################################################
 
     context = owlContextCreate(nullptr, 1);
-    OWLModule  module = owlModuleCreate(context, ptxCode);
+    OWLModule  module = owlModuleCreate(context, deviceCode);
 
     // ##################################################################
     // set up all the *GEOMETRY* graph we want to render
