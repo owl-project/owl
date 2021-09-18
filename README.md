@@ -308,16 +308,20 @@ a CMake variable when you run CMake on your project.
 Latest additions, not yet in any release
 ----------------------------------------------------------------------
 
+<none yet>
+
+v1.1 - Switched to "modern cmake" technology (kudos lpisha, and jda)
+----------------------------------------------------------------------
+
+*v.1.1.2*:
+
 - added `owlBufferClear()`, at least for copyable data
 
-- added `owlLaunch3D()`, as requested in FR issue #123
+- added `owlLaunch3D()`, as requested in feature request issue #123
 
 - added new cmdline sample s10-launch3D that demonstrates both 3D
   launches, and how to do 'interop' between CUDA and OWL (using owl
   for rendering, and CUDA to convert framebuffer from float3 to RGBA8.
-
-v1.1 - Switched to "modern cmake" technology (kudos lpisha)
-----------------------------------------------------------------------
 
 *1.1.1*: various fixes for the 'modern cmake' version, with a pretty
    big re-vamp of the entire build system. projects using owl as a
