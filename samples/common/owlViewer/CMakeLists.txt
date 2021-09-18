@@ -14,8 +14,17 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+#if (WIN32)
+#set(OPENGL_DEPENDENCY "")
+#else()
+#set(OpenGL_GL_PREFERENCE "LEGACY")
+#find_package(OpenGL QUIET)
+#set(OPENGL_DEPENDENCY OpenGL::OpenGL)
+#endif()
+#find_package(OpenGL QUIET)
+
 set(OpenGL_GL_PREFERENCE "LEGACY")
-find_package(OpenGL QUIET)
+find_package(OpenGL REQUIRED)
 
 add_library(owl_viewer STATIC)
 
@@ -35,9 +44,9 @@ target_sources(owl_viewer PRIVATE
 
 target_link_libraries(owl_viewer
   PUBLIC
-    OpenGL::OpenGL
     owl::owl
     glfw
+    OpenGL::GL
     stb_image
 )
 
