@@ -30,7 +30,12 @@ if (TARGET OptiX::OptiX)
   return()
 endif()
 
-find_path(OptiX_ROOT_DIR NAMES include/optix.h)
+if (DEFINED ENV{OptiX_INSTALL_DIR})
+  message(STATUS "Detected the OptiX_INSTALL_DIR env variable (pointing to $ENV{OptiX_INSTALL_DIR}; going to use this for finding optix.h")
+  find_path(OptiX_ROOT_DIR NAMES include/optix.h PATHS $ENV{OptiX_INSTALL_DIR})
+else()
+  find_path(OptiX_ROOT_DIR NAMES include/optix.h)
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(OptiX
