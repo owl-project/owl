@@ -134,7 +134,7 @@ set_target_properties(
 )
 
 target_link_libraries(owl PUBLIC OptiX::OptiX)
-if (OWL_HAVE_TBB)
+if (OWL_HAVE_TBB AND TBB_FOUND)
   target_link_libraries(owl PUBLIC ${TBB_LIBRARIES})
   target_include_directories(owl PUBLIC ${TBB_INCLUDES})
   target_compile_definitions(owl PUBLIC -DOWL_HAVE_TBB=1)
