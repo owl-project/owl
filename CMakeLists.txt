@@ -40,7 +40,7 @@ endif()
 set(CMAKE_BUILD_TYPE_INIT "Release")
 
 # project command is required to come after cmake_minimum_required command.
-project(Optix-OWL VERSION 1.1.2 LANGUAGES C CXX CUDA)
+project(Optix-OWL VERSION 1.1.3 LANGUAGES C CXX CUDA)
 
 #set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -64,7 +64,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/owl/cmake/")
 if (OWL_IS_SUBPROJECT)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
 endif()
-include(configure_tbb)
+#include(configure_tbb)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -78,19 +78,10 @@ option(OWL_BUILD_SHARED "Build OWL as a shared library? (otherwise static)" OFF)
 set(BUILD_SHARED_LIBS ${OWL_BUILD_SHARED}) # use 'OWL_' naming convention
 add_subdirectory(owl)
 
-if (OWL_IS_SUBPROJECT)
-  return()
-endif()
-
-include(CTest)
-if (BUILD_TESTING)
-  enable_testing()
-endif()
+add_subdirectory(3rdParty)
 
 option(OWL_BUILD_SAMPLES "Build the Samples?" ON)
 option(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
-
-add_subdirectory(3rdParty)
 
 # ------------------------------------------------------------------
 # tutorial/samples
@@ -99,6 +90,14 @@ if (OWL_BUILD_SAMPLES)
   add_subdirectory(samples)
 endif()
 
+if (OWL_IS_SUBPROJECT)
+  return()
+endif()
+
+include(CTest)
+if (BUILD_TESTING)
+  enable_testing()
+endif()
 # ------------------------------------------------------------------
 # some basic testing
 # ------------------------------------------------------------------

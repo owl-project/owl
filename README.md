@@ -313,6 +313,8 @@ Latest additions, not yet in any release
 v1.1 - Switched to "modern cmake" technology (kudos lpisha, and jda)
 ----------------------------------------------------------------------
 
+*v.1.1.3*:  bugfix; fixed TBB includes for windows, when sued as submodule
+
 *v.1.1.2*:
 
 - added `owlBufferClear()`, at least for copyable data
