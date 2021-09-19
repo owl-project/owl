@@ -40,7 +40,7 @@ endif()
 set(CMAKE_BUILD_TYPE_INIT "Release")
 
 # project command is required to come after cmake_minimum_required command.
-project(Optix-OWL VERSION 1.1.2 LANGUAGES C CXX CUDA)
+project(Optix-OWL VERSION 1.1.3 LANGUAGES C CXX CUDA)
 
 #set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
