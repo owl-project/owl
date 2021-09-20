@@ -35,7 +35,7 @@
   std::cout << "#owl.sample(main): " << message << std::endl;   \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char deviceCode[];
+extern "C" char deviceCode_ptx[];
 
 // When run, this program produces this PNG as output.
 // In this case the correct result is a red and light gray checkerboard,
@@ -71,7 +71,7 @@ int main(int ac, char **av)
   // This PTX intermediate code representation is then compiled into an OptiX module.
   // See https://devblogs.nvidia.com/how-to-get-started-with-optix-7/ for more information.
   OWLModule module
-    = owlModuleCreate(owl,deviceCode);
+    = owlModuleCreate(owl,deviceCode_ptx);
 
   OWLVarDecl rayGenVars[]
     = {

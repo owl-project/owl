@@ -35,7 +35,7 @@
   std::cout << "#ll.sample(main): " << message << std::endl;    \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char deviceCode[];
+extern "C" char deviceCode_ptx[];
 
 const char *outFileName = "t01-manySpheres.png";
 const vec2i fbSize(2048,2048);
@@ -87,7 +87,7 @@ int main(int ac, char **av)
   // ##################################################################
 
   OWLContext context = owlContextCreate();
-  OWLModule  module  = owlModuleCreate(context,deviceCode);
+  OWLModule  module  = owlModuleCreate(context,deviceCode_ptx);
 
   // ##################################################################
   // set up all the *GEOMETRY* graph we want to render

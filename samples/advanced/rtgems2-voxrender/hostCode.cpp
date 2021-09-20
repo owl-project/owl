@@ -44,7 +44,7 @@
   std::cout << "#owl.sample(main): " << message << std::endl;   \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char deviceCode[];
+extern "C" char deviceCode_ptx[];
 
 // Small default vox file as byte buffer
 extern "C" const uint8_t voxBuffer[];
@@ -1113,7 +1113,7 @@ Viewer::Viewer(const ogt_vox_scene *scene, SceneType sceneType, const GlobalOpti
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
-  OWLModule module = owlModuleCreate(context,deviceCode);
+  OWLModule module = owlModuleCreate(context,deviceCode_ptx);
 
   // Set context options that affect program compilation
   // IMPORTANT: this needs to happen before any calls to owlBuildPrograms() !

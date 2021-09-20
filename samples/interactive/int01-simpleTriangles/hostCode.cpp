@@ -33,7 +33,7 @@
   std::cout << "#owl.sample(main): " << message << std::endl;   \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char deviceCode[];
+extern "C" char deviceCode_ptx[];
 
 const int NUM_VERTICES = 8;
 vec3f vertices[NUM_VERTICES] =
@@ -132,7 +132,7 @@ Viewer::Viewer()
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
-  OWLModule module = owlModuleCreate(context,deviceCode);
+  OWLModule module = owlModuleCreate(context,deviceCode_ptx);
 
   // ##################################################################
   // set up all the *GEOMETRY* graph we want to render

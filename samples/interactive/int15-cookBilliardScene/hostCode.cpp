@@ -41,7 +41,7 @@ using namespace owl::common;
   std::cout << "#owl.sample(main): " << message << std::endl;   \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char deviceCode[];
+extern "C" char deviceCode_ptx[];
 
 namespace cameraTriangle {
   const vec3f init_lookFrom(0.216657f,-9.58095f,3.37295f);
@@ -225,7 +225,7 @@ Viewer::Viewer(Viewer::Setup stp)
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
   owlContextSetRayTypeCount(context,2);
-  OWLModule module = owlModuleCreate(context,deviceCode);
+  OWLModule module = owlModuleCreate(context,deviceCode_ptx);
 
   // ##################################################################
   // set up all the *GEOMETRY* graph we want to render
