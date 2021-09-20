@@ -1,7 +1,11 @@
 ## Copyright 2021 Jefferson Amstutz
 ## SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.12)
+
+# NOTE(jda) - CMake 3.17 defines CMAKE_CURRENT_FUNCTION_LIST_DIR, but alas can't
+#             use it yet.
+set(EMBED_PTX_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 function(embed_ptx)
   set(oneArgs OUTPUT_TARGET)
@@ -27,12 +31,7 @@ function(embed_ptx)
       )
   endif()
 
-  set(CMAKE_PREFIX_PATH ${CMAKE_MODULE_PATH})
-  find_file(EMBED_PTX_RUN run_bin2c.cmake)
-  mark_as_advanced(EMBED_PTX_RUN)
-  if(NOT EMBED_PTX_RUN)
-    message(FATAL_ERROR "embed_ptx.cmake and run_bin2c.cmake must be on CMAKE_MODULE_PATH\n")
-  endif()
+  set(EMBED_PTX_RUN ${EMBED_PTX_DIR}/run_bin2c.cmake)
 
   ## Create PTX object target ##
 
