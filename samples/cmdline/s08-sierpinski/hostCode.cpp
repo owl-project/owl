@@ -35,7 +35,7 @@
   std::cout << "#owl.sample(main): " << message << std::endl;    \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char deviceCode[];
+extern "C" char deviceCode_ptx[];
 
 std::vector<vec3f> vertices =
   {
@@ -88,7 +88,7 @@ int main(int ac, char **av)
   owlSetMaxInstancingDepth(owl,numLevels);
 
   OWLModule module
-    = owlModuleCreate(owl,deviceCode);
+    = owlModuleCreate(owl,deviceCode_ptx);
 
   // ------------------------------------------------------------------
   OWLVarDecl lambertianMeshTypeVars[]

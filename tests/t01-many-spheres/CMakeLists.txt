@@ -17,6 +17,8 @@
 embed_ptx(
   OUTPUT_TARGET
     test01-manySpheres-ptx
+  EMBEDDED_SYMBOL_NAMES
+    ptxCode
   PTX_LINK_LIBRARIES
     owl::owl
   SOURCES

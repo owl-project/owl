@@ -36,7 +36,7 @@
   std::cout << "#owl.sample(main): " << message << std::endl;    \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char deviceCode[];
+extern "C" char deviceCode_ptx[];
 
 const char *outFileName = "s07-rtow-multiGPU.png";
 const vec2i fbSize(1600,800);
@@ -200,7 +200,7 @@ int main(int ac, char **av)
 
   int numGPUsFound = owlGetDeviceCount(context);
   LOG("Context created; owl found " << numGPUsFound << " GPUs");
-  OWLModule  module  = owlModuleCreate(context,deviceCode);
+  OWLModule  module  = owlModuleCreate(context,deviceCode_ptx);
 
   // ##################################################################
   // set up all the *GEOMETRY* graph we want to render

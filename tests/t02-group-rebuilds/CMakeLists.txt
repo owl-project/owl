@@ -16,17 +16,19 @@
 
 embed_ptx(
   OUTPUT_TARGET
+    test02-group-rebuilds-embedded-ptx
+  PTX_TARGET
     test02-group-rebuilds-ptx
-  PTX_LINK_LIBRARIES
-    owl::owl
   SOURCES
     deviceCode.cu
 )
 
+target_link_libraries(test02-group-rebuilds-ptx PRIVATE owl::owl)
+
 add_executable(test02-group-rebuilds hostCode.cpp)
 target_link_libraries(test02-group-rebuilds
   PRIVATE
-    test02-group-rebuilds-ptx
+    test02-group-rebuilds-embedded-ptx
     owl::owl
     stb_image
 )

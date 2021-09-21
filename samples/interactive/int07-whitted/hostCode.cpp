@@ -36,7 +36,7 @@
   std::cout << "#owl.sample(main): " << message << std::endl;    \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char deviceCode[];
+extern "C" char deviceCode_ptx[];
 
 const vec2i init_fbSize(1600, 800);
 const vec3f init_lookFrom(-4.3f, 3.3f, -5.0f);
@@ -241,7 +241,7 @@ Viewer::Viewer()
     // ##################################################################
 
     context = owlContextCreate(nullptr, 1);
-    OWLModule  module = owlModuleCreate(context, deviceCode);
+    OWLModule  module = owlModuleCreate(context, deviceCode_ptx);
 
     // ##################################################################
     // set up all the *GEOMETRY* graph we want to render

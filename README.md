@@ -313,6 +313,15 @@ Latest additions, not yet in any release
 v1.1 - Switched to "modern cmake" technology (kudos lpisha, and jda)
 ----------------------------------------------------------------------
 
+*v.1.1.4*:
+
+- added new (optional) `EMBEDDED_SYMBOL_NAMES` argument  to `embed_ptx()` to
+  permit overriding the C symbol names used (default is `${CU_FILE_NAME}_ptx`)
+    - see `tests/t01-many-spheres` as an example of using this feature
+- added new (optional) `PTX_TARGET` argument to `embed_ptx()` to allow
+  specifying the target name used to compile `.cu` files to PTX
+    - see `tests/t02-group-rebuilds` as an example of using this feature
+
 *v.1.1.3*:  bugfix; fixed TBB includes for windows, when sued as submodule
 
 *v.1.1.2*:

@@ -22,7 +22,7 @@
 /*! \namespace osc - Optix Siggraph Course */
 namespace osc {
 
-  extern "C" char devicePrograms[];
+  extern "C" char devicePrograms_ptx[];
 
   /*! constructor - performs all setup, including initializing
     optix, creates module, pipeline, programs, SBT, etc. */
@@ -33,7 +33,7 @@ namespace osc {
     context = owlContextCreate(nullptr,1);
     owlContextSetRayTypeCount(context,2);
 
-    module = owlModuleCreate(context,devicePrograms);
+    module = owlModuleCreate(context,devicePrograms_ptx);
     rayGen
       = owlRayGenCreate(context,module,"renderFrame",
                         /* no sbt data: */0,nullptr,-1);
