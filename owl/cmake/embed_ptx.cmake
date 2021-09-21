@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.12)
 
 # NOTE(jda) - CMake 3.17 defines CMAKE_CURRENT_FUNCTION_LIST_DIR, but alas can't
 #             use it yet.
-set(EMBED_PTX_DIR ${CMAKE_CURRENT_LIST_DIR})
+set(EMBED_PTX_DIR ${CMAKE_CURRENT_LIST_DIR} CACHE INTERNAL "")
 
 function(embed_ptx)
   set(oneArgs OUTPUT_TARGET)
