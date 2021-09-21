@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.12)
 set(EMBED_PTX_DIR ${CMAKE_CURRENT_LIST_DIR} CACHE INTERNAL "")
 
 function(embed_ptx)
-  set(oneArgs OUTPUT_TARGET)
+  set(oneArgs OUTPUT_TARGET PTX_TARGET)
   set(multiArgs PTX_LINK_LIBRARIES SOURCES EMBEDDED_SYMBOL_NAMES)
   cmake_parse_arguments(EMBED_PTX "" "${oneArgs}" "${multiArgs}" ${ARGN})
 
@@ -52,7 +52,12 @@ function(embed_ptx)
 
   ## Create PTX object target ##
 
-  set(PTX_TARGET ${EMBED_PTX_OUTPUT_TARGET}_ptx)
+  if (NOT EMBED_PTX_PTX_TARGET)
+    set(PTX_TARGET ${EMBED_PTX_OUTPUT_TARGET}_ptx)
+  else()
+    set(PTX_TARGET ${EMBED_PTX_PTX_TARGET})
+  endif()
+
   add_library(${PTX_TARGET} OBJECT)
   target_sources(${PTX_TARGET} PRIVATE ${EMBED_PTX_SOURCES})
   target_link_libraries(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_LINK_LIBRARIES})
