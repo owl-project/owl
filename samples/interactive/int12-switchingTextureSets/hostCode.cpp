@@ -37,7 +37,7 @@ using namespace owl::common;
   std::cout << "#owl.sample(main): " << message << std::endl;   \
   std::cout << OWL_TERMINAL_DEFAULT;
 
-extern "C" char deviceCode[];
+extern "C" char deviceCode_ptx[];
 
 struct Mesh {
   std::vector<vec3f> vertices;
@@ -270,7 +270,7 @@ Viewer::Viewer()
 {
   // create a context on the first device:
   context = owlContextCreate(nullptr,0);
-  OWLModule module = owlModuleCreate(context,deviceCode);
+  OWLModule module = owlModuleCreate(context,deviceCode_ptx);
 
   // ##################################################################
   // set up all the *GEOMETRY* graph we want to render

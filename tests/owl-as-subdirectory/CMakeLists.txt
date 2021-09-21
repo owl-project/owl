@@ -25,21 +25,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(owlSubmoduleTest LANGUAGES C CXX CUDA)
 
-# This is the same as someone calling add_subdirectory(path/to/OWL) submodule
-add_subdirectory(
-  ${CMAKE_SOURCE_DIR}/../..
-  ${CMAKE_BINARY_DIR}/owl
-)
+# This is the same as someone calling add_subdirectory(path/to/OWL) with OWL as
+# a submodule
+add_subdirectory(${CMAKE_SOURCE_DIR}/../.. ${CMAKE_BINARY_DIR}/owl)
 
 # Parent projects must include embed_ptx.cmake in order to use it
 include(embed_ptx)
-
-# NOTE(jda) - Hack here to get stb_image...would be provided by parent project
-#             normally.
-add_subdirectory(
-  ${CMAKE_SOURCE_DIR}/../../3rdParty/stb_image
-  ${CMAKE_BINARY_DIR}/stb_image
-)
 
 # Build the many-spheres test to verify things work
 add_subdirectory(

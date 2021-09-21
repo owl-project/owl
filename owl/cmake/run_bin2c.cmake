@@ -7,9 +7,9 @@ unset(file_contents)
 
 foreach(obj ${OBJECTS})
   get_filename_component(obj_ext ${obj} EXT)
-  get_filename_component(obj_name ${obj} NAME_WE)
   get_filename_component(obj_dir ${obj} DIRECTORY)
 
+  list(POP_FRONT SYMBOL_NAMES obj_name)
   if(obj_ext MATCHES ".ptx")
     set(args --name ${obj_name} ${obj})
     execute_process(
