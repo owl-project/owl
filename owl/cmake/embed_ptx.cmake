@@ -9,8 +9,25 @@ set(EMBED_PTX_DIR ${CMAKE_CURRENT_LIST_DIR} CACHE INTERNAL "")
 
 function(embed_ptx)
   set(oneArgs OUTPUT_TARGET)
-  set(multiArgs PTX_LINK_LIBRARIES SOURCES)
+  set(multiArgs PTX_LINK_LIBRARIES SOURCES EMBEDDED_SYMBOL_NAMES)
   cmake_parse_arguments(EMBED_PTX "" "${oneArgs}" "${multiArgs}" ${ARGN})
+
+  if (EMBED_PTX_EMBEDDED_SYMBOL_NAMES)
+    list(LENGTH EMBED_PTX_EMBEDDED_SYMBOL_NAMES NUM_NAMES)
+    list(LENGTH EMBED_PTX_SOURCES NUM_SOURCES)
+    if (NOT ${NUM_SOURCES} EQUAL ${NUM_NAMES})
+      message(FATAL_ERROR
+        "embed_ptx(): the number of names passed as EMBEDDED_SYMBOL_NAMES must \
+        match the number of files in SOURCES."
+      )
+    endif()
+  else()
+    unset(EMBED_PTX_EMBEDDED_SYMBOL_NAMES)
+    foreach(source ${EMBED_PTX_SOURCES})
+      get_filename_component(name ${source} NAME_WE)
+      list(APPEND EMBED_PTX_EMBEDDED_SYMBOL_NAMES ${name}_ptx)
+    endforeach()
+  endif()
 
   ## Find bin2c and CMake script to feed it ##
 
@@ -51,6 +68,7 @@ function(embed_ptx)
     COMMAND ${CMAKE_COMMAND}
       "-DBIN_TO_C_COMMAND=${BIN_TO_C}"
       "-DOBJECTS=$<TARGET_OBJECTS:${PTX_TARGET}>"
+      "-DSYMBOL_NAMES=${EMBED_PTX_EMBEDDED_SYMBOL_NAMES}"
       "-DOUTPUT=${EMBED_PTX_C_FILE}"
       -P ${EMBED_PTX_RUN}
     VERBATIM
