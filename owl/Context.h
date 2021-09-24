@@ -140,7 +140,7 @@ namespace owl {
       different programs, etc, but must all be of "OWL_TRIANGLES"
       kind */
     GeomGroup::SP
-    trianglesGeomGroupCreate(size_t numChildren);
+    trianglesGeomGroupCreate(size_t numChildren, unsigned int buildFlags);
     
     /*! create a new *user* geometry group that will eventually create
       a BVH over all the user geoms / custom prims in all its child

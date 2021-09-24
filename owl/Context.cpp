@@ -283,10 +283,10 @@ namespace owl {
   }
   
   
-  GeomGroup::SP Context::trianglesGeomGroupCreate(size_t numChildren)
+  GeomGroup::SP Context::trianglesGeomGroupCreate(size_t numChildren, unsigned int buildFlags)
   {
     GeomGroup::SP gg
-      = std::make_shared<TrianglesGeomGroup>(this,numChildren);
+      = std::make_shared<TrianglesGeomGroup>(this,numChildren,buildFlags);
     gg->createDeviceData(getDevices());
     return gg;
   }

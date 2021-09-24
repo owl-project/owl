@@ -515,11 +515,15 @@ owlUserGeomGroupCreate(OWLContext context,
   geometries. Every geom in this array must be a valid owl geometry
   created with owlGeomCreate, and must be of a OWL_GEOM_TRIANGLES
   type.
+
+  \param buildFlags A combination of OptixBuildFlags.  The default
+  of 0 means to use OWL default build flags.
 */
 OWL_API OWLGroup
 owlTrianglesGeomGroupCreate(OWLContext context,
                             size_t     numGeometries,
-                            OWLGeom   *initValues);
+                            OWLGeom   *initValues,
+                            unsigned int buildFlags OWL_IF_CPP(=0));
 
 // ------------------------------------------------------------------
 /*! create a new instance group with given number of instances. The

@@ -39,10 +39,12 @@ namespace owl {
     return "TrianglesGeomGroup";
   }
   
-  /*! constructor - passthroughto parent class */
+  /*! constructor - mostly passthrough to parent class */
   TrianglesGeomGroup::TrianglesGeomGroup(Context *const context,
-                                         size_t numChildren)
-    : GeomGroup(context,numChildren)
+                                         size_t numChildren,
+                                         unsigned int _buildFlags)
+    : GeomGroup(context,numChildren), 
+    buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags)
   {}
   
   void TrianglesGeomGroup::updateMotionBounds()
@@ -179,10 +181,7 @@ namespace owl {
     // first: compute temp memory for bvh
     // ------------------------------------------------------------------
     OptixAccelBuildOptions accelOptions = {};
-    accelOptions.buildFlags =
-      OPTIX_BUILD_FLAG_ALLOW_UPDATE |
-      OPTIX_BUILD_FLAG_PREFER_FAST_TRACE |
-      OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+    accelOptions.buildFlags = this->buildFlags;
     
     accelOptions.motionOptions.numKeys   = numKeys;
     accelOptions.motionOptions.flags     = 0;

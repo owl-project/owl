@@ -473,11 +473,12 @@ owlMissProgCreate(OWLContext _context,
 OWL_API OWLGroup
 owlTrianglesGeomGroupCreate(OWLContext _context,
                             size_t numGeometries,
-                            OWLGeom *initValues)
+                            OWLGeom *initValues,
+                            unsigned int buildFlags)
 {
   LOG_API_CALL();
   APIContext::SP context = checkGet(_context);
-  GeomGroup::SP  group = context->trianglesGeomGroupCreate(numGeometries);
+  GeomGroup::SP  group = context->trianglesGeomGroupCreate(numGeometries, buildFlags);
   assert(group);
     
   OWLGroup _group = (OWLGroup)context->createHandle(group);
