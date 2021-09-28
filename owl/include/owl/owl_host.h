@@ -497,11 +497,15 @@ owlMissProgSet(OWLContext  context,
   geometries. Every geom in this array must be a valid owl geometry
   created with owlGeomCreate, and must be of a OWL_GEOM_USER
   type.
+
+  \param buildFlags A combination of OptixBuildFlags.  The default
+  of 0 means to use OWL default build flags.
 */
 OWL_API OWLGroup
 owlUserGeomGroupCreate(OWLContext context,
                        size_t     numGeometries,
-                       OWLGeom   *arrayOfChildGeoms);
+                       OWLGeom   *arrayOfChildGeoms,
+                       unsigned int buildFlags OWL_IF_CPP(=0));
 
 
 // ------------------------------------------------------------------
