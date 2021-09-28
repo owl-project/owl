@@ -42,8 +42,7 @@ namespace owl {
 
     constexpr static unsigned int defaultBuildFlags = 
         OPTIX_BUILD_FLAG_PREFER_FAST_TRACE |
-        OPTIX_BUILD_FLAG_ALLOW_COMPACTION |
-        OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS;
+        OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
 
     protected:
     const unsigned int buildFlags;
