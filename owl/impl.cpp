@@ -547,7 +547,9 @@ owlInstanceGroupCreate(OWLContext _context,
                          null, or an array of size numInstnaces, of
                          the format specified */
                        const float    *initTransforms,
-                       OWLMatrixFormat matrixFormat)
+                       OWLMatrixFormat matrixFormat,
+                       
+                       unsigned int buildFlags)
 {
   LOG_API_CALL();
   std::vector<Group::SP> initGroups;
@@ -557,7 +559,7 @@ owlInstanceGroupCreate(OWLContext _context,
   InstanceGroup::SP  group
     = std::make_shared<InstanceGroup>
     (context.get(),numInstances,
-     __initGroups);
+     __initGroups, buildFlags);
   assert(group);
   group->createDeviceData(context->getDevices());
 

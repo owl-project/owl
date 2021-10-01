@@ -302,7 +302,8 @@ Viewer::Viewer()
                              groups.data(),
                              nullptr,
                              (const float*)boxTransforms.data(),
-                             OWL_MATRIX_FORMAT_OWL);
+                             OWL_MATRIX_FORMAT_OWL,
+                             OPTIX_BUILD_FLAG_PREFER_FAST_TRACE | OPTIX_BUILD_FLAG_ALLOW_UPDATE);
   owlGroupBuildAccel(world);
 
   // ##################################################################

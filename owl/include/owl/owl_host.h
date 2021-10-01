@@ -579,7 +579,11 @@ owlInstanceGroupCreate(OWLContext context,
                          null, or an array of size numInstnaces, of
                          the format specified */
                        const float    *initTransforms  OWL_IF_CPP(= nullptr),
-                       OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL)
+                       OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL),
+
+                       /*! A combination of OptixBuildFlags.  The default
+                         of 0 means to use OWL default build flags.*/
+                       unsigned int buildFlags OWL_IF_CPP(=0)
                        );
 
                        
