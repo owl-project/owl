@@ -324,16 +324,8 @@ namespace owl {
       dd.memFinal = dd.bvhMemory.size();
     }
     CUDA_SYNC_CHECK();
-      
-    // ==================================================================
-    // aaaaaand .... clean up
-    // ==================================================================
-    if (FULL_REBUILD && allowCompaction) {
-      outputBuffer.free(); // << the UNcompacted, temporary output buffer
-      compactedSizeBuffer.free();
-    }
-    tempBuffer.free();
 
+    
     LOG_OK("successfully build triangles geom group accel");
   }
   
