@@ -124,8 +124,7 @@ target_sources(owl PRIVATE
   UserGeomGroup.cpp
 )
 
-set_target_properties(
-  owl
+set_target_properties(owl
   PROPERTIES
   CUDA_SEPARABLE_COMPILATION ON
   POSITION_INDEPENDENT_CODE ON
@@ -140,12 +139,18 @@ if (OWL_HAVE_TBB AND TBB_FOUND)
   target_compile_definitions(owl PUBLIC -DOWL_HAVE_TBB=1)
 endif()
 
+# bind OWL to CUDA (includes and library)
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.17)
+  # for new cmake version, we can rely on the working cuda detection
+  # mechanism
   find_package(CUDAToolkit REQUIRED)
   target_link_libraries(owl PUBLIC CUDA::cuda_driver CUDA::cudart_static)
 else()
+  # for older version of cmake (where CUDAToolkit detection doesn't
+  # properly work) we fall back to search paths for hardcoded library
+  # names and header name; this isn't clean, but applies only for a
+  # small set of deprecated cmake versions, so OK for now.
   target_link_libraries(owl PUBLIC cuda)
-  # iw - this is not clean; needs fixing.
   find_path(cuda_h_dir NAMES cuda.h HINTS /usr/local/cuda/include)
   target_include_directories(owl PUBLIC ${cuda_h_dir})
 endif()

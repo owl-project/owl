@@ -313,6 +313,8 @@ Latest additions, not yet in any release
 v1.1 - Switched to "modern cmake" technology (kudos lpisha, and jda)
 ----------------------------------------------------------------------
 
+*v.1.1.5*: bugfix: various buffer types didn't properly release all memory.
+
 *v.1.1.4*:
 
 - added new (optional) `EMBEDDED_SYMBOL_NAMES` argument  to `embed_ptx()` to
@@ -322,7 +324,7 @@ v1.1 - Switched to "modern cmake" technology (kudos lpisha, and jda)
   specifying the target name used to compile `.cu` files to PTX
     - see `tests/t02-group-rebuilds` as an example of using this feature
 
-*v.1.1.3*:  bugfix; fixed TBB includes for windows, when sued as submodule
+*v.1.1.3*:  bugfix: fixed TBB includes for windows, when sued as submodule
 
 *v.1.1.2*:
 

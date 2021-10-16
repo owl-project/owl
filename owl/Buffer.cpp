@@ -333,8 +333,17 @@ namespace owl {
   HostPinnedBuffer::HostPinnedBuffer(Context *const context,
                                      OWLDataType type)
     : Buffer(context,type)
+  {}
+
+  /*! destructor that frees any allocated host-pinned memory */
+  HostPinnedBuffer::~HostPinnedBuffer()
   {
+    if (cudaHostPinnedMem) {
+      CUDA_CALL_NOTHROW(FreeHost(cudaHostPinnedMem));
+      cudaHostPinnedMem = nullptr;
+    }
   }
+  
   
   /*! pretty-printer, for debugging */
   std::string HostPinnedBuffer::toString() const
@@ -384,6 +393,15 @@ namespace owl {
                                            OWLDataType type)
     : Buffer(context,type)
   {}
+
+    /*! destructor that frees any left-over allocated memory */
+  ManagedMemoryBuffer::~ManagedMemoryBuffer()
+  {
+    if (cudaManagedMem) {
+      CUDA_CALL_NOTHROW(Free(cudaManagedMem));
+      cudaManagedMem = 0;
+    }
+  }
 
   /*! pretty-printer, for debugging */
   std::string ManagedMemoryBuffer::toString() const

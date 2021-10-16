@@ -251,6 +251,9 @@ namespace owl {
     
     HostPinnedBuffer(Context *const context,
                      OWLDataType type);
+    
+    /*! destructor that frees any allocated host-pinned memory */
+    virtual ~HostPinnedBuffer();
 
     /*! pretty-printer, for debugging */
     std::string toString() const override;
@@ -277,6 +280,9 @@ namespace owl {
     
     ManagedMemoryBuffer(Context *const context,
                         OWLDataType type);
+    
+    /*! destructor that frees any left-over allocated memory */
+    virtual ~ManagedMemoryBuffer();
 
     void resize(size_t newElementCount) override;
     void upload(const void *hostPtr, size_t offset, int64_t count) override;
