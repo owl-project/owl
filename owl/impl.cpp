@@ -826,7 +826,7 @@ owlBufferDestroy(OWLBuffer _buffer)
   assert(buffer);
   buffer->destroy();
 
-  handle->clear();
+  handle->object = 0;
 }
 
 OWL_API OWLGeomType
@@ -898,12 +898,6 @@ template<typename T>
 void releaseObject(APIHandle *handle)
 {
   assert(handle);
-
-  // we don't actually _need_ this object, but let's do this just
-  // for sanity's sake
-  typename T::SP object = handle->get<T>();
-  assert(object);
-
   delete handle;
 }
   
