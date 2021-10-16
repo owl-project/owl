@@ -45,7 +45,7 @@ namespace owl {
       assert(object);
       return object->toString();
     }
-    void clear() { object = nullptr; context = nullptr; }
+    void clear() { object = nullptr; }//context = nullptr; }
     std::shared_ptr<Object>     object;
     std::shared_ptr<APIContext> context;
   };
