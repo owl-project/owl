@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -121,10 +121,10 @@ namespace owl {
       (((box3f*)d_bounds.get())+0,
        (box3f *)dd.internalBufferForBoundsProgram.get(),
        primCount);
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
     d_bounds.download(&bounds[0]);
     d_bounds.free();
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
     bounds[1] = bounds[0];
   }
 

@@ -114,7 +114,7 @@
 #endif
 
 namespace detail {
-static std::string backtrace()
+inline static std::string backtrace()
 {
 #ifdef __GNUC__
     static const int max_frames = 16;
@@ -149,7 +149,7 @@ inline void owlRaise_impl(std::string str)
     throw std::runtime_error(str);
 #else
 #ifndef NDEBUG
-  std::string bt = detail::backtrace();
+  std::string bt = ::detail::backtrace();
   fprintf(stderr,"%s\n",bt.c_str());
 #endif
   raise(SIGINT);
@@ -157,7 +157,7 @@ inline void owlRaise_impl(std::string str)
 }
 }
 
-#define OWL_RAISE(MSG) detail::owlRaise_impl(MSG);
+#define OWL_RAISE(MSG) ::detail::owlRaise_impl(MSG);
 
 
 #define OWL_NOTIMPLEMENTED throw std::runtime_error(std::string(__PRETTY_FUNCTION__)+" not implemented")

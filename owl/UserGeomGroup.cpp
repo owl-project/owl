@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -272,7 +272,7 @@ namespace owl {
                                   nullptr,0
                                   ));
     }
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
 
     // ==================================================================
     // perform compaction
@@ -313,7 +313,7 @@ namespace owl {
                                 nullptr,0u
                                 ));
       
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
 
 
     LOG_OK("successfully built user geom group accel");
@@ -333,7 +333,7 @@ namespace owl {
     if (FULL_REBUILD)
       dd.memPeak += sumBoundsMem;
 
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
   }
     
 } // ::owl

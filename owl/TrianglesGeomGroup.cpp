@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -300,7 +300,7 @@ namespace owl {
                                   nullptr,0
                                   ));
     }
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
     
     // ==================================================================
     // perform compaction
@@ -323,7 +323,7 @@ namespace owl {
       dd.memPeak += dd.bvhMemory.size();
       dd.memFinal = dd.bvhMemory.size();
     }
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
 
     
     LOG_OK("successfully build triangles geom group accel");

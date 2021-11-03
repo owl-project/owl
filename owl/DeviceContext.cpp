@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -115,7 +115,7 @@ namespace owl {
     cudaFree(0);
     
     int totalNumDevicesAvailable = 0;
-    CUDA_CALL(GetDeviceCount(&totalNumDevicesAvailable));
+    OWL_CUDA_CALL(GetDeviceCount(&totalNumDevicesAvailable));
     if (totalNumDevicesAvailable == 0)
       OWL_RAISE("#owl: no CUDA capable devices found!");
     LOG_OK("found " << totalNumDevicesAvailable << " CUDA device(s)");
@@ -201,8 +201,8 @@ namespace owl {
     
     LOG(" - device: " << getDeviceName());
     
-    CUDA_CHECK(cudaSetDevice(cudaDeviceID));
-    CUDA_CHECK(cudaStreamCreate(&stream));
+    OWL_CUDA_CHECK(cudaSetDevice(cudaDeviceID));
+    OWL_CUDA_CHECK(cudaStreamCreate(&stream));
     
     CUresult  cuRes = cuCtxGetCurrent(&cudaContext);
     if (cuRes != CUDA_SUCCESS) 
