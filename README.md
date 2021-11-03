@@ -308,6 +308,7 @@ a CMake variable when you run CMake on your project.
 Latest additions, not yet in any release
 ----------------------------------------------------------------------
 
+- renamed all `CUDA_` macros to `OWL_CUDA_` to avoid naming conflicts with other projects
 <none yet>
 
 v1.1 - Switched to "modern cmake" technology (kudos lpisha, and jda)
