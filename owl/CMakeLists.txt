@@ -14,6 +14,10 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
+if (TARGET owl)
+  return()
+endif()
+
 find_package(OptiX REQUIRED)
 
 add_library(owl)
@@ -144,7 +148,7 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.17)
   # for new cmake version, we can rely on the working cuda detection
   # mechanism
   find_package(CUDAToolkit REQUIRED)
-  target_link_libraries(owl PUBLIC CUDA::cuda_driver CUDA::cudart_static)
+  target_link_libraries(owl PUBLIC CUDA::cuda_driver CUDA::cudart)
 else()
   # for older version of cmake (where CUDAToolkit detection doesn't
   # properly work) we fall back to search paths for hardcoded library
