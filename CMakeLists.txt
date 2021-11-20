@@ -22,8 +22,10 @@ endif()
 
 if (NOT (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR}))
   set(OWL_IS_SUBPROJECT ON)
+  set(OWL_IS_NOT_SUBPROJECT OFF)
 else()
   set(OWL_IS_SUBPROJECT OFF)
+  set(OWL_IS_NOT_SUBPROJECT ON)
 endif()
 
 if(CUDA_TOOLKIT_ROOT_DIR)
@@ -80,7 +82,7 @@ add_subdirectory(owl)
 
 add_subdirectory(3rdParty)
 
-option(OWL_BUILD_SAMPLES "Build the Samples?" ON)
+option(OWL_BUILD_SAMPLES "Build the Samples?" ${OWL_IS_NOT_SUBPROJECT})
 option(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 
 # ------------------------------------------------------------------
