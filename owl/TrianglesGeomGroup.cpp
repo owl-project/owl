@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -39,10 +39,12 @@ namespace owl {
     return "TrianglesGeomGroup";
   }
   
-  /*! constructor - passthroughto parent class */
+  /*! constructor - mostly passthrough to parent class */
   TrianglesGeomGroup::TrianglesGeomGroup(Context *const context,
-                                         size_t numChildren)
-    : GeomGroup(context,numChildren)
+                                         size_t numChildren,
+                                         unsigned int _buildFlags)
+    : GeomGroup(context,numChildren), 
+    buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags)
   {}
   
   void TrianglesGeomGroup::updateMotionBounds()
@@ -85,6 +87,9 @@ namespace owl {
 
     if (!FULL_REBUILD && dd.bvhMemory.empty())
       throw std::runtime_error("trying to refit an accel struct that has not been previously built");
+
+    if (!FULL_REBUILD && !(buildFlags & OPTIX_BUILD_FLAG_ALLOW_UPDATE))
+      throw std::runtime_error("trying to refit an accel struct that was not built with OPTIX_BUILD_FLAG_ALLOW_UPDATE");
 
     if (FULL_REBUILD) {
       dd.memFinal = 0;
@@ -179,10 +184,7 @@ namespace owl {
     // first: compute temp memory for bvh
     // ------------------------------------------------------------------
     OptixAccelBuildOptions accelOptions = {};
-    accelOptions.buildFlags =
-      OPTIX_BUILD_FLAG_ALLOW_UPDATE |
-      OPTIX_BUILD_FLAG_PREFER_FAST_TRACE |
-      OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+    accelOptions.buildFlags = this->buildFlags;
     
     accelOptions.motionOptions.numKeys   = numKeys;
     accelOptions.motionOptions.flags     = 0;
@@ -222,29 +224,42 @@ namespace owl {
     tempBuffer.alloc(FULL_REBUILD
                      ?blasBufferSizes.tempSizeInBytes
                      :blasBufferSizes.tempUpdateSizeInBytes);
-    
-    // buffer for initial, uncompacted bvh
-    DeviceMemory outputBuffer;
-    outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
-
-    // single size-t buffer to store compacted size in
-    DeviceMemory compactedSizeBuffer;
     if (FULL_REBUILD) {
-      compactedSizeBuffer.alloc(sizeof(uint64_t));
-      // this is only 8 bytes, so woon't matter... but still
+      // Only track this on first build, assuming temp buffer gets smaller for refit
       dd.memPeak += tempBuffer.size();
-      dd.memPeak += outputBuffer.size();
-      dd.memPeak += compactedSizeBuffer.size();
-    } 
-      
-    // ------------------------------------------------------------------
-    // now execute initial, uncompacted build
-    // ------------------------------------------------------------------
-    OptixAccelEmitDesc emitDesc;
-    emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
-    emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
+    }
+         
+    const bool allowCompaction = (buildFlags & OPTIX_BUILD_FLAG_ALLOW_COMPACTION);
 
+    // Optional buffers only used when compaction is allowed
+    DeviceMemory outputBuffer;
+    DeviceMemory compactedSizeBuffer;
+
+
+    // Allocate output buffer for initial build
     if (FULL_REBUILD) {
+      if (allowCompaction) {
+        outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
+        dd.memPeak += outputBuffer.size();
+      } else {
+        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+        dd.memPeak += dd.bvhMemory.size();
+        dd.memFinal = dd.bvhMemory.size();
+      }
+    }
+
+    // Build or refit
+
+    if (FULL_REBUILD && allowCompaction) {
+
+      compactedSizeBuffer.alloc(sizeof(uint64_t));
+      dd.memPeak += compactedSizeBuffer.size();
+
+      OptixAccelEmitDesc emitDesc;
+      emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+      emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
+
+      // Initial, uncompacted build
       OPTIX_CHECK(optixAccelBuild(device->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
@@ -263,6 +278,10 @@ namespace owl {
                                   &emitDesc,1u
                                   ));
     } else {
+
+      // This is either a full rebuild operation _without_ compaction, or a refit.
+      // The operation has already been stored in accelOptions.
+
       OPTIX_CHECK(optixAccelBuild(device->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
@@ -287,8 +306,7 @@ namespace owl {
     // perform compaction
     // ==================================================================
     
-    // alloc the buffer...
-    if (FULL_REBUILD) {
+    if (FULL_REBUILD && allowCompaction) {
       // download builder's compacted size from device
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
@@ -315,7 +333,7 @@ namespace owl {
     tempBuffer.free();
     if (FULL_REBUILD)
       compactedSizeBuffer.free();
-
+    
     LOG_OK("successfully build triangles geom group accel");
   }
   

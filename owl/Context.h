@@ -140,15 +140,15 @@ namespace owl {
       different programs, etc, but must all be of "OWL_TRIANGLES"
       kind */
     GeomGroup::SP
-    trianglesGeomGroupCreate(size_t numChildren);
+    trianglesGeomGroupCreate(size_t numChildren, unsigned int buildFlags);
     
     /*! create a new *user* geometry group that will eventually create
       a BVH over all the user geoms / custom prims in all its child
       geometries. only UserGeom's can be added to this group. These
       user geoms can all have different types, different programs,
-      etc, but must all be of "OWL_TRIANGLES" kind */
+      etc, but must all be of "OWL_GEOMETRY_USER" kind */
     GeomGroup::SP
-    userGeomGroupCreate(size_t numChildren);
+    userGeomGroupCreate(size_t numChildren, unsigned int buildFlags);
 
     /*! create a new device buffer of given data type and count; if
       init is non-null it will be used to populoate this

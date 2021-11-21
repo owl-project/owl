@@ -497,11 +497,15 @@ owlMissProgSet(OWLContext  context,
   geometries. Every geom in this array must be a valid owl geometry
   created with owlGeomCreate, and must be of a OWL_GEOM_USER
   type.
+
+  \param buildFlags A combination of OptixBuildFlags.  The default
+  of 0 means to use OWL default build flags.
 */
 OWL_API OWLGroup
 owlUserGeomGroupCreate(OWLContext context,
                        size_t     numGeometries,
-                       OWLGeom   *arrayOfChildGeoms);
+                       OWLGeom   *arrayOfChildGeoms,
+                       unsigned int buildFlags OWL_IF_CPP(=0));
 
 
 // ------------------------------------------------------------------
@@ -515,11 +519,15 @@ owlUserGeomGroupCreate(OWLContext context,
   geometries. Every geom in this array must be a valid owl geometry
   created with owlGeomCreate, and must be of a OWL_GEOM_TRIANGLES
   type.
+
+  \param buildFlags A combination of OptixBuildFlags.  The default
+  of 0 means to use OWL default build flags.
 */
 OWL_API OWLGroup
 owlTrianglesGeomGroupCreate(OWLContext context,
                             size_t     numGeometries,
-                            OWLGeom   *initValues);
+                            OWLGeom   *initValues,
+                            unsigned int buildFlags OWL_IF_CPP(=0));
 
 // ------------------------------------------------------------------
 /*! create a new instance group with given number of instances. The
@@ -571,7 +579,11 @@ owlInstanceGroupCreate(OWLContext context,
                          null, or an array of size numInstnaces, of
                          the format specified */
                        const float    *initTransforms  OWL_IF_CPP(= nullptr),
-                       OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL)
+                       OWLMatrixFormat matrixFormat    OWL_IF_CPP(=OWL_MATRIX_FORMAT_OWL),
+
+                       /*! A combination of OptixBuildFlags.  The default
+                         of 0 means to use OWL default build flags.*/
+                       unsigned int buildFlags OWL_IF_CPP(=0)
                        );
 
                        

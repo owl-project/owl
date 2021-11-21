@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -39,9 +39,11 @@ namespace owl {
 
   InstanceGroup::InstanceGroup(Context *const context,
                                size_t numChildren,
-                               Group::SP      *groups)
+                               Group::SP *groups,
+                               unsigned int _buildFlags)
     : Group(context,context->groups),
-      children(numChildren)
+      children(numChildren),
+      buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags)
   {
     std::vector<uint32_t> childIDs;
     if (groups) {
@@ -156,6 +158,9 @@ namespace owl {
     if (children.size() > maxInstsPerIAS)
       throw std::runtime_error("number of children in instance group exceeds "
                                "OptiX's MAX_INSTANCES_PER_IAS limit");
+
+    if (!FULL_REBUILD && !(buildFlags & OPTIX_BUILD_FLAG_ALLOW_UPDATE))
+      throw std::runtime_error("trying to refit an accel struct that was not built with OPTIX_BUILD_FLAG_ALLOW_UPDATE");
     
     if (FULL_REBUILD) {
       dd.memFinal = 0;
@@ -223,11 +228,8 @@ namespace owl {
     // ==================================================================
     // set up accel uptions
     // ==================================================================
-    accelOptions.buildFlags =
-      OPTIX_BUILD_FLAG_PREFER_FAST_TRACE
-      |
-      OPTIX_BUILD_FLAG_ALLOW_UPDATE
-      ;
+    accelOptions.buildFlags = this->buildFlags;
+
     accelOptions.motionOptions.numKeys = 1;
     if (FULL_REBUILD)
       accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
