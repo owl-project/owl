@@ -315,6 +315,9 @@ namespace owl {
       
     OWL_CUDA_SYNC_CHECK();
 
+    // ==================================================================
+    // finish - clean up
+    // ==================================================================
 
     LOG_OK("successfully built user geom group accel");
 
