@@ -127,10 +127,10 @@ namespace owl {
         (((box3f*)d_bounds.get())+1,
          vertex.buffers[1]->getPointer(device),
          vertex.count,vertex.stride,vertex.offset);
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
     d_bounds.download(&bounds[0]);
     d_bounds.free();
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
     if (vertex.buffers.size() == 1)
       bounds[1] = bounds[0];
   }

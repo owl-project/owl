@@ -281,7 +281,7 @@ namespace owl {
                                   nullptr,0
                                   ));
     }
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
     
     // ==================================================================
     // perform compaction
@@ -305,7 +305,7 @@ namespace owl {
       dd.memPeak += dd.bvhMemory.size();
       dd.memFinal = dd.bvhMemory.size();
     }
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
       
     // ==================================================================
     // aaaaaand .... clean up

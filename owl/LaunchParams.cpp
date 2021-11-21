@@ -43,7 +43,7 @@ namespace owl {
   {
     SetActiveGPU forLifeTime(device);
     
-    CUDA_CHECK(cudaStreamCreate(&stream));
+    OWL_CUDA_CHECK(cudaStreamCreate(&stream));
     deviceMemory.alloc(dataSize);
     hostMemory.resize(dataSize);
   }

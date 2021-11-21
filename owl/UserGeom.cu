@@ -121,10 +121,10 @@ namespace owl {
       (((box3f*)d_bounds.get())+0,
        (box3f *)dd.internalBufferForBoundsProgram.get(),
        primCount);
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
     d_bounds.download(&bounds[0]);
     d_bounds.free();
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
     bounds[1] = bounds[0];
   }
 

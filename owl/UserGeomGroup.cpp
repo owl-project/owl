@@ -232,7 +232,7 @@ namespace owl {
                                 nullptr,0u
                                 ));
       
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
 
     // ==================================================================
     // finish - clean up
@@ -257,7 +257,7 @@ namespace owl {
     if (FULL_REBUILD)
       dd.memPeak += sumBoundsMem;
 
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
   }
     
 } // ::owl
