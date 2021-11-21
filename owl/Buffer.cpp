@@ -94,7 +94,7 @@ namespace owl {
 
     SetActiveGPU forLifeTime(device);
 
-    CUDA_CALL_NOTHROW(Free(d_pointer));
+    OWL_CUDA_CALL_NOTHROW(Free(d_pointer));
     d_pointer = nullptr;
   }
   
@@ -121,7 +121,7 @@ namespace owl {
   {
     for (auto dd : deviceData)
       dd->as<DeviceBuffer::DeviceData>().clear();
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
   }
   
   void DeviceBuffer::upload(const void *hostPtr, size_t offset, int64_t count)
@@ -129,14 +129,14 @@ namespace owl {
     assert(deviceData.size() == context->deviceCount());
     for (auto dd : deviceData)
       dd->as<DeviceBuffer::DeviceData>().uploadAsync(hostPtr, offset, count);
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
   }
   
   void DeviceBuffer::upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) 
   {
     assert(deviceID < (int)deviceData.size());
     deviceData[deviceID]->as<DeviceBuffer::DeviceData>().uploadAsync(hostPtr, offset, count);
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
   }
   
 
@@ -156,11 +156,11 @@ namespace owl {
   {
     SetActiveGPU forLifeTime(device);
     if (d_pointer) {
-      CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
+      OWL_CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
     }
 
     if (parent->elementCount)
-      CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(cudaTextureObject_t)));
+      OWL_CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(cudaTextureObject_t)));
   }
 
   void DeviceBuffer::DeviceDataForTextures::clear() 
@@ -185,7 +185,7 @@ namespace owl {
       } else
         hostHandles[i] = nullptr;
 
-    CUDA_CALL(MemcpyAsync((char*)d_pointer + offset, devRep.data(),
+    OWL_CUDA_CALL(MemcpyAsync((char*)d_pointer + offset, devRep.data(),
                           devRep.size()*sizeof(devRep[0]),
                           cudaMemcpyDefault,
                           device->getStream()));
@@ -201,11 +201,11 @@ namespace owl {
     SetActiveGPU forLifeTime(device);
     
     if (d_pointer) {
-      CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
+      OWL_CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
     }
 
     if (parent->elementCount) {
-      CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(device::Buffer)));
+      OWL_CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(device::Buffer)));
     }
   }
   
@@ -233,7 +233,7 @@ namespace owl {
         devRep[i].count   = 0;
       }
 
-    CUDA_CALL(MemcpyAsync((char*)d_pointer + offset,devRep.data(),
+    OWL_CUDA_CALL(MemcpyAsync((char*)d_pointer + offset,devRep.data(),
                           devRep.size()*sizeof(devRep[0]),
                           cudaMemcpyDefault,
                           device->getStream()));
@@ -252,10 +252,10 @@ namespace owl {
   {
     SetActiveGPU forLifeTime(device);
     
-    if (d_pointer) { CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
+    if (d_pointer) { OWL_CUDA_CALL(Free(d_pointer)); d_pointer = nullptr; }
 
     if (parent->elementCount)
-      CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(OptixTraversableHandle)));
+      OWL_CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeof(OptixTraversableHandle)));
   }
   
   void DeviceBuffer::DeviceDataForGroups::uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) 
@@ -282,7 +282,7 @@ namespace owl {
         devRep[i] = 0;
       }
 
-    CUDA_CALL(MemcpyAsync((char*)d_pointer + offset,devRep.data(),
+    OWL_CUDA_CALL(MemcpyAsync((char*)d_pointer + offset,devRep.data(),
                           devRep.size()*sizeof(devRep[0]),
                           cudaMemcpyDefault,
                           device->getStream()));
@@ -294,7 +294,7 @@ namespace owl {
     SetActiveGPU forLifeTime(device);
     
     if (parent->elementCount) {
-      CUDA_CALL(Memset(d_pointer,0,parent->elementCount*sizeOf(parent->type)));
+      OWL_CUDA_CALL(Memset(d_pointer,0,parent->elementCount*sizeOf(parent->type)));
     }
   }
   
@@ -305,11 +305,11 @@ namespace owl {
     SetActiveGPU forLifeTime(device);
     
     if (d_pointer) {
-      CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
+      OWL_CUDA_CALL(Free(d_pointer)); d_pointer = nullptr;
     }
 
     if (parent->elementCount) {
-      CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeOf(parent->type)));
+      OWL_CUDA_CALL(Malloc(&d_pointer,parent->elementCount*sizeOf(parent->type)));
     }
   }
   
@@ -317,7 +317,7 @@ namespace owl {
   {
     SetActiveGPU forLifeTime(device);
     
-    CUDA_CALL(MemcpyAsync((char*)d_pointer + offset,hostDataPtr,
+    OWL_CUDA_CALL(MemcpyAsync((char*)d_pointer + offset,hostDataPtr,
                           ((count == -1) ? parent->elementCount : count)*sizeOf(parent->type),
                           cudaMemcpyDefault,
                           device->getStream()));
@@ -339,7 +339,7 @@ namespace owl {
   HostPinnedBuffer::~HostPinnedBuffer()
   {
     if (cudaHostPinnedMem) {
-      CUDA_CALL_NOTHROW(FreeHost(cudaHostPinnedMem));
+      OWL_CUDA_CALL_NOTHROW(FreeHost(cudaHostPinnedMem));
       cudaHostPinnedMem = nullptr;
     }
   }
@@ -354,13 +354,13 @@ namespace owl {
   void HostPinnedBuffer::resize(size_t newElementCount)
   {
     if (cudaHostPinnedMem) {
-      CUDA_CALL_NOTHROW(FreeHost(cudaHostPinnedMem));
+      OWL_CUDA_CALL_NOTHROW(FreeHost(cudaHostPinnedMem));
       cudaHostPinnedMem = nullptr;
     }
 
     elementCount = newElementCount;
     if (newElementCount > 0)
-      CUDA_CALL(MallocHost((void**)&cudaHostPinnedMem, sizeInBytes()));
+      OWL_CUDA_CALL(MallocHost((void**)&cudaHostPinnedMem, sizeInBytes()));
 
     for (auto device : context->getDevices()) {
       getDD(device).d_pointer = cudaHostPinnedMem;
@@ -398,7 +398,7 @@ namespace owl {
   ManagedMemoryBuffer::~ManagedMemoryBuffer()
   {
     if (cudaManagedMem) {
-      CUDA_CALL_NOTHROW(Free(cudaManagedMem));
+      OWL_CUDA_CALL_NOTHROW(Free(cudaManagedMem));
       cudaManagedMem = 0;
     }
   }
@@ -412,13 +412,13 @@ namespace owl {
   void ManagedMemoryBuffer::resize(size_t newElementCount)
   {
     if (cudaManagedMem) {
-      CUDA_CALL_NOTHROW(Free(cudaManagedMem));
+      OWL_CUDA_CALL_NOTHROW(Free(cudaManagedMem));
       cudaManagedMem = 0;
     }
     
     elementCount = newElementCount;
     if (newElementCount > 0) {
-      CUDA_CALL(MallocManaged((void**)&cudaManagedMem, sizeInBytes()));
+      OWL_CUDA_CALL(MallocManaged((void**)&cudaManagedMem, sizeInBytes()));
       unsigned char *mem_end = (unsigned char *)cudaManagedMem + sizeInBytes();
       size_t pageSize = 16*1024*1024;
       int pageID = 0;
@@ -460,7 +460,7 @@ namespace owl {
   void ManagedMemoryBuffer::clear()
   {
     assert(cudaManagedMem);
-    CUDA_CALL(Memset((char*)cudaManagedMem, 0, sizeInBytes()));
+    OWL_CUDA_CALL(Memset((char*)cudaManagedMem, 0, sizeInBytes()));
   }
   
   void ManagedMemoryBuffer::upload(const void *hostPtr, size_t offset, int64_t count)
@@ -517,16 +517,16 @@ namespace owl {
   {
     DeviceContext::SP device = context->getDevice(deviceID);
     DeviceData &dd = getDD(device);
-    CUDA_CHECK(cudaGraphicsMapResources(1, &resource, stream));
+    OWL_CUDA_CHECK(cudaGraphicsMapResources(1, &resource, stream));
     size_t size = 0;
-    CUDA_CHECK(cudaGraphicsResourceGetMappedPointer(&dd.d_pointer, &size, resource));
+    OWL_CUDA_CHECK(cudaGraphicsResourceGetMappedPointer(&dd.d_pointer, &size, resource));
   }
 
   void GraphicsBuffer::unmap(const int deviceID, CUstream stream)
   {
     DeviceContext::SP device = context->getDevice(deviceID);
     DeviceData &dd = getDD(device);
-    CUDA_CHECK(cudaGraphicsUnmapResources(1, &resource, stream));
+    OWL_CUDA_CHECK(cudaGraphicsUnmapResources(1, &resource, stream));
     dd.d_pointer = nullptr;
   }
 

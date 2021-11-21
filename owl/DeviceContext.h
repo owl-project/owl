@@ -142,17 +142,17 @@ namespace owl {
   struct SetActiveGPU {
     inline SetActiveGPU(const DeviceContext::SP &device)
     {
-      CUDA_CHECK(cudaGetDevice(&savedActiveDeviceID));
-      CUDA_CHECK(cudaSetDevice(device->cudaDeviceID));
+      OWL_CUDA_CHECK(cudaGetDevice(&savedActiveDeviceID));
+      OWL_CUDA_CHECK(cudaSetDevice(device->cudaDeviceID));
     }
     inline SetActiveGPU(const DeviceContext *device)
     {
-      CUDA_CHECK(cudaGetDevice(&savedActiveDeviceID));
-      CUDA_CHECK(cudaSetDevice(device->cudaDeviceID));
+      OWL_CUDA_CHECK(cudaGetDevice(&savedActiveDeviceID));
+      OWL_CUDA_CHECK(cudaSetDevice(device->cudaDeviceID));
     }
     inline ~SetActiveGPU()
     {
-      CUDA_CHECK_NOTHROW(cudaSetDevice(savedActiveDeviceID));
+      OWL_CUDA_CHECK_NOTHROW(cudaSetDevice(savedActiveDeviceID));
     }
   private:
     int savedActiveDeviceID = -1;

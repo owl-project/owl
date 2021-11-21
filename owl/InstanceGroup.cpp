@@ -284,7 +284,7 @@ namespace owl {
                                 nullptr,0u
                                 ));
       
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
     
     // ==================================================================
     // aaaaaand .... clean up
@@ -519,7 +519,7 @@ namespace owl {
                                 nullptr,0u
                                 ));
 
-    CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK();
     
     // ==================================================================
     // aaaaaand .... clean up

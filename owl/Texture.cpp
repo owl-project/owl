@@ -83,12 +83,12 @@ namespace owl {
       }        
 
       cudaArray_t   pixelArray;
-      CUDA_CALL(MallocArray(&pixelArray,
+      OWL_CUDA_CALL(MallocArray(&pixelArray,
                              &channel_desc,
                              size.x,size.y));
       textureArrays.push_back(pixelArray);
       
-      CUDA_CALL(Memcpy2DToArray(pixelArray,
+      OWL_CUDA_CALL(Memcpy2DToArray(pixelArray,
                                  /* offset */0,0,
                                  texels,
                                  pitch,pitch,size.y,
@@ -131,7 +131,7 @@ namespace owl {
       
       // Create texture object
       cudaTextureObject_t cuda_tex = 0;
-      CUDA_CALL(CreateTextureObject(&cuda_tex, &res_desc, &tex_desc, nullptr));
+      OWL_CUDA_CALL(CreateTextureObject(&cuda_tex, &res_desc, &tex_desc, nullptr));
 
       textureObjects.push_back(cuda_tex);
     }
