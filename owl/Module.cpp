@@ -154,8 +154,8 @@ namespace owl {
       const char *errName = 0;
       cuGetErrorName(rc,&errName);
       OWL_RAISE("unknown CUDA error when building module "
-                "for bounds program kernel"
-                +std::string(errName));
+                "for bounds program kernel "
+                + std::string(errName) + " log: " + std::string(log));
     }
     LOG_OK("created module #" << parent->ID << " (both optix and cuda)");
   }
