@@ -240,9 +240,9 @@ Some sample use projects/papers that recently used OWL:
 # Building OWL / Supported Platforms
 
 General Requirements:
-- OptiX 7 SDK (version 7.0, 7.1, or 7.2, will work with either)
+- OptiX 7 SDK (version 7.0, 7.1, 7.2, 7.3, or 7.4; should work with either)
 - CUDA version 10 or 11
-- a C++11 capable compiler (regular gcc on CentOS and Linux should do, VS on Windows)
+- a C++11 capable compiler (regular gcc on CentOS, Ubuntu, or any other Linux should do; as should VS on Windows)
 
 Per-OS Instructions:
 
@@ -313,6 +313,8 @@ Latest additions, not yet in any release
 
 v1.1 - Switched to "modern cmake" technology (kudos lpisha, and jda)
 ----------------------------------------------------------------------
+
+*v.1.1.6*: bugfix: supporting optix 7.4 now.
 
 *v.1.1.5*: bugfix: various buffer types didn't properly release all memory.
 
