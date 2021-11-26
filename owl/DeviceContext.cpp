@@ -142,7 +142,9 @@ namespace owl {
     // ------------------------------------------------------------------
     // init optix itself
     // ------------------------------------------------------------------
-#if OPTIX_VERSION >= 70300
+#if OPTIX_VERSION >= 70400
+    LOG("initializing optix 7.4");
+#elif OPTIX_VERSION >= 70300
     LOG("initializing optix 7.3");
 #elif OPTIX_VERSION >= 70200
     LOG("initializing optix 7.2");
@@ -259,13 +261,23 @@ namespace owl {
   if (!debug) {
     moduleCompileOptions.maxRegisterCount  = OPTIX_COMPILE_DEFAULT_MAX_REGISTER_COUNT ;
     moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
+#if OPTIX_VERSION >= 70400
+    // 7.4 no longer has 'lineinfo'
+    moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_MINIMAL;
+#else
     moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
+#endif
   } 
   else {
     std::cout << "WARNING: RUNNING OPTIX PROGRAMS IN -O0 DEBUG MODE!!!" << std::endl;
     moduleCompileOptions.maxRegisterCount  = OPTIX_COMPILE_DEFAULT_MAX_REGISTER_COUNT ;
     moduleCompileOptions.optLevel          = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
+#if OPTIX_VERSION >= 70400
+    // 7.4 no longer has 'lineinfo'
+    moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_MINIMAL;
+#else
     moduleCompileOptions.debugLevel        = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
+#endif
   }
 
 #if OPTIX_VERSION >= 70200
