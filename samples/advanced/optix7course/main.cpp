@@ -100,9 +100,13 @@ namespace osc {
   {
     std::string inFileName = 
 #ifdef _WIN32
+#ifdef OWL_BUILDING_ALL_SAMPLES
+      "../../samples/advanced/optix7course/models/sponza.obj"
+#else
       // on windows, visual studio creates _two_ levels of build dir
       // (x86/Release)
       "../../models/sponza.obj"
+#endif
 #else
       // on linux, common practice is to have ONE level of build dir
       // (say, <project>/build/)...
