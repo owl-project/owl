@@ -314,6 +314,8 @@ Latest additions, not yet in any release
 - build fix to automatically build glfw on linux if no system-glfw is
   installed (kudos srogatch)
 
+- now handling empty user-geometries gracefully (fixes #147)
+
 v1.1 - Switched to "modern cmake" technology (kudos lpisha, and jda)
 ----------------------------------------------------------------------
 

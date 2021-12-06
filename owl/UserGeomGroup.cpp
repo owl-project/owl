@@ -126,8 +126,8 @@ namespace owl {
       CUdeviceptr     &d_bounds = boundsPointers[childID];
       OptixBuildInput &userGeomInput = userGeomInputs[childID];
 
-      assert("user geom has valid bounds buffer"
-             && ugDD.internalBufferForBoundsProgram.alloced());
+      assert("user geom is either empty, or has valid bounds buffer"
+             && ((child->primCount == 0) || ugDD.internalBufferForBoundsProgram.alloced()));
       d_bounds = (CUdeviceptr)ugDD.internalBufferForBoundsProgram.get();
       
       userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
@@ -136,7 +136,7 @@ namespace owl {
 #else
       auto &aa = userGeomInput.aabbArray;
 #endif
-      aa.aabbBuffers   = &d_bounds;
+      aa.aabbBuffers   = (child->primCount == 0) ? nullptr : &d_bounds;
       aa.numPrimitives = (uint32_t)child->primCount;
       aa.strideInBytes = sizeof(box3f);
       aa.primitiveIndexOffset = 0;

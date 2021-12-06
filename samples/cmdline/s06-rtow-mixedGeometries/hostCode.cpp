@@ -186,6 +186,9 @@ int main(int ac, char **av)
 
   LOG("creating the scene ...");
   createScene();
+
+  lambertianSpheres.clear();
+  
   LOG_OK("created scene:");
   LOG_OK(" num lambertian spheres: " << lambertianSpheres.size());
   LOG_OK(" num dielectric spheres: " << dielectricSpheres.size());
