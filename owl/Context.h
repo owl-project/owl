@@ -134,13 +134,22 @@ namespace owl {
                     const void *texels);
 
     /*! create a new *triangles* geometry group that will eventually
-      create a BVH over all the trinalges in all its child
+      create a BVH over all the trianlges across all its child
       geometries. only TrianglesGeoms can be added to this
       group. These triangle geoms can all have different types,
       different programs, etc, but must all be of "OWL_TRIANGLES"
       kind */
     GeomGroup::SP
     trianglesGeomGroupCreate(size_t numChildren, unsigned int buildFlags);
+    
+    /*! create a new *curves* geometry group that will eventually
+      create a BVH over all the curve segments across all its child
+      geometries. only CurvesGeoms can be added to this
+      group. These curves geoms can all have different types,
+      different programs, etc, but must all be of "OWL_CURVES"
+      kind */
+    GeomGroup::SP
+    curvesGeomGroupCreate(size_t numChildren, unsigned int buildFlags);
     
     /*! create a new *user* geometry group that will eventually create
       a BVH over all the user geoms / custom prims in all its child

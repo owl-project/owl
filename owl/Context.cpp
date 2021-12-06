@@ -19,8 +19,10 @@
 #include "Geometry.h"
 #include "Triangles.h"
 #include "UserGeom.h"
+#include "Curves.h"
 #include "Texture.h"
 #include "TrianglesGeomGroup.h"
+#include "CurvesGeomGroup.h"
 #include "UserGeomGroup.h"
 
 #define LOG(message)                            \
@@ -291,6 +293,14 @@ namespace owl {
     return gg;
   }
   
+  GeomGroup::SP Context::curvesGeomGroupCreate(size_t numChildren, unsigned int buildFlags)
+  {
+    GeomGroup::SP gg
+      = std::make_shared<CurvesGeomGroup>(this,numChildren,buildFlags);
+    gg->createDeviceData(getDevices());
+    return gg;
+  }
+  
   GeomGroup::SP Context::userGeomGroupCreate(size_t numChildren, unsigned int buildFlags)
   {
     GeomGroup::SP gg
@@ -309,6 +319,9 @@ namespace owl {
     case OWL_GEOMETRY_TRIANGLES:
       gt = std::make_shared<TrianglesGeomType>(this,varStructSize,varDecls);
       break;
+    case OWL_GEOMETRY_CURVES:
+      gt = std::make_shared<CurvesGeomType>(this,varStructSize,varDecls);
+      break;
     case OWL_GEOMETRY_USER:
       gt = std::make_shared<UserGeomType>(this,varStructSize,varDecls);
       break;
@@ -325,24 +338,6 @@ namespace owl {
     assert(module);
     module->createDeviceData(getDevices());
     return module;
-  }
-
-  std::shared_ptr<Geom> UserGeomType::createGeom()
-  {
-    GeomType::SP self
-      = std::dynamic_pointer_cast<GeomType>(shared_from_this());
-    Geom::SP geom = std::make_shared<UserGeom>(context,self);
-    geom->createDeviceData(context->getDevices());
-    return geom;
-  }
-
-  std::shared_ptr<Geom> TrianglesGeomType::createGeom()
-  {
-    GeomType::SP self
-      = std::dynamic_pointer_cast<GeomType>(shared_from_this());
-    Geom::SP geom = std::make_shared<TrianglesGeom>(context,self);
-    geom->createDeviceData(context->getDevices());
-    return geom;
   }
 
   void Context::buildHitGroupRecordsOn(const DeviceContext::SP &device)

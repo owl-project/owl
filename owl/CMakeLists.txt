@@ -110,6 +110,8 @@ target_sources(owl PRIVATE
   Triangles.cu
   UserGeom.h
   UserGeom.cu
+  Curves.h
+  Curves.cu
 
   # -------------------------------------------------------
   # accel structures
@@ -120,6 +122,8 @@ target_sources(owl PRIVATE
   InstanceGroup.cpp
   TrianglesGeomGroup.h
   TrianglesGeomGroup.cpp
+  CurvesGeomGroup.h
+  CurvesGeomGroup.cpp
   UserGeomGroup.h
   UserGeomGroup.cpp
 )
