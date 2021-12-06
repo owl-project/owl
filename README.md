@@ -243,11 +243,13 @@ General Requirements:
 - OptiX 7 SDK (version 7.0, 7.1, 7.2, 7.3, or 7.4; should work with either)
 - CUDA version 10 or 11
 - a C++11 capable compiler (regular gcc on CentOS, Ubuntu, or any other Linux should do; as should VS on Windows)
+- OpenGL
 
 Per-OS Instructions:
 
 - Ubuntu 18, 19, and 20 (automatically tested on 18, mostly developed on 20)
     - Requires: `sudo apt install cmake-curses-gui`
+    - Dependencies: `sudo apt-get install x11-xserver-utils libxrandr-dev libxinerama-dev libxcb-xkb-dev libxcursor-dev libxcb-xinput-dev libxi-dev`
 	- Build:
 	```bash
 	mkdir build
