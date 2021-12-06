@@ -31,10 +31,23 @@ typedef owl::RayT<0,2> RadianceRay;
 typedef owl::RayT<1,2> ShadowRay;
 #endif
 
+struct BasicLight
+{
+  vec3f pos;
+  vec3f color;
+};
+
+struct Material {
+  vec3f Kd, Ks, Ka;
+  float phong_exp;
+  float reflectivity;
+};
+
 struct CurvesGeomData
 {
   /*! color at the endpoints, to demonstrate interpolation */
   vec3f color0, color1;
+  Material material;
 };
 
 /* variables for the ray generation program */
@@ -49,6 +62,8 @@ struct RayGenData
     vec3f dir_00;
     vec3f dir_du;
     vec3f dir_dv;
+    float aperture_radius;
+    float focal_scale;
   } camera;
 };
 

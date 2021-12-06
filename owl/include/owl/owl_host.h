@@ -228,7 +228,8 @@ typedef enum
    // new naming, to be consistent with type OLWGeom (not OWLGeometry):
    OWL_GEOM_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
    OWL_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
-   OWL_GEOMETRY_HAIR
+   /*! maps to optix curves geometry */
+   OWL_GEOMETRY_CURVES
   }
   OWLGeomKind;
 
@@ -529,6 +530,29 @@ owlTrianglesGeomGroupCreate(OWLContext context,
                             OWLGeom   *initValues,
                             unsigned int buildFlags OWL_IF_CPP(=0));
 
+
+
+// ------------------------------------------------------------------
+/*! create a new group (which handles the acceleration strucure) for
+  "curves" geometries.
+
+  \param numGeometries Number of geometries in this group, must be
+  non-zero.
+
+  \param arrayOfChildGeoms A array of 'numGeometries' child
+  geometries. Every geom in this array must be a valid owl geometry
+  created with owlGeomCreate, and must be of a OWL_GEOM_TRIANGLES
+  type.
+
+  \param buildFlags A combination of OptixBuildFlags.  The default
+  of 0 means to use OWL default build flags.
+*/
+OWL_API OWLGroup
+owlCurvesGeomGroupCreate(OWLContext context,
+                         size_t     numCurveGeometries,
+                         OWLGeom   *curveGeometries,
+                         unsigned int buildFlags OWL_IF_CPP(=0));
+
 // ------------------------------------------------------------------
 /*! create a new instance group with given number of instances. The
   child groups and their instance IDs and/or transforms can either
@@ -806,6 +830,29 @@ OWL_API void owlTrianglesSetIndices(OWLGeom triangles,
                                     size_t stride,
                                     size_t offset);
 
+// ==================================================================
+// "Triangles" functions
+// ==================================================================
+
+OWL_API void owlCurvesSetType(OWLGeom curvesGeom,
+                              bool capped);
+
+OWL_API void owlCurvesSetControlPoints(OWLGeom curvesGeom,
+                                       int numControlPoints,
+                                       /*! buffer of (one vec3f per
+                                         control point) that
+                                         specifies curve width */
+                                       OWLBuffer vertices,
+                                       /*! buffer of (one float per
+                                           control point) the curve
+                                           width of that control
+                                           point */
+                                       OWLBuffer widths);
+
+OWL_API void owlCurvesSetSegmentIndices(OWLGeom curvesGeom,
+                                        int numSegmentIndices,
+                                        OWLBuffer segmentIndices);
+                                       
 // -------------------------------------------------------
 // group/hierarchy creation and setting
 // -------------------------------------------------------

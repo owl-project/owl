@@ -52,6 +52,10 @@ struct Viewer : public owl::viewer::OWLViewer
 {
   Viewer();
 
+  /*! creates a simple curves geometry similar to the 'optixCurves'
+      example in the OptiX SDK */
+  void createScene();
+  
   /*! gets called whenever the viewer needs us to re-render out widget */
   void render() override;
 
@@ -68,7 +72,7 @@ struct Viewer : public owl::viewer::OWLViewer
   OWLParams  lp      { 0 };
   OWLContext context { 0 };
   OWLGroup   world   { 0 };
-  OWLGroup   curvesGroups;
+  OWLGroup   curvesGeomGroup;
   OWLBuffer  accumBuffer { 0 };
   int accumID { 0 };
 
@@ -76,6 +80,9 @@ struct Viewer : public owl::viewer::OWLViewer
   std::vector<int>   segmentIndices;
   std::vector<float> widths;
   std::vector<vec3f> vertices;
+  OWLBuffer widthsBuffer, verticesBuffer, segmentIndicesBuffer;
+  
+  bool sbtDirty = true;
 };
 
 /*! window notifies us that we got resized */
@@ -121,7 +128,7 @@ void Viewer::cameraChanged()
   owlRayGenSet3f    (rayGen,"camera.dir_du",(const owl3f&)camera_ddu);
   owlRayGenSet3f    (rayGen,"camera.dir_dv",(const owl3f&)camera_ddv);
   // DoF camera setup
-  owlRayGenSet1f    (rayGen,"camera.aperture_radius",setup==SETUP_TRIANGLE ? .15f : .1f);
+  owlRayGenSet1f    (rayGen,"camera.aperture_radius",.15f);
   owlRayGenSet1f    (rayGen,"camera.focal_scale",focal_scale);
 
   sbtDirty = true;
@@ -141,31 +148,31 @@ void Viewer::createScene()
     const float c = cosf(i / static_cast<float>(NUM_KEYS) * 2.0f * static_cast<float>(M_PI));
     switch( degree ) {
     case 1: {
-      vertices.push_back( make_float3( -0.25f, -0.25f * c, 0.0f ) );
+      vertices.push_back( vec3f( -0.25f, -0.25f * c, 0.0f ) );
       widths.push_back( 0.3f );
-      vertices.push_back( make_float3( 0.25f, 0.25f * c, 0.0f ) );
+      vertices.push_back( vec3f( 0.25f, 0.25f * c, 0.0f ) );
       widths.push_back( radius );
     } break;
     case 2: {
-      vertices.push_back( make_float3( -1.5f, -2.0f * c, 0.0f ) );
+      vertices.push_back( vec3f( -1.5f, -2.0f * c, 0.0f ) );
       widths.push_back( .01f );
-      vertices.push_back( make_float3( 0.0f, 1.0f * c, 0.0f ) );
+      vertices.push_back( vec3f( 0.0f, 1.0f * c, 0.0f ) );
       widths.push_back( radius );
-      vertices.push_back( make_float3( 1.5f, -2.0f * c, 0.0f ) );
+      vertices.push_back( vec3f( 1.5f, -2.0f * c, 0.0f ) );
       widths.push_back( .01f );
     } break;
     case 3: {
-      vertices.push_back( make_float3( -1.5f, -3.5f * c, 0.0f ) );
+      vertices.push_back( vec3f( -1.5f, -3.5f * c, 0.0f ) );
       widths.push_back( .01f );
-      vertices.push_back( make_float3( -1.0f, 0.5f * c, 0.0f ) );
+      vertices.push_back( vec3f( -1.0f, 0.5f * c, 0.0f ) );
       widths.push_back( radius );
-      vertices.push_back( make_float3( 1.0f, 0.5f * c, 0.0f ) );
+      vertices.push_back( vec3f( 1.0f, 0.5f * c, 0.0f ) );
       widths.push_back( radius );
-      vertices.push_back( make_float3( 1.5f, -3.5f * c, 0.0f ) );
+      vertices.push_back( vec3f( 1.5f, -3.5f * c, 0.0f ) );
       widths.push_back( .01f );
     } break;
     default:
-      SUTIL_ASSERT_MSG( false, "Curve degree must be in {1, 2, 3}." );
+      throw std::runtime_error("invalid curves degree?");
     }
   }
 }
@@ -195,10 +202,12 @@ Viewer::Viewer()
   OWLGeomType curvesGeomType
     = owlGeomTypeCreate(context,
                         OWL_GEOMETRY_CURVES,
-                        sizeof(PoolBallsGeomData),
-                        poolBallsGeomVars,-1);
-  owlGeomTypeSetClosestHit(poolBallsGeomType,RADIANCE_RAY_TYPE,
+                        sizeof(CurvesGeomData),
+                        curvesGeomVars,-1);
+  owlGeomTypeSetClosestHit(curvesGeomType,RADIANCE_RAY_TYPE,
                            module,"CurvesGeom");
+  owlGeomTypeSetAnyHit(curvesGeomType,SHADOW_RAY_TYPE,
+                       module,"CurvesGeom");
 
   // Call this so we have the bounds progs available
   owlBuildPrograms(context);
@@ -209,83 +218,29 @@ Viewer::Viewer()
 
   LOG("building geometries ...");
 
-  verticesBuffer =
+  verticesBuffer 
     = owlDeviceBufferCreate(context,OWL_FLOAT3,vertices.size(),vertices.data());
-  widthsBuffer =
-    = owlDeviceBufferCreate(context,OWL_FLOAT1,widths.size(),widths.data());
-  segmentsBuffer =
-    = owlDeviceBufferCreate(context,OWL_INT1,segments.size(),segments.data());
+  widthsBuffer 
+    = owlDeviceBufferCreate(context,OWL_FLOAT,widths.size(),widths.data());
+  segmentIndicesBuffer 
+    = owlDeviceBufferCreate(context,OWL_INT,segmentIndices.size(),segmentIndices.data());
 
   OWLGeom curvesGeom = owlGeomCreate(context,curvesGeomType);
-  owlCurvesSetControlPoints(curvesGeom,vertices.size(),verticesBuffer,widthsBuffers);
-  owlCurvesSetSegments(curvesGeom,segments.size(),segmentsBuffer);
+  owlCurvesSetControlPoints(curvesGeom,vertices.size(),verticesBuffer,widthsBuffer);
+  owlCurvesSetSegmentIndices(curvesGeom,segmentIndices.size(),segmentIndicesBuffer);
 
-  groups[0] = owlUserGeomGroupCreate(context,1,&poolBallsGeom);
-  owlGroupBuildAccel(groups[0]);
+  owlGeomSet3f(curvesGeom,"material.Ka",.35f,.35f,.35f);
+  owlGeomSet3f(curvesGeom,"material.Kd",.5f,.5f,.5f);
+  owlGeomSet3f(curvesGeom,"material.Ks",1.f,1.f,1.f);
+  owlGeomSet3f(curvesGeom,"material.reflectivity",0.f,0.f,0.f);
+  owlGeomSet1f(curvesGeom,"material.phong_exp",1.f);
 
+  curvesGeomGroup = owlUserGeomGroupCreate(context,1,&curvesGeom);
+  owlGroupBuildAccel(curvesGeomGroup);
 
-  vec3f anchor( -5.00f, -25.0f, 0.01f );
-  vec3f v1( 20.0f,  0.0f, 0.01f );
-  vec3f v2(  0.0f, 50.0f, 0.01f );
-
-  vec3f normal = cross( v1, v2 );
-  normal = normalize( normal );
-  float d = dot( normal, anchor );
-  v1 *= 1.0f/dot( v1, v1 );
-  v2 *= 1.0f/dot( v2, v2 );
-  vec4f plane( normal, d );
-
-  vec2i res;
-  int comp;
-  std::string path(DATA_PATH);
-  path += "/cloth.ppm";
-  unsigned char* image = stbi_load(path.c_str(),
-                                   &res.x, &res.y, &comp, STBI_rgb);
-  // oof, rather implement OWL_RGB8.. :-)
-  std::vector<unsigned char> texels(res.x*res.y*4);
-  for (int y=res.y-1; y>=0; --y) {
-    for (int x=0; x<res.x; ++x) {
-      int index = (y*res.x+x)*4;
-      texels[index]=*image++;
-      texels[index+1]=*image++;
-      texels[index+2]=*image++;
-      texels[index+3]=(comp==3) ? 1U : *image++;
-    }
-  }
-  OWLTexture ka_map
-    = owlTexture2DCreate(context,
-                         OWL_TEXEL_FORMAT_RGBA8,
-                         res.x,res.y,
-                         texels.data(),
-                         OWL_TEXTURE_NEAREST,
-                         OWL_TEXTURE_CLAMP);
-  OWLTexture kd_map
-    = owlTexture2DCreate(context,
-                         OWL_TEXEL_FORMAT_RGBA8,
-                         res.x,res.y,
-                         texels.data(),
-                         OWL_TEXTURE_NEAREST,
-                         OWL_TEXTURE_CLAMP);
-
-  OWLGeom parallelogramGeom = owlGeomCreate(context,parallelogramGeomType);
-  owlGeomSetPrimCount(parallelogramGeom,1);
-  owlGeomSet4f(parallelogramGeom,"plane",plane.x,plane.y,plane.z,plane.w);
-  owlGeomSet3f(parallelogramGeom,"v1",v1.x,v1.y,v1.z);
-  owlGeomSet3f(parallelogramGeom,"v2",v2.x,v2.y,v2.z);
-  owlGeomSet3f(parallelogramGeom,"anchor",anchor.x,anchor.y,anchor.z);
-  owlGeomSetTexture(parallelogramGeom,"ka_map",ka_map);
-  owlGeomSetTexture(parallelogramGeom,"kd_map",kd_map);
-  owlGeomSet3f(parallelogramGeom,"material.Ka",.35f,.35f,.35f);
-  owlGeomSet3f(parallelogramGeom,"material.Kd",.5f,.5f,.5f);
-  owlGeomSet3f(parallelogramGeom,"material.Ks",1.f,1.f,1.f);
-  owlGeomSet3f(parallelogramGeom,"material.reflectivity",0.f,0.f,0.f);
-  owlGeomSet1f(parallelogramGeom,"material.phong_exp",1.f);
-
-  groups[1] = owlUserGeomGroupCreate(context,1,&parallelogramGeom);
-  owlGroupBuildAccel(groups[1]);
   world
-    = owlInstanceGroupCreate(context,2,
-                             groups,
+    = owlInstanceGroupCreate(context,1,
+                             &curvesGeomGroup,
                              nullptr,
                              nullptr,
                              OWL_MATRIX_FORMAT_OWL);
@@ -333,8 +288,8 @@ Viewer::Viewer()
   /* light sources */
   owlParamsSet1i(lp,"numLights",2);
   BasicLight lights[] = {
-    { vec3f( -30.0f, -10.0f, 80.0f ), vec3f( 1.0f, 1.0f, 1.0f ), 1 },
-    { vec3f(  10.0f,  30.0f, 20.0f ), vec3f( 1.0f, 1.0f, 1.0f ), 1 }
+    { vec3f( -30.0f, -10.0f, 80.0f ), vec3f( 1.0f, 1.0f, 1.0f ) },
+    { vec3f(  10.0f,  30.0f, 20.0f ), vec3f( 1.0f, 1.0f, 1.0f ) }
   };
   OWLBuffer lightBuffer
     = owlDeviceBufferCreate(context,OWL_USER_TYPE(BasicLight),2,&lights);
@@ -347,7 +302,6 @@ Viewer::Viewer()
   // -------------------------------------------------------
   OWLVarDecl rayGenVars[] = {
     { "fbPtr",         OWL_RAW_POINTER, OWL_OFFSETOF(RayGenData,fbPtr)},
-    // { "fbPtr",         OWL_BUFPTR, OWL_OFFSETOF(RayGenData,fbPtr)},
     { "fbSize",        OWL_INT2,   OWL_OFFSETOF(RayGenData,fbSize)},
     { "world",         OWL_GROUP,  OWL_OFFSETOF(RayGenData,world)},
     { "camera.pos",    OWL_FLOAT3, OWL_OFFSETOF(RayGenData,camera.pos)},
@@ -380,16 +334,6 @@ Viewer::Viewer()
 
 void Viewer::render()
 {
-  if (setup == SETUP_1984) {
-  	// Jitter the location of the pool ball for motion blur
-  	vec3f offset = random1() * vec3f(0.1f, 0.6f, 0.0f);
-    std::vector<vec3f> center(poolballs.center);
-    center[4] += offset;
-    owlBufferUpload(poolballs.centerBuffer,center.data());
-    owlGroupBuildAccel(groups[0]);
-    owlGroupBuildAccel(world);
-  }
-
   if (sbtDirty) {
     owlBuildSBT(context);
     sbtDirty = false;
@@ -402,31 +346,22 @@ void Viewer::render()
 
 int main(int ac, char **av)
 {
-  LOG("owl::ng example '" << av[0] << "' starting up");
-
   std::string arg1;
   if (ac>1) {
     arg1 = std::string(av[1]);
     if (arg1=="-h") {
-      std::cout << "Usage: " << av[0] << "[-h|-1984]\n";
-      std::cout << "  -h:    print this message\n";
-      std::cout << "  -1984: load the 1984 motion blur scene\n";
+      std::cout << "Usage: " << av[0] << "[args]\n";
+      std::cout << "w/ args:" << std::endl;
+      std::cout << "  -r <r0> <r1>    : begin and end radius\n";
       exit(EXIT_SUCCESS);
     }
   }
 
-  Viewer viewer(arg1=="-1984"? Viewer::SETUP_1984: Viewer::SETUP_TRIANGLE);
-  if (viewer.setup==Viewer::SETUP_TRIANGLE) {
-    viewer.camera.setOrientation(cameraTriangle::init_lookFrom,
-                                 cameraTriangle::init_lookAt,
-                                 cameraTriangle::init_lookUp,
-                                 owl::viewer::toDegrees(acosf(cameraTriangle::init_cosFovy)));
-  } else {
-    viewer.camera.setOrientation(camera1984::init_lookFrom,
-                                 camera1984::init_lookAt,
-                                 camera1984::init_lookUp,
-                                 owl::viewer::toDegrees(acosf(camera1984::init_cosFovy)));
-  }
+  Viewer viewer;
+  viewer.camera.setOrientation(camera_init_lookFrom,
+                               camera_init_lookAt,
+                               camera_init_lookUp,
+                               owl::viewer::toDegrees(acosf(camera_init_cosFovy)));
   viewer.enableFlyMode();
   viewer.enableInspectMode(viewer::OWLViewer::Arcball,
                            owl::box3f(vec3f(-10.f),vec3f(+10.f)));
