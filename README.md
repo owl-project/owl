@@ -248,8 +248,9 @@ General Requirements:
 Per-OS Instructions:
 
 - Ubuntu 18, 19, and 20 (automatically tested on 18, mostly developed on 20)
-    - Requires: `sudo apt install cmake-curses-gui`
-    - Dependencies: `sudo apt-get install x11-xserver-utils libxrandr-dev libxinerama-dev libxcb-xkb-dev libxcursor-dev libxcb-xinput-dev libxi-dev`
+    - Dependencies
+		- cmake for building (`sudo apt install cmake-curses-gui`)
+		- if you want to build the graphical examples: glfw (`sudo apt-get install libglfw3-dev`), or all the libraries to build it from included source code (`sudo apt-get install x11-xserver-utils libxrandr-dev libxinerama-dev libxcb-xkb-dev libxcursor-dev libxcb-xinput-dev libxi-dev`)
 	- Build:
 	```bash
 	mkdir build
@@ -310,13 +311,19 @@ a CMake variable when you run CMake on your project.
 Latest additions, not yet in any release
 ----------------------------------------------------------------------
 
-- renamed all `CUDA_` macros to `OWL_CUDA_` to avoid naming conflicts with other projects
-<none yet>
+- build fix to automatically build glfw on linux if no system-glfw is
+  installed (kudos srogatch)
 
 v1.1 - Switched to "modern cmake" technology (kudos lpisha, and jda)
 ----------------------------------------------------------------------
 
-*v.1.1.6*: bugfix: supporting optix 7.4 now.
+*v.1.1.6*: 
+
+- bugfix: supporting optix 7.4 now.
+
+- renamed all `CUDA_` macros to `OWL_CUDA_` to avoid naming conflicts with other projects
+<none yet>
+
 
 *v.1.1.5*: bugfix: various buffer types didn't properly release all memory.
 
