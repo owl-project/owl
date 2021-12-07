@@ -321,24 +321,29 @@ namespace owl {
     pipelineLinkOptions.maxTraceDepth          = 2;
     pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
 
-
-#if 1
-    std::cout << "HACK: FORCE-ENABLE CURVES!" << std::endl;
-    int degree = 1;
-    bool motion_blur = 0;
-    switch( degree )
-      {
-      case 1:
-        pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_LINEAR;
-        break;
-      case 2:
-        pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_QUADRATIC_BSPLINE;
-        break;
-      case 3:
-        pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_CUBIC_BSPLINE;
-        break;
-      }
-#endif
+    // if (parent->curvesEnabled) 
+      pipelineCompileOptions.usesPrimitiveTypeFlags
+        = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_LINEAR
+        | OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_QUADRATIC_BSPLINE
+        | OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_CUBIC_BSPLINE;
+    
+// #if 1
+//     std::cout << "HACK: FORCE-ENABLE CURVES!" << std::endl;
+//     int degree = 1;
+//     bool motion_blur = 0;
+//     switch( degree )
+//       {
+//       case 1:
+//         pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_LINEAR;
+//         break;
+//       case 2:
+//         pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_QUADRATIC_BSPLINE;
+//         break;
+//       case 3:
+//         pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_CUBIC_BSPLINE;
+//         break;
+//       }
+// #endif
   }
   
   void DeviceContext::buildPipeline()
@@ -399,8 +404,10 @@ namespace owl {
     buildHitGroupPrograms();
   }
 
-  void DeviceContext::enableCurves()
+  void DeviceContext::buildCurvesModules()
   {
+    SetActiveGPU forLifeTime(this);
+    
     for (int degree=1;degree<=3;degree++) {
       if (curvesModule[degree-1] != nullptr)
         optixModuleDestroy(curvesModule[degree-1]);
@@ -422,7 +429,8 @@ namespace owl {
                                           &builtinISOptions, &curvesModule[degree-1]));
       PING;
       PRINT(curvesModule[degree-1]);
-    }      
+    }
+
   }
   
   void DeviceContext::destroyPrograms()

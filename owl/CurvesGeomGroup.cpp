@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 #include "CurvesGeomGroup.h"
-#include "Curves.h"
+#include "CurvesGeom.h"
 #include "Context.h"
 
 #define LOG(message)                                            \
@@ -149,8 +149,10 @@ namespace owl {
       buildInput.type = OPTIX_BUILD_INPUT_TYPE_CURVES;
       auto &curveArray = buildInput.curveArray;
 
-      PRINT(curves->degree);
-      switch(curves->degree) {
+      auto curvesGT = curves->geomType->as<CurvesGeomType>();//getTypeDD(device);
+      
+      PRINT(curvesGT->degree);
+      switch(curvesGT->degree) {
       case 1:
         PING;
         curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_LINEAR;

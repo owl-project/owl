@@ -849,7 +849,7 @@ OWL_API void owlTrianglesSetIndices(OWLGeom triangles,
     b-spline"), as well as whether end-caps need to get added for
     non-linear curves (linear curves always have end-caps, no matter
     what this value is */
-OWL_API void owlCurvesSetDegree(OWLGeom curvesGeom,
+OWL_API void owlCurvesSetDegree(OWLGeomType curvesGeomType,
                                 int     degree,
                                 bool    forceCaps);
 

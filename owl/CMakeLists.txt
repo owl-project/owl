@@ -110,8 +110,8 @@ target_sources(owl PRIVATE
   Triangles.cu
   UserGeom.h
   UserGeom.cu
-  Curves.h
-  Curves.cu
+  CurvesGeom.h
+  CurvesGeom.cu
 
   # -------------------------------------------------------
   # accel structures

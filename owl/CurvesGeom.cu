@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "Curves.h"
+#include "CurvesGeom.h"
 #include "Context.h"
 
 namespace owl {
@@ -23,6 +23,11 @@ namespace owl {
   // CurvesGeomType
   // ------------------------------------------------------------------
   
+  /*! construct a new device-data for this type */
+  CurvesGeomType::DeviceData::DeviceData(const DeviceContext::SP &device)
+    : GeomType::DeviceData(device)
+  {}
+
   CurvesGeomType::CurvesGeomType(Context *const context,
                                  size_t varStructSize,
                                  const std::vector<OWLVarDecl> &varDecls)
@@ -38,6 +43,21 @@ namespace owl {
     return geom;
   }
 
+  /*! fill in an OptixProgramGroup descriptor with the module and
+    program names for this type */
+  void CurvesGeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
+                                              GeomType *_parent,
+                                              int rt)
+  {
+    GeomType::DeviceData::fillPGDesc(pgDesc,_parent,rt);
+    CurvesGeomType *parent = (CurvesGeomType*)_parent;
+
+
+    // ----------- intersect from builtin module -----------
+    pgDesc.hitgroup.moduleIS = device->curvesModule[parent->degree-1];
+    pgDesc.hitgroup.entryFunctionNameIS = /* default for built-ins */0;
+  }
+  
   
   // ------------------------------------------------------------------
   // CurvesGeom::DeviceData
@@ -63,19 +83,12 @@ namespace owl {
     return "CurvesGeom";
   }
 
-  void CurvesGeom::setDegree(int degree, bool force_caps)
+  void CurvesGeomType::setDegree(int degree, bool force_caps)
   {
     if (degree < 1 || degree > 3) OWL_RAISE("invalid curve degree (must be 1-3)");
     this->degree = degree;
     this->forceCaps = force_caps;
   }
-
-  RegisteredObject::DeviceData::SP CurvesGeom::createOn(const DeviceContext::SP &device) 
-  {
-    PING;
-    return std::make_shared<DeviceData>(device);
-  }
-
 
   /*! set the vertex array (if vector size is 1), or set/enable
     motion blur via multiple time steps, if vector size >= 0 */
@@ -119,19 +132,19 @@ namespace owl {
     }
   }
 
-  /*! fill in an OptixProgramGroup descriptor with the module and
-    program names for this type */
-  void CurvesGeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
-                                              GeomType *_parent,
-                                              int rt)
+    /*! creates the device-specific data for this group */
+  RegisteredObject::DeviceData::SP
+  CurvesGeom::createOn(const DeviceContext::SP &device) 
   {
-    GeomType::DeviceData::fillPGDesc(pgDesc,_parent,rt);
-    CurvesGeomType *parent = (CurvesGeomType*)_parent;
-
-
-    // ----------- intersect from builtin module -----------
-    pgDesc.hitgroup.moduleIS = device->curvesModule[parent->degree-1];
-    pgDesc.hitgroup.entryFunctionNameIS = /* default for built-ins */0;
+    return std::make_shared<DeviceData>(device);
   }
-  
+
+    /*! creates the device-specific data for this group */
+  RegisteredObject::DeviceData::SP
+  CurvesGeomType::createOn(const DeviceContext::SP &device) 
+  {
+    return std::make_shared<DeviceData>(device);
+  }
+
+
 } // ::owl

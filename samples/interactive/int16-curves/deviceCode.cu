@@ -137,8 +137,6 @@ OPTIX_CLOSEST_HIT_PROGRAM(CurvesGeom)()
 
   PRD &prd = owl::getPRD<PRD>();
 
-  printf("I hit something...\n");
-  
   RadianceRay ray;
   ray.origin = optixGetWorldRayOrigin();
   ray.direction = optixGetWorldRayDirection();

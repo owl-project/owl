@@ -19,7 +19,7 @@
 #include "Geometry.h"
 #include "Triangles.h"
 #include "UserGeom.h"
-#include "Curves.h"
+#include "CurvesGeom.h"
 #include "Texture.h"
 #include "TrianglesGeomGroup.h"
 #include "CurvesGeomGroup.h"
@@ -512,6 +512,9 @@ namespace owl {
         module->getDD(device).build();
       }
     }
+    if (curvesEnabled)
+      for (auto device : getDevices())
+        device->buildCurvesModules();
   }
   
   void Context::setRayTypeCount(size_t rayTypeCount)
@@ -579,9 +582,6 @@ namespace owl {
 
   void Context::enableCurves()
   {
-    if (!curvesEnabled)
-      for (auto device : getDevices())
-        device->enableMotionBlur();
     curvesEnabled = true;
   }
 

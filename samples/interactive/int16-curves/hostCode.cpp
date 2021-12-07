@@ -81,7 +81,7 @@ struct Viewer : public owl::viewer::OWLViewer
   std::vector<float> widths;
   std::vector<vec3f> vertices;
   OWLBuffer widthsBuffer, verticesBuffer, segmentIndicesBuffer;
-  int    degree = 2;
+  int    degree = 1;
   
   bool sbtDirty = true;
 };
@@ -183,7 +183,8 @@ Viewer::Viewer()
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
   owlContextSetRayTypeCount(context,2);
-
+  owlEnableCurves(context);
+  
   createScene();
   
   OWLModule module = owlModuleCreate(context,deviceCode_ptx);
@@ -239,7 +240,7 @@ Viewer::Viewer()
   OWLGeom curvesGeom = owlGeomCreate(context,curvesGeomType);
   owlCurvesSetControlPoints(curvesGeom,vertices.size(),verticesBuffer,widthsBuffer);
   owlCurvesSetSegmentIndices(curvesGeom,segmentIndices.size(),segmentIndicesBuffer);
-  owlCurvesSetDegree(curvesGeom,degree,false);
+  owlCurvesSetDegree(curvesGeomType,degree,false);
   
   owlGeomSet3f(curvesGeom,"material.Ka",.35f,.35f,.35f);
   owlGeomSet3f(curvesGeom,"material.Kd",.5f,.5f,.5f);

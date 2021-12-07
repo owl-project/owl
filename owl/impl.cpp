@@ -18,9 +18,9 @@
 #include "APIContext.h"
 #include "APIHandle.h"
 #include "owl/common/parallel/parallel_for.h"
-#include "Curves.h"
 #include "Triangles.h"
 #include "UserGeom.h"
+#include "CurvesGeom.h"
 #include "InstanceGroup.h"
 
 #undef OWL_API
@@ -1603,19 +1603,19 @@ owlInstanceGroupSetTransform(OWLGroup _group,
     b-spline"), as well as whether end-caps need to get added for
     non-linear curves (linear curves always have end-caps, no matter
     what this value is */
-OWL_API void owlCurvesSetDegree(OWLGeom _curves,
+OWL_API void owlCurvesSetDegree(OWLGeomType _curvesGT,
                                 int     degree,
                                 bool    capped)
 {
   LOG_API_CALL();
     
-  assert(_curves);
+  assert(_curvesGT);
 
-  CurvesGeom::SP curves
-    = ((APIHandle *)_curves)->get<CurvesGeom>();
-  assert(curves);
+  CurvesGeomType::SP curvesGT
+    = ((APIHandle *)_curvesGT)->get<CurvesGeomType>();
+  assert(curvesGT);
 
-  curves->setDegree(degree,capped);
+  curvesGT->setDegree(degree,capped);
 }
 
 /*! sets the array of control points, and their associated curve

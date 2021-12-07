@@ -100,7 +100,7 @@ namespace owl {
     void destroyPipeline();
     void buildPipeline();
 
-    void enableCurves();
+    void buildCurvesModules();
     
     /*! collects all compiled programs during 'buildPrograms', such
         that all active progs can then be passed to optix durign

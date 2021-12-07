@@ -74,9 +74,14 @@ namespace owl {
 
     void setBoundLaunchParamValues(const std::vector<OWLBoundValueDecl> &boundValues);
     
-    /*! enables motoin blur - should be done right after context
+    /*! enables motion blur - should be done right after context
       creation, and before SBT and pipeline get built */
     void enableMotionBlur();
+    
+    /*! enables support for curves; has to be called before creating
+        any curves geometries get created, and before the pipeline
+        gets built, whichever comes first */
+    void enableCurves();
     
     /*! sets maximum instancing depth for the given context:
 
