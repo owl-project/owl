@@ -49,14 +49,8 @@ namespace owl {
   
   void CurvesGeomGroup::updateMotionBounds()
   {
-    bounds[0] = bounds[1] = box3f();
-    for (auto geom : geometries) {
-      CurvesGeom::SP mesh = geom->as<CurvesGeom>();
-      box3f meshBounds[2];
-      mesh->computeBounds(meshBounds);
-      for (int i=0;i<2;i++)
-        bounds[i].extend(meshBounds[i]);
-    }
+    // only need this for older version of optix that wouldn't even support curves
+    OWL_NOTIMPLEMENTED;
   }
   
   void CurvesGeomGroup::buildAccel()
@@ -110,7 +104,7 @@ namespace owl {
     assert(!geometries.empty());
     CurvesGeom::SP child0 = geometries[0]->as<CurvesGeom>();
     assert(child0);
-    int numKeys = (int)child0->vertex.buffers.size();
+    int numKeys = (int)child0->verticesBuffers.size();
     assert(numKeys > 0);
     const bool hasMotion = (numKeys > 1);
     if (hasMotion) assert(context->motionBlurEnabled);
@@ -119,57 +113,80 @@ namespace owl {
     // create triangle inputs
     // ==================================================================
     //! the N build inputs that go into the builder
-    std::vector<OptixBuildInput> triangleInputs(geometries.size());
+    std::vector<OptixBuildInput> buildInputs(geometries.size());
     // one build flag per build input
-    std::vector<uint32_t> triangleInputFlags(geometries.size());
+    // std::vector<uint32_t> buildInputFlags(geometries.size());
 
     // now go over all geometries to set up the buildinputs
     for (size_t childID=0;childID<geometries.size();childID++) {
       
       // the child wer're setting them with (with sanity checks)
-      CurvesGeom::SP tris = geometries[childID]->as<CurvesGeom>();
-      assert(tris);
+      CurvesGeom::SP curves = geometries[childID]->as<CurvesGeom>();
+      assert(curves);
       
-      if (tris->vertex.buffers.size() != (size_t)numKeys)
+      if (curves->verticesBuffers.size() != (size_t)numKeys)
         OWL_RAISE("invalid combination of meshes with "
                   "different motion keys in the same "
                   "curves geom group");
-      CurvesGeom::DeviceData &trisDD = tris->getDD(device);
+      CurvesGeom::DeviceData &curvesDD = curves->getDD(device);
       
-      CUdeviceptr     *d_vertices    = trisDD.vertexPointers.data();
+      CUdeviceptr     *d_vertices       = curvesDD.verticesPointers.data();
       assert(d_vertices);
-      OptixBuildInput &triangleInput = triangleInputs[childID];
+      CUdeviceptr     *d_widths         = curvesDD.widthsPointers.data();
+      assert(d_widths);
+      // CUdeviceptr     *d_segmentIndices = curvesDD.segmentIndicesPointers.data();
+      // assert(d_widths);
+
+      OptixBuildInput &buildInput = buildInputs[childID];
+
+      buildInput = {}; // init defaults, whatever they might be
       
-      triangleInput.type = OPTIX_BUILD_INPUT_TYPE_CURVES;
-      auto &ta = triangleInput.triangleArray;
-      ta.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
-      ta.vertexStrideInBytes = (uint32_t)tris->vertex.stride;
-      ta.numVertices         = (uint32_t)tris->vertex.count;
-      ta.vertexBuffers       = d_vertices;
+      buildInput.type = OPTIX_BUILD_INPUT_TYPE_CURVES;
+      auto &curveArray = buildInput.curveArray;
       
-      ta.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-      ta.indexStrideInBytes  = (uint32_t)tris->index.stride;
-      ta.numIndexTriplets    = (uint32_t)tris->index.count;
-      ta.indexBuffer         = trisDD.indexPointer;
-      assert(ta.indexBuffer);
+      switch(curves->degree) {
+      case 1:
+        curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_LINEAR;
+        break;
+      case 2:
+        curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_QUADRATIC_BSPLINE;
+        break;
+      case 3:
+        curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_CUBIC_BSPLINE;
+        break;
+      default:
+        OWL_RAISE("invalid/unsupported curve degree for owl curves geometry");
+      }
+      
+      curveArray.numPrimitives        = curves->segmentIndicesCount;//1;
+      curveArray.vertexBuffers        = d_vertices;//vertexBufferPointers;
+      curveArray.numVertices          = curves->vertexCount;//static_cast<uint32_t>( vertices.size() );
+      curveArray.vertexStrideInBytes  = sizeof(vec3f);
+      curveArray.widthBuffers         = d_widths;//widthsBufferPointers;
+      curveArray.widthStrideInBytes   = sizeof(float);
+      curveArray.normalBuffers        = 0;
+      curveArray.normalStrideInBytes  = 0;
+      curveArray.indexBuffer          = curvesDD.indicesPointer;//d_segmentIndices;
+      curveArray.indexStrideInBytes   = sizeof(int);
+      curveArray.flag                 = OPTIX_GEOMETRY_FLAG_NONE;
+      curveArray.primitiveIndexOffset = 0;
+      curveArray.endcapFlags          = OPTIX_CURVE_ENDCAP_DEFAULT;
+
+      // ca.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
+      // ca.vertexStrideInBytes = (uint32_t)curves->vertex.stride;
+      // ca.numVertices         = (uint32_t)curves->vertex.count;
+      // ca.vertexBuffers       = d_vertices;
+      
+      // ca.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
+      // ca.indexStrideInBytes  = (uint32_t)curves->index.stride;
+      // ca.numIndexTriplets    = (uint32_t)curves->index.count;
+      // ca.indexBuffer         = curvesDD.indexPointer;
+      // assert(ta.indexBuffer);
       
       // -------------------------------------------------------
       // sanity check that we don't have too many prims
       // -------------------------------------------------------
-      sumPrims += ta.numIndexTriplets;
-      // we always have exactly one SBT entry per shape (i.e., triangle
-      // mesh), and no per-primitive materials:
-      triangleInputFlags[childID]    = 0;
-      ta.flags                       = &triangleInputFlags[childID];
-      // iw, jan 7, 2020: note this is not the "actual" number of
-      // SBT entires we'll generate when we build the SBT, only the
-      // number of per-ray-type 'groups' of SBT entities (i.e., before
-      // scaling by the SBT_STRIDE that gets passed to
-      // optixTrace. So, for the build input this value remains *1*).
-      ta.numSbtRecords               = 1; 
-      ta.sbtIndexOffsetBuffer        = 0; 
-      ta.sbtIndexOffsetSizeInBytes   = 0; 
-      ta.sbtIndexOffsetStrideInBytes = 0; 
+      sumPrims += curveArray.numPrimitives;
     }
     
     if (sumPrims > maxPrimsPerGAS) 
@@ -199,8 +216,8 @@ namespace owl {
     OPTIX_CHECK(optixAccelComputeMemoryUsage
                 (device->optixContext,
                  &accelOptions,
-                 triangleInputs.data(),
-                 (uint32_t)triangleInputs.size(),
+                 buildInputs.data(),
+                 (uint32_t)buildInputs.size(),
                  &blasBufferSizes
                  ));
     
@@ -215,7 +232,7 @@ namespace owl {
         ? blasBufferSizes.tempSizeInBytes
         : blasBufferSizes.tempUpdateSizeInBytes;
     LOG("starting to build/refit "
-        << prettyNumber(triangleInputs.size()) << " triangle geom groups, "
+        << prettyNumber(buildInputs.size()) << " triangle geom groups, "
         << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
         << prettyNumber(tempSize) << "B in temp data");
 
@@ -264,8 +281,8 @@ namespace owl {
                                   /* todo: stream */0,
                                   &accelOptions,
                                   // array of build inputs:
-                                  triangleInputs.data(),
-                                  (uint32_t)triangleInputs.size(),
+                                  buildInputs.data(),
+                                  (uint32_t)buildInputs.size(),
                                   // buffer of temp memory:
                                   (CUdeviceptr)tempBuffer.get(),
                                   tempBuffer.size(),
@@ -286,8 +303,8 @@ namespace owl {
                                   /* todo: stream */0,
                                   &accelOptions,
                                   // array of build inputs:
-                                  triangleInputs.data(),
-                                  (uint32_t)triangleInputs.size(),
+                                  buildInputs.data(),
+                                  (uint32_t)buildInputs.size(),
                                   // buffer of temp memory:
                                   (CUdeviceptr)tempBuffer.get(),
                                   tempBuffer.size(),

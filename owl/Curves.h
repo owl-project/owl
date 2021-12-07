@@ -92,6 +92,8 @@ namespace owl {
     /*! pretty-print */
     std::string toString() const override;
 
+    int degree = 3;
+    
     int segmentIndicesCount = 0;
     Buffer::SP segmentIndicesBuffer;
     
