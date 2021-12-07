@@ -18,6 +18,7 @@
 #include "APIContext.h"
 #include "APIHandle.h"
 #include "owl/common/parallel/parallel_for.h"
+#include "Curves.h"
 #include "Triangles.h"
 #include "UserGeom.h"
 #include "InstanceGroup.h"
@@ -1566,3 +1567,79 @@ owlInstanceGroupSetTransform(OWLGroup _group,
   group->setTransform(whichChild, xfm);
 }
 
+
+
+/*! sets curve degree (1="linear", 2="quadratic b-spline", 3="cubic
+    b-spline"), as well as whether end-caps need to get added for
+    non-linear curves (linear curves always have end-caps, no matter
+    what this value is */
+OWL_API void owlCurvesSetDegree(OWLGeom _curves,
+                                int     degree,
+                                bool    capped)
+{
+  LOG_API_CALL();
+    
+  assert(_curves);
+
+  CurvesGeom::SP curves
+    = ((APIHandle *)_curves)->get<CurvesGeom>();
+  assert(curves);
+
+  curves->setDegree(degree,capped);
+}
+
+/*! sets the array of control points, and their associated curve
+    width. */
+OWL_API void owlCurvesSetControlPoints(OWLGeom _curves,
+                                       int numControlPoints,
+                                       /*! buffer of (one vec3f per
+                                         control point) that
+                                         specifies curve width */
+                                       OWLBuffer _vertices,
+                                       /*! buffer of (one float per
+                                           control point) the curve
+                                           width of that control
+                                           point */
+                                       OWLBuffer _widths)
+{
+  LOG_API_CALL();
+    
+  assert(_curves);
+  assert(_vertices);
+  assert(_widths);
+
+  CurvesGeom::SP curves
+    = ((APIHandle *)_curves)->get<CurvesGeom>();
+  assert(curves);
+
+  Buffer::SP vertices_buffer
+    = ((APIHandle *)_vertices)->get<Buffer>();
+  assert(vertices_buffer);
+
+  Buffer::SP widths_buffer
+    = ((APIHandle *)_widths)->get<Buffer>();
+  assert(widths_buffer);
+
+  curves->setVertices({vertices_buffer},{widths_buffer},numControlPoints);
+}
+
+OWL_API void owlCurvesSetSegmentIndices(OWLGeom   _curves,
+                                        int       count,
+                                        OWLBuffer _buffer)
+{
+  LOG_API_CALL();
+    
+  assert(_curves);
+  assert(_buffer);
+
+  CurvesGeom::SP curves
+    = ((APIHandle *)_curves)->get<CurvesGeom>();
+  assert(curves);
+
+  Buffer::SP buffer
+    = ((APIHandle *)_buffer)->get<Buffer>();
+  assert(buffer);
+
+  curves->setSegmentIndices({buffer},count);
+}
+                                       

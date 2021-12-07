@@ -89,10 +89,18 @@ namespace owl {
     void setSegmentIndices(Buffer::SP indices,
                            size_t count);
 
+    void setDegree(int degree, bool force_caps);
+    
     /*! pretty-print */
     std::string toString() const override;
 
+    /*! curve degree - linear (1), quadratic (2), or cubic (3) */
     int degree = 3;
+    
+    /*! if true, we tell optix to add curve caps on qudratc and cubic
+        segments (which by default wll not have caps). Ignored for
+        linear segments, which always have caps */
+    bool forceCaps = false;
     
     int segmentIndicesCount = 0;
     Buffer::SP segmentIndicesBuffer;

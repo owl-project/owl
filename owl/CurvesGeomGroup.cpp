@@ -170,7 +170,9 @@ namespace owl {
       curveArray.indexStrideInBytes   = sizeof(int);
       curveArray.flag                 = OPTIX_GEOMETRY_FLAG_NONE;
       curveArray.primitiveIndexOffset = 0;
-      curveArray.endcapFlags          = OPTIX_CURVE_ENDCAP_DEFAULT;
+      curveArray.endcapFlags          = curves->forceCaps
+        ? OPTIX_CURVE_ENDCAP_ON
+        : OPTIX_CURVE_ENDCAP_DEFAULT;
 
       // ca.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
       // ca.vertexStrideInBytes = (uint32_t)curves->vertex.stride;

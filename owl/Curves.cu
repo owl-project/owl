@@ -63,6 +63,13 @@ namespace owl {
     return "CurvesGeom";
   }
 
+  void CurvesGeom::setDegree(int degree, bool force_caps)
+  {
+    if (degree < 1 || degree > 3) OWL_RAISE("invalid curve degree (must be 1-3)");
+    this->degree = degree;
+    this->forceCaps = force_caps;
+  }
+
   RegisteredObject::DeviceData::SP CurvesGeom::createOn(const DeviceContext::SP &device) 
   { return std::make_shared<DeviceData>(device); }
 

@@ -834,9 +834,16 @@ OWL_API void owlTrianglesSetIndices(OWLGeom triangles,
 // "Triangles" functions
 // ==================================================================
 
-OWL_API void owlCurvesSetType(OWLGeom curvesGeom,
-                              bool capped);
+/*! sets curve degree (1="linear", 2="quadratic b-spline", 3="cubic
+    b-spline"), as well as whether end-caps need to get added for
+    non-linear curves (linear curves always have end-caps, no matter
+    what this value is */
+OWL_API void owlCurvesSetDegree(OWLGeom curvesGeom,
+                                int     degree,
+                                bool    forceCaps);
 
+/*! sets the array of control points, and their associated curve
+    width. */
 OWL_API void owlCurvesSetControlPoints(OWLGeom curvesGeom,
                                        int numControlPoints,
                                        /*! buffer of (one vec3f per
