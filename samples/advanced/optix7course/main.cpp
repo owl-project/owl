@@ -101,6 +101,8 @@ namespace osc {
     std::string inFileName = 
 #ifdef _WIN32
 #ifdef OWL_BUILDING_ALL_SAMPLES
+      // on windows, when building the whole project (including the
+      // samples) with VS, the executable's location is different
       "../../samples/advanced/optix7course/models/sponza.obj"
 #else
       // on windows, visual studio creates _two_ levels of build dir
