@@ -320,6 +320,7 @@ namespace owl {
       gt = std::make_shared<TrianglesGeomType>(this,varStructSize,varDecls);
       break;
     case OWL_GEOMETRY_CURVES:
+      PING;
       gt = std::make_shared<CurvesGeomType>(this,varStructSize,varDecls);
       break;
     case OWL_GEOMETRY_USER:

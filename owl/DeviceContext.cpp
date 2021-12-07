@@ -320,6 +320,43 @@ namespace owl {
     // pipelineLinkOptions.overrideUsesMotionBlur = motionBlurEnabled;
     pipelineLinkOptions.maxTraceDepth          = 2;
     pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
+
+
+#if 1
+    std::cout << "HACK: FORCE-ENABLE CURVES!" << std::endl;
+    int degree = 1;
+    bool motion_blur = 0;
+    switch( degree )
+      {
+      case 1:
+        pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_LINEAR;
+        break;
+      case 2:
+        pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_QUADRATIC_BSPLINE;
+        break;
+      case 3:
+        pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_CUBIC_BSPLINE;
+        break;
+      }
+
+    OptixBuiltinISOptions builtinISOptions = {};
+    switch( degree )
+      {
+      case 1:
+        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_LINEAR;
+        break;
+      case 2:
+        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_QUADRATIC_BSPLINE;
+        break;
+      case 3:
+        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_CUBIC_BSPLINE;
+        break;
+      }
+    builtinISOptions.usesMotionBlur = motion_blur;  // enable motion-blur for built-in intersector
+    OPTIX_CHECK( optixBuiltinISModuleGet( optixContext, &moduleCompileOptions, &pipelineCompileOptions,
+                                          &builtinISOptions, &geometry_module ) );
+    
+#endif
   }
   
   void DeviceContext::buildPipeline()

@@ -67,7 +67,7 @@ namespace owl {
     };
 
     /*! constructor - create a new (as yet without vertices, indices,
-        etc) instance of given triangles geom type */
+        etc) instance of given curves geom type */
     CurvesGeom(Context *const context,
                GeomType::SP geometryType);
 

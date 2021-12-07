@@ -44,7 +44,8 @@ namespace owl {
                                          size_t numChildren,
                                          unsigned int _buildFlags)
     : GeomGroup(context,numChildren), 
-    buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags)
+      // buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags)
+      buildFlags(OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS)
   {}
   
   void CurvesGeomGroup::updateMotionBounds()
@@ -76,6 +77,8 @@ namespace owl {
   {
     DeviceData &dd = getDD(device);
 
+    PING;
+    
     if (FULL_REBUILD && !dd.bvhMemory.empty())
       dd.bvhMemory.free();
 
@@ -105,12 +108,13 @@ namespace owl {
     CurvesGeom::SP child0 = geometries[0]->as<CurvesGeom>();
     assert(child0);
     int numKeys = (int)child0->verticesBuffers.size();
+    PRINT(numKeys);
     assert(numKeys > 0);
     const bool hasMotion = (numKeys > 1);
     if (hasMotion) assert(context->motionBlurEnabled);
     
     // ==================================================================
-    // create triangle inputs
+    // create curve inputs
     // ==================================================================
     //! the N build inputs that go into the builder
     std::vector<OptixBuildInput> buildInputs(geometries.size());
@@ -119,6 +123,7 @@ namespace owl {
 
     // now go over all geometries to set up the buildinputs
     for (size_t childID=0;childID<geometries.size();childID++) {
+      PRINT(childID);
       
       // the child wer're setting them with (with sanity checks)
       CurvesGeom::SP curves = geometries[childID]->as<CurvesGeom>();
@@ -143,15 +148,19 @@ namespace owl {
       
       buildInput.type = OPTIX_BUILD_INPUT_TYPE_CURVES;
       auto &curveArray = buildInput.curveArray;
-      
+
+      PRINT(curves->degree);
       switch(curves->degree) {
       case 1:
+        PING;
         curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_LINEAR;
         break;
       case 2:
+        PING;
         curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_QUADRATIC_BSPLINE;
         break;
       case 3:
+        PING;
         curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_CUBIC_BSPLINE;
         break;
       default:
@@ -159,38 +168,36 @@ namespace owl {
       }
       
       curveArray.numPrimitives        = curves->segmentIndicesCount;//1;
+      PRINT(curveArray.numPrimitives);
       curveArray.vertexBuffers        = d_vertices;//vertexBufferPointers;
-      curveArray.numVertices          = curves->vertexCount;//static_cast<uint32_t>( vertices.size() );
+      PRINT(curveArray.vertexBuffers);
+      curveArray.numVertices          = 6*curves->vertexCount;//static_cast<uint32_t>( vertices.size() );
+      PRINT(curves->vertexCount);
       curveArray.vertexStrideInBytes  = sizeof(vec3f);
       curveArray.widthBuffers         = d_widths;//widthsBufferPointers;
+      PRINT(curveArray.widthBuffers);
       curveArray.widthStrideInBytes   = sizeof(float);
       curveArray.normalBuffers        = 0;
       curveArray.normalStrideInBytes  = 0;
       curveArray.indexBuffer          = curvesDD.indicesPointer;//d_segmentIndices;
+      PRINT(curveArray.indexBuffer);
       curveArray.indexStrideInBytes   = sizeof(int);
       curveArray.flag                 = OPTIX_GEOMETRY_FLAG_NONE;
       curveArray.primitiveIndexOffset = 0;
-      curveArray.endcapFlags          = curves->forceCaps
-        ? OPTIX_CURVE_ENDCAP_ON
-        : OPTIX_CURVE_ENDCAP_DEFAULT;
+      curveArray.endcapFlags          = OPTIX_CURVE_ENDCAP_DEFAULT;
+        // curves->forceCaps
+        // ? OPTIX_CURVE_ENDCAP_ON
+        // : OPTIX_CURVE_ENDCAP_DEFAULT;
 
-      // ca.vertexFormat        = OPTIX_VERTEX_FORMAT_FLOAT3;
-      // ca.vertexStrideInBytes = (uint32_t)curves->vertex.stride;
-      // ca.numVertices         = (uint32_t)curves->vertex.count;
-      // ca.vertexBuffers       = d_vertices;
-      
-      // ca.indexFormat         = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-      // ca.indexStrideInBytes  = (uint32_t)curves->index.stride;
-      // ca.numIndexTriplets    = (uint32_t)curves->index.count;
-      // ca.indexBuffer         = curvesDD.indexPointer;
-      // assert(ta.indexBuffer);
-      
       // -------------------------------------------------------
       // sanity check that we don't have too many prims
       // -------------------------------------------------------
       sumPrims += curveArray.numPrimitives;
     }
     
+    // -------------------------------------------------------
+    // sanity check that we don't have too many prims
+    // -------------------------------------------------------
     if (sumPrims > maxPrimsPerGAS) 
       OWL_RAISE("number of prim in user geom group exceeds "
                 "OptiX's MAX_PRIMITIVES_PER_GAS limit");
@@ -203,12 +210,19 @@ namespace owl {
     // first: compute temp memory for bvh
     // ------------------------------------------------------------------
     OptixAccelBuildOptions accelOptions = {};
-    accelOptions.buildFlags = this->buildFlags;
-    
-    accelOptions.motionOptions.numKeys   = numKeys;
-    accelOptions.motionOptions.flags     = 0;
-    accelOptions.motionOptions.timeBegin = 0.f;
-    accelOptions.motionOptions.timeEnd   = 1.f;
+
+    if (0) {
+      accelOptions.motionOptions.numKeys   = numKeys;
+      accelOptions.motionOptions.flags     = 0;
+      accelOptions.motionOptions.timeBegin = 0.f;
+      accelOptions.motionOptions.timeEnd   = 1.f;
+    }
+    accelOptions.buildFlags
+      =
+      // this->buildFlags
+      // | OPTIX_BUILD_FLAG_ALLOW_COMPACTION
+      // |
+      OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS;
     if (FULL_REBUILD)
       accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
     else
@@ -234,7 +248,7 @@ namespace owl {
         ? blasBufferSizes.tempSizeInBytes
         : blasBufferSizes.tempUpdateSizeInBytes;
     LOG("starting to build/refit "
-        << prettyNumber(buildInputs.size()) << " triangle geom groups, "
+        << prettyNumber(buildInputs.size()) << " curve geom groups, "
         << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
         << prettyNumber(tempSize) << "B in temp data");
 
@@ -261,6 +275,7 @@ namespace owl {
         outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
         dd.memPeak += outputBuffer.size();
       } else {
+        PING; PRINT(blasBufferSizes.outputSizeInBytes);
         dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
         dd.memPeak += dd.bvhMemory.size();
         dd.memFinal = dd.bvhMemory.size();

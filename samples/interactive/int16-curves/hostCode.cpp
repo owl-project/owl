@@ -81,6 +81,7 @@ struct Viewer : public owl::viewer::OWLViewer
   std::vector<float> widths;
   std::vector<vec3f> vertices;
   OWLBuffer widthsBuffer, verticesBuffer, segmentIndicesBuffer;
+  int    degree = 2;
   
   bool sbtDirty = true;
 };
@@ -121,6 +122,7 @@ void Viewer::cameraChanged()
   float focal_scale = 10.f;
 
   // ----------- set variables  ----------------------------
+  PING; PRINT((int *)fbPointer);
   owlRayGenSet1ul   (rayGen,"fbPtr",        (uint64_t)fbPointer);
   owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
   owlRayGenSet3f    (rayGen,"camera.pos",   (const owl3f&)camera_pos);
@@ -138,10 +140,9 @@ void Viewer::createScene()
 {
   segmentIndices = std::vector<int>{ 0 };
 
-            // Number of motion keys
-  const int NUM_KEYS = 6;
+  // Number of motion keys
+  const int NUM_KEYS = 1;
   
-  int    degree = 3;
   float  radius = 0.4f;
   for( int i = 0; i < NUM_KEYS; ++i ) {
     // move the y-coordinates based on cosine
@@ -197,6 +198,12 @@ Viewer::Viewer()
   OWLVarDecl curvesGeomVars[] = {
     { "color0", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,color0)},
     { "color1", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,color1)},
+    //
+    { "material.Ka", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,material.Ka) },
+    { "material.Kd", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,material.Kd) },
+    { "material.Ks", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,material.Ks) },
+    { "material.reflectivity", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,material.reflectivity) },
+    { "material.phong_exp", OWL_FLOAT, OWL_OFFSETOF(CurvesGeomData,material.phong_exp) },
     { nullptr }
   };
   OWLGeomType curvesGeomType
@@ -225,17 +232,22 @@ Viewer::Viewer()
   segmentIndicesBuffer 
     = owlDeviceBufferCreate(context,OWL_INT,segmentIndices.size(),segmentIndices.data());
 
+  PRINT(vertices.size()); for (auto vtx : vertices) PRINT(vtx);
+  PRINT(widths.size()); for (auto width : widths) PRINT(width);
+  PRINT(segmentIndices.size()); for (auto idx : segmentIndices) PRINT(idx);
+  
   OWLGeom curvesGeom = owlGeomCreate(context,curvesGeomType);
   owlCurvesSetControlPoints(curvesGeom,vertices.size(),verticesBuffer,widthsBuffer);
   owlCurvesSetSegmentIndices(curvesGeom,segmentIndices.size(),segmentIndicesBuffer);
-
+  owlCurvesSetDegree(curvesGeom,degree,false);
+  
   owlGeomSet3f(curvesGeom,"material.Ka",.35f,.35f,.35f);
   owlGeomSet3f(curvesGeom,"material.Kd",.5f,.5f,.5f);
   owlGeomSet3f(curvesGeom,"material.Ks",1.f,1.f,1.f);
   owlGeomSet3f(curvesGeom,"material.reflectivity",0.f,0.f,0.f);
   owlGeomSet1f(curvesGeom,"material.phong_exp",1.f);
 
-  curvesGeomGroup = owlUserGeomGroupCreate(context,1,&curvesGeom);
+  curvesGeomGroup = owlCurvesGeomGroupCreate(context,1,&curvesGeom);
   owlGroupBuildAccel(curvesGeomGroup);
 
   world
@@ -334,13 +346,17 @@ Viewer::Viewer()
 
 void Viewer::render()
 {
+  // std::cout << "==================================================================" << std::endl;
   if (sbtDirty) {
     owlBuildSBT(context);
     sbtDirty = false;
   }
+  // PRINT(accumID);
   owlParamsSet1i(lp,"accumID",accumID);
   accumID++;
   owlLaunch2D(rayGen,fbSize.x,fbSize.y,lp);
+  // PRINT(fbSize);
+  // PING;
 }
 
 

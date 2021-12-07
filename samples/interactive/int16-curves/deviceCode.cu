@@ -27,7 +27,6 @@ struct PRD {
   Random rng;
   float t_hit;
   vec3f gn, sn;
-  vec3f texCoord;
   struct {
     vec3f result;
     float importance;
@@ -138,6 +137,8 @@ OPTIX_CLOSEST_HIT_PROGRAM(CurvesGeom)()
 
   PRD &prd = owl::getPRD<PRD>();
 
+  printf("I hit something...\n");
+  
   RadianceRay ray;
   ray.origin = optixGetWorldRayOrigin();
   ray.direction = optixGetWorldRayDirection();
@@ -157,11 +158,79 @@ OPTIX_CLOSEST_HIT_PROGRAM(CurvesGeom)()
   phongShade( kd, ka, ks, ffnormal, self.material.phong_exp, self.material.reflectivity );
 }
 
+OPTIX_ANY_HIT_PROGRAM(CurvesGeom)()
+{
+  PRD &prd = owl::getPRD<PRD>();
+  prd.shadow.attenuation = 0.f;
+}
+
 OPTIX_MISS_PROGRAM(miss)()
 {
   const MissProgData &self = owl::getProgramData<MissProgData>();
 
   PRD &prd = owl::getPRD<PRD>();
   prd.radiance.result = self.bg_color;
+}
+
+OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
+{
+  const vec2i launchIndex = owl::getLaunchIndex();
+  const bool dbg =  (launchIndex == vec2i(1200,800)/2);
+  
+  const RayGenData &self = owl::getProgramData<RayGenData>();
+  const auto &lp = optixLaunchParams;
+  const int pixelID = launchIndex.x+self.fbSize.x*launchIndex.y; 
+
+  // printf("pixel %i %i\n",launchIndex.x,launchIndex.y);
+  
+  Random rng(pixelID,lp.accumID);
+  
+  const vec2f screen = (vec2f(launchIndex)+vec2f(rng(),rng())) / vec2f(self.fbSize);
+  RadianceRay ray;
+  ray.origin    
+    = self.camera.pos;
+  ray.direction 
+    = normalize(self.camera.dir_00
+                + screen.u * self.camera.dir_du
+                + screen.v * self.camera.dir_dv);
+#if 0
+  if (dbg) printf("camera DOF %f %f\n",self.camera.focal_scale,self.camera.aperture_radius);
+  vec3f ray_target = ray.origin + self.camera.focal_scale * ray.direction;
+  // lens sampling
+  vec2f sample = square_to_disk(make_float2(rng(), rng()));
+  ray.origin = ray.origin + self.camera.aperture_radius * ( sample.x * normalize( self.camera.dir_du ) +  sample.y * normalize( self.camera.dir_dv ) );
+  ray.direction = normalize(ray_target - ray.origin);
+#endif
+  
+  //ray.time = 0.5f;
+  ray.time = 0.f;
+  
+  vec4f accumColor = 0.f;
+
+  PRD prd;
+  prd.t_hit = 1e20f;
+  prd.radiance.importance = 1.f;
+
+  if (0 && dbg) printf("before trace... (accum %i) org %f %f %f dir %f %f %f\n",lp.accumID,
+                  ray.origin.x,
+                  ray.origin.y,
+                  ray.origin.z,
+                  ray.direction.x,
+                  ray.direction.y,
+                  ray.direction.z
+                  );
+  owl::traceRay(/*accel to trace against*/self.world,
+                /*the ray to trace*/ray,
+                /*prd*/prd,
+                /*only CH*/OPTIX_RAY_FLAG_DISABLE_ANYHIT);
+
+  accumColor += vec4f(prd.radiance.result,1.f);
+
+  if (lp.accumID > 0)
+    accumColor += vec4f(lp.accumBuffer[pixelID]);
+  lp.accumBuffer[pixelID] = accumColor;
+  accumColor *= (1.f/(lp.accumID+1));
+  self.fbPtr[pixelID]
+    = owl::make_rgba(vec3f(accumColor));
 }
 

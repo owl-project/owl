@@ -71,7 +71,10 @@ namespace owl {
   }
 
   RegisteredObject::DeviceData::SP CurvesGeom::createOn(const DeviceContext::SP &device) 
-  { return std::make_shared<DeviceData>(device); }
+  {
+    PING;
+    return std::make_shared<DeviceData>(device);
+  }
 
 
   /*! set the vertex array (if vector size is 1), or set/enable

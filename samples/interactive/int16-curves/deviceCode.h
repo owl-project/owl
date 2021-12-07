@@ -40,7 +40,7 @@ struct BasicLight
 struct Material {
   vec3f Kd, Ks, Ka;
   float phong_exp;
-  float reflectivity;
+  vec3f reflectivity;
 };
 
 struct CurvesGeomData

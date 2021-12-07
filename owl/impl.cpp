@@ -518,6 +518,29 @@ owlUserGeomGroupCreate(OWLContext _context,
 }
 
 OWL_API OWLGroup
+owlCurvesGeomGroupCreate(OWLContext _context,
+                       size_t numGeometries,
+                       OWLGeom *initValues,
+                       unsigned int buildFlags)
+{
+  LOG_API_CALL();
+  APIContext::SP context = checkGet(_context);
+  GeomGroup::SP  group   = context->curvesGeomGroupCreate(numGeometries, buildFlags);
+  assert(group);
+    
+  OWLGroup _group = (OWLGroup)context->createHandle(group);
+  if (initValues) {
+    for (size_t i = 0; i < numGeometries; i++) {
+      Geom::SP child = ((APIHandle *)initValues[i])->get<CurvesGeom>();
+      assert(child);
+      group->setChild(i, child);
+    }
+  }
+  assert(_group);
+  return _group;
+}
+
+OWL_API OWLGroup
 owlInstanceGroupCreate(OWLContext _context,
                          
                        /*! number of instances in this group */
