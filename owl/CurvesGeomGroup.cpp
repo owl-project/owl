@@ -44,8 +44,11 @@ namespace owl {
                                          size_t numChildren,
                                          unsigned int _buildFlags)
     : GeomGroup(context,numChildren), 
-      // buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags)
-      buildFlags(OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS)
+      buildFlags(( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags)
+                 |
+                 OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS
+                 )
+      // buildFlags(OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS)
   {}
   
   void CurvesGeomGroup::updateMotionBounds()
@@ -77,8 +80,6 @@ namespace owl {
   {
     DeviceData &dd = getDD(device);
 
-    PING;
-    
     if (FULL_REBUILD && !dd.bvhMemory.empty())
       dd.bvhMemory.free();
 
@@ -108,7 +109,6 @@ namespace owl {
     CurvesGeom::SP child0 = geometries[0]->as<CurvesGeom>();
     assert(child0);
     int numKeys = (int)child0->verticesBuffers.size();
-    PRINT(numKeys);
     assert(numKeys > 0);
     const bool hasMotion = (numKeys > 1);
     if (hasMotion) assert(context->motionBlurEnabled);
@@ -123,8 +123,6 @@ namespace owl {
 
     // now go over all geometries to set up the buildinputs
     for (size_t childID=0;childID<geometries.size();childID++) {
-      PRINT(childID);
-      
       // the child wer're setting them with (with sanity checks)
       CurvesGeom::SP curves = geometries[childID]->as<CurvesGeom>();
       assert(curves);
@@ -151,18 +149,14 @@ namespace owl {
 
       auto curvesGT = curves->geomType->as<CurvesGeomType>();//getTypeDD(device);
       
-      PRINT(curvesGT->degree);
       switch(curvesGT->degree) {
       case 1:
-        PING;
         curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_LINEAR;
         break;
       case 2:
-        PING;
         curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_QUADRATIC_BSPLINE;
         break;
       case 3:
-        PING;
         curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_CUBIC_BSPLINE;
         break;
       default:
@@ -170,26 +164,22 @@ namespace owl {
       }
       
       curveArray.numPrimitives        = curves->segmentIndicesCount;//1;
-      PRINT(curveArray.numPrimitives);
       curveArray.vertexBuffers        = d_vertices;//vertexBufferPointers;
-      PRINT(curveArray.vertexBuffers);
       curveArray.numVertices          = 6*curves->vertexCount;//static_cast<uint32_t>( vertices.size() );
-      PRINT(curves->vertexCount);
       curveArray.vertexStrideInBytes  = sizeof(vec3f);
       curveArray.widthBuffers         = d_widths;//widthsBufferPointers;
-      PRINT(curveArray.widthBuffers);
       curveArray.widthStrideInBytes   = sizeof(float);
       curveArray.normalBuffers        = 0;
       curveArray.normalStrideInBytes  = 0;
       curveArray.indexBuffer          = curvesDD.indicesPointer;//d_segmentIndices;
-      PRINT(curveArray.indexBuffer);
       curveArray.indexStrideInBytes   = sizeof(int);
       curveArray.flag                 = OPTIX_GEOMETRY_FLAG_NONE;
       curveArray.primitiveIndexOffset = 0;
-      curveArray.endcapFlags          = OPTIX_CURVE_ENDCAP_DEFAULT;
-        // curves->forceCaps
-        // ? OPTIX_CURVE_ENDCAP_ON
-        // : OPTIX_CURVE_ENDCAP_DEFAULT;
+      curveArray.endcapFlags          = //OPTIX_CURVE_ENDCAP_DEFAULT;
+        
+      curvesGT->forceCaps
+        ? OPTIX_CURVE_ENDCAP_ON
+        : OPTIX_CURVE_ENDCAP_DEFAULT;
 
       // -------------------------------------------------------
       // sanity check that we don't have too many prims
@@ -213,7 +203,7 @@ namespace owl {
     // ------------------------------------------------------------------
     OptixAccelBuildOptions accelOptions = {};
 
-    if (0) {
+    if (numKeys > 1) {
       accelOptions.motionOptions.numKeys   = numKeys;
       accelOptions.motionOptions.flags     = 0;
       accelOptions.motionOptions.timeBegin = 0.f;
@@ -221,10 +211,11 @@ namespace owl {
     }
     accelOptions.buildFlags
       =
-      // this->buildFlags
+      this->buildFlags
       // | OPTIX_BUILD_FLAG_ALLOW_COMPACTION
       // |
-      OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS;
+      // OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS
+      ;
     if (FULL_REBUILD)
       accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
     else
@@ -277,7 +268,6 @@ namespace owl {
         outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
         dd.memPeak += outputBuffer.size();
       } else {
-        PING; PRINT(blasBufferSizes.outputSizeInBytes);
         dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
         dd.memPeak += dd.bvhMemory.size();
         dd.memFinal = dd.bvhMemory.size();

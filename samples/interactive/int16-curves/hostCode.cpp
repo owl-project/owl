@@ -81,7 +81,8 @@ struct Viewer : public owl::viewer::OWLViewer
   std::vector<float> widths;
   std::vector<vec3f> vertices;
   OWLBuffer widthsBuffer, verticesBuffer, segmentIndicesBuffer;
-  int    degree = 1;
+  int    degree = 3;
+  bool   forceCaps = false;
   
   bool sbtDirty = true;
 };
@@ -122,7 +123,6 @@ void Viewer::cameraChanged()
   float focal_scale = 10.f;
 
   // ----------- set variables  ----------------------------
-  PING; PRINT((int *)fbPointer);
   owlRayGenSet1ul   (rayGen,"fbPtr",        (uint64_t)fbPointer);
   owlRayGenSet2i    (rayGen,"fbSize",       (const owl2i&)fbSize);
   owlRayGenSet3f    (rayGen,"camera.pos",   (const owl3f&)camera_pos);
@@ -180,6 +180,7 @@ void Viewer::createScene()
 
 Viewer::Viewer()
 {
+  setTitle("sample viewer: int16-curves");
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
   owlContextSetRayTypeCount(context,2);
@@ -232,22 +233,25 @@ Viewer::Viewer()
     = owlDeviceBufferCreate(context,OWL_FLOAT,widths.size(),widths.data());
   segmentIndicesBuffer 
     = owlDeviceBufferCreate(context,OWL_INT,segmentIndices.size(),segmentIndices.data());
-
-  PRINT(vertices.size()); for (auto vtx : vertices) PRINT(vtx);
-  PRINT(widths.size()); for (auto width : widths) PRINT(width);
-  PRINT(segmentIndices.size()); for (auto idx : segmentIndices) PRINT(idx);
   
   OWLGeom curvesGeom = owlGeomCreate(context,curvesGeomType);
   owlCurvesSetControlPoints(curvesGeom,vertices.size(),verticesBuffer,widthsBuffer);
   owlCurvesSetSegmentIndices(curvesGeom,segmentIndices.size(),segmentIndicesBuffer);
-  owlCurvesSetDegree(curvesGeomType,degree,false);
-  
+  owlCurvesSetDegree(curvesGeomType,degree,forceCaps);
+
+#if 1
+  owlGeomSet3f(curvesGeom,"material.Ka",.15f,.15f,.15f);
+  owlGeomSet3f(curvesGeom,"material.Kd",.25f,.5f,.35f);
+  owlGeomSet3f(curvesGeom,"material.Ks",.4f,.4f,.4f);
+  owlGeomSet3f(curvesGeom,"material.reflectivity",0.f,0.f,0.f);
+  owlGeomSet1f(curvesGeom,"material.phong_exp",20.f);
+#else
   owlGeomSet3f(curvesGeom,"material.Ka",.35f,.35f,.35f);
   owlGeomSet3f(curvesGeom,"material.Kd",.5f,.5f,.5f);
   owlGeomSet3f(curvesGeom,"material.Ks",1.f,1.f,1.f);
   owlGeomSet3f(curvesGeom,"material.reflectivity",0.f,0.f,0.f);
   owlGeomSet1f(curvesGeom,"material.phong_exp",1.f);
-
+#endif
   curvesGeomGroup = owlCurvesGeomGroupCreate(context,1,&curvesGeom);
   owlGroupBuildAccel(curvesGeomGroup);
 

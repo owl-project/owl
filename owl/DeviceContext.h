@@ -119,7 +119,11 @@ namespace owl {
     
     /*! optix builtin modules for curves of degree 1, 2, and 3; only
         get loaded once the user calls owlEnableCurves() */
-    OptixModule                 curvesModule[3]        = { nullptr, nullptr, nullptr };
+    OptixModule                 curvesModule[2][3]
+    = {
+       { nullptr, nullptr, nullptr },
+       { nullptr, nullptr, nullptr }
+    };
 
     /*! the owl context that this device is in */
     Context *const parent;

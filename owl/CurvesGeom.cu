@@ -54,7 +54,7 @@ namespace owl {
 
 
     // ----------- intersect from builtin module -----------
-    pgDesc.hitgroup.moduleIS = device->curvesModule[parent->degree-1];
+    pgDesc.hitgroup.moduleIS = device->curvesModule[parent->forceCaps][parent->degree-1];
     pgDesc.hitgroup.entryFunctionNameIS = /* default for built-ins */0;
   }
   

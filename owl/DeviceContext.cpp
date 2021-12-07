@@ -407,10 +407,11 @@ namespace owl {
   void DeviceContext::buildCurvesModules()
   {
     SetActiveGPU forLifeTime(this);
-    
+
+    for (int forceCap=0;forceCap<2;forceCap++) {
     for (int degree=1;degree<=3;degree++) {
-      if (curvesModule[degree-1] != nullptr)
-        optixModuleDestroy(curvesModule[degree-1]);
+      if (curvesModule[forceCap][degree-1] != nullptr)
+        optixModuleDestroy(curvesModule[forceCap][degree-1]);
       
       OptixBuiltinISOptions builtinISOptions = {};
       switch (degree) {
@@ -425,10 +426,11 @@ namespace owl {
         break;
       }
       builtinISOptions.usesMotionBlur = parent->motionBlurEnabled;  // enable motion-blur for built-in intersector
+      builtinISOptions.curveEndcapFlags = forceCap;
+      
       OPTIX_CHECK(optixBuiltinISModuleGet(optixContext, &moduleCompileOptions, &pipelineCompileOptions,
-                                          &builtinISOptions, &curvesModule[degree-1]));
-      PING;
-      PRINT(curvesModule[degree-1]);
+                                          &builtinISOptions, &curvesModule[forceCap][degree-1]));
+    }
     }
 
   }
