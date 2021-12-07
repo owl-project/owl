@@ -100,6 +100,8 @@ namespace owl {
     void destroyPipeline();
     void buildPipeline();
 
+    void enableCurves();
+    
     /*! collects all compiled programs during 'buildPrograms', such
         that all active progs can then be passed to optix durign
         pipeline creation */
@@ -114,6 +116,10 @@ namespace owl {
     OptixModuleCompileOptions   moduleCompileOptions   = {};
     OptixPipeline               pipeline               = nullptr;
     SBT                         sbt                    = {};
+    
+    /*! optix builtin modules for curves of degree 1, 2, and 3; only
+        get loaded once the user calls owlEnableCurves() */
+    OptixModule                 curvesModule[3]        = { nullptr, nullptr, nullptr };
 
     /*! the owl context that this device is in */
     Context *const parent;

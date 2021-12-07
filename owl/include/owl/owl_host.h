@@ -370,6 +370,13 @@ owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
 OWL_API void
 owlContextDestroy(OWLContext context);
 
+/*! tell the context/pipeline to enable the support for curves
+    geometries; this _must_ be called when using curves geometries. If
+    you want to use _both_ motion blur and curves, motion blur has to
+    be enabled _before_ enableing curves */
+OWL_API void
+owlEnableCurves(OWLContext _context);
+
 /*! enable motion blur for this context. this _has_ to be called
     before creating any geometries, groups, etc, and before the
     pipeline gets compiled. Ie, it shold be called _right_ after
@@ -541,11 +548,15 @@ owlTrianglesGeomGroupCreate(OWLContext context,
 
   \param arrayOfChildGeoms A array of 'numGeometries' child
   geometries. Every geom in this array must be a valid owl geometry
-  created with owlGeomCreate, and must be of a OWL_GEOM_TRIANGLES
+  created with owlGeomCreate, and must be of a OWL_GEOM_CURVES
   type.
 
   \param buildFlags A combination of OptixBuildFlags.  The default
   of 0 means to use OWL default build flags.
+
+  Note that in order to use curves geometries you _have_ to call
+  owlEnableCurves() before curves are used; in particular, curves
+  _have_ to already be enabled when the pipeline gets compiled.
 */
 OWL_API OWLGroup
 owlCurvesGeomGroupCreate(OWLContext context,

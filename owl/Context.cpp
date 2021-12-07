@@ -577,6 +577,14 @@ namespace owl {
     motionBlurEnabled = true;
   }
 
+  void Context::enableCurves()
+  {
+    if (!curvesEnabled)
+      for (auto device : getDevices())
+        device->enableMotionBlur();
+    curvesEnabled = true;
+  }
+
   void Context::setNumAttributeValues(size_t numAttributeValues)
   {
     for (auto device : getDevices()) {

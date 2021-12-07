@@ -119,4 +119,19 @@ namespace owl {
     }
   }
 
+  /*! fill in an OptixProgramGroup descriptor with the module and
+    program names for this type */
+  void CurvesGeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
+                                              GeomType *_parent,
+                                              int rt)
+  {
+    GeomType::DeviceData::fillPGDesc(pgDesc,_parent,rt);
+    CurvesGeomType *parent = (CurvesGeomType*)_parent;
+
+
+    // ----------- intersect from builtin module -----------
+    pgDesc.hitgroup.moduleIS = device->curvesModule[parent->degree-1];
+    pgDesc.hitgroup.entryFunctionNameIS = /* default for built-ins */0;
+  }
+  
 } // ::owl

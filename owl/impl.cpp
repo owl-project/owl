@@ -169,6 +169,13 @@ owlEnableMotionBlur(OWLContext _context)
   checkGet(_context)->enableMotionBlur();
 }
   
+OWL_API void
+owlEnableCurves(OWLContext _context)
+{
+  LOG_API_CALL();
+  checkGet(_context)->enableCurves();
+}
+  
 OWL_API void owlBuildSBT(OWLContext _context,
                          OWLBuildSBTFlags flags)
 {

@@ -338,24 +338,6 @@ namespace owl {
         pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_CUBIC_BSPLINE;
         break;
       }
-
-    OptixBuiltinISOptions builtinISOptions = {};
-    switch( degree )
-      {
-      case 1:
-        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_LINEAR;
-        break;
-      case 2:
-        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_QUADRATIC_BSPLINE;
-        break;
-      case 3:
-        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_CUBIC_BSPLINE;
-        break;
-      }
-    builtinISOptions.usesMotionBlur = motion_blur;  // enable motion-blur for built-in intersector
-    OPTIX_CHECK( optixBuiltinISModuleGet( optixContext, &moduleCompileOptions, &pipelineCompileOptions,
-                                          &builtinISOptions, &geometry_module ) );
-    
 #endif
   }
   
@@ -417,6 +399,32 @@ namespace owl {
     buildHitGroupPrograms();
   }
 
+  void DeviceContext::enableCurves()
+  {
+    for (int degree=1;degree<=3;degree++) {
+      if (curvesModule[degree-1] != nullptr)
+        optixModuleDestroy(curvesModule[degree-1]);
+      
+      OptixBuiltinISOptions builtinISOptions = {};
+      switch (degree) {
+      case 1:
+        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_LINEAR;
+        break;
+      case 2:
+        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_QUADRATIC_BSPLINE;
+        break;
+      case 3:
+        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_CUBIC_BSPLINE;
+        break;
+      }
+      builtinISOptions.usesMotionBlur = parent->motionBlurEnabled;  // enable motion-blur for built-in intersector
+      OPTIX_CHECK(optixBuiltinISModuleGet(optixContext, &moduleCompileOptions, &pipelineCompileOptions,
+                                          &builtinISOptions, &curvesModule[degree-1]));
+      PING;
+      PRINT(curvesModule[degree-1]);
+    }      
+  }
+  
   void DeviceContext::destroyPrograms()
   {
     SetActiveGPU forLifeTime(this);

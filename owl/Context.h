@@ -286,8 +286,12 @@ namespace owl {
 #endif
     
     /*! by default motion blur is off, as it costs performacne - set
-      via enableMotimBlur() */
+      via owlEnableMotionBlur() */
     bool motionBlurEnabled = false;
+
+    /*! by default support for curves is off, as it costs performacne - set
+      via owlEnableCurves() */
+    bool curvesEnabled = false;
 
     /* Number of attributes for writing data between Intersection and ClosestHit */
     int numAttributeValues = 2;
