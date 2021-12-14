@@ -138,9 +138,10 @@ owlContextSetBoundLaunchParamValues(OWLContext _context,
 
   '0' means 'no instancing allowed, only bottom-level accels; 
   
-  '1' means 'at most one layer of instances' (i.e., a two-level scene),
-  where the 'root' world rays are traced against can be an instance
-  group, but every child in that instance group is a geometry group.
+  '1' means 'at most one layer of instances' (i.e., a two-level scene).
+  In other words, if the value is '1', the children of the 'root' world
+  OwlGroup we trace against can be instance groups, but every child of
+  those instance groups is a geometry group.
 
   'N>1" means "up to N layers of instances are allowed.
 
