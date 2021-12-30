@@ -62,7 +62,7 @@ function(embed_ptx)
   target_sources(${PTX_TARGET} PRIVATE ${EMBED_PTX_SOURCES})
   target_link_libraries(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_LINK_LIBRARIES})
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_PTX_COMPILATION ON)
-  set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_ARCHITECTURES OFF)
+  set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_ARCHITECTURES "50")
   target_compile_options(${PTX_TARGET} PRIVATE "-lineinfo")
 
   ## Create command to run the bin2c via the CMake script ##
