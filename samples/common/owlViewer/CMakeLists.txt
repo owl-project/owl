@@ -24,7 +24,7 @@
 #find_package(OpenGL QUIET)
 
 set(OpenGL_GL_PREFERENCE "LEGACY")
-find_package(OpenGL REQUIRED)
+find_package(OpenGL REQUIRED OPTIONAL_COMPONENTS OpenGL)
 
 add_library(owl_viewer STATIC)
 
@@ -42,11 +42,16 @@ target_sources(owl_viewer PRIVATE
   FlyMode.cpp
 )
 
+if(TARGET OpenGL::OpenGL)
+  target_link_libraries(owl_viewer PUBLIC OpenGL::OpenGL)
+else()
+  target_link_libraries(owl_viewer PUBLIC OpenGL::GL)
+endif()
+
 target_link_libraries(owl_viewer
   PUBLIC
     owl::owl
     glfw
-    OpenGL::GL
     stb_image
 )
 

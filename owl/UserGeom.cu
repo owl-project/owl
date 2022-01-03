@@ -172,6 +172,10 @@ namespace owl {
   void UserGeom::executeBoundsProgOnPrimitives(const DeviceContext::SP &device)
   {
     SetActiveGPU activeGPU(device);
+    // if geom does't contain any prims we would run into issue
+    // launching zero-sized bounds prog kernel below, so let's just
+    // exit here.
+    if (primCount == 0) return;
       
     std::vector<uint8_t> userGeomData(geomType->varStructSize);
     
