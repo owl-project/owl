@@ -45,12 +45,25 @@ namespace owl {
     
     OWL_CUDA_CHECK(cudaStreamCreate(&stream));
     deviceMemory.alloc(dataSize);
+# if LAUNCHPARAMS_USE_PINNED_MEM
+    if (pinnedHostMemorySize != dataSize) {
+      if (pinnedHostMemory)
+        cudaFreeHost(pinnedHostMemory);
+      cudaMallocHost(&pinnedHostMemory,dataSize);
+      pinnedHostMemorySize = dataSize;
+    }
+#else
     hostMemory.resize(dataSize);
+#endif
   }
 
   LaunchParams::DeviceData::~DeviceData()
   {
     cudaStreamDestroy(stream);
+# if LAUNCHPARAMS_USE_PINNED_MEM
+    if (pinnedHostMemory)
+      cudaFreeHost(pinnedHostMemory);
+#endif
   }
   
   // ------------------------------------------------------------------

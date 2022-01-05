@@ -163,8 +163,13 @@ namespace owl {
     RayGen::DeviceData       &rgDD = getDD(device);
     LaunchParams::DeviceData &lpDD = lp->getDD(device);
     
+# if LAUNCHPARAMS_USE_PINNED_MEM
+    lp->writeVariables(lpDD.pinnedHostMemory,device);
+    lpDD.deviceMemory.uploadAsync(lpDD.pinnedHostMemory,lpDD.stream);
+#else
     lp->writeVariables(lpDD.hostMemory.data(),device);
     lpDD.deviceMemory.uploadAsync(lpDD.hostMemory.data(),lpDD.stream);
+#endif
 
     auto &sbt = lpDD.sbt;
 

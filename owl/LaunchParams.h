@@ -19,6 +19,8 @@
 #include "SBTObject.h"
 #include "Module.h"
 
+#define LAUNCHPARAMS_USE_PINNED_MEM 1
+
 namespace owl {
 
   /*! describes a given *type* of launch params - basically the set of
@@ -60,9 +62,17 @@ namespace owl {
 
       /*! host-size memory for the launch paramters - we have a
           host-side copy, too, so we can leave the launch2D call
-          without having to first wait for the cudaMemcpy to
-          complete */
+          without having to first wait for the cudaMemcpy to complete
+      */
+# if LAUNCHPARAMS_USE_PINNED_MEM
+      /* iw, jan 5, 2022 - to actually allow ASYNC uploads we have to
+         use pinned mem here, or cudaMemcpyAsync *will* implicitly
+         sync, whether we call the "Async" version or not */
+      uint8_t *pinnedHostMemory = 0;
+      size_t pinnedHostMemorySize = 0;
+#else
       std::vector<uint8_t> hostMemory;
+#endif
       
       /*! the cuda device memory we copy the launch params to */
       DeviceMemory         deviceMemory;
