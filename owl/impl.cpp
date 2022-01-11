@@ -498,11 +498,12 @@ OWL_API OWLGroup
 owlUserGeomGroupCreate(OWLContext _context,
                        size_t numGeometries,
                        OWLGeom *initValues,
-                       unsigned int buildFlags)
+                       unsigned int buildFlags,
+                       uint32_t numKeys)
 {
   LOG_API_CALL();
   APIContext::SP context = checkGet(_context);
-  GeomGroup::SP  group   = context->userGeomGroupCreate(numGeometries, buildFlags);
+  GeomGroup::SP  group   = context->userGeomGroupCreate(numGeometries, buildFlags, numKeys);
   assert(group);
     
   OWLGroup _group = (OWLGroup)context->createHandle(group);
@@ -882,6 +883,14 @@ owlGeomSetPrimCount(OWLGeom _geom,
   geom->setPrimCount(primCount);
 }
 
+  OWL_API void
+  owlGeomSetNumMotionKeys(OWLGeom _geom,
+                      uint32_t  numKeys)
+  {
+    assert(_geom);
+    UserGeom::SP geom = ((APIHandle *)_geom)->get<UserGeom>();
+    geom->setNumMotionKeys(numKeys);
+  }
   
 OWL_API OWLModule owlModuleCreate(OWLContext _context,
                                   const char *ptxCode)

@@ -500,12 +500,14 @@ owlMissProgSet(OWLContext  context,
 
   \param buildFlags A combination of OptixBuildFlags.  The default
   of 0 means to use OWL default build flags.
+  \param numKeys the number of motion blur keys to use. The default is 2
 */
 OWL_API OWLGroup
 owlUserGeomGroupCreate(OWLContext context,
                        size_t     numGeometries,
                        OWLGeom   *arrayOfChildGeoms,
-                       unsigned int buildFlags OWL_IF_CPP(=0));
+                       unsigned int buildFlags OWL_IF_CPP(=0),
+                       uint32_t   numKeys OWL_IF_CPP(=2));
 
 
 // ------------------------------------------------------------------
@@ -877,6 +879,11 @@ owlGeomTypeSetBoundsProg(OWLGeomType type,
 OWL_API void
 owlGeomSetPrimCount(OWLGeom geom,
                     size_t  primCount);
+/*! set the number of motion keys to use for the given uesr geometry. 
+  this _has_ to be set before the group(s) that this geom is used in get built */
+OWL_API void
+owlGeomSetNumMotionKeys(OWLGeom geom,
+                    uint32_t  numKeys);
 
 // -------------------------------------------------------
 // VariableGet for the various types
