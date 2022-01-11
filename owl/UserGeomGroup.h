@@ -26,8 +26,9 @@ namespace owl {
   struct UserGeomGroup : public GeomGroup {
 
     UserGeomGroup(Context *const context,
-                   size_t numChildren,
-                   unsigned int buildFlags);
+                   size_t numChildren, 
+                   unsigned int buildFlags,
+                   uint32_t numKeys);
     virtual std::string toString() const { return "UserGeomGroup"; }
 
     /*! build() and refit() share most of their code; this functoin
@@ -49,6 +50,8 @@ namespace owl {
     protected:
     const unsigned int buildFlags;
 
+    /*! number of motion blur keys */
+    uint32_t numKeys = 1;
   };
 
 } // ::owl

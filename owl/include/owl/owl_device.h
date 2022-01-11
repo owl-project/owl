@@ -233,13 +233,16 @@ namespace owl {
   inline __device__                                                     \
   void __boundsFunc__##progName(const void *geomData,                   \
                                 owl::common::box3f &bounds,             \
-                                const int32_t primID);                  \
+                                const int32_t primID,                   \
+                                const int32_t key);                     \
                                                                         \
   /* the '__global__' kernel we can get a function handle on */         \
   extern "C" __global__                                                 \
-  void __boundsFuncKernel__##progName(const void  *geomData,            \
-                         owl::common::box3f *const boundsArray,         \
-                                      const uint32_t numPrims)          \
+  void __boundsFuncKernel__##progName(                                  \
+    const void  *geomData,                                              \
+    owl::common::box3f *const boundsArray,                              \
+    const uint32_t numPrims,                                            \
+    const uint32_t key)                                                 \
   {                                                                     \
     uint32_t blockIndex                                                 \
       = blockIdx.x                                                      \
@@ -249,7 +252,11 @@ namespace owl {
       = threadIdx.x + blockDim.x*threadIdx.y                            \
       + blockDim.x*blockDim.y*blockIndex;                               \
     if (primID < numPrims) {                                            \
-      __boundsFunc__##progName(geomData,boundsArray[primID],primID);    \
+      __boundsFunc__##progName(                                         \
+        geomData,                                                       \
+        boundsArray[primID],                                            \
+        primID,                                                         \
+        key);                                                           \
     }                                                                   \
   }                                                                     \
                                                                         \

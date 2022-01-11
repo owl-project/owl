@@ -291,10 +291,10 @@ namespace owl {
     return gg;
   }
   
-  GeomGroup::SP Context::userGeomGroupCreate(size_t numChildren, unsigned int buildFlags)
+  GeomGroup::SP Context::userGeomGroupCreate(size_t numChildren, unsigned int buildFlags, unsigned int numKeys)
   {
     GeomGroup::SP gg
-      = std::make_shared<UserGeomGroup>(this,numChildren,buildFlags);
+      = std::make_shared<UserGeomGroup>(this,numChildren,buildFlags,numKeys);
     gg->createDeviceData(getDevices());
     return gg;
   }

@@ -33,9 +33,11 @@ namespace owl {
   
   UserGeomGroup::UserGeomGroup(Context *const context,
                                size_t numChildren,
-                               unsigned int _buildFlags)
-    : GeomGroup(context,numChildren),
-    buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags)
+                               unsigned int _buildFlags,
+                               uint32_t _numKeys)
+    : GeomGroup(context,numChildren), 
+    buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags),
+    numKeys(_numKeys)
   {}
 
   void UserGeomGroup::buildOrRefit(bool FULL_REBUILD)
@@ -104,10 +106,14 @@ namespace owl {
     std::vector<OptixBuildInput> userGeomInputs(geometries.size());
     /*! *arrays* of the vertex pointers - the buildinputs contain
      *pointers* to the pointers, so need a temp copy here */
-    std::vector<CUdeviceptr> boundsPointers(geometries.size());
+    std::vector<std::vector<CUdeviceptr>> boundsPointers(numKeys);
+    for (uint32_t i = 0; i < numKeys; ++i) {
+      boundsPointers[i] = std::vector<CUdeviceptr>(geometries.size());
+    }
 
     // for now we use the same flags for all geoms
     std::vector<uint32_t> userGeomInputFlags(geometries.size());
+    std::vector<std::vector<CUdeviceptr>> d_boundsList;
 
     // now go over all geometries to set up the buildinputs
     for (size_t childID=0;childID<geometries.size();childID++) {
@@ -122,21 +128,28 @@ namespace owl {
                   "OptiX's MAX_PRIMITIVES_PER_GAS limit");
 
       UserGeom::DeviceData &ugDD = child->getDD(device);
-      
-      CUdeviceptr     &d_bounds = boundsPointers[childID];
+
       OptixBuildInput &userGeomInput = userGeomInputs[childID];
 
-      assert("user geom is either empty, or has valid bounds buffer"
-             && ((child->primCount == 0) || ugDD.internalBufferForBoundsProgram.alloced()));
-      d_bounds = (CUdeviceptr)ugDD.internalBufferForBoundsProgram.get();
-      
+      assert("user geom has enough motion keys" && ugDD.internalBufferForBoundsProgram.size() == numKeys);
+      for (uint32_t i = 0; i < numKeys; ++i) {
+        assert("user geom has valid bounds buffer" && ugDD.internalBufferForBoundsProgram[i].alloced());
+        boundsPointers[i][childID] = (CUdeviceptr)ugDD.internalBufferForBoundsProgram[i].get();
+      }
+
       userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
 #if OPTIX_VERSION >= 70100
       auto &aa = userGeomInput.customPrimitiveArray;
 #else
       auto &aa = userGeomInput.aabbArray;
 #endif
-      aa.aabbBuffers   = (child->primCount == 0) ? nullptr : &d_bounds;
+      
+      std::vector<CUdeviceptr> bounds;
+      for (uint32_t i = 0; i < numKeys; ++i) {
+        bounds.push_back(boundsPointers[i][childID]);
+      }
+      d_boundsList.push_back(bounds);
+      aa.aabbBuffers   = (CUdeviceptr*)d_boundsList[childID].data();
       aa.numPrimitives = (uint32_t)child->primCount;
       aa.strideInBytes = sizeof(box3f);
       aa.primitiveIndexOffset = 0;
@@ -165,8 +178,10 @@ namespace owl {
     // ------------------------------------------------------------------
     OptixAccelBuildOptions accelOptions = {};
     accelOptions.buildFlags = this->buildFlags;
-
-    accelOptions.motionOptions.numKeys  = 1;
+    accelOptions.motionOptions.numKeys  = numKeys;
+    accelOptions.motionOptions.timeBegin = 0.f;
+    accelOptions.motionOptions.timeEnd   = 1.f;
+    accelOptions.motionOptions.flags = OPTIX_MOTION_FLAG_START_VANISH;
     if (FULL_REBUILD)
       accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
     else
@@ -318,6 +333,7 @@ namespace owl {
     // ==================================================================
     // finish - clean up
     // ==================================================================
+    tempBuffer.free();
 
     LOG_OK("successfully built user geom group accel");
 
@@ -329,9 +345,11 @@ namespace owl {
       
       UserGeom::DeviceData &ugDD = child->getDD(device);
       
-      sumBoundsMem += ugDD.internalBufferForBoundsProgram.sizeInBytes;
-      if (ugDD.internalBufferForBoundsProgram.alloced())
-        ugDD.internalBufferForBoundsProgram.free();
+      for (uint32_t i = 0; i < numKeys; ++i) {
+        sumBoundsMem += ugDD.internalBufferForBoundsProgram[i].sizeInBytes;
+        if (ugDD.internalBufferForBoundsProgram[i].alloced())
+          ugDD.internalBufferForBoundsProgram[i].free();
+      }
     }
     if (FULL_REBUILD)
       dd.memPeak += sumBoundsMem;

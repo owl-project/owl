@@ -31,47 +31,7 @@ namespace owl {
               << "#owl(" << device->ID << "): "                 \
               << message << OWL_TERMINAL_DEFAULT << std::endl
 
-  __device__ static float atomicMax(float* address, float val)
-  {
-    int* address_as_i = (int*) address;
-    int old = *address_as_i, assumed;
-    do {
-      assumed = old;
-      old = ::atomicCAS(address_as_i, assumed,
-                        __float_as_int(::fmaxf(val, __int_as_float(assumed))));
-    } while (assumed != old);
-    return __int_as_float(old);
-  }
-  
-  __device__ static float atomicMin(float* address, float val)
-  {
-    int* address_as_i = (int*) address;
-    int old = *address_as_i, assumed;
-    do {
-      assumed = old;
-      old = ::atomicCAS(address_as_i, assumed,
-                        __float_as_int(::fminf(val, __int_as_float(assumed))));
-    } while (assumed != old);
-    return __int_as_float(old);
-  }
-  
-  __global__ void computeBoundsOfPrimBounds(box3f *d_bounds,
-                                            const box3f *d_primBounds,
-                                            size_t count)
-  {
-    int tid = blockDim.x * blockIdx.x + threadIdx.x;
-    if (tid >= count) return;
 
-    box3f box = d_primBounds[tid];
-    if (!box.empty()) {
-      atomicMin(&d_bounds->lower.x,box.lower.x);
-      atomicMin(&d_bounds->lower.y,box.lower.y);
-      atomicMin(&d_bounds->lower.z,box.lower.z);
-      atomicMax(&d_bounds->upper.x,box.upper.x);
-      atomicMax(&d_bounds->upper.y,box.upper.y);
-      atomicMax(&d_bounds->upper.z,box.upper.z);
-    }
-  }
                                           
   /*! construct a new device-data for this type */
   UserGeomType::DeviceData::DeviceData(const DeviceContext::SP &device)
@@ -100,33 +60,7 @@ namespace owl {
   std::string UserGeom::toString() const
   { return "UserGeom"; }
   
-  /*! call a cuda kernel that computes the bounds of the vertex
-      buffers. note we alwyas (and only) do this on the first GPU */
-  void UserGeom::computeBounds(box3f bounds[2])
-  {
-    int numThreads = 1024;
-    int numBlocks = int((primCount + numThreads - 1) / numThreads);
 
-    DeviceContext::SP device = context->getDevices()[0];
-    SetActiveGPU forLifeTime(device);
-
-    DeviceMemory d_bounds;
-    d_bounds.alloc(sizeof(box3f));
-    bounds[0] = bounds[1] = box3f();
-    d_bounds.upload(bounds);
-
-    DeviceData &dd = getDD(device);
-    
-    computeBoundsOfPrimBounds<<<numBlocks,numThreads>>>
-      (((box3f*)d_bounds.get())+0,
-       (box3f *)dd.internalBufferForBoundsProgram.get(),
-       primCount);
-    OWL_CUDA_SYNC_CHECK();
-    d_bounds.download(&bounds[0]);
-    d_bounds.free();
-    OWL_CUDA_SYNC_CHECK();
-    bounds[1] = bounds[0];
-  }
 
   UserGeomType::UserGeomType(Context *const context,
                              size_t varStructSize,
@@ -147,6 +81,10 @@ namespace owl {
   void UserGeom::setPrimCount(size_t count)
   {
     primCount = count;
+  }
+  void UserGeom::setNumMotionKeys(uint32_t _numKeys)
+  {
+    numKeys = _numKeys;
   }
 
   /*! set intersection program to run for this type and given ray type */
@@ -183,9 +121,11 @@ namespace owl {
     tempMem.alloc(geomType->varStructSize);
     
     DeviceData &dd = getDD(device);
-    dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
-    // dd.internalBufferForBoundsProgram.allocManaged(primCount*sizeof(box3f));
-
+    dd.internalBufferForBoundsProgram.resize(numKeys);
+    for (uint32_t i = 0; i < numKeys; ++i) {
+      dd.internalBufferForBoundsProgram[i].alloc(primCount*sizeof(box3f));
+    }
+    
     writeVariables(userGeomData.data(),device);
         
     // size of each thread block during bounds function call
@@ -205,37 +145,41 @@ namespace owl {
     tempMem.upload(userGeomData);
     
     void  *d_geomData = tempMem.get();
-    vec3f *d_boundsArray = (vec3f*)dd.internalBufferForBoundsProgram.get();
-    /* arguments for the kernel we are to call */
-    void  *args[] = {
-                     &d_geomData,
-                     &d_boundsArray,
-                     (void *)&primCount
-    };
-    
-    CUstream stream = device->stream;
-    UserGeomType::DeviceData &typeDD = getTypeDD(device);
-    if (!typeDD.boundsFuncKernel)
-      OWL_RAISE("bounds kernel set, but not yet compiled - "
-                "did you forget to call BuildPrograms() before"
-                " (User)GroupAccelBuild()!?");
-        
-    CUresult rc
-      = cuLaunchKernel(typeDD.boundsFuncKernel,
-                       gridDims.x,gridDims.y,gridDims.z,
-                       blockDims.x,blockDims.y,blockDims.z,
-                       0, stream, args, 0);
-    if (rc) {
-      const char *errName = 0;
-      cuGetErrorName(rc,&errName);
-      OWL_RAISE("unknown CUDA error in calling bounds function kernel: "
-                +std::string(errName));
+    for (int k = 0; k < numKeys; ++k) {
+      void* d_boundsArray = dd.internalBufferForBoundsProgram[k].get();
+
+      /* arguments for the kernel we are to call */
+      void  *args[] = {
+                      &d_geomData,
+                      &d_boundsArray,
+                      (void *)&primCount,
+                      (void *)&k
+      };
+      
+      CUstream stream = device->stream;
+      UserGeomType::DeviceData &typeDD = getTypeDD(device);
+      if (!typeDD.boundsFuncKernel)
+        OWL_RAISE("bounds kernel set, but not yet compiled - "
+                                "did you forget to call BuildPrograms() before"
+                                " (User)GroupAccelBuild()!?");
+          
+      CUresult rc
+        = cuLaunchKernel(typeDD.boundsFuncKernel,
+                        gridDims.x,gridDims.y,gridDims.z,
+                        blockDims.x,blockDims.y,blockDims.z,
+                        0, stream, args, 0);
+      if (rc) {
+        const char *errName = 0;
+        cuGetErrorName(rc,&errName);
+        OWL_RAISE("unknown CUDA error in calling bounds function kernel: "
+                                +std::string(errName));
+      }
     }
     
     tempMem.free();
     cudaDeviceSynchronize();
   }
-
+  
   /*! fill in an OptixProgramGroup descriptor with the module and
     program names for this type */
   void UserGeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,

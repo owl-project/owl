@@ -105,8 +105,8 @@ namespace owl {
       /*! stors the device-side buffer to store the bounding boxes in
         that the bounds program generates, and that the BVH builder
         requires. (in theory we can release this memory after BVH is
-        built)*/
-      DeviceMemory internalBufferForBoundsProgram;
+        built) Note: one entry per motion blur key. */
+      std::vector<DeviceMemory> internalBufferForBoundsProgram = {};
     };
 
     /*! constructor */
@@ -128,16 +128,18 @@ namespace owl {
     /*! set number of primitives that this geom will contain */
     void setPrimCount(size_t count);
     
-    /*! call a cuda kernel that computes the bounds *across* all
-      primitives within this group; may only get caleld after bound
-      progs have been executed */
-    void computeBounds(box3f bounds[2]);
+    /*! set number of motion keys that this geom will use */
+    void setNumMotionKeys(uint32_t numKeys);
+    
+
 
     /*! run the bounding box program for all primitives within this geometry */
     void executeBoundsProgOnPrimitives(const DeviceContext::SP &device);
 
     /*! number of prims that this geom will contain */
     size_t primCount = 0;
+    /*! number of motion keys that this geom will use */
+    uint32_t numKeys = 1;
   };
 
 
