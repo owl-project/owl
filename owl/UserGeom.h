@@ -107,6 +107,7 @@ namespace owl {
         requires. (in theory we can release this memory after BVH is
         built) Note: one entry per motion blur key. */
       std::vector<DeviceMemory> internalBufferForBoundsProgram = {};
+      DeviceMemory tempMem;
     };
 
     /*! constructor */

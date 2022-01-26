@@ -211,8 +211,11 @@ namespace owl {
       optixInstances[childID] = oi;
     }
 
-    dd.optixInstanceBuffer.alloc(optixInstances.size()*
-                                 sizeof(optixInstances[0]));
+    if (dd.tempBuffer.sizeInBytes < optixInstances.size()*sizeof(optixInstances[0]))
+    {
+      dd.optixInstanceBuffer.alloc(optixInstances.size()*
+                                  sizeof(optixInstances[0]));
+    }
     dd.optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
     
     // ==================================================================
@@ -258,15 +261,22 @@ namespace owl {
         << prettyNumber(optixInstances.size()) << " instances, "
         << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
         << prettyNumber(tempSize) << "B in temp data");
-      
-    DeviceMemory tempBuffer;
-    tempBuffer.alloc(tempSize);
+
+    if (dd.tempBuffer.sizeInBytes < tempSize)
+    {
+      if (!dd.tempBuffer.empty()) dd.tempBuffer.free();
+      dd.tempBuffer.alloc(tempSize);      
+    }    
       
     if (FULL_REBUILD) {
-      dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
-      dd.memPeak += tempBuffer.size();
-      dd.memPeak += dd.bvhMemory.size();
-      dd.memFinal = dd.bvhMemory.size();
+      if (dd.bvhMemory.sizeInBytes < blasBufferSizes.outputSizeInBytes)
+      {
+        if (!dd.bvhMemory.empty()) dd.bvhMemory.free();
+        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);      
+        dd.memPeak += dd.tempBuffer.size();
+        dd.memPeak += dd.bvhMemory.size();
+        dd.memFinal = dd.bvhMemory.size();
+      }    
     }
       
     OPTIX_CHECK(optixAccelBuild(optixContext,
@@ -275,8 +285,8 @@ namespace owl {
                                 // array of build inputs:
                                 &instanceInput,1,
                                 // buffer of temp memory:
-                                (CUdeviceptr)tempBuffer.get(),
-                                tempBuffer.size(),
+                                (CUdeviceptr)dd.tempBuffer.get(),
+                                dd.tempBuffer.size(),
                                 // where we store initial, uncomp bvh:
                                 (CUdeviceptr)dd.bvhMemory.get(),
                                 dd.bvhMemory.size(),
@@ -293,7 +303,7 @@ namespace owl {
     // ==================================================================
     // TODO: move those free's to the destructor, so we can delay the
     // frees until all objects are done
-    tempBuffer.free();
+    // tempBuffer.free();
       
     LOG_OK("successfully built instance group accel");
   }

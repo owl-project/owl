@@ -45,6 +45,8 @@ namespace owl {
           memory */
       DeviceMemory           bvhMemory;
 
+      DeviceMemory tempBuffer;
+
       //! memory used for the BVH, last time it was built.
       size_t memFinal = 0;
       

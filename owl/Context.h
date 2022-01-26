@@ -102,6 +102,10 @@ namespace owl {
        to ClosestHit programs.  Default 2.  Has no effect once programs are built.*/
     void setNumAttributeValues(size_t numAttributeValues);
 
+    /* Set number of payload registers for passing data between raygen and raytracing 
+        programs.  Default 2.  Has no effect once programs are built.*/
+    void setNumPayloadValues(size_t numPayloadValues);
+
 
     // ------------------------------------------------------------------
     // internal mechanichs/plumbling that do the actual work
@@ -282,6 +286,9 @@ namespace owl {
 
     /* Number of attributes for writing data between Intersection and ClosestHit */
     int numAttributeValues = 2;
+
+    /* Number of payload registers for writing data between raygen and raytracing programs */
+    int numPayloadValues = 2;
 
     /*! a set of dummy (ie, empty) launch params. allows us for always
       using the same launch code, *with* launch params, even if th

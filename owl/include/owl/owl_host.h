@@ -389,6 +389,13 @@ OWL_API void
 owlContextSetNumAttributeValues(OWLContext context,
                                 size_t numAttributeValues);
 
+/* Set number of payload registers for passing data between raygen programs and 
+   closesthit / anyhit / miss programs.  Default 2.  Has no effect once programs are built.*/
+OWL_API void
+owlContextSetNumPayloadValues(OWLContext context,
+                                size_t numPayloadValues);
+
+
 /*! tells OptiX to specialize the values of certain launch parameters
   when compiling modules, and ignore their values at launch.
   See section 6.3.1 of the OptiX 7.2 programming guide.

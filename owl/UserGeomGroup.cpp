@@ -17,6 +17,9 @@
 #include "UserGeomGroup.h"
 #include "Context.h"
 
+// useful for profiling with nvtxRangePushA("A"); and nvtxRangePop();
+// #include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include\nvtx3\nvToolsExt.h"
+
 #define LOG(message)                                            \
   if (Context::logging())                                       \
     std::cout << "#owl(" << device->ID << "): "                 \
@@ -73,8 +76,11 @@ namespace owl {
     DeviceData &dd = getDD(device);
     auto optixContext = device->optixContext;
 
-    if (FULL_REBUILD && !dd.bvhMemory.empty())
-      dd.bvhMemory.free();
+    // if (FULL_REBUILD && !dd.bvhMemory.empty())
+      // dd.bvhMemory.free(); 
+      // NM: Don't do this, freeing is expensive. Instead, reuse previous allocation if possible.
+      // Note, refitting isn't always an option, eg for photon maps that change each frame
+    // cudaDeviceSynchronize();
 
     if (!FULL_REBUILD && dd.bvhMemory.empty())
       throw std::runtime_error("trying to refit an accel struct that has not been previously built");
@@ -195,7 +201,7 @@ namespace owl {
                  (uint32_t)userGeomInputs.size(),
                  &blasBufferSizes
                  ));
-    
+   
     // ------------------------------------------------------------------
     // ... and allocate buffers: temp buffer, initial (uncompacted)
     // BVH buffer, and a one-single-size_t buffer to store the
@@ -212,14 +218,18 @@ namespace owl {
         << prettyNumber(tempSize) << "B in temp data");
 
     // temp memory:
-    DeviceMemory tempBuffer;
-    tempBuffer.alloc
-      (FULL_REBUILD
+    size_t sizeInBytes = (FULL_REBUILD
        ? blasBufferSizes.tempSizeInBytes
        : blasBufferSizes.tempUpdateSizeInBytes);
 
+    if (dd.tempBuffer.sizeInBytes < sizeInBytes)
+    {
+      if (!dd.tempBuffer.empty()) dd.tempBuffer.free();
+      dd.tempBuffer.alloc(sizeInBytes);      
+    }      
+
     if (FULL_REBUILD) {
-      dd.memPeak += tempBuffer.size();
+      dd.memPeak += dd.tempBuffer.size();
     }
 
     const bool allowCompaction = (buildFlags & OPTIX_BUILD_FLAG_ALLOW_COMPACTION);
@@ -234,9 +244,14 @@ namespace owl {
         outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
         dd.memPeak += outputBuffer.size();
       } else {
-        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
-        dd.memPeak += dd.bvhMemory.size();
-        dd.memFinal = dd.bvhMemory.size();
+        if (dd.bvhMemory.sizeInBytes < blasBufferSizes.outputSizeInBytes) {
+          if (!dd.bvhMemory.empty()) { 
+            dd.bvhMemory.free(); 
+          }
+          dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+          dd.memPeak += dd.bvhMemory.size();
+          dd.memFinal = dd.bvhMemory.size();
+        }
       }
     }
 
@@ -258,8 +273,8 @@ namespace owl {
                                   userGeomInputs.data(),
                                   (uint32_t)userGeomInputs.size(),
                                   // buffer of temp memory:
-                                  (CUdeviceptr)tempBuffer.get(),
-                                  tempBuffer.size(),
+                                  (CUdeviceptr)dd.tempBuffer.get(),
+                                  dd.tempBuffer.size(),
                                   // where we store initial, uncomp bvh:
                                   (CUdeviceptr)outputBuffer.get(),
                                   outputBuffer.size(),
@@ -276,8 +291,8 @@ namespace owl {
                                   userGeomInputs.data(),
                                   (uint32_t)userGeomInputs.size(),
                                   // buffer of temp memory:
-                                  (CUdeviceptr)tempBuffer.get(),
-                                  tempBuffer.size(),
+                                  (CUdeviceptr)dd.tempBuffer.get(),
+                                  dd.tempBuffer.size(),
                                   // where we store initial, uncomp bvh:
                                   (CUdeviceptr)dd.bvhMemory.get(),
                                   dd.bvhMemory.size(),
@@ -287,8 +302,7 @@ namespace owl {
                                   nullptr,0
                                   ));
     }
-    OWL_CUDA_SYNC_CHECK();
-
+ 
     // ==================================================================
     // perform compaction
     // ==================================================================
@@ -310,31 +324,10 @@ namespace owl {
       dd.memPeak += dd.bvhMemory.size();
       dd.memFinal = dd.bvhMemory.size();
     }
-    OPTIX_CHECK(optixAccelBuild(optixContext,
-                                /* todo: stream */0,
-                                &accelOptions,
-                                // array of build inputs:
-                                userGeomInputs.data(),
-                                (uint32_t)userGeomInputs.size(),
-                                // buffer of temp memory:
-                                (CUdeviceptr)tempBuffer.get(),
-                                tempBuffer.size(),
-                                // where we store initial, uncomp bvh:
-                                (CUdeviceptr)dd.bvhMemory.get(),
-                                dd.bvhMemory.size(),
-                                /* the dd.traversable we're building: */ 
-                                &dd.traversable,
-                                /* we're also querying compacted size: */
-                                nullptr,0u
-                                ));
-      
-    OWL_CUDA_SYNC_CHECK();
-
+ 
     // ==================================================================
     // finish - clean up
     // ==================================================================
-    tempBuffer.free();
-
     LOG_OK("successfully built user geom group accel");
 
     // size_t sumPrims = 0;
@@ -347,14 +340,12 @@ namespace owl {
       
       for (uint32_t i = 0; i < numKeys; ++i) {
         sumBoundsMem += ugDD.internalBufferForBoundsProgram[i].sizeInBytes;
-        if (ugDD.internalBufferForBoundsProgram[i].alloced())
-          ugDD.internalBufferForBoundsProgram[i].free();
+        // if (ugDD.internalBufferForBoundsProgram[i].alloced())
+        //   ugDD.internalBufferForBoundsProgram[i].free(); // don't do this, we recycle this memory across builds now.
       }
     }
     if (FULL_REBUILD)
       dd.memPeak += sumBoundsMem;
-
-    OWL_CUDA_SYNC_CHECK();
   }
     
 } // ::owl

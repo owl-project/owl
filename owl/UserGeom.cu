@@ -114,16 +114,23 @@ namespace owl {
     // launching zero-sized bounds prog kernel below, so let's just
     // exit here.
     if (primCount == 0) return;
+    DeviceData &dd = getDD(device);
       
     std::vector<uint8_t> userGeomData(geomType->varStructSize);
     
-    DeviceMemory tempMem;
-    tempMem.alloc(geomType->varStructSize);
+    if (dd.tempMem.sizeInBytes < geomType->varStructSize) 
+    {
+      if (!dd.tempMem.empty()) dd.tempMem.free();
+      dd.tempMem.alloc(geomType->varStructSize);
+    }
     
-    DeviceData &dd = getDD(device);
     dd.internalBufferForBoundsProgram.resize(numKeys);
     for (uint32_t i = 0; i < numKeys; ++i) {
-      dd.internalBufferForBoundsProgram[i].alloc(primCount*sizeof(box3f));
+      if (dd.internalBufferForBoundsProgram[i].sizeInBytes < primCount*sizeof(box3f)) 
+      {
+        if (!dd.internalBufferForBoundsProgram[i].empty()) dd.internalBufferForBoundsProgram[i].free();
+        dd.internalBufferForBoundsProgram[i].alloc(primCount*sizeof(box3f));
+      }
     }
     
     writeVariables(userGeomData.data(),device);
@@ -142,9 +149,9 @@ namespace owl {
         
     vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
 
-    tempMem.upload(userGeomData);
+    dd.tempMem.upload(userGeomData);
     
-    void  *d_geomData = tempMem.get();
+    void  *d_geomData = dd.tempMem.get();
     for (int k = 0; k < numKeys; ++k) {
       void* d_boundsArray = dd.internalBufferForBoundsProgram[k].get();
 
@@ -176,8 +183,8 @@ namespace owl {
       }
     }
     
-    tempMem.free();
-    cudaDeviceSynchronize();
+    //tempMem.free(); // don't free temp mem, instead recycle if possible
+    //cudaDeviceSynchronize(); // is synchronizing here necessary?
   }
   
   /*! fill in an OptixProgramGroup descriptor with the module and
