@@ -18,13 +18,13 @@
 #include "Context.h"
 
 #define LOG(message)                                    \
-  if (Context::logging())                               \
+  if (1 || Context::logging())                               \
     std::cout << "#owl(" << device->ID << "): "         \
               << message                                \
               << std::endl
 
 #define LOG_OK(message)                                         \
-  if (Context::logging())                                       \
+  if (1 || Context::logging())                                       \
     std::cout << OWL_TERMINAL_GREEN                             \
               << "#owl(" << device->ID << "): "                 \
               << message << OWL_TERMINAL_DEFAULT << std::endl
@@ -268,7 +268,10 @@ namespace owl {
       dd.memPeak += dd.bvhMemory.size();
       dd.memFinal = dd.bvhMemory.size();
     }
-      
+
+    PRINT(dd.bvhMemory.size());
+    PRINT(tempBuffer.size());
+    OWL_CUDA_SYNC_CHECK();
     OPTIX_CHECK(optixAccelBuild(optixContext,
                                 /* todo: stream */0,
                                 &accelOptions,
