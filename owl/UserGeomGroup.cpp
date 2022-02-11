@@ -295,23 +295,6 @@ namespace owl {
       dd.memPeak += dd.bvhMemory.size();
       dd.memFinal = dd.bvhMemory.size();
     }
-    OPTIX_CHECK(optixAccelBuild(optixContext,
-                                /* todo: stream */0,
-                                &accelOptions,
-                                // array of build inputs:
-                                userGeomInputs.data(),
-                                (uint32_t)userGeomInputs.size(),
-                                // buffer of temp memory:
-                                (CUdeviceptr)tempBuffer.get(),
-                                tempBuffer.size(),
-                                // where we store initial, uncomp bvh:
-                                (CUdeviceptr)dd.bvhMemory.get(),
-                                dd.bvhMemory.size(),
-                                /* the dd.traversable we're building: */ 
-                                &dd.traversable,
-                                /* we're also querying compacted size: */
-                                nullptr,0u
-                                ));
       
     OWL_CUDA_SYNC_CHECK();
 
