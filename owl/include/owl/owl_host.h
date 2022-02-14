@@ -507,14 +507,14 @@ owlMissProgSet(OWLContext  context,
 
   \param buildFlags A combination of OptixBuildFlags.  The default
   of 0 means to use OWL default build flags.
-  \param numKeys the number of motion blur keys to use. The default is 2
+  \param numKeys the number of motion blur keys to use. The default is 1
 */
 OWL_API OWLGroup
 owlUserGeomGroupCreate(OWLContext context,
                        size_t     numGeometries,
                        OWLGeom   *arrayOfChildGeoms,
                        unsigned int buildFlags OWL_IF_CPP(=0),
-                       uint32_t   numKeys OWL_IF_CPP(=2));
+                       uint32_t   numKeys OWL_IF_CPP(=1));
 
 
 // ------------------------------------------------------------------
