@@ -162,7 +162,7 @@ target_include_directories(owl
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
-set_property(TARGET owl PROPERTY CUDA_ARCHITECTURES "70;75;80;86") 
+set_property(TARGET owl PROPERTY CUDA_ARCHITECTURES OFF) 
 
 if (WIN32)
   target_compile_definitions(owl PUBLIC -DNOMINMAX)
