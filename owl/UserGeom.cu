@@ -17,6 +17,8 @@
 #include "UserGeom.h"
 #include "Context.h"
 
+#define FREE_EARLY 1
+
 namespace owl {
 
 #define LOG(message)                                    \
@@ -183,8 +185,11 @@ namespace owl {
       }
     }
     
-    //tempMem.free(); // don't free temp mem, instead recycle if possible
-    //cudaDeviceSynchronize(); // is synchronizing here necessary?
+    #ifdef FREE_EARLY
+    // only free temporary memory if necessary. For realtime builds, instead recycle if possible
+    dd.tempMem.free(); 
+    cudaDeviceSynchronize();
+    #endif
   }
   
   /*! fill in an OptixProgramGroup descriptor with the module and

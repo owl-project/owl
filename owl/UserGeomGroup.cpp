@@ -17,6 +17,8 @@
 #include "UserGeomGroup.h"
 #include "Context.h"
 
+#define FREE_EARLY 1
+
 // useful for profiling with nvtxRangePushA("A"); and nvtxRangePop();
 // #include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include\nvtx3\nvToolsExt.h"
 
@@ -330,6 +332,11 @@ namespace owl {
     // ==================================================================
     LOG_OK("successfully built user geom group accel");
 
+    #if FREE_EARLY == 1
+    if (dd.tempBuffer.alloced())
+      dd.tempBuffer.free();
+    #endif
+
     // size_t sumPrims = 0;
     size_t sumBoundsMem = 0;
     for (size_t childID=0;childID<geometries.size();childID++) {
@@ -340,8 +347,12 @@ namespace owl {
       
       for (uint32_t i = 0; i < numKeys; ++i) {
         sumBoundsMem += ugDD.internalBufferForBoundsProgram[i].sizeInBytes;
-        // if (ugDD.internalBufferForBoundsProgram[i].alloced())
-        //   ugDD.internalBufferForBoundsProgram[i].free(); // don't do this, we recycle this memory across builds now.
+
+        // don't do this unless absolutely necessary. For performance reasons, recycle this memory across builds if possible.
+        #if FREE_EARLY == 1
+        if (ugDD.internalBufferForBoundsProgram[i].alloced())
+          ugDD.internalBufferForBoundsProgram[i].free();
+        #endif
       }
     }
     if (FULL_REBUILD)
