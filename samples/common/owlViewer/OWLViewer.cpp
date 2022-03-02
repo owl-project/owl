@@ -199,7 +199,12 @@ namespace owl {
         (&cuDisplayTexture, fbTexture, GL_TEXTURE_2D, 0);
 
       // if (firstResize || !firstResize && resourceSharingSuccessful) {
+#if OWL_FORCE_SLOW_DISPLAY
+      bool forceSlowDisplay = true;
+# pragma message("forcing slow display in owl viewer!")
+#else
       bool forceSlowDisplay = false;
+#endif
       if (rc != cudaSuccess || forceSlowDisplay) {
         std::cout << OWL_TERMINAL_RED
                   << "Warning: Could not do CUDA graphics resource sharing "
