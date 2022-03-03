@@ -18,6 +18,7 @@
 #include "Camera.h"
 #include "InspectMode.h"
 #include "FlyMode.h"
+#include "owl/helper/cuda.h"
 #include <sstream>
 
 // eventually to go into 'apps/'
@@ -231,10 +232,10 @@ namespace owl {
     {
       glfwMakeContextCurrent(handle);
       if (resourceSharingSuccessful) {
-        GL_CHECK(cudaGraphicsMapResources(1, &cuDisplayTexture));
+        OWL_CUDA_CHECK(cudaGraphicsMapResources(1, &cuDisplayTexture));
 
         cudaArray_t array;
-        GL_CHECK(cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0));
+        OWL_CUDA_CHECK(cudaGraphicsSubResourceGetMappedArray(&array, cuDisplayTexture, 0, 0));
         {
           cudaMemcpy2DToArray(array,
                               0,
@@ -289,7 +290,7 @@ namespace owl {
       }
       glEnd();
       if (resourceSharingSuccessful) {
-        GL_CHECK(cudaGraphicsUnmapResources(1, &cuDisplayTexture));
+        OWL_CUDA_CHECK(cudaGraphicsUnmapResources(1, &cuDisplayTexture));
       }
     }
 
