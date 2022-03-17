@@ -11,7 +11,7 @@ foreach(obj ${OBJECTS})
 
   list(POP_FRONT SYMBOL_NAMES obj_name)
   if(obj_ext MATCHES ".ptx")
-    set(args --name ${obj_name} ${obj})
+    set(args --name ${obj_name} ${obj} --padd 0,0)
     execute_process(
       COMMAND "${BIN_TO_C_COMMAND}" ${args}
       WORKING_DIRECTORY ${obj_dir}
