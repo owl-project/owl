@@ -320,6 +320,30 @@ namespace owl {
     // pipelineLinkOptions.overrideUsesMotionBlur = motionBlurEnabled;
     pipelineLinkOptions.maxTraceDepth          = 2;
     pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
+
+    // if (parent->curvesEnabled) 
+      pipelineCompileOptions.usesPrimitiveTypeFlags
+        = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_LINEAR
+        | OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_QUADRATIC_BSPLINE
+        | OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_CUBIC_BSPLINE;
+    
+// #if 1
+//     std::cout << "HACK: FORCE-ENABLE CURVES!" << std::endl;
+//     int degree = 1;
+//     bool motion_blur = 0;
+//     switch( degree )
+//       {
+//       case 1:
+//         pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_LINEAR;
+//         break;
+//       case 2:
+//         pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_QUADRATIC_BSPLINE;
+//         break;
+//       case 3:
+//         pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_CUBIC_BSPLINE;
+//         break;
+//       }
+// #endif
   }
   
   void DeviceContext::buildPipeline()
@@ -380,6 +404,37 @@ namespace owl {
     buildHitGroupPrograms();
   }
 
+  void DeviceContext::buildCurvesModules()
+  {
+    SetActiveGPU forLifeTime(this);
+
+    for (int forceCap=0;forceCap<2;forceCap++) {
+    for (int degree=1;degree<=3;degree++) {
+      if (curvesModule[forceCap][degree-1] != nullptr)
+        optixModuleDestroy(curvesModule[forceCap][degree-1]);
+      
+      OptixBuiltinISOptions builtinISOptions = {};
+      switch (degree) {
+      case 1:
+        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_LINEAR;
+        break;
+      case 2:
+        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_QUADRATIC_BSPLINE;
+        break;
+      case 3:
+        builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_ROUND_CUBIC_BSPLINE;
+        break;
+      }
+      builtinISOptions.usesMotionBlur = parent->motionBlurEnabled;  // enable motion-blur for built-in intersector
+      builtinISOptions.curveEndcapFlags = forceCap;
+      
+      OPTIX_CHECK(optixBuiltinISModuleGet(optixContext, &moduleCompileOptions, &pipelineCompileOptions,
+                                          &builtinISOptions, &curvesModule[forceCap][degree-1]));
+    }
+    }
+
+  }
+  
   void DeviceContext::destroyPrograms()
   {
     SetActiveGPU forLifeTime(this);
