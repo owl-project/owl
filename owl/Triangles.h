@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2021 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -36,8 +36,8 @@ namespace owl {
     std::shared_ptr<Geom> createGeom() override;
   };
 
-  /*! an actual *instance* of a given triangle-primitmives type; this
-      actual trianlge mesh uses the programs and SBT data associated
+  /*! an actual *instance* of a given triangle-primitives type; this
+      actual triangle mesh uses the programs and SBT data associated
       with its associated TrianglesGeomType, and will "instantiate"
       these with the vertex arrays, index array, etc, specified in
       this Geom */

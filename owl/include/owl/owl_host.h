@@ -228,7 +228,8 @@ typedef enum
    // new naming, to be consistent with type OLWGeom (not OWLGeometry):
    OWL_GEOM_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
    OWL_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
-   OWL_GEOMETRY_HAIR
+   /*! maps to optix curves geometry */
+   OWL_GEOMETRY_CURVES
   }
   OWLGeomKind;
 
@@ -368,6 +369,13 @@ owlContextCreate(int32_t *requestedDeviceIDs OWL_IF_CPP(=nullptr),
                  
 OWL_API void
 owlContextDestroy(OWLContext context);
+
+/*! tell the context/pipeline to enable the support for curves
+    geometries; this _must_ be called when using curves geometries. If
+    you want to use _both_ motion blur and curves, motion blur has to
+    be enabled _before_ enableing curves */
+OWL_API void
+owlEnableCurves(OWLContext _context);
 
 /*! enable motion blur for this context. this _has_ to be called
     before creating any geometries, groups, etc, and before the
@@ -528,6 +536,33 @@ owlTrianglesGeomGroupCreate(OWLContext context,
                             size_t     numGeometries,
                             OWLGeom   *initValues,
                             unsigned int buildFlags OWL_IF_CPP(=0));
+
+
+
+// ------------------------------------------------------------------
+/*! create a new group (which handles the acceleration strucure) for
+  "curves" geometries.
+
+  \param numGeometries Number of geometries in this group, must be
+  non-zero.
+
+  \param arrayOfChildGeoms A array of 'numGeometries' child
+  geometries. Every geom in this array must be a valid owl geometry
+  created with owlGeomCreate, and must be of a OWL_GEOM_CURVES
+  type.
+
+  \param buildFlags A combination of OptixBuildFlags.  The default
+  of 0 means to use OWL default build flags.
+
+  Note that in order to use curves geometries you _have_ to call
+  owlEnableCurves() before curves are used; in particular, curves
+  _have_ to already be enabled when the pipeline gets compiled.
+*/
+OWL_API OWLGroup
+owlCurvesGeomGroupCreate(OWLContext context,
+                         size_t     numCurveGeometries,
+                         OWLGeom   *curveGeometries,
+                         unsigned int buildFlags OWL_IF_CPP(=0));
 
 // ------------------------------------------------------------------
 /*! create a new instance group with given number of instances. The
@@ -806,6 +841,36 @@ OWL_API void owlTrianglesSetIndices(OWLGeom triangles,
                                     size_t stride,
                                     size_t offset);
 
+// ==================================================================
+// "Triangles" functions
+// ==================================================================
+
+/*! sets curve degree (1="linear", 2="quadratic b-spline", 3="cubic
+    b-spline"), as well as whether end-caps need to get added for
+    non-linear curves (linear curves always have end-caps, no matter
+    what this value is */
+OWL_API void owlCurvesSetDegree(OWLGeomType curvesGeomType,
+                                int     degree,
+                                bool    forceCaps);
+
+/*! sets the array of control points, and their associated curve
+    width. */
+OWL_API void owlCurvesSetControlPoints(OWLGeom curvesGeom,
+                                       int numControlPoints,
+                                       /*! buffer of (one vec3f per
+                                         control point) that
+                                         specifies curve width */
+                                       OWLBuffer vertices,
+                                       /*! buffer of (one float per
+                                           control point) the curve
+                                           width of that control
+                                           point */
+                                       OWLBuffer widths);
+
+OWL_API void owlCurvesSetSegmentIndices(OWLGeom curvesGeom,
+                                        int numSegmentIndices,
+                                        OWLBuffer segmentIndices);
+                                       
 // -------------------------------------------------------
 // group/hierarchy creation and setting
 // -------------------------------------------------------
