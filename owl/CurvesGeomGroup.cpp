@@ -78,6 +78,8 @@ namespace owl {
   template<bool FULL_REBUILD>
   void CurvesGeomGroup::buildAccelOn(const DeviceContext::SP &device) 
   {
+// #if OPTIX_VERSION >= 70300
+#if OWL_CAN_DO_CURVES
     DeviceData &dd = getDD(device);
 
     if (FULL_REBUILD && !dd.bvhMemory.empty())
@@ -361,6 +363,9 @@ namespace owl {
       compactedSizeBuffer.free();
     
     LOG_OK("successfully build curves geom group accel");
+#else
+    throw std::runtime_error("This version of OWL was compiled with an OptiX version that does not yet support curves. Please re-build with a newer version of OptiX if you do want to use curves");
+#endif
   }
   
 } // ::owl
