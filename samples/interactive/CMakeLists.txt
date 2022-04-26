@@ -26,6 +26,7 @@ foreach(sample IN ITEMS
     int13-motionBlurInstances
     int15-cookBilliardScene
     int16-curves
+    int17-curveMaterials
     )
   add_subdirectory(${sample})
 endforeach()
