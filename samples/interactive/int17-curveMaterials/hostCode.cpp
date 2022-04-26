@@ -137,45 +137,137 @@ void Viewer::cameraChanged()
   sbtDirty = true;
 }
 
+vec2f rotate(vec2f vec, float theta){
+  vec2f outVec = vec2f(0,0);
+  outVec.x = vec.x * cos(theta) - vec.y*sin(theta);
+  outVec.y = vec.x * sin(theta) + vec.y*cos(theta);
+  return outVec;
+}
+
 void Viewer::createScene()
 {
-  segmentIndices = std::vector<int>{ 0 };
 
-  // Number of motion keys
-  const int NUM_KEYS = 1;
-  
-  float  radius = 0.4f;
-  for( int i = 0; i < NUM_KEYS; ++i ) {
-    // move the y-coordinates based on cosine
-    const float c = cosf(i / static_cast<float>(NUM_KEYS) * 2.0f * static_cast<float>(M_PI));
-    switch( degree ) {
-    case 1: {
-      vertices.push_back( vec3f( -0.25f, -0.25f * c, 0.0f ) );
-      widths.push_back( 0.3f );
-      vertices.push_back( vec3f( 0.25f, 0.25f * c, 0.0f ) );
-      widths.push_back( radius );
-    } break;
-    case 2: {
-      vertices.push_back( vec3f( -1.5f, -2.0f * c, 0.0f ) );
-      widths.push_back( .01f );
-      vertices.push_back( vec3f( 0.0f, 1.0f * c, 0.0f ) );
-      widths.push_back( radius );
-      vertices.push_back( vec3f( 1.5f, -2.0f * c, 0.0f ) );
-      widths.push_back( .01f );
-    } break;
-    case 3: {
-      vertices.push_back( vec3f( -1.5f, -3.5f * c, 0.0f ) );
-      widths.push_back( .01f );
-      vertices.push_back( vec3f( -1.0f, 0.5f * c, 0.0f ) );
-      widths.push_back( radius );
-      vertices.push_back( vec3f( 1.0f, 0.5f * c, 0.0f ) );
-      widths.push_back( radius );
-      vertices.push_back( vec3f( 1.5f, -3.5f * c, 0.0f ) );
-      widths.push_back( .01f );
-    } break;
-    default:
-      throw std::runtime_error("invalid curves degree?");
-    }
+  // Segment configuration
+  float radius = 0.05f;
+  float d = 0.3;
+
+
+  // Set up curve materials
+  Material nonreflectiveMat;
+  nonreflectiveMat.Ka = vec3f(.15f,.15f,.15f);
+  nonreflectiveMat.Kd = vec3f(.25f,.5f,.35f);
+  nonreflectiveMat.Ks = vec3f(.2f,.2f,.2f);
+  nonreflectiveMat.reflectivity = vec3f(0.f,0.f,0.f);
+  nonreflectiveMat.phong_exp = 20.f;
+
+  Material reflectiveMat;
+  reflectiveMat.Ka = vec3f(.0f,.0f,.0f);
+  reflectiveMat.Kd = vec3f(.4f,.4f,.8f);
+  reflectiveMat.Ks = vec3f(0.f,0.f,0.f);
+  // non-perfect reflections so we at least see the curves
+  reflectiveMat.reflectivity = vec3f(0.95f, 0.95f, 0.95f);
+  reflectiveMat.phong_exp = 20.f;
+
+  // Set up geom data
+  CurvesGeomData nonreflective;
+  nonreflective.material = nonreflectiveMat;
+
+  CurvesGeomData reflective;
+  reflective.material = reflectiveMat;
+
+  // Curves pushed
+  int curveCount = 0;
+
+  // Amount to rotate each iteration
+  float theta = (3.14159f)/4;
+
+
+  // Initial cubic curve circle segment approximation (XY plane)
+  vec3f p0 = vec3f( 1.f * d, 0.f * d, 0.0f );
+  vec3f p1 = vec3f( 1.f * d, 0.55228f * d, 0.0f);
+  vec3f p2 = vec3f( 0.55228f * d, 1.f * d, 0.0f );
+  vec3f p3 = vec3f( 0.f * d, 1.f * d, 0.0f );
+
+  // Create 8 curve segments on the XY plane
+  for (int i = 0; i < 8; i++){
+    CurvesGeomData currMaterial = (i%4<2) ? reflective : nonreflective;
+
+    // Rotate curve segment around z axis
+    vec2f p0sub = vec2f(p0.x, p0.y);
+    vec2f p1sub = vec2f(p1.x, p1.y);
+    vec2f p2sub = vec2f(p2.x, p2.y);
+    vec2f p3sub = vec2f(p3.x, p3.y);
+
+    vec2f p0subRot = rotate(p0sub, theta*(i));
+    vec2f p1subRot = rotate(p1sub, theta*(i));
+    vec2f p2subRot = rotate(p2sub, theta*(i));
+    vec2f p3subRot = rotate(p3sub, theta*(i));
+
+    vec3f p0out = vec3f(p0subRot.x,p0subRot.y,p0.z);
+    vec3f p1out = vec3f(p1subRot.x,p1subRot.y,p1.z);
+    vec3f p2out = vec3f(p2subRot.x,p2subRot.y,p2.z);
+    vec3f p3out = vec3f(p3subRot.x,p3subRot.y,p3.z);
+
+    // Push curve data to buffers
+    vertices.push_back( p0out );
+    widths.push_back( radius );
+    vertices.push_back( p1out );
+    widths.push_back( radius );
+    vertices.push_back( p2out );
+    widths.push_back( radius );
+    vertices.push_back( p3out );
+    widths.push_back( radius );
+    materials.push_back ( currMaterial );
+    segmentIndices.push_back(curveCount * 4);
+
+    curveCount++;
+  }
+
+
+  // Initial cubic curve circle segment approximation (YZ plane)
+  p0 = vec3f( 0.f, 0.f * d, 1.f * d);
+  p1 = vec3f( 0.f, 0.55228f * d, 1.f * d);
+  p2 = vec3f( 0.f, 1.f * d, 0.55228f * d);
+  p3 = vec3f( 0.f, 1.f * d, 0.f * d);
+
+  // Change diffuse color
+  nonreflectiveMat.Kd = vec3f(.5f,.15f,.15f);
+  nonreflective.material = nonreflectiveMat;
+
+  // Create 8 curve segments on the YZ plane
+  for (int i = 0; i < 8; i++){
+
+    CurvesGeomData currMaterial = (i%4<2) ? reflective : nonreflective;
+
+    // Rotate curve segment around x axis
+    vec2f p0sub = vec2f(p0.y, p0.z);
+    vec2f p1sub = vec2f(p1.y, p1.z);
+    vec2f p2sub = vec2f(p2.y, p2.z);
+    vec2f p3sub = vec2f(p3.y, p3.z);
+
+    vec2f p0subRot = rotate(p0sub, theta*(i));
+    vec2f p1subRot = rotate(p1sub, theta*(i));
+    vec2f p2subRot = rotate(p2sub, theta*(i));
+    vec2f p3subRot = rotate(p3sub, theta*(i));
+
+    vec3f p0out = vec3f(p0.x,p0subRot.y+0.33f,p0subRot.x);
+    vec3f p1out = vec3f(p1.x,p1subRot.y+0.33f,p1subRot.x);
+    vec3f p2out = vec3f(p2.x,p2subRot.y+0.33f,p2subRot.x);
+    vec3f p3out = vec3f(p3.x,p3subRot.y+0.33f,p3subRot.x);
+
+    // Push curve data to buffers
+    vertices.push_back( p0out );
+    widths.push_back( radius );
+    vertices.push_back( p1out );
+    widths.push_back( radius );
+    vertices.push_back( p2out );
+    widths.push_back( radius );
+    vertices.push_back( p3out );
+    widths.push_back( radius );
+    materials.push_back ( currMaterial );
+    segmentIndices.push_back(curveCount * 4);
+
+    curveCount++;
   }
 }
 
