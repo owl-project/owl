@@ -591,13 +591,15 @@ OPTIX_CLOSEST_HIT_PROGRAM(CurvesGeom)()
   prd.t_hit = optixGetRayTmax(); // TODO:
   prd.sn = prd.gn
     // = vec3f(0,1,0)
-    = computeNormal(optixGetPrimitiveType(), optixGetPrimitiveIndex())
-    ;
+    = computeNormal(optixGetPrimitiveType(), optixGetPrimitiveIndex());
 
-  
-  vec3f ka = self.material.Ka;
-  vec3f kd = self.material.Kd;
-  vec3f ks = self.material.Ks;
+
+  // Get curve material properties
+  const auto &curveMaterial = owl::getProgramData<CurvesGeom>().curves[optixGetPrimitiveIndex()];
+  Material material = curveMaterial.material;
+  vec3f ka = material.Ka;
+  vec3f kd = material.Kd;
+  vec3f ks = material.Ks;
 
   vec3f world_shading_normal = normalize((vec3f)optixTransformNormalFromObjectToWorldSpace(prd.sn));
   vec3f world_geometric_normal = normalize((vec3f)optixTransformNormalFromObjectToWorldSpace(prd.gn));
@@ -609,7 +611,7 @@ OPTIX_CLOSEST_HIT_PROGRAM(CurvesGeom)()
   // const bool dbg_y = launchIndex.y == launchDims.y/2;
   // const bool dbg =  dbg_x & dbg_y;
   
-  phongShade( kd, ka, ks, ffnormal, self.material.phong_exp, self.material.reflectivity );
+  phongShade( kd, ka, ks, ffnormal, material.phong_exp, material.reflectivity );
 }
 
 OPTIX_ANY_HIT_PROGRAM(CurvesGeom)()
