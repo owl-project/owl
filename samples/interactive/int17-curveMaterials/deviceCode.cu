@@ -556,6 +556,7 @@ __device__ void phongShade( vec3f p_Kd,
     vec3f ntsc_luminance = {0.30, 0.59, 0.11}; 
     new_prd.radiance.importance = prd.radiance.importance * dot( p_reflectivity, ntsc_luminance );
     new_prd.radiance.depth = prd.radiance.depth + 1;
+    new_prd.max_depth=prd.max_depth;
 
     // reflection ray
     if( new_prd.radiance.importance >= 0.01f && new_prd.radiance.depth <= prd.max_depth) {
@@ -665,6 +666,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   PRD prd;
   prd.t_hit = 1e20f;
   prd.radiance.importance = 1.f;
+  prd.max_depth = 5;
 
   owl::traceRay(/*accel to trace against*/self.world,
                 /*the ray to trace*/ray,
