@@ -80,9 +80,10 @@ struct Viewer : public owl::viewer::OWLViewer
   std::vector<int>   segmentIndices;
   std::vector<float> widths;
   std::vector<vec3f> vertices;
-  OWLBuffer widthsBuffer, verticesBuffer, segmentIndicesBuffer;
+  std::vector<CurvesGeomData> materials;
+  OWLBuffer widthsBuffer, verticesBuffer, materialsBuffer, segmentIndicesBuffer;
   int    degree = 3;
-  bool   forceCaps = false;
+  bool   forceCaps = true;
   
   bool sbtDirty = true;
 };
@@ -198,20 +199,13 @@ Viewer::Viewer()
   // declare geometry types
   // -------------------------------------------------------
   OWLVarDecl curvesGeomVars[] = {
-    { "color0", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,color0)},
-    { "color1", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,color1)},
-    //
-    { "material.Ka", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,material.Ka) },
-    { "material.Kd", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,material.Kd) },
-    { "material.Ks", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,material.Ks) },
-    { "material.reflectivity", OWL_FLOAT3, OWL_OFFSETOF(CurvesGeomData,material.reflectivity) },
-    { "material.phong_exp", OWL_FLOAT, OWL_OFFSETOF(CurvesGeomData,material.phong_exp) },
+    { "curves", OWL_BUFPTR, OWL_OFFSETOF(CurvesGeom,curves)},
     { nullptr }
   };
   OWLGeomType curvesGeomType
     = owlGeomTypeCreate(context,
                         OWL_GEOMETRY_CURVES,
-                        sizeof(CurvesGeomData),
+                        sizeof(CurvesGeom),
                         curvesGeomVars,-1);
   owlGeomTypeSetClosestHit(curvesGeomType,RADIANCE_RAY_TYPE,
                            module,"CurvesGeom");
@@ -231,6 +225,8 @@ Viewer::Viewer()
     = owlDeviceBufferCreate(context,OWL_FLOAT3,vertices.size(),vertices.data());
   widthsBuffer 
     = owlDeviceBufferCreate(context,OWL_FLOAT,widths.size(),widths.data());
+  materialsBuffer 
+    = owlDeviceBufferCreate(context,OWL_USER_TYPE(materials[0]),materials.size(),materials.data());
   segmentIndicesBuffer 
     = owlDeviceBufferCreate(context,OWL_INT,segmentIndices.size(),segmentIndices.data());
   
@@ -239,19 +235,7 @@ Viewer::Viewer()
   owlCurvesSetSegmentIndices(curvesGeom,segmentIndices.size(),segmentIndicesBuffer);
   owlCurvesSetDegree(curvesGeomType,degree,forceCaps);
 
-#if 1
-  owlGeomSet3f(curvesGeom,"material.Ka",.15f,.15f,.15f);
-  owlGeomSet3f(curvesGeom,"material.Kd",.25f,.5f,.35f);
-  owlGeomSet3f(curvesGeom,"material.Ks",.4f,.4f,.4f);
-  owlGeomSet3f(curvesGeom,"material.reflectivity",0.f,0.f,0.f);
-  owlGeomSet1f(curvesGeom,"material.phong_exp",20.f);
-#else
-  owlGeomSet3f(curvesGeom,"material.Ka",.35f,.35f,.35f);
-  owlGeomSet3f(curvesGeom,"material.Kd",.5f,.5f,.5f);
-  owlGeomSet3f(curvesGeom,"material.Ks",1.f,1.f,1.f);
-  owlGeomSet3f(curvesGeom,"material.reflectivity",0.f,0.f,0.f);
-  owlGeomSet1f(curvesGeom,"material.phong_exp",1.f);
-#endif
+
   curvesGeomGroup = owlCurvesGeomGroupCreate(context,1,&curvesGeom);
   owlGroupBuildAccel(curvesGeomGroup);
 
