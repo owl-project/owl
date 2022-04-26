@@ -234,7 +234,7 @@ Viewer::Viewer()
   owlCurvesSetControlPoints(curvesGeom,vertices.size(),verticesBuffer,widthsBuffer);
   owlCurvesSetSegmentIndices(curvesGeom,segmentIndices.size(),segmentIndicesBuffer);
   owlCurvesSetDegree(curvesGeomType,degree,forceCaps);
-
+  owlGeomSetBuffer(curvesGeom,"curves",materialsBuffer);
 
   curvesGeomGroup = owlCurvesGeomGroupCreate(context,1,&curvesGeom);
   owlGroupBuildAccel(curvesGeomGroup);
