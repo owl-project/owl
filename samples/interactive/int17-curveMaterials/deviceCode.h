@@ -16,9 +16,11 @@
 
 #pragma once
 
+#include <math.h>
 #include <owl/owl.h>
 #include "owl/common/math/LinearSpace.h"
 #include <owl/common/math/vec.h>
+#include <owl/common/math/vec/rotate.h>
 #include <cuda_runtime.h>
 
 using namespace owl;
@@ -48,6 +50,10 @@ struct CurvesGeomData
   /*! color at the endpoints, to demonstrate interpolation */
   vec3f color0, color1;
   Material material;
+};
+
+struct CurvesGeom {
+  CurvesGeomData *curves;
 };
 
 /* variables for the ray generation program */
