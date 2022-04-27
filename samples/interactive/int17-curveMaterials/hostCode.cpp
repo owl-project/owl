@@ -162,10 +162,10 @@ void Viewer::createScene()
 
   Material reflectiveMat;
   reflectiveMat.Ka = vec3f(.0f,.0f,.0f);
-  reflectiveMat.Kd = vec3f(.4f,.4f,.8f);
+  reflectiveMat.Kd = vec3f(0.7f, 0.6f, 0.5f);
   reflectiveMat.Ks = vec3f(0.f,0.f,0.f);
   // non-perfect reflections so we at least see the curves
-  reflectiveMat.reflectivity = vec3f(0.95f, 0.95f, 0.95f);
+  reflectiveMat.reflectivity = vec3f(0.98f, 0.98f, 0.98f);
   reflectiveMat.phong_exp = 20.f;
 
   // Set up geom data
@@ -382,7 +382,7 @@ Viewer::Viewer()
   owlParamsSet1i(lp,"numLights",2);
   BasicLight lights[] = {
     { vec3f( -30.0f, -10.0f, 80.0f ), vec3f( 1.0f, 1.0f, 1.0f ) },
-    { vec3f(  10.0f,  30.0f, 20.0f ), vec3f( 1.0f, 1.0f, 1.0f ) }
+    { vec3f(  10.0f,  30.0f, 20.0f ), vec3f( 1.0f, 1.0f, 1.0f ) },
   };
   OWLBuffer lightBuffer
     = owlDeviceBufferCreate(context,OWL_USER_TYPE(BasicLight),2,&lights);
