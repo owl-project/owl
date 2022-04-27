@@ -538,7 +538,7 @@ __device__ void phongShade( vec3f p_Kd,
     if(fmaxf(shadow_prd.shadow.attenuation) > 0) {
       vec3f Lc = light.color * shadow_prd.shadow.attenuation;
 
-      result += p_Kd * nDl * Lc;
+      result += p_Kd * nDl * Lc * (vec3f(1.f,1.f,1.f)-p_reflectivity);
 
       vec3f H = normalize(L - ray.direction);
       float nDh = dot( p_normal, H );
