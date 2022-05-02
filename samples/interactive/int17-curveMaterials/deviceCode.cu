@@ -15,6 +15,13 @@
 // ======================================================================== //
 
 #include "deviceCode.h"
+
+/* this sample uses features from newer versions of optix; it will not
+   run with older versions, nor even compile with them - so to make
+   the entire project compile with older versions of optix we'll here
+   disable this newer code if an older version is being used. */
+#if OPTIX_VERSION >= 70300
+
 #include "../int15-cookBilliardScene/helpers.h"
 #include <optix_device.h>
 #include <owl/common/math/random.h>
@@ -57,6 +64,8 @@ static __forceinline__ __device__ vec3f getHitPoint()
 
   return (vec3f)rayOrigin + t * (vec3f)rayDirection;
 }
+
+
 
 /*! compute normal - stolen from optixHair sample in OptiX 7.4 SDK */
 //
@@ -690,3 +699,4 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     = owl::make_rgba(vec3f(accumColor));
 }
 
+#endif

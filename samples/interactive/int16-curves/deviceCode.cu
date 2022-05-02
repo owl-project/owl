@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2022 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -15,6 +15,13 @@
 // ======================================================================== //
 
 #include "deviceCode.h"
+
+/* this sample uses features from newer versions of optix; it will not
+   run with older versions, nor even compile with them - so to make
+   the entire project compile with older versions of optix we'll here
+   disable this newer code if an older version is being used. */
+#if OPTIX_VERSION >= 70300
+
 #include "../int15-cookBilliardScene/helpers.h"
 #include <optix_device.h>
 #include <owl/common/math/random.h>
@@ -681,3 +688,4 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
     = owl::make_rgba(vec3f(accumColor));
 }
 
+#endif

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2022 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -273,7 +273,7 @@ void Viewer::createScene()
 
 Viewer::Viewer()
 {
-  setTitle("sample viewer: int16-curves");
+  setTitle("sample viewer: int17-curveMaterials");
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
   owlContextSetRayTypeCount(context,2);
@@ -427,22 +427,25 @@ Viewer::Viewer()
 
 void Viewer::render()
 {
-  // std::cout << "==================================================================" << std::endl;
   if (sbtDirty) {
     owlBuildSBT(context);
     sbtDirty = false;
   }
-  // PRINT(accumID);
   owlParamsSet1i(lp,"accumID",accumID);
   accumID++;
   owlLaunch2D(rayGen,fbSize.x,fbSize.y,lp);
-  // PRINT(fbSize);
-  // PING;
 }
 
 
 int main(int ac, char **av)
 {
+#if !OWL_CAN_DO_CURVES
+  std::cerr << OWL_TERMINAL_RED
+            << "You tried to run a sample that requires support for 'curves' primitives;\n"
+            << "but OWL supports curves only when compiled with OptiX >= 7.4.\n"
+            << "please re-build with a newer version of OptiX, and re-run\n";
+  exit(0);
+#endif
   std::string arg1;
   if (ac>1) {
     arg1 = std::string(av[1]);
