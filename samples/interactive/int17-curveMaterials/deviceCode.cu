@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2022 Ingo Wald                                            //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -64,6 +64,8 @@ static __forceinline__ __device__ vec3f getHitPoint()
 
   return (vec3f)rayOrigin + t * (vec3f)rayDirection;
 }
+
+
 
 /*! compute normal - stolen from optixHair sample in OptiX 7.4 SDK */
 //
@@ -545,7 +547,7 @@ __device__ void phongShade( vec3f p_Kd,
     if(fmaxf(shadow_prd.shadow.attenuation) > 0) {
       vec3f Lc = light.color * shadow_prd.shadow.attenuation;
 
-      result += p_Kd * nDl * Lc;
+      result += p_Kd * nDl * Lc * (vec3f(1.f,1.f,1.f)-p_reflectivity);
 
       vec3f H = normalize(L - ray.direction);
       float nDh = dot( p_normal, H );
@@ -563,6 +565,7 @@ __device__ void phongShade( vec3f p_Kd,
     vec3f ntsc_luminance = {0.30, 0.59, 0.11}; 
     new_prd.radiance.importance = prd.radiance.importance * dot( p_reflectivity, ntsc_luminance );
     new_prd.radiance.depth = prd.radiance.depth + 1;
+    new_prd.max_depth=prd.max_depth;
 
     // reflection ray
     if( new_prd.radiance.importance >= 0.01f && new_prd.radiance.depth <= prd.max_depth) {
@@ -597,13 +600,15 @@ OPTIX_CLOSEST_HIT_PROGRAM(CurvesGeom)()
   prd.t_hit = optixGetRayTmax(); // TODO:
   prd.sn = prd.gn
     // = vec3f(0,1,0)
-    = computeNormal(optixGetPrimitiveType(), optixGetPrimitiveIndex())
-    ;
+    = computeNormal(optixGetPrimitiveType(), optixGetPrimitiveIndex());
 
-  
-  vec3f ka = self.material.Ka;
-  vec3f kd = self.material.Kd;
-  vec3f ks = self.material.Ks;
+
+  // Get curve material properties
+  const auto &curveMaterial = owl::getProgramData<CurvesGeom>().curves[optixGetPrimitiveIndex()];
+  Material material = curveMaterial.material;
+  vec3f ka = material.Ka;
+  vec3f kd = material.Kd;
+  vec3f ks = material.Ks;
 
   vec3f world_shading_normal = normalize((vec3f)optixTransformNormalFromObjectToWorldSpace(prd.sn));
   vec3f world_geometric_normal = normalize((vec3f)optixTransformNormalFromObjectToWorldSpace(prd.gn));
@@ -615,7 +620,7 @@ OPTIX_CLOSEST_HIT_PROGRAM(CurvesGeom)()
   // const bool dbg_y = launchIndex.y == launchDims.y/2;
   // const bool dbg =  dbg_x & dbg_y;
   
-  phongShade( kd, ka, ks, ffnormal, self.material.phong_exp, self.material.reflectivity );
+  phongShade( kd, ka, ks, ffnormal, material.phong_exp, material.reflectivity );
 }
 
 OPTIX_ANY_HIT_PROGRAM(CurvesGeom)()
@@ -627,9 +632,14 @@ OPTIX_ANY_HIT_PROGRAM(CurvesGeom)()
 OPTIX_MISS_PROGRAM(miss)()
 {
   const MissProgData &self = owl::getProgramData<MissProgData>();
-
   PRD &prd = owl::getPRD<PRD>();
-  prd.radiance.result = self.bg_color;
+
+  RadianceRay ray;
+  ray.direction = optixGetWorldRayDirection();
+
+  const vec3f rayDir = normalize(ray.direction);
+  const float t = 0.5f*(rayDir.z + 1.0f);
+  prd.radiance.result = (1.0f - t) * (0.8f,0.71f,0.71f) + t * self.bg_color;
 }
 
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
@@ -672,6 +682,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   PRD prd;
   prd.t_hit = 1e20f;
   prd.radiance.importance = 1.f;
+  prd.max_depth = 5;
 
   owl::traceRay(/*accel to trace against*/self.world,
                 /*the ray to trace*/ray,

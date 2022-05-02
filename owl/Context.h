@@ -27,10 +27,6 @@
 
 namespace owl {
 
-#if OPTIX_VERSION >= 70300
-# define OWL_CAN_DO_CURVES 1
-#endif
-
   /*! the root 'context' that spans, and manages, all objects and all
     devices */
   struct Context : public Object {
