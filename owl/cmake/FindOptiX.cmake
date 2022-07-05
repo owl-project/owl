@@ -26,9 +26,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+message(WARN BEFORE ${OptiX_INSTALL_DIR})
 if (TARGET OptiX::OptiX)
   return()
 endif()
+
+message(WARN AFTER ${OptiX_INSTALL_DIR})
 
 if (DEFINED ENV{OptiX_INSTALL_DIR})
   message(STATUS "Detected the OptiX_INSTALL_DIR env variable (pointing to $ENV{OptiX_INSTALL_DIR}; going to use this for finding optix.h")
@@ -37,7 +40,6 @@ elseif (DEFINED ${OptiX_INSTALL_DIR})
   message(STATUS "Detected the OptiX_INSTALL_DIR variable (pointing to ${OptiX_INSTALL_DIR}; going to use this for finding optix.h")
   find_path(OptiX_ROOT_DIR NAMES include/optix.h PATHS ${OptiX_INSTALL_DIR})
 else()
-  else()
   find_path(OptiX_ROOT_DIR NAMES include/optix.h)
 endif()
 
