@@ -30,7 +30,6 @@ if (TARGET OptiX::OptiX)
   return()
 endif()
 
-message(WARN TEST ${OptiX_INSTALL_DIR})
 if (OptiX_INSTALL_DIR)
   message(STATUS "Detected the OptiX_INSTALL_DIR variable (pointing to ${OptiX_INSTALL_DIR}; going to use this for finding optix.h")
   find_path(OptiX_ROOT_DIR NAMES include/optix.h PATHS ${OptiX_INSTALL_DIR})
