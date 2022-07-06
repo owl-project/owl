@@ -26,12 +26,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-message(WARN BEFORE ${OptiX_INSTALL_DIR})
 if (TARGET OptiX::OptiX)
   return()
 endif()
-
-message(WARN AFTER ${OptiX_INSTALL_DIR})
 
 if (DEFINED ENV{OptiX_INSTALL_DIR})
   message(STATUS "Detected the OptiX_INSTALL_DIR env variable (pointing to $ENV{OptiX_INSTALL_DIR}; going to use this for finding optix.h")
