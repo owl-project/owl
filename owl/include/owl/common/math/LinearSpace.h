@@ -148,25 +148,25 @@ namespace owl {
     // Binary Operators
     ////////////////////////////////////////////////////////////////////////////////
 
-    template<typename T> inline LinearSpace2<T> operator +( const LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return LinearSpace2<T>(a.vx+b.vx,a.vy+b.vy); }
-    template<typename T> inline LinearSpace2<T> operator -( const LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return LinearSpace2<T>(a.vx-b.vx,a.vy-b.vy); }
+    template<typename T> inline __both__ LinearSpace2<T> operator +( const LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return LinearSpace2<T>(a.vx+b.vx,a.vy+b.vy); }
+    template<typename T> inline __both__ LinearSpace2<T> operator -( const LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return LinearSpace2<T>(a.vx-b.vx,a.vy-b.vy); }
 
-    template<typename T> inline LinearSpace2<T> operator*(const typename T::scalar_t & a, const LinearSpace2<T>& b) { return LinearSpace2<T>(a*b.vx, a*b.vy); }
-    template<typename T> inline T               operator*(const LinearSpace2<T>& a, const T              & b) { return b.x*a.vx + b.y*a.vy; }
-    template<typename T> inline LinearSpace2<T> operator*(const LinearSpace2<T>& a, const LinearSpace2<T>& b) { return LinearSpace2<T>(a*b.vx, a*b.vy); }
+    template<typename T> inline __both__ LinearSpace2<T> operator*(const typename T::scalar_t & a, const LinearSpace2<T>& b) { return LinearSpace2<T>(a*b.vx, a*b.vy); }
+    template<typename T> inline __both__ T               operator*(const LinearSpace2<T>& a, const T              & b) { return b.x*a.vx + b.y*a.vy; }
+    template<typename T> inline __both__ LinearSpace2<T> operator*(const LinearSpace2<T>& a, const LinearSpace2<T>& b) { return LinearSpace2<T>(a*b.vx, a*b.vy); }
 
-    template<typename T> inline LinearSpace2<T> operator/(const LinearSpace2<T>& a, const typename T::scalar_t & b) { return LinearSpace2<T>(a.vx/b, a.vy/b); }
-    template<typename T> inline LinearSpace2<T> operator/(const LinearSpace2<T>& a, const LinearSpace2<T>& b) { return a * rcp(b); }
+    template<typename T> inline __both__ LinearSpace2<T> operator/(const LinearSpace2<T>& a, const typename T::scalar_t & b) { return LinearSpace2<T>(a.vx/b, a.vy/b); }
+    template<typename T> inline __both__ LinearSpace2<T> operator/(const LinearSpace2<T>& a, const LinearSpace2<T>& b) { return a * rcp(b); }
 
-    template<typename T> inline LinearSpace2<T>& operator *=( LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return a = a * b; }
-    template<typename T> inline LinearSpace2<T>& operator /=( LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return a = a / b; }
+    template<typename T> inline __both__ LinearSpace2<T>& operator *=( LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return a = a * b; }
+    template<typename T> inline __both__ LinearSpace2<T>& operator /=( LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return a = a / b; }
 
     ////////////////////////////////////////////////////////////////////////////////
     /// Comparison Operators
     ////////////////////////////////////////////////////////////////////////////////
 
-    template<typename T> inline bool operator ==( const LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return a.vx == b.vx && a.vy == b.vy; }
-    template<typename T> inline bool operator !=( const LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return a.vx != b.vx || a.vy != b.vy; }
+    template<typename T> inline __both__ bool operator ==( const LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return a.vx == b.vx && a.vy == b.vy; }
+    template<typename T> inline __both__ bool operator !=( const LinearSpace2<T>& a, const LinearSpace2<T>& b ) { return a.vx != b.vx || a.vy != b.vy; }
 
     ////////////////////////////////////////////////////////////////////////////////
     /// Output Operators
@@ -361,9 +361,9 @@ namespace owl {
     template<typename T> inline __both__ T               operator*(const LinearSpace3<T>& a, const T              & b) { return b.x*a.vx + b.y*a.vy + b.z*a.vz; }
     template<typename T> inline __both__ LinearSpace3<T> operator*(const LinearSpace3<T>& a, const LinearSpace3<T>& b) { return LinearSpace3<T>(a*b.vx, a*b.vy, a*b.vz); }
 
-    template<typename T> __both__ inline LinearSpace3<T> operator/(const LinearSpace3<T>& a, const typename T::scalar_t & b) { return LinearSpace3<T>(a.vx/b, a.vy/b, a.vz/b); }
+    template<typename T> inline __both__ LinearSpace3<T> operator/(const LinearSpace3<T>& a, const typename T::scalar_t & b) { return LinearSpace3<T>(a.vx/b, a.vy/b, a.vz/b); }
   
-    template<typename T> __both__ inline LinearSpace3<T> operator/(const LinearSpace3<T>& a, const LinearSpace3<T>& b) { return a * rcp(b); }
+    template<typename T> inline __both__ LinearSpace3<T> operator/(const LinearSpace3<T>& a, const LinearSpace3<T>& b) { return a * rcp(b); }
 
     template<typename T> inline LinearSpace3<T>& operator *=( LinearSpace3<T>& a, const LinearSpace3<T>& b ) { return a = a * b; }
     template<typename T> inline LinearSpace3<T>& operator /=( LinearSpace3<T>& a, const LinearSpace3<T>& b ) { return a = a / b; }
