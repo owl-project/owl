@@ -371,6 +371,7 @@ namespace owl {
     size_t totalHitGroupRecordsArraySize
       = numHitGroupRecords * hitGroupRecordSize;
     std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
+    PING; PRINT(totalHitGroupRecordsArraySize);
 
     // ------------------------------------------------------------------
     // now, write all records (only on the host so far): we need to

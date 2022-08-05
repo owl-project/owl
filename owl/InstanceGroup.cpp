@@ -18,13 +18,13 @@
 #include "Context.h"
 
 #define LOG(message)                                    \
-  if (Context::logging())                               \
+  if (1 || Context::logging())                               \
     std::cout << "#owl(" << device->ID << "): "         \
               << message                                \
               << std::endl
 
 #define LOG_OK(message)                                         \
-  if (Context::logging())                                       \
+  if (1 || Context::logging())                                       \
     std::cout << OWL_TERMINAL_GREEN                             \
               << "#owl(" << device->ID << "): "                 \
               << message << OWL_TERMINAL_DEFAULT << std::endl
@@ -250,10 +250,13 @@ namespace owl {
     // ==================================================================
     // trigger the build ....
     // ==================================================================
+    const size_t SANITY_SIZE = 1*1024ULL*1024ULL*1024ULL;
     const size_t tempSize
-      = FULL_REBUILD
-      ? blasBufferSizes.tempSizeInBytes
-      : blasBufferSizes.tempUpdateSizeInBytes;
+      = (FULL_REBUILD
+         ? blasBufferSizes.tempSizeInBytes
+         : blasBufferSizes.tempUpdateSizeInBytes)
+      + SANITY_SIZE
+      ;
     LOG("starting to build/refit "
         << prettyNumber(optixInstances.size()) << " instances, "
         << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
@@ -263,12 +266,18 @@ namespace owl {
     tempBuffer.alloc(tempSize);
       
     if (FULL_REBUILD) {
-      dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes
+                               + SANITY_SIZE
+);
       dd.memPeak += tempBuffer.size();
       dd.memPeak += dd.bvhMemory.size();
       dd.memFinal = dd.bvhMemory.size();
     }
-      
+
+    PING;
+    PRINT(tempSize);
+    PRINT(tempBuffer.get());
+    PRINT(dd.bvhMemory.get());
     OPTIX_CHECK(optixAccelBuild(optixContext,
                                 /* todo: stream */0,
                                 &accelOptions,
