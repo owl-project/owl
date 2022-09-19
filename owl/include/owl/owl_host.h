@@ -740,14 +740,33 @@ owlBufferResize(OWLBuffer buffer, size_t newItemCount);
 OWL_API size_t
 owlBufferSizeInBytes(OWLBuffer buffer);
 
-/*! uploads data from given host poiner to given device. offset refers
-    to the offset (in bytes) on the device. \param numbytes is the
-    number of bytes to upload; -1 meaning "full buffer" */
+/*! uploads data from given host poiner to given device, uploading
+    'numItems' items to the destination array offset provided in
+    'destItemOffset'. 
+
+    \note "Items" and "offset" in that context are computed relative
+    to the type that the given buffer was declared over; so for a
+    OWL_FLOAT buffer this function uploads numItems float values to a
+    float buffer; for a OWL_INT3 buffer it will upload numItems int3
+    values, etc. Similarly, the offset is also calculated in typed
+    items: i.e., a specified offset of N in a FLOAT2 buffer will
+    upload to byte offset N*sizeof(float2) (i.e., 8 bytes).
+
+    \param numItems number of (typed) items to upload. A value of
+    numItems==-1 means "upload as many as the buffer has been created
+    over"
+
+    \param destItemOffset offset in the target buffer (calculated in
+    number of typed _items_, not _bytes_!). I.e., a offset value of 0
+    will upload to the beginning of the buffer, a offset value of N
+    will upload with an offset of N*sizeof(T) bytes (where T is the
+    type that the buffer was declared over)
+*/
 OWL_API void 
 owlBufferUpload(OWLBuffer buffer,
                 const void *hostPtr,
-                size_t offset OWL_IF_CPP(=0),
-                size_t numBytes OWL_IF_CPP(=size_t(-1)));
+                size_t destItemOffset OWL_IF_CPP(=0),
+                size_t numItems OWL_IF_CPP(=size_t(-1)));
 
 /*! clears a buffer in the sense that it sets the entire memory region
     to zeroes. Note this is currently implemneted only for buffers of
