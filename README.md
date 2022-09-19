@@ -299,6 +299,12 @@ fully use it. This might look like:
 target_link_libraries(myOwlApp PRIVATE owl::owl)
 ```
 
+If your sample uses the `owlViewer` base class and/or ptx embedding, add those as well:
+
+```cmake
+target_link_libraries(myOwlApp PRIVATE myOwlApp-ptx owl::owl owl_viewer)
+```
+
 OptiX will need to be in a place that can be found by CMake. Point CMake at your
 OptiX directory by adding it to `CMAKE_PREFIX_PATH` (where it works on all
 platforms similar to how `LD_LIBRARY_PATH` resolves runtime linking on Linux).
