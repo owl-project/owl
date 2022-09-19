@@ -167,7 +167,7 @@ namespace owl {
       
       curveArray.numPrimitives        = curves->segmentIndicesCount;//1;
       curveArray.vertexBuffers        = d_vertices;//vertexBufferPointers;
-      curveArray.numVertices          = 6*curves->vertexCount;//static_cast<uint32_t>( vertices.size() );
+      curveArray.numVertices          = curves->vertexCount;//static_cast<uint32_t>( vertices.size() );
       curveArray.vertexStrideInBytes  = sizeof(vec3f);
       curveArray.widthBuffers         = d_widths;//widthsBufferPointers;
       curveArray.widthStrideInBytes   = sizeof(float);
