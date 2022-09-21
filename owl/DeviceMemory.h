@@ -110,4 +110,15 @@ namespace owl {
     upload(vec.data());
   }
     
+  struct PinnedHostMem {
+    void resize(int N) {
+      if (ptr) cudaFree(ptr);
+      ptr = 0;
+      cudaMallocHost(&ptr,N);
+    }
+    uint8_t *data() { return ptr; }
+    
+    uint8_t *ptr = 0;
+  };
+  
 } //::owl
