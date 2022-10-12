@@ -19,6 +19,5 @@
 # path tracer, etc
 # ---------------------------------------------------------------------------
 add_subdirectory(optix7course)
-add_subdirectory(rtgems2-voxrender)
 
 
