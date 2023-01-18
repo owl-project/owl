@@ -159,7 +159,7 @@ namespace owl {
       sumPrims += ta.numIndexTriplets;
       // we always have exactly one SBT entry per shape (i.e., triangle
       // mesh), and no per-primitive materials:
-      triangleInputFlags[childID]    = 0;
+      triangleInputFlags[childID]    = OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL;//0;
       ta.flags                       = &triangleInputFlags[childID];
       // iw, jan 7, 2020: note this is not the "actual" number of
       // SBT entires we'll generate when we build the SBT, only the
