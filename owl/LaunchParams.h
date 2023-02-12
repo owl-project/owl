@@ -62,7 +62,7 @@ namespace owl {
           host-side copy, too, so we can leave the launch2D call
           without having to first wait for the cudaMemcpy to
           complete */
-      std::vector<uint8_t> hostMemory;
+      PinnedHostMem hostMemory;
       
       /*! the cuda device memory we copy the launch params to */
       DeviceMemory         deviceMemory;

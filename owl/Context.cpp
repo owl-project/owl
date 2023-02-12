@@ -43,6 +43,9 @@
 
 namespace owl {
 
+  bool Context::useManagedMemForAccelData = false;
+  bool Context::useManagedMemForAccelAux  = false;
+  
   Context::Context(int32_t *requestedDeviceIDs,
                    int      numRequestedDevices)
     : buffers(this),
@@ -111,7 +114,10 @@ namespace owl {
           }
           
           rc = cudaDeviceEnablePeerAccess(cuda_j,0);
-          if (rc != cudaSuccess)
+          if (rc == cudaErrorPeerAccessAlreadyEnabled) {
+            std::cout << "#owl: peer access already enabled ... 'k." << std::endl;
+            cudaGetLastError();
+          } else if (rc != cudaSuccess)
             OWL_RAISE("cuda error in cudaDeviceEnablePeerAccess: "
                       +std::to_string(rc));
           ss << " +";

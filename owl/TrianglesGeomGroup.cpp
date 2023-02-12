@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2022 Ingo Wald                                            //
+// Copyright 2019-2023 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -159,7 +159,7 @@ namespace owl {
       sumPrims += ta.numIndexTriplets;
       // we always have exactly one SBT entry per shape (i.e., triangle
       // mesh), and no per-primitive materials:
-      triangleInputFlags[childID]    = 0;
+      triangleInputFlags[childID]    = OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL;//0;
       ta.flags                       = &triangleInputFlags[childID];
       // iw, jan 7, 2020: note this is not the "actual" number of
       // SBT entires we'll generate when we build the SBT, only the
@@ -221,9 +221,16 @@ namespace owl {
 
     // temp memory:
     DeviceMemory tempBuffer;
-    tempBuffer.alloc(FULL_REBUILD
-                     ?max(blasBufferSizes.tempSizeInBytes,blasBufferSizes.tempUpdateSizeInBytes)
-                     :blasBufferSizes.tempUpdateSizeInBytes);
+    if (Context::useManagedMemForAccelAux)
+      tempBuffer.allocManaged(FULL_REBUILD
+                       ?max(blasBufferSizes.tempSizeInBytes,
+                            blasBufferSizes.tempUpdateSizeInBytes)
+                       :blasBufferSizes.tempUpdateSizeInBytes);
+    else
+      tempBuffer.alloc(FULL_REBUILD
+                       ?max(blasBufferSizes.tempSizeInBytes,
+                            blasBufferSizes.tempUpdateSizeInBytes)
+                       :blasBufferSizes.tempUpdateSizeInBytes);
     if (FULL_REBUILD) {
       // Only track this on first build, assuming temp buffer gets smaller for refit
       dd.memPeak += tempBuffer.size();
@@ -239,10 +246,16 @@ namespace owl {
     // Allocate output buffer for initial build
     if (FULL_REBUILD) {
       if (allowCompaction) {
-        outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
+        if (Context::useManagedMemForAccelData)
+          outputBuffer.allocManaged(blasBufferSizes.outputSizeInBytes);
+        else
+          outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
         dd.memPeak += outputBuffer.size();
       } else {
-        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+        if (Context::useManagedMemForAccelData)
+          dd.bvhMemory.allocManaged(blasBufferSizes.outputSizeInBytes);
+        else
+          dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
         dd.memPeak += dd.bvhMemory.size();
         dd.memFinal = dd.bvhMemory.size();
       }
@@ -252,7 +265,10 @@ namespace owl {
 
     if (FULL_REBUILD && allowCompaction) {
 
-      compactedSizeBuffer.alloc(sizeof(uint64_t));
+      if (Context::useManagedMemForAccelData)
+        compactedSizeBuffer.allocManaged(sizeof(uint64_t));
+      else
+        compactedSizeBuffer.alloc(sizeof(uint64_t));
       dd.memPeak += compactedSizeBuffer.size();
 
       OptixAccelEmitDesc emitDesc;
@@ -311,8 +327,11 @@ namespace owl {
       // download builder's compacted size from device
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
-      
-      dd.bvhMemory.alloc(compactedSize);
+
+      if (Context::useManagedMemForAccelData)
+        dd.bvhMemory.allocManaged(compactedSize);
+      else
+        dd.bvhMemory.alloc(compactedSize);
       // ... and perform compaction
       OPTIX_CALL(AccelCompact(device->optixContext,
                               /*TODO: stream:*/0,

@@ -196,7 +196,7 @@ namespace owl {
       = (uint32_t)device->sbt.hitGroupRecordSize;
     sbt.hitgroupRecordCount
       = (uint32_t)device->sbt.hitGroupRecordCount;
-    
+
     OPTIX_CALL(Launch(device->pipeline,
                       lpDD.stream,
                       (CUdeviceptr)lpDD.deviceMemory.get(),
@@ -204,7 +204,6 @@ namespace owl {
                       &lpDD.sbt,
                       dims.x,dims.y,dims.z
                       ));
-
     /* note we do NOT sync here ! */
   }
 

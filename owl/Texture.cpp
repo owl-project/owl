@@ -119,14 +119,19 @@ namespace owl {
         ? cudaFilterModePoint
         : cudaFilterModeLinear;
       tex_desc.readMode            =
-        ((texelFormat == OWL_TEXEL_FORMAT_R8) || (texelFormat == OWL_TEXEL_FORMAT_RGBA8)) ?
-        cudaReadModeNormalizedFloat : cudaReadModeElementType;
+        ((texelFormat == OWL_TEXEL_FORMAT_R8) || (texelFormat == OWL_TEXEL_FORMAT_RGBA8))
+        ? cudaReadModeNormalizedFloat
+        : cudaReadModeElementType;
       tex_desc.normalizedCoords    = 1;
       tex_desc.maxAnisotropy       = 1;
-      tex_desc.maxMipmapLevelClamp = 99;
+      tex_desc.maxMipmapLevelClamp = 0;
+      // tex_desc.maxMipmapLevelClamp = 99;
       tex_desc.minMipmapLevelClamp = 0;
       tex_desc.mipmapFilterMode    = cudaFilterModePoint;
       tex_desc.borderColor[0]      = 1.0f;
+      tex_desc.borderColor[1]      = 1.0f;
+      tex_desc.borderColor[2]      = 1.0f;
+      tex_desc.borderColor[3]      = 1.0f;
       tex_desc.sRGB                = (colorSpace == OWL_COLOR_SPACE_SRGB);
       
       // Create texture object
