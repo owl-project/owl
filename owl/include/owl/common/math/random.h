@@ -89,7 +89,8 @@ namespace owl {
         const uint32_t LCG_A = 1664525u;
         const uint32_t LCG_C = 1013904223u;
         state = (LCG_A * state + LCG_C);
-        return (state & 0x00FFFFFF) / (float) 0x01000000;
+        float f = (state & 0x00FFFFFF) / (float) 0x01000000;
+        return (f >= 1.f) ? 0.f : f;
       }
     
       uint32_t state;
