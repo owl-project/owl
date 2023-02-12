@@ -211,8 +211,12 @@ namespace owl {
       optixInstances[childID] = oi;
     }
 
-    dd.optixInstanceBuffer.alloc(optixInstances.size()*
-                                 sizeof(optixInstances[0]));
+    if (Context::useManagedMemForAccelAux)
+      dd.optixInstanceBuffer.allocManaged(optixInstances.size()*
+                                          sizeof(optixInstances[0]));
+    else
+      dd.optixInstanceBuffer.alloc(optixInstances.size()*
+                                   sizeof(optixInstances[0]));
     dd.optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
     
     // ==================================================================
@@ -260,10 +264,16 @@ namespace owl {
         << prettyNumber(tempSize) << "B in temp data");
       
     DeviceMemory tempBuffer;
-    tempBuffer.alloc(tempSize);
+    if (Context::useManagedMemForAccelAux)
+      tempBuffer.allocManaged(tempSize);
+    else
+      tempBuffer.alloc(tempSize);
       
     if (FULL_REBUILD) {
-      dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      if (Context::useManagedMemForAccelData)
+        dd.bvhMemory.allocManaged(blasBufferSizes.outputSizeInBytes);
+      else
+        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
       dd.memPeak += tempBuffer.size();
       dd.memPeak += dd.bvhMemory.size();
       dd.memFinal = dd.bvhMemory.size();
@@ -376,7 +386,7 @@ namespace owl {
 #endif
     }
     // and upload
-    dd.motionTransformsBuffer.alloc(motionTransforms.size()*
+    dd.motionTransformsBuffer.allocManaged(motionTransforms.size()*
                                     sizeof(motionTransforms[0]));
     dd.motionTransformsBuffer.upload(motionTransforms.data(),"motionTransforms");
       
@@ -384,7 +394,7 @@ namespace owl {
     /* since 7.2, optix no longer requires those aabbs (and in fact,
        no longer supports specifying them */
 #else
-    dd.motionAABBsBuffer.alloc(motionAABBs.size()*sizeof(box3f));
+    dd.motionAABBsBuffer.allocManaged(motionAABBs.size()*sizeof(box3f));
     dd.motionAABBsBuffer.upload(motionAABBs.data(),"motionaabbs");
 #endif      
     // ==================================================================
@@ -434,8 +444,12 @@ namespace owl {
       optixInstances[childID] = oi;
     }
 
-    dd.optixInstanceBuffer.alloc(optixInstances.size()*
-                                 sizeof(optixInstances[0]));
+    if (Context::useManagedMemForAccelAux)
+      dd.optixInstanceBuffer.allocManaged(optixInstances.size()*
+                                          sizeof(optixInstances[0]));
+    else
+      dd.optixInstanceBuffer.alloc(optixInstances.size()*
+                                   sizeof(optixInstances[0]));
     dd.optixInstanceBuffer.upload(optixInstances.data(),"optixinstances");
 
     // ==================================================================
@@ -499,10 +513,14 @@ namespace owl {
         << prettyNumber(tempSize) << "B in temp data");
       
     DeviceMemory tempBuffer;
-    tempBuffer.alloc(tempSize);
+    tempBuffer.allocManaged(tempSize);
       
-    if (FULL_REBUILD)
-      dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+    if (FULL_REBUILD) {
+      if (Context::useManagedMemForAccelAux)
+        dd.bvhMemory.allocManaged(blasBufferSizes.outputSizeInBytes);
+      else
+        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+    }
       
     OPTIX_CHECK(optixAccelBuild(optixContext,
                                 /* todo: stream */0,

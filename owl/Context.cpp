@@ -43,6 +43,9 @@
 
 namespace owl {
 
+  bool Context::useManagedMemForAccelData = false;
+  bool Context::useManagedMemForAccelAux  = false;
+  
   Context::Context(int32_t *requestedDeviceIDs,
                    int      numRequestedDevices)
     : buffers(this),
