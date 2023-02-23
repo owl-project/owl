@@ -95,6 +95,8 @@ namespace owl {
     if (module)
       optixModuleDestroy(module);
     module = 0;
+    if (boundsModule)
+      cuModuleUnload(boundsModule);
   }
 
   /*! build the optix side of this module on this device */
