@@ -43,6 +43,7 @@ namespace owl {
 
       inline __both__ bool contains(const T &t) const { return t >= lower && t <= upper; }
       inline __both__ bool is_empty() const { return begin > end; }
+      inline __both__ bool empty() const { return begin > end; }
       inline __both__ T center() const { return (begin+end)/2; }
       inline __both__ T span() const { return end - begin; }
       inline __both__ T diagonal() const { return end - begin; }
