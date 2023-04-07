@@ -56,17 +56,6 @@ struct PRD {
   int max_depth;
 };
 
-/*! stolen from optixHair sample in OptiX 7.4 SDK */
-// Get curve hit-point in world coordinates.
-static __forceinline__ __device__ vec3f getHitPoint()
-{
-  const float  t            = optixGetRayTmax();
-  const float3 rayOrigin    = optixGetWorldRayOrigin();
-  const float3 rayDirection = optixGetWorldRayDirection();
-
-  return (vec3f)rayOrigin + t * (vec3f)rayDirection;
-}
-
 static
 __device__ void phongShade( vec3f p_Kd,
                             vec3f p_Ka,
@@ -187,8 +176,9 @@ OPTIX_CLOSEST_HIT_PROGRAM(SpheresGeom)()
 
   prd.sn = prd.gn = normalize((vec3f)N);
   
-  vec3f ka = self.material.Ka;
-  vec3f kd = self.material.Kd;
+  vec3f tint = self.tint[prim_idx];
+  vec3f ka = self.material.Ka * tint;
+  vec3f kd = self.material.Kd * tint;
   vec3f ks = self.material.Ks;
 
   vec3f world_shading_normal = normalize((vec3f)optixTransformNormalFromObjectToWorldSpace(prd.sn));

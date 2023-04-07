@@ -45,8 +45,8 @@ struct Material {
 
 struct SpheresGeomData
 {
-  /*! color of the sphere */
-  vec3f color;
+  /*! color of the spheres */
+  vec3f* tint;
   Material material;
 };
 

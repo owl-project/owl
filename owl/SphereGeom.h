@@ -20,7 +20,7 @@
 
 namespace owl {
 
-  /*! a geometry *type* that uses optix 'curves' primitives, and that
+  /*! a geometry *type* that uses optix 'sphere' primitives, and that
     captures the anyhit and closesthit programs, variable types, SBT
     layout, etc, associated with all instances of this type */
   struct SphereGeomType : public GeomType {
@@ -82,11 +82,6 @@ namespace owl {
         purposes. ie, for static meshes only one entry is used, for
         motion blur two (and eventually, maybe more) will be used */
       std::vector<CUdeviceptr> radiusPointers;
-
-      /*! device poiner to array of segment indices - the memory for the
-        indices will live in some sort of buffer; this only points
-        to that buffer */
-      CUdeviceptr indicesPointer  = (CUdeviceptr)0;
     };
 
     /*! constructor - create a new (as yet without vertices, indices,

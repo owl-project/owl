@@ -152,7 +152,6 @@ namespace owl {
 
 			sphereArray.radiusBuffers = d_radius;
 			sphereArray.radiusStrideInBytes = sizeof(float);
-			sphereArray.singleRadius = 0;
 
 			sphereArray.vertexBuffers = d_vertices;//vertexBufferPointers;
 			sphereArray.numVertices = spheres->vertexCount;//static_cast<uint32_t>( vertices.size() );
@@ -161,7 +160,7 @@ namespace owl {
 
 			// we always have exactly one SBT entry per shape (i.e., triangle
 			// mesh), and no per-primitive materials:
-			sphereInputFlags[childID] = OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL;//0;
+			sphereInputFlags[childID] = OPTIX_GEOMETRY_FLAG_NONE;//0;
 			sphereArray.flags = &sphereInputFlags[childID];
 
 			// iw, jan 7, 2020: note this is not the "actual" number of

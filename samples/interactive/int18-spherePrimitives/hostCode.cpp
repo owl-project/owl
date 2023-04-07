@@ -79,7 +79,8 @@ struct Viewer : public owl::viewer::OWLViewer
   // the spheres model we're going to render
   std::vector<float> radii;
   std::vector<vec3f> vertices;
-  OWLBuffer radiiBuffer, verticesBuffer;
+  std::vector<vec3f> colors;
+  OWLBuffer radiiBuffer, verticesBuffer, colorsBuffer;
   
   bool sbtDirty = true;
 };
@@ -140,16 +141,19 @@ static float randomFloat01()
 
 void Viewer::createScene()
 {
-  for (int i = 0; i < 100; i++)
+  for (int i = 0; i < 500; i++)
   {
-      float radius = 0.1f + (randomFloat01() * 0.1f);
+      float radius = 0.05f + (randomFloat01() * 0.2f);
       radii.push_back( radius );
 
-      float size = 3.0f;
+      float size = 6.0f;
       float x = (randomFloat01() * size) - (size * 0.5f);
       float y = (randomFloat01() * size) - (size * 0.5f);
       float z = (randomFloat01() * size) - (size * 0.5f);
       vertices.push_back( vec3f( x, y, z ) );
+
+      float red = randomFloat01();
+      colors.push_back( vec3f( red, 1.0f, 1.0f - red) );
   }
 }
 
@@ -173,7 +177,7 @@ Viewer::Viewer()
   // declare geometry types
   // -------------------------------------------------------
   OWLVarDecl spheresGeomVars[] = {
-    { "color", OWL_FLOAT3, OWL_OFFSETOF(SpheresGeomData,color)},
+    { "tint", OWL_BUFPTR, OWL_OFFSETOF(SpheresGeomData,tint)},
     //
     { "material.Ka", OWL_FLOAT3, OWL_OFFSETOF(SpheresGeomData,material.Ka) },
     { "material.Kd", OWL_FLOAT3, OWL_OFFSETOF(SpheresGeomData,material.Kd) },
@@ -205,13 +209,16 @@ Viewer::Viewer()
     = owlDeviceBufferCreate(context,OWL_FLOAT3,vertices.size(),vertices.data());
   radiiBuffer 
     = owlDeviceBufferCreate(context,OWL_FLOAT,radii.size(),radii.data());
+  colorsBuffer 
+    = owlDeviceBufferCreate(context,OWL_FLOAT3,colors.size(),colors.data());
   
   OWLGeom spheresGeom = owlGeomCreate(context,spheresGeomType);
   owlSpheresSetVertices(spheresGeom,vertices.size(),verticesBuffer,radiiBuffer);
 
 #if 1
+  owlGeomSetBuffer(spheresGeom, "tint", colorsBuffer);
   owlGeomSet3f(spheresGeom,"material.Ka",.15f,.15f,.15f);
-  owlGeomSet3f(spheresGeom,"material.Kd",.25f,.5f,.35f);
+  owlGeomSet3f(spheresGeom,"material.Kd",.25f,.25f,.25f);
   owlGeomSet3f(spheresGeom,"material.Ks",.4f,.4f,.4f);
   owlGeomSet3f(spheresGeom,"material.reflectivity",0.f,0.f,0.f);
   owlGeomSet1f(spheresGeom,"material.phong_exp",20.f);
@@ -336,7 +343,7 @@ int main(int ac, char **av)
 #if !OWL_CAN_DO_SPHERES
   std::cerr << OWL_TERMINAL_RED
             << "You tried to run a sample that requires support for 'sphere' primitives;\n"
-            << "but OWL supports spheres only when compiled with OptiX >= 7.6.\n"
+            << "but OWL supports spheres only when compiled with OptiX >= 7.5.\n"
             << "please re-build with a newer version of OptiX, and re-run\n";
   exit(0);
 #endif
