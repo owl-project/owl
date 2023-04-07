@@ -21,6 +21,7 @@
 #include "Triangles.h"
 #include "UserGeom.h"
 #include "CurvesGeom.h"
+#include "SphereGeom.h"
 #include "InstanceGroup.h"
 
 #undef OWL_API
@@ -175,6 +176,13 @@ owlEnableCurves(OWLContext _context)
 {
   LOG_API_CALL();
   checkGet(_context)->enableCurves();
+}
+
+OWL_API void
+owlEnableSpheres(OWLContext _context)
+{
+  LOG_API_CALL();
+  checkGet(_context)->enableSpheres();
 }
   
 OWL_API void owlBuildSBT(OWLContext _context,
@@ -546,6 +554,29 @@ owlCurvesGeomGroupCreate(OWLContext _context,
   }
   assert(_group);
   return _group;
+}
+
+OWL_API OWLGroup
+owlSphereGeomGroupCreate(OWLContext _context,
+	size_t numGeometries,
+	OWLGeom* initValues,
+	unsigned int buildFlags)
+{
+	LOG_API_CALL();
+	APIContext::SP context = checkGet(_context);
+	GeomGroup::SP  group = context->sphereGeomGroupCreate(numGeometries, buildFlags);
+	assert(group);
+
+	OWLGroup _group = (OWLGroup)context->createHandle(group);
+	if (initValues) {
+		for (size_t i = 0; i < numGeometries; i++) {
+			Geom::SP child = ((APIHandle*)initValues[i])->get<SphereGeom>();
+			assert(child);
+			group->setChild(i, child);
+		}
+	}
+	assert(_group);
+	return _group;
 }
 
 OWL_API OWLGroup
@@ -1674,3 +1705,32 @@ OWL_API void owlCurvesSetSegmentIndices(OWLGeom   _curves,
   curves->setSegmentIndices({buffer},count);
 }
                                        
+OWL_API void owlSpheresSetVertices(OWLGeom _spheres,
+                                       int numSpheres,
+                                       /*! buffer of (one vec3f per
+                                            sphere) that specifies center */
+                                       OWLBuffer _vertices,
+                                       /*! buffer of (one float per
+                                           sphere) specifies radius*/
+                                       OWLBuffer _radii)
+{
+	LOG_API_CALL();
+
+	assert(_spheres);
+	assert(_vertices);
+	assert(_radii);
+
+	SphereGeom::SP spheres
+		= ((APIHandle*)_spheres)->get<SphereGeom>();
+	assert(spheres);
+
+	Buffer::SP vertices_buffer
+		= ((APIHandle*)_vertices)->get<Buffer>();
+	assert(vertices_buffer);
+
+	Buffer::SP radii_buffer
+		= ((APIHandle*)_radii)->get<Buffer>();
+	assert(radii_buffer);
+
+	spheres->setVertices({ vertices_buffer }, { radii_buffer }, numSpheres);
+}

@@ -24,6 +24,7 @@
 #include "TrianglesGeomGroup.h"
 #include "CurvesGeomGroup.h"
 #include "UserGeomGroup.h"
+#include "SphereGeomGroup.h"
 
 #define LOG(message)                            \
   if (Context::logging())                       \
@@ -314,6 +315,14 @@ namespace owl {
     gg->createDeviceData(getDevices());
     return gg;
   }
+
+  GeomGroup::SP Context::sphereGeomGroupCreate(size_t numChildren, unsigned int buildFlags)
+  {
+    GeomGroup::SP gg
+      = std::make_shared<SphereGeomGroup>(this,numChildren,buildFlags);
+    gg->createDeviceData(getDevices());
+    return gg;
+  }
   
   GeomType::SP
   Context::createGeomType(OWLGeomKind kind,
@@ -330,6 +339,9 @@ namespace owl {
       break;
     case OWL_GEOMETRY_USER:
       gt = std::make_shared<UserGeomType>(this,varStructSize,varDecls);
+      break;
+    case OWL_GEOMETRY_SPHERES:
+      gt = std::make_shared<SphereGeomType>(this,varStructSize,varDecls);
       break;
     default:
       OWL_NOTIMPLEMENTED;
@@ -520,6 +532,10 @@ namespace owl {
     if (curvesEnabled)
       for (auto device : getDevices())
         device->buildCurvesModules();
+    if (spheresEnabled)
+      for (auto device : getDevices())
+        device->buildSphereModule();
+
   }
   
   void Context::setRayTypeCount(size_t rayTypeCount)
@@ -588,6 +604,11 @@ namespace owl {
   void Context::enableCurves()
   {
     curvesEnabled = true;
+  }
+  
+  void Context::enableSpheres()
+  {
+    spheresEnabled = true;
   }
 
   void Context::setNumAttributeValues(size_t numAttributeValues)

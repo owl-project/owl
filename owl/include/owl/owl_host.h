@@ -33,6 +33,10 @@
 # define OWL_CAN_DO_CURVES 1
 #endif
 
+#if OPTIX_VERSION >= 70500
+# define OWL_CAN_DO_SPHERES 1
+#endif
+
 
 #if defined(_MSC_VER)
 #  define OWL_DLL_EXPORT __declspec(dllexport)
@@ -220,7 +224,9 @@ typedef enum
    OWL_GEOM_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
    OWL_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
    /*! maps to optix curves geometry */
-   OWL_GEOMETRY_CURVES
+   OWL_GEOMETRY_CURVES,
+   /*! maps to optix sphere geometry */
+   OWL_GEOMETRY_SPHERES
   }
   OWLGeomKind;
 
@@ -367,6 +373,13 @@ owlContextDestroy(OWLContext context);
     be enabled _before_ enableing curves */
 OWL_API void
 owlEnableCurves(OWLContext _context);
+
+/*! tell the context/pipeline to enable the support for curves
+    geometries; this _must_ be called when using curves geometries. If
+    you want to use _both_ motion blur and curves, motion blur has to
+    be enabled _before_ enableing curves */
+OWL_API void
+owlEnableSpheres(OWLContext _context);
 
 /*! enable motion blur for this context. this _has_ to be called
     before creating any geometries, groups, etc, and before the
@@ -554,6 +567,28 @@ owlCurvesGeomGroupCreate(OWLContext context,
                          size_t     numCurveGeometries,
                          OWLGeom   *curveGeometries,
                          unsigned int buildFlags OWL_IF_CPP(=0));
+
+// ------------------------------------------------------------------
+/*! create a new group (which handles the acceleration strucure) for
+  sphere geometries.
+
+  \param numGeometries Number of geometries in this group, must be
+  non-zero.
+
+  \param arrayOfChildGeoms A array of 'numGeomteries' child
+  geometries. Every geom in this array must be a valid owl geometry
+  created with owlGeomCreate, and must be of a OWL_GEOMETRY_SPHERES
+  type.
+
+  \param buildFlags A combination of OptixBuildFlags.  The default
+  of 0 means to use OWL default build flags.
+*/
+OWL_API OWLGroup
+owlSphereGeomGroupCreate(OWLContext context,
+                       size_t     numGeometries,
+                       OWLGeom   *arrayOfChildGeoms,
+                       unsigned int buildFlags OWL_IF_CPP(=0));
+
 
 // ------------------------------------------------------------------
 /*! create a new instance group with given number of instances. The
@@ -852,7 +887,7 @@ OWL_API void owlTrianglesSetIndices(OWLGeom triangles,
                                     size_t offset);
 
 // ==================================================================
-// "Triangles" functions
+// "Curves" functions
 // ==================================================================
 
 /*! sets curve degree (1="linear", 2="quadratic b-spline", 3="cubic
@@ -880,6 +915,21 @@ OWL_API void owlCurvesSetControlPoints(OWLGeom curvesGeom,
 OWL_API void owlCurvesSetSegmentIndices(OWLGeom curvesGeom,
                                         int numSegmentIndices,
                                         OWLBuffer segmentIndices);
+
+// ==================================================================
+// "Spheres" functions
+// ==================================================================
+
+/*! sets the array of control points, and their associated curve
+    width. */
+OWL_API void owlSpheresSetVertices(OWLGeom spheresGeom,
+                                       int numSpheres,
+                                       /*! buffer of (one vec3f per
+                                            sphere) that specifies center */
+                                       OWLBuffer vertices,
+                                       /*! buffer of (one float per
+                                           sphere) specifies radius*/
+                                       OWLBuffer radius);
                                        
 // -------------------------------------------------------
 // group/hierarchy creation and setting
