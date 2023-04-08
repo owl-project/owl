@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2021 Ingo Wald                                            //
+// Copyright 2019-2020 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,36 +16,44 @@
 
 #pragma once
 
-#include "Group.h"
+#include <owl/owl.h>
+#include <owl/common/math/vec.h>
+#include <cuda_runtime.h>
 
-namespace owl {
+using namespace owl;
 
-  /*! a group / BLAS over triangle meshes */
-  struct TrianglesGeomGroup : public GeomGroup {
+/* variables for the triangle mesh geometry */
+struct TrianglesGeomData
+{
+  /*! array/buffer of the texgture coordinates */
+  vec2f *texCoord;
+  /*! array/buffer of vertex indices */
+  vec3i *index;
+  /*! array/buffer of vertex positions */
+  vec3f *vertex;
+  /* texture object */
+  cudaTextureObject_t texture;
+};
 
-    /*! constructor - passthroughto parent class */
-    TrianglesGeomGroup(Context *const context, size_t numChildren, unsigned int buildFlags);
-    
-    /*! pretty-printer, for printf-debugging */
-    std::string toString() const override;
+/* variables for the ray generation program */
+struct RayGenData
+{
+  uint32_t *fbPtr;
+  vec2i  fbSize;
+  OptixTraversableHandle world;
 
-    void buildAccel() override;
-    void refitAccel() override;
+  struct {
+    vec3f pos;
+    vec3f dir_00;
+    vec3f dir_du;
+    vec3f dir_dv;
+  } camera;
+};
 
-    /*! (re-)compute the Group::bounds[2] information for motion blur
-      - ie, our _parent_ node may need this */
-    void updateMotionBounds();
+/* variables for the miss program */
+struct MissProgData
+{
+  vec3f  color0;
+  vec3f  color1;
+};
 
-    /*! low-level accel structure builder for given device */
-    template<bool FULL_REBUILD>
-    void buildAccelOn(const DeviceContext::SP &device);
-
-    constexpr static unsigned int defaultBuildFlags = 
-        OPTIX_BUILD_FLAG_PREFER_FAST_TRACE |
-        OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
-
-    protected:
-    const unsigned int buildFlags;
-  };
-
-} // ::owl

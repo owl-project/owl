@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019-2022 Ingo Wald                                            #
+# Copyright 2019 Ingo Wald                                                 #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,19 +14,20 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-#file(GLOB samples RELATIVE ${CMAKE_CURRENT_LIST_DIR} "int??-*")
+embed_ptx(
+  OUTPUT_TARGET
+    sample11-textures-ptx
+  PTX_LINK_LIBRARIES
+    owl::owl
+  SOURCES
+    deviceCode.cu
+)
 
-foreach(sample IN ITEMS
-    int01-simpleTriangles
-    int06-mixedGeometries
-    int07-whitted
-    int10-texturedTriangles
-    int11-rotatingBoxes
-    int12-switchingTextureSets
-    int13-motionBlurInstances
-    int15-cookBilliardScene
-    )
-  add_subdirectory(${sample})
-endforeach()
-
-
+add_executable(sample11-textures hostCode.cpp)
+target_link_libraries(sample11-textures
+  PRIVATE
+    sample11-textures-ptx
+    owl::owl
+    stb_image
+)
+add_test(sample11-textures ${CMAKE_BINARY_DIR}/sample11-textures)

@@ -40,6 +40,15 @@ namespace owl {
     : GeomType::DeviceData(device)
   {}
 
+  std::shared_ptr<Geom> UserGeomType::createGeom()
+  {
+    GeomType::SP self
+      = std::dynamic_pointer_cast<GeomType>(shared_from_this());
+    Geom::SP geom = std::make_shared<UserGeom>(context,self);
+    geom->createDeviceData(context->getDevices());
+    return geom;
+  }
+  
   /*! creates the device-specific data for this group */
   RegisteredObject::DeviceData::SP
   UserGeom::createOn(const DeviceContext::SP &device) 

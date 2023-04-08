@@ -27,6 +27,10 @@
 
 namespace owl {
 
+#if OPTIX_VERSION >= 70300
+# define OWL_CAN_DO_CURVES 1
+#endif
+
   /*! the root 'context' that spans, and manages, all objects and all
     devices */
   struct Context : public Object {
@@ -74,9 +78,14 @@ namespace owl {
 
     void setBoundLaunchParamValues(const std::vector<OWLBoundValueDecl> &boundValues);
     
-    /*! enables motoin blur - should be done right after context
+    /*! enables motion blur - should be done right after context
       creation, and before SBT and pipeline get built */
     void enableMotionBlur();
+    
+    /*! enables support for curves; has to be called before creating
+        any curves geometries get created, and before the pipeline
+        gets built, whichever comes first */
+    void enableCurves();
     
     /*! sets maximum instancing depth for the given context:
 
@@ -138,13 +147,22 @@ namespace owl {
                     const void *texels);
 
     /*! create a new *triangles* geometry group that will eventually
-      create a BVH over all the trinalges in all its child
+      create a BVH over all the trianlges across all its child
       geometries. only TrianglesGeoms can be added to this
       group. These triangle geoms can all have different types,
       different programs, etc, but must all be of "OWL_TRIANGLES"
       kind */
     GeomGroup::SP
     trianglesGeomGroupCreate(size_t numChildren, unsigned int buildFlags);
+    
+    /*! create a new *curves* geometry group that will eventually
+      create a BVH over all the curve segments across all its child
+      geometries. only CurvesGeoms can be added to this
+      group. These curves geoms can all have different types,
+      different programs, etc, but must all be of "OWL_CURVES"
+      kind */
+    GeomGroup::SP
+    curvesGeomGroupCreate(size_t numChildren, unsigned int buildFlags);
     
     /*! create a new *user* geometry group that will eventually create
       a BVH over all the user geoms / custom prims in all its child
@@ -281,8 +299,12 @@ namespace owl {
 #endif
     
     /*! by default motion blur is off, as it costs performacne - set
-      via enableMotimBlur() */
+      via owlEnableMotionBlur() */
     bool motionBlurEnabled = false;
+
+    /*! by default support for curves is off, as it costs performacne - set
+      via owlEnableCurves() */
+    bool curvesEnabled = false;
 
     /* Number of attributes for writing data between Intersection and ClosestHit */
     int numAttributeValues = 2;

@@ -79,6 +79,20 @@ namespace owl {
   {}
 
   // ------------------------------------------------------------------
+  // TrianglesGeomType::createGeom
+  // ------------------------------------------------------------------
+  
+  std::shared_ptr<Geom> TrianglesGeomType::createGeom()
+  {
+    GeomType::SP self
+      = std::dynamic_pointer_cast<GeomType>(shared_from_this());
+    Geom::SP geom = std::make_shared<TrianglesGeom>(context,self);
+    geom->createDeviceData(context->getDevices());
+    return geom;
+  }
+
+  
+  // ------------------------------------------------------------------
   // TrianglesGeom::DeviceData
   // ------------------------------------------------------------------
   

@@ -20,6 +20,7 @@
 #include "owl/common/parallel/parallel_for.h"
 #include "Triangles.h"
 #include "UserGeom.h"
+#include "CurvesGeom.h"
 #include "InstanceGroup.h"
 
 #undef OWL_API
@@ -174,6 +175,13 @@ owlEnableMotionBlur(OWLContext _context)
 {
   LOG_API_CALL();
   checkGet(_context)->enableMotionBlur();
+}
+  
+OWL_API void
+owlEnableCurves(OWLContext _context)
+{
+  LOG_API_CALL();
+  checkGet(_context)->enableCurves();
 }
   
 OWL_API void owlBuildSBT(OWLContext _context,
@@ -517,6 +525,29 @@ owlUserGeomGroupCreate(OWLContext _context,
   if (initValues) {
     for (size_t i = 0; i < numGeometries; i++) {
       Geom::SP child = ((APIHandle *)initValues[i])->get<UserGeom>();
+      assert(child);
+      group->setChild(i, child);
+    }
+  }
+  assert(_group);
+  return _group;
+}
+
+OWL_API OWLGroup
+owlCurvesGeomGroupCreate(OWLContext _context,
+                       size_t numGeometries,
+                       OWLGeom *initValues,
+                       unsigned int buildFlags)
+{
+  LOG_API_CALL();
+  APIContext::SP context = checkGet(_context);
+  GeomGroup::SP  group   = context->curvesGeomGroupCreate(numGeometries, buildFlags);
+  assert(group);
+    
+  OWLGroup _group = (OWLGroup)context->createHandle(group);
+  if (initValues) {
+    for (size_t i = 0; i < numGeometries; i++) {
+      Geom::SP child = ((APIHandle *)initValues[i])->get<CurvesGeom>();
       assert(child);
       group->setChild(i, child);
     }
@@ -1583,3 +1614,79 @@ owlInstanceGroupSetTransform(OWLGroup _group,
   group->setTransform(whichChild, xfm);
 }
 
+
+
+/*! sets curve degree (1="linear", 2="quadratic b-spline", 3="cubic
+    b-spline"), as well as whether end-caps need to get added for
+    non-linear curves (linear curves always have end-caps, no matter
+    what this value is */
+OWL_API void owlCurvesSetDegree(OWLGeomType _curvesGT,
+                                int     degree,
+                                bool    capped)
+{
+  LOG_API_CALL();
+    
+  assert(_curvesGT);
+
+  CurvesGeomType::SP curvesGT
+    = ((APIHandle *)_curvesGT)->get<CurvesGeomType>();
+  assert(curvesGT);
+
+  curvesGT->setDegree(degree,capped);
+}
+
+/*! sets the array of control points, and their associated curve
+    width. */
+OWL_API void owlCurvesSetControlPoints(OWLGeom _curves,
+                                       int numControlPoints,
+                                       /*! buffer of (one vec3f per
+                                         control point) that
+                                         specifies curve width */
+                                       OWLBuffer _vertices,
+                                       /*! buffer of (one float per
+                                           control point) the curve
+                                           width of that control
+                                           point */
+                                       OWLBuffer _widths)
+{
+  LOG_API_CALL();
+    
+  assert(_curves);
+  assert(_vertices);
+  assert(_widths);
+
+  CurvesGeom::SP curves
+    = ((APIHandle *)_curves)->get<CurvesGeom>();
+  assert(curves);
+
+  Buffer::SP vertices_buffer
+    = ((APIHandle *)_vertices)->get<Buffer>();
+  assert(vertices_buffer);
+
+  Buffer::SP widths_buffer
+    = ((APIHandle *)_widths)->get<Buffer>();
+  assert(widths_buffer);
+
+  curves->setVertices({vertices_buffer},{widths_buffer},numControlPoints);
+}
+
+OWL_API void owlCurvesSetSegmentIndices(OWLGeom   _curves,
+                                        int       count,
+                                        OWLBuffer _buffer)
+{
+  LOG_API_CALL();
+    
+  assert(_curves);
+  assert(_buffer);
+
+  CurvesGeom::SP curves
+    = ((APIHandle *)_curves)->get<CurvesGeom>();
+  assert(curves);
+
+  Buffer::SP buffer
+    = ((APIHandle *)_buffer)->get<Buffer>();
+  assert(buffer);
+
+  curves->setSegmentIndices({buffer},count);
+}
+                                       

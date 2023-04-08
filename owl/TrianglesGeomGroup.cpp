@@ -80,6 +80,7 @@ namespace owl {
   template<bool FULL_REBUILD>
   void TrianglesGeomGroup::buildAccelOn(const DeviceContext::SP &device) 
   {
+    SetActiveGPU forLifeTime(device);
     DeviceData &dd = getDD(device);
 
     if (FULL_REBUILD && !dd.bvhMemory.empty())
@@ -96,7 +97,6 @@ namespace owl {
       dd.memPeak = 0;
     }
    
-    SetActiveGPU forLifeTime(device);
     LOG("building triangles accel over "
         << geometries.size() << " geometries");
     size_t   sumPrims = 0;
@@ -211,9 +211,9 @@ namespace owl {
     // ------------------------------------------------------------------
 
     const size_t tempSize
-        = FULL_REBUILD
-        ? blasBufferSizes.tempSizeInBytes
-        : blasBufferSizes.tempUpdateSizeInBytes;
+      = FULL_REBUILD
+      ? max(blasBufferSizes.tempSizeInBytes,blasBufferSizes.tempUpdateSizeInBytes)
+      : blasBufferSizes.tempUpdateSizeInBytes;
     LOG("starting to build/refit "
         << prettyNumber(triangleInputs.size()) << " triangle geom groups, "
         << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
@@ -222,7 +222,7 @@ namespace owl {
     // temp memory:
     DeviceMemory tempBuffer;
     tempBuffer.alloc(FULL_REBUILD
-                     ?blasBufferSizes.tempSizeInBytes
+                     ?max(blasBufferSizes.tempSizeInBytes,blasBufferSizes.tempUpdateSizeInBytes)
                      :blasBufferSizes.tempUpdateSizeInBytes);
     if (FULL_REBUILD) {
       // Only track this on first build, assuming temp buffer gets smaller for refit
@@ -277,6 +277,7 @@ namespace owl {
                                   /* we're also querying compacted size: */
                                   &emitDesc,1u
                                   ));
+      OWL_CUDA_SYNC_CHECK();
     } else {
 
       // This is either a full rebuild operation _without_ compaction, or a refit.
@@ -299,8 +300,8 @@ namespace owl {
                                   /* we're also querying compacted size: */
                                   nullptr,0
                                   ));
-    }
     OWL_CUDA_SYNC_CHECK();
+    }
     
     // ==================================================================
     // perform compaction

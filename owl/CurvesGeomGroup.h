@@ -21,10 +21,10 @@
 namespace owl {
 
   /*! a group / BLAS over triangle meshes */
-  struct TrianglesGeomGroup : public GeomGroup {
+  struct CurvesGeomGroup : public GeomGroup {
 
     /*! constructor - passthroughto parent class */
-    TrianglesGeomGroup(Context *const context, size_t numChildren, unsigned int buildFlags);
+    CurvesGeomGroup(Context *const context, size_t numChildren, unsigned int buildFlags);
     
     /*! pretty-printer, for printf-debugging */
     std::string toString() const override;

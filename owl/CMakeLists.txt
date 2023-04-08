@@ -110,6 +110,8 @@ target_sources(owl PRIVATE
   Triangles.cu
   UserGeom.h
   UserGeom.cu
+  CurvesGeom.h
+  CurvesGeom.cu
 
   # -------------------------------------------------------
   # accel structures
@@ -120,6 +122,8 @@ target_sources(owl PRIVATE
   InstanceGroup.cpp
   TrianglesGeomGroup.h
   TrianglesGeomGroup.cpp
+  CurvesGeomGroup.h
+  CurvesGeomGroup.cpp
   UserGeomGroup.h
   UserGeomGroup.cpp
 )
@@ -162,6 +166,7 @@ target_include_directories(owl
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
+set_property(TARGET owl PROPERTY CUDA_ARCHITECTURES OFF) 
 
 if (WIN32)
   target_compile_definitions(owl PUBLIC -DNOMINMAX)

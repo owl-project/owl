@@ -14,13 +14,9 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "UserGeomGroup.h"
+#include "CurvesGeomGroup.h"
+#include "CurvesGeom.h"
 #include "Context.h"
-
-#define FREE_EARLY 1
-
-// useful for profiling with nvtxRangePushA("A"); and nvtxRangePop();
-// #include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include\nvtx3\nvToolsExt.h"
 
 #define LOG(message)                                            \
   if (Context::logging())                                       \
@@ -34,55 +30,60 @@
               << "#owl(" << device->ID << "): "                 \
               << message << OWL_TERMINAL_DEFAULT << std::endl
 
+
 namespace owl {
+
+  /*! pretty-printer, for printf-debugging */
+  std::string CurvesGeomGroup::toString() const
+  {
+    return "CurvesGeomGroup";
+  }
   
-  UserGeomGroup::UserGeomGroup(Context *const context,
-                               size_t numChildren,
-                               unsigned int _buildFlags,
-                               uint32_t _numKeys)
+  /*! constructor - mostly passthrough to parent class */
+  CurvesGeomGroup::CurvesGeomGroup(Context *const context,
+                                         size_t numChildren,
+                                         unsigned int _buildFlags)
     : GeomGroup(context,numChildren), 
-    buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags),
-    numKeys(_numKeys)
+      buildFlags(( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags)
+                 |
+                 OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS
+                 )
+      // buildFlags(OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS)
   {}
-
-  void UserGeomGroup::buildOrRefit(bool FULL_REBUILD)
+  
+  void CurvesGeomGroup::updateMotionBounds()
   {
-    for (auto child : geometries) {
-      UserGeom::SP userGeom = child->as<UserGeom>();
-      assert(userGeom);
-      for (auto device : context->getDevices())
-        userGeom->executeBoundsProgOnPrimitives(device);
-    }
-    
-    for (auto device : context->getDevices())
-      if (FULL_REBUILD)
-        buildAccelOn<true>(device);
-      else
-        buildAccelOn<false>(device);
+    // only need this for older version of optix that wouldn't even support curves
+    OWL_NOTIMPLEMENTED;
   }
   
-  void UserGeomGroup::buildAccel()
+  void CurvesGeomGroup::buildAccel()
   {
-    buildOrRefit(true);
-  }
+    for (auto device : context->getDevices()) 
+      buildAccelOn<true>(device);
 
-  void UserGeomGroup::refitAccel()
+    if (context->motionBlurEnabled)
+      updateMotionBounds();
+  }
+  
+  void CurvesGeomGroup::refitAccel()
   {
-    buildOrRefit(false);
+    for (auto device : context->getDevices()) 
+      buildAccelOn<false>(device);
+    
+    if (context->motionBlurEnabled)
+      updateMotionBounds();
   }
-
-  /*! low-level accel structure builder for given device */
+  
   template<bool FULL_REBUILD>
-  void UserGeomGroup::buildAccelOn(const DeviceContext::SP &device)
+  void CurvesGeomGroup::buildAccelOn(const DeviceContext::SP &device) 
   {
+// #if OPTIX_VERSION >= 70300
+#if OWL_CAN_DO_CURVES
     DeviceData &dd = getDD(device);
-    auto optixContext = device->optixContext;
 
-    // if (FULL_REBUILD && !dd.bvhMemory.empty())
-      // dd.bvhMemory.free(); 
-      // NM: Don't do this, freeing is expensive. Instead, reuse previous allocation if possible.
-      // Note, refitting isn't always an option, eg for photon maps that change each frame
-    // cudaDeviceSynchronize();
+    if (FULL_REBUILD && !dd.bvhMemory.empty())
+      dd.bvhMemory.free();
 
     if (!FULL_REBUILD && dd.bvhMemory.empty())
       throw std::runtime_error("trying to refit an accel struct that has not been previously built");
@@ -94,89 +95,107 @@ namespace owl {
       dd.memFinal = 0;
       dd.memPeak = 0;
     }
-      
+   
     SetActiveGPU forLifeTime(device);
-    LOG("building user accel over "
+    LOG("building curves accel over "
         << geometries.size() << " geometries");
-
-    size_t sumPrims = 0;
+    size_t   sumPrims = 0;
     uint32_t maxPrimsPerGAS = 0;
     optixDeviceContextGetProperty
       (device->optixContext,
        OPTIX_DEVICE_PROPERTY_LIMIT_MAX_PRIMITIVES_PER_GAS,
        &maxPrimsPerGAS,
        sizeof(maxPrimsPerGAS));
+
+    assert(!geometries.empty());
+    CurvesGeom::SP child0 = geometries[0]->as<CurvesGeom>();
+    assert(child0);
+    int numKeys = (int)child0->verticesBuffers.size();
+    assert(numKeys > 0);
+    const bool hasMotion = (numKeys > 1);
+    if (hasMotion) assert(context->motionBlurEnabled);
     
     // ==================================================================
-    // create user geom inputs
+    // create curve inputs
     // ==================================================================
     //! the N build inputs that go into the builder
-    std::vector<OptixBuildInput> userGeomInputs(geometries.size());
-    /*! *arrays* of the vertex pointers - the buildinputs contain
-     *pointers* to the pointers, so need a temp copy here */
-    std::vector<std::vector<CUdeviceptr>> boundsPointers(numKeys);
-    for (uint32_t i = 0; i < numKeys; ++i) {
-      boundsPointers[i] = std::vector<CUdeviceptr>(geometries.size());
-    }
-
-    // for now we use the same flags for all geoms
-    std::vector<uint32_t> userGeomInputFlags(geometries.size());
-    std::vector<std::vector<CUdeviceptr>> d_boundsList;
+    std::vector<OptixBuildInput> buildInputs(geometries.size());
+    // one build flag per build input
+    // std::vector<uint32_t> buildInputFlags(geometries.size());
 
     // now go over all geometries to set up the buildinputs
     for (size_t childID=0;childID<geometries.size();childID++) {
-      // the three fields we're setting:
-
-      UserGeom::SP child = geometries[childID]->as<UserGeom>();
-      assert(child);
-
-      sumPrims += child->primCount;
-      if (sumPrims > maxPrimsPerGAS) 
-        OWL_RAISE("number of prim in user geom group exceeds "
-                  "OptiX's MAX_PRIMITIVES_PER_GAS limit");
-
-      UserGeom::DeviceData &ugDD = child->getDD(device);
-
-      OptixBuildInput &userGeomInput = userGeomInputs[childID];
-
-      assert("user geom has enough motion keys" && ugDD.internalBufferForBoundsProgram.size() == numKeys);
-      for (uint32_t i = 0; i < numKeys; ++i) {
-        assert("user geom has valid bounds buffer" && ugDD.internalBufferForBoundsProgram[i].alloced());
-        boundsPointers[i][childID] = (CUdeviceptr)ugDD.internalBufferForBoundsProgram[i].get();
-      }
-
-      userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
-#if OPTIX_VERSION >= 70100
-      auto &aa = userGeomInput.customPrimitiveArray;
-#else
-      auto &aa = userGeomInput.aabbArray;
-#endif
+      // the child wer're setting them with (with sanity checks)
+      CurvesGeom::SP curves = geometries[childID]->as<CurvesGeom>();
+      assert(curves);
       
-      std::vector<CUdeviceptr> bounds;
-      for (uint32_t i = 0; i < numKeys; ++i) {
-        bounds.push_back(boundsPointers[i][childID]);
-      }
-      d_boundsList.push_back(bounds);
-      aa.aabbBuffers   = (CUdeviceptr*)d_boundsList[childID].data();
-      aa.numPrimitives = (uint32_t)child->primCount;
-      aa.strideInBytes = sizeof(box3f);
-      aa.primitiveIndexOffset = 0;
+      if (curves->verticesBuffers.size() != (size_t)numKeys)
+        OWL_RAISE("invalid combination of meshes with "
+                  "different motion keys in the same "
+                  "curves geom group");
+      CurvesGeom::DeviceData &curvesDD = curves->getDD(device);
       
-      // we always have exactly one SBT entry per shape (i.e., triangle
-      // mesh), and no per-primitive materials:
-      userGeomInputFlags[childID]    = 0;
-      aa.flags                       = &userGeomInputFlags[childID];
-      // iw, jan 7, 2020: note this is not the "actual" number of
-      // SBT entires we'll generate when we build the SBT, only the
-      // number of per-ray-type 'groups' of SBT enties (i.e., before
-      // scaling by the SBT_STRIDE that gets passed to
-      // optixTrace. So, for the build input this value remains *1*).
-      aa.numSbtRecords               = 1; 
-      aa.sbtIndexOffsetBuffer        = 0; 
-      aa.sbtIndexOffsetSizeInBytes   = 0; 
-      aa.sbtIndexOffsetStrideInBytes = 0; 
+      CUdeviceptr     *d_vertices       = curvesDD.verticesPointers.data();
+      assert(d_vertices);
+      CUdeviceptr     *d_widths         = curvesDD.widthsPointers.data();
+      assert(d_widths);
+      // CUdeviceptr     *d_segmentIndices = curvesDD.segmentIndicesPointers.data();
+      // assert(d_widths);
+
+      OptixBuildInput &buildInput = buildInputs[childID];
+
+      buildInput = {}; // init defaults, whatever they might be
+      
+      buildInput.type = OPTIX_BUILD_INPUT_TYPE_CURVES;
+      auto &curveArray = buildInput.curveArray;
+
+      auto curvesGT = curves->geomType->as<CurvesGeomType>();//getTypeDD(device);
+      
+      switch(curvesGT->degree) {
+      case 1:
+        curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_LINEAR;
+        break;
+      case 2:
+        curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_QUADRATIC_BSPLINE;
+        break;
+      case 3:
+        curveArray.curveType = OPTIX_PRIMITIVE_TYPE_ROUND_CUBIC_BSPLINE;
+        break;
+      default:
+        OWL_RAISE("invalid/unsupported curve degree for owl curves geometry");
+      }
+      
+      curveArray.numPrimitives        = curves->segmentIndicesCount;//1;
+      curveArray.vertexBuffers        = d_vertices;//vertexBufferPointers;
+      curveArray.numVertices          = 6*curves->vertexCount;//static_cast<uint32_t>( vertices.size() );
+      curveArray.vertexStrideInBytes  = sizeof(vec3f);
+      curveArray.widthBuffers         = d_widths;//widthsBufferPointers;
+      curveArray.widthStrideInBytes   = sizeof(float);
+      curveArray.normalBuffers        = 0;
+      curveArray.normalStrideInBytes  = 0;
+      curveArray.indexBuffer          = curvesDD.indicesPointer;//d_segmentIndices;
+      curveArray.indexStrideInBytes   = sizeof(int);
+      curveArray.flag                 = OPTIX_GEOMETRY_FLAG_NONE;
+      curveArray.primitiveIndexOffset = 0;
+      curveArray.endcapFlags          = //OPTIX_CURVE_ENDCAP_DEFAULT;
+        
+      curvesGT->forceCaps
+        ? OPTIX_CURVE_ENDCAP_ON
+        : OPTIX_CURVE_ENDCAP_DEFAULT;
+
+      // -------------------------------------------------------
+      // sanity check that we don't have too many prims
+      // -------------------------------------------------------
+      sumPrims += curveArray.numPrimitives;
     }
-
+    
+    // -------------------------------------------------------
+    // sanity check that we don't have too many prims
+    // -------------------------------------------------------
+    if (sumPrims > maxPrimsPerGAS) 
+      OWL_RAISE("number of prim in user geom group exceeds "
+                "OptiX's MAX_PRIMITIVES_PER_GAS limit");
+    
     // ==================================================================
     // BLAS setup: buildinputs set up, build the blas
     // ==================================================================
@@ -185,60 +204,65 @@ namespace owl {
     // first: compute temp memory for bvh
     // ------------------------------------------------------------------
     OptixAccelBuildOptions accelOptions = {};
-    accelOptions.buildFlags = this->buildFlags;
-    accelOptions.motionOptions.numKeys  = numKeys;
-    accelOptions.motionOptions.timeBegin = 0.f;
-    accelOptions.motionOptions.timeEnd   = 1.f;
-    accelOptions.motionOptions.flags = OPTIX_MOTION_FLAG_START_VANISH;
+
+    if (numKeys > 1) {
+      accelOptions.motionOptions.numKeys   = numKeys;
+      accelOptions.motionOptions.flags     = 0;
+      accelOptions.motionOptions.timeBegin = 0.f;
+      accelOptions.motionOptions.timeEnd   = 1.f;
+    }
+    accelOptions.buildFlags
+      =
+      this->buildFlags
+      // | OPTIX_BUILD_FLAG_ALLOW_COMPACTION
+      // |
+      // OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS
+      ;
     if (FULL_REBUILD)
       accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
     else
       accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
-    
+      
     OptixAccelBufferSizes blasBufferSizes;
     OPTIX_CHECK(optixAccelComputeMemoryUsage
-                (optixContext,
+                (device->optixContext,
                  &accelOptions,
-                 userGeomInputs.data(),
-                 (uint32_t)userGeomInputs.size(),
+                 buildInputs.data(),
+                 (uint32_t)buildInputs.size(),
                  &blasBufferSizes
                  ));
-   
+    
     // ------------------------------------------------------------------
     // ... and allocate buffers: temp buffer, initial (uncompacted)
     // BVH buffer, and a one-single-size_t buffer to store the
     // compacted size in
     // ------------------------------------------------------------------
-      
+
     const size_t tempSize
         = FULL_REBUILD
         ? blasBufferSizes.tempSizeInBytes
         : blasBufferSizes.tempUpdateSizeInBytes;
     LOG("starting to build/refit "
-        << prettyNumber(userGeomInputs.size()) << " user geoms, "
+        << prettyNumber(buildInputs.size()) << " curve geom groups, "
         << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
         << prettyNumber(tempSize) << "B in temp data");
 
     // temp memory:
-    size_t sizeInBytes = (FULL_REBUILD
-       ? blasBufferSizes.tempSizeInBytes
-       : blasBufferSizes.tempUpdateSizeInBytes);
-
-    if (dd.tempBuffer.sizeInBytes < sizeInBytes)
-    {
-      if (!dd.tempBuffer.empty()) dd.tempBuffer.free();
-      dd.tempBuffer.alloc(sizeInBytes);      
-    }      
-
+    DeviceMemory tempBuffer;
+    tempBuffer.alloc(FULL_REBUILD
+                     ?blasBufferSizes.tempSizeInBytes
+                     :blasBufferSizes.tempUpdateSizeInBytes);
     if (FULL_REBUILD) {
-      dd.memPeak += dd.tempBuffer.size();
+      // Only track this on first build, assuming temp buffer gets smaller for refit
+      dd.memPeak += tempBuffer.size();
     }
-
+         
     const bool allowCompaction = (buildFlags & OPTIX_BUILD_FLAG_ALLOW_COMPACTION);
 
     // Optional buffers only used when compaction is allowed
     DeviceMemory outputBuffer;
     DeviceMemory compactedSizeBuffer;
+
 
     // Allocate output buffer for initial build
     if (FULL_REBUILD) {
@@ -246,14 +270,9 @@ namespace owl {
         outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
         dd.memPeak += outputBuffer.size();
       } else {
-        if (dd.bvhMemory.sizeInBytes < blasBufferSizes.outputSizeInBytes) {
-          if (!dd.bvhMemory.empty()) { 
-            dd.bvhMemory.free(); 
-          }
-          dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
-          dd.memPeak += dd.bvhMemory.size();
-          dd.memFinal = dd.bvhMemory.size();
-        }
+        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+        dd.memPeak += dd.bvhMemory.size();
+        dd.memFinal = dd.bvhMemory.size();
       }
     }
 
@@ -268,43 +287,49 @@ namespace owl {
       emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
       emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
 
-      OPTIX_CHECK(optixAccelBuild(optixContext,
+      // Initial, uncompacted build
+      OPTIX_CHECK(optixAccelBuild(device->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
                                   // array of build inputs:
-                                  userGeomInputs.data(),
-                                  (uint32_t)userGeomInputs.size(),
+                                  buildInputs.data(),
+                                  (uint32_t)buildInputs.size(),
                                   // buffer of temp memory:
-                                  (CUdeviceptr)dd.tempBuffer.get(),
-                                  dd.tempBuffer.size(),
+                                  (CUdeviceptr)tempBuffer.get(),
+                                  tempBuffer.size(),
                                   // where we store initial, uncomp bvh:
                                   (CUdeviceptr)outputBuffer.get(),
                                   outputBuffer.size(),
-                                  /* the dd.traversable we're building: */ 
+                                  /* the traversable we're building: */ 
                                   &dd.traversable,
                                   /* we're also querying compacted size: */
                                   &emitDesc,1u
                                   ));
     } else {
-      OPTIX_CHECK(optixAccelBuild(optixContext,
+
+      // This is either a full rebuild operation _without_ compaction, or a refit.
+      // The operation has already been stored in accelOptions.
+
+      OPTIX_CHECK(optixAccelBuild(device->optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
                                   // array of build inputs:
-                                  userGeomInputs.data(),
-                                  (uint32_t)userGeomInputs.size(),
+                                  buildInputs.data(),
+                                  (uint32_t)buildInputs.size(),
                                   // buffer of temp memory:
-                                  (CUdeviceptr)dd.tempBuffer.get(),
-                                  dd.tempBuffer.size(),
+                                  (CUdeviceptr)tempBuffer.get(),
+                                  tempBuffer.size(),
                                   // where we store initial, uncomp bvh:
                                   (CUdeviceptr)dd.bvhMemory.get(),
                                   dd.bvhMemory.size(),
-                                  /* the dd.traversable we're building: */ 
+                                  /* the traversable we're building: */ 
                                   &dd.traversable,
-                                  /* not querying anything */
+                                  /* we're also querying compacted size: */
                                   nullptr,0
                                   ));
     }
- 
+    OWL_CUDA_SYNC_CHECK();
+    
     // ==================================================================
     // perform compaction
     // ==================================================================
@@ -326,37 +351,21 @@ namespace owl {
       dd.memPeak += dd.bvhMemory.size();
       dd.memFinal = dd.bvhMemory.size();
     }
-    
-    // ==================================================================
-    // finish - clean up
-    // ==================================================================
-    LOG_OK("successfully built user geom group accel");
-
-    #if FREE_EARLY == 1
-    if (dd.tempBuffer.alloced())
-      dd.tempBuffer.free();
-    #endif
-
-    // size_t sumPrims = 0;
-    size_t sumBoundsMem = 0;
-    for (size_t childID=0;childID<geometries.size();childID++) {
-      UserGeom::SP child = geometries[childID]->as<UserGeom>();
-      assert(child);
+    OWL_CUDA_SYNC_CHECK();
       
-      UserGeom::DeviceData &ugDD = child->getDD(device);
-      
-      for (uint32_t i = 0; i < numKeys; ++i) {
-        sumBoundsMem += ugDD.internalBufferForBoundsProgram[i].sizeInBytes;
-
-        // don't do this unless absolutely necessary. For performance reasons, recycle this memory across builds if possible.
-        #if FREE_EARLY == 1
-        if (ugDD.internalBufferForBoundsProgram[i].alloced())
-          ugDD.internalBufferForBoundsProgram[i].free();
-        #endif
-      }
-    }
+    // ==================================================================
+    // aaaaaand .... clean up
+    // ==================================================================
     if (FULL_REBUILD)
-      dd.memPeak += sumBoundsMem;
-  }
+      outputBuffer.free(); // << the UNcompacted, temporary output buffer
+    tempBuffer.free();
+    if (FULL_REBUILD)
+      compactedSizeBuffer.free();
     
+    LOG_OK("successfully build curves geom group accel");
+#else
+    throw std::runtime_error("This version of OWL was compiled with an OptiX version that does not yet support curves. Please re-build with a newer version of OptiX if you do want to use curves");
+#endif
+  }
+  
 } // ::owl

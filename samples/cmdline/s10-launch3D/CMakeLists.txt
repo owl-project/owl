@@ -27,6 +27,7 @@ embed_ptx(
 add_executable(sample10-launch3D
   hostCode.cu
   )
+set_property(TARGET sample10-launch3D PROPERTY CUDA_ARCHITECTURES OFF) 
 
 target_link_libraries(sample10-launch3D
   PRIVATE
