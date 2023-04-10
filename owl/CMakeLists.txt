@@ -162,11 +162,10 @@ endif()
 
 target_include_directories(owl
   PUBLIC
-    /usr/local/cuda/include/
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
-set_property(TARGET owl PROPERTY CUDA_ARCHITECTURES OFF) 
+set_property(TARGET owl PROPERTY CUDA_ARCHITECTURES OFF)
 
 if (WIN32)
   target_compile_definitions(owl PUBLIC -DNOMINMAX)
