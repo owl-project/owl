@@ -26,7 +26,15 @@ if(POLICY CMP0074)
 endif()
 
 if (OWL_USE_TBB AND (NOT OWL_DISABLE_TBB))
-  find_package(TBB)
+
+  #
+  # first try find_package in CONFIG mode, it will be catched by OneTBB
+  # if OneTBB is not avaible, then use the old macro
+  #
+  find_package(TBB CONFIG)
+  if (NOT TBB_FOUND)
+    find_package(TBB)
+  endif()
 
   if (TBB_FOUND)
     #    include_directories(${TBB_INCLUDE_DIR})
