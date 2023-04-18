@@ -112,6 +112,8 @@ target_sources(owl PRIVATE
   UserGeom.cu
   CurvesGeom.h
   CurvesGeom.cu
+  SphereGeom.h
+  SphereGeom.cu
 
   # -------------------------------------------------------
   # accel structures
@@ -126,6 +128,8 @@ target_sources(owl PRIVATE
   CurvesGeomGroup.cpp
   UserGeomGroup.h
   UserGeomGroup.cpp
+  SphereGeomGroup.h
+  SphereGeomGroup.cpp
 )
 
 set_target_properties(owl
