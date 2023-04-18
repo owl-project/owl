@@ -87,6 +87,11 @@ namespace owl {
         gets built, whichever comes first */
     void enableCurves();
     
+    /*! enables support for spheres; has to be called before creating
+        any curves geometries get created, and before the pipeline
+        gets built, whichever comes first */
+    void enableSpheres();
+    
     /*! sets maximum instancing depth for the given context:
 
       '0' means 'no instancing allowed, only bottom-level accels; 
@@ -167,6 +172,14 @@ namespace owl {
       etc, but must all be of "OWL_GEOMETRY_USER" kind */
     GeomGroup::SP
     userGeomGroupCreate(size_t numChildren, unsigned int buildFlags);
+    
+    /*! create a new *user* geometry group that will eventually create
+      a BVH over all the sphere geoms in all its child
+      geometries. only SphereGeom's can be added to this group. These
+      user geoms can all have different types, different programs,
+      etc, but must all be of "OWL_GEOMETRY_USER" kind */
+    GeomGroup::SP
+    sphereGeomGroupCreate(size_t numChildren, unsigned int buildFlags);
 
     /*! create a new device buffer of given data type and count; if
       init is non-null it will be used to populoate this
@@ -301,6 +314,10 @@ namespace owl {
     /*! by default support for curves is off, as it costs performacne - set
       via owlEnableCurves() */
     bool curvesEnabled = false;
+
+    /*! by default support for spheres is off, as it costs performacne - set
+      via owlEnableCurves() */
+    bool spheresEnabled = false;
 
     /* Number of attributes for writing data between Intersection and ClosestHit */
     int numAttributeValues = 2;
