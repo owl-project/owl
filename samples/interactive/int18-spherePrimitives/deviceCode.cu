@@ -16,8 +16,6 @@
 
 #include "deviceCode.h"
 
-#define OPTIX_VERSION 70500
-
 /* this sample uses features from newer versions of optix; it will not
    run with older versions, nor even compile with them - so to make
    the entire project compile with older versions of optix we'll here
