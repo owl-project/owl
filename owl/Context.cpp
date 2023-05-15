@@ -596,6 +596,20 @@ namespace owl {
     } 
   }
 
+  void Context::setNumPayloadValues(size_t numPayloadValues)
+  {
+    if (numPayloadValues > 32)
+      OWL_RAISE
+        ("a payload count > 32 isnt' currently supported in OWL; "
+         "please see comments on owlSetNumPayloadValues() (owl/owl_host.h)");
+
+    for (auto device : getDevices()) {
+      assert("check programs have not been built"
+             && device->allActivePrograms.empty());
+    }
+    this->numPayloadValues = (int)numPayloadValues;
+  }
+
   void Context::enableMotionBlur()
   {
     motionBlurEnabled = true;
