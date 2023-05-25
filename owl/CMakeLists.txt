@@ -143,7 +143,7 @@ set_target_properties(owl
 target_link_libraries(owl PUBLIC OptiX::OptiX)
 #target_link_libraries(owl PUBLIC OptiX)
 if (OWL_HAVE_TBB AND TBB_FOUND)
-  if (TARGET TBB)
+  if (TARGET TBB::tbb)
     target_link_libraries(owl PUBLIC TBB::tbb)
   else()
     target_link_libraries(owl PUBLIC ${TBB_LIBRARIES})
