@@ -461,18 +461,18 @@ OWL_API void
 owlGeomRelease(OWLGeom geometry);
 
 OWL_API OWLParams
-owlParamsCreate(OWLContext  context,
-                size_t      sizeOfVarStruct,
-                OWLVarDecl *vars,
-                int         numVars);
+owlParamsCreate(OWLContext        context,
+                size_t            sizeOfVarStruct,
+                const OWLVarDecl *vars,
+                int               numVars);
 
 OWL_API OWLRayGen
-owlRayGenCreate(OWLContext  context,
-                OWLModule   module,
-                const char *programName,
-                size_t      sizeOfVarStruct,
-                OWLVarDecl *vars,
-                int         numVars);
+owlRayGenCreate(OWLContext        context,
+                OWLModule         module,
+                const char       *programName,
+                size_t            sizeOfVarStruct,
+                const OWLVarDecl *vars,
+                int               numVars);
                 
 OWL_API void 
 owlRayGenRelease(OWLRayGen rayGen);
@@ -485,12 +485,12 @@ owlRayGenRelease(OWLRayGen rayGen);
     \see owlMissProgSet to explicitly assign miss programs to specific
     ray types */
 OWL_API OWLMissProg
-owlMissProgCreate(OWLContext  context,
-                  OWLModule   module,
-                  const char *programName,
-                  size_t      sizeOfVarStruct,
-                  OWLVarDecl *vars,
-                  int         numVars);
+owlMissProgCreate(OWLContext        context,
+                  OWLModule         module,
+                  const char       *programName,
+                  size_t            sizeOfVarStruct,
+                  const OWLVarDecl *vars,
+                  int               numVars);
 
 /*! sets the given miss program for the given ray type */
 OWL_API void
@@ -666,11 +666,11 @@ owlGroupGetAccelSize(OWLGroup group,
                      size_t *p_memPeak);
                                   
 OWL_API OWLGeomType
-owlGeomTypeCreate(OWLContext context,
-                  OWLGeomKind kind,
-                  size_t sizeOfVarStruct,
-                  OWLVarDecl *vars,
-                  int         numVars);
+owlGeomTypeCreate(OWLContext        context,
+                  OWLGeomKind       kind,
+                  size_t            sizeOfVarStruct,
+                  const OWLVarDecl *vars,
+                  int               numVars);
 
 
 /*! create new texture of given format and dimensions - for now, we
