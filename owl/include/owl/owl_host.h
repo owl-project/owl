@@ -33,6 +33,10 @@
 # define OWL_CAN_DO_CURVES 1
 #endif
 
+#if OPTIX_VERSION >= 70500
+# define OWL_CAN_DO_SPHERES 1
+#endif
+
 
 #if defined(_MSC_VER)
 #  define OWL_DLL_EXPORT __declspec(dllexport)
@@ -220,7 +224,9 @@ typedef enum
    OWL_GEOM_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
    OWL_TRIANGLES=OWL_GEOMETRY_TRIANGLES,
    /*! maps to optix curves geometry */
-   OWL_GEOMETRY_CURVES
+   OWL_GEOMETRY_CURVES,
+   /*! maps to optix sphere geometry */
+   OWL_GEOMETRY_SPHERES
   }
   OWLGeomKind;
 
@@ -368,6 +374,13 @@ owlContextDestroy(OWLContext context);
 OWL_API void
 owlEnableCurves(OWLContext _context);
 
+/*! tell the context/pipeline to enable the support for curves
+    geometries; this _must_ be called when using curves geometries. If
+    you want to use _both_ motion blur and curves, motion blur has to
+    be enabled _before_ enableing curves */
+OWL_API void
+owlEnableSpheres(OWLContext _context);
+
 /*! enable motion blur for this context. this _has_ to be called
     before creating any geometries, groups, etc, and before the
     pipeline gets compiled. Ie, it shold be called _right_ after
@@ -448,18 +461,18 @@ OWL_API void
 owlGeomRelease(OWLGeom geometry);
 
 OWL_API OWLParams
-owlParamsCreate(OWLContext  context,
-                size_t      sizeOfVarStruct,
-                OWLVarDecl *vars,
-                int         numVars);
+owlParamsCreate(OWLContext        context,
+                size_t            sizeOfVarStruct,
+                const OWLVarDecl *vars,
+                int               numVars);
 
 OWL_API OWLRayGen
-owlRayGenCreate(OWLContext  context,
-                OWLModule   module,
-                const char *programName,
-                size_t      sizeOfVarStruct,
-                OWLVarDecl *vars,
-                int         numVars);
+owlRayGenCreate(OWLContext        context,
+                OWLModule         module,
+                const char       *programName,
+                size_t            sizeOfVarStruct,
+                const OWLVarDecl *vars,
+                int               numVars);
                 
 OWL_API void 
 owlRayGenRelease(OWLRayGen rayGen);
@@ -472,12 +485,12 @@ owlRayGenRelease(OWLRayGen rayGen);
     \see owlMissProgSet to explicitly assign miss programs to specific
     ray types */
 OWL_API OWLMissProg
-owlMissProgCreate(OWLContext  context,
-                  OWLModule   module,
-                  const char *programName,
-                  size_t      sizeOfVarStruct,
-                  OWLVarDecl *vars,
-                  int         numVars);
+owlMissProgCreate(OWLContext        context,
+                  OWLModule         module,
+                  const char       *programName,
+                  size_t            sizeOfVarStruct,
+                  const OWLVarDecl *vars,
+                  int               numVars);
 
 /*! sets the given miss program for the given ray type */
 OWL_API void
@@ -556,6 +569,28 @@ owlCurvesGeomGroupCreate(OWLContext context,
                          unsigned int buildFlags OWL_IF_CPP(=0));
 
 // ------------------------------------------------------------------
+/*! create a new group (which handles the acceleration strucure) for
+  sphere geometries.
+
+  \param numGeometries Number of geometries in this group, must be
+  non-zero.
+
+  \param arrayOfChildGeoms A array of 'numGeomteries' child
+  geometries. Every geom in this array must be a valid owl geometry
+  created with owlGeomCreate, and must be of a OWL_GEOMETRY_SPHERES
+  type.
+
+  \param buildFlags A combination of OptixBuildFlags.  The default
+  of 0 means to use OWL default build flags.
+*/
+OWL_API OWLGroup
+owlSphereGeomGroupCreate(OWLContext context,
+                       size_t     numGeometries,
+                       OWLGeom   *arrayOfChildGeoms,
+                       unsigned int buildFlags OWL_IF_CPP(=0));
+
+
+// ------------------------------------------------------------------
 /*! create a new instance group with given number of instances. The
   child groups and their instance IDs and/or transforms can either
   be specified "in bulk" as part of this call, or can be set later on
@@ -631,11 +666,11 @@ owlGroupGetAccelSize(OWLGroup group,
                      size_t *p_memPeak);
                                   
 OWL_API OWLGeomType
-owlGeomTypeCreate(OWLContext context,
-                  OWLGeomKind kind,
-                  size_t sizeOfVarStruct,
-                  OWLVarDecl *vars,
-                  int         numVars);
+owlGeomTypeCreate(OWLContext        context,
+                  OWLGeomKind       kind,
+                  size_t            sizeOfVarStruct,
+                  const OWLVarDecl *vars,
+                  int               numVars);
 
 
 /*! create new texture of given format and dimensions - for now, we
@@ -852,7 +887,7 @@ OWL_API void owlTrianglesSetIndices(OWLGeom triangles,
                                     size_t offset);
 
 // ==================================================================
-// "Triangles" functions
+// "Curves" functions
 // ==================================================================
 
 /*! sets curve degree (1="linear", 2="quadratic b-spline", 3="cubic
@@ -880,6 +915,21 @@ OWL_API void owlCurvesSetControlPoints(OWLGeom curvesGeom,
 OWL_API void owlCurvesSetSegmentIndices(OWLGeom curvesGeom,
                                         int numSegmentIndices,
                                         OWLBuffer segmentIndices);
+
+// ==================================================================
+// "Spheres" functions
+// ==================================================================
+
+/*! sets the array of control points, and their associated curve
+    width. */
+OWL_API void owlSpheresSetVertices(OWLGeom spheresGeom,
+                                       int numSpheres,
+                                       /*! buffer of (one vec3f per
+                                            sphere) that specifies center */
+                                       OWLBuffer vertices,
+                                       /*! buffer of (one float per
+                                           sphere) specifies radius*/
+                                       OWLBuffer radius);
                                        
 // -------------------------------------------------------
 // group/hierarchy creation and setting

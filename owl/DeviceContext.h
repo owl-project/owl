@@ -101,6 +101,7 @@ namespace owl {
     void buildPipeline();
 
     void buildCurvesModules();
+    void buildSphereModule();
     
     /*! collects all compiled programs during 'buildPrograms', such
         that all active progs can then be passed to optix durign
@@ -124,6 +125,9 @@ namespace owl {
        { nullptr, nullptr, nullptr },
        { nullptr, nullptr, nullptr }
     };
+    
+    /*! optix builtin module for spheres */
+    OptixModule                 spheresModule = nullptr;
 
     /*! the owl context that this device is in */
     Context *const parent;

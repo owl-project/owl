@@ -21,6 +21,7 @@
 #include "Triangles.h"
 #include "UserGeom.h"
 #include "CurvesGeom.h"
+#include "SphereGeom.h"
 #include "InstanceGroup.h"
 
 #undef OWL_API
@@ -175,6 +176,13 @@ owlEnableCurves(OWLContext _context)
 {
   LOG_API_CALL();
   checkGet(_context)->enableCurves();
+}
+
+OWL_API void
+owlEnableSpheres(OWLContext _context)
+{
+  LOG_API_CALL();
+  checkGet(_context)->enableSpheres();
 }
   
 OWL_API void owlBuildSBT(OWLContext _context,
@@ -393,12 +401,12 @@ std::vector<OWLVarDecl> checkAndPackVariables(const OWLVarDecl *vars,
 }
 
 OWL_API OWLRayGen
-owlRayGenCreate(OWLContext _context,
-                OWLModule  _module,
-                const char *programName,
-                size_t      sizeOfVarStruct,
-                OWLVarDecl *vars,
-                int         numVars)
+owlRayGenCreate(OWLContext       _context,
+                OWLModule        _module,
+                const char       *programName,
+                size_t            sizeOfVarStruct,
+                const OWLVarDecl *vars,
+                int               numVars)
 {
   LOG_API_CALL();
   APIContext::SP context = checkGet(_context);
@@ -417,10 +425,10 @@ owlRayGenCreate(OWLContext _context,
 }
 
 OWL_API OWLParams
-owlParamsCreate(OWLContext _context,
-                size_t      sizeOfVarStruct,
-                OWLVarDecl *vars,
-                int         numVars)
+owlParamsCreate(OWLContext       _context,
+                size_t            sizeOfVarStruct,
+                const OWLVarDecl *vars,
+                int               numVars)
 {
   LOG_API_CALL();
   APIContext::SP context = checkGet(_context);
@@ -452,12 +460,12 @@ owlMissProgSet(OWLContext _context,
 }
 
 OWL_API OWLMissProg
-owlMissProgCreate(OWLContext _context,
-                  OWLModule  _module,
-                  const char *programName,
-                  size_t      sizeOfVarStruct,
-                  OWLVarDecl *vars,
-                  int         numVars)
+owlMissProgCreate(OWLContext       _context,
+                  OWLModule        _module,
+                  const char       *programName,
+                  size_t            sizeOfVarStruct,
+                  const OWLVarDecl *vars,
+                  int               numVars)
 {
   LOG_API_CALL();
  
@@ -546,6 +554,29 @@ owlCurvesGeomGroupCreate(OWLContext _context,
   }
   assert(_group);
   return _group;
+}
+
+OWL_API OWLGroup
+owlSphereGeomGroupCreate(OWLContext _context,
+	size_t numGeometries,
+	OWLGeom* initValues,
+	unsigned int buildFlags)
+{
+	LOG_API_CALL();
+	APIContext::SP context = checkGet(_context);
+	GeomGroup::SP  group = context->sphereGeomGroupCreate(numGeometries, buildFlags);
+	assert(group);
+
+	OWLGroup _group = (OWLGroup)context->createHandle(group);
+	if (initValues) {
+		for (size_t i = 0; i < numGeometries; i++) {
+			Geom::SP child = ((APIHandle*)initValues[i])->get<SphereGeom>();
+			assert(child);
+			group->setChild(i, child);
+		}
+	}
+	assert(_group);
+	return _group;
 }
 
 OWL_API OWLGroup
@@ -866,11 +897,11 @@ owlBufferDestroy(OWLBuffer _buffer)
 }
 
 OWL_API OWLGeomType
-owlGeomTypeCreate(OWLContext  _context,
-                  OWLGeomKind kind,
-                  size_t      varStructSize,
-                  OWLVarDecl *vars,
-                  int         numVars)
+owlGeomTypeCreate(OWLContext       _context,
+                  OWLGeomKind       kind,
+                  size_t            varStructSize,
+                  const OWLVarDecl *vars,
+                  int               numVars)
 {
   LOG_API_CALL();
   assert(_context);
@@ -1674,3 +1705,32 @@ OWL_API void owlCurvesSetSegmentIndices(OWLGeom   _curves,
   curves->setSegmentIndices({buffer},count);
 }
                                        
+OWL_API void owlSpheresSetVertices(OWLGeom _spheres,
+                                       int numSpheres,
+                                       /*! buffer of (one vec3f per
+                                            sphere) that specifies center */
+                                       OWLBuffer _vertices,
+                                       /*! buffer of (one float per
+                                           sphere) specifies radius*/
+                                       OWLBuffer _radii)
+{
+	LOG_API_CALL();
+
+	assert(_spheres);
+	assert(_vertices);
+	assert(_radii);
+
+	SphereGeom::SP spheres
+		= ((APIHandle*)_spheres)->get<SphereGeom>();
+	assert(spheres);
+
+	Buffer::SP vertices_buffer
+		= ((APIHandle*)_vertices)->get<Buffer>();
+	assert(vertices_buffer);
+
+	Buffer::SP radii_buffer
+		= ((APIHandle*)_radii)->get<Buffer>();
+	assert(radii_buffer);
+
+	spheres->setVertices({ vertices_buffer }, { radii_buffer }, numSpheres);
+}

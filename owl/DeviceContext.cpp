@@ -328,6 +328,11 @@ namespace owl {
         | OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_QUADRATIC_BSPLINE
         | OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_CUBIC_BSPLINE;
 #endif
+
+#if OWL_CAN_DO_SPHERES
+   pipelineCompileOptions.usesPrimitiveTypeFlags |= OPTIX_PRIMITIVE_TYPE_FLAGS_SPHERE;
+#endif
+
 // #if 1
 //     std::cout << "HACK: FORCE-ENABLE CURVES!" << std::endl;
 //     int degree = 1;
@@ -434,6 +439,23 @@ namespace owl {
                                             &builtinISOptions, &curvesModule[forceCap][degree-1]));
       }
     }
+#endif
+  }
+
+  void DeviceContext::buildSphereModule()
+  {
+#if OWL_CAN_DO_SPHERES
+    SetActiveGPU forLifeTime(this);
+
+    if (spheresModule != nullptr)
+        optixModuleDestroy(spheresModule);
+      
+    OptixBuiltinISOptions builtinISOptions = {};
+    builtinISOptions.builtinISModuleType = OPTIX_PRIMITIVE_TYPE_SPHERE;
+    builtinISOptions.usesMotionBlur = parent->motionBlurEnabled;  // enable motion-blur for built-in intersector
+      
+    OPTIX_CHECK(optixBuiltinISModuleGet(optixContext, &moduleCompileOptions, &pipelineCompileOptions,
+                                            &builtinISOptions, &spheresModule));
 #endif
   }
   
