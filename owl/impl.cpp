@@ -401,12 +401,12 @@ std::vector<OWLVarDecl> checkAndPackVariables(const OWLVarDecl *vars,
 }
 
 OWL_API OWLRayGen
-owlRayGenCreate(OWLContext _context,
-                OWLModule  _module,
-                const char *programName,
-                size_t      sizeOfVarStruct,
-                OWLVarDecl *vars,
-                int         numVars)
+owlRayGenCreate(OWLContext       _context,
+                OWLModule        _module,
+                const char       *programName,
+                size_t            sizeOfVarStruct,
+                const OWLVarDecl *vars,
+                int               numVars)
 {
   LOG_API_CALL();
   APIContext::SP context = checkGet(_context);
@@ -425,10 +425,10 @@ owlRayGenCreate(OWLContext _context,
 }
 
 OWL_API OWLParams
-owlParamsCreate(OWLContext _context,
-                size_t      sizeOfVarStruct,
-                OWLVarDecl *vars,
-                int         numVars)
+owlParamsCreate(OWLContext       _context,
+                size_t            sizeOfVarStruct,
+                const OWLVarDecl *vars,
+                int               numVars)
 {
   LOG_API_CALL();
   APIContext::SP context = checkGet(_context);
@@ -460,12 +460,12 @@ owlMissProgSet(OWLContext _context,
 }
 
 OWL_API OWLMissProg
-owlMissProgCreate(OWLContext _context,
-                  OWLModule  _module,
-                  const char *programName,
-                  size_t      sizeOfVarStruct,
-                  OWLVarDecl *vars,
-                  int         numVars)
+owlMissProgCreate(OWLContext       _context,
+                  OWLModule        _module,
+                  const char       *programName,
+                  size_t            sizeOfVarStruct,
+                  const OWLVarDecl *vars,
+                  int               numVars)
 {
   LOG_API_CALL();
  
@@ -897,11 +897,11 @@ owlBufferDestroy(OWLBuffer _buffer)
 }
 
 OWL_API OWLGeomType
-owlGeomTypeCreate(OWLContext  _context,
-                  OWLGeomKind kind,
-                  size_t      varStructSize,
-                  OWLVarDecl *vars,
-                  int         numVars)
+owlGeomTypeCreate(OWLContext       _context,
+                  OWLGeomKind       kind,
+                  size_t            varStructSize,
+                  const OWLVarDecl *vars,
+                  int               numVars)
 {
   LOG_API_CALL();
   assert(_context);
