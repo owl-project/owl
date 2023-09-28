@@ -233,9 +233,12 @@ namespace owl {
     // for backwards compatibility: automatically set miss prog if none are set, yet
     if (mp->ID < numRayTypes &&
         (mp->ID >= (int)missProgPerRayType.size() || !missProgPerRayType[mp->ID]))
+    {
       LOG("for backwards compatibility to pre-0.9.0 versions of OWL, "
           "hereby installing this miss program for ray type #" << mp->ID);
       setMissProg(mp->ID,mp);
+    }
+          
     return mp;
   }
 

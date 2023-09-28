@@ -92,7 +92,7 @@ namespace owl {
              children.size()*sizeof(affine3f));
     } break;
     default:
-      OWL_RAISE("used matrix format not yet implmeneted for"
+      OWL_RAISE("used matrix format not yet implemented for"
                 " InstanceGroup::setTransforms");
     };
   }

@@ -432,8 +432,17 @@ namespace owl {
           int result = 0;
           cudaDeviceGetAttribute(&result, cudaDevAttrConcurrentManagedAccess, cudaDevID);
           if (result) {
-            cudaError_t rc = cudaMemAdvise((void*)begin, end-begin,
-                                           cudaMemAdviseSetPreferredLocation, cudaDevID);
+            cudaError_t rc = cudaSuccess;
+            for (int i=0;i<context->deviceCount();i++) {
+              if (rc == cudaSuccess)
+                rc = cudaMemAdvise((void*)begin, end-begin,
+                                   cudaMemAdviseSetReadMostly, context->getDevice(i)->getCudaDeviceID());
+            }
+
+            if (rc == cudaSuccess)
+              rc = cudaMemAdvise((void*)begin, end-begin,
+                                 cudaMemAdviseSetPreferredLocation, cudaDevID);
+            
             if (rc != cudaSuccess) {
 #ifndef NDEBUG
               static bool alreadyWarned = false;
