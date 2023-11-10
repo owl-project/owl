@@ -49,8 +49,8 @@ namespace owl {
     LOG("#owl: context is dying; number of API handles (other than context itself) "
         << "that have not yet been released (incl this context): "
         << (activeHandles.size()));
-    for (auto handle : activeHandles)
-      LOG(" - " + handle->toString());
+    // for (auto handle : activeHandles)
+    //   LOG(" - " + handle->toString());
 
     // create one reference that won't get removed when removing all API handles (caller should actually have one, but just in case)
     std::shared_ptr<APIContext> self = shared_from_this()->as<APIContext>();

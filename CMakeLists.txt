@@ -105,3 +105,12 @@ endif()
 if (OWL_BUILD_ADVANCED_TESTS)
   add_subdirectory(tests)
 endif()
+
+# ------------------------------------------------------------------
+# PyOWL python bindings
+# ------------------------------------------------------------------
+option(OWL_BUILD_PYOWL "Build PyOWL Python Wrappers?" OFF)
+if (OWL_BUILD_PYOWL)
+  add_subdirectory(pyOWL)
+endif()
+    

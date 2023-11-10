@@ -30,6 +30,7 @@
 #include <math.h>
 #include <cmath>
 #include <algorithm>
+#include <execinfo.h>
 #include <sstream>
 #ifdef __GNUC__
 #include <execinfo.h>
