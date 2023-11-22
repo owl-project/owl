@@ -181,6 +181,7 @@ namespace owl {
   void UserGeom::executeBoundsProgOnPrimitives(const DeviceContext::SP &device)
   {
     SetActiveGPU activeGPU(device);
+    CUstream stream = device->stream;
     // if geom does't contain any prims we would run into issue
     // launching zero-sized bounds prog kernel below, so let's just
     // exit here.
@@ -189,10 +190,10 @@ namespace owl {
     std::vector<uint8_t> userGeomData(geomType->varStructSize);
     
     DeviceMemory tempMem;
-    tempMem.alloc(geomType->varStructSize);
+    tempMem.alloc(geomType->varStructSize,stream);
     
     DeviceData &dd = getDD(device);
-    dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
+    dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f),stream);
     // dd.internalBufferForBoundsProgram.allocManaged(primCount*sizeof(box3f));
 
     writeVariables(userGeomData.data(),device);
@@ -222,7 +223,6 @@ namespace owl {
                      (void *)&primCount
     };
     
-    CUstream stream = device->stream;
     UserGeomType::DeviceData &typeDD = getTypeDD(device);
     if (!typeDD.boundsFuncKernel)
       OWL_RAISE("bounds kernel set, but not yet compiled - "
@@ -241,8 +241,8 @@ namespace owl {
                 +std::string(errName));
     }
     
-    tempMem.free();
-    cudaDeviceSynchronize();
+    tempMem.free(stream);
+    // cudaDeviceSynchronize();
   }
 
   /*! fill in an OptixProgramGroup descriptor with the module and

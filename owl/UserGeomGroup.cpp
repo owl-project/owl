@@ -16,6 +16,7 @@
 
 #include "UserGeomGroup.h"
 #include "Context.h"
+#include "owl/common/parallel/parallel_for.h"
 
 #define LOG(message)                                            \
   if (Context::logging())                                       \
@@ -40,6 +41,31 @@ namespace owl {
 
   void UserGeomGroup::buildOrRefit(bool FULL_REBUILD)
   {
+#if 1
+    double t0 = getCurrentTime();
+    auto &devices = context->getDevices();
+    owl::common::parallel_for
+      ((int)devices.size(),
+       [&](int deviceID){
+         auto device = devices[deviceID];
+         for (auto child : geometries) {
+           UserGeom::SP userGeom = child->as<UserGeom>();
+           assert(userGeom);
+           // for (auto device : context->getDevices())
+           PING; PRINT(prettyDouble(getCurrentTime()-t0));
+           userGeom->executeBoundsProgOnPrimitives(device);
+           PING; PRINT(prettyDouble(getCurrentTime()-t0));
+         }
+         
+           PING; PRINT(prettyDouble(getCurrentTime()-t0));
+         if (FULL_REBUILD)
+           buildAccelOn<true>(device);
+         else
+           buildAccelOn<false>(device);
+           PING; PRINT(prettyDouble(getCurrentTime()-t0));
+       });
+    PING; PRINT(prettyDouble(getCurrentTime()-t0));
+#else
     for (auto child : geometries) {
       UserGeom::SP userGeom = child->as<UserGeom>();
       assert(userGeom);
@@ -52,6 +78,7 @@ namespace owl {
         buildAccelOn<true>(device);
       else
         buildAccelOn<false>(device);
+#endif
   }
   
   void UserGeomGroup::buildAccel()
@@ -86,6 +113,7 @@ namespace owl {
     }
       
     SetActiveGPU forLifeTime(device);
+    cudaStream_t stream = device->stream;
     LOG("building user accel over "
         << geometries.size() << " geometries");
 
@@ -216,10 +244,10 @@ namespace owl {
     // Allocate output buffer for initial build
     if (FULL_REBUILD) {
       if (allowCompaction) {
-        outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
+        outputBuffer.alloc(blasBufferSizes.outputSizeInBytes,stream);
         dd.memPeak += outputBuffer.size();
       } else {
-        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes,stream);
         dd.memPeak += dd.bvhMemory.size();
         dd.memFinal = dd.bvhMemory.size();
       }
@@ -229,7 +257,7 @@ namespace owl {
 
     if (FULL_REBUILD && allowCompaction) {
 
-      compactedSizeBuffer.alloc(sizeof(uint64_t));
+      compactedSizeBuffer.alloc(sizeof(uint64_t),stream);
       dd.memPeak += compactedSizeBuffer.size();
 
       OptixAccelEmitDesc emitDesc;
@@ -237,7 +265,7 @@ namespace owl {
       emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
 
       OPTIX_CHECK(optixAccelBuild(optixContext,
-                                  /* todo: stream */0,
+                                  /* todo: stream */stream,//0,
                                   &accelOptions,
                                   // array of build inputs:
                                   userGeomInputs.data(),
@@ -255,7 +283,7 @@ namespace owl {
                                   ));
     } else {
       OPTIX_CHECK(optixAccelBuild(optixContext,
-                                  /* todo: stream */0,
+                                  /* todo: stream */stream,//0,
                                   &accelOptions,
                                   // array of build inputs:
                                   userGeomInputs.data(),
@@ -272,7 +300,8 @@ namespace owl {
                                   nullptr,0
                                   ));
     }
-    OWL_CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK_STREAM(stream);
+    // OWL_CUDA_SYNC_CHECK();
 
     // ==================================================================
     // perform compaction
@@ -283,10 +312,10 @@ namespace owl {
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
       
-      dd.bvhMemory.alloc(compactedSize);
+      dd.bvhMemory.alloc(compactedSize,stream);
       // ... and perform compaction
       OPTIX_CALL(AccelCompact(device->optixContext,
-                              /*TODO: stream:*/0,
+                              /*TODO: stream:*/stream,//0,
                               // OPTIX_COPY_MODE_COMPACT,
                               dd.traversable,
                               (CUdeviceptr)dd.bvhMemory.get(),
@@ -296,7 +325,8 @@ namespace owl {
       dd.memFinal = dd.bvhMemory.size();
     }
       
-    OWL_CUDA_SYNC_CHECK();
+    //    OWL_CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK_STREAM(stream);
 
     // ==================================================================
     // finish - clean up
@@ -314,12 +344,12 @@ namespace owl {
       
       sumBoundsMem += ugDD.internalBufferForBoundsProgram.sizeInBytes;
       if (ugDD.internalBufferForBoundsProgram.alloced())
-        ugDD.internalBufferForBoundsProgram.free();
+        ugDD.internalBufferForBoundsProgram.free(stream);
     }
     if (FULL_REBUILD)
       dd.memPeak += sumBoundsMem;
 
-    OWL_CUDA_SYNC_CHECK();
+    OWL_CUDA_SYNC_CHECK_STREAM(stream);
   }
     
 } // ::owl

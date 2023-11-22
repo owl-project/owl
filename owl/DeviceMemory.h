@@ -27,6 +27,7 @@ namespace owl {
     inline bool   notEmpty() const { return !empty(); }
     inline size_t size()     const { return sizeInBytes; }
     
+    inline void alloc(size_t size, cudaStream_t stream);
     inline void alloc(size_t size);
     inline void allocManaged(size_t size);
     inline void *get();
@@ -34,6 +35,7 @@ namespace owl {
     inline void uploadAsync(const void *h_pointer, cudaStream_t stream);
     inline void download(void *h_pointer);
     inline void free();
+    inline void free(cudaStream_t stream);
     template<typename T>
     inline void upload(const std::vector<T> &vec);
       
@@ -48,6 +50,16 @@ namespace owl {
     assert(empty());
     this->sizeInBytes = size;
     OWL_CUDA_CHECK(cudaMalloc( (void**)&d_pointer, sizeInBytes));
+    assert(alloced() || size == 0);
+  }
+    
+  inline void DeviceMemory::alloc(size_t size, cudaStream_t stream)
+  {
+    if (alloced()) free();
+      
+    assert(empty());
+    this->sizeInBytes = size;
+    OWL_CUDA_CHECK(cudaMallocAsync( (void**)&d_pointer, sizeInBytes, stream));
     assert(alloced() || size == 0);
   }
     
@@ -92,6 +104,17 @@ namespace owl {
     assert(alloced() || empty());
     if (!empty()) {
       OWL_CUDA_CHECK(cudaFree((void*)d_pointer));
+    }
+    sizeInBytes = 0;
+    d_pointer   = 0;
+    assert(empty());
+  }
+
+  inline void DeviceMemory::free(cudaStream_t stream)
+  {
+    assert(alloced() || empty());
+    if (!empty()) {
+      OWL_CUDA_CHECK(cudaFreeAsync((void*)d_pointer,stream));
     }
     sizeInBytes = 0;
     d_pointer   = 0;

@@ -58,6 +58,17 @@
     }                                                           \
   }
 
+#define OWL_CUDA_SYNC_CHECK_STREAM(stream)                                       \
+  {                                                             \
+    cudaError_t rc = cudaStreamSynchronize(stream);                                    \
+    /*cudaError_t rc = cudaGetLastError();*/                            \
+    if (rc != cudaSuccess) {                                    \
+      fprintf(stderr, "error (%s: line %d): %s\n",              \
+              __FILE__, __LINE__, cudaGetErrorString(rc));      \
+      OWL_RAISE("fatal cuda error");                            \
+    }                                                           \
+  }
+
 
 
 #define OWL_CUDA_CHECK_NOTHROW( call )                                      \
