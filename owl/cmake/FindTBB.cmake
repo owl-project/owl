@@ -115,34 +115,35 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(TBB
   TBB_INCLUDE_DIR TBB_LIBRARY TBB_LIBRARY_MALLOC
 )
 
-# check version
-IF (TBB_INCLUDE_DIR)
-  #  FILE(READ ${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h TBB_STDDEF_H) issue
-  
-  # (iw): issue #68: should use tbb/version.h, not tbb/tbb_stddef.h, to make
-  # newest intel beta software happy.
-  if (EXISTS ${TBB_INCLUDE_DIR}/tbb/version.h)
-    FILE(READ ${TBB_INCLUDE_DIR}/tbb/version.h TBB_STDDEF_H)
-  else()
-    FILE(READ ${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h TBB_STDDEF_H) 
-  endif()
+IF (TBB_FOUND)
+  # check version
+  IF (TBB_INCLUDE_DIR)
+    #  FILE(READ ${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h TBB_STDDEF_H) issue
+    
+    # (iw): issue #68: should use tbb/version.h, not tbb/tbb_stddef.h, to make
+    # newest intel beta software happy.
+    if (EXISTS ${TBB_INCLUDE_DIR}/tbb/version.h)
+      FILE(READ ${TBB_INCLUDE_DIR}/tbb/version.h TBB_STDDEF_H)
+    else()
+      FILE(READ ${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h TBB_STDDEF_H) 
+    endif()
 
-  STRING(REGEX MATCH "#define TBB_VERSION_MAJOR ([0-9]+)" DUMMY "${TBB_STDDEF_H}")
-  SET(TBB_VERSION_MAJOR ${CMAKE_MATCH_1})
+    STRING(REGEX MATCH "#define TBB_VERSION_MAJOR ([0-9]+)" DUMMY "${TBB_STDDEF_H}")
+    SET(TBB_VERSION_MAJOR ${CMAKE_MATCH_1})
 
-  STRING(REGEX MATCH "#define TBB_VERSION_MINOR ([0-9]+)" DUMMY "${TBB_STDDEF_H}")
-  SET(TBB_VERSION "${TBB_VERSION_MAJOR}.${CMAKE_MATCH_1}")
+    STRING(REGEX MATCH "#define TBB_VERSION_MINOR ([0-9]+)" DUMMY "${TBB_STDDEF_H}")
+    SET(TBB_VERSION "${TBB_VERSION_MAJOR}.${CMAKE_MATCH_1}")
 
-  IF (TBB_VERSION VERSION_LESS TBB_VERSION_REQUIRED)
-    MESSAGE(WARNING ${TBB_ERROR_MESSAGE})
-    SET(TBB_FOUND FALSE)
+    IF (TBB_VERSION VERSION_LESS TBB_VERSION_REQUIRED)
+      MESSAGE(WARNING ${TBB_ERROR_MESSAGE})
+      SET(TBB_FOUND FALSE)
+    ENDIF()
+
+    SET(TBB_VERSION ${TBB_VERSION} CACHE STRING "TBB Version")
+    MARK_AS_ADVANCED(TBB_VERSION)
   ENDIF()
 
-  SET(TBB_VERSION ${TBB_VERSION} CACHE STRING "TBB Version")
-  MARK_AS_ADVANCED(TBB_VERSION)
-ENDIF()
-
-IF (TBB_FOUND)
+  
   SET(TBB_INCLUDE_DIRS ${TBB_INCLUDE_DIR})
   # NOTE(jda) - TBB found in CentOS 6/7 package manager does not have debug
   #             versions of the library...silently fall-back to using only the
