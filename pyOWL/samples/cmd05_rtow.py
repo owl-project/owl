@@ -141,7 +141,7 @@ def main():
     print("#sample: creating context")
     owl = py_owl.context_create()
     print("#sample: creating module")
-    module = owl.module_from_file("cmd05-rtow.ptx")
+    module = owl.module_from_file("cmd05_rtow.ptx")
     print("#sample: creating geom type for 'lambertian' spheres")
     lambertian_sphere_gt = owl.geom_type_create(owl.GEOM_USER,module,"LambertianSphere")
     lambertian_sphere_gt.set_closest_hit(0,module,"LambertianSphere")

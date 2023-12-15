@@ -64,7 +64,7 @@ def normalize( vec ):
 def main():
     print("#sample: creating context")
     owl = py_owl.context_create()
-    module = owl.module_from_file("cmd01-simpleTriangles.ptx")
+    module = owl.module_from_file("cmd01_simpleTriangles.ptx")
     print("#sample: creating geom type")
     gt = owl.geom_type_create(owl.GEOM_TRIANGLES,module,"TrianglesGeomData")
 
