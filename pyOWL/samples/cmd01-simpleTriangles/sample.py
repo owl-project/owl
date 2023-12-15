@@ -42,9 +42,7 @@ def sub( a, b ):
     return ( a[0]-b[0], a[1]-b[1], a[2]-b[2] )
 
 def scale_f( f, vec ):
-    print("scaling vec "+str(vec)+" w/ scale "+str(f))
     result = ( f*vec[0], f*vec[1], f*vec[2] )
-    print("result "+str(result))
     return result
 
 def dot( a, b ):
@@ -60,16 +58,12 @@ def cross( a, b ):
 def normalize( vec ):
     length = math.sqrt(dot(vec,vec))
     scale = 1 / length
-    print(" vec "+str(vec))
-    print(" scale "+str(scale))
     result = scale_f( scale, vec)
-    print(" result "+str(result))
     return result
         
 def main():
     print("#sample: creating context")
     owl = py_owl.context_create()
-    print("#sample: creating module")
     module = owl.module_from_file("cmd01-simpleTriangles.ptx")
     print("#sample: creating geom type")
     gt = owl.geom_type_create(owl.GEOM_TRIANGLES,module,"TrianglesGeomData")
@@ -123,16 +117,10 @@ def main():
     camera_pos = look_from
     camera_d00 = normalize(sub(look_at, look_from))
     aspect = fb_size[0] / float(fb_size[1])
-    print("aspect "+str(aspect));
-    print("cosfovy*aspect "+str(cos_fovy*aspect))
     camera_ddu = scale_f(cos_fovy * aspect, normalize(cross(camera_d00,look_up)))
     camera_ddv = scale_f(cos_fovy, normalize(cross(camera_ddu,camera_d00)))
     camera_d00 = sub(camera_d00, scale_f(0.5, camera_ddu))
     camera_d00 = sub(camera_d00, scale_f(0.5, camera_ddv))
-    print("pos "+str(camera_pos))
-    print("d00 "+str(camera_d00))
-    print("ddu "+str(camera_ddu))
-    print("ddv "+str(camera_ddv))
     
     #// ----------- set variables  ----------------------------
     ray_gen.set_buffer("fbPtr",        frame_buffer);
@@ -154,22 +142,16 @@ def main():
     #// now that everything is ready: launch it ....
     #// ##################################################################
   
-    print("launching ...\n");
     ray_gen.launch(fb_size);
   
-    print("done with launch, writing picture ...")
-    
     fb = save_png_rgba8(frame_buffer,fb_size,outFileName);
-    print("written rendered frame buffer to file "+outFileName)
+    print("#sample: written rendered frame buffer to file "+outFileName)
     
     # ##################################################################
     # and finally, clean up
     # ##################################################################
     
-    print("destroying devicegroup ...")
     owl.context_destroy()
-  
-    print("seems all went OK; app is done, this should be the last output ...")
 
 main()
 
