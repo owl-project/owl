@@ -1134,7 +1134,8 @@ OWL_API void owlVariableSet4ulv(OWLVariable var, const uint64_t *val);
 OWL_API void owlVariableSetGroup  (OWLVariable variable, OWLGroup value);
 OWL_API void owlVariableSetTexture(OWLVariable variable, OWLTexture value);
 OWL_API void owlVariableSetBuffer (OWLVariable variable, OWLBuffer value);
-OWL_API void owlVariableSetRaw    (OWLVariable variable, const void *valuePtr);
+OWL_API void owlVariableSetRaw    (OWLVariable variable, const void *valuePtr,
+                                   int devID OWL_IF_CPP(=-1));
 OWL_API void owlVariableSetPointer(OWLVariable variable, const void *valuePtr);
 
 #ifdef __cplusplus
@@ -1590,28 +1591,32 @@ OWL_API void owlRayGenSetTexture(OWLRayGen obj, const char *name, OWLTexture val
 OWL_API void owlRayGenSetPointer(OWLRayGen obj, const char *name, const void *val);
 OWL_API void owlRayGenSetBuffer(OWLRayGen obj, const char *name, OWLBuffer val);
 OWL_API void owlRayGenSetGroup(OWLRayGen obj, const char *name, OWLGroup val);
-OWL_API void owlRayGenSetRaw(OWLRayGen obj, const char *name, const void *val);
+OWL_API void owlRayGenSetRaw(OWLRayGen obj, const char *name, const void *val,
+                             int devID OWL_IF_CPP(=-1));
 
 // setters for variables on "Geom"s
 OWL_API void owlGeomSetTexture(OWLGeom obj, const char *name, OWLTexture val);
 OWL_API void owlGeomSetPointer(OWLGeom obj, const char *name, const void *val);
 OWL_API void owlGeomSetBuffer(OWLGeom obj, const char *name, OWLBuffer val);
 OWL_API void owlGeomSetGroup(OWLGeom obj, const char *name, OWLGroup val);
-OWL_API void owlGeomSetRaw(OWLGeom obj, const char *name, const void *val);
+OWL_API void owlGeomSetRaw(OWLGeom obj, const char *name, const void *val,
+                           int deviceID OWL_IF_CPP(=-1));
 
 // setters for variables on "Params"s
 OWL_API void owlParamsSetTexture(OWLParams obj, const char *name, OWLTexture val);
 OWL_API void owlParamsSetPointer(OWLParams obj, const char *name, const void *val);
 OWL_API void owlParamsSetBuffer(OWLParams obj, const char *name, OWLBuffer val);
 OWL_API void owlParamsSetGroup(OWLParams obj, const char *name, OWLGroup val);
-OWL_API void owlParamsSetRaw(OWLParams obj, const char *name, const void *val);
+OWL_API void owlParamsSetRaw(OWLParams obj, const char *name, const void *val,
+                             int devID OWL_IF_CPP(=-1));
 
 // setters for variables on "MissProg"s
 OWL_API void owlMissProgSetTexture(OWLMissProg obj, const char *name, OWLTexture val);
 OWL_API void owlMissProgSetPointer(OWLMissProg obj, const char *name, const void *val);
 OWL_API void owlMissProgSetBuffer(OWLMissProg obj, const char *name, OWLBuffer val);
 OWL_API void owlMissProgSetGroup(OWLMissProg obj, const char *name, OWLGroup val);
-OWL_API void owlMissProgSetRaw(OWLMissProg obj, const char *name, const void *val);
+OWL_API void owlMissProgSetRaw(OWLMissProg obj, const char *name, const void *val,
+                               int devID OWL_IF_CPP(=-1));
 
 
 // -------------------------------------------------------

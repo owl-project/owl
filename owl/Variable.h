@@ -125,7 +125,7 @@ namespace owl {
     virtual void set(const std::shared_ptr<Group>   &value);
     virtual void set(const std::shared_ptr<Texture> &value);
     
-    virtual void setRaw(const void *ptr);
+    virtual void setRaw(const void *ptr, int devID);
 
     
     virtual std::string toString() const { return "Variable"; }
