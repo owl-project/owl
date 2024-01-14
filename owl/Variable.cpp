@@ -169,7 +169,7 @@ namespace owl {
         = /* actual size is 'type' - constant */varDecl->type - OWL_USER_TYPE_BEGIN;
       if (devID == -1) {
         dataShared.resize(dataSize);
-        memcpy(dataPerDev[devID].data(),ptr,dataSize);
+        memcpy(dataShared.data(),ptr,dataSize);
       } else {
         if (devID >= dataPerDev.size()) {
           dataPerDev.resize(devID+1);
