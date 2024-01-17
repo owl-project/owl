@@ -334,11 +334,13 @@ namespace owl {
     void OWLViewer::mouseMotion(const vec2i &newMousePosition)
     {
       if (lastMousePosition != vec2i(-1)) {
-        if (leftButton.isPressed)
-          mouseDragLeft  (newMousePosition,newMousePosition-lastMousePosition);
-        if (centerButton.isPressed)
+        if (leftButton.isPressed && leftButton.ctrlWhenPressed)
           mouseDragCenter(newMousePosition,newMousePosition-lastMousePosition);
-        if (rightButton.isPressed)
+        else if (leftButton.isPressed)
+          mouseDragLeft  (newMousePosition,newMousePosition-lastMousePosition);
+        else if (centerButton.isPressed)
+          mouseDragCenter(newMousePosition,newMousePosition-lastMousePosition);
+        else if (rightButton.isPressed)
           mouseDragRight (newMousePosition,newMousePosition-lastMousePosition);
       }
       lastMousePosition = newMousePosition;
@@ -368,7 +370,7 @@ namespace owl {
     void OWLViewer::mouseButtonLeft  (const vec2i &where, bool pressed)
     {
       if (cameraManipulator) cameraManipulator->mouseButtonLeft(where,pressed);
-
+      
       lastMousePosition = where;
     }
 
