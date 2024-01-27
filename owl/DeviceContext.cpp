@@ -326,7 +326,7 @@ namespace owl {
     // if (parent->curvesEnabled) 
 #if OWL_CAN_DO_CURVES
    pipelineCompileOptions.usesPrimitiveTypeFlags
-        = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_LINEAR
+        |= OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_LINEAR
         | OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_QUADRATIC_BSPLINE
         | OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_CUBIC_BSPLINE;
 #endif
