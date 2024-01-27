@@ -312,6 +312,8 @@ namespace owl {
     pipelineCompileOptions.numPayloadValues   = parent->numPayloadValues;
     pipelineCompileOptions.numAttributeValues = parent->numAttributeValues;
     pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
+    pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_TRIANGLE;
+    pipelineCompileOptions.usesPrimitiveTypeFlags |= OPTIX_PRIMITIVE_TYPE_FLAGS_CUSTOM;
     pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
     
     // ------------------------------------------------------------------
