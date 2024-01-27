@@ -623,6 +623,15 @@ namespace owl {
     this->numAttributeValues = (int)numAttributeValues;
   }
 
+  void Context::setNumPayloadValues(size_t numPayloadValues)
+  {
+    for (auto device : getDevices()) {
+      assert("check programs have not been built"
+             && device->allActivePrograms.empty());
+    }
+    this->numPayloadValues = (int)numPayloadValues;
+  }
+
   void Context::buildPrograms(bool debug)
   {
     buildModules(debug);

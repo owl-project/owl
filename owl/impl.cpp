@@ -111,6 +111,13 @@ owlContextSetNumAttributeValues(OWLContext _context, size_t numAttributeValues)
 }
 
 OWL_API void
+owlContextSetNumPayloadValues(OWLContext _context, size_t numRayPayloadValues)
+{
+  LOG_API_CALL();
+  checkGet(_context)->setNumPayloadValues(numRayPayloadValues);
+}
+
+OWL_API void
 owlContextSetBoundLaunchParamValues(OWLContext _context,
                                     const OWLBoundValueDecl *_boundValues,
                                     int numBoundValues)

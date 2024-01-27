@@ -401,6 +401,13 @@ OWL_API void
 owlContextSetNumAttributeValues(OWLContext context,
                                 size_t numAttributeValues);
 
+/*! sets the max number of ray payload registers that can be used in this context; 
+  this should be done before any programs, pipelines, geometries, etc get
+  created */
+OWL_API void
+owlContextSetNumPayloadValues(OWLContext context,
+                              size_t numRayPayloadValues);
+
 /*! tells OptiX to specialize the values of certain launch parameters
   when compiling modules, and ignore their values at launch.
   See section 6.3.1 of the OptiX 7.2 programming guide.
