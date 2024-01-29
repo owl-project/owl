@@ -585,7 +585,9 @@ namespace owl {
       
       UserGeomType::SP userGeomType
         = geomType->as<UserGeomType>();
-      if (userGeomType)
+      if (userGeomType && parent->motionBlurEnabled)
+        userGeomType->buildMotionBoundsProg();
+      else if (userGeomType)
         userGeomType->buildBoundsProg();
       
       auto &dd = geomType->getDD(shared_from_this());

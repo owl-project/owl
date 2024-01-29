@@ -257,4 +257,39 @@ namespace owl {
   inline __device__ void __boundsFunc__##progName                       \
   /* program args and body supplied by user ... */
 #endif
-  
+
+/* defines the wrapper stuff to actually launch all the bounds
+   programs from the host - todo: move to deviceAPI.h once working */
+#ifndef OPTIX_MOTION_BOUNDS_PROGRAM
+#define OPTIX_MOTION_BOUNDS_PROGRAM(progName)                                  \
+  /* fwd decl for the kernel func to call */                            \
+  inline __device__                                                     \
+  void __motionBoundsFunc__##progName(const void *geomData,                   \
+                                owl::common::box3f &boundskey1,         \
+                                owl::common::box3f &boundskey2,         \
+                                const int32_t primID);                  \
+                                                                        \
+  /* the '__global__' kernel we can get a function handle on */         \
+  extern "C" __global__                                                 \
+  void __motionBoundsFuncKernel__##progName(const void  *geomData,      \
+                         owl::common::box3f *const boundsArray,         \
+                                      const uint32_t numPrims)          \
+  {                                                                     \
+    uint32_t blockIndex                                                 \
+      = blockIdx.x                                                      \
+      + blockIdx.y * gridDim.x                                          \
+      + blockIdx.z * gridDim.x * gridDim.y;                             \
+    uint32_t primID                                                     \
+      = threadIdx.x + blockDim.x*threadIdx.y                            \
+      + blockDim.x*blockDim.y*blockIndex;                               \
+    if (primID < numPrims) {                                            \
+      __motionBoundsFunc__##progName(geomData,boundsArray[primID * 2],  \
+                                     boundsArray[primID * 2 + 1],       \
+                                     primID);                           \
+    }                                                                   \
+  }                                                                     \
+                                                                        \
+  /* now the actual device code that the user is writing: */            \
+  inline __device__ void __motionBoundsFunc__##progName                       \
+  /* program args and body supplied by user ... */
+#endif

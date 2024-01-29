@@ -1004,6 +1004,11 @@ owlGeomTypeSetBoundsProg(OWLGeomType type,
                          OWLModule module,
                          const char *progName);
 
+OWL_API void
+owlGeomTypeSetMotionBoundsProg(OWLGeomType type,
+                               OWLModule module,
+                               const char *progName);
+
 /*! set the primitive count for the given uesr geometry. this _has_ to
   be set before the group(s) that this geom is used in get built */
 OWL_API void
