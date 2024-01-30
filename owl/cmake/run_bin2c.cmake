@@ -23,6 +23,11 @@ foreach(obj ${OBJECTS})
     string(LENGTH ${filedata} len)
     math(EXPR numBytes "${len} / 2")
 
+    if(obj_ext MATCHES ".ptx")
+    # append two bytes for the null character
+    math(EXPR numBytes "${numBytes} + 2")
+    endif()
+
     # Convert hex data for C compatibility
     string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," filedata ${filedata})
 
@@ -33,7 +38,14 @@ foreach(obj ${OBJECTS})
 
     # Append data to file
     string(APPEND file_contents "const uint8_t ${obj_name}[${numBytes}] = \n")
-    string(APPEND file_contents "{${filedata}};\n\n")
+    string(APPEND file_contents "{${filedata}")
+    
+    if(obj_ext MATCHES ".ptx")
+    # append two bytes for the null character
+    string(APPEND file_contents ",0x00,0x00};\n\n")
+    else()
+    string(APPEND file_contents "};\n\n")
+    endif()
 
     # Append length 
     string(APPEND file_contents "const uint32_t ${obj_name}_length = ${numBytes};\n\n")
