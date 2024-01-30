@@ -951,7 +951,6 @@ owlGeomSetPrimCount(OWLGeom _geom,
   geom->setPrimCount(primCount);
 }
 
-  
 OWL_API OWLModule owlModuleCreate(OWLContext _context,
                                   const char *ptxCode)
 {
@@ -964,6 +963,18 @@ OWL_API OWLModule owlModuleCreate(OWLContext _context,
   return (OWLModule)context->createHandle(module);
 }
 
+OWL_API OWLModule owlModuleCreateFromIR(OWLContext _context, uint8_t* bytes, uint32_t numBytes)
+{
+  LOG_API_CALL();
+  
+  std::vector<uint8_t> IR(numBytes);
+  memcpy(IR.data(), bytes, numBytes);
+
+  APIContext::SP context = checkGet(_context);
+  Module::SP  module  = context->createModule(IR);
+  assert(module);
+  return (OWLModule)context->createHandle(module);
+}
 
 // ==================================================================
 // "RELEASE" functions

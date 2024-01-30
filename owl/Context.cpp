@@ -361,6 +361,14 @@ namespace owl {
     return module;
   }
 
+  Module::SP Context::createModule(const std::vector<uint8_t> &IR)
+  {
+    Module::SP module = std::make_shared<Module>(this,IR);
+    assert(module);
+    module->createDeviceData(getDevices());
+    return module;
+  }
+
   void Context::buildHitGroupRecordsOn(const DeviceContext::SP &device)
   {
     LOG("building SBT hit group records");

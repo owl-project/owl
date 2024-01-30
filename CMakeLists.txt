@@ -70,6 +70,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(embed_ptx)
+include(embed_optixir)
 
 # ------------------------------------------------------------------
 # owl library itself, including owl-common
