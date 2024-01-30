@@ -74,6 +74,51 @@ OPTIX_MOTION_BOUNDS_PROGRAM(Bounds)(const void *geomData,
   primBounds2.upper = center2 + vec3f(.1f, .1f, .1f);
 }
 
+OPTIX_CLOSEST_HIT_PROGRAM(BoundsMesh)()
+{
+  Hit &prd = owl::getPRD<Hit>();
+
+  // // printf("HIT\n");
+  
+  // const BoundsGeomData &self = owl::getProgramData<BoundsGeomData>();
+  
+  // const vec3f rayOrg = optixGetWorldRayOrigin();
+  // const vec3f rayDir = normalize((vec3f)optixGetWorldRayDirection());
+
+  // // compute normal:
+  // const int   primID = optixGetPrimitiveIndex();
+  // const vec3i index  = self.index[primID];
+  // const vec3f &A     = self.vertex[index.x];
+  // const vec3f &B     = self.vertex[index.y];
+  // const vec3f &C     = self.vertex[index.z];
+  // vec3f Ng     = normalize(cross(B-A,C-A));
+  // Ng = optixTransformNormalFromObjectToWorldSpace(Ng);
+  // if (dot(Ng,rayDir) > 0.f) Ng = -Ng;
+
+  // const vec2f uv     = optixGetTriangleBarycentrics();
+  // const vec2f tc
+  //   = (1.f-uv.x-uv.y)*self.texCoord[index.x]
+  //   +      uv.x      *self.texCoord[index.y]
+  //   +           uv.y *self.texCoord[index.z];
+  // vec4f texColor = tex2D<float4>(self.texture,tc.x,tc.y);
+
+  // const vec3f P = rayOrg + (optixGetRayTmax()*.999f) * rayDir;
+
+  // const vec3f lightDir(1,1,1);
+  // bool illuminated = false;
+  // if (dot(lightDir,Ng) > 0.f) {
+  //   illuminated = true;
+  // }
+
+  // float weight = .1f;
+  // weight += .2f*fabs(dot(rayDir,Ng));
+  // if (illuminated)
+  //   weight += 1.5f * dot(normalize(lightDir),Ng);
+  
+  prd.col = vec3f(1.f, 0.f, 0.f);//weight * vec3f(texColor);
+  prd.hadHit = true;
+}
+
 OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
 {
   Hit &prd = owl::getPRD<Hit>();
