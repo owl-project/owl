@@ -267,6 +267,10 @@ namespace owl {
     Module::SP
     createModule(const std::string &ptxCode);
 
+    /*! creates new module with given precompiled OptiX IR code */
+    Module::SP
+    createModule(const std::vector<uint8_t> &IR);
+
     // ------------------------------------------------------------------
     // member variables
     // ------------------------------------------------------------------

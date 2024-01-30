@@ -456,7 +456,12 @@ owlContextGetOptixContext(OWLContext context, int deviceID);
 OWL_API OWLModule
 owlModuleCreate(OWLContext  context,
                 const char *ptxCode);
-                
+
+/* Note, this does not currently support bounds programs */
+OWL_API OWLModule
+owlModuleCreateFromIR(OWLContext  context,
+                      uint8_t* bytes, uint32_t numBytes);
+
 OWL_API void
 owlModuleRelease(OWLModule module);
 
