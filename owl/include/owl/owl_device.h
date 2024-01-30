@@ -272,7 +272,8 @@ namespace owl {
   /* the '__global__' kernel we can get a function handle on */         \
   extern "C" __global__                                                 \
   void __motionBoundsFuncKernel__##progName(const void  *geomData,      \
-                         owl::common::box3f *const boundsArray,         \
+                         owl::common::box3f *const boundsArrayKey1,     \
+                         owl::common::box3f *const boundsArrayKey2,     \
                                       const uint32_t numPrims)          \
   {                                                                     \
     uint32_t blockIndex                                                 \
@@ -283,13 +284,14 @@ namespace owl {
       = threadIdx.x + blockDim.x*threadIdx.y                            \
       + blockDim.x*blockDim.y*blockIndex;                               \
     if (primID < numPrims) {                                            \
-      __motionBoundsFunc__##progName(geomData,boundsArray[primID * 2],  \
-                                     boundsArray[primID * 2 + 1],       \
+      __motionBoundsFunc__##progName(geomData,                          \
+                                     boundsArrayKey1[primID],           \
+                                     boundsArrayKey2[primID],           \
                                      primID);                           \
     }                                                                   \
   }                                                                     \
                                                                         \
   /* now the actual device code that the user is writing: */            \
-  inline __device__ void __motionBoundsFunc__##progName                       \
+  inline __device__ void __motionBoundsFunc__##progName                 \
   /* program args and body supplied by user ... */
 #endif

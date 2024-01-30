@@ -25,14 +25,8 @@ using namespace owl;
 /* variables for the AABBs geometry */
 struct BoundsGeomData
 {
-  /*! array/buffer of vertex indices */
-  vec3i *index;
-  /*! array/buffer of vertex positions */
+  /*! array/buffer of box center positions */
   vec3f *vertex;
-  /*! texture coordinates */
-  vec2f *texCoord;
-  /* texture object */
-  cudaTextureObject_t texture;
 };
 
 /* variables for the ray generation program */

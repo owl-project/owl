@@ -74,93 +74,93 @@ OPTIX_MOTION_BOUNDS_PROGRAM(Bounds)(const void *geomData,
   primBounds2.upper = center2 + vec3f(.1f, .1f, .1f);
 }
 
+OPTIX_INTERSECT_PROGRAM(Bounds)()
+{
+  const auto &self
+    = owl::getProgramData<BoundsGeomData>();
+
+  uint32_t primID = optixGetPrimitiveIndex();
+  float time = optixGetRayTime();
+
+  vec3f origin = optixGetObjectRayOrigin();
+  vec3f direction = optixGetObjectRayDirection();
+  float tmin = optixGetRayTmin();
+  float tmax = optixGetRayTmax();
+
+  const vec3f center1 = self.vertex[primID * 2 + 0];
+  const vec3f center2 = self.vertex[primID * 2 + 1];
+
+  vec3f center = center1 * (1.f - time) + center2 * time;
+  box3f box = box3f(center - vec3f(.1f, .1f, .1f),
+                    center + vec3f(.1f, .1f, .1f));
+
+  float tmp = 0.f;
+  optixReportIntersection(.1f,0,*(unsigned*)&tmp);
+
+  // // intersect ray with box
+  // vec3f invDir = 1.0f / direction;
+  // vec3f t0 = (box.lower - origin) * invDir;
+  // vec3f t1 = (box.upper - origin) * invDir;
+  // vec3f tminVec = min(t0, t1);
+  // vec3f tmaxVec = max(t0, t1);
+  // float boxTmin = max(max(tminVec.x, tminVec.y), tminVec.z);
+  // float boxTmax = min(min(tmaxVec.x, tmaxVec.y), tmaxVec.z);
+
+  // // ray does not hit box
+  // if (boxTmin > boxTmax) return;
+
+  // // ray might hit box, tell optix to shorten ray
+  // optixReportIntersection(boxTmin,0,*(unsigned*)&boxTmin);
+}
+
+
+__device__ vec3f hsvToRgb(const vec3f& hsv) {
+  float h = hsv.x;
+  float s = hsv.y;
+  float v = hsv.z;
+
+  float c = v * s;
+  float x = c * (1.f - abs(fmodf(h / 60.0f, 2.f) - 1.f));
+  float m = v - c;
+
+  float r, g, b;
+  if (h >= 0 && h < 60) {
+    r = c;
+    g = x;
+    b = 0;
+  } else if (h >= 60 && h < 120) {
+    r = x;
+    g = c;
+    b = 0;
+  } else if (h >= 120 && h < 180) {
+    r = 0;
+    g = c;
+    b = x;
+  } else if (h >= 180 && h < 240) {
+    r = 0;
+    g = x;
+    b = c;
+  } else if (h >= 240 && h < 300) {
+    r = x;
+    g = 0;
+    b = c;
+  } else {
+    r = c;
+    g = 0;
+    b = x;
+  }
+
+  return vec3f(r + m, g + m, b + m);
+}
+
+
 OPTIX_CLOSEST_HIT_PROGRAM(BoundsMesh)()
 {
   Hit &prd = owl::getPRD<Hit>();
+  int primID = optixGetPrimitiveIndex();
 
-  // // printf("HIT\n");
-  
-  // const BoundsGeomData &self = owl::getProgramData<BoundsGeomData>();
-  
-  // const vec3f rayOrg = optixGetWorldRayOrigin();
-  // const vec3f rayDir = normalize((vec3f)optixGetWorldRayDirection());
-
-  // // compute normal:
-  // const int   primID = optixGetPrimitiveIndex();
-  // const vec3i index  = self.index[primID];
-  // const vec3f &A     = self.vertex[index.x];
-  // const vec3f &B     = self.vertex[index.y];
-  // const vec3f &C     = self.vertex[index.z];
-  // vec3f Ng     = normalize(cross(B-A,C-A));
-  // Ng = optixTransformNormalFromObjectToWorldSpace(Ng);
-  // if (dot(Ng,rayDir) > 0.f) Ng = -Ng;
-
-  // const vec2f uv     = optixGetTriangleBarycentrics();
-  // const vec2f tc
-  //   = (1.f-uv.x-uv.y)*self.texCoord[index.x]
-  //   +      uv.x      *self.texCoord[index.y]
-  //   +           uv.y *self.texCoord[index.z];
-  // vec4f texColor = tex2D<float4>(self.texture,tc.x,tc.y);
-
-  // const vec3f P = rayOrg + (optixGetRayTmax()*.999f) * rayDir;
-
-  // const vec3f lightDir(1,1,1);
-  // bool illuminated = false;
-  // if (dot(lightDir,Ng) > 0.f) {
-  //   illuminated = true;
-  // }
-
-  // float weight = .1f;
-  // weight += .2f*fabs(dot(rayDir,Ng));
-  // if (illuminated)
-  //   weight += 1.5f * dot(normalize(lightDir),Ng);
-  
-  prd.col = vec3f(1.f, 0.f, 0.f);//weight * vec3f(texColor);
-  prd.hadHit = true;
-}
-
-OPTIX_CLOSEST_HIT_PROGRAM(TriangleMesh)()
-{
-  Hit &prd = owl::getPRD<Hit>();
-
-  // printf("HIT\n");
-  
-  const BoundsGeomData &self = owl::getProgramData<BoundsGeomData>();
-  
-  const vec3f rayOrg = optixGetWorldRayOrigin();
-  const vec3f rayDir = normalize((vec3f)optixGetWorldRayDirection());
-
-  // compute normal:
-  const int   primID = optixGetPrimitiveIndex();
-  const vec3i index  = self.index[primID];
-  const vec3f &A     = self.vertex[index.x];
-  const vec3f &B     = self.vertex[index.y];
-  const vec3f &C     = self.vertex[index.z];
-  vec3f Ng     = normalize(cross(B-A,C-A));
-  Ng = optixTransformNormalFromObjectToWorldSpace(Ng);
-  if (dot(Ng,rayDir) > 0.f) Ng = -Ng;
-
-  const vec2f uv     = optixGetTriangleBarycentrics();
-  const vec2f tc
-    = (1.f-uv.x-uv.y)*self.texCoord[index.x]
-    +      uv.x      *self.texCoord[index.y]
-    +           uv.y *self.texCoord[index.z];
-  vec4f texColor = tex2D<float4>(self.texture,tc.x,tc.y);
-
-  const vec3f P = rayOrg + (optixGetRayTmax()*.999f) * rayDir;
-
-  const vec3f lightDir(1,1,1);
-  bool illuminated = false;
-  if (dot(lightDir,Ng) > 0.f) {
-    illuminated = true;
-  }
-
-  float weight = .1f;
-  weight += .2f*fabs(dot(rayDir,Ng));
-  if (illuminated)
-    weight += 1.5f * dot(normalize(lightDir),Ng);
-  
-  prd.col = weight * vec3f(texColor);
+  // Generate a vec3f color based on primID
+  prd.col = hsvToRgb(vec3f((primID / 64.f) * 360.f, 1.f, 1.f)); 
   prd.hadHit = true;
 }
 

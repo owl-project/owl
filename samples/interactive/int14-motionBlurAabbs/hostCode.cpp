@@ -53,7 +53,6 @@ const float init_cosFovy = 0.66f;
 
 const vec3i numBoxes(4);
 const float worldSize = 1;
-const vec3f boxSize   = (2*.4f*worldSize)/vec3f(numBoxes);
 
 std::default_random_engine rndGen;
 std::uniform_real_distribution<float> distribution_uniform(-1.0f,1.0f);
@@ -72,123 +71,51 @@ inline vec3f getRandomDir()
   return normalize(rotationAxis);
 }
 
-void getTransforms(affine3f &xfm0,
-                   affine3f &xfm1,
-                   vec3i boxID)
+void getCenters(vec3f &pos0,
+                vec3f &pos1,
+                vec3i boxID)
 {
-  const vec3f rotationAxis = getRandomDir();
-
-  const float rotationAngle0 = float(distribution_uniform(rndGen)*(2.f*M_PI));
-  const linear3f rot0 = linear3f::rotate(rotationAxis,rotationAngle0);
-
-  const float rotationAngle1 = float(rotationAngle0+distribution_rot(rndGen));
-  const linear3f rot1 = linear3f::rotate(rotationAxis,rotationAngle1);
-
   const vec3f rel = (vec3f(boxID)+.5f) / vec3f(numBoxes);
   const vec3f boxCenter = vec3f(-worldSize) + (2.f*worldSize)*rel;
-  const vec3f pos0 = boxCenter;
+  pos0 = boxCenter;
 
   const float speed  = distribution_speed(rndGen);
   const vec3f motion = speed * getRandomDir();
-  const vec3f pos1 = pos0+motion;;
-
-  xfm0 = affine3f(rot0,pos0);
-  xfm1 = affine3f(rot1,pos1);
+  pos1 = pos0+motion;
 }
 
-std::vector<affine3f>     boxTransforms0;
-std::vector<affine3f>     boxTransforms1;
-
-void addFace(Mesh &mesh, const vec3f ll, const vec3f du, const vec3f dv)
+OWLGroup createBoxesGroup(OWLContext context,
+                          OWLGeomType boundsGeomType,
+                          const vec3i numBoxes)
 {
-  int idxll = (int)mesh.vertices.size();
-  for (int iy=0;iy<2;iy++)
-    for (int ix=0;ix<2;ix++) {
-      mesh.vertices.push_back(ll+float(ix)*du+float(iy)*dv);
-      mesh.texCoords.push_back(vec2f((float)ix,(float)iy));
-    }
-  mesh.indices.push_back(vec3i(idxll,idxll+1,idxll+3));
-  mesh.indices.push_back(vec3i(idxll,idxll+3,idxll+2));
-}
+  std::vector<vec3f> boxCenters;
 
-void addBox(Mesh &mesh,
-            const vec3f du=vec3f(boxSize.x,0,0),
-            const vec3f dv=vec3f(0,boxSize.y,0),
-            const vec3f dw=vec3f(0,0,boxSize.z))
-{
-  addFace(mesh,-0.5f*(du+dv+dw),du,dv);
-  addFace(mesh,-0.5f*(du+dv+dw),du,dw);
-  addFace(mesh,-0.5f*(du+dv+dw),dv,dw);
+  for (int iz=0;iz<numBoxes.z;iz++)
+    for (int iy=0;iy<numBoxes.y;iy++)
+      for (int ix=0;ix<numBoxes.x;ix++) {
+        vec3f c0,c1;
+        getCenters(c0,c1,vec3i(ix,iy,iz));
+        boxCenters.push_back(c0);
+        boxCenters.push_back(c1);
+      }
 
-  addFace(mesh,0.5f*(du+dv+dw),-du,-dv);
-  addFace(mesh,0.5f*(du+dv+dw),-du,-dw);
-  addFace(mesh,0.5f*(du+dv+dw),-dv,-dw);
-}
-
-OWLGroup createBox(OWLContext context,
-                 OWLGeomType trianglesGeomType,
-                 const vec3i coord)
-{
-  Mesh mesh;
-  addBox(mesh);
-
-  // ------------------------------------------------------------------
-  // triangle mesh
-  // ------------------------------------------------------------------
   OWLBuffer vertexBuffer
-    = owlDeviceBufferCreate(context,OWL_FLOAT3,mesh.vertices.size(),mesh.vertices.data());
-  OWLBuffer texCoordsBuffer
-    = owlDeviceBufferCreate(context,OWL_FLOAT2,mesh.texCoords.size(),mesh.texCoords.data());
-  OWLBuffer indexBuffer
-    = owlDeviceBufferCreate(context,OWL_INT3,mesh.indices.size(),mesh.indices.data());
-  // OWLBuffer frameBuffer
-  //   = owlHostPinnedBufferCreate(context,OWL_INT,fbSize.x*fbSize.y);
+    = owlDeviceBufferCreate(context,OWL_FLOAT3,boxCenters.size(),boxCenters.data());  
 
-  OWLGeom trianglesGeom
-    = owlGeomCreate(context,trianglesGeomType);
-
-  owlTrianglesSetVertices(trianglesGeom,vertexBuffer,
-                          mesh.vertices.size(),sizeof(vec3f),0);
-  owlTrianglesSetIndices(trianglesGeom,indexBuffer,
-                         mesh.indices.size(),sizeof(vec3i),0);
-
-  owlGeomSetBuffer(trianglesGeom,"vertex",vertexBuffer);
-  owlGeomSetBuffer(trianglesGeom,"texCoord",texCoordsBuffer);
-  owlGeomSetBuffer(trianglesGeom,"index",indexBuffer);
-
-  // ------------------------------------------------------------------
-  // create a 4x4 checkerboard texture
-  // ------------------------------------------------------------------
-  vec2i texSize(distribution_texSize(rndGen),distribution_texSize(rndGen));
-  vec4uc color0 = vec4uc(255.99f*vec4f((float)distribution_uniform(rndGen),
-      (float)distribution_uniform(rndGen),
-      (float)distribution_uniform(rndGen),
-                                       0.f));
-  vec4uc color1 = vec4uc(255)-color0;
-  std::vector<vec4uc> texels;
-  for (int iy=0;iy<texSize.y;iy++)
-    for (int ix=0;ix<texSize.x;ix++) {
-      texels.push_back(((ix ^ iy)&1) ?
-                       color0 : color1);
-    }
-  OWLTexture cbTexture
-    = owlTexture2DCreate(context,
-                         OWL_TEXEL_FORMAT_RGBA8,
-                         texSize.x,texSize.y,
-                         texels.data(),
-                         OWL_TEXTURE_NEAREST,
-                         OWL_TEXTURE_CLAMP);
-  owlGeomSetTexture(trianglesGeom,"texture",cbTexture);
+  OWLGeom userGeom
+    = owlGeomCreate(context,boundsGeomType);
+  owlGeomSetPrimCount(userGeom,boxCenters.size() / 2);
+  owlGeomSetBuffer(userGeom,"vertex",vertexBuffer);
 
   // ------------------------------------------------------------------
   // the group/accel for that mesh
   // ------------------------------------------------------------------
-  OWLGroup trianglesGroup
-    = owlTrianglesGeomGroupCreate(context,1,&trianglesGeom);
+  OWLGroup userGeomGroup
+    = owlUserGeomGroupCreate(context,1,&userGeom);
 
-  owlGroupBuildAccel(trianglesGroup);
+  owlGroupBuildAccel(userGeomGroup);
 
-  return trianglesGroup;
+  return userGeomGroup;
 }
 
 
@@ -268,20 +195,9 @@ Viewer::Viewer()
   // declare geometry type
   // -------------------------------------------------------
   OWLVarDecl boundsGeomVars[] = {
-    { "index",  OWL_BUFPTR, OWL_OFFSETOF(BoundsGeomData,index)},
     { "vertex", OWL_BUFPTR, OWL_OFFSETOF(BoundsGeomData,vertex)},
-    { "texCoord", OWL_BUFPTR, OWL_OFFSETOF(BoundsGeomData,texCoord)},
-    { "texture",  OWL_TEXTURE, OWL_OFFSETOF(BoundsGeomData,texture)},
     { nullptr }
   };
-  OWLGeomType trianglesGeomType
-    = owlGeomTypeCreate(context,
-                        OWL_TRIANGLES,
-                        sizeof(BoundsGeomData),
-                        boundsGeomVars,-1);
-  owlGeomTypeSetClosestHit(trianglesGeomType,0,
-                           module,"TriangleMesh");
-
   OWLGeomType boundsGeomType
     = owlGeomTypeCreate(context,
                         OWL_GEOM_USER,
@@ -289,46 +205,10 @@ Viewer::Viewer()
                         boundsGeomVars,-1);
   owlGeomTypeSetMotionBoundsProg(boundsGeomType, 
                                  module, "Bounds");
-  
-  // ##################################################################
-  // set up all the *GEOMS* we want to run that code on
-  // ##################################################################
-
-  LOG("building geometries ...");
-
-  // addCube(vec3f(0.f),
-  //         vec3f(2.f,0.f,0.f),
-  //         vec3f(0.f,2.f,0.f),
-  //         vec3f(0.f,0.f,2.f));
-
-  std::vector<OWLGroup> groups;
-  for (int iz=0;iz<numBoxes.z;iz++)
-    for (int iy=0;iy<numBoxes.y;iy++)
-      for (int ix=0;ix<numBoxes.x;ix++) {
-        affine3f xfm0, xfm1;
-        getTransforms(xfm0,xfm1,vec3i(ix,iy,iz));
-        boxTransforms0.push_back(xfm0);
-        boxTransforms1.push_back(xfm1);
-        groups.push_back(createBox(context,trianglesGeomType,vec3i(ix,iy,iz)));
-      }
-
-  world
-    = owlInstanceGroupCreate(context,groups.size(),
-                             groups.data(),
-                             nullptr,
-                             nullptr,
-                             OWL_MATRIX_FORMAT_OWL);
-  // OWLBuffer xfmBuffer0 = owlDeviceBufferCreate(context,OWL_AFFINE3F,
-  //                                              boxTransforms0.size(),
-  //                                              boxTransforms0.data());
-  // OWLBuffer xfmBuffer1 = owlDeviceBufferCreate(context,OWL_AFFINE3F,
-  //                                              boxTransforms1.size(),
-  //                                              boxTransforms1.data());
-  // OWLBuffer xfmArrays[2] = { xfmBuffer0, xfmBuffer1 };
-  // owlInstanceGroupSetTransformArrays(world,2,xfmArrays);
-  owlInstanceGroupSetTransforms(world,0,(const float*)boxTransforms0.data());
-  // owlInstanceGroupSetTransforms(world,1,(const float*)boxTransforms1.data());
-  owlGroupBuildAccel(world);
+  owlGeomTypeSetIntersectProg(boundsGeomType, 0,
+                              module, "Bounds");
+  owlGeomTypeSetClosestHit(boundsGeomType, 0,
+                           module, "BoundsMesh");
 
   // ##################################################################
   // set miss and raygen program required for SBT
@@ -373,6 +253,19 @@ Viewer::Viewer()
     = owlRayGenCreate(context,module,"simpleRayGen",
                       sizeof(RayGenData),
                       rayGenVars,-1);
+                      
+  owlBuildPrograms(context);
+
+  // ##################################################################
+  // set up all the *GEOMS* we want to run that code on
+  // ##################################################################
+
+  LOG("building geometries ...");
+
+  OWLGroup group = createBoxesGroup(context,boundsGeomType,numBoxes);
+  world = owlInstanceGroupCreate(context, 1, &group);
+  owlGroupBuildAccel(world);
+
   /* camera and frame buffer get set in resiez() and cameraChanged() */
   owlRayGenSetGroup (rayGen,"world",        world);
 
@@ -380,7 +273,6 @@ Viewer::Viewer()
   // build *SBT* required to trace the groups
   // ##################################################################
 
-  owlBuildPrograms(context);
   owlBuildPipeline(context);
   owlBuildSBT(context);
   sbtDirty = true;

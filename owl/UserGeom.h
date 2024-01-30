@@ -121,6 +121,10 @@ namespace owl {
         requires. (in theory we can release this memory after BVH is
         built)*/
       DeviceMemory internalBufferForBoundsProgram;
+
+      /*! Same as above, but for the motion blur case */
+      DeviceMemory internalBufferForBoundsProgramKey1;
+      DeviceMemory internalBufferForBoundsProgramKey2;
     };
 
     /*! constructor */

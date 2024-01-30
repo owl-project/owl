@@ -240,7 +240,8 @@ namespace owl {
     tempMem.alloc(geomType->varStructSize);
     
     DeviceData &dd = getDD(device);
-    dd.internalBufferForBoundsProgram.alloc(primCount*2*sizeof(box3f));
+    dd.internalBufferForBoundsProgramKey1.alloc(primCount*sizeof(box3f));
+    dd.internalBufferForBoundsProgramKey2.alloc(primCount*sizeof(box3f));
     // dd.internalBufferForBoundsProgram.allocManaged(primCount*sizeof(box3f));
 
     writeVariables(userGeomData.data(),device);
@@ -262,11 +263,13 @@ namespace owl {
     tempMem.upload(userGeomData);
     
     void  *d_geomData = tempMem.get();
-    vec3f *d_boundsArray = (vec3f*)dd.internalBufferForBoundsProgram.get();
+    vec3f *d_boundsArrayKey1 = (vec3f*)dd.internalBufferForBoundsProgramKey1.get();
+    vec3f *d_boundsArrayKey2 = (vec3f*)dd.internalBufferForBoundsProgramKey2.get();
     /* arguments for the kernel we are to call */
     void  *args[] = {
                      &d_geomData,
-                     &d_boundsArray,
+                     &d_boundsArrayKey1,
+                     &d_boundsArrayKey2,
                      (void *)&primCount
     };
     
@@ -372,9 +375,9 @@ namespace owl {
 
       const std::string annotatedProgName
         = std::string("__motionBoundsFuncKernel__")
-        + boundsProg.progName;
+        + motionBoundsProg.progName;
     
-      CUresult rc = cuModuleGetFunction(&typeDD.boundsFuncKernel,
+      CUresult rc = cuModuleGetFunction(&typeDD.motionBoundsFuncKernel,
                                         moduleDD.boundsModule,
                                         annotatedProgName.c_str());
       
@@ -386,7 +389,7 @@ namespace owl {
       case CUDA_ERROR_NOT_FOUND:
         OWL_RAISE("in "+std::string(__PRETTY_FUNCTION__)
                   +": could not find OPTIX_MOTION_BOUNDS_PROGRAM("
-                  +boundsProg.progName+")");
+                  +motionBoundsProg.progName+")");
       default:
         const char *errName = 0;
         cuGetErrorName(rc,&errName);

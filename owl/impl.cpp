@@ -1272,7 +1272,7 @@ owlGeomTypeSetMotionBoundsProg(OWLGeomType _geometryType,
     = ((APIHandle *)_module)->get<Module>();
   assert(module);
 
-  geometryType->setBoundsProg(module,progName);
+  geometryType->setMotionBoundsProg(module,progName);
 }
 
 #define FATAL(error) { std::cerr << "FATAL Error: " << error << std::endl; exit(1); }
