@@ -43,7 +43,7 @@ namespace owl {
 
   inline void DeviceMemory::alloc(size_t size)
   {
-    if (alloced()) free();
+    if (alloced() || size > this->sizeInBytes) free();
       
     assert(empty());
     this->sizeInBytes = size;
