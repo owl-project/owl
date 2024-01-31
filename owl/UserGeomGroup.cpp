@@ -74,9 +74,6 @@ namespace owl {
     DeviceData &dd = getDD(device);
     auto optixContext = device->optixContext;
 
-    if (FULL_REBUILD && !dd.bvhMemory.empty())
-      dd.bvhMemory.free();
-
     if (!FULL_REBUILD && dd.bvhMemory.empty())
       throw std::runtime_error("trying to refit an accel struct that has not been previously built");
 
@@ -335,9 +332,14 @@ namespace owl {
       
       UserGeom::DeviceData &ugDD = child->getDD(device);
       
-      sumBoundsMem += ugDD.internalBufferForBoundsProgram.sizeInBytes;
-      if (ugDD.internalBufferForBoundsProgram.alloced())
-        ugDD.internalBufferForBoundsProgram.free();
+      if (!!ugDD.internalBufferForBoundsProgram.externallyManaged) {
+        if (context->motionBlurEnabled) {
+          sumBoundsMem += ugDD.internalBufferForBoundsProgramKey1.sizeInBytes;
+          sumBoundsMem += ugDD.internalBufferForBoundsProgramKey2.sizeInBytes;
+        } else {
+          sumBoundsMem += ugDD.internalBufferForBoundsProgram.sizeInBytes;
+        }
+      }
     }
     if (FULL_REBUILD)
       dd.memPeak += sumBoundsMem;
