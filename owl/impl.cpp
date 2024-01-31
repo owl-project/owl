@@ -1498,11 +1498,12 @@ _OWL_VARIABLE_SETTERS(double,d)
   }                                                             \
   OWL_API void owl##OType##SetRaw(OWL##OType object,            \
                                   const char *varName,          \
-                                  const void *v)                \
+                                  const void *v,                \
+                                  int devID)                    \
   {                                                             \
     OWLVariable var                                             \
       = owl##OType##GetVariable(object,varName);                \
-    owlVariableSetRaw(var,v);                                   \
+    owlVariableSetRaw(var,v,devID);                             \
     owlVariableRelease(var);                                    \
   }                                                             \
   
@@ -1574,7 +1575,7 @@ OWL_API void owlVariableSetBuffer(OWLVariable _variable, OWLBuffer _buffer)
   setVariable((APIHandle *)_variable,buffer);
 }
 
-OWL_API void owlVariableSetRaw(OWLVariable _variable, const void *valuePtr)
+OWL_API void owlVariableSetRaw(OWLVariable _variable, const void *valuePtr, int devID)
 {
   LOG_API_CALL();
 
@@ -1585,7 +1586,7 @@ OWL_API void owlVariableSetRaw(OWLVariable _variable, const void *valuePtr)
     = handle->get<Variable>();
   assert(variable);
 
-  variable->setRaw(valuePtr);
+  variable->setRaw(valuePtr, devID);
 }
 
 OWL_API void owlVariableSetPointer(OWLVariable _variable, const void *valuePtr)
