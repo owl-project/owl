@@ -198,7 +198,7 @@ namespace owl {
     
     if (!dd.useExternalBoundsBuffer)
       dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
-    else if (dd.internalBufferForBoundsProgram.size() != primCount*sizeof(box3f))
+    else if (dd.internalBufferForBoundsProgram.size() < primCount*sizeof(box3f))
       OWL_RAISE("external bounds buffer size does not match primCount");
 
     DeviceMemory &tempMem = dd.tempMem;
@@ -270,9 +270,9 @@ namespace owl {
       dd.internalBufferForBoundsProgramKey2.alloc(primCount*sizeof(box3f));
     }
     else {
-      if (dd.internalBufferForBoundsProgramKey1.size() != primCount*sizeof(box3f))
+      if (dd.internalBufferForBoundsProgramKey1.size() < primCount*sizeof(box3f))
         OWL_RAISE("external bounds buffer for key 0 size does not match primCount");
-      if (dd.internalBufferForBoundsProgramKey2.size() != primCount*sizeof(box3f))
+      if (dd.internalBufferForBoundsProgramKey2.size() < primCount*sizeof(box3f))
         OWL_RAISE("external bounds buffer for key 1 size does not match primCount");
     } 
 
