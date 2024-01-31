@@ -130,6 +130,32 @@ namespace owl {
     primCount = count;
   }
 
+  void UserGeom::setBoundsBuffer(Buffer::SP buffer)
+  {
+    for (auto device : context->getDevices()) {
+      DeviceData &dd = getDD(device);
+      dd.internalBufferForBoundsProgram.d_pointer = (CUdeviceptr)buffer->getPointer(device);
+      dd.internalBufferForBoundsProgram.sizeInBytes = buffer->sizeInBytes();
+      dd.internalBufferForBoundsProgram.externallyManaged = true;
+      dd.useExternalBoundsBuffer = true;
+    }
+  }
+
+  void UserGeom::setMotionBoundsBuffers(Buffer::SP buffer1, Buffer::SP buffer2)
+  {
+    for (auto device : context->getDevices()) {
+      DeviceData &dd = getDD(device);
+      dd.useExternalBoundsBuffer = true;
+      dd.internalBufferForBoundsProgramKey1.d_pointer = (CUdeviceptr)buffer1->getPointer(device);
+      dd.internalBufferForBoundsProgramKey1.sizeInBytes = buffer1->sizeInBytes();
+      dd.internalBufferForBoundsProgramKey1.externallyManaged = true;
+
+      dd.internalBufferForBoundsProgramKey2.d_pointer = (CUdeviceptr)buffer2->getPointer(device);
+      dd.internalBufferForBoundsProgramKey2.sizeInBytes = buffer2->sizeInBytes();
+      dd.internalBufferForBoundsProgramKey2.externallyManaged = true;
+    }
+  }
+
   /*! set intersection program to run for this type and given ray type */
   void UserGeomType::setIntersectProg(int rayType,
                                       Module::SP module,
@@ -168,12 +194,15 @@ namespace owl {
       
     std::vector<uint8_t> userGeomData(geomType->varStructSize);
     
-    DeviceMemory tempMem;
-    tempMem.alloc(geomType->varStructSize);
-    
     DeviceData &dd = getDD(device);
-    dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
-    // dd.internalBufferForBoundsProgram.allocManaged(primCount*sizeof(box3f));
+    
+    if (!dd.useExternalBoundsBuffer)
+      dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
+    else if (dd.internalBufferForBoundsProgram.size() != primCount*sizeof(box3f))
+      OWL_RAISE("external bounds buffer size does not match primCount");
+
+    DeviceMemory &tempMem = dd.tempMem;
+    tempMem.alloc(geomType->varStructSize);
 
     writeVariables(userGeomData.data(),device);
         
@@ -221,7 +250,6 @@ namespace owl {
                 +std::string(errName));
     }
     
-    tempMem.free();
     cudaDeviceSynchronize();
   }
 
@@ -235,14 +263,21 @@ namespace owl {
     if (primCount == 0) return;
       
     std::vector<uint8_t> userGeomData(geomType->varStructSize);
-    
-    DeviceMemory tempMem;
-    tempMem.alloc(geomType->varStructSize);
-    
+       
     DeviceData &dd = getDD(device);
-    dd.internalBufferForBoundsProgramKey1.alloc(primCount*sizeof(box3f));
-    dd.internalBufferForBoundsProgramKey2.alloc(primCount*sizeof(box3f));
-    // dd.internalBufferForBoundsProgram.allocManaged(primCount*sizeof(box3f));
+    if (!dd.useExternalBoundsBuffer) {
+      dd.internalBufferForBoundsProgramKey1.alloc(primCount*sizeof(box3f));
+      dd.internalBufferForBoundsProgramKey2.alloc(primCount*sizeof(box3f));
+    }
+    else {
+      if (dd.internalBufferForBoundsProgramKey1.size() != primCount*sizeof(box3f))
+        OWL_RAISE("external bounds buffer for key 0 size does not match primCount");
+      if (dd.internalBufferForBoundsProgramKey2.size() != primCount*sizeof(box3f))
+        OWL_RAISE("external bounds buffer for key 1 size does not match primCount");
+    } 
+
+    DeviceMemory &tempMem = dd.tempMem;
+    tempMem.alloc(geomType->varStructSize);
 
     writeVariables(userGeomData.data(),device);
         
@@ -292,7 +327,6 @@ namespace owl {
                 +std::string(errName));
     }
     
-    tempMem.free();
     cudaDeviceSynchronize();
   }
 

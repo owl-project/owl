@@ -951,6 +951,35 @@ owlGeomSetPrimCount(OWLGeom _geom,
   geom->setPrimCount(primCount);
 }
 
+/*! Sets the buffer to use for the AABBs for user geometry. This is optional, 
+ but allows for deferring mallocs / frees during realtime tree construction. */
+OWL_API void
+owlGeomSetBoundsBuffer(OWLGeom _geom,
+                       OWLBuffer _aabbArray)
+{
+  assert(_geom);
+  UserGeom::SP geom = ((APIHandle *)_geom)->get<UserGeom>();
+  Buffer::SP aabbArray = ((APIHandle *)_aabbArray)->get<Buffer>();
+  assert(aabbArray);
+  geom->setBoundsBuffer(aabbArray);
+}
+
+/*! Sets the buffer to use for the AABBs for user geometry. This is optional, 
+ but allows for deferring mallocs / frees during realtime tree construction. */
+OWL_API void
+owlGeomSetMotionBoundsBuffers(OWLGeom _geom,
+                            OWLBuffer _aabbArrayKey0,
+                            OWLBuffer _aabbArrayKey1)
+{
+  assert(_geom);
+  UserGeom::SP geom = ((APIHandle *)_geom)->get<UserGeom>();
+  Buffer::SP aabbArrayKey0 = ((APIHandle *)_aabbArrayKey0)->get<Buffer>();
+  Buffer::SP aabbArrayKey1 = ((APIHandle *)_aabbArrayKey1)->get<Buffer>();
+  assert(aabbArrayKey0);
+  assert(aabbArrayKey1);
+  geom->setMotionBoundsBuffers(aabbArrayKey0, aabbArrayKey1);
+}
+
 OWL_API OWLModule owlModuleCreate(OWLContext _context,
                                   const char *ptxCode)
 {

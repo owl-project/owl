@@ -1020,6 +1020,19 @@ OWL_API void
 owlGeomSetPrimCount(OWLGeom geom,
                     size_t  primCount);
 
+/*! Sets the buffer to use for the AABBs for user geometry. This is optional, 
+ but allows for deferring mallocs / frees during realtime tree construction. */
+OWL_API void
+owlGeomSetBoundsBuffer(OWLGeom _geom,
+                       OWLBuffer aabbArray);
+
+/*! Sets the buffer to use for the AABBs for user geometry. This is optional, 
+ but allows for deferring mallocs / frees during realtime tree construction. */
+OWL_API void
+owlGeomSetMotionBoundsBuffers(OWLGeom _geom,
+                            OWLBuffer aabbArrayKey0,
+                            OWLBuffer aabbArrayKey1);
+
 // -------------------------------------------------------
 // VariableGet for the various types
 // -------------------------------------------------------

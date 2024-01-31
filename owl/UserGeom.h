@@ -125,6 +125,13 @@ namespace owl {
       /*! Same as above, but for the motion blur case */
       DeviceMemory internalBufferForBoundsProgramKey1;
       DeviceMemory internalBufferForBoundsProgramKey2;
+
+      /*! Temporary memory for executing motion bounds program */
+      DeviceMemory tempMem;
+
+      /* if this is true, then the above buffers come from the user, and should not be 
+        malloced/freed on tree rebuilds */
+      bool useExternalBoundsBuffer = false;
     };
 
     /*! constructor */
@@ -145,6 +152,12 @@ namespace owl {
 
     /*! set number of primitives that this geom will contain */
     void setPrimCount(size_t count);
+
+    /*! Allow the user to allocate their own buffer for storing AABBs */
+    void setBoundsBuffer(Buffer::SP buffer);
+    
+    /*! Allow the user to allocate their own buffer for storing motion AABBs */
+    void setMotionBoundsBuffers(Buffer::SP buffer1, Buffer::SP buffer2);
 
     /*! run the bounding box program for all primitives within this geometry */
     void executeBoundsProgOnPrimitives(const DeviceContext::SP &device);

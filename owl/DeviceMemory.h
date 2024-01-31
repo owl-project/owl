@@ -21,7 +21,7 @@
 namespace owl {
 
   struct DeviceMemory {
-    inline ~DeviceMemory() { free(); }
+    inline ~DeviceMemory() { if (!externallyManaged) free(); }
     inline bool   alloced()  const { return !empty(); }
     inline bool   empty()    const { return sizeInBytes == 0; }
     inline bool   notEmpty() const { return !empty(); }
@@ -39,10 +39,12 @@ namespace owl {
       
     size_t      sizeInBytes { 0 };
     CUdeviceptr d_pointer   { 0 };
+    bool externallyManaged = false;
   };
 
   inline void DeviceMemory::alloc(size_t size)
   {
+    assert(!externallyManaged);
     if (alloced() || size > this->sizeInBytes) free();
       
     assert(empty());
@@ -53,6 +55,7 @@ namespace owl {
     
   inline void DeviceMemory::allocManaged(size_t size)
   {
+    assert(!externallyManaged);
     assert(empty());
     this->sizeInBytes = size;
     OWL_CUDA_CHECK(cudaMallocManaged( (void**)&d_pointer, sizeInBytes));
@@ -89,6 +92,7 @@ namespace owl {
     
   inline void DeviceMemory::free()
   {
+    assert(!externallyManaged);
     assert(alloced() || empty());
     if (!empty()) {
       OWL_CUDA_CHECK(cudaFree((void*)d_pointer));
