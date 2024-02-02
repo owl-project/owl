@@ -221,7 +221,7 @@ namespace owl {
     using std::max;
     using std::abs;
     // inline __both__ double sin(double f) { return ::sin(f); }
-    inline __both__ float saturate(const float &f) { return min(1.f,max(0.f,f)); }
+    // inline __both__ float saturate(const float &f) { return min(1.f,max(0.f,f)); }
 #endif
 
     // inline __both__ float abs(float f)      { return fabsf(f); }
