@@ -283,13 +283,13 @@ namespace owl {
                                        (a.vz.y-a.vy.z)/s,
                                        (a.vx.z-a.vz.x)/s,
                                        (a.vy.x-a.vx.y)/s);
-        } else if (arg_min(diag) == 0) {
+        } else if (arg_max(diag) == 0) {
           scalar_t s = owl::common::polymorphic::sqrt(1.f+diag.x-diag.y-diag.z)*2.f;
           return QuaternionT<scalar_t>((a.vz.y-a.vy.z)/s,
                                        .25f * s,
                                        (a.vx.y-a.vy.x)/s,
                                        (a.vx.z-a.vz.x)/s);
-        } else if (arg_min(diag) == 1) {
+        } else if (arg_max(diag) == 1) {
           scalar_t s = owl::common::polymorphic::sqrt(1.f+diag.y-diag.x-diag.z)*2.f;
           return QuaternionT<scalar_t>((a.vx.z-a.vz.x)/s,
                                        (a.vx.y-a.vy.x)/s,
