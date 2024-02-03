@@ -91,6 +91,11 @@ namespace owl {
         any curves geometries get created, and before the pipeline
         gets built, whichever comes first */
     void enableSpheres();
+
+    /*! disables the geometry's contribution to hit record generation. 
+      If set, we assume that the first geometry's record is representative
+      of all geometry in an owl group. */
+    void disableGeometryMultiplier();
     
     /*! sets maximum instancing depth for the given context:
 
@@ -305,6 +310,13 @@ namespace owl {
     /*! maximum depth instancing tree as specified by
       `setMaxInstancingDepth` */
     int maxInstancingDepth = 1;
+
+    /*! Whether or not to let the geometry change the SBT record. 
+       If false, only the first hit given hit record will be used. 
+       Useful for scenarios like realtime instance manipulation over
+       many instances where creating a record per geometry isn't 
+       practical. */
+    bool geometryMultiplierDisabled = false;
 
     /*! number of ray types - change via setRayTypeCount() */
     int numRayTypes { 1 };

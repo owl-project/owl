@@ -612,6 +612,11 @@ namespace owl {
     motionBlurEnabled = true;
   }
 
+  void Context::disableGeometryMultiplier()
+  {
+    geometryMultiplierDisabled = true;
+  }
+
   void Context::enableCurves()
   {
     curvesEnabled = true;

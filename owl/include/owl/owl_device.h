@@ -126,11 +126,11 @@ namespace owl {
   static __forceinline__ __device__ T &getPRD()
   { return *(T*)getPRDPointer(); }
 
-  template<int _rayType=0, int _numRayTypes=1, int _geometryMultiplier=1>
+  template<int _rayType=0, int _numRayTypes=1, bool _disableGeometryMultiplier=0>
   struct RayT {
     enum { rayType = _rayType };
     enum { numRayTypes = _numRayTypes };
-    enum { geometryMultiplier = _geometryMultiplier };
+    enum { disableGeometryMultiplier = _disableGeometryMultiplier };
     inline __device__ RayT() {}
     inline __device__ RayT(const vec3f &origin,
                           const vec3f &direction,
@@ -171,7 +171,7 @@ namespace owl {
                ray.visibilityMask,
                /*rayFlags     */ rayFlags,
                /*SBToffset    */ ray.rayType,
-               /*SBTstride    */ ray.numRayTypes * ray.geometryMultiplier,
+               /*SBTstride    */ ray.numRayTypes * (ray.disableGeometryMultiplier) ? 0 : 1,
                /*missSBTIndex */ ray.rayType,              
                p0,
                p1);
@@ -209,7 +209,7 @@ namespace owl {
   void trace(OptixTraversableHandle traversable,
              const Ray &ray,
              int numRayTypes,
-             int geometryMultiplier,
+             bool disableGeometryMultiplier,
              PRD &prd,
              int sbtOffset = 0)
   {
@@ -226,7 +226,7 @@ namespace owl {
                ray.visibilityMask,
                /*rayFlags     */0u,
                /*SBToffset    */ray.rayType + numRayTypes*sbtOffset,
-               /*SBTstride    */numRayTypes * geometryMultiplier,
+               /*SBTstride    */numRayTypes * (ray.disableGeometryMultiplier) ? 0 : 1,
                /*missSBTIndex */ray.rayType,
                p0,
                p1);

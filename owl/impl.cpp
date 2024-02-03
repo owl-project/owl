@@ -177,6 +177,13 @@ owlEnableMotionBlur(OWLContext _context)
   LOG_API_CALL();
   checkGet(_context)->enableMotionBlur();
 }
+
+OWL_API void
+owlContextDisableGeometryMultiplier(OWLContext _context)
+{
+  LOG_API_CALL();
+  checkGet(_context)->disableGeometryMultiplier();
+}
   
 OWL_API void
 owlEnableCurves(OWLContext _context)

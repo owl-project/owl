@@ -388,6 +388,13 @@ owlEnableSpheres(OWLContext _context);
 OWL_API void
 owlEnableMotionBlur(OWLContext _context);
 
+/*! When disabled, owl will use only the first hitgroup for a given BLAS. 
+    This is useful in scenarios where many instances of the same underlying 
+    BLAS need to be manipulated interactively, because it reduces the number
+    of SBT records to "numRayTypes" rather than "numRayTypes * numGeometry" */
+OWL_API void
+owlContextDisableGeometryMultiplier(OWLContext context);
+
 /*! set number of ray types to be used in this context; this should be
   done before any programs, pipelines, geometries, etc get
   created */
