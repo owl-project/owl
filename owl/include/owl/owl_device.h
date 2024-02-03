@@ -126,10 +126,11 @@ namespace owl {
   static __forceinline__ __device__ T &getPRD()
   { return *(T*)getPRDPointer(); }
 
-  template<int _rayType=0, int _numRayTypes=1>
+  template<int _rayType=0, int _numRayTypes=1, int _geometryMultiplier=1>
   struct RayT {
     enum { rayType = _rayType };
     enum { numRayTypes = _numRayTypes };
+    enum { geometryMultiplier = _geometryMultiplier };
     inline __device__ RayT() {}
     inline __device__ RayT(const vec3f &origin,
                           const vec3f &direction,
@@ -168,10 +169,10 @@ namespace owl {
                ray.tmax,
                ray.time,
                ray.visibilityMask,
-               /*rayFlags     */rayFlags,
-               /*SBToffset    */ray.rayType,
-               /*SBTstride    */ray.numRayTypes,
-               /*missSBTIndex */ray.rayType,
+               /*rayFlags     */ rayFlags,
+               /*SBToffset    */ ray.rayType,
+               /*SBTstride    */ ray.numRayTypes * ray.geometryMultiplier,
+               /*missSBTIndex */ ray.rayType,              
                p0,
                p1);
   }
@@ -198,6 +199,34 @@ namespace owl {
                /*rayFlags     */0u,
                /*SBToffset    */ray.rayType + numRayTypes*sbtOffset,
                /*SBTstride    */numRayTypes,
+               /*missSBTIndex */ray.rayType,
+               p0,
+               p1);
+  }
+
+  template<typename PRD>
+  inline __device__
+  void trace(OptixTraversableHandle traversable,
+             const Ray &ray,
+             int numRayTypes,
+             int geometryMultiplier,
+             PRD &prd,
+             int sbtOffset = 0)
+  {
+    unsigned int           p0 = 0;
+    unsigned int           p1 = 0;
+    owl::packPointer(&prd,p0,p1);
+    
+    optixTrace(traversable,
+               (const float3&)ray.origin,
+               (const float3&)ray.direction,
+               ray.tmin,
+               ray.tmax,
+               ray.time,
+               ray.visibilityMask,
+               /*rayFlags     */0u,
+               /*SBToffset    */ray.rayType + numRayTypes*sbtOffset,
+               /*SBTstride    */numRayTypes * geometryMultiplier,
                /*missSBTIndex */ray.rayType,
                p0,
                p1);
