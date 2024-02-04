@@ -1674,6 +1674,59 @@ owlInstanceGroupSetVisibilityMasks(OWLGroup _group,
 
   group->setVisibilityMasks(visibilityMasks);
 }
+
+OWL_API void
+owlInstanceGroupSetInstanceProg(OWLGroup _group,
+                                OWLModule _module,
+                                const char *progName)
+{
+  LOG_API_CALL();
+    
+  assert(_geometryType);
+  assert(_module);
+  assert(progName);
+
+  assert(_group);
+  InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+  assert(group);
+
+  Module::SP module
+    = ((APIHandle *)_module)->get<Module>();
+  assert(module);
+
+  assert("geometry multiplier must be disabled to use instance programs." 
+    && module->context->geometryMultiplierDisabled == true);
+
+  group->setInstanceProg(module,progName);
+}
+
+OWL_API void
+owlInstanceGroupSetMotionInstanceProg(OWLGroup _group,
+                                      OWLModule _module,
+                                      const char *progName)
+{
+  LOG_API_CALL();
+    
+  assert(_geometryType);
+  assert(_module);
+  assert(progName);
+
+  assert(_group);
+  InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+  assert(group);
+
+  Module::SP module
+    = ((APIHandle *)_module)->get<Module>();
+  assert(module);
+
+  assert("geometry multiplier must be disabled to use instance programs." 
+    && module->context->geometryMultiplierDisabled == true);
+
+  assert("motion blur must be enabled to use motion instance programs." 
+    && module->context->motionBlurEnabled == true);
+  
+  group->setMotionInstanceProg(module,progName);
+}
   
 OWL_API void
 owlInstanceGroupSetTransform(OWLGroup _group,

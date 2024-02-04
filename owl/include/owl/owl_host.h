@@ -992,6 +992,15 @@ OWL_API void
 owlInstanceGroupSetVisibilityMasks(OWLGroup group,
                                const uint8_t *visibilityMasks);
 
+OWL_API void
+owlInstanceGroupSetInstanceProg(OWLGroup group,
+                                OWLModule module,
+                                const char *progName);
+
+OWL_API void
+owlInstanceGroupSetMotionInstanceProg(OWLGroup group,
+                                      OWLModule module,
+                                      const char *progName);
 
 OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,

@@ -110,6 +110,20 @@ namespace owl {
     visibilityMasks.resize(children.size());
     std::copy(_visibilityMasks,_visibilityMasks+visibilityMasks.size(),visibilityMasks.data());
   }
+
+  void InstanceGroup::setInstanceProg(Module::SP module,
+                                      const std::string &progName)
+  {
+    this->instanceProg.progName = progName;
+    this->instanceProg.module   = module;
+  }
+
+  void InstanceGroup::setMotionInstanceProg(Module::SP module,
+                                            const std::string &progName)
+  {
+    this->motionInstanceProg.progName = progName;
+    this->motionInstanceProg.module   = module;
+  }
   
   void InstanceGroup::setChild(size_t childID, Group::SP child)
   {

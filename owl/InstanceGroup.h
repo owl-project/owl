@@ -67,6 +67,14 @@ namespace owl {
     /* set visibility masks to use for the children - MUST be an array of
        children.size() items */
     void setVisibilityMasks(const uint8_t *visibilityMasks);
+
+    /*! set instance program to run for this IAS */
+    void setInstanceProg(Module::SP module,
+                         const std::string &progName);
+    
+    /*! set motion instance program to run for this IAS */
+    void setMotionInstanceProg(Module::SP module,
+                               const std::string &progName);
       
     void buildAccel() override;
     void refitAccel() override;
@@ -111,6 +119,11 @@ namespace owl {
     protected:
     const unsigned int buildFlags;
 
+    /*! the instance prog to run for this type */
+    ProgramDesc instanceProg;
+
+    /*! the motion instance prog to run for this type (if motion blur is enabled) */
+    ProgramDesc motionInstanceProg;
   };
 
   // ------------------------------------------------------------------
