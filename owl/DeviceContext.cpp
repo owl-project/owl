@@ -16,6 +16,7 @@
 
 #include "Context.h"
 #include "UserGeom.h"
+#include "InstanceGroup.h"
 
 #include <optix_function_table_definition.h>
 
@@ -625,6 +626,22 @@ namespace owl {
                                             ));
         allActivePrograms.push_back(pg);
       }
+    }
+
+    // ------------------------------------------------------------------
+    // instance programs -> what goes into instances
+    // ------------------------------------------------------------------
+    for (size_t groupID=0;groupID<parent->groups.size();groupID++) {
+      // skip groups which are not "Instance Group" types
+      InstanceGroup::SP instanceGroup
+        = parent->groups.getSP(groupID)->as<InstanceGroup>();
+      if (!instanceGroup)
+        continue;
+      
+      if (parent->motionBlurEnabled)
+        instanceGroup->buildMotionInstanceProg();
+      else
+        instanceGroup->buildInstanceProg();
     }
   }
   
