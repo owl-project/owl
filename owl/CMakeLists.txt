@@ -121,7 +121,7 @@ target_sources(owl PRIVATE
   Group.h
   Group.cpp
   InstanceGroup.h
-  InstanceGroup.cpp
+  InstanceGroup.cu
   TrianglesGeomGroup.h
   TrianglesGeomGroup.cpp
   CurvesGeomGroup.h
