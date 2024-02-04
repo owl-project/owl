@@ -36,8 +36,15 @@ namespace owl {
 
       /*! if we use motion blur, this is used to store all the motoin transforms */
       DeviceMemory motionTransformsBuffer;
-      DeviceMemory motionAABBsBuffer;
       DeviceMemory outputBuffer;
+
+      /*! cuda function handle for the (automatically generated) kernel
+        that runs the instance generation program on the device */
+      CUfunction instanceFuncKernel = 0;
+
+      /*! cuda function handle for the (automatically generated) kernel
+        that runs the motion instance generation program on the device */
+      CUfunction motionInstanceFuncKernel = 0;
     };
     
     /*! construct with given array of groups - transforms can be specified later */
@@ -75,7 +82,13 @@ namespace owl {
     /*! set motion instance program to run for this IAS */
     void setMotionInstanceProg(Module::SP module,
                                const std::string &progName);
-      
+    
+    /*! build the CUDA instance program kernel (if instance prog is set) */
+    void buildInstanceProg();
+
+    /*! build the CUDA motion instance program kernel (if motion instance prog is set) */
+    void buildMotionInstanceProg();
+
     void buildAccel() override;
     void refitAccel() override;
 

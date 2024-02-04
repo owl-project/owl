@@ -124,7 +124,91 @@ namespace owl {
     this->motionInstanceProg.progName = progName;
     this->motionInstanceProg.module   = module;
   }
-  
+
+  /*! build the CUDA instance program kernel (if instance prog is set) */
+  void InstanceGroup::buildInstanceProg()
+  {
+    if (!instanceProg.module) return;
+    
+    Module::SP module = instanceProg.module;
+    assert(module);
+
+    for (auto device : context->getDevices()) {
+      LOG("building instance function ....");
+      SetActiveGPU forLifeTime(device);
+      auto &typeDD = getDD(device);
+      auto &moduleDD = module->getDD(device);
+      
+      assert(moduleDD.computeModule);
+
+      const std::string annotatedProgName
+        = std::string("__instanceFuncKernel__")
+        + instanceProg.progName;
+    
+      CUresult rc = cuModuleGetFunction(&typeDD.instanceFuncKernel,
+                                        moduleDD.computeModule,
+                                        annotatedProgName.c_str());
+      
+      switch(rc) {
+      case CUDA_SUCCESS:
+        /* all OK, nothing to do */
+        LOG_OK("found instance function " << annotatedProgName << " ... perfect!");
+        break;
+      case CUDA_ERROR_NOT_FOUND:
+        OWL_RAISE("in "+std::string(__PRETTY_FUNCTION__)
+                  +": could not find OPTIX_INSTANCE_PROGRAM("
+                  +instanceProg.progName+")");
+      default:
+        const char *errName = 0;
+        cuGetErrorName(rc,&errName);
+        OWL_RAISE("unknown CUDA error when building instance program kernel"
+                  +std::string(errName));
+      }
+    }
+  }
+
+  /*! build the CUDA motion instance program kernel (if motion instance prog is set) */
+  void InstanceGroup::buildMotionInstanceProg()
+  {
+    if (!motionInstanceProg.module) return;
+    
+    Module::SP module = motionInstanceProg.module;
+    assert(module);
+
+    for (auto device : context->getDevices()) {
+      LOG("building motion instance function ....");
+      SetActiveGPU forLifeTime(device);
+      auto &typeDD = getDD(device);
+      auto &moduleDD = module->getDD(device);
+      
+      assert(moduleDD.computeModule);
+
+      const std::string annotatedProgName
+        = std::string("__motionInstanceFuncKernel__")
+        + motionInstanceProg.progName;
+    
+      CUresult rc = cuModuleGetFunction(&typeDD.motionInstanceFuncKernel,
+                                        moduleDD.computeModule,
+                                        annotatedProgName.c_str());
+      
+      switch(rc) {
+      case CUDA_SUCCESS:
+        /* all OK, nothing to do */
+        LOG_OK("found motion instance function " << annotatedProgName << " ... perfect!");
+        break;
+      case CUDA_ERROR_NOT_FOUND:
+        OWL_RAISE("in "+std::string(__PRETTY_FUNCTION__)
+                  +": could not find OPTIX_MOTION_INSTANCE_PROGRAM("
+                  +motionInstanceProg.progName+")");
+      default:
+        const char *errName = 0;
+        cuGetErrorName(rc,&errName);
+        OWL_RAISE("unknown CUDA error when building motion instance program kernel"
+                  +std::string(errName));
+      }
+    }
+  }
+
   void InstanceGroup::setChild(size_t childID, Group::SP child)
   {
     assert(childID < children.size());

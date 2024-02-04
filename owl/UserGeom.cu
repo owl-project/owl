@@ -363,14 +363,14 @@ namespace owl {
       auto &typeDD = getDD(device);
       auto &moduleDD = module->getDD(device);
       
-      assert(moduleDD.boundsModule);
+      assert(moduleDD.computeModule);
 
       const std::string annotatedProgName
         = std::string("__boundsFuncKernel__")
         + boundsProg.progName;
     
       CUresult rc = cuModuleGetFunction(&typeDD.boundsFuncKernel,
-                                        moduleDD.boundsModule,
+                                        moduleDD.computeModule,
                                         annotatedProgName.c_str());
       
       switch(rc) {
@@ -405,14 +405,14 @@ namespace owl {
       auto &typeDD = getDD(device);
       auto &moduleDD = module->getDD(device);
       
-      assert(moduleDD.boundsModule);
+      assert(moduleDD.computeModule);
 
       const std::string annotatedProgName
         = std::string("__motionBoundsFuncKernel__")
         + motionBoundsProg.progName;
     
       CUresult rc = cuModuleGetFunction(&typeDD.motionBoundsFuncKernel,
-                                        moduleDD.boundsModule,
+                                        moduleDD.computeModule,
                                         annotatedProgName.c_str());
       
       switch(rc) {

@@ -95,8 +95,8 @@ namespace owl {
     if (module)
       optixModuleDestroy(module);
     module = 0;
-    if (boundsModule)
-      cuModuleUnload(boundsModule);
+    if (computeModule)
+      cuModuleUnload(computeModule);
   }
 
   /*! build the optix side of this module on this device */
@@ -178,7 +178,7 @@ namespace owl {
                               (void*)sizeof(log)
       };
       
-      rc = cuModuleLoadDataEx(&boundsModule, (void *)fixedPtxCode.c_str(),
+      rc = cuModuleLoadDataEx(&computeModule, (void *)fixedPtxCode.c_str(),
                               3, options, optionValues);
       if (rc != CUDA_SUCCESS) {
         const char *errName = 0;

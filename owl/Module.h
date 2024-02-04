@@ -54,7 +54,7 @@ namespace owl {
       /*! for the *bounds* function we have to build a *separate*
         module because this one is built outside of optix, and thus
         does not have the internal _optix_xyz() symbols in it */
-      CUmodule    boundsModule = 0;
+      CUmodule    computeModule = 0;
     };
 
     /*! constructor - ptxCode contains the prec-ompiled ptx code with
