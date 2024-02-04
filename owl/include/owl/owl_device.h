@@ -21,6 +21,7 @@
 // the 'actual' optix
 #include <cuda.h>
 #include <optix.h>
+#include <vector_types.h>
 
 // ==================================================================
 // actual device-side "API" built-ins.
@@ -322,5 +323,68 @@ namespace owl {
                                                                         \
   /* now the actual device code that the user is writing: */            \
   inline __device__ void __motionBoundsFunc__##progName                 \
+  /* program args and body supplied by user ... */
+#endif
+
+/* defines a wrapper to a new program type which enables GPU-side 
+ instance manipulation (transforms, visibility mask, etc). Assumes 
+ that geometry contribution to hitgroup index is disabled. */
+#ifndef OPTIX_INSTANCE_PROGRAM
+#define OPTIX_INSTANCE_PROGRAM(progName)                                   \
+  /* fwd decl for the kernel func to call */                               \
+  inline __device__                                                        \
+  void __instanceFunc__##progName(const void *geomData,                    \
+    const int32_t instanceIndex, owl::common::affine3f &tfm,               \
+    uint32_t &customInstanceID, uint32_t &mask, uint32_t &flags);          \
+                                                                           \
+  /* the '__global__' kernel we can get a function handle on */         \
+  extern "C" __global__                                                 \
+  void __instanceFuncKernel__##progName(                                \
+    const void  *geomData,                                              \
+    OptixInstance *const instances,                                     \
+    OptixTraversableHandle *const traversableHandles,                   \
+    float4* motionTransformsBuffer,                                     \
+    const uint32_t numInstances,                                        \
+    const uint32_t IASIndex, const uint32_t numRayTypes)                \
+  {                                                                     \
+    uint32_t blockIndex                                                 \
+      = blockIdx.x                                                      \
+      + blockIdx.y * gridDim.x                                          \
+      + blockIdx.z * gridDim.x * gridDim.y;                             \
+    uint32_t instanceID                                                 \
+      = threadIdx.x + blockDim.x*threadIdx.y                            \
+      + blockDim.x*blockDim.y*blockIndex;                               \
+    owl::common::affine3f tfm(owl::common::OneTy);                      \
+    OptixInstance oi    = {};                                           \
+    /* defaults */                                                      \
+    oi.flags             = OPTIX_INSTANCE_FLAG_NONE;                    \
+    oi.instanceId        = instanceID;                                  \
+    oi.visibilityMask = 255;                                            \
+    /* ignored in favor of motion transform buffer */                   \
+    oi.transform = {1.f,0.f,0.f,0.f,                                    \
+                    0.f,1.f,0.f,0.f,                                    \
+                    0.f,0.f,1.f,0.f};                                   \
+    if (instanceIndex < numInstances) {                                 \
+      __instanceFunc__##progName(geomData, instanceIndex,               \
+        tfm, oi.instanceId, oi.visibilityMask, oi.flags);               \
+    }                                                                   \
+                                                                        \
+    /* These we compute, since they're tightly coupled to OWL's SBT */  \
+    /* When geom contribution is 0, these are all that matters */       \
+    oi.sbtOffset         = IASIndex * numRayTypes;                      \
+    /* This need to come from optixConvertPointerToTraversableHandle */ \
+    /* which currently can't be called device side... */                \
+    oi.traversableHandle = traversableHandles[childID]                  \
+    float4 row0 = {tfm.l.vx.x, tfm.l.vy.x, tfm.l.vz.x, tfm.p.x};        \
+    float4 row1 = {tfm.l.vx.y, tfm.l.vy.y, tfm.l.vz.y, tfm.p.y};        \
+    float4 row2 = {tfm.l.vx.z, tfm.l.vy.z, tfm.l.vz.z, tfm.p.z};        \
+    motionTransformsBuffer[childID * 3 + 0] = row0;                     \
+    motionTransformsBuffer[childID * 3 + 1] = row1;                     \
+    motionTransformsBuffer[childID * 3 + 2] = row2;                     \
+    optixInstances[childID] = oi;                                       \
+  }                                                                     \
+                                                                        \
+  /* now the actual device code that the user is writing: */            \
+  inline __device__ void __instanceFunc__##progName                     \
   /* program args and body supplied by user ... */
 #endif
