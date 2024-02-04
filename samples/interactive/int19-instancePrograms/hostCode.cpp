@@ -51,7 +51,7 @@ const vec3f init_lookAt(0.f,0.f,0.f);
 const vec3f init_lookUp(0.f,1.f,0.f);
 const float init_cosFovy = 0.66f;
 
-const vec3i numBoxes(12);
+const vec3i numBoxes(100);
 const float worldSize = 1;
 const vec3f boxSize   = (2*.4f*worldSize)/vec3f(numBoxes);
 const float animSpeed = 4.f;
@@ -249,9 +249,23 @@ void Viewer::cameraChanged()
 
 Viewer::Viewer()
 {
+  
   // create a context on the first device:
   context = owlContextCreate(nullptr,1);
   OWLModule module = owlModuleCreate(context,deviceCode_ptx);
+
+  // disable the geometry from contribution to allow for device-side 
+  // instance manipulation. In this example, our own group only has one geometry, 
+  // so this technically has no effect. But more generally, we're making an agreement 
+  // with OWL that _if_ we were to give more than one geometry in a triangles group, 
+  // that it's _okay_ for OWL to just make one hit group that's shared across all 
+  // geometries in that group. 
+  //
+  // It's a subtle difference, but the end result is that the sbtOffset for every geometry 
+  // group in our instance accel can be calculated as:
+  //     tlasBaseOffset + numRayTypes * blasIndex
+  // which is _waaaay_ easier to generate on the device in a CUDA kernel. 
+  owlContextDisablePerGeometrySBTRecords(context);
 
   // ##################################################################
   // set up all the *GEOMETRY* graph we want to render
@@ -286,6 +300,9 @@ Viewer::Viewer()
   //         vec3f(0.f,2.f,0.f),
   //         vec3f(0.f,0.f,2.f));
 
+  // One box to instanced many
+  OWLGroup box = createBox(context,trianglesGeomType,vec3i(0,0,0));
+
   std::vector<OWLGroup> groups;
   for (int iz=0;iz<numBoxes.z;iz++)
     for (int iy=0;iy<numBoxes.y;iy++)
@@ -294,7 +311,7 @@ Viewer::Viewer()
         boxAnimStates.push_back(BoxAnimState());
         boxAnimStates[ID].init(vec3i(ix,iy,iz));
         boxTransforms.push_back(boxAnimStates[ID].getTransform(0.f));
-        groups.push_back(createBox(context,trianglesGeomType,vec3i(ix,iy,iz)));
+        groups.push_back(box);
       }
 
   world
@@ -304,7 +321,9 @@ Viewer::Viewer()
                              (const float*)boxTransforms.data(),
                              OWL_MATRIX_FORMAT_OWL,
                              OPTIX_BUILD_FLAG_PREFER_FAST_TRACE | OPTIX_BUILD_FLAG_ALLOW_UPDATE);
-  owlGroupBuildAccel(world);
+  
+  // Can't build the accel here just yet, first need to setup our SBT
+  //owlGroupBuildAccel(world);
 
   // ##################################################################
   // set miss and raygen program required for SBT
@@ -350,7 +369,7 @@ Viewer::Viewer()
                       sizeof(RayGenData),
                       rayGenVars,-1);
   /* camera and frame buffer get set in resiez() and cameraChanged() */
-  owlRayGenSetGroup (rayGen,"world",        world);
+  
 
   // ##################################################################
   // build *SBT* required to trace the groups
@@ -358,6 +377,11 @@ Viewer::Viewer()
 
   owlBuildPrograms(context);
   owlBuildPipeline(context);
+  owlBuildSBT(context);
+
+  // now, we can set the accel for the world group
+  owlGroupBuildAccel(world);
+  owlRayGenSetGroup (rayGen,"world",        world);
   owlBuildSBT(context);
 }
 

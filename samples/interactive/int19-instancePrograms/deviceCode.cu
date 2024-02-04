@@ -28,7 +28,7 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
   const vec2i pixelID = owl::getLaunchIndex();
 
   const vec2f screen = (vec2f(pixelID)+vec2f(.5f)) / vec2f(self.fbSize);
-  owl::Ray ray;
+  owl::RayT</*ray type*/0,/*total ray types*/1, /*disable geometry contribution*/ true> ray;
   ray.origin    
     = self.camera.pos;
   ray.direction 
@@ -102,3 +102,10 @@ OPTIX_MISS_PROGRAM(miss)()
   prd.col = c;
 }
 
+OPTIX_INSTANCE_PROGRAM(instanceProg)(
+  const void *geomData,
+  const int32_t instanceIndex, float (&transform)[12],
+  uint32_t &customInstanceID, uint32_t &mask, uint32_t &flags) 
+{
+  
+}

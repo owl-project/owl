@@ -388,12 +388,13 @@ owlEnableSpheres(OWLContext _context);
 OWL_API void
 owlEnableMotionBlur(OWLContext _context);
 
-/*! When disabled, owl will use only the first hitgroup for a given BLAS. 
-    This is useful in scenarios where many instances of the same underlying 
-    BLAS need to be manipulated interactively, because it reduces the number
-    of SBT records to "numRayTypes" rather than "numRayTypes * numGeometry" */
+/*! When disabled, owl will share the first hitgroup in a given BLAS across
+    all the geometries within that BLAS. This is useful in scenarios where 
+    many different instances in a TLAS need to be manipulated interactively, 
+    we can more easily calculate the SBT record offset in parallel on the device 
+    as "baseIndex + blasIndex * numRayTypes" */
 OWL_API void
-owlContextDisableGeometryMultiplier(OWLContext context);
+owlContextDisablePerGeometrySBTRecords(OWLContext context);
 
 /*! set number of ray types to be used in this context; this should be
   done before any programs, pipelines, geometries, etc get

@@ -179,10 +179,10 @@ owlEnableMotionBlur(OWLContext _context)
 }
 
 OWL_API void
-owlContextDisableGeometryMultiplier(OWLContext _context)
+owlContextDisablePerGeometrySBTRecords(OWLContext _context)
 {
   LOG_API_CALL();
-  checkGet(_context)->disableGeometryMultiplier();
+  checkGet(_context)->disablePerGeometrySBTRecords();
 }
   
 OWL_API void
@@ -1695,7 +1695,7 @@ owlInstanceGroupSetInstanceProg(OWLGroup _group,
   assert(module);
 
   assert("geometry multiplier must be disabled to use instance programs." 
-    && module->context->geometryMultiplierDisabled == true);
+    && module->context->perGeometrySBTRecordsDisabled == true);
 
   group->setInstanceProg(module,progName);
 }
@@ -1720,7 +1720,7 @@ owlInstanceGroupSetMotionInstanceProg(OWLGroup _group,
   assert(module);
 
   assert("geometry multiplier must be disabled to use instance programs." 
-    && module->context->geometryMultiplierDisabled == true);
+    && module->context->perGeometrySBTRecordsDisabled == true);
 
   assert("motion blur must be enabled to use motion instance programs." 
     && module->context->motionBlurEnabled == true);

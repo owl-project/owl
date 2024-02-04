@@ -95,7 +95,7 @@ namespace owl {
     /*! disables the geometry's contribution to hit record generation. 
       If set, we assume that the first geometry's record is representative
       of all geometry in an owl group. */
-    void disableGeometryMultiplier();
+    void disablePerGeometrySBTRecords();
     
     /*! sets maximum instancing depth for the given context:
 
@@ -316,7 +316,7 @@ namespace owl {
        Useful for scenarios like realtime instance manipulation over
        many instances where creating a record per geometry isn't 
        practical. */
-    bool geometryMultiplierDisabled = false;
+    bool perGeometrySBTRecordsDisabled = false;
 
     /*! number of ray types - change via setRayTypeCount() */
     int numRayTypes { 1 };

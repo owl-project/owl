@@ -124,7 +124,7 @@ namespace owl {
 
     /*! the SBT offset that this group will use to write its children
         into the SBT */
-    const int sbtOffset;
+    int sbtOffset;
   };
 
   

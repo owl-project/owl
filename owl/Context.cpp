@@ -376,13 +376,13 @@ namespace owl {
     if (device->sbt.hitGroupRecordsBuffer.alloced())
       device->sbt.hitGroupRecordsBuffer.free();
 
+    // NM: swiching over to iterator on geomType, which is a much smaller list 
+    // than the total number of geometries.
     size_t maxHitProgDataSize = 0;
-    for (size_t i=0;i<geoms.size();i++) {
-      Geom *geom = (Geom *)geoms.getPtr(i);
-      if (!geom) continue;
-      
-      assert(geom->geomType);
-      maxHitProgDataSize = std::max(maxHitProgDataSize,geom->geomType->varStructSize);
+    for (size_t i = 0; i < geomTypes.size(); ++i) {
+      GeomType* geomType = geomTypes.getPtr(i);
+      if (!geomType) continue;
+      maxHitProgDataSize = std::max(maxHitProgDataSize, geomType->varStructSize);
     }
       
     size_t numHitGroupEntries = sbtRangeAllocator.maxAllocedID;
@@ -402,8 +402,10 @@ namespace owl {
     std::vector<uint8_t> hitGroupRecords(totalHitGroupRecordsArraySize);
 
     // ------------------------------------------------------------------
-    // now, write all records (only on the host so far): we need to
-    // write one record per geometry, per ray type
+    // now, write all records (only on the host so far). 
+    // Either we need to write one record per geometry, per ray type,
+    // or if the geometry contribution is disabled, then write one record
+    // per geometry group, per ray type.
     // ------------------------------------------------------------------
     for (size_t groupID=0;groupID<groups.size();groupID++) {
       Group *group = groups.getPtr(groupID);
@@ -411,8 +413,11 @@ namespace owl {
       GeomGroup *gg = dynamic_cast<GeomGroup *>(group);
       if (!gg) continue;
         
+      // note, sbtOffset here already accounts for if per-geometry records are disabled
       const size_t sbtOffset = gg->sbtOffset;
-      for (size_t childID=0;childID<gg->geometries.size();childID++) {
+      size_t numChildrenToConsider = (perGeometrySBTRecordsDisabled) ? 
+        std::min(gg->geometries.size(), 1ull) : gg->geometries.size();
+      for (size_t childID=0;childID <numChildrenToConsider;childID++) {
         Geom::SP geom = gg->geometries[childID];
         if (!geom) continue;
           
@@ -612,9 +617,9 @@ namespace owl {
     motionBlurEnabled = true;
   }
 
-  void Context::disableGeometryMultiplier()
+  void Context::disablePerGeometrySBTRecords()
   {
-    geometryMultiplierDisabled = true;
+    perGeometrySBTRecordsDisabled = true;
   }
 
   void Context::enableCurves()
