@@ -38,12 +38,15 @@ namespace owl {
   {};
 
   InstanceGroup::InstanceGroup(Context *const context,
-                               size_t numChildren,
+                               size_t _numChildren,
                                Group::SP *groups,
-                               unsigned int _buildFlags)
+                               unsigned int _buildFlags,
+                               bool _useInstanceProgram)
     : Group(context,context->groups),
-      children(numChildren),
-      buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags)
+      numChildren(_numChildren),
+      children(_numChildren),
+      buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags),
+      useInstanceProgram(_useInstanceProgram)
   {
     std::vector<uint32_t> childIDs;
     if (groups) {
@@ -70,7 +73,12 @@ namespace owl {
   /*! creates the device-specific data for this group */
   RegisteredObject::DeviceData::SP InstanceGroup::createOn(const DeviceContext::SP &device) 
   {
-    return std::make_shared<DeviceData>(device);
+    auto dd = std::make_shared<DeviceData>(device);
+    if (useInstanceProgram) {
+      assert(context->perGeometrySBTRecordsDisabled);
+      dd->traversableHandlesBuffer.alloc(numChildren*sizeof(OptixTraversableHandle));
+    }
+    return dd;
   }
   
   /*! set transformation matrix of given child */
@@ -114,6 +122,9 @@ namespace owl {
   void InstanceGroup::setInstanceProg(Module::SP module,
                                       const std::string &progName)
   {
+    if (!useInstanceProgram) 
+      OWL_RAISE("trying to set instance program on instance group that was not created" 
+        "with useInstanceProgram=true");
     this->instanceProg.progName = progName;
     this->instanceProg.module   = module;
   }
@@ -121,8 +132,29 @@ namespace owl {
   void InstanceGroup::setMotionInstanceProg(Module::SP module,
                                             const std::string &progName)
   {
+    if (!useInstanceProgram) 
+      OWL_RAISE("trying to set instance program on instance group that was not created" 
+        "with useInstanceProgram=true");
     this->motionInstanceProg.progName = progName;
     this->motionInstanceProg.module   = module;
+  }
+
+  /*! run the bounding box program for all primitives within this geometry */
+  void InstanceGroup::executeInstanceProgOnInstances(const DeviceContext::SP &device)
+  {
+    SetActiveGPU activeGPU(device);
+    // if instance group doesn't contain any instances we would run into issue
+    // launching zero-sized instance prog kernel below, so let's just
+    // exit here.
+    if (numChildren == 0) return;
+
+    DeviceData &dd = getDD(device);
+
+    // Allocate a buffer to hold our instances. These will serve as 
+    // the primitives for our instance acceleration structure.
+    dd.optixInstanceBuffer.alloc(numChildren*sizeof(OptixInstance));
+
+
   }
 
   /*! build the CUDA instance program kernel (if instance prog is set) */
@@ -213,18 +245,42 @@ namespace owl {
   {
     assert(childID < children.size());
     children[childID] = child;
+
+    if (useInstanceProgram) {
+      for (auto device : context->getDevices()) {
+        auto &dd = getDD(device);
+        OptixTraversableHandle handle = child->getTraversable(device);
+
+        // note, using upload async here to avoid stalls from many small synchronous uploads
+        dd.traversableHandlesBuffer.uploadAsync(
+          (const uint32_t*)&handle, 
+          childID*sizeof(OptixTraversableHandle), 
+          sizeof(OptixTraversableHandle),
+          device->getStream());
+        
+        // flag for sync
+        dd.traversableHandlesBufferNeedsSynchronizing = true;
+      }
+    }
   }
 
-  void InstanceGroup::buildAccel()
+  void InstanceGroup::buildAccel(LaunchParams::SP launchParams)
   {
     for (auto device : context->getDevices())
-      if (transforms[1].empty())
+      if (!useInstanceProgram && transforms[1].empty())
         staticBuildOn<true>(device);
-      else
+      else if (!useInstanceProgram)
         motionBlurBuildOn<true>(device);
+      else if (useInstanceProgram && transforms[1].empty())
+        staticDeviceBuildOn<true>(device, launchParams);
+      else if (useInstanceProgram) {
+        motionBlurDeviceBuildOn<true>(device, launchParams);
+      }
+      else 
+        OWL_RAISE("unknown instance group build type");
   }
   
-  void InstanceGroup::refitAccel()
+  void InstanceGroup::refitAccel(LaunchParams::SP launchParams)
   {
     for (auto device : context->getDevices())
       if (transforms[1].empty())
@@ -405,9 +461,223 @@ namespace owl {
       
     LOG_OK("successfully built instance group accel");
   }
+
+  template<bool FULL_REBUILD>
+  void InstanceGroup::staticDeviceBuildOn(const DeviceContext::SP &device, LaunchParams::SP launchParams) 
+  {
+    DeviceData &dd = getDD(device);
+    auto optixContext = device->optixContext;
+
+    SetActiveGPU forLifeTime(device);
+    LOG("building instance accel over "
+        << children.size() << " groups");
+
+    // ==================================================================
+    // sanity check that that many instances are actually allowed by optix:
+    // ==================================================================
+    uint32_t maxInstsPerIAS = 0;
+    optixDeviceContextGetProperty
+      (optixContext,
+       OPTIX_DEVICE_PROPERTY_LIMIT_MAX_INSTANCES_PER_IAS,
+       &maxInstsPerIAS,
+       sizeof(maxInstsPerIAS));
+      
+    if (children.size() > maxInstsPerIAS)
+      throw std::runtime_error("number of children in instance group exceeds "
+                               "OptiX's MAX_INSTANCES_PER_IAS limit");
+
+    if (!FULL_REBUILD && !(buildFlags & OPTIX_BUILD_FLAG_ALLOW_UPDATE))
+      throw std::runtime_error("trying to refit an accel struct that was not built with OPTIX_BUILD_FLAG_ALLOW_UPDATE");
     
+    if (FULL_REBUILD) {
+      dd.memFinal = 0;
+      dd.memPeak = 0;
+    }
+   
 
+    // ==================================================================
+    // create instance build inputs on the device
+    // ==================================================================
 
+    if (Context::useManagedMemForAccelAux)
+      dd.optixInstanceBuffer.allocManaged(numChildren*
+                                          sizeof(OptixInstance));
+    else
+      dd.optixInstanceBuffer.alloc(numChildren*
+                                   sizeof(OptixInstance));
+
+    OptixBuildInput              instanceInput  {};
+    OptixAccelBuildOptions       accelOptions   {};
+
+    if (!instanceProg.module) {
+      OWL_RAISE("instance module is missing - "
+                "did you forget to call owlInstanceGroupSetInstanceProg() before"
+                " (Instance)GroupAccelBuild()!?");
+    }
+
+    // size of each thread block during instance program function call
+    vec3i blockDims(32,32,1);
+    uint32_t threadsPerBlock = blockDims.x*blockDims.y*blockDims.z;
+        
+    uint32_t numBlocks = owl::common::divRoundUp((uint32_t)numChildren,threadsPerBlock);
+    uint32_t numBlocks_x
+      = 1+uint32_t(powf((float)numBlocks,1.f/3.f));
+    uint32_t numBlocks_y
+      = 1+uint32_t(sqrtf((float)(numBlocks/numBlocks_x)));
+    uint32_t numBlocks_z
+      = owl::common::divRoundUp(numBlocks,numBlocks_x*numBlocks_y);
+        
+    vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
+
+    OptixInstance* d_instances = (OptixInstance*)dd.optixInstanceBuffer.get();
+    OptixTraversableHandle* d_traversableHandles = (OptixTraversableHandle*)dd.traversableHandlesBuffer.get();
+
+    uint32_t IASIndex = getSBTOffset();
+    uint32_t numRayTypes = context->numRayTypes;
+
+    /* arguments for the kernel we are to call */
+    void *args[] = {
+      &d_instances,
+      &d_traversableHandles,
+      (void*)&numChildren,
+      (void*)&IASIndex,
+      (void*)&numRayTypes
+    };
+
+    if (launchParams != nullptr) {
+      auto &lpDD = launchParams->getDD(device);
+      auto &moduleDD = instanceProg.module->getDD(device);
+      // lpDD
+      CUdeviceptr d_launchDataPtr = 0;
+      size_t bytes = 0;      
+      cuModuleGetGlobal(&d_launchDataPtr, &bytes, moduleDD.computeModule, "optixLaunchParams");
+      if (d_launchDataPtr == 0) {
+        OWL_RAISE("could not find optixLaunchParams in instance program module");
+      }
+      if (bytes != lpDD.dataSize) {
+        OWL_RAISE("size of launch params in instance program module does not match size of launch params in launch params object");
+      }
+      // now, copy the deviceMemory in the launch params object to this pointer
+      // CUresult rc = cuMemcpyDtoD(d_launchDataPtr, lpDD.deviceMemory.d_pointer, bytes);
+      CUresult rc = cuMemcpyHtoD(d_launchDataPtr, (void*)lpDD.hostMemory.ptr, bytes);
+
+      // Check the result and see if there was an error
+      if (rc) {
+        const char *errName = 0;
+        cuGetErrorName(rc,&errName);
+        OWL_RAISE("CUDA error in copying launch params to instance program module: "
+                  +std::string(errName));
+      }
+    }
+
+    CUstream stream = device->stream;
+    // If we need to, synchronize the stream so that all traversable handles 
+    // are done being copied over.
+    if (dd.traversableHandlesBufferNeedsSynchronizing) {
+      cudaStreamSynchronize(stream);
+      dd.traversableHandlesBufferNeedsSynchronizing = false;
+    }
+
+    if (!dd.instanceFuncKernel)
+      OWL_RAISE("instance kernel set, but not yet compiled - "
+                "did you forget to call BuildPrograms() before"
+                " (Instance)GroupAccelBuild()!?");
+
+    CUresult rc
+      = cuLaunchKernel(dd.instanceFuncKernel,
+                       gridDims.x,gridDims.y,gridDims.z,
+                       blockDims.x,blockDims.y,blockDims.z,
+                       0, stream, args, 0);
+    
+    if (rc) {
+      const char *errName = 0;
+      cuGetErrorName(rc,&errName);
+      OWL_RAISE("unknown CUDA error in calling bounds function kernel: "
+                +std::string(errName));
+    }
+
+    // cudaStreamSynchronize(stream);
+
+    // ==================================================================
+    // set up build input
+    // ==================================================================
+    instanceInput.type
+      = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
+    instanceInput.instanceArray.instances
+      = (CUdeviceptr)dd.optixInstanceBuffer.get();
+    instanceInput.instanceArray.numInstances = numChildren;
+      
+    // ==================================================================
+    // set up accel uptions
+    // ==================================================================
+    accelOptions.buildFlags = this->buildFlags;
+
+    accelOptions.motionOptions.numKeys = 1;
+    if (FULL_REBUILD)
+      accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
+    else
+      accelOptions.operation            = OPTIX_BUILD_OPERATION_UPDATE;
+      
+    // ==================================================================
+    // query build buffer sizes, and allocate those buffers
+    // ==================================================================
+    OptixAccelBufferSizes blasBufferSizes;
+    OPTIX_CHECK(optixAccelComputeMemoryUsage(optixContext,
+                                             &accelOptions,
+                                             &instanceInput,
+                                             1, // num build inputs
+                                             &blasBufferSizes
+                                             ));
+    
+    // ==================================================================
+    // trigger the build ....
+    // ==================================================================
+    const size_t tempSize
+      = FULL_REBUILD
+      ? blasBufferSizes.tempSizeInBytes
+      : blasBufferSizes.tempUpdateSizeInBytes;
+    LOG("starting to build/refit "
+        << prettyNumber(numChildren) << " instances, "
+        << prettyNumber(blasBufferSizes.outputSizeInBytes) << "B in output and "
+        << prettyNumber(tempSize) << "B in temp data");
+      
+    DeviceMemory tempBuffer;
+    if (Context::useManagedMemForAccelAux)
+      tempBuffer.allocManaged(tempSize);
+    else
+      tempBuffer.alloc(tempSize);
+      
+    if (FULL_REBUILD) {
+      if (Context::useManagedMemForAccelData)
+        dd.bvhMemory.allocManaged(blasBufferSizes.outputSizeInBytes);
+      else
+        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      dd.memPeak += tempBuffer.size();
+      dd.memPeak += dd.bvhMemory.size();
+      dd.memFinal = dd.bvhMemory.size();
+    }
+      
+    OPTIX_CHECK(optixAccelBuild(optixContext,
+                                /* todo: stream */0,
+                                &accelOptions,
+                                // array of build inputs:
+                                &instanceInput,1,
+                                // buffer of temp memory:
+                                (CUdeviceptr)tempBuffer.get(),
+                                tempBuffer.size(),
+                                // where we store initial, uncomp bvh:
+                                (CUdeviceptr)dd.bvhMemory.get(),
+                                dd.bvhMemory.size(),
+                                /* the traversable we're building: */ 
+                                &dd.traversable,
+                                /* no compaction for instances: */
+                                nullptr,0u
+                                ));
+      
+    OWL_CUDA_SYNC_CHECK();
+      
+    LOG_OK("successfully built instance group accel");
+  }
 
   template<bool FULL_REBUILD>
   void InstanceGroup::motionBlurBuildOn(const DeviceContext::SP &device)
@@ -649,4 +919,9 @@ namespace owl {
     LOG_OK("successfully built instance group accel");
   }
   
+  template<bool FULL_REBUILD>
+  void InstanceGroup::motionBlurDeviceBuildOn(const DeviceContext::SP &device, LaunchParams::SP launchParams) 
+  {
+    OWL_RAISE("Not implemented");
+  }
 } // ::owl

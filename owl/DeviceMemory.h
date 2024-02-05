@@ -32,6 +32,7 @@ namespace owl {
     inline void *get();
     inline void upload(const void *h_pointer, const char *debugMessage = nullptr);
     inline void uploadAsync(const void *h_pointer, cudaStream_t stream);
+    inline void uploadAsync(const void *h_pointer, size_t offset, size_t size, cudaStream_t stream);
     inline void download(void *h_pointer);
     inline void free();
     template<typename T>
@@ -80,6 +81,15 @@ namespace owl {
     assert(alloced() || empty());
     OWL_CUDA_CHECK(cudaMemcpyAsync((void*)d_pointer, h_pointer,
                                sizeInBytes, cudaMemcpyHostToDevice,
+                               stream));
+  }
+
+  inline void DeviceMemory::uploadAsync(const void *h_pointer, size_t offset, size_t size, cudaStream_t stream)
+  {
+    assert(alloced() || empty());
+    assert(offset + size <= sizeInBytes);
+    OWL_CUDA_CHECK(cudaMemcpyAsync((void*)(d_pointer + offset), h_pointer,
+                               size, cudaMemcpyHostToDevice,
                                stream));
   }
     

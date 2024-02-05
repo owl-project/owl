@@ -29,8 +29,8 @@ namespace owl {
     /*! pretty-printer, for printf-debugging */
     std::string toString() const override;
 
-    void buildAccel() override;
-    void refitAccel() override;
+    void buildAccel(LaunchParams::SP launchParams = nullptr) override;
+    void refitAccel(LaunchParams::SP launchParams = nullptr) override;
 
     /*! (re-)compute the Group::bounds[2] information for motion blur
       - ie, our _parent_ node may need this */

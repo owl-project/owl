@@ -59,7 +59,7 @@ namespace owl {
     }
   }
   
-  void TrianglesGeomGroup::buildAccel()
+  void TrianglesGeomGroup::buildAccel(LaunchParams::SP launchParams)
   {
     for (auto device : context->getDevices()) 
       buildAccelOn<true>(device);
@@ -68,7 +68,7 @@ namespace owl {
       updateMotionBounds();
   }
   
-  void TrianglesGeomGroup::refitAccel()
+  void TrianglesGeomGroup::refitAccel(LaunchParams::SP launchParams)
   {
     for (auto device : context->getDevices()) 
       buildAccelOn<false>(device);

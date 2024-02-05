@@ -16,6 +16,11 @@
 
 #include "deviceCode.h"
 #include <optix_device.h>
+#include <owl/common/math/random.h>
+
+typedef owl::common::LCG<4> Random;
+
+__constant__ Globals optixLaunchParams;
 
 struct Hit {
   bool  hadHit = false;
@@ -24,6 +29,8 @@ struct Hit {
 
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
 {
+  uint64_t clock_begin = clock();
+
   const RayGenData &self = owl::getProgramData<RayGenData>();
   const vec2i pixelID = owl::getLaunchIndex();
 
@@ -41,6 +48,15 @@ OPTIX_RAYGEN_PROGRAM(simpleRayGen)()
                 /*the ray to trace*/ray,
                 /*prd*/hit);
 
+  uint64_t clock_end = clock();
+  // if (optixLaunchParams.heatmapEnabled) 
+  // float heatmapScale = 10000;
+  // {
+  //   float t = (clock_end-clock_begin)*(1.f / heatmapScale);
+  //   hit.col = make_float4(t, t, t, 1.f);
+  // }
+
+  
   const int fbOfs = pixelID.x+self.fbSize.x*pixelID.y;
   self.fbPtr[fbOfs]
     = owl::make_rgba(hit.col);
@@ -103,9 +119,37 @@ OPTIX_MISS_PROGRAM(miss)()
 }
 
 OPTIX_INSTANCE_PROGRAM(instanceProg)(
-  const void *geomData,
   const int32_t instanceIndex, float (&transform)[12],
   uint32_t &customInstanceID, uint32_t &mask, uint32_t &flags) 
 {
+  Random rng(vec2i(instanceIndex / 1000, instanceIndex % 1000));
+
+  float t = optixLaunchParams.time;
   
+  vec3f boxCenter;
+  vec3f rotationAxis;
+  do {
+    rotationAxis.x = rng();
+    rotationAxis.y = rng();
+    rotationAxis.z = rng();
+  } while (dot(rotationAxis,rotationAxis) > 1.f);
+  rotationAxis = normalize(rotationAxis);
+  float rotationSpeed = .1f + rng() * .7f;
+  float rotationAngle0 = rng() * 2.f * M_PI;
+
+  const vec3i numBoxes(100);
+  const float worldSize = 1;
+  const vec3f boxSize   = (2*.4f*worldSize)/vec3f(numBoxes);
+  const float animSpeed = 4.f;
+
+  vec3i boxID = vec3i(instanceIndex % 100,(instanceIndex / 100) % 100,(instanceIndex / (100 * 100)) % 100);
+  
+  vec3f rel = (vec3f(boxID)+.5f) / vec3f(numBoxes);
+  boxCenter = vec3f(-worldSize) + (2.f*worldSize)*rel;
+
+  const float angle  = rotationAngle0 + rotationSpeed*t;
+  const linear3f rot = linear3f::rotate(rotationAxis,angle);
+  affine3f tfm = affine3f(rot,boxCenter);
+
+  toRowMajor(tfm, transform);
 }

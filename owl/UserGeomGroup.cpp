@@ -57,12 +57,12 @@ namespace owl {
         buildAccelOn<false>(device);
   }
   
-  void UserGeomGroup::buildAccel()
+  void UserGeomGroup::buildAccel(LaunchParams::SP launchParams)
   {
     buildOrRefit(true);
   }
 
-  void UserGeomGroup::refitAccel()
+  void UserGeomGroup::refitAccel(LaunchParams::SP launchParams)
   {
     buildOrRefit(false);
   }

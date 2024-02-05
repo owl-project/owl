@@ -664,15 +664,20 @@ owlInstanceGroupCreate(OWLContext context,
 
                        /*! A combination of OptixBuildFlags.  The default
                          of 0 means to use OWL default build flags.*/
-                       unsigned int buildFlags OWL_IF_CPP(=0)
+                       unsigned int buildFlags OWL_IF_CPP(=0),
+
+                       /*! If true, will use the device to fill in 
+                          the optixInstance array. This requires that 
+                          per-geometry SBT records are disabled. */
+                       bool useInstanceProgram OWL_IF_CPP(=false)
                        );
 
                        
 OWL_API void
 owlGroupRelease(OWLGroup group);
 
-OWL_API void owlGroupBuildAccel(OWLGroup group);
-OWL_API void owlGroupRefitAccel(OWLGroup group);
+OWL_API void owlGroupBuildAccel(OWLGroup group, OWLParams params OWL_IF_CPP(=nullptr));
+OWL_API void owlGroupRefitAccel(OWLGroup group, OWLParams params OWL_IF_CPP(=nullptr));
 
 /*! returns the (device) memory used for this group's acceleration
     structure (but _excluding_ the memory for the geometries

@@ -59,3 +59,6 @@ struct MissProgData
   vec3f  color1;
 };
 
+struct Globals {
+  float time;
+};

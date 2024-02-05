@@ -626,7 +626,8 @@ owlInstanceGroupCreate(OWLContext _context,
                        const float    *initTransforms,
                        OWLMatrixFormat matrixFormat,
                        
-                       unsigned int buildFlags)
+                       unsigned int buildFlags,
+                       bool useInstanceProgram)
 {
   LOG_API_CALL();
   std::vector<Group::SP> initGroups;
@@ -636,7 +637,7 @@ owlInstanceGroupCreate(OWLContext _context,
   InstanceGroup::SP  group
     = std::make_shared<InstanceGroup>
     (context.get(),numInstances,
-     __initGroups, buildFlags);
+     __initGroups, buildFlags, useInstanceProgram);
   assert(group);
   group->createDeviceData(context->getDevices());
 
@@ -1120,7 +1121,7 @@ owlTrianglesSetMotionVertices(OWLGeom _triangles,
   triangles->setVertices(buffers,count,stride,offset);
 }
 
-OWL_API void owlGroupBuildAccel(OWLGroup _group)
+OWL_API void owlGroupBuildAccel(OWLGroup _group, OWLLaunchParams _launchParams)
 {
   LOG_API_CALL();
     
@@ -1129,8 +1130,12 @@ OWL_API void owlGroupBuildAccel(OWLGroup _group)
   Group::SP group
     = ((APIHandle *)_group)->get<Group>();
   assert(group);
+
+  LaunchParams::SP launchParams = nullptr;
+  if (_launchParams)
+    launchParams = ((APIHandle *)_launchParams)->get<LaunchParams>();
     
-  group->buildAccel();
+  group->buildAccel(launchParams);
 }  
 
 /*! returns the (device) memory used for this group's acceleration
@@ -1159,7 +1164,7 @@ OWL_API void owlGroupGetAccelSize(OWLGroup _group,
 }
 
   
-OWL_API void owlGroupRefitAccel(OWLGroup _group)
+OWL_API void owlGroupRefitAccel(OWLGroup _group, OWLLaunchParams _launchParams)
 {
   LOG_API_CALL();
     
@@ -1168,8 +1173,12 @@ OWL_API void owlGroupRefitAccel(OWLGroup _group)
   Group::SP group
     = ((APIHandle *)_group)->get<Group>();
   assert(group);
-    
-  group->refitAccel();
+  
+  LaunchParams::SP launchParams = nullptr;
+  if (_launchParams)
+    launchParams = ((APIHandle *)_launchParams)->get<LaunchParams>();
+
+  group->refitAccel(launchParams);
 }  
 
 OWL_API void
@@ -1682,7 +1691,6 @@ owlInstanceGroupSetInstanceProg(OWLGroup _group,
 {
   LOG_API_CALL();
     
-  assert(_geometryType);
   assert(_module);
   assert(progName);
 
@@ -1707,7 +1715,6 @@ owlInstanceGroupSetMotionInstanceProg(OWLGroup _group,
 {
   LOG_API_CALL();
     
-  assert(_geometryType);
   assert(_module);
   assert(progName);
 

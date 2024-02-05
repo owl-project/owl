@@ -18,6 +18,7 @@
 
 #include "owl/common/math/vec.h"
 #include "owl/common/math/box.h"
+#include "owl/common/math/AffineSpace.h"
 // the 'actual' optix
 #include <cuda.h>
 #include <optix.h>
@@ -103,6 +104,12 @@ namespace owl {
     t[0] = 1.f; t[1] = 0.f; t[2] = 0.f; t[3] = 0.f;
     t[4] = 0.f; t[5] = 1.f; t[6] = 0.f; t[7] = 0.f;
     t[8] = 0.f; t[9] = 0.f; t[10] = 1.f; t[11] = 0.f;
+  }
+
+  inline __device__ void toRowMajor(affine3f tfm, float (&t)[12]) {
+    t[0] = tfm.l.vx.x; t[1] = tfm.l.vx.y; t[2] = tfm.l.vx.z; t[3] = tfm.p.x;
+    t[4] = tfm.l.vy.x; t[5] = tfm.l.vy.y; t[6] = tfm.l.vy.z; t[7] = tfm.p.y;
+    t[8] = tfm.l.vz.x; t[9] = tfm.l.vz.y; t[10] = tfm.l.vz.z; t[11] = tfm.p.z;
   }
 
   static __forceinline__ __device__ void* unpackPointer( uint32_t i0, uint32_t i1 )
@@ -338,17 +345,15 @@ namespace owl {
 #define OPTIX_INSTANCE_PROGRAM(progName)                                \
   /* fwd decl for the kernel func to call */                            \
   inline __device__                                                     \
-  void __instanceFunc__##progName(const void *geomData,                 \
-    const int32_t instanceIndex, float (&transform)[12],      \
+  void __instanceFunc__##progName(                                      \
+    const int32_t instanceIndex, float (&transform)[12],                \
     uint32_t &customInstanceID, uint32_t &mask, uint32_t &flags);       \
                                                                         \
   /* the '__global__' kernel we can get a function handle on */         \
   extern "C" __global__                                                 \
   void __instanceFuncKernel__##progName(                                \
-    const void  *geomData,                                              \
     OptixInstance *instances,                                           \
     OptixTraversableHandle *const traversableHandles,                   \
-    float4* motionTransformsBuffer,                                     \
     const uint32_t numInstances,                                        \
     const uint32_t IASIndex, const uint32_t numRayTypes)                \
   {                                                                     \
@@ -366,17 +371,17 @@ namespace owl {
     oi.visibilityMask = 255;                                            \
     initializeTransformToIdentity(oi.transform);                        \
     if (instanceIndex < numInstances) {                                 \
-      __instanceFunc__##progName(geomData, instanceIndex,               \
+      __instanceFunc__##progName(instanceIndex,                         \
         oi.transform, oi.instanceId, oi.visibilityMask, oi.flags);      \
-    }                                                                   \
                                                                         \
-    /* These we compute, since they're tightly coupled to OWL's SBT */  \
-    /* When geom contribution is 0, these are all that matters */       \
-    oi.sbtOffset         = IASIndex * numRayTypes;                      \
-    /* This need to come from optixConvertPointerToTraversableHandle */ \
-    /* which currently can't be called device side... */                \
-    oi.traversableHandle = traversableHandles[instanceIndex];           \
-    instances[instanceIndex] = oi;                                      \
+      /* These we compute, since they're tightly coupled to OWL's SBT */  \
+      /* When geom contribution is 0, these are all that matters */       \
+      oi.sbtOffset         = IASIndex * numRayTypes;                      \
+      /* This need to come from optixConvertPointerToTraversableHandle */ \
+      /* which currently can't be called device side... */                \
+      oi.traversableHandle = traversableHandles[instanceIndex];           \
+      instances[instanceIndex] = oi;                                      \
+    }                                                                   \
   }                                                                     \
                                                                         \
   /* now the actual device code that the user is writing: */            \
@@ -391,7 +396,7 @@ namespace owl {
 #define OPTIX_MOTION_INSTANCE_PROGRAM(progName)                         \
   /* fwd decl for the kernel func to call */                            \
   inline __device__                                                     \
-  void __motionInstanceFunc__##progName(const void *geomData,           \
+  void __motionInstanceFunc__##progName(                                \
     const int32_t instanceIndex,                                        \
     owl::common::affine3f &transformKey0,                               \
     owl::common::affine3f &transformKey1,                               \
@@ -400,7 +405,6 @@ namespace owl {
   /* the '__global__' kernel we can get a function handle on */         \
   extern "C" __global__                                                 \
   void __motionInstanceFuncKernel__##progName(                          \
-    const void  *geomData,                                              \
     OptixInstance *instances,                                           \
     OptixTraversableHandle *const traversableHandles,                   \
     float4* motionTransformsBuffer,                                     \
@@ -426,29 +430,29 @@ namespace owl {
                     0.f,1.f,0.f,0.f,                                    \
                     0.f,0.f,1.f,0.f};                                   \
     if (instanceIndex < numInstances) {                                 \
-      __instanceFunc__##progName(geomData, instanceIndex,               \
+      __instanceFunc__##progName(instanceIndex,                         \
         tfm0, tfm1, oi.instanceId, oi.visibilityMask, oi.flags);        \
-    }                                                                   \
                                                                         \
-    /* These we compute, since they're tightly coupled to OWL's SBT */  \
-    /* When geom contribution is 0, these are all that matters */       \
-    oi.sbtOffset         = IASIndex * numRayTypes;                      \
-    /* This need to come from optixConvertPointerToTraversableHandle */ \
-    /* which currently can't be called device side... */                \
-    oi.traversableHandle = traversableHandles[childID]                  \
-    float4 row0K0 = {tfm0.l.vx.x, tfm0.l.vy.x, tfm0.l.vz.x, tfm0.p.x};  \
-    float4 row1K0 = {tfm0.l.vx.y, tfm0.l.vy.y, tfm0.l.vz.y, tfm0.p.y};  \
-    float4 row2K0 = {tfm0.l.vx.z, tfm0.l.vy.z, tfm0.l.vz.z, tfm0.p.z};  \
-    float4 row0K1 = {tfm1.l.vx.x, tfm1.l.vy.x, tfm1.l.vz.x, tfm1.p.x};  \
-    float4 row1K1 = {tfm1.l.vx.y, tfm1.l.vy.y, tfm1.l.vz.y, tfm1.p.y};  \
-    float4 row2K1 = {tfm1.l.vx.z, tfm1.l.vy.z, tfm1.l.vz.z, tfm1.p.z};  \
-    motionTransformsBuffer[childID * 6 + 0] = row0K0;                   \
-    motionTransformsBuffer[childID * 6 + 1] = row1K0;                   \
-    motionTransformsBuffer[childID * 6 + 2] = row2K0;                   \
-    motionTransformsBuffer[childID * 6 + 3] = row0K1;                   \
-    motionTransformsBuffer[childID * 6 + 4] = row1K1;                   \
-    motionTransformsBuffer[childID * 6 + 5] = row2K1;                   \
-    optixInstances[childID] = oi;                                       \
+      /* These we compute, since they're tightly coupled to OWL's SBT */  \
+      /* When geom contribution is 0, these are all that matters */       \
+      oi.sbtOffset         = IASIndex * numRayTypes;                      \
+      /* This need to come from optixConvertPointerToTraversableHandle */ \
+      /* which currently can't be called device side... */                \
+      oi.traversableHandle = traversableHandles[instanceIndex]                  \
+      float4 row0K0 = {tfm0.l.vx.x, tfm0.l.vy.x, tfm0.l.vz.x, tfm0.p.x};  \
+      float4 row1K0 = {tfm0.l.vx.y, tfm0.l.vy.y, tfm0.l.vz.y, tfm0.p.y};  \
+      float4 row2K0 = {tfm0.l.vx.z, tfm0.l.vy.z, tfm0.l.vz.z, tfm0.p.z};  \
+      float4 row0K1 = {tfm1.l.vx.x, tfm1.l.vy.x, tfm1.l.vz.x, tfm1.p.x};  \
+      float4 row1K1 = {tfm1.l.vx.y, tfm1.l.vy.y, tfm1.l.vz.y, tfm1.p.y};  \
+      float4 row2K1 = {tfm1.l.vx.z, tfm1.l.vy.z, tfm1.l.vz.z, tfm1.p.z};  \
+      motionTransformsBuffer[instanceIndex * 6 + 0] = row0K0;                   \
+      motionTransformsBuffer[instanceIndex * 6 + 1] = row1K0;                   \
+      motionTransformsBuffer[instanceIndex * 6 + 2] = row2K0;                   \
+      motionTransformsBuffer[instanceIndex * 6 + 3] = row0K1;                   \
+      motionTransformsBuffer[instanceIndex * 6 + 4] = row1K1;                   \
+      motionTransformsBuffer[instanceIndex * 6 + 5] = row2K1;                   \
+      optixInstances[instanceIndex] = oi;                                       \
+    }                                                                   \
   }                                                                     \
                                                                         \
   /* now the actual device code that the user is writing: */            \

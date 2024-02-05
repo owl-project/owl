@@ -61,6 +61,8 @@ std::uniform_real_distribution<float> distribution_uniform(0.0,1.0);
 std::uniform_real_distribution<float> distribution_speed(.1f,.8f);
 std::uniform_int_distribution<int> distribution_texSize(2,16);
 
+OWLParams lp;
+
 struct BoxAnimState {
   void init(vec3i boxID)
   {
@@ -267,6 +269,19 @@ Viewer::Viewer()
   // which is _waaaay_ easier to generate on the device in a CUDA kernel. 
   owlContextDisablePerGeometrySBTRecords(context);
 
+  // -------------------------------------------------------
+  // set up launch params
+  // -------------------------------------------------------
+  OWLVarDecl lpVars[] = {
+    { "time",         OWL_FLOAT,  OWL_OFFSETOF(Globals,time)},
+    { nullptr /* sentinel to mark end of list */ }
+  };
+
+  // ----------- create object  ----------------------------
+  lp = owlParamsCreate(context,
+                      sizeof(Globals),
+                      lpVars,-1);
+
   // ##################################################################
   // set up all the *GEOMETRY* graph we want to render
   // ##################################################################
@@ -320,8 +335,10 @@ Viewer::Viewer()
                              nullptr,
                              (const float*)boxTransforms.data(),
                              OWL_MATRIX_FORMAT_OWL,
-                             OPTIX_BUILD_FLAG_PREFER_FAST_TRACE | OPTIX_BUILD_FLAG_ALLOW_UPDATE);
+                             OPTIX_BUILD_FLAG_PREFER_FAST_TRACE | OPTIX_BUILD_FLAG_ALLOW_UPDATE,
+                             /*use instane program*/ true);
   
+  owlInstanceGroupSetInstanceProg(world,module,"instanceProg");
   // Can't build the accel here just yet, first need to setup our SBT
   //owlGroupBuildAccel(world);
 
@@ -374,14 +391,15 @@ Viewer::Viewer()
   // ##################################################################
   // build *SBT* required to trace the groups
   // ##################################################################
-
   owlBuildPrograms(context);
-  owlBuildPipeline(context);
-  owlBuildSBT(context);
 
+  owlParamsSet1f(lp,"time",0.f);
+  
   // now, we can set the accel for the world group
-  owlGroupBuildAccel(world);
+  owlGroupBuildAccel(world, lp);
+
   owlRayGenSetGroup (rayGen,"world",        world);
+  owlBuildPipeline(context);
   owlBuildSBT(context);
 }
 
@@ -389,12 +407,13 @@ void Viewer::render()
 {
   static double t0 = getCurrentTime();
   double t = animSpeed * (getCurrentTime() - t0);
-  for (size_t i=0;i<boxTransforms.size();i++) {
-    boxTransforms[i] = boxAnimStates[i].getTransform((float)t);
-    owlInstanceGroupSetTransform(world,(int)i,
-                                 (const float*)&boxTransforms[i],
-                                 OWL_MATRIX_FORMAT_OWL);
-  }
+  // for (size_t i=0;i<boxTransforms.size();i++) {
+  //   boxTransforms[i] = boxAnimStates[i].getTransform((float)t);
+  //   owlInstanceGroupSetTransform(world,(int)i,
+  //                                (const float*)&boxTransforms[i],
+  //                                OWL_MATRIX_FORMAT_OWL);
+  // }
+  owlParamsSet1f(lp,"time",(float)t);
 
   static double updateTime = 0.f;
   updateTime -= getCurrentTime();
@@ -402,14 +421,17 @@ void Viewer::render()
   frameID++;
   // we can resort to update here because the initial build was
   // already done before
-  owlGroupRefitAccel(world);
+  // owlGroupRefitAccel(world);
+  owlGroupBuildAccel(world, lp);
   updateTime += getCurrentTime();
   PRINT(updateTime/frameID);
+
+  owlRayGenSetGroup(rayGen,"world",world);
 
   // owlGroupBuildAccel(world);
   owlBuildSBT(context);
 
-  owlRayGenLaunch2D(rayGen,fbSize.x,fbSize.y);
+  owlLaunch2D(rayGen,fbSize.x,fbSize.y,lp);
 }
 
 
