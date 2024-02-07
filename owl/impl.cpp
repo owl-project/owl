@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2021 Ingo Wald                                            //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -65,7 +65,7 @@ OWL_API OWLContext owlContextCreate(int32_t *requestedDeviceIDs,
 inline APIContext::SP checkGet(OWLContext _context)
 {
   assert(_context);
-  APIContext::SP context = ((APIHandle *)_context)->getContext();
+  APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
   assert(context);
   return context;
 }
@@ -666,6 +666,8 @@ owlInstanceGroupCreate(OWLContext _context,
 OWL_API void owlContextDestroy(OWLContext _context)
 {
   LOG_API_CALL();
+  // create and hold a reference to ourselves here, so one reference
+  // will remain alive even if the context frees all api handles.
   APIContext::SP context = checkGet(_context);
   context->releaseAll();
 }
