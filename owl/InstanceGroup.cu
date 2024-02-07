@@ -44,23 +44,27 @@ namespace owl {
                                bool _useInstanceProgram)
     : Group(context,context->groups),
       numChildren(_numChildren),
-      children(_numChildren),
       buildFlags( (_buildFlags > 0) ? _buildFlags : defaultBuildFlags),
       useInstanceProgram(_useInstanceProgram)
   {
-    std::vector<uint32_t> childIDs;
-    if (groups) {
-      childIDs.resize(numChildren);
-      for (size_t i=0;i<numChildren;i++) {
-        assert(groups[i]);
-        children[i] = groups[i];
-        childIDs[i] = groups[i]->ID;
+    if (!useInstanceProgram) {
+      children.resize(numChildren);
+      std::vector<uint32_t> childIDs;
+      if (groups) {
+        childIDs.resize(numChildren);
+        for (size_t i=0;i<numChildren;i++) {
+          assert(groups[i]);
+          children[i] = groups[i];
+          childIDs[i] = groups[i]->ID;
+        }
       }
-    }
 
-    transforms[0].resize(children.size());
-    // do NOT automatically resize transforms[0] - need these only if
-    // we use motion blur for this object
+      // TODO: refactor below... doesn't really work with instance programs, since 
+      // transforms will be 0 in size then, regardless of if motion blur is enabled or not
+      transforms[0].resize(children.size());
+      // do NOT automatically resize transforms[0] - need these only if
+      // we use motion blur for this object
+    }
   }
   
   
@@ -74,10 +78,6 @@ namespace owl {
   RegisteredObject::DeviceData::SP InstanceGroup::createOn(const DeviceContext::SP &device) 
   {
     auto dd = std::make_shared<DeviceData>(device);
-    if (useInstanceProgram) {
-      assert(context->perGeometrySBTRecordsDisabled);
-      dd->traversableHandlesBuffer.alloc(numChildren*sizeof(OptixTraversableHandle));
-    }
     return dd;
   }
   
@@ -85,6 +85,8 @@ namespace owl {
   void InstanceGroup::setTransform(size_t childID,
                                    const affine3f &xfm)
   {
+    if (useInstanceProgram)
+      OWL_RAISE("setting children on instance group with instance program must be done on device");
     assert(childID < children.size());
     transforms[0][childID] = xfm;
   }
@@ -93,6 +95,8 @@ namespace owl {
                                     const float *floatsForThisStimeStep,
                                     OWLMatrixFormat matrixFormat)
   {
+    if (useInstanceProgram) 
+      OWL_RAISE("setting transforms on instance group with instance program must be done on device");
     switch(matrixFormat) {
     case OWL_MATRIX_FORMAT_OWL: {
       transforms[timeStep].resize(children.size());
@@ -108,6 +112,8 @@ namespace owl {
   /* set instance IDs to use for the children - MUST be an array of children.size() items */
   void InstanceGroup::setInstanceIDs(const uint32_t *_instanceIDs)
   {
+    if (useInstanceProgram)
+      OWL_RAISE("setting instance IDs on instance group with instance program must be done on device");
     instanceIDs.resize(children.size());
     std::copy(_instanceIDs,_instanceIDs+instanceIDs.size(),instanceIDs.data());
   }
@@ -115,8 +121,19 @@ namespace owl {
   /* set visibility masks to use for the children - MUST be an array of children.size() items */
   void InstanceGroup::setVisibilityMasks(const uint8_t *_visibilityMasks)
   {
+    if (useInstanceProgram)
+      OWL_RAISE("setting visibility masks on instance group with instance program must be done on device");
     visibilityMasks.resize(children.size());
     std::copy(_visibilityMasks,_visibilityMasks+visibilityMasks.size(),visibilityMasks.data());
+  }
+
+  void InstanceGroup::setChild(size_t childID, Group::SP child)
+  {
+    if (useInstanceProgram)
+      OWL_RAISE("setting children on instance group with instance program must be done on device");
+
+    assert(childID < numChildren);
+    children[childID] = child;
   }
 
   void InstanceGroup::setInstanceProg(Module::SP module,
@@ -137,24 +154,6 @@ namespace owl {
         "with useInstanceProgram=true");
     this->motionInstanceProg.progName = progName;
     this->motionInstanceProg.module   = module;
-  }
-
-  /*! run the bounding box program for all primitives within this geometry */
-  void InstanceGroup::executeInstanceProgOnInstances(const DeviceContext::SP &device)
-  {
-    SetActiveGPU activeGPU(device);
-    // if instance group doesn't contain any instances we would run into issue
-    // launching zero-sized instance prog kernel below, so let's just
-    // exit here.
-    if (numChildren == 0) return;
-
-    DeviceData &dd = getDD(device);
-
-    // Allocate a buffer to hold our instances. These will serve as 
-    // the primitives for our instance acceleration structure.
-    dd.optixInstanceBuffer.alloc(numChildren*sizeof(OptixInstance));
-
-
   }
 
   /*! build the CUDA instance program kernel (if instance prog is set) */
@@ -241,29 +240,6 @@ namespace owl {
     }
   }
 
-  void InstanceGroup::setChild(size_t childID, Group::SP child)
-  {
-    assert(childID < children.size());
-    children[childID] = child;
-
-    if (useInstanceProgram) {
-      for (auto device : context->getDevices()) {
-        auto &dd = getDD(device);
-        OptixTraversableHandle handle = child->getTraversable(device);
-
-        // note, using upload async here to avoid stalls from many small synchronous uploads
-        dd.traversableHandlesBuffer.uploadAsync(
-          (const uint32_t*)&handle, 
-          childID*sizeof(OptixTraversableHandle), 
-          sizeof(OptixTraversableHandle),
-          device->getStream());
-        
-        // flag for sync
-        dd.traversableHandlesBufferNeedsSynchronizing = true;
-      }
-    }
-  }
-
   void InstanceGroup::buildAccel(LaunchParams::SP launchParams)
   {
     for (auto device : context->getDevices())
@@ -283,10 +259,14 @@ namespace owl {
   void InstanceGroup::refitAccel(LaunchParams::SP launchParams)
   {
     for (auto device : context->getDevices())
-      if (transforms[1].empty())
+      if (!useInstanceProgram && transforms[1].empty())
         staticBuildOn<false>(device);
-      else
+      else if (!useInstanceProgram)
         motionBlurBuildOn<false>(device);
+      else if (useInstanceProgram && transforms[1].empty())
+        staticDeviceBuildOn<false>(device, launchParams);
+      else if (useInstanceProgram)
+        motionBlurDeviceBuildOn<false>(device, launchParams);
   }
 
   template<bool FULL_REBUILD>
@@ -470,7 +450,7 @@ namespace owl {
 
     SetActiveGPU forLifeTime(device);
     LOG("building instance accel over "
-        << children.size() << " groups");
+        << numChildren << " groups");
 
     // ==================================================================
     // sanity check that that many instances are actually allowed by optix:
@@ -482,7 +462,7 @@ namespace owl {
        &maxInstsPerIAS,
        sizeof(maxInstsPerIAS));
       
-    if (children.size() > maxInstsPerIAS)
+    if (numChildren > maxInstsPerIAS)
       throw std::runtime_error("number of children in instance group exceeds "
                                "OptiX's MAX_INSTANCES_PER_IAS limit");
 
@@ -530,22 +510,22 @@ namespace owl {
     vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
 
     OptixInstance* d_instances = (OptixInstance*)dd.optixInstanceBuffer.get();
-    OptixTraversableHandle* d_traversableHandles = (OptixTraversableHandle*)dd.traversableHandlesBuffer.get();
 
-    uint32_t IASIndex = getSBTOffset();
     uint32_t numRayTypes = context->numRayTypes;
 
     /* arguments for the kernel we are to call */
     void *args[] = {
       &d_instances,
-      &d_traversableHandles,
       (void*)&numChildren,
-      (void*)&IASIndex,
       (void*)&numRayTypes
     };
 
+    CUstream stream = device->stream;
+
     if (launchParams != nullptr) {
       auto &lpDD = launchParams->getDD(device);
+      launchParams->writeVariables(lpDD.hostMemory.data(),device);
+      
       auto &moduleDD = instanceProg.module->getDD(device);
       // lpDD
       CUdeviceptr d_launchDataPtr = 0;
@@ -568,14 +548,6 @@ namespace owl {
         OWL_RAISE("CUDA error in copying launch params to instance program module: "
                   +std::string(errName));
       }
-    }
-
-    CUstream stream = device->stream;
-    // If we need to, synchronize the stream so that all traversable handles 
-    // are done being copied over.
-    if (dd.traversableHandlesBufferNeedsSynchronizing) {
-      cudaStreamSynchronize(stream);
-      dd.traversableHandlesBufferNeedsSynchronizing = false;
     }
 
     if (!dd.instanceFuncKernel)
@@ -922,6 +894,6 @@ namespace owl {
   template<bool FULL_REBUILD>
   void InstanceGroup::motionBlurDeviceBuildOn(const DeviceContext::SP &device, LaunchParams::SP launchParams) 
   {
-    OWL_RAISE("Not implemented");
+    OWL_RAISE("Not yet implemented");
   }
 } // ::owl

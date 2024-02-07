@@ -1163,6 +1163,19 @@ OWL_API void owlGroupGetAccelSize(OWLGroup _group,
   if (p_memPeak)  *p_memPeak  = memPeak;
 }
 
+OWL_API uint32_t 
+owlGroupGetSBTOffset(OWLGroup _group)
+{
+  LOG_API_CALL();
+    
+  assert(_group);
+
+  Group::SP group
+    = ((APIHandle *)_group)->get<Group>();
+  assert(group);
+
+  return group->getSBTOffset() * group->context->numRayTypes;
+}
   
 OWL_API void owlGroupRefitAccel(OWLGroup _group, OWLLaunchParams _launchParams)
 {

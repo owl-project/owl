@@ -118,13 +118,21 @@ OPTIX_MISS_PROGRAM(miss)()
   prd.col = c;
 }
 
-OPTIX_INSTANCE_PROGRAM(instanceProg)(
-  const int32_t instanceIndex, float (&transform)[12],
-  uint32_t &customInstanceID, uint32_t &mask, uint32_t &flags) 
+OPTIX_INSTANCE_PROGRAM(instanceProg)(const int32_t instanceIndex, OptixInstance &i)
 {
-  Random rng(vec2i(instanceIndex / 1000, instanceIndex % 1000));
-
   float t = optixLaunchParams.time;
+  Random rng(vec2i(instanceIndex / 1000, instanceIndex % 1000));
+  
+  // select a BLAS at random
+  uint32_t blasID = int(instanceIndex + int(t)) % optixLaunchParams.numBLAS;
+  // if (instanceIndex == 0) printf("blasID = %i, time %f\n", optixLaunchParams.numBLAS, optixLaunchParams.time);
+
+  if (instanceIndex == 0) printf("num boxes %d %d %d\n", optixLaunchParams.numBoxes.x, optixLaunchParams.numBoxes.y, optixLaunchParams.numBoxes.z); 
+
+  i.sbtOffset = optixLaunchParams.BLASOffsets[blasID];
+  i.traversableHandle = optixLaunchParams.BLAS[blasID];
+
+  // generate a random transform for this instance
   
   vec3f boxCenter;
   vec3f rotationAxis;
@@ -134,22 +142,24 @@ OPTIX_INSTANCE_PROGRAM(instanceProg)(
     rotationAxis.z = rng();
   } while (dot(rotationAxis,rotationAxis) > 1.f);
   rotationAxis = normalize(rotationAxis);
+  
   float rotationSpeed = .1f + rng() * .7f;
   float rotationAngle0 = rng() * 2.f * M_PI;
 
-  const vec3i numBoxes(100);
   const float worldSize = 1;
-  const vec3f boxSize   = (2*.4f*worldSize)/vec3f(numBoxes);
+  const vec3f boxSize   = (2*.4f*worldSize)/vec3f(optixLaunchParams.numBoxes);
   const float animSpeed = 4.f;
 
   vec3i boxID = vec3i(instanceIndex % 100,(instanceIndex / 100) % 100,(instanceIndex / (100 * 100)) % 100);
   
-  vec3f rel = (vec3f(boxID)+.5f) / vec3f(numBoxes);
+  vec3f rel = (vec3f(boxID)+.5f) / vec3f(optixLaunchParams.numBoxes);
   boxCenter = vec3f(-worldSize) + (2.f*worldSize)*rel;
 
   const float angle  = rotationAngle0 + rotationSpeed*t;
   const linear3f rot = linear3f::rotate(rotationAxis,angle);
   affine3f tfm = affine3f(rot,boxCenter);
 
-  toRowMajor(tfm, transform);
+  i.transform[0] = tfm.l.vx.x; i.transform[1] = tfm.l.vx.y; i.transform[ 2] = tfm.l.vx.z; i.transform[ 3] = tfm.p.x;
+  i.transform[4] = tfm.l.vy.x; i.transform[5] = tfm.l.vy.y; i.transform[ 6] = tfm.l.vy.z; i.transform[ 7] = tfm.p.y;
+  i.transform[8] = tfm.l.vz.x; i.transform[9] = tfm.l.vz.y; i.transform[10] = tfm.l.vz.z; i.transform[11] = tfm.p.z;
 }

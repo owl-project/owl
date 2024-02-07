@@ -61,4 +61,11 @@ struct MissProgData
 
 struct Globals {
   float time;
+
+  // The BLAS handles to randomly pick from
+  OptixTraversableHandle *BLAS;
+  uint32_t *BLASOffsets;
+  uint32_t numBLAS;
+
+  vec3ui numBoxes;
 };

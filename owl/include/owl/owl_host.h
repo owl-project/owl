@@ -689,7 +689,13 @@ OWL_API void
 owlGroupGetAccelSize(OWLGroup group,
                      size_t *p_memFinal,
                      size_t *p_memPeak);
-                                  
+
+/*! return the SBT offset (ie, the offset at which the geometries
+within this group will be written into the Shader Binding
+Table) */
+OWL_API uint32_t
+owlGroupGetSBTOffset(OWLGroup group);
+
 OWL_API OWLGeomType
 owlGeomTypeCreate(OWLContext        context,
                   OWLGeomKind       kind,
@@ -1003,10 +1009,11 @@ owlInstanceGroupSetInstanceProg(OWLGroup group,
                                 OWLModule module,
                                 const char *progName);
 
-OWL_API void
-owlInstanceGroupSetMotionInstanceProg(OWLGroup group,
-                                      OWLModule module,
-                                      const char *progName);
+// todo, finish implementing this...
+// OWL_API void
+// owlInstanceGroupSetMotionInstanceProg(OWLGroup group,
+//                                       OWLModule module,
+//                                       const char *progName);
 
 OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,

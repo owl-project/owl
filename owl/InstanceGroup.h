@@ -45,12 +45,6 @@ namespace owl {
       /*! cuda function handle for the (automatically generated) kernel
         that runs the motion instance generation program on the device */
       CUfunction motionInstanceFuncKernel = 0;
-
-      /*! A buffer which makes the traversable handles available on the device */
-      DeviceMemory traversableHandlesBuffer;
-
-      /*! during builds, we check this bool to avoid unnecessary host-to-device synchronizations */
-      bool traversableHandlesBufferNeedsSynchronizing = false;
     };
     
     /*! construct with given array of groups - transforms can be specified later */
@@ -90,8 +84,6 @@ namespace owl {
     void setMotionInstanceProg(Module::SP module,
                                const std::string &progName);
     
-    void executeInstanceProgOnInstances(const DeviceContext::SP &device);
-
     /*! build the CUDA instance program kernel (if instance prog is set) */
     void buildInstanceProg();
 
