@@ -74,7 +74,9 @@ namespace owl {
   
   Context::~Context()
   {
+    PING;
     devices.clear();
+    PING;
   }
   
 

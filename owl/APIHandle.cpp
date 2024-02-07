@@ -19,8 +19,11 @@
 
 namespace owl {
 
+  int numAPIHandlesAlive = 0;
+  
   APIHandle::APIHandle(Object::SP object, APIContext *_context)
   {
+    std::cout << "### creating new apihandle for object " << object->toString() << std::endl;
     assert(object);
     assert(_context);
     this->object  = object;
@@ -28,10 +31,14 @@ namespace owl {
       (_context->shared_from_this());
     assert(this->object);
     assert(this->context);
+    PING; PRINT(++numAPIHandlesAlive); fflush(0);
   }
 
   APIHandle::~APIHandle()
   {
+    std::cout << "### killing api handle belonging to object " << (object?object->toString():"null") << std::endl;
+    -- numAPIHandlesAlive;
+    std::cout << "### num api handles still alive AFTER this " << numAPIHandlesAlive << std::endl;
     // iw: every active handle _should_ have a context, but if context
     // itself is killing off remaining handles this pointer may
     // already be null.

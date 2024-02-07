@@ -92,11 +92,17 @@ namespace owl {
   {
     SetActiveGPU forLifeTime(device);
     
+    PING; fflush(0);
     if (module)
       optixModuleDestroy(module);
+    PING; fflush(0);
     module = 0;
+    PING; fflush(0);
     if (boundsModule)
       cuModuleUnload(boundsModule);
+    PING; fflush(0);
+    boundsModule = 0;
+    PING; fflush(0);
   }
 
   /*! build the optix side of this module on this device */
