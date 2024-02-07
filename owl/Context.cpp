@@ -415,8 +415,9 @@ namespace owl {
         
       // note, sbtOffset here already accounts for if per-geometry records are disabled
       const size_t sbtOffset = gg->sbtOffset;
-      size_t numChildrenToConsider = (perGeometrySBTRecordsDisabled) ? 
-        std::min(gg->geometries.size(), 1ull) : gg->geometries.size();
+      size_t numChildrenToConsider = (perGeometrySBTRecordsDisabled)
+        ? std::min(gg->geometries.size(), size_t(1))
+        : gg->geometries.size();
       for (size_t childID=0;childID <numChildrenToConsider;childID++) {
         Geom::SP geom = gg->geometries[childID];
         if (!geom) continue;
