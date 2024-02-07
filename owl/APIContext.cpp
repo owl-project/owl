@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2021 Ingo Wald                                            //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -18,7 +18,7 @@
 #include "APIHandle.h"
 
 #define LOG(message)                            \
-  if (1 || Context::logging())                       \
+  if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_LIGHT_BLUE                \
       << "#owl: "                               \
@@ -26,7 +26,7 @@
       << OWL_TERMINAL_DEFAULT << std::endl
 
 #define LOG_OK(message)                         \
-  if (1 || Context::logging())                       \
+  if (Context::logging())                       \
     std::cout                                   \
       << OWL_TERMINAL_BLUE                      \
       << "#owl: "                               \
@@ -38,13 +38,10 @@ namespace owl {
   void APIContext::forget(APIHandle *object)
   {
     std::lock_guard<std::mutex> lock(monitor);
-    std::cout << "#forgetting " << object << std::endl;
-    PRINT(activeHandles.size()); fflush(0);
     assert(object);
     auto it = activeHandles.find(object);
     assert(it != activeHandles.end());
     activeHandles.erase(it);
-    PRINT(activeHandles.size()); fflush(0);
   }
 
   void APIContext::releaseAll()
@@ -52,15 +49,9 @@ namespace owl {
     LOG("#owl: context is dying; number of API handles (other than context itself) "
         << "that have not yet been released (incl this context): "
         << (activeHandles.size()));
-    // for (auto handle : activeHandles)
-    //   LOG(" - " + handle->toString());
     
-    PRINT(this);
-    for (auto it : activeHandles)
-      std::cout << " - " << it << " : " << it->toString() << std::endl;
-    
-    
-    // create one reference that won't get removed when removing all API handles (caller should actually have one, but just in case)
+    // create one reference that won't get removed when removing all
+    // API handles (caller should actually have one, but just in case)
     std::shared_ptr<APIContext> self = shared_from_this()->as<APIContext>();
     std::vector<APIHandle*> handlesToFree;
     for (auto &it : activeHandles) {
@@ -71,9 +62,7 @@ namespace owl {
             handlesToFree.push_back(it);
         }
     }
-    PING; PRINT(handlesToFree.size()); fflush(0);
     activeHandles.clear();
-    PING; PRINT(handlesToFree.size()); fflush(0);
     for (auto handle : handlesToFree)
       delete handle;
   }

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2021 Ingo Wald                                            //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -29,7 +29,7 @@
 
 using namespace owl;
 
-#if 0
+#if 1
 # define LOG_API_CALL() /* ignore */
 #else 
 # define LOG_API_CALL() std::cout << "% " << __FUNCTION__ << "(...)" << std::endl;
@@ -66,7 +66,6 @@ inline APIContext::SP checkGet(OWLContext _context)
 {
   assert(_context);
   APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
-  // APIContext::SP context = ((APIHandle *)_context)->getContext();
   assert(context);
   return context;
 }
@@ -659,16 +658,10 @@ owlInstanceGroupCreate(OWLContext _context,
 OWL_API void owlContextDestroy(OWLContext _context)
 {
   LOG_API_CALL();
-  PING; fflush(0);
   // create and hold a reference to ourselves here, so one reference
   // will remain alive even if the context frees all api handles.
   APIContext::SP context = checkGet(_context);
-  PING; fflush(0);
   context->releaseAll();
-  PING; fflush(0);
-  std::cout << "aaand... releasing last(?) handle on apicontext:" << std::endl << std::flush;
-  fflush(0);
-  PING; fflush(0);
 }
 
 /*! creates a device buffer where every device has its own local
