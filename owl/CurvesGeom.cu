@@ -101,7 +101,7 @@ namespace owl {
     assert(vertices.size() > 0);
     assert(widths.size() == vertices.size());
     
-    vertexCount = count;
+    vertexCount     = (int)count;
     verticesBuffers = vertices;
     widthsBuffers   = widths;
 
@@ -123,7 +123,9 @@ namespace owl {
     assert(count > 0);
     assert(indices);
     
-    segmentIndicesCount = count;
+    segmentIndicesCount  = (int)count;
+    // check for overflow
+    assert((size_t)segmentIndicesCount == count);
     segmentIndicesBuffer = indices;
     
     for (auto device : context->getDevices()) {

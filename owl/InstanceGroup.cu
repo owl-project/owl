@@ -577,7 +577,7 @@ namespace owl {
       = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
     instanceInput.instanceArray.instances
       = (CUdeviceptr)dd.optixInstanceBuffer.get();
-    instanceInput.instanceArray.numInstances = numChildren;
+    instanceInput.instanceArray.numInstances = (unsigned)numChildren;
       
     // ==================================================================
     // set up accel uptions
