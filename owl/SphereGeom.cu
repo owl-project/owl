@@ -92,7 +92,7 @@ namespace owl {
     assert(vertices.size() > 0);
     assert(radii.size() == vertices.size());
     
-    vertexCount = count;
+    vertexCount     = (int)count;
     verticesBuffers = vertices;
     radiusBuffers   = radii;
 

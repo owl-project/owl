@@ -125,7 +125,7 @@ namespace owl {
   }
     
   struct PinnedHostMem {
-    void resize(int N) {
+    void resize(size_t N) {
       if (ptr) cudaFree(ptr);
       ptr = 0;
       cudaMallocHost(&ptr,N);
