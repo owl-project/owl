@@ -87,7 +87,7 @@ namespace owl {
     }
   
     template<typename TASK_T>
-    void parallel_for_blocked(size_t begin, size_t end, size_t blockSize,
+    void parallel_for_blocked(size_t begin, size_t end, int blockSize,
                               const TASK_T &taskFunction)
     {
 #if 0
