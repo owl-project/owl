@@ -31,9 +31,6 @@ namespace owl {
     devices */
   struct Context : public Object {
 
-    static bool useManagedMemForAccelData;
-    static bool useManagedMemForAccelAux;
-    
     typedef std::shared_ptr<Context> SP;
 
     /*! returns whether logging is enabled */
