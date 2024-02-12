@@ -55,18 +55,25 @@ namespace owl {
   // ------------------------------------------------------------------
 
   /*! constructor for given number of chilren, will allocate the SBT
-    range for those children*/
+    range for those children (or 1 record if geometry contribution is disabled.)*/
   GeomGroup::GeomGroup(Context *const context,
                        size_t numChildren)
     : Group(context,context->groups),
-      geometries(numChildren),
-      sbtOffset(context->sbtRangeAllocator.alloc(numChildren))
-  {}
+      geometries(numChildren)      
+  {
+    if (context->perGeometrySBTRecordsDisabled)
+      sbtOffset = context->sbtRangeAllocator.alloc(1);
+    else 
+      sbtOffset = context->sbtRangeAllocator.alloc(numChildren);
+  }
   
   /*! destructor that releases the SBT range used by this group */
   GeomGroup::~GeomGroup()
   {
-    context->sbtRangeAllocator.release(sbtOffset,geometries.size());
+    if (context->perGeometrySBTRecordsDisabled)
+      context->sbtRangeAllocator.release(sbtOffset,1);
+    else
+      context->sbtRangeAllocator.release(sbtOffset,geometries.size());
   }
 
 

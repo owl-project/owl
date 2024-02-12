@@ -18,6 +18,7 @@
 
 #include "RegisteredObject.h"
 #include "Geometry.h"
+#include "LaunchParams.h"
 // #include "ll/DeviceMemory.h"
 // #include "ll/Device.h"
 
@@ -60,10 +61,10 @@ namespace owl {
     std::string toString() const override;
 
     /*! re*build* this accel - actual work depens on subclass */
-    virtual void buildAccel() = 0;
+    virtual void buildAccel(LaunchParams::SP launchParams = nullptr) = 0;
     
     /*! re*fit* this accel - actual work depens on subclass */
-    virtual void refitAccel() = 0;
+    virtual void refitAccel(LaunchParams::SP launchParams = nullptr) = 0;
     
     /*! return the SBT offset (ie, the offset at which the geometries
         within this group will be written into the Shader Binding
@@ -124,7 +125,7 @@ namespace owl {
 
     /*! the SBT offset that this group will use to write its children
         into the SBT */
-    const int sbtOffset;
+    int sbtOffset;
   };
 
   

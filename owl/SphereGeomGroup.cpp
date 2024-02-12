@@ -56,7 +56,7 @@ namespace owl {
 		OWL_NOTIMPLEMENTED;
 	}
 
-	void SphereGeomGroup::buildAccel()
+	void SphereGeomGroup::buildAccel(LaunchParams::SP launchParams)
 	{
 		for (auto device : context->getDevices())
 			buildAccelOn<true>(device);
@@ -65,7 +65,7 @@ namespace owl {
 			updateMotionBounds();
 	}
 
-	void SphereGeomGroup::refitAccel()
+	void SphereGeomGroup::refitAccel(LaunchParams::SP launchParams)
 	{
 		for (auto device : context->getDevices())
 			buildAccelOn<false>(device);

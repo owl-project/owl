@@ -21,7 +21,7 @@
 namespace owl {
 
   struct DeviceMemory {
-    inline ~DeviceMemory() { free(); }
+    inline ~DeviceMemory() { if (!externallyManaged) free(); }
     inline bool   alloced()  const { return !empty(); }
     inline bool   empty()    const { return sizeInBytes == 0; }
     inline bool   notEmpty() const { return !empty(); }
@@ -32,6 +32,7 @@ namespace owl {
     inline void *get();
     inline void upload(const void *h_pointer, const char *debugMessage = nullptr);
     inline void uploadAsync(const void *h_pointer, cudaStream_t stream);
+    inline void uploadAsync(const void *h_pointer, size_t offset, size_t size, cudaStream_t stream);
     inline void download(void *h_pointer);
     inline void free();
     template<typename T>
@@ -39,11 +40,13 @@ namespace owl {
       
     size_t      sizeInBytes { 0 };
     CUdeviceptr d_pointer   { 0 };
+    bool externallyManaged = false;
   };
 
   inline void DeviceMemory::alloc(size_t size)
   {
-    if (alloced()) free();
+    assert(!externallyManaged);
+    if (alloced() || size > this->sizeInBytes) free();
       
     assert(empty());
     this->sizeInBytes = size;
@@ -53,6 +56,7 @@ namespace owl {
     
   inline void DeviceMemory::allocManaged(size_t size)
   {
+    assert(!externallyManaged);
     assert(empty());
     this->sizeInBytes = size;
     OWL_CUDA_CHECK(cudaMallocManaged( (void**)&d_pointer, sizeInBytes));
@@ -79,6 +83,15 @@ namespace owl {
                                sizeInBytes, cudaMemcpyHostToDevice,
                                stream));
   }
+
+  inline void DeviceMemory::uploadAsync(const void *h_pointer, size_t offset, size_t size, cudaStream_t stream)
+  {
+    assert(alloced() || empty());
+    assert(offset + size <= sizeInBytes);
+    OWL_CUDA_CHECK(cudaMemcpyAsync((void*)(d_pointer + offset), h_pointer,
+                               size, cudaMemcpyHostToDevice,
+                               stream));
+  }
     
   inline void DeviceMemory::download(void *h_pointer)
   {
@@ -89,6 +102,7 @@ namespace owl {
     
   inline void DeviceMemory::free()
   {
+    assert(!externallyManaged);
     assert(alloced() || empty());
     if (!empty()) {
       OWL_CUDA_CHECK(cudaFree((void*)d_pointer));
@@ -111,7 +125,7 @@ namespace owl {
   }
     
   struct PinnedHostMem {
-    void resize(int N) {
+    void resize(size_t N) {
       if (ptr) cudaFree(ptr);
       ptr = 0;
       cudaMallocHost(&ptr,N);

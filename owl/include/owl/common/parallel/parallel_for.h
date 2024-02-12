@@ -87,7 +87,7 @@ namespace owl {
     }
   
     template<typename TASK_T>
-    void parallel_for_blocked(size_t begin, size_t end, size_t blockSize,
+    void parallel_for_blocked(size_t begin, size_t end, int blockSize,
                               const TASK_T &taskFunction)
     {
 #if 0
@@ -101,6 +101,22 @@ namespace owl {
         });
 #endif
     }
-  
+
+    template<typename TASK_T>
+    void parallel_for_blocked(int begin, int end, int blockSize,
+        const TASK_T& taskFunction)
+    {
+#if 0
+        serial_for_blocked(begin, end, blockSize, taskFunction);
+#else
+        const int numTasks = end - begin;
+        const int numBlocks = (numTasks + blockSize - 1) / blockSize;
+        parallel_for(numBlocks, [&](int blockID) {
+            int block_begin = begin + blockID * blockSize;
+            taskFunction(block_begin, std::min(block_begin + blockSize, end));
+            });
+#endif
+    }
+
   } // ::owl::common
 } // ::owl

@@ -49,8 +49,17 @@
 
 #define OWL_CUDA_SYNC_CHECK()                                       \
   {                                                             \
-    cudaDeviceSynchronize();                                    \
-    cudaError_t rc = cudaGetLastError();                        \
+    cudaError_t rc = cudaDeviceSynchronize();                                    \
+    if (rc != cudaSuccess) {                                    \
+      fprintf(stderr, "error (%s: line %d): %s\n",              \
+              __FILE__, __LINE__, cudaGetErrorString(rc));      \
+      OWL_RAISE("fatal cuda error");                            \
+    }                                                           \
+  }
+
+#define OWL_CUDA_SYNC_CHECK_STREAM(s)                                       \
+  {                                                             \
+    cudaError_t rc = cudaStreamSynchronize(s);                  \
     if (rc != cudaSuccess) {                                    \
       fprintf(stderr, "error (%s: line %d): %s\n",              \
               __FILE__, __LINE__, cudaGetErrorString(rc));      \

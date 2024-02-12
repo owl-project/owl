@@ -14,11 +14,21 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-OPTION(OWL_DISABLE_TBB "DISABLE TBB in OWL, even if it could be found" OFF)
+# this should't be a public option, rather something the parent project can set
+# (if used as a submodule)
+#OPTION(OWL_DISABLE_TBB "DISABLE TBB in OWL, even if it could be found" OFF)
 if (OWL_DISABLE_TBB)
   set(OWL_USE_TBB OFF)
 else()
+ if (WIN32)
+   # OFF by default under windows; windows probably doesnt' have it, 
+   # nor is there an easy way to install it
+   OPTION(OWL_USE_TBB "Use TBB to parallelize host-side code?" OFF)
+ else()
+   # on by default, because even if not installed it's trivial
+   # to apt/yum install
   OPTION(OWL_USE_TBB "Use TBB to parallelize host-side code?" ON)
+  endif()
 endif()
 
 if(POLICY CMP0074)

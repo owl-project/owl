@@ -18,9 +18,11 @@
 
 #include "owl/common/math/vec.h"
 #include "owl/common/math/box.h"
+#include "owl/common/math/AffineSpace.h"
 // the 'actual' optix
 #include <cuda.h>
 #include <optix.h>
+#include <vector_types.h>
 
 // ==================================================================
 // actual device-side "API" built-ins.
@@ -98,6 +100,17 @@ namespace owl {
       (make_8bit(color.w) << 24);
   }
 
+  inline __device__ void initializeTransformToIdentity(float (&t)[12]) {
+    t[0] = 1.f; t[1] = 0.f; t[2] = 0.f; t[3] = 0.f;
+    t[4] = 0.f; t[5] = 1.f; t[6] = 0.f; t[7] = 0.f;
+    t[8] = 0.f; t[9] = 0.f; t[10] = 1.f; t[11] = 0.f;
+  }
+
+  inline __device__ void toRowMajor(affine3f tfm, float (&t)[12]) {
+    t[0] = tfm.l.vx.x; t[1] = tfm.l.vx.y; t[2] = tfm.l.vx.z; t[3] = tfm.p.x;
+    t[4] = tfm.l.vy.x; t[5] = tfm.l.vy.y; t[6] = tfm.l.vy.z; t[7] = tfm.p.y;
+    t[8] = tfm.l.vz.x; t[9] = tfm.l.vz.y; t[10] = tfm.l.vz.z; t[11] = tfm.p.z;
+  }
 
   static __forceinline__ __device__ void* unpackPointer( uint32_t i0, uint32_t i1 )
   {
@@ -126,10 +139,11 @@ namespace owl {
   static __forceinline__ __device__ T &getPRD()
   { return *(T*)getPRDPointer(); }
 
-  template<int _rayType=0, int _numRayTypes=1>
+  template<int _rayType=0, int _numRayTypes=1, bool _disablePerGeometrySBTRecords=0>
   struct RayT {
     enum { rayType = _rayType };
     enum { numRayTypes = _numRayTypes };
+    enum { disablePerGeometrySBTRecords = _disablePerGeometrySBTRecords };
     inline __device__ RayT() {}
     inline __device__ RayT(const vec3f &origin,
                           const vec3f &direction,
@@ -168,10 +182,10 @@ namespace owl {
                ray.tmax,
                ray.time,
                ray.visibilityMask,
-               /*rayFlags     */rayFlags,
-               /*SBToffset    */ray.rayType,
-               /*SBTstride    */ray.numRayTypes,
-               /*missSBTIndex */ray.rayType,
+               /*rayFlags     */ rayFlags,
+               /*SBToffset    */ ray.rayType,
+               /*SBTstride    */ ray.numRayTypes * (ray.disablePerGeometrySBTRecords) ? 0 : 1,
+               /*missSBTIndex */ ray.rayType,              
                p0,
                p1);
   }
@@ -198,6 +212,34 @@ namespace owl {
                /*rayFlags     */0u,
                /*SBToffset    */ray.rayType + numRayTypes*sbtOffset,
                /*SBTstride    */numRayTypes,
+               /*missSBTIndex */ray.rayType,
+               p0,
+               p1);
+  }
+
+  template<typename PRD>
+  inline __device__
+  void trace(OptixTraversableHandle traversable,
+             const Ray &ray,
+             int numRayTypes,
+             bool disablePerGeometrySBTRecords,
+             PRD &prd,
+             int sbtOffset = 0)
+  {
+    unsigned int           p0 = 0;
+    unsigned int           p1 = 0;
+    owl::packPointer(&prd,p0,p1);
+    
+    optixTrace(traversable,
+               (const float3&)ray.origin,
+               (const float3&)ray.direction,
+               ray.tmin,
+               ray.tmax,
+               ray.time,
+               ray.visibilityMask,
+               /*rayFlags     */0u,
+               /*SBToffset    */ray.rayType + numRayTypes*sbtOffset,
+               /*SBTstride    */numRayTypes * (ray.disablePerGeometrySBTRecords) ? 0 : 1,
                /*missSBTIndex */ray.rayType,
                p0,
                p1);
@@ -257,4 +299,81 @@ namespace owl {
   inline __device__ void __boundsFunc__##progName                       \
   /* program args and body supplied by user ... */
 #endif
-  
+
+/* defines the wrapper stuff to actually launch all the bounds
+   programs from the host - todo: move to deviceAPI.h once working */
+#ifndef OPTIX_MOTION_BOUNDS_PROGRAM
+#define OPTIX_MOTION_BOUNDS_PROGRAM(progName)                                  \
+  /* fwd decl for the kernel func to call */                            \
+  inline __device__                                                     \
+  void __motionBoundsFunc__##progName(const void *geomData,                   \
+                                owl::common::box3f &boundskey1,         \
+                                owl::common::box3f &boundskey2,         \
+                                const int32_t primID);                  \
+                                                                        \
+  /* the '__global__' kernel we can get a function handle on */         \
+  extern "C" __global__                                                 \
+  void __motionBoundsFuncKernel__##progName(const void  *geomData,      \
+                         owl::common::box3f *const boundsArrayKey1,     \
+                         owl::common::box3f *const boundsArrayKey2,     \
+                                      const uint32_t numPrims)          \
+  {                                                                     \
+    uint32_t blockIndex                                                 \
+      = blockIdx.x                                                      \
+      + blockIdx.y * gridDim.x                                          \
+      + blockIdx.z * gridDim.x * gridDim.y;                             \
+    uint32_t primID                                                     \
+      = threadIdx.x + blockDim.x*threadIdx.y                            \
+      + blockDim.x*blockDim.y*blockIndex;                               \
+    if (primID < numPrims) {                                            \
+      __motionBoundsFunc__##progName(geomData,                          \
+                                     boundsArrayKey1[primID],           \
+                                     boundsArrayKey2[primID],           \
+                                     primID);                           \
+    }                                                                   \
+  }                                                                     \
+                                                                        \
+  /* now the actual device code that the user is writing: */            \
+  inline __device__ void __motionBoundsFunc__##progName                 \
+  /* program args and body supplied by user ... */
+#endif
+
+/* defines a wrapper to a new program type which enables GPU-side 
+ instance manipulation (transforms, visibility mask, etc). Assumes 
+ that geometry contribution to hitgroup index is disabled. */
+#ifndef OPTIX_INSTANCE_PROGRAM
+#define OPTIX_INSTANCE_PROGRAM(progName)                                \
+  /* fwd decl for the kernel func to call */                            \
+  inline __device__                                                     \
+  void __instanceFunc__##progName(                                      \
+    const int32_t instanceIndex, OptixInstance &instance);              \
+                                                                        \
+  /* the '__global__' kernel we can get a function handle on */         \
+  extern "C" __global__                                                 \
+  void __instanceFuncKernel__##progName(                                \
+    OptixInstance *insts, uint32_t numInsts, uint32_t numRayTypes)      \
+  {                                                                     \
+    uint32_t blockIndex                                                 \
+      = blockIdx.x                                                      \
+      + blockIdx.y * gridDim.x                                          \
+      + blockIdx.z * gridDim.x * gridDim.y;                             \
+    uint32_t instanceIndex                                              \
+      = threadIdx.x + blockDim.x*threadIdx.y                            \
+      + blockDim.x*blockDim.y*blockIndex;                               \
+    if (instanceIndex < numInsts) {                                     \
+      OptixInstance oi    = {};                                         \
+      /* defaults */                                                    \
+      oi.flags             = OPTIX_INSTANCE_FLAG_NONE;                  \
+      oi.instanceId        = instanceIndex;                             \
+      oi.visibilityMask = 255;                                          \
+      oi.traversableHandle = 0; /* if not set, ignored by builder */    \
+      initializeTransformToIdentity(oi.transform);                      \
+      __instanceFunc__##progName(instanceIndex, oi);                    \
+      insts[instanceIndex] = oi;                                        \
+    }                                                                   \
+  }                                                                     \
+                                                                        \
+  /* now the actual device code that the user is writing: */            \
+  inline __device__ void __instanceFunc__##progName                     \
+  /* program args and body supplied by user ... */
+#endif

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2021 Ingo Wald                                            //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -49,10 +49,9 @@ namespace owl {
     LOG("#owl: context is dying; number of API handles (other than context itself) "
         << "that have not yet been released (incl this context): "
         << (activeHandles.size()));
-    for (auto handle : activeHandles)
-      LOG(" - " + handle->toString());
-
-    // create one reference that won't get removed when removing all API handles (caller should actually have one, but just in case)
+    
+    // create one reference that won't get removed when removing all
+    // API handles (caller should actually have one, but just in case)
     std::shared_ptr<APIContext> self = shared_from_this()->as<APIContext>();
     std::vector<APIHandle*> handlesToFree;
     for (auto &it : activeHandles) {

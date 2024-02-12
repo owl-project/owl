@@ -44,7 +44,10 @@ namespace owl {
       UserGeom::SP userGeom = child->as<UserGeom>();
       assert(userGeom);
       for (auto device : context->getDevices())
-        userGeom->executeBoundsProgOnPrimitives(device);
+        if (context->motionBlurEnabled) 
+          userGeom->executeMotionBoundsProgOnPrimitives(device);
+        else 
+          userGeom->executeBoundsProgOnPrimitives(device);
     }
     
     for (auto device : context->getDevices())
@@ -54,12 +57,12 @@ namespace owl {
         buildAccelOn<false>(device);
   }
   
-  void UserGeomGroup::buildAccel()
+  void UserGeomGroup::buildAccel(LaunchParams::SP launchParams)
   {
     buildOrRefit(true);
   }
 
-  void UserGeomGroup::refitAccel()
+  void UserGeomGroup::refitAccel(LaunchParams::SP launchParams)
   {
     buildOrRefit(false);
   }
@@ -70,9 +73,6 @@ namespace owl {
   {
     DeviceData &dd = getDD(device);
     auto optixContext = device->optixContext;
-
-    if (FULL_REBUILD && !dd.bvhMemory.empty())
-      dd.bvhMemory.free();
 
     if (!FULL_REBUILD && dd.bvhMemory.empty())
       throw std::runtime_error("trying to refit an accel struct that has not been previously built");
@@ -102,9 +102,31 @@ namespace owl {
     // ==================================================================
     //! the N build inputs that go into the builder
     std::vector<OptixBuildInput> userGeomInputs(geometries.size());
+    
     /*! *arrays* of the vertex pointers - the buildinputs contain
      *pointers* to the pointers, so need a temp copy here */
-    std::vector<CUdeviceptr> boundsPointers(geometries.size());
+    int boundsStride = (context->motionBlurEnabled ? 2 : 1);
+    std::vector<CUdeviceptr> boundsPointers(geometries.size() * boundsStride);
+
+    for (size_t childID=0;childID<geometries.size();childID++) {
+      UserGeom::SP child = geometries[childID]->as<UserGeom>();
+
+      UserGeom::DeviceData &ugDD = child->getDD(device);
+      
+      if (context->motionBlurEnabled) {
+        assert("user geom is either empty, or has valid bounds buffers for both keys"
+              && ((child->primCount == 0) || ugDD.internalBufferForBoundsProgramKey1.alloced() 
+                                          || ugDD.internalBufferForBoundsProgramKey2.alloced()));
+        boundsPointers[childID * 2 + 0] = (CUdeviceptr)ugDD.internalBufferForBoundsProgramKey1.get();
+        boundsPointers[childID * 2 + 1] = (CUdeviceptr)ugDD.internalBufferForBoundsProgramKey2.get();
+      }
+      else {
+
+        assert("user geom is either empty, or has valid bounds buffer"
+              && ((child->primCount == 0) || ugDD.internalBufferForBoundsProgram.alloced()));
+        boundsPointers[childID] = (CUdeviceptr)ugDD.internalBufferForBoundsProgram.get();
+      } 
+    }
 
     // for now we use the same flags for all geoms
     std::vector<uint32_t> userGeomInputFlags(geometries.size());
@@ -123,20 +145,15 @@ namespace owl {
 
       UserGeom::DeviceData &ugDD = child->getDD(device);
       
-      CUdeviceptr     &d_bounds = boundsPointers[childID];
       OptixBuildInput &userGeomInput = userGeomInputs[childID];
 
-      assert("user geom is either empty, or has valid bounds buffer"
-             && ((child->primCount == 0) || ugDD.internalBufferForBoundsProgram.alloced()));
-      d_bounds = (CUdeviceptr)ugDD.internalBufferForBoundsProgram.get();
-      
       userGeomInput.type = OPTIX_BUILD_INPUT_TYPE_CUSTOM_PRIMITIVES;
 #if OPTIX_VERSION >= 70100
       auto &aa = userGeomInput.customPrimitiveArray;
 #else
       auto &aa = userGeomInput.aabbArray;
 #endif
-      aa.aabbBuffers   = (child->primCount == 0) ? nullptr : &d_bounds;
+      aa.aabbBuffers   = (child->primCount == 0) ? nullptr : &boundsPointers[childID * boundsStride];
       aa.numPrimitives = (uint32_t)child->primCount;
       aa.strideInBytes = sizeof(box3f);
       aa.primitiveIndexOffset = 0;
@@ -166,7 +183,10 @@ namespace owl {
     OptixAccelBuildOptions accelOptions = {};
     accelOptions.buildFlags = this->buildFlags;
 
-    accelOptions.motionOptions.numKeys  = 1;
+    accelOptions.motionOptions.numKeys  = context->motionBlurEnabled ? 2 : 1;
+    accelOptions.motionOptions.flags    = OPTIX_MOTION_FLAG_NONE;
+    accelOptions.motionOptions.timeBegin = 0.f;
+    accelOptions.motionOptions.timeEnd   = 1.f;
     if (FULL_REBUILD)
       accelOptions.operation            = OPTIX_BUILD_OPERATION_BUILD;
     else
@@ -312,9 +332,14 @@ namespace owl {
       
       UserGeom::DeviceData &ugDD = child->getDD(device);
       
-      sumBoundsMem += ugDD.internalBufferForBoundsProgram.sizeInBytes;
-      if (ugDD.internalBufferForBoundsProgram.alloced())
-        ugDD.internalBufferForBoundsProgram.free();
+      if (!!ugDD.internalBufferForBoundsProgram.externallyManaged) {
+        if (context->motionBlurEnabled) {
+          sumBoundsMem += ugDD.internalBufferForBoundsProgramKey1.sizeInBytes;
+          sumBoundsMem += ugDD.internalBufferForBoundsProgramKey2.sizeInBytes;
+        } else {
+          sumBoundsMem += ugDD.internalBufferForBoundsProgram.sizeInBytes;
+        }
+      }
     }
     if (FULL_REBUILD)
       dd.memPeak += sumBoundsMem;
