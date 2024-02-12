@@ -469,12 +469,8 @@ namespace owl {
     // create instance build inputs on the device
     // ==================================================================
 
-    if (Context::useManagedMemForAccelAux)
-      dd.optixInstanceBuffer.allocManaged(numChildren*
-                                          sizeof(OptixInstance));
-    else
-      dd.optixInstanceBuffer.alloc(numChildren*
-                                   sizeof(OptixInstance));
+    dd.optixInstanceBuffer.alloc(numChildren*
+                                 sizeof(OptixInstance));
 
     OptixBuildInput              instanceInput  {};
     OptixAccelBuildOptions       accelOptions   {};
@@ -604,16 +600,10 @@ namespace owl {
         << prettyNumber(tempSize) << "B in temp data");
       
     DeviceMemory tempBuffer;
-    if (Context::useManagedMemForAccelAux)
-      tempBuffer.allocManaged(tempSize);
-    else
-      tempBuffer.alloc(tempSize);
+    tempBuffer.alloc(tempSize);
       
     if (FULL_REBUILD) {
-      if (Context::useManagedMemForAccelData)
-        dd.bvhMemory.allocManaged(blasBufferSizes.outputSizeInBytes);
-      else
-        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+      dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
       dd.memPeak += tempBuffer.size();
       dd.memPeak += dd.bvhMemory.size();
       dd.memFinal = dd.bvhMemory.size();
