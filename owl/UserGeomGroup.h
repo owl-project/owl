@@ -35,8 +35,8 @@ namespace owl {
         build vs refit */
     void buildOrRefit(bool FULL_REBUILD);
     
-    void buildAccel() override;
-    void refitAccel() override;
+    void buildAccel(LaunchParams::SP launchParams = nullptr) override;
+    void refitAccel(LaunchParams::SP launchParams = nullptr) override;
 
     /*! low-level accel structure builder for given device */
     template<bool FULL_REBUILD>

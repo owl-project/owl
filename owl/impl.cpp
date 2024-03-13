@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2021 Ingo Wald                                            //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -65,7 +65,7 @@ OWL_API OWLContext owlContextCreate(int32_t *requestedDeviceIDs,
 inline APIContext::SP checkGet(OWLContext _context)
 {
   assert(_context);
-  APIContext::SP context = ((APIHandle *)_context)->getContext();
+  APIContext::SP context = ((APIHandle *)_context)->get<APIContext>();
   assert(context);
   return context;
 }
@@ -108,6 +108,13 @@ owlContextSetNumAttributeValues(OWLContext _context, size_t numAttributeValues)
 {
   LOG_API_CALL();
   checkGet(_context)->setNumAttributeValues(numAttributeValues);
+}
+
+OWL_API void
+owlContextSetNumPayloadValues(OWLContext _context, size_t numRayPayloadValues)
+{
+  LOG_API_CALL();
+  checkGet(_context)->setNumPayloadValues(numRayPayloadValues);
 }
 
 OWL_API void
@@ -169,6 +176,13 @@ owlEnableMotionBlur(OWLContext _context)
 {
   LOG_API_CALL();
   checkGet(_context)->enableMotionBlur();
+}
+
+OWL_API void
+owlContextDisablePerGeometrySBTRecords(OWLContext _context)
+{
+  LOG_API_CALL();
+  checkGet(_context)->disablePerGeometrySBTRecords();
 }
   
 OWL_API void
@@ -612,7 +626,8 @@ owlInstanceGroupCreate(OWLContext _context,
                        const float    *initTransforms,
                        OWLMatrixFormat matrixFormat,
                        
-                       unsigned int buildFlags)
+                       unsigned int buildFlags,
+                       bool useInstanceProgram)
 {
   LOG_API_CALL();
   std::vector<Group::SP> initGroups;
@@ -622,7 +637,7 @@ owlInstanceGroupCreate(OWLContext _context,
   InstanceGroup::SP  group
     = std::make_shared<InstanceGroup>
     (context.get(),numInstances,
-     __initGroups, buildFlags);
+     __initGroups, buildFlags, useInstanceProgram);
   assert(group);
   group->createDeviceData(context->getDevices());
 
@@ -651,6 +666,8 @@ owlInstanceGroupCreate(OWLContext _context,
 OWL_API void owlContextDestroy(OWLContext _context)
 {
   LOG_API_CALL();
+  // create and hold a reference to ourselves here, so one reference
+  // will remain alive even if the context frees all api handles.
   APIContext::SP context = checkGet(_context);
   context->releaseAll();
 }
@@ -944,7 +961,35 @@ owlGeomSetPrimCount(OWLGeom _geom,
   geom->setPrimCount(primCount);
 }
 
-  
+/*! Sets the buffer to use for the AABBs for user geometry. This is optional, 
+ but allows for deferring mallocs / frees during realtime tree construction. */
+OWL_API void
+owlGeomSetBoundsBuffer(OWLGeom _geom,
+                       OWLBuffer _aabbArray)
+{
+  assert(_geom);
+  UserGeom::SP geom = ((APIHandle *)_geom)->get<UserGeom>();
+  Buffer::SP aabbArray = ((APIHandle *)_aabbArray)->get<Buffer>();
+  assert(aabbArray);
+  geom->setBoundsBuffer(aabbArray);
+}
+
+/*! Sets the buffer to use for the AABBs for user geometry. This is optional, 
+ but allows for deferring mallocs / frees during realtime tree construction. */
+OWL_API void
+owlGeomSetMotionBoundsBuffers(OWLGeom _geom,
+                            OWLBuffer _aabbArrayKey0,
+                            OWLBuffer _aabbArrayKey1)
+{
+  assert(_geom);
+  UserGeom::SP geom = ((APIHandle *)_geom)->get<UserGeom>();
+  Buffer::SP aabbArrayKey0 = ((APIHandle *)_aabbArrayKey0)->get<Buffer>();
+  Buffer::SP aabbArrayKey1 = ((APIHandle *)_aabbArrayKey1)->get<Buffer>();
+  assert(aabbArrayKey0);
+  assert(aabbArrayKey1);
+  geom->setMotionBoundsBuffers(aabbArrayKey0, aabbArrayKey1);
+}
+
 OWL_API OWLModule owlModuleCreate(OWLContext _context,
                                   const char *ptxCode)
 {
@@ -957,6 +1002,18 @@ OWL_API OWLModule owlModuleCreate(OWLContext _context,
   return (OWLModule)context->createHandle(module);
 }
 
+OWL_API OWLModule owlModuleCreateFromIR(OWLContext _context, uint8_t* bytes, uint32_t numBytes)
+{
+  LOG_API_CALL();
+  
+  std::vector<uint8_t> IR(numBytes);
+  memcpy(IR.data(), bytes, numBytes);
+
+  APIContext::SP context = checkGet(_context);
+  Module::SP  module  = context->createModule(IR);
+  assert(module);
+  return (OWLModule)context->createHandle(module);
+}
 
 // ==================================================================
 // "RELEASE" functions
@@ -1066,7 +1123,7 @@ owlTrianglesSetMotionVertices(OWLGeom _triangles,
   triangles->setVertices(buffers,count,stride,offset);
 }
 
-OWL_API void owlGroupBuildAccel(OWLGroup _group)
+OWL_API void owlGroupBuildAccel(OWLGroup _group, OWLLaunchParams _launchParams)
 {
   LOG_API_CALL();
     
@@ -1075,8 +1132,12 @@ OWL_API void owlGroupBuildAccel(OWLGroup _group)
   Group::SP group
     = ((APIHandle *)_group)->get<Group>();
   assert(group);
+
+  LaunchParams::SP launchParams = nullptr;
+  if (_launchParams)
+    launchParams = ((APIHandle *)_launchParams)->get<LaunchParams>();
     
-  group->buildAccel();
+  group->buildAccel(launchParams);
 }  
 
 /*! returns the (device) memory used for this group's acceleration
@@ -1104,8 +1165,8 @@ OWL_API void owlGroupGetAccelSize(OWLGroup _group,
   if (p_memPeak)  *p_memPeak  = memPeak;
 }
 
-  
-OWL_API void owlGroupRefitAccel(OWLGroup _group)
+OWL_API uint32_t 
+owlGroupGetSBTOffset(OWLGroup _group)
 {
   LOG_API_CALL();
     
@@ -1114,8 +1175,25 @@ OWL_API void owlGroupRefitAccel(OWLGroup _group)
   Group::SP group
     = ((APIHandle *)_group)->get<Group>();
   assert(group);
+
+  return group->getSBTOffset() * group->context->numRayTypes;
+}
+  
+OWL_API void owlGroupRefitAccel(OWLGroup _group, OWLLaunchParams _launchParams)
+{
+  LOG_API_CALL();
     
-  group->refitAccel();
+  assert(_group);
+
+  Group::SP group
+    = ((APIHandle *)_group)->get<Group>();
+  assert(group);
+  
+  LaunchParams::SP launchParams = nullptr;
+  if (_launchParams)
+    launchParams = ((APIHandle *)_launchParams)->get<LaunchParams>();
+
+  group->refitAccel(launchParams);
 }  
 
 OWL_API void
@@ -1233,6 +1311,28 @@ owlGeomTypeSetBoundsProg(OWLGeomType _geometryType,
   assert(module);
 
   geometryType->setBoundsProg(module,progName);
+}
+
+OWL_API void
+owlGeomTypeSetMotionBoundsProg(OWLGeomType _geometryType,
+                               OWLModule       _module,
+                               const char     *progName)
+{
+  LOG_API_CALL();
+    
+  assert(_geometryType);
+  assert(_module);
+  assert(progName);
+
+  UserGeomType::SP geometryType
+    = ((APIHandle *)_geometryType)->get<UserGeomType>();
+  assert(geometryType);
+
+  Module::SP module
+    = ((APIHandle *)_module)->get<Module>();
+  assert(module);
+
+  geometryType->setMotionBoundsProg(module,progName);
 }
 
 #define FATAL(error) { std::cerr << "FATAL Error: " << error << std::endl; exit(1); }
@@ -1429,11 +1529,12 @@ _OWL_VARIABLE_SETTERS(double,d)
   }                                                             \
   OWL_API void owl##OType##SetRaw(OWL##OType object,            \
                                   const char *varName,          \
-                                  const void *v)                \
+                                  const void *v,                \
+                                  int devID)                    \
   {                                                             \
     OWLVariable var                                             \
       = owl##OType##GetVariable(object,varName);                \
-    owlVariableSetRaw(var,v);                                   \
+    owlVariableSetRaw(var,v,devID);                             \
     owlVariableRelease(var);                                    \
   }                                                             \
   
@@ -1505,7 +1606,7 @@ OWL_API void owlVariableSetBuffer(OWLVariable _variable, OWLBuffer _buffer)
   setVariable((APIHandle *)_variable,buffer);
 }
 
-OWL_API void owlVariableSetRaw(OWLVariable _variable, const void *valuePtr)
+OWL_API void owlVariableSetRaw(OWLVariable _variable, const void *valuePtr, int devID)
 {
   LOG_API_CALL();
 
@@ -1516,7 +1617,7 @@ OWL_API void owlVariableSetRaw(OWLVariable _variable, const void *valuePtr)
     = handle->get<Variable>();
   assert(variable);
 
-  variable->setRaw(valuePtr);
+  variable->setRaw(valuePtr, devID);
 }
 
 OWL_API void owlVariableSetPointer(OWLVariable _variable, const void *valuePtr)
@@ -1596,6 +1697,57 @@ owlInstanceGroupSetVisibilityMasks(OWLGroup _group,
   assert(group);
 
   group->setVisibilityMasks(visibilityMasks);
+}
+
+OWL_API void
+owlInstanceGroupSetInstanceProg(OWLGroup _group,
+                                OWLModule _module,
+                                const char *progName)
+{
+  LOG_API_CALL();
+    
+  assert(_module);
+  assert(progName);
+
+  assert(_group);
+  InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+  assert(group);
+
+  Module::SP module
+    = ((APIHandle *)_module)->get<Module>();
+  assert(module);
+
+  assert("geometry multiplier must be disabled to use instance programs." 
+    && module->context->perGeometrySBTRecordsDisabled == true);
+
+  group->setInstanceProg(module,progName);
+}
+
+OWL_API void
+owlInstanceGroupSetMotionInstanceProg(OWLGroup _group,
+                                      OWLModule _module,
+                                      const char *progName)
+{
+  LOG_API_CALL();
+    
+  assert(_module);
+  assert(progName);
+
+  assert(_group);
+  InstanceGroup::SP group = ((APIHandle*)_group)->get<InstanceGroup>();
+  assert(group);
+
+  Module::SP module
+    = ((APIHandle *)_module)->get<Module>();
+  assert(module);
+
+  assert("geometry multiplier must be disabled to use instance programs." 
+    && module->context->perGeometrySBTRecordsDisabled == true);
+
+  assert("motion blur must be enabled to use motion instance programs." 
+    && module->context->motionBlurEnabled == true);
+  
+  group->setMotionInstanceProg(module,progName);
 }
   
 OWL_API void

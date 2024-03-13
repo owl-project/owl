@@ -31,9 +31,6 @@ namespace owl {
     devices */
   struct Context : public Object {
 
-    static bool useManagedMemForAccelData;
-    static bool useManagedMemForAccelAux;
-    
     typedef std::shared_ptr<Context> SP;
 
     /*! returns whether logging is enabled */
@@ -91,6 +88,11 @@ namespace owl {
         any curves geometries get created, and before the pipeline
         gets built, whichever comes first */
     void enableSpheres();
+
+    /*! disables the geometry's contribution to hit record generation. 
+      If set, we assume that the first geometry's record is representative
+      of all geometry in an owl group. */
+    void disablePerGeometrySBTRecords();
     
     /*! sets maximum instancing depth for the given context:
 
@@ -116,6 +118,9 @@ namespace owl {
        to ClosestHit programs.  Default 2.  Has no effect once programs are built.*/
     void setNumAttributeValues(size_t numAttributeValues);
 
+    /* Set number of payload values for passing data between programs. Default 2.  
+    Has no effect once programs are built.*/
+    void setNumPayloadValues(size_t numPayloadValues);
 
     // ------------------------------------------------------------------
     // internal mechanichs/plumbling that do the actual work
@@ -264,6 +269,10 @@ namespace owl {
     Module::SP
     createModule(const std::string &ptxCode);
 
+    /*! creates new module with given precompiled OptiX IR code */
+    Module::SP
+    createModule(const std::vector<uint8_t> &IR);
+
     // ------------------------------------------------------------------
     // member variables
     // ------------------------------------------------------------------
@@ -299,6 +308,13 @@ namespace owl {
       `setMaxInstancingDepth` */
     int maxInstancingDepth = 1;
 
+    /*! Whether or not to let the geometry change the SBT record. 
+       If false, only the first hit given hit record will be used. 
+       Useful for scenarios like realtime instance manipulation over
+       many instances where creating a record per geometry isn't 
+       practical. */
+    bool perGeometrySBTRecordsDisabled = false;
+
     /*! number of ray types - change via setRayTypeCount() */
     int numRayTypes { 1 };
 
@@ -321,6 +337,9 @@ namespace owl {
 
     /* Number of attributes for writing data between Intersection and ClosestHit */
     int numAttributeValues = 2;
+
+    /* Number of payload values to request for passing data between RT programs */
+    int numPayloadValues = 2;
 
     /*! a set of dummy (ie, empty) launch params. allows us for always
       using the same launch code, *with* launch params, even if th

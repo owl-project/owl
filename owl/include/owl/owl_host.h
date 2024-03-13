@@ -388,6 +388,14 @@ owlEnableSpheres(OWLContext _context);
 OWL_API void
 owlEnableMotionBlur(OWLContext _context);
 
+/*! When disabled, owl will share the first hitgroup in a given BLAS across
+    all the geometries within that BLAS. This is useful in scenarios where 
+    many different instances in a TLAS need to be manipulated interactively, 
+    we can more easily calculate the SBT record offset in parallel on the device 
+    as "baseIndex + blasIndex * numRayTypes" */
+OWL_API void
+owlContextDisablePerGeometrySBTRecords(OWLContext context);
+
 /*! set number of ray types to be used in this context; this should be
   done before any programs, pipelines, geometries, etc get
   created */
@@ -400,6 +408,13 @@ owlContextSetRayTypeCount(OWLContext context,
 OWL_API void
 owlContextSetNumAttributeValues(OWLContext context,
                                 size_t numAttributeValues);
+
+/*! sets the max number of ray payload registers that can be used in this context; 
+  this should be done before any programs, pipelines, geometries, etc get
+  created */
+OWL_API void
+owlContextSetNumPayloadValues(OWLContext context,
+                              size_t numRayPayloadValues);
 
 /*! tells OptiX to specialize the values of certain launch parameters
   when compiling modules, and ignore their values at launch.
@@ -449,7 +464,12 @@ owlContextGetOptixContext(OWLContext context, int deviceID);
 OWL_API OWLModule
 owlModuleCreate(OWLContext  context,
                 const char *ptxCode);
-                
+
+/* Note, this does not currently support bounds programs */
+OWL_API OWLModule
+owlModuleCreateFromIR(OWLContext  context,
+                      uint8_t* bytes, uint32_t numBytes);
+
 OWL_API void
 owlModuleRelease(OWLModule module);
 
@@ -644,15 +664,20 @@ owlInstanceGroupCreate(OWLContext context,
 
                        /*! A combination of OptixBuildFlags.  The default
                          of 0 means to use OWL default build flags.*/
-                       unsigned int buildFlags OWL_IF_CPP(=0)
+                       unsigned int buildFlags OWL_IF_CPP(=0),
+
+                       /*! If true, will use the device to fill in 
+                          the optixInstance array. This requires that 
+                          per-geometry SBT records are disabled. */
+                       bool useInstanceProgram OWL_IF_CPP(=false)
                        );
 
                        
 OWL_API void
 owlGroupRelease(OWLGroup group);
 
-OWL_API void owlGroupBuildAccel(OWLGroup group);
-OWL_API void owlGroupRefitAccel(OWLGroup group);
+OWL_API void owlGroupBuildAccel(OWLGroup group, OWLParams params OWL_IF_CPP(=nullptr));
+OWL_API void owlGroupRefitAccel(OWLGroup group, OWLParams params OWL_IF_CPP(=nullptr));
 
 /*! returns the (device) memory used for this group's acceleration
     structure (but _excluding_ the memory for the geometries
@@ -664,7 +689,13 @@ OWL_API void
 owlGroupGetAccelSize(OWLGroup group,
                      size_t *p_memFinal,
                      size_t *p_memPeak);
-                                  
+
+/*! return the SBT offset (ie, the offset at which the geometries
+within this group will be written into the Shader Binding
+Table) */
+OWL_API uint32_t
+owlGroupGetSBTOffset(OWLGroup group);
+
 OWL_API OWLGeomType
 owlGeomTypeCreate(OWLContext        context,
                   OWLGeomKind       kind,
@@ -973,6 +1004,16 @@ OWL_API void
 owlInstanceGroupSetVisibilityMasks(OWLGroup group,
                                const uint8_t *visibilityMasks);
 
+OWL_API void
+owlInstanceGroupSetInstanceProg(OWLGroup group,
+                                OWLModule module,
+                                const char *progName);
+
+// todo, finish implementing this...
+// OWL_API void
+// owlInstanceGroupSetMotionInstanceProg(OWLGroup group,
+//                                       OWLModule module,
+//                                       const char *progName);
 
 OWL_API void
 owlGeomTypeSetClosestHit(OWLGeomType type,
@@ -997,11 +1038,29 @@ owlGeomTypeSetBoundsProg(OWLGeomType type,
                          OWLModule module,
                          const char *progName);
 
+OWL_API void
+owlGeomTypeSetMotionBoundsProg(OWLGeomType type,
+                               OWLModule module,
+                               const char *progName);
+
 /*! set the primitive count for the given uesr geometry. this _has_ to
   be set before the group(s) that this geom is used in get built */
 OWL_API void
 owlGeomSetPrimCount(OWLGeom geom,
                     size_t  primCount);
+
+/*! Sets the buffer to use for the AABBs for user geometry. This is optional, 
+ but allows for deferring mallocs / frees during realtime tree construction. */
+OWL_API void
+owlGeomSetBoundsBuffer(OWLGeom _geom,
+                       OWLBuffer aabbArray);
+
+/*! Sets the buffer to use for the AABBs for user geometry. This is optional, 
+ but allows for deferring mallocs / frees during realtime tree construction. */
+OWL_API void
+owlGeomSetMotionBoundsBuffers(OWLGeom _geom,
+                            OWLBuffer aabbArrayKey0,
+                            OWLBuffer aabbArrayKey1);
 
 // -------------------------------------------------------
 // VariableGet for the various types
@@ -1134,7 +1193,8 @@ OWL_API void owlVariableSet4ulv(OWLVariable var, const uint64_t *val);
 OWL_API void owlVariableSetGroup  (OWLVariable variable, OWLGroup value);
 OWL_API void owlVariableSetTexture(OWLVariable variable, OWLTexture value);
 OWL_API void owlVariableSetBuffer (OWLVariable variable, OWLBuffer value);
-OWL_API void owlVariableSetRaw    (OWLVariable variable, const void *valuePtr);
+OWL_API void owlVariableSetRaw    (OWLVariable variable, const void *valuePtr,
+                                   int devID OWL_IF_CPP(=-1));
 OWL_API void owlVariableSetPointer(OWLVariable variable, const void *valuePtr);
 
 #ifdef __cplusplus
@@ -1590,28 +1650,32 @@ OWL_API void owlRayGenSetTexture(OWLRayGen obj, const char *name, OWLTexture val
 OWL_API void owlRayGenSetPointer(OWLRayGen obj, const char *name, const void *val);
 OWL_API void owlRayGenSetBuffer(OWLRayGen obj, const char *name, OWLBuffer val);
 OWL_API void owlRayGenSetGroup(OWLRayGen obj, const char *name, OWLGroup val);
-OWL_API void owlRayGenSetRaw(OWLRayGen obj, const char *name, const void *val);
+OWL_API void owlRayGenSetRaw(OWLRayGen obj, const char *name, const void *val,
+                             int devID OWL_IF_CPP(=-1));
 
 // setters for variables on "Geom"s
 OWL_API void owlGeomSetTexture(OWLGeom obj, const char *name, OWLTexture val);
 OWL_API void owlGeomSetPointer(OWLGeom obj, const char *name, const void *val);
 OWL_API void owlGeomSetBuffer(OWLGeom obj, const char *name, OWLBuffer val);
 OWL_API void owlGeomSetGroup(OWLGeom obj, const char *name, OWLGroup val);
-OWL_API void owlGeomSetRaw(OWLGeom obj, const char *name, const void *val);
+OWL_API void owlGeomSetRaw(OWLGeom obj, const char *name, const void *val,
+                           int deviceID OWL_IF_CPP(=-1));
 
 // setters for variables on "Params"s
 OWL_API void owlParamsSetTexture(OWLParams obj, const char *name, OWLTexture val);
 OWL_API void owlParamsSetPointer(OWLParams obj, const char *name, const void *val);
 OWL_API void owlParamsSetBuffer(OWLParams obj, const char *name, OWLBuffer val);
 OWL_API void owlParamsSetGroup(OWLParams obj, const char *name, OWLGroup val);
-OWL_API void owlParamsSetRaw(OWLParams obj, const char *name, const void *val);
+OWL_API void owlParamsSetRaw(OWLParams obj, const char *name, const void *val,
+                             int devID OWL_IF_CPP(=-1));
 
 // setters for variables on "MissProg"s
 OWL_API void owlMissProgSetTexture(OWLMissProg obj, const char *name, OWLTexture val);
 OWL_API void owlMissProgSetPointer(OWLMissProg obj, const char *name, const void *val);
 OWL_API void owlMissProgSetBuffer(OWLMissProg obj, const char *name, OWLBuffer val);
 OWL_API void owlMissProgSetGroup(OWLMissProg obj, const char *name, OWLGroup val);
-OWL_API void owlMissProgSetRaw(OWLMissProg obj, const char *name, const void *val);
+OWL_API void owlMissProgSetRaw(OWLMissProg obj, const char *name, const void *val,
+                               int devID OWL_IF_CPP(=-1));
 
 
 // -------------------------------------------------------

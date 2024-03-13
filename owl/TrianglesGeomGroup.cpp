@@ -26,7 +26,7 @@
 
 #define LOG_OK(message)                                         \
   if (Context::logging())                                       \
-    std::cout << OWL_TERMINAL_GREEN                             \
+    std::cout << OWL_TERMINAL_GREEN                                                 \
               << "#owl(" << device->ID << "): "                 \
               << message << OWL_TERMINAL_DEFAULT << std::endl
 
@@ -59,7 +59,7 @@ namespace owl {
     }
   }
   
-  void TrianglesGeomGroup::buildAccel()
+  void TrianglesGeomGroup::buildAccel(LaunchParams::SP launchParams)
   {
     for (auto device : context->getDevices()) 
       buildAccelOn<true>(device);
@@ -68,7 +68,7 @@ namespace owl {
       updateMotionBounds();
   }
   
-  void TrianglesGeomGroup::refitAccel()
+  void TrianglesGeomGroup::refitAccel(LaunchParams::SP launchParams)
   {
     for (auto device : context->getDevices()) 
       buildAccelOn<false>(device);
@@ -221,16 +221,10 @@ namespace owl {
 
     // temp memory:
     DeviceMemory tempBuffer;
-    if (Context::useManagedMemForAccelAux)
-      tempBuffer.allocManaged(FULL_REBUILD
-                       ?max(blasBufferSizes.tempSizeInBytes,
-                            blasBufferSizes.tempUpdateSizeInBytes)
-                       :blasBufferSizes.tempUpdateSizeInBytes);
-    else
-      tempBuffer.alloc(FULL_REBUILD
-                       ?max(blasBufferSizes.tempSizeInBytes,
-                            blasBufferSizes.tempUpdateSizeInBytes)
-                       :blasBufferSizes.tempUpdateSizeInBytes);
+    tempBuffer.alloc(FULL_REBUILD
+                     ?max(blasBufferSizes.tempSizeInBytes,
+                          blasBufferSizes.tempUpdateSizeInBytes)
+                     :blasBufferSizes.tempUpdateSizeInBytes);
     if (FULL_REBUILD) {
       // Only track this on first build, assuming temp buffer gets smaller for refit
       dd.memPeak += tempBuffer.size();
@@ -246,16 +240,10 @@ namespace owl {
     // Allocate output buffer for initial build
     if (FULL_REBUILD) {
       if (allowCompaction) {
-        if (Context::useManagedMemForAccelData)
-          outputBuffer.allocManaged(blasBufferSizes.outputSizeInBytes);
-        else
-          outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
+        outputBuffer.alloc(blasBufferSizes.outputSizeInBytes);
         dd.memPeak += outputBuffer.size();
       } else {
-        if (Context::useManagedMemForAccelData)
-          dd.bvhMemory.allocManaged(blasBufferSizes.outputSizeInBytes);
-        else
-          dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
+        dd.bvhMemory.alloc(blasBufferSizes.outputSizeInBytes);
         dd.memPeak += dd.bvhMemory.size();
         dd.memFinal = dd.bvhMemory.size();
       }
@@ -265,10 +253,7 @@ namespace owl {
 
     if (FULL_REBUILD && allowCompaction) {
 
-      if (Context::useManagedMemForAccelData)
-        compactedSizeBuffer.allocManaged(sizeof(uint64_t));
-      else
-        compactedSizeBuffer.alloc(sizeof(uint64_t));
+      compactedSizeBuffer.alloc(sizeof(uint64_t));
       dd.memPeak += compactedSizeBuffer.size();
 
       OptixAccelEmitDesc emitDesc;
@@ -328,10 +313,7 @@ namespace owl {
       uint64_t compactedSize;
       compactedSizeBuffer.download(&compactedSize);
 
-      if (Context::useManagedMemForAccelData)
-        dd.bvhMemory.allocManaged(compactedSize);
-      else
-        dd.bvhMemory.alloc(compactedSize);
+      dd.bvhMemory.alloc(compactedSize);
       // ... and perform compaction
       OPTIX_CALL(AccelCompact(device->optixContext,
                               /*TODO: stream:*/0,

@@ -24,10 +24,12 @@ foreach(sample IN ITEMS
     int11-rotatingBoxes
     int12-switchingTextureSets
     int13-motionBlurInstances
+    int14-motionBlurAabbs
     int15-cookBilliardScene
     int16-curves
     int17-curveMaterials
     int18-spherePrimitives
+    int19-instancePrograms
     )
   add_subdirectory(${sample})
 endforeach()

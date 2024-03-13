@@ -16,6 +16,7 @@
 
 #include "Context.h"
 #include "UserGeom.h"
+#include "InstanceGroup.h"
 
 #include <optix_function_table_definition.h>
 
@@ -309,9 +310,11 @@ namespace owl {
       break;
     }
     pipelineCompileOptions.usesMotionBlur     = parent->motionBlurEnabled;
-    pipelineCompileOptions.numPayloadValues   = 2;
+    pipelineCompileOptions.numPayloadValues   = parent->numPayloadValues;
     pipelineCompileOptions.numAttributeValues = parent->numAttributeValues;
     pipelineCompileOptions.exceptionFlags     = OPTIX_EXCEPTION_FLAG_NONE;
+    pipelineCompileOptions.usesPrimitiveTypeFlags = OPTIX_PRIMITIVE_TYPE_FLAGS_TRIANGLE;
+    pipelineCompileOptions.usesPrimitiveTypeFlags |= OPTIX_PRIMITIVE_TYPE_FLAGS_CUSTOM;
     pipelineCompileOptions.pipelineLaunchParamsVariableName = "optixLaunchParams";
     
     // ------------------------------------------------------------------
@@ -324,7 +327,7 @@ namespace owl {
     // if (parent->curvesEnabled) 
 #if OWL_CAN_DO_CURVES
    pipelineCompileOptions.usesPrimitiveTypeFlags
-        = OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_LINEAR
+        |= OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_LINEAR
         | OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_QUADRATIC_BSPLINE
         | OPTIX_PRIMITIVE_TYPE_FLAGS_ROUND_CUBIC_BSPLINE;
 #endif
@@ -583,7 +586,9 @@ namespace owl {
       
       UserGeomType::SP userGeomType
         = geomType->as<UserGeomType>();
-      if (userGeomType)
+      if (userGeomType && parent->motionBlurEnabled)
+        userGeomType->buildMotionBoundsProg();
+      else if (userGeomType)
         userGeomType->buildBoundsProg();
       
       auto &dd = geomType->getDD(shared_from_this());
@@ -621,6 +626,22 @@ namespace owl {
                                             ));
         allActivePrograms.push_back(pg);
       }
+    }
+
+    // ------------------------------------------------------------------
+    // instance programs -> what goes into instances
+    // ------------------------------------------------------------------
+    for (size_t groupID=0;groupID<parent->groups.size();groupID++) {
+      // skip groups which are not "Instance Group" types
+      InstanceGroup::SP instanceGroup
+        = parent->groups.getSP(groupID)->as<InstanceGroup>();
+      if (!instanceGroup)
+        continue;
+      
+      if (parent->motionBlurEnabled)
+        instanceGroup->buildMotionInstanceProg();
+      else
+        instanceGroup->buildInstanceProg();
     }
   }
   

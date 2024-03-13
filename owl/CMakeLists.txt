@@ -121,7 +121,7 @@ target_sources(owl PRIVATE
   Group.h
   Group.cpp
   InstanceGroup.h
-  InstanceGroup.cpp
+  InstanceGroup.cu
   TrianglesGeomGroup.h
   TrianglesGeomGroup.cpp
   CurvesGeomGroup.h
@@ -147,8 +147,8 @@ if (OWL_HAVE_TBB AND TBB_FOUND)
     target_link_libraries(owl PUBLIC TBB::tbb)
   else()
     target_link_libraries(owl PUBLIC ${TBB_LIBRARIES})
+    target_include_directories(owl PUBLIC ${TBB_INCLUDE_DIR})
   endif()
-  target_include_directories(owl PUBLIC ${TBB_INCLUDE_DIR})
   target_compile_definitions(owl PUBLIC -DOWL_HAVE_TBB=1)
 endif()
 

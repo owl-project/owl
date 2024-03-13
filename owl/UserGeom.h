@@ -46,6 +46,10 @@ namespace owl {
       /*! cuda function handle for the (automatically generatd) kernel
         that runs the primitive bounds program on the device */
       CUfunction boundsFuncKernel = 0;
+
+      /*! cuda function handle for the (automatically generatd) kernel
+        that runs the primitive motion bounds program on the device */
+      CUfunction motionBoundsFuncKernel = 0;
     };
 
     /*! constructor, using the variable declaratoins that the user
@@ -63,8 +67,15 @@ namespace owl {
     void setBoundsProg(Module::SP module,
                        const std::string &progName);
 
+    /*! set motion bounding box program to run for this type */
+    void setMotionBoundsProg(Module::SP module,
+                       const std::string &progName);
+
     /*! build the CUDA bounds program kernel (if bounds prog is set) */
     void buildBoundsProg();
+
+    /*! build the CUDA bounds program kernel (if motion bounds prog is set) */
+    void buildMotionBoundsProg();
 
     /*! pretty-printer, for printf-debugging */
     std::string toString() const override;
@@ -81,6 +92,9 @@ namespace owl {
 
     /*! the bounds prog to run for this type */
     ProgramDesc boundsProg;
+
+    /*! the motion bounds prog to run for this type (if motion blur is enabled) */
+    ProgramDesc motionBoundsProg;
     
     /*! the vector of intersect programs to run for this type, one per
       ray type */
@@ -107,6 +121,17 @@ namespace owl {
         requires. (in theory we can release this memory after BVH is
         built)*/
       DeviceMemory internalBufferForBoundsProgram;
+
+      /*! Same as above, but for the motion blur case */
+      DeviceMemory internalBufferForBoundsProgramKey1;
+      DeviceMemory internalBufferForBoundsProgramKey2;
+
+      /*! Temporary memory for executing motion bounds program */
+      DeviceMemory tempMem;
+
+      /* if this is true, then the above buffers come from the user, and should not be 
+        malloced/freed on tree rebuilds */
+      bool useExternalBoundsBuffer = false;
     };
 
     /*! constructor */
@@ -127,14 +152,18 @@ namespace owl {
 
     /*! set number of primitives that this geom will contain */
     void setPrimCount(size_t count);
+
+    /*! Allow the user to allocate their own buffer for storing AABBs */
+    void setBoundsBuffer(Buffer::SP buffer);
     
-    /*! call a cuda kernel that computes the bounds *across* all
-      primitives within this group; may only get caleld after bound
-      progs have been executed */
-    void computeBounds(box3f bounds[2]);
+    /*! Allow the user to allocate their own buffer for storing motion AABBs */
+    void setMotionBoundsBuffers(Buffer::SP buffer1, Buffer::SP buffer2);
 
     /*! run the bounding box program for all primitives within this geometry */
     void executeBoundsProgOnPrimitives(const DeviceContext::SP &device);
+
+    /*! run the motion bounding box program for all primitives within this geometry */
+    void executeMotionBoundsProgOnPrimitives(const DeviceContext::SP &device);
 
     /*! number of prims that this geom will contain */
     size_t primCount = 0;

@@ -42,7 +42,7 @@ namespace owl {
   void Variable::set(const std::shared_ptr<Texture> &value)
   { mismatchingType("Texture"); }
     
-  void Variable::setRaw(const void *ptr)
+  void Variable::setRaw(const void *ptr, int devID)
   { mismatchingType("void*"); }
 
 
@@ -158,23 +158,43 @@ namespace owl {
   struct UserTypeVariable : public Variable
   {
     UserTypeVariable(const OWLVarDecl *const varDecl)
-      : Variable(varDecl),
-        data(/* actual size is 'type' - constant */varDecl->type - OWL_USER_TYPE_BEGIN)
+      : Variable(varDecl)
+      // ,
+      //   data(/* actual size is 'type' - constant */varDecl->type - OWL_USER_TYPE_BEGIN)
     {}
     
-    void setRaw(const void *ptr) override
+    void setRaw(const void *ptr, int devID) override
     {
-      memcpy(data.data(),ptr,data.size());
+      size_t dataSize
+        = /* actual size is 'type' - constant */varDecl->type - OWL_USER_TYPE_BEGIN;
+      if (devID == -1) {
+        dataShared.resize(dataSize);
+        memcpy(dataShared.data(),ptr,dataSize);
+      } else {
+        if (devID >= dataPerDev.size()) {
+          dataPerDev.resize(devID+1);
+          if (dataPerDev[devID].empty())
+            dataPerDev[devID].resize(dataSize);
+        }
+        memcpy(dataPerDev[devID].data(),ptr,dataSize);
+      }
     }
 
     /*! writes the device specific representation of the given type */
     void writeToSBT(uint8_t *sbtEntry,
                     const DeviceContext::SP &device) const override
     {
-      memcpy(sbtEntry,data.data(),data.size());
+      if (!dataPerDev.empty()) {
+        int devID = device->ID;
+        if (devID < dataPerDev.size())
+          memcpy(sbtEntry,dataPerDev[devID].data(),dataPerDev[devID].size());
+      } else {
+        memcpy(sbtEntry,dataShared.data(),dataShared.size());
+      }
     }
     
-    std::vector<uint8_t> data;
+    std::vector<std::vector<uint8_t>> dataPerDev;
+    std::vector<std::vector<uint8_t>> dataShared;
   };
 
   /*! Variable type for basic and compound-basic data types such as

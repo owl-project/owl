@@ -109,34 +109,6 @@ namespace owl {
   std::string UserGeom::toString() const
   { return "UserGeom"; }
   
-  /*! call a cuda kernel that computes the bounds of the vertex
-      buffers. note we alwyas (and only) do this on the first GPU */
-  void UserGeom::computeBounds(box3f bounds[2])
-  {
-    int numThreads = 1024;
-    int numBlocks = int((primCount + numThreads - 1) / numThreads);
-
-    DeviceContext::SP device = context->getDevices()[0];
-    SetActiveGPU forLifeTime(device);
-
-    DeviceMemory d_bounds;
-    d_bounds.alloc(sizeof(box3f));
-    bounds[0] = bounds[1] = box3f();
-    d_bounds.upload(bounds);
-
-    DeviceData &dd = getDD(device);
-    
-    computeBoundsOfPrimBounds<<<numBlocks,numThreads>>>
-      (((box3f*)d_bounds.get())+0,
-       (box3f *)dd.internalBufferForBoundsProgram.get(),
-       primCount);
-    OWL_CUDA_SYNC_CHECK();
-    d_bounds.download(&bounds[0]);
-    d_bounds.free();
-    OWL_CUDA_SYNC_CHECK();
-    bounds[1] = bounds[0];
-  }
-
   UserGeomType::UserGeomType(Context *const context,
                              size_t varStructSize,
                              const std::vector<OWLVarDecl> &varDecls)
@@ -158,6 +130,32 @@ namespace owl {
     primCount = count;
   }
 
+  void UserGeom::setBoundsBuffer(Buffer::SP buffer)
+  {
+    for (auto device : context->getDevices()) {
+      DeviceData &dd = getDD(device);
+      dd.internalBufferForBoundsProgram.d_pointer = (CUdeviceptr)buffer->getPointer(device);
+      dd.internalBufferForBoundsProgram.sizeInBytes = buffer->sizeInBytes();
+      dd.internalBufferForBoundsProgram.externallyManaged = true;
+      dd.useExternalBoundsBuffer = true;
+    }
+  }
+
+  void UserGeom::setMotionBoundsBuffers(Buffer::SP buffer1, Buffer::SP buffer2)
+  {
+    for (auto device : context->getDevices()) {
+      DeviceData &dd = getDD(device);
+      dd.useExternalBoundsBuffer = true;
+      dd.internalBufferForBoundsProgramKey1.d_pointer = (CUdeviceptr)buffer1->getPointer(device);
+      dd.internalBufferForBoundsProgramKey1.sizeInBytes = buffer1->sizeInBytes();
+      dd.internalBufferForBoundsProgramKey1.externallyManaged = true;
+
+      dd.internalBufferForBoundsProgramKey2.d_pointer = (CUdeviceptr)buffer2->getPointer(device);
+      dd.internalBufferForBoundsProgramKey2.sizeInBytes = buffer2->sizeInBytes();
+      dd.internalBufferForBoundsProgramKey2.externallyManaged = true;
+    }
+  }
+
   /*! set intersection program to run for this type and given ray type */
   void UserGeomType::setIntersectProg(int rayType,
                                       Module::SP module,
@@ -177,6 +175,14 @@ namespace owl {
     this->boundsProg.module   = module;
   }
 
+  /*! set bounding box program to run for this type */
+  void UserGeomType::setMotionBoundsProg(Module::SP module,
+                                   const std::string &progName)
+  {
+    this->motionBoundsProg.progName = progName;
+    this->motionBoundsProg.module   = module;
+  }
+
   /*! run the bounding box program for all primitives within this geometry */
   void UserGeom::executeBoundsProgOnPrimitives(const DeviceContext::SP &device)
   {
@@ -188,12 +194,15 @@ namespace owl {
       
     std::vector<uint8_t> userGeomData(geomType->varStructSize);
     
-    DeviceMemory tempMem;
-    tempMem.alloc(geomType->varStructSize);
-    
     DeviceData &dd = getDD(device);
-    dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
-    // dd.internalBufferForBoundsProgram.allocManaged(primCount*sizeof(box3f));
+    
+    if (!dd.useExternalBoundsBuffer)
+      dd.internalBufferForBoundsProgram.alloc(primCount*sizeof(box3f));
+    else if (dd.internalBufferForBoundsProgram.size() < primCount*sizeof(box3f))
+      OWL_RAISE("external bounds buffer size does not match primCount");
+
+    DeviceMemory &tempMem = dd.tempMem;
+    tempMem.alloc(geomType->varStructSize);
 
     writeVariables(userGeomData.data(),device);
         
@@ -241,7 +250,83 @@ namespace owl {
                 +std::string(errName));
     }
     
-    tempMem.free();
+    cudaDeviceSynchronize();
+  }
+
+  /*! run the motion bounding box program for all primitives within this geometry */
+  void UserGeom::executeMotionBoundsProgOnPrimitives(const DeviceContext::SP &device)
+  {
+    SetActiveGPU activeGPU(device);
+    // if geom does't contain any prims we would run into issue
+    // launching zero-sized bounds prog kernel below, so let's just
+    // exit here.
+    if (primCount == 0) return;
+      
+    std::vector<uint8_t> userGeomData(geomType->varStructSize);
+       
+    DeviceData &dd = getDD(device);
+    if (!dd.useExternalBoundsBuffer) {
+      dd.internalBufferForBoundsProgramKey1.alloc(primCount*sizeof(box3f));
+      dd.internalBufferForBoundsProgramKey2.alloc(primCount*sizeof(box3f));
+    }
+    else {
+      if (dd.internalBufferForBoundsProgramKey1.size() < primCount*sizeof(box3f))
+        OWL_RAISE("external bounds buffer for key 0 size does not match primCount");
+      if (dd.internalBufferForBoundsProgramKey2.size() < primCount*sizeof(box3f))
+        OWL_RAISE("external bounds buffer for key 1 size does not match primCount");
+    } 
+
+    DeviceMemory &tempMem = dd.tempMem;
+    tempMem.alloc(geomType->varStructSize);
+
+    writeVariables(userGeomData.data(),device);
+        
+    // size of each thread block during bounds function call
+    vec3i blockDims(32,32,1);
+    uint32_t threadsPerBlock = blockDims.x*blockDims.y*blockDims.z;
+        
+    uint32_t numBlocks = owl::common::divRoundUp((uint32_t)primCount,threadsPerBlock);
+    uint32_t numBlocks_x
+      = 1+uint32_t(powf((float)numBlocks,1.f/3.f));
+    uint32_t numBlocks_y
+      = 1+uint32_t(sqrtf((float)(numBlocks/numBlocks_x)));
+    uint32_t numBlocks_z
+      = owl::common::divRoundUp(numBlocks,numBlocks_x*numBlocks_y);
+        
+    vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
+
+    tempMem.upload(userGeomData);
+    
+    void  *d_geomData = tempMem.get();
+    vec3f *d_boundsArrayKey1 = (vec3f*)dd.internalBufferForBoundsProgramKey1.get();
+    vec3f *d_boundsArrayKey2 = (vec3f*)dd.internalBufferForBoundsProgramKey2.get();
+    /* arguments for the kernel we are to call */
+    void  *args[] = {
+                     &d_geomData,
+                     &d_boundsArrayKey1,
+                     &d_boundsArrayKey2,
+                     (void *)&primCount
+    };
+    
+    CUstream stream = device->stream;
+    UserGeomType::DeviceData &typeDD = getTypeDD(device);
+    if (!typeDD.motionBoundsFuncKernel)
+      OWL_RAISE("bounds kernel set, but not yet compiled - "
+                "did you forget to call BuildPrograms() before"
+                " (User)GroupAccelBuild()!?");
+        
+    CUresult rc
+      = cuLaunchKernel(typeDD.motionBoundsFuncKernel,
+                       gridDims.x,gridDims.y,gridDims.z,
+                       blockDims.x,blockDims.y,blockDims.z,
+                       0, stream, args, 0);
+    if (rc) {
+      const char *errName = 0;
+      cuGetErrorName(rc,&errName);
+      OWL_RAISE("unknown CUDA error in calling motion bounds function kernel: "
+                +std::string(errName));
+    }
+    
     cudaDeviceSynchronize();
   }
 
@@ -278,14 +363,14 @@ namespace owl {
       auto &typeDD = getDD(device);
       auto &moduleDD = module->getDD(device);
       
-      assert(moduleDD.boundsModule);
+      assert(moduleDD.computeModule);
 
       const std::string annotatedProgName
         = std::string("__boundsFuncKernel__")
         + boundsProg.progName;
     
       CUresult rc = cuModuleGetFunction(&typeDD.boundsFuncKernel,
-                                        moduleDD.boundsModule,
+                                        moduleDD.computeModule,
                                         annotatedProgName.c_str());
       
       switch(rc) {
@@ -301,6 +386,48 @@ namespace owl {
         const char *errName = 0;
         cuGetErrorName(rc,&errName);
         OWL_RAISE("unknown CUDA error when building bounds program kernel"
+                  +std::string(errName));
+      }
+    }
+  }
+
+  /*! build the CUDA bounds program kernel (if bounds prog is set) */
+  void UserGeomType::buildMotionBoundsProg()
+  {
+    if (!motionBoundsProg.module) return;
+    
+    Module::SP module = motionBoundsProg.module;
+    assert(module);
+
+    for (auto device : context->getDevices()) {
+      LOG("building motion bounds function ....");
+      SetActiveGPU forLifeTime(device);
+      auto &typeDD = getDD(device);
+      auto &moduleDD = module->getDD(device);
+      
+      assert(moduleDD.computeModule);
+
+      const std::string annotatedProgName
+        = std::string("__motionBoundsFuncKernel__")
+        + motionBoundsProg.progName;
+    
+      CUresult rc = cuModuleGetFunction(&typeDD.motionBoundsFuncKernel,
+                                        moduleDD.computeModule,
+                                        annotatedProgName.c_str());
+      
+      switch(rc) {
+      case CUDA_SUCCESS:
+        /* all OK, nothing to do */
+        LOG_OK("found motion bounds function " << annotatedProgName << " ... perfect!");
+        break;
+      case CUDA_ERROR_NOT_FOUND:
+        OWL_RAISE("in "+std::string(__PRETTY_FUNCTION__)
+                  +": could not find OPTIX_MOTION_BOUNDS_PROGRAM("
+                  +motionBoundsProg.progName+")");
+      default:
+        const char *errName = 0;
+        cuGetErrorName(rc,&errName);
+        OWL_RAISE("unknown CUDA error when building motion bounds program kernel"
                   +std::string(errName));
       }
     }

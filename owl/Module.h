@@ -54,12 +54,15 @@ namespace owl {
       /*! for the *bounds* function we have to build a *separate*
         module because this one is built outside of optix, and thus
         does not have the internal _optix_xyz() symbols in it */
-      CUmodule    boundsModule = 0;
+      CUmodule    computeModule = 0;
     };
 
     /*! constructor - ptxCode contains the prec-ompiled ptx code with
       the compiled functions */
     Module(Context *context, const std::string &ptxCode);
+
+    /*! constructor - IR contains the pre-compiled optix IR */
+    Module(Context *context, const std::vector<uint8_t> &IR);
 
     /*! destructor, to release data if required */
     virtual ~Module();
@@ -73,8 +76,14 @@ namespace owl {
     /*! create this object's device-specific data for the device */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
 
+    /*! a flag tracking if we're using OptiX IR or PTX. For now, assuming PTX as default. */
+    bool useIR = false;
+
     /*! the precompiled PTX code supplied by the user */
     const std::string ptxCode;
+
+    /*! the precompiled OptiX IR supplied by the user */
+    const std::vector<uint8_t> optixIRCode;
   };
   
   // ------------------------------------------------------------------

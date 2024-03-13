@@ -36,15 +36,23 @@ namespace owl {
 
       /*! if we use motion blur, this is used to store all the motoin transforms */
       DeviceMemory motionTransformsBuffer;
-      DeviceMemory motionAABBsBuffer;
       DeviceMemory outputBuffer;
+
+      /*! cuda function handle for the (automatically generated) kernel
+        that runs the instance generation program on the device */
+      CUfunction instanceFuncKernel = 0;
+
+      /*! cuda function handle for the (automatically generated) kernel
+        that runs the motion instance generation program on the device */
+      CUfunction motionInstanceFuncKernel = 0;
     };
     
     /*! construct with given array of groups - transforms can be specified later */
     InstanceGroup(Context *const context,
                   size_t numChildren,
                   Group::SP *groups,
-                  unsigned int buildFlags);
+                  unsigned int buildFlags,
+                  bool useInstanceProgram);
 
     /*! pretty-printer, for printf-debugging */
     std::string toString() const override;
@@ -67,9 +75,23 @@ namespace owl {
     /* set visibility masks to use for the children - MUST be an array of
        children.size() items */
     void setVisibilityMasks(const uint8_t *visibilityMasks);
-      
-    void buildAccel() override;
-    void refitAccel() override;
+
+    /*! set instance program to run for this IAS */
+    void setInstanceProg(Module::SP module,
+                         const std::string &progName);
+    
+    /*! set motion instance program to run for this IAS */
+    void setMotionInstanceProg(Module::SP module,
+                               const std::string &progName);
+    
+    /*! build the CUDA instance program kernel (if instance prog is set) */
+    void buildInstanceProg();
+
+    /*! build the CUDA motion instance program kernel (if motion instance prog is set) */
+    void buildMotionInstanceProg();
+
+    void buildAccel(LaunchParams::SP launchParams = nullptr) override;
+    void refitAccel(LaunchParams::SP launchParams = nullptr) override;
 
     /*! creates the device-specific data for this group */
     RegisteredObject::DeviceData::SP createOn(const DeviceContext::SP &device) override;
@@ -82,10 +104,18 @@ namespace owl {
     template<bool FULL_REBUILD>
     void motionBlurBuildOn(const DeviceContext::SP &device);
 
+    template<bool FULL_REBUILD>
+    void staticDeviceBuildOn(const DeviceContext::SP &device, LaunchParams::SP launchParams);
+    template<bool FULL_REBUILD>
+    void motionBlurDeviceBuildOn(const DeviceContext::SP &device, LaunchParams::SP launchParams);
+    
     /*! return the SBT offset to use for this group - SBT offsets for
       instnace groups are always 0 */
     int getSBTOffset() const override { return 0; }
     
+    /*! number of children in this group */
+    size_t numChildren;
+
     /*! the list of children - note we do have to keep them both in
       the ll layer _and_ here for the refcounting to work; the
       transforms are only stored once, on the ll layer */
@@ -111,6 +141,14 @@ namespace owl {
     protected:
     const unsigned int buildFlags;
 
+    /*! if true, we use the instance program to generate the instances */
+    bool useInstanceProgram;
+
+    /*! the instance prog to run for this type */
+    ProgramDesc instanceProg;
+
+    /*! the motion instance prog to run for this type (if motion blur is enabled) */
+    ProgramDesc motionInstanceProg;
   };
 
   // ------------------------------------------------------------------
