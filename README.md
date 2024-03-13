@@ -241,16 +241,25 @@ Some sample use projects/papers that recently used OWL:
 
 General Requirements:
 - OptiX 7 SDK (version 7.0, 7.1, 7.2, 7.3, or 7.4; should work with either)
-- CUDA version 10 or 11
+- CUDA, preferably CUDA version 12
 - a C++11 capable compiler (regular gcc on CentOS, Ubuntu, or any other Linux should do; as should VS on Windows)
 - OpenGL
 
 Per-OS Instructions:
 
-- Ubuntu 18, 19, and 20 (automatically tested on 18, mostly developed on 20)
-    - Dependencies
-		- cmake for building (`sudo apt install cmake-curses-gui`)
-		- if you want to build the graphical examples: glfw (`sudo apt-get install libglfw3-dev`), or all the libraries to build it from included source code (`sudo apt-get install x11-xserver-utils libxrandr-dev libxinerama-dev libxcb-xkb-dev libxcursor-dev libxcb-xinput-dev libxi-dev`)
+- Ubuntu 18, 19, and 20, 22 (mostly developed on 18 and 20, today mostly used on 22)
+    - Required Dependencies (for building just the core library itself)
+		- cmake and general build essentials 
+		
+        sudo apt install cmake cmake-curses-gui build-essential
+	
+	- Optional but recommended dependencies:
+	  - for the graphical exampels: 
+	
+            sudo apt-get install libglfw3-dev
+			
+	  - TBB for parallelism
+		
 	- Build:
 	```bash
 	mkdir build

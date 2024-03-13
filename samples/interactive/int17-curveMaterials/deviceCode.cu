@@ -639,7 +639,7 @@ OPTIX_MISS_PROGRAM(miss)()
 
   const vec3f rayDir = normalize(ray.direction);
   const float t = 0.5f*(rayDir.z + 1.0f);
-  prd.radiance.result = (1.0f - t) * (0.8f,0.71f,0.71f) + t * self.bg_color;
+  prd.radiance.result = (1.0f - t) * vec3f(0.8f,0.71f,0.71f) + t * self.bg_color;
 }
 
 OPTIX_RAYGEN_PROGRAM(simpleRayGen)()

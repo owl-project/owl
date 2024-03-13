@@ -44,8 +44,20 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(OptiX
   FOUND_VAR OptiX_FOUND
   REQUIRED_VARS
-    OptiX_ROOT_DIR
-)
+  OptiX_ROOT_DIR
+  )
+
+if (OptiX_FOUND)
+  message("OptiX found all right.")
+else()
+  message("could not find optix, through none of the supported ways.")
+  message("If you haven't yet done so, please install OptiX, then point OWL to where you have it installed. There are two different ways of doing that (pick which one you prefer):")
+  message("Option 1: cmake's OPTIX_ROOT variable. E.g.")
+  message("   OptiX_ROOT=<whereever>/NVIDIA-OptiX-SDK-7.6.0-linux64-x86_64/ cmake .")
+  message("Option 1: defining a `OptiX_INSTALL_DIR` environment variable")
+  message("   export OptiX_INSTALL_DIR=<wherever>/NVIDIA-OptiX-SDK-7.6.0-linux64-x86_64/")
+  message("   cmake .")
+endif()
 
 add_library(OptiX::OptiX INTERFACE IMPORTED)
 target_include_directories(OptiX::OptiX INTERFACE ${OptiX_ROOT_DIR}/include)

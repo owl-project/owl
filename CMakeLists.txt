@@ -75,8 +75,14 @@ option(OWL_BUILD_SHARED "Build OWL as a shared library? (otherwise static)" OFF)
 set(BUILD_SHARED_LIBS ${OWL_BUILD_SHARED}) # use 'OWL_' naming convention
 add_subdirectory(owl)
 
-option(OWL_BUILD_SAMPLES "Build the Samples?" ON)
-add_compile_definitions(OWL_BUILDING_ALL_SAMPLES)
+if (NOT OWL_IS_SUBPROJECT)
+  option(OWL_BUILD_SAMPLES "Build the Samples?" ON)
+else()
+  # make it off by default when building as subproject, so we don't
+  # even define glfw target under windows when used as submodule
+  option(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
+endif()
+#add_compile_definitions(OWL_BUILDING_ALL_SAMPLES)
 option(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 
 add_subdirectory(3rdParty)
