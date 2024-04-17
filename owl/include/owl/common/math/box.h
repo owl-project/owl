@@ -175,7 +175,7 @@ namespace owl {
     inline __both__ typename long_type_of<T>::type area(const box_t<vec_t<T,3>> &b)
     {
       const vec_t<T,3> diag = b.upper - b.lower;
-      return 2.f*(area(vec_t<T,2>(diag.x,diag.y))+
+      return T(2)*(area(vec_t<T,2>(diag.x,diag.y))+
                   area(vec_t<T,2>(diag.y,diag.z))+
                   area(vec_t<T,2>(diag.z,diag.x)));
     }
