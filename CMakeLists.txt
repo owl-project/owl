@@ -92,6 +92,8 @@ add_subdirectory(3rdParty)
 # ------------------------------------------------------------------
 if (OWL_BUILD_SAMPLES)
   add_subdirectory(samples)
+else()
+  add_subdirectory(samples EXCLUDE_FROM_ALL)
 endif()
 
 if (OWL_IS_SUBPROJECT)
