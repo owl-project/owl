@@ -1,4 +1,4 @@
-# OWL: A Node Graph "Wrapper" Library for OptiX 7
+# OWL: A Productivity Library for OptiX 7
 
 <!--- ------------------------------------------------------- -->
 ## What is OWL?
