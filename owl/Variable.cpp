@@ -194,7 +194,7 @@ namespace owl {
     }
     
     std::vector<std::vector<uint8_t>> dataPerDev;
-    std::vector<std::vector<uint8_t>> dataShared;
+    std::vector<uint8_t> dataShared;
   };
 
   /*! Variable type for basic and compound-basic data types such as
