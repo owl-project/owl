@@ -91,9 +91,11 @@ add_subdirectory(3rdParty)
 # tutorial/samples
 # ------------------------------------------------------------------
 if (OWL_BUILD_SAMPLES)
-  add_subdirectory(samples)
-else()
-  add_subdirectory(samples EXCLUDE_FROM_ALL)
+	if(NOT OWL_IS_SUBPROJECT)
+		add_subdirectory(samples)
+	else()
+		add_subdirectory(samples EXCLUDE_FROM_ALL)
+	endif()
 endif()
 
 if (OWL_IS_SUBPROJECT)
