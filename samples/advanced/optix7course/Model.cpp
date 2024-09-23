@@ -23,26 +23,28 @@
 
 //std
 #include <set>
-
-namespace std {
-  inline bool operator<(const tinyobj::index_t &a,
-                        const tinyobj::index_t &b)
-  {
-    if (a.vertex_index < b.vertex_index) return true;
-    if (a.vertex_index > b.vertex_index) return false;
-    
-    if (a.normal_index < b.normal_index) return true;
-    if (a.normal_index > b.normal_index) return false;
-    
-    if (a.texcoord_index < b.texcoord_index) return true;
-    if (a.texcoord_index > b.texcoord_index) return false;
-    
-    return false;
-  }
-}
+#include <map>
+#include <functional>
 
 /*! \namespace osc - Optix Siggraph Course */
 namespace osc {
+
+  struct index_less {
+    inline bool operator()(const tinyobj::index_t &a,
+                           const tinyobj::index_t &b) const
+    {
+      if (a.vertex_index < b.vertex_index) return true;
+      if (a.vertex_index > b.vertex_index) return false;
+  
+      if (a.normal_index < b.normal_index) return true;
+      if (a.normal_index > b.normal_index) return false;
+  
+      if (a.texcoord_index < b.texcoord_index) return true;
+      if (a.texcoord_index > b.texcoord_index) return false;
+  
+      return false;
+    }
+  };
 
   /*! find vertex with given position, normal, texcoord, and return
       its vertex ID, or, if it doesn't exit, add it to the mesh, and
@@ -50,7 +52,7 @@ namespace osc {
   int addVertex(TriangleMesh *mesh,
                 tinyobj::attrib_t &attributes,
                 const tinyobj::index_t &idx,
-                std::map<tinyobj::index_t,int> &knownVertices)
+                std::map<tinyobj::index_t,int,index_less> &knownVertices)
   {
     if (knownVertices.find(idx) != knownVertices.end())
       return knownVertices[idx];
@@ -163,7 +165,7 @@ namespace osc {
       for (auto faceMatID : shape.mesh.material_ids)
         materialIDs.insert(faceMatID);
       
-      std::map<tinyobj::index_t,int> knownVertices;
+      std::map<tinyobj::index_t,int,index_less> knownVertices;
       
       for (int materialID : materialIDs) {
         TriangleMesh *mesh = new TriangleMesh;
