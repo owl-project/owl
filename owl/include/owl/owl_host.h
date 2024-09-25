@@ -734,6 +734,10 @@ owlTexture2DDestroy(OWLTexture texture);
 OWL_API CUtexObject
 owlTextureGetObject(OWLTexture texture, int deviceID);
 
+/*! returns the dimensions (number of pixels in) a given texture. */
+OWL_API owl2ui
+owlTextureGetDimensions(OWLTexture texture);
+
 /*! creates a device buffer where every device has its own local copy
   of the given buffer */
 OWL_API OWLBuffer
