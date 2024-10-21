@@ -574,6 +574,7 @@ namespace owl {
   
   void DeviceContext::buildHitGroupPrograms()
   {
+    assert(parent);
     const int numRayTypes = parent->numRayTypes;
     
     // ------------------------------------------------------------------
@@ -590,11 +591,11 @@ namespace owl {
         userGeomType->buildMotionBoundsProg();
       else if (userGeomType)
         userGeomType->buildBoundsProg();
-      
+
       auto &dd = geomType->getDD(shared_from_this());
       dd.hgPGs.clear();
       dd.hgPGs.resize(numRayTypes);
-      
+
       for (int rt=0;rt<numRayTypes;rt++) {
         
         OptixProgramGroupOptions pgOptions = {};
@@ -633,8 +634,12 @@ namespace owl {
     // ------------------------------------------------------------------
     for (size_t groupID=0;groupID<parent->groups.size();groupID++) {
       // skip groups which are not "Instance Group" types
+      Group::SP group = parent->groups.getSP(groupID);
+      if (!group)
+        continue;
       InstanceGroup::SP instanceGroup
-        = parent->groups.getSP(groupID)->as<InstanceGroup>();
+        = group->as<InstanceGroup>();
+      
       if (!instanceGroup)
         continue;
       
