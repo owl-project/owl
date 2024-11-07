@@ -742,7 +742,17 @@ owlTextureGetObject(OWLTexture _texture, int deviceID)
   assert(texture);
   return texture->getObject(deviceID);
 }
-  
+
+OWL_API owl2ui
+owlTextureGetDimensions(OWLTexture _texture)
+{
+  LOG_API_CALL();
+  assert(_texture);
+  Texture::SP texture = ((APIHandle *)_texture)->get<Texture>();
+  assert(texture);
+  return (owl2ui&)texture->size;
+}
+
 /*! destroy the given texture; this will both release the app's
   refcount on the given texture handle, *and* the texture itself; i.e.,
   even if some objects still hold variables that refer to the old

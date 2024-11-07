@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2020-2021 Ingo Wald                                            //
+// Copyright 2020-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -43,7 +43,8 @@ namespace owl {
                    OWLTextureColorSpace colorSpace,
                    const void *texels
                    )
-    : RegisteredObject(context,context->textures)
+    : RegisteredObject(context,context->textures),
+      size(size)
   {
     assert(size.x > 0);
     assert(size.y > 0);
