@@ -14,7 +14,9 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-add_subdirectory(stb_image)
+if (NOT (TARGET stb_image))
+  add_subdirectory(stb_image)
+endif()
 
 if (OWL_BUILD_SAMPLES)
   if (TARGET glfw)
