@@ -247,6 +247,11 @@ namespace owl {
   
 } // ::owl
 
+/*! in owl we can only change the _type_ of launch params, they always
+    need to be caleld 'optixLaunchParams', and must have __constant__
+    storage*/
+#define DECLARE_OPTIX_LAUNCH_PARAMS(type) extern __constant__ type optixLaunchParams;
+
 #define OPTIX_RAYGEN_PROGRAM(programName) \
   extern "C" __global__ \
   void __raygen__##programName
