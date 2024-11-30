@@ -169,7 +169,7 @@ target_compile_definitions(owl_static PUBLIC -DOWL_HAVE_TBB=0)
 # bind OWL to CUDA (includes and library)
 find_package(CUDAToolkit REQUIRED)
 target_link_libraries(owl-config INTERFACE
-  #CUDA::cuda_driver
+  CUDA::cuda_driver
   CUDA::cudart_static
   )
 
