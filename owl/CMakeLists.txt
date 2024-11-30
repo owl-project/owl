@@ -16,11 +16,9 @@
 
 find_package(OptiX REQUIRED)
 
-add_library(owl)
-
 include(cmake/configure_tbb.cmake)
 
-target_sources(owl PRIVATE
+set(OWL_SOURCES
   # -------------------------------------------------------
   # infrastructure
   # -------------------------------------------------------
@@ -132,7 +130,17 @@ target_sources(owl PRIVATE
   SphereGeomGroup.cpp
 )
 
+add_library(owl SHARED ${OWL_SOURCES})
+add_library(owl_static STATIC ${OWL_SOURCES})
+
 set_target_properties(owl
+  PROPERTIES
+  CUDA_SEPARABLE_COMPILATION ON
+  POSITION_INDEPENDENT_CODE ON
+  CUDA_RESOLVE_DEVICE_SYMBOLS ON
+  CUDA_USE_STATIC_CUDA_RUNTIME ON
+)
+set_target_properties(owl_static
   PROPERTIES
   CUDA_SEPARABLE_COMPILATION ON
   POSITION_INDEPENDENT_CODE ON
@@ -141,42 +149,47 @@ set_target_properties(owl
 )
 
 target_link_libraries(owl PUBLIC OptiX::OptiX)
-#target_link_libraries(owl PUBLIC OptiX)
+target_link_libraries(owl_static PUBLIC OptiX::OptiX)
+
 if (OWL_HAVE_TBB AND TBB_FOUND)
   if (TARGET TBB::tbb)
     target_link_libraries(owl PUBLIC TBB::tbb)
+    target_link_libraries(owl_static PUBLIC TBB::tbb)
   else()
     target_link_libraries(owl PUBLIC ${TBB_LIBRARIES})
+    target_link_libraries(owl_static PUBLIC ${TBB_LIBRARIES})
     target_include_directories(owl PUBLIC ${TBB_INCLUDE_DIR})
+    target_include_directories(owl_static PUBLIC ${TBB_INCLUDE_DIR})
   endif()
   target_compile_definitions(owl PUBLIC -DOWL_HAVE_TBB=1)
+  target_compile_definitions(owl_static PUBLIC -DOWL_HAVE_TBB=1)
 endif()
 
 # bind OWL to CUDA (includes and library)
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.17)
-  # for new cmake version, we can rely on the working cuda detection
-  # mechanism
-  find_package(CUDAToolkit REQUIRED)
-  target_link_libraries(owl PUBLIC CUDA::cuda_driver CUDA::cudart_static)
-else()
-  # for older version of cmake (where CUDAToolkit detection doesn't
-  # properly work) we fall back to search paths for hardcoded library
-  # names and header name; this isn't clean, but applies only for a
-  # small set of deprecated cmake versions, so OK for now.
-  target_link_libraries(owl PUBLIC cuda)
-  find_path(cuda_h_dir NAMES cuda.h HINTS /usr/local/cuda/include)
-  target_include_directories(owl PUBLIC ${cuda_h_dir})
-endif()
+find_package(CUDAToolkit REQUIRED)
+target_link_libraries(owl PUBLIC CUDA::cuda_driver CUDA::cudart_static)
+target_link_libraries(owl_static PUBLIC CUDA::cuda_driver CUDA::cudart_static)
 
 target_include_directories(owl
   PUBLIC
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
-set_property(TARGET owl PROPERTY CUDA_ARCHITECTURES OFF)
+target_include_directories(owl_static
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/include
+)
+set_property(TARGET owl
+  PROPERTY CUDA_ARCHITECTURES all-major
+  )
+set_property(TARGET owl_static
+  PROPERTY CUDA_ARCHITECTURES all-major
+  )
 
 if (WIN32)
   target_compile_definitions(owl PUBLIC -DNOMINMAX)
+  target_compile_definitions(owl_static PUBLIC -DNOMINMAX)
 endif()
 
 add_library(owl::owl ALIAS owl)
