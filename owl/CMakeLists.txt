@@ -130,6 +130,7 @@ set(OWL_SOURCES
   SphereGeomGroup.cpp
 )
 
+add_library(owl-config INTERFACE)
 add_library(owl SHARED ${OWL_SOURCES})
 add_library(owl_static STATIC ${OWL_SOURCES})
 
@@ -148,48 +149,42 @@ set_target_properties(owl_static
   CUDA_USE_STATIC_CUDA_RUNTIME ON
 )
 
-target_link_libraries(owl PUBLIC OptiX::OptiX)
-target_link_libraries(owl_static PUBLIC OptiX::OptiX)
+target_link_libraries(owl-config INTERFACE
+  OptiX::OptiX
+  )
+target_link_libraries(owl PUBLIC owl-config)
+target_link_libraries(owl_static PUBLIC owl-config)
 
 if (OWL_HAVE_TBB AND TBB_FOUND)
   if (TARGET TBB::tbb)
     target_link_libraries(owl PUBLIC TBB::tbb)
-    target_link_libraries(owl_static PUBLIC TBB::tbb)
   else()
     target_link_libraries(owl PUBLIC ${TBB_LIBRARIES})
-    target_link_libraries(owl_static PUBLIC ${TBB_LIBRARIES})
     target_include_directories(owl PUBLIC ${TBB_INCLUDE_DIR})
-    target_include_directories(owl_static PUBLIC ${TBB_INCLUDE_DIR})
   endif()
-  target_compile_definitions(owl PUBLIC -DOWL_HAVE_TBB=1)
-  target_compile_definitions(owl_static PUBLIC -DOWL_HAVE_TBB=1)
+  # **NO** TBB for owl-static; there is not static tbb lib
+  target_compile_definitions(owl_static PUBLIC -DOWL_HAVE_TBB=0)
 endif()
 
 # bind OWL to CUDA (includes and library)
 find_package(CUDAToolkit REQUIRED)
-target_link_libraries(owl PUBLIC CUDA::cuda_driver CUDA::cudart_static)
-target_link_libraries(owl_static PUBLIC CUDA::cuda_driver CUDA::cudart_static)
+target_link_libraries(owl-config INTERFACE
+  CUDA::cuda_driver CUDA::cudart_static)
 
-target_include_directories(owl
-  PUBLIC
+target_include_directories(owl-config
+  INTERFACE
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
-target_include_directories(owl_static
-  PUBLIC
-    ${PROJECT_SOURCE_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/include
-)
-set_property(TARGET owl
+set_property(TARGET owl-config
   PROPERTY CUDA_ARCHITECTURES all-major
   )
-set_property(TARGET owl_static
-  PROPERTY CUDA_ARCHITECTURES all-major
-  )
+#set_property(TARGET owl_static
+#  PROPERTY CUDA_ARCHITECTURES all-major
+#  )
 
 if (WIN32)
-  target_compile_definitions(owl PUBLIC -DNOMINMAX)
-  target_compile_definitions(owl_static PUBLIC -DNOMINMAX)
+  target_compile_definitions(owl-config PUBLIC -DNOMINMAX)
 endif()
 
 add_library(owl::owl ALIAS owl)
