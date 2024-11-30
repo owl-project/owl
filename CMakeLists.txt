@@ -39,6 +39,11 @@ endif()
 
 set(CMAKE_BUILD_TYPE_INIT "Release")
 
+if (NOT CMAKE_CUDA_ARCHITECTURES)
+  # 'all-major', since cmake-3.23
+  set(CMAKE_CUDA_ARCHITECTURES all-major)
+endif()
+
 # project command is required to come after cmake_minimum_required command.
 project(Optix-OWL VERSION 1.1.5 LANGUAGES C CXX CUDA)
 
@@ -49,12 +54,13 @@ if (NOT OWL_IS_SUBPROJECT)
   if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
   endif()
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 # ------------------------------------------------------------------
 # first, include gdt project to do some general configuration stuff
-# (build modes, glut, optix, etc)
+# (build modes, glut, optixb, etc)
 # ------------------------------------------------------------------
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/owl/cmake/")
 if (OWL_IS_SUBPROJECT)
