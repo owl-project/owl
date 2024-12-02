@@ -162,16 +162,24 @@ if (OWL_HAVE_TBB AND TBB_FOUND)
     target_link_libraries(owl PUBLIC ${TBB_LIBRARIES})
     target_include_directories(owl PUBLIC ${TBB_INCLUDE_DIR})
   endif()
-  # **NO** TBB for owl-static; there is not static tbb lib
 endif()
+# **NO** TBB for owl-static; there is not static tbb lib
 target_compile_definitions(owl_static PUBLIC -DOWL_HAVE_TBB=0)
 
 # bind OWL to CUDA (includes and library)
 find_package(CUDAToolkit REQUIRED)
-target_link_libraries(owl-config INTERFACE
-  CUDA::cuda_driver
-  CUDA::cudart_static
-  )
+if (OWL_CUDA_STATIC)
+  target_link_libraries(owl-config INTERFACE
+    ${OWL_CUDA_STATIC}
+    CUDA::cudart_static
+    )
+  target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_STATIC=1)
+else()
+  target_link_libraries(owl-config INTERFACE
+    CUDA::cuda_driver
+    CUDA::cudart_static
+    )
+endif()
 
 target_include_directories(owl-config
   INTERFACE
