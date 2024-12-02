@@ -16,6 +16,7 @@
 
 #include "InstanceGroup.h"
 #include "Context.h"
+#include "CUDADriver.h"
 
 #define LOG(message)                                    \
   if (Context::logging())                               \
@@ -176,7 +177,7 @@ namespace owl {
         = std::string("__instanceFuncKernel__")
         + instanceProg.progName;
     
-      CUresult rc = cuModuleGetFunction(&typeDD.instanceFuncKernel,
+      CUresult rc = _cuModuleGetFunction(&typeDD.instanceFuncKernel,
                                         moduleDD.computeModule,
                                         annotatedProgName.c_str());
       
@@ -191,7 +192,7 @@ namespace owl {
                   +instanceProg.progName+")");
       default:
         const char *errName = 0;
-        cuGetErrorName(rc,&errName);
+        _cuGetErrorName(rc,&errName);
         OWL_RAISE("unknown CUDA error when building instance program kernel"
                   +std::string(errName));
       }
@@ -218,7 +219,7 @@ namespace owl {
         = std::string("__motionInstanceFuncKernel__")
         + motionInstanceProg.progName;
     
-      CUresult rc = cuModuleGetFunction(&typeDD.motionInstanceFuncKernel,
+      CUresult rc = _cuModuleGetFunction(&typeDD.motionInstanceFuncKernel,
                                         moduleDD.computeModule,
                                         annotatedProgName.c_str());
       
@@ -233,7 +234,7 @@ namespace owl {
                   +motionInstanceProg.progName+")");
       default:
         const char *errName = 0;
-        cuGetErrorName(rc,&errName);
+        _cuGetErrorName(rc,&errName);
         OWL_RAISE("unknown CUDA error when building motion instance program kernel"
                   +std::string(errName));
       }
@@ -516,7 +517,7 @@ namespace owl {
       // lpDD
       CUdeviceptr d_launchDataPtr = 0;
       size_t bytes = 0;      
-      cuModuleGetGlobal(&d_launchDataPtr, &bytes, moduleDD.computeModule, "optixLaunchParams");
+      _cuModuleGetGlobal(&d_launchDataPtr, &bytes, moduleDD.computeModule, "optixLaunchParams");
       if (d_launchDataPtr == 0) {
         OWL_RAISE("could not find optixLaunchParams in instance program module");
       }
@@ -525,15 +526,20 @@ namespace owl {
       }
       // now, copy the deviceMemory in the launch params object to this pointer
       // CUresult rc = cuMemcpyDtoD(d_launchDataPtr, lpDD.deviceMemory.d_pointer, bytes);
-      CUresult rc = cuMemcpyHtoD(d_launchDataPtr, (void*)lpDD.hostMemory.ptr, bytes);
+#if 1
+      cudaMemcpy((void*)d_launchDataPtr, (void*)lpDD.hostMemory.ptr, bytes,
+                 cudaMemcpyHostToDevice);
+#else
+      CUresult rc = _cuMemcpyHtoD(d_launchDataPtr, (void*)lpDD.hostMemory.ptr, bytes);
 
       // Check the result and see if there was an error
       if (rc) {
         const char *errName = 0;
-        cuGetErrorName(rc,&errName);
+        _cuGetErrorName(rc,&errName);
         OWL_RAISE("CUDA error in copying launch params to instance program module: "
                   +std::string(errName));
       }
+#endif
     }
 
     if (!dd.instanceFuncKernel)
@@ -542,14 +548,14 @@ namespace owl {
                 " (Instance)GroupAccelBuild()!?");
 
     CUresult rc
-      = cuLaunchKernel(dd.instanceFuncKernel,
+      = _cuLaunchKernel(dd.instanceFuncKernel,
                        gridDims.x,gridDims.y,gridDims.z,
                        blockDims.x,blockDims.y,blockDims.z,
                        0, stream, args, 0);
     
     if (rc) {
       const char *errName = 0;
-      cuGetErrorName(rc,&errName);
+      _cuGetErrorName(rc,&errName);
       OWL_RAISE("unknown CUDA error in calling bounds function kernel: "
                 +std::string(errName));
     }

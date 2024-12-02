@@ -16,6 +16,7 @@
 
 #include "UserGeom.h"
 #include "Context.h"
+#include "CUDADriver.h"
 
 namespace owl {
 
@@ -239,13 +240,14 @@ namespace owl {
                 " (User)GroupAccelBuild()!?");
         
     CUresult rc
-      = cuLaunchKernel(typeDD.boundsFuncKernel,
+      = _cuLaunchKernel(typeDD.boundsFuncKernel,
                        gridDims.x,gridDims.y,gridDims.z,
                        blockDims.x,blockDims.y,blockDims.z,
                        0, stream, args, 0);
     if (rc) {
+      PING;
       const char *errName = 0;
-      cuGetErrorName(rc,&errName);
+      _cuGetErrorName(rc,&errName);
       OWL_RAISE("unknown CUDA error in calling bounds function kernel: "
                 +std::string(errName));
     }
@@ -316,13 +318,13 @@ namespace owl {
                 " (User)GroupAccelBuild()!?");
         
     CUresult rc
-      = cuLaunchKernel(typeDD.motionBoundsFuncKernel,
+      = _cuLaunchKernel(typeDD.motionBoundsFuncKernel,
                        gridDims.x,gridDims.y,gridDims.z,
                        blockDims.x,blockDims.y,blockDims.z,
                        0, stream, args, 0);
     if (rc) {
       const char *errName = 0;
-      cuGetErrorName(rc,&errName);
+      _cuGetErrorName(rc,&errName);
       OWL_RAISE("unknown CUDA error in calling motion bounds function kernel: "
                 +std::string(errName));
     }
@@ -369,7 +371,7 @@ namespace owl {
         = std::string("__boundsFuncKernel__")
         + boundsProg.progName;
     
-      CUresult rc = cuModuleGetFunction(&typeDD.boundsFuncKernel,
+      CUresult rc = _cuModuleGetFunction(&typeDD.boundsFuncKernel,
                                         moduleDD.computeModule,
                                         annotatedProgName.c_str());
       
@@ -384,7 +386,7 @@ namespace owl {
                   +boundsProg.progName+")");
       default:
         const char *errName = 0;
-        cuGetErrorName(rc,&errName);
+        _cuGetErrorName(rc,&errName);
         OWL_RAISE("unknown CUDA error when building bounds program kernel"
                   +std::string(errName));
       }
@@ -411,7 +413,7 @@ namespace owl {
         = std::string("__motionBoundsFuncKernel__")
         + motionBoundsProg.progName;
     
-      CUresult rc = cuModuleGetFunction(&typeDD.motionBoundsFuncKernel,
+      CUresult rc = _cuModuleGetFunction(&typeDD.motionBoundsFuncKernel,
                                         moduleDD.computeModule,
                                         annotatedProgName.c_str());
       
@@ -426,7 +428,7 @@ namespace owl {
                   +motionBoundsProg.progName+")");
       default:
         const char *errName = 0;
-        cuGetErrorName(rc,&errName);
+        _cuGetErrorName(rc,&errName);
         OWL_RAISE("unknown CUDA error when building motion bounds program kernel"
                   +std::string(errName));
       }

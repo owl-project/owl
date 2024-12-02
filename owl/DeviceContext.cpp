@@ -17,6 +17,7 @@
 #include "Context.h"
 #include "UserGeom.h"
 #include "InstanceGroup.h"
+#include "CUDADriver.h"
 
 #include <optix_function_table_definition.h>
 
@@ -207,7 +208,7 @@ namespace owl {
     OWL_CUDA_CHECK(cudaSetDevice(cudaDeviceID));
     OWL_CUDA_CHECK(cudaStreamCreate(&stream));
     
-    CUresult  cuRes = cuCtxGetCurrent(&cudaContext);
+    CUresult  cuRes = _cuCtxGetCurrent(&cudaContext);
     if (cuRes != CUDA_SUCCESS) 
       OWL_RAISE("Error querying current CUDA context...");
     
