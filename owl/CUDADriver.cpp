@@ -133,6 +133,41 @@ namespace owl {
   }
   
 #else
+  CUresult _cuModuleLoadDataEx(CUmodule *module,
+                               const void *image,
+                               unsigned int numOptions,
+                               CUjit_option *options,
+                               void **optionValues)
+  {
+    return  cuModuleLoadDataEx(module,
+                               image,
+                               numOptions,
+                               options,
+                               optionValues);
+  }
+  
+  CUresult _cuCtxGetCurrent(CUcontext *pctx)
+  {
+    return cuCtxGetCurrent(pctx);
+  }
+  
+  CUresult _cuModuleGetGlobal(CUdeviceptr *dptr,
+                              size_t *bytes,
+                              CUmodule hmod,
+                              const char *name)
+  {
+    return  cuModuleGetGlobal(dptr,
+                              bytes,
+                              hmod,
+                              name);
+      };
+
+    CUresult _cuModuleUnload(CUmodule module)
+  {
+    return cuModuleUnload(module);
+  }
+  
+
   CUresult _cuGetErrorName ( CUresult error,
                             const char** pStr )
   { return cuGetErrorName(error,pStr); }
