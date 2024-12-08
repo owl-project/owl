@@ -1,9 +1,24 @@
 #include "CUDADriver.h"
-#include <dlfcn.h>
+#ifdef _WIN32
+# include <windows.h>
+#else
+# include <dlfcn.h>
+#endif
 #include "owl/common.h"
 
 namespace owl {
 #if OWL_CUDA_DRIVER_STATIC
+# ifdef _WIN32
+    void* getDriverFunction(const std::string& fctName)
+    {
+        static HMODULE libCUDA = LoadLibraryW(L"nvcuda.dll");
+
+        if (!libCUDA) throw std::runtime_error("could not load nvcuda.dll");
+        void* sym = (void*)GetProcAddress(libCUDA, fctName.c_str());
+        if (!sym) throw std::runtime_error("could not find symbol '" + fctName + "' in libCUDA");
+        return sym;
+    }
+# else
   void *getDriverFunction(const std::string &fctName)
   {
     static void *libCUDA = dlopen("libcuda.so.1",RTLD_LAZY|RTLD_LOCAL);
@@ -12,6 +27,7 @@ namespace owl {
     if (!sym) throw std::runtime_error("could not find symbol '"+fctName+"' in libCUDA");
     return sym;
   }
+# endif
 
   CUresult _cuModuleGetFunction ( CUfunction* hfunc,
                                   CUmodule hmod,

@@ -196,7 +196,7 @@ set_property(TARGET owl-config
 #  )
 
 if (WIN32)
-  target_compile_definitions(owl-config PUBLIC -DNOMINMAX)
+  target_compile_definitions(owl-config INTERFACE -DNOMINMAX)
 endif()
 
 add_library(owl::owl ALIAS owl)
