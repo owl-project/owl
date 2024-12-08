@@ -71,6 +71,8 @@ set(OWL_SOURCES
   # -------------------------------------------------------
   # base classes
   # -------------------------------------------------------
+  CUDADriver.h
+  CUDADriver.cpp
   Object.h
   Object.cpp
   Module.h

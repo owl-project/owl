@@ -16,6 +16,7 @@
 
 #include "Module.h"
 #include "Context.h"
+#include "CUDADriver.h"
 
 #define LOG(message)                            \
   if (Context::logging())                       \
@@ -97,7 +98,7 @@ namespace owl {
     module = 0;
 
     if (computeModule)
-      cuModuleUnload(computeModule);
+      _cuModuleUnload(computeModule);
     computeModule = 0;
   }
 
@@ -180,11 +181,11 @@ namespace owl {
                               (void*)sizeof(log)
       };
       
-      rc = cuModuleLoadDataEx(&computeModule, (void *)fixedPtxCode.c_str(),
+      rc = _cuModuleLoadDataEx(&computeModule, (void *)fixedPtxCode.c_str(),
                               3, options, optionValues);
       if (rc != CUDA_SUCCESS) {
         const char *errName = 0;
-        cuGetErrorName(rc,&errName);
+        _cuGetErrorName(rc,&errName);
         OWL_RAISE("unknown CUDA error when building module "
                   "for bounds program kernel "
                   + std::string(errName) + " log: " + std::string(log));
