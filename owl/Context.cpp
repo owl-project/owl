@@ -62,16 +62,22 @@ namespace owl {
                                    requestedDeviceIDs,
                                    numRequestedDevices))
   {
+    PING;
     enablePeerAccess();
+    PING;
 
     LaunchParamsType::SP emptyLPType
       = createLaunchParamsType(0,{});
+    PING;
     dummyLaunchParams = createLaunchParams(emptyLPType);
+    PING;
   }
   
   Context::~Context()
   {
+    PING;
     devices.clear();
+    PING;
   }
   
 
