@@ -89,9 +89,9 @@
 
 
 #ifndef PRINT
-# define PRINT(var) std::cout << #var << "=" << var << std::endl;
+# define PRINT(var) std::cout << #var << "=" << var << std::endl << std::flush;
 #ifdef __WIN32__
-# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __FUNCTION__ << std::endl;
+# define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __FUNCTION__ << std::endl << std::flush;
 #else
 # define PING std::cout << __FILE__ << "::" << __LINE__ << ": " << __PRETTY_FUNCTION__ << std::endl;
 #endif
@@ -144,6 +144,7 @@ inline void owlRaise_impl(std::string str)
 {
   fprintf(stderr,"%s\n",str.c_str());
 #ifdef WIN32
+  PING; PRINT(str);
   if (IsDebuggerPresent())
     DebugBreak();
   else

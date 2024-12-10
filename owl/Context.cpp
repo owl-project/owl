@@ -273,11 +273,14 @@ namespace owl {
   Context::createLaunchParamsType(size_t varStructSize,
                                   const std::vector<OWLVarDecl> &varDecls)
   {
+    PING;
     LaunchParamsType::SP lpt
       = std::make_shared<LaunchParamsType>(this,
                                            varStructSize,
                                            varDecls);
+    PING;
     lpt->createDeviceData(getDevices());
+    PING;
     return lpt;
   }
   

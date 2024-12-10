@@ -25,14 +25,19 @@ namespace owl {
       ID(registry.allocID()),
       registry(registry)
   {
+    PING;
     assert(this);
+    PING;
     registry.track(this);
+    PING;
   }
   
   RegisteredObject::~RegisteredObject()
   {
+    PING;
     assert(this);
     registry.forget(this);
+    PING;
   }
     
 } // ::owl

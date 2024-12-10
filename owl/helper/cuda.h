@@ -21,7 +21,9 @@
 
 #define OWL_CUDA_CHECK( call )                                              \
   {                                                                     \
+    PING; \
     cudaError_t rc = call;                                              \
+    PING; PRINT(rc);                                                    \
     if (rc != cudaSuccess) {                                            \
       fprintf(stderr,                                                   \
               "CUDA call (%s) failed with code %d (line %d): %s\n",     \

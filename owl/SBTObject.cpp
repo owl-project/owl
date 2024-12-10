@@ -27,12 +27,14 @@ namespace owl {
       (we'll then have a clean copy) */
   std::vector<OWLVarDecl> copyVarDecls(const std::vector<OWLVarDecl> &varDecls)
   {
+    PING;
     std::vector<OWLVarDecl> result;
     for (auto vd : varDecls) {
       OWLVarDecl copy_vd = vd;
       copy_vd.name = strdup(vd.name);
       result.push_back(copy_vd);
     }
+    PING;
     return result;
   }
   
@@ -44,8 +46,10 @@ namespace owl {
       varStructSize(varStructSize),
       varDecls(copyVarDecls(varDecls))
   {
+    PING;
     for (auto &var : varDecls)
       assert(var.name != nullptr);
+    PING;
     /* TODO: at least in debug mode, do some 'duplicate variable
        name' and 'overlap of variables' checks etc */
   }

@@ -11,11 +11,16 @@ namespace owl {
 # ifdef _WIN32
     void* getDriverFunction(const std::string& fctName)
     {
+      PING; PRINT(fctName);
         static HMODULE libCUDA = LoadLibraryW(L"nvcuda.dll");
 
+    PING;
         if (!libCUDA) throw std::runtime_error("could not load nvcuda.dll");
+    PING;
         void* sym = (void*)GetProcAddress(libCUDA, fctName.c_str());
+        PING; PRINT(sym);
         if (!sym) throw std::runtime_error("could not find symbol '" + fctName + "' in libCUDA");
+        PING;
         return sym;
     }
 # else
@@ -78,8 +83,10 @@ namespace owl {
 
   CUresult _cuModuleLoad(CUmodule *module, const char *fname)
   {
+    PING;
     typedef CUresult (*Fct)(CUmodule *module, const char *fname);
     static Fct fct = (Fct)getDriverFunction("cuModuleLoad");
+    PING;
     return fct(module,fname);
   }
   
@@ -93,11 +100,13 @@ namespace owl {
   CUresult _cuGetErrorName ( CUresult error,
                              const char** pStr )
   {
+    PING;
     typedef CUresult (*cuGetErrorNameFct)( CUresult error,
                                            const char** pStr );
     static cuGetErrorNameFct fct 
       = (cuGetErrorNameFct)
       getDriverFunction("cuGetErrorName");
+    PING;
     return fct(error,pStr);
   }
   CUresult _cuLaunchKernel ( CUfunction f,

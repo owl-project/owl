@@ -28,6 +28,7 @@ namespace owl {
                                      const std::vector<OWLVarDecl> &varDecls)
     : SBTObjectType(context,context->launchParamTypes,varStructSize,varDecls)
   {
+    PING;
   }
   
   // ------------------------------------------------------------------
@@ -41,11 +42,16 @@ namespace owl {
       dataSize(dataSize),
       sbt({})
   {
+    PING;
     SetActiveGPU forLifeTime(device);
     
+    PING;
     OWL_CUDA_CHECK(cudaStreamCreate(&stream));
+    PING;
     deviceMemory.alloc(dataSize);
+    PING;
     hostMemory.resize(dataSize);
+    PING;
   }
 
   LaunchParams::DeviceData::~DeviceData()
