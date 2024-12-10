@@ -57,18 +57,24 @@ namespace owl {
     
   int ObjectRegistry::allocID()
   {
+    PING;
     std::lock_guard<std::mutex> lock(mutex);
+    PING;
     if (previouslyReleasedIDs.empty()) {
+    PING;
       objects.push_back(nullptr);
       const int newID = int(objects.size()-1);
       if (newID >= numIDsAllocedInContext) {
         while (newID >= numIDsAllocedInContext)
           numIDsAllocedInContext = std::max(1,numIDsAllocedInContext*2);
       }
+    PING;
       return newID;
     } else {
+    PING;
       int reusedID = previouslyReleasedIDs.top();
       previouslyReleasedIDs.pop();
+    PING;
       return reusedID;
     }
   }

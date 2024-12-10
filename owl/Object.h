@@ -93,7 +93,7 @@ namespace owl {
     
     ContextObject(Context *const context)
       : context(context)
-    {}
+    { PING; }
     
     /*! pretty-printer, for printf-debugging */
     std::string toString() const override;

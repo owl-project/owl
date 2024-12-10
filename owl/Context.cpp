@@ -274,6 +274,10 @@ namespace owl {
                                   const std::vector<OWLVarDecl> &varDecls)
   {
     PING;
+    PRINT(varDecls.size());
+    PRINT(varStructSize);
+    PRINT((int*)this);
+    PRINT(this->launchParamTypes.size());
     LaunchParamsType::SP lpt
       = std::make_shared<LaunchParamsType>(this,
                                            varStructSize,
