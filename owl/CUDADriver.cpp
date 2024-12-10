@@ -12,10 +12,10 @@ namespace owl {
     void* getDriverFunction(const std::string& fctName)
     {
       PING; PRINT(fctName);
-        static HMODULE libCUDA = LoadLibraryW(L"nvcuda.dll");
+        static HMODULE libCUDA = LoadLibraryW(L"nvcuda64dll");
 
     PING;
-        if (!libCUDA) throw std::runtime_error("could not load nvcuda.dll");
+        if (!libCUDA) throw std::runtime_error("could not load nvcuda64.dll");
     PING;
         void* sym = (void*)GetProcAddress(libCUDA, fctName.c_str());
         PING; PRINT(sym);
