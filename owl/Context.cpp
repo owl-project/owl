@@ -70,7 +70,7 @@ namespace owl {
 
     std::vector<OWLVarDecl> params;
     LaunchParamsType::SP emptyLPType
-      = createLaunchParamsType((size_t)0,);
+      = createLaunchParamsType((size_t)0,params);
     PING;
     dummyLaunchParams = createLaunchParams(emptyLPType);
     PING;
