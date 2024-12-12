@@ -68,7 +68,7 @@ if (OWL_IS_SUBPROJECT)
 endif()
 #include(configure_tbb)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(embed_ptx)

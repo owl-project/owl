@@ -57,6 +57,7 @@ namespace owl {
     
   int ObjectRegistry::allocID()
   {
+    try {
     PING;
     PRINT(this);
     PRINT((int*)&mutex);
@@ -78,6 +79,10 @@ namespace owl {
       previouslyReleasedIDs.pop();
     PING;
       return reusedID;
+    }
+    } catch (const std::exception &e) {
+      PING; PRINT(e.what());
+      throw;
     }
   }
   
