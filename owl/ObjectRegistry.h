@@ -28,6 +28,9 @@ namespace owl {
     IDs. Every buffer should have a valid ID, and should be tracked
     in this registry under this ID */
   struct ObjectRegistry {
+    ObjectRegistry() { PING; PRINT((int*)&mutex); PRINT(objects.size()); }
+    virtual ~ObjectRegistry() { PING; PRINT((int*)this); }
+    
     // ReallocContextIDsCB reallocContextIDs,
     // const char *typeDescription);
     inline size_t size()  const { return objects.size(); }
@@ -64,17 +67,20 @@ namespace owl {
   struct ObjectRegistryT : public ObjectRegistry {
     ObjectRegistryT(Context *context)
       : context(context)
-    {};
-      
+    {
+      PING; PRINT(context);
+    };
+    virtual ~ObjectRegistryT() { PING; PRINT((int*)this); }
     // void reallocContextIDs(int newMaxIDs) override;
     
     inline T* getPtr(size_t ID)
     {
-        return (T*)ObjectRegistry::getPtr(ID);
+      return (T*)ObjectRegistry::getPtr(ID);
     }
 
     inline typename T::SP getSP(size_t ID)
     {
+      PING; PRINT(ID);
       T *ptr = getPtr(ID);
       if (!ptr) return {};
       Object::SP object = ptr->shared_from_this();

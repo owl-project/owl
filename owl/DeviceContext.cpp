@@ -53,6 +53,8 @@ namespace owl {
       first of those */
   int RangeAllocator::alloc(size_t size)
   {
+    PING;
+    PRINT(freedRanges.size());
     for (size_t i=0;i<freedRanges.size();i++) {
       if (freedRanges[i].size >= size) {
         size_t where = freedRanges[i].begin;

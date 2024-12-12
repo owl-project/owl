@@ -94,6 +94,7 @@ namespace owl {
     ContextObject(Context *const context)
       : context(context)
     { PING; }
+    virtual ~ContextObject() = default;
     
     /*! pretty-printer, for printf-debugging */
     std::string toString() const override;

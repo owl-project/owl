@@ -58,6 +58,8 @@ namespace owl {
   int ObjectRegistry::allocID()
   {
     PING;
+    PRINT(this);
+    PRINT((int*)&mutex);
     std::lock_guard<std::mutex> lock(mutex);
     PING;
     if (previouslyReleasedIDs.empty()) {

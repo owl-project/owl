@@ -276,7 +276,16 @@ namespace owl {
     // ------------------------------------------------------------------
     // member variables
     // ------------------------------------------------------------------
+    
+    /*! tracks which ID regions in the SBT have already been used -
+      newly created groups allocate ranges of IDs in the SBT (to
+      allow its geometries to be in successive SBT regions), and
+      this struct keeps track of whats already used, and what is
+      available - should come *BEFORE* object registry types */
+    std::shared_ptr<RangeAllocator> sbtRangeAllocator;
 
+
+    
     /*! @{ registries for all the different object types within this
       context. allows for keeping track what's alive, and what has
       to be compiled, put into SBTs, etc */
@@ -293,13 +302,6 @@ namespace owl {
     ObjectRegistryT<LaunchParamsType> launchParamTypes;
     ObjectRegistryT<LaunchParams>     launchParams;
     /*! @} */
-
-    /*! tracks which ID regions in the SBT have already been used -
-      newly created groups allocate ranges of IDs in the SBT (to
-      allow its geometries to be in successive SBT regions), and
-      this struct keeps track of whats already used, and what is
-      available */
-    RangeAllocator sbtRangeAllocator;
 
     /*! one miss prog per ray type */
     std::vector<MissProg::SP> missProgPerRayType;

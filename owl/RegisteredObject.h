@@ -31,7 +31,7 @@ namespace owl {
 
     RegisteredObject(Context *const context,
                      ObjectRegistry &registry);
-    ~RegisteredObject();
+    virtual ~RegisteredObject();
 
     /*! the ID we're registered by - should only ever get set to any
         useful value in the constructor, and get set to -1 when the

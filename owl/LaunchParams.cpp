@@ -30,6 +30,14 @@ namespace owl {
   {
     PING;
   }
+
+  /*! creates the device-specific data for this group */
+  Object::DeviceData::SP LaunchParamsType::createOn(const DeviceContext::SP &device)
+  {
+    PING; PRINT(this); PRINT(device->ID); PRINT(device->cudaDeviceID);
+    return std::make_shared<Object::DeviceData>(device);
+  }
+  
   
   // ------------------------------------------------------------------
   // LaunchParams::DeviceData
