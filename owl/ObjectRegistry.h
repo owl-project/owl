@@ -56,7 +56,7 @@ namespace owl {
     /*! list of IDs that have already been allocated before, and have
       since gotten freed, so can be re-used */
     std::stack<int> previouslyReleasedIDs;
-    std::mutex mutex;
+    std::recursive_mutex mutex;
   };
 
 

@@ -67,9 +67,10 @@ namespace owl {
     enablePeerAccess();
     PING;
     PRINT((int*)this);
-    
+
+    std::vector<OWLVarDecl> params;
     LaunchParamsType::SP emptyLPType
-      = createLaunchParamsType(0,{});
+      = createLaunchParamsType((size_t)0,);
     PING;
     dummyLaunchParams = createLaunchParams(emptyLPType);
     PING;

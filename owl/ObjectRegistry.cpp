@@ -34,7 +34,7 @@ namespace owl {
       // reference count and thus hasn't been deleted yet.
       return;
     
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(this->mutex);
     assert(object->ID >= 0);
     assert(object->ID < (int)objects.size());
     assert(objects[object->ID] == object);
@@ -48,7 +48,7 @@ namespace owl {
   void ObjectRegistry::track(RegisteredObject *object)
   {
     assert(object);
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(this->mutex);
     assert(object->ID >= 0);
     assert(object->ID < (int)objects.size());
     assert(objects[object->ID] == nullptr);
@@ -60,7 +60,7 @@ namespace owl {
     PING;
     PRINT(this);
     PRINT((int*)&mutex);
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(this->mutex);
     PING;
     if (previouslyReleasedIDs.empty()) {
     PING;
@@ -84,7 +84,7 @@ namespace owl {
   RegisteredObject *ObjectRegistry::getPtr(size_t ID)
   {
     assert(ID < objects.size());
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return objects[ID];
   }
 
