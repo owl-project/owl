@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -28,8 +28,8 @@ namespace owl {
     IDs. Every buffer should have a valid ID, and should be tracked
     in this registry under this ID */
   struct ObjectRegistry {
-    ObjectRegistry() { PING; PRINT((int*)&mutex); PRINT(objects.size()); }
-    virtual ~ObjectRegistry() { PING; PRINT((int*)this); }
+    ObjectRegistry() = default;
+    virtual ~ObjectRegistry() = default;
     
     // ReallocContextIDsCB reallocContextIDs,
     // const char *typeDescription);
@@ -67,11 +67,8 @@ namespace owl {
   struct ObjectRegistryT : public ObjectRegistry {
     ObjectRegistryT(Context *context)
       : context(context)
-    {
-      PING; PRINT(context);
-    };
-    virtual ~ObjectRegistryT() { PING; PRINT((int*)this); }
-    // void reallocContextIDs(int newMaxIDs) override;
+    {}
+    virtual ~ObjectRegistryT() = default;
     
     inline T* getPtr(size_t ID)
     {
@@ -80,7 +77,6 @@ namespace owl {
 
     inline typename T::SP getSP(size_t ID)
     {
-      PING; PRINT(ID);
       T *ptr = getPtr(ID);
       if (!ptr) return {};
       Object::SP object = ptr->shared_from_this();

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2018-2020 Ingo Wald                                            //
+// Copyright 2018-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -144,7 +144,6 @@ inline void owlRaise_impl(std::string str)
 {
   fprintf(stderr,"%s\n",str.c_str());
 #ifdef WIN32
-  PING; PRINT(str);
   if (IsDebuggerPresent())
     DebugBreak();
   else

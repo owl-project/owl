@@ -63,24 +63,17 @@ namespace owl {
                                    requestedDeviceIDs,
                                    numRequestedDevices))
   {
-    PING;
     enablePeerAccess();
-    PING;
-    PRINT((int*)this);
 
-    std::vector<OWLVarDecl> params;
+    std::vector<OWLVarDecl> params /* empty */;
     LaunchParamsType::SP emptyLPType
       = createLaunchParamsType((size_t)0,params);
-    PING;
     dummyLaunchParams = createLaunchParams(emptyLPType);
-    PING;
   }
   
   Context::~Context()
   {
-    PING;
     devices.clear();
-    PING;
   }
   
 
@@ -276,19 +269,11 @@ namespace owl {
   Context::createLaunchParamsType(size_t varStructSize,
                                   const std::vector<OWLVarDecl> &varDecls)
   {
-    PING;
-    PRINT(varDecls.size());
-    PRINT(varStructSize);
-    PRINT((int*)this);
-    PRINT(this->launchParamTypes.size());
     LaunchParamsType::SP lpt
       = std::make_shared<LaunchParamsType>(this,
                                            varStructSize,
                                            varDecls);
-    PING;
-    PRINT(lpt.get());
     lpt->createDeviceData(getDevices());
-    PING;
     return lpt;
   }
   

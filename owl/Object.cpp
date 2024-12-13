@@ -313,7 +313,6 @@ namespace owl {
     createOn() for each device */
   void Object::createDeviceData(const std::vector<DeviceContext::SP> &devices)
   {
-    PING; PRINT(devices.size());
     if (!deviceData.empty())
       OWL_RAISE
         ("trying to create device data on object "+toString()
@@ -335,10 +334,8 @@ namespace owl {
   { return "Object"; }
 
 
-
-
   // ------------------------------------------------------------------
-  // Object
+  // ContextObject
   // ------------------------------------------------------------------
 
   /*! pretty-printer, for printf-debugging */

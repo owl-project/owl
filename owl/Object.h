@@ -55,7 +55,7 @@ namespace owl {
 
     /*! constructor */
     Object();
-    virtual ~Object() {}
+    virtual ~Object() = default;
 
     /*! pretty-printer, for printf-debugging */
     virtual std::string toString() const;

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -25,19 +25,14 @@ namespace owl {
       ID(registry.allocID()),
       registry(registry)
   {
-    PING;
     assert(this);
-    PING;
     registry.track(this);
-    PING;
   }
   
   RegisteredObject::~RegisteredObject()
   {
-    PING;
     assert(this);
     registry.forget(this);
-    PING;
   }
     
 } // ::owl

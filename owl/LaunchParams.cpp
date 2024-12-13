@@ -27,14 +27,12 @@ namespace owl {
                                      size_t varStructSize,
                                      const std::vector<OWLVarDecl> &varDecls)
     : SBTObjectType(context,context->launchParamTypes,varStructSize,varDecls)
-  {
-    PING;
-  }
+  {}
 
   /*! creates the device-specific data for this group */
-  Object::DeviceData::SP LaunchParamsType::createOn(const DeviceContext::SP &device)
+  Object::DeviceData::SP
+  LaunchParamsType::createOn(const DeviceContext::SP &device)
   {
-    PING; PRINT(this); PRINT(device->ID); PRINT(device->cudaDeviceID);
     return std::make_shared<Object::DeviceData>(device);
   }
   
@@ -50,16 +48,11 @@ namespace owl {
       dataSize(dataSize),
       sbt({})
   {
-    PING;
     SetActiveGPU forLifeTime(device);
     
-    PING;
     OWL_CUDA_CHECK(cudaStreamCreate(&stream));
-    PING;
     deviceMemory.alloc(dataSize);
-    PING;
     hostMemory.resize(dataSize);
-    PING;
   }
 
   LaunchParams::DeviceData::~DeviceData()

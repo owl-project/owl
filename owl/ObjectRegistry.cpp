@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -58,30 +58,22 @@ namespace owl {
   int ObjectRegistry::allocID()
   {
     try {
-    PING;
-    PRINT(this);
-    PRINT((int*)&mutex);
-    std::lock_guard<std::recursive_mutex> lock(this->mutex);
-    PING;
-    if (previouslyReleasedIDs.empty()) {
-    PING;
-      objects.push_back(nullptr);
-      const int newID = int(objects.size()-1);
-      if (newID >= numIDsAllocedInContext) {
-        while (newID >= numIDsAllocedInContext)
-          numIDsAllocedInContext = std::max(1,numIDsAllocedInContext*2);
+      std::lock_guard<std::recursive_mutex> lock(this->mutex);
+      if (previouslyReleasedIDs.empty()) {
+        objects.push_back(nullptr);
+        const int newID = int(objects.size()-1);
+        if (newID >= numIDsAllocedInContext) {
+          while (newID >= numIDsAllocedInContext)
+            numIDsAllocedInContext = std::max(1,numIDsAllocedInContext*2);
+        }
+        return newID;
+      } else {
+        int reusedID = previouslyReleasedIDs.top();
+        previouslyReleasedIDs.pop();
+        return reusedID;
       }
-    PING;
-      return newID;
-    } else {
-    PING;
-      int reusedID = previouslyReleasedIDs.top();
-      previouslyReleasedIDs.pop();
-    PING;
-      return reusedID;
-    }
     } catch (const std::exception &e) {
-      PING; PRINT(e.what());
+      std::cout << "Error in allocating ID " << e.what() << std::endl;;
       throw;
     }
   }
