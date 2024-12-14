@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -84,7 +84,8 @@ namespace owl {
     SBTObjectBase(Context *const context,
                   ObjectRegistry &registry,
                   std::shared_ptr<SBTObjectType> type);
-
+    virtual ~SBTObjectBase() = default;
+    
     /*! returns whether this object has a variable of this name */
     inline bool hasVariable(const std::string &name);
     
@@ -126,6 +127,7 @@ namespace owl {
       : SBTObjectBase(context,registry,type),
         type(type)
     {}
+    virtual ~SBTObject() = default;
     
     virtual std::string toString() const { return "SBTObject<"+type->toString()+">"; }
     

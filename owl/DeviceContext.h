@@ -70,7 +70,7 @@ namespace owl {
     DeviceContext(Context *parent,
                   int owlID,
                   int cudaID);
-    ~DeviceContext();
+    virtual ~DeviceContext();
     
     /*! helper function - return cuda name of this device */
     std::string getDeviceName() const;

@@ -9,15 +9,16 @@
 namespace owl {
 #if OWL_CUDA_DRIVER_STATIC
 # ifdef _WIN32
-    void* getDriverFunction(const std::string& fctName)
-    {
-        static HMODULE libCUDA = LoadLibraryW(L"nvcuda.dll");
-
-        if (!libCUDA) throw std::runtime_error("could not load nvcuda.dll");
-        void* sym = (void*)GetProcAddress(libCUDA, fctName.c_str());
-        if (!sym) throw std::runtime_error("could not find symbol '" + fctName + "' in libCUDA");
-        return sym;
-    }
+  void* getDriverFunction(const std::string& fctName)
+  {
+    static HMODULE libCUDA = LoadLibraryW(L"nvcuda.dll");
+    
+    if (!libCUDA) throw std::runtime_error("could not load nvcuda..dll");
+    
+    void* sym = (void*)GetProcAddress(libCUDA, fctName.c_str());
+    if (!sym) throw std::runtime_error("could not find symbol '" + fctName + "' in libCUDA");
+    return sym;
+  }
 # else
   void *getDriverFunction(const std::string &fctName)
   {

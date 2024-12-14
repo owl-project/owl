@@ -50,7 +50,10 @@ namespace owl {
       
     assert(empty());
     this->sizeInBytes = size;
-    OWL_CUDA_CHECK(cudaMalloc( (void**)&d_pointer, sizeInBytes));
+    if (size == 0)
+      d_pointer = 0;
+    else
+      OWL_CUDA_CHECK(cudaMalloc( (void**)&d_pointer, sizeInBytes));
     assert(alloced() || size == 0);
   }
     
@@ -59,7 +62,10 @@ namespace owl {
     assert(!externallyManaged);
     assert(empty());
     this->sizeInBytes = size;
-    OWL_CUDA_CHECK(cudaMallocManaged( (void**)&d_pointer, sizeInBytes));
+    if (size == 0)
+      d_pointer = 0;
+    else
+      OWL_CUDA_CHECK(cudaMallocManaged( (void**)&d_pointer, sizeInBytes));
     assert(alloced() || size == 0);
   }
     
@@ -125,10 +131,12 @@ namespace owl {
   }
     
   struct PinnedHostMem {
+    PinnedHostMem() = default;
+    ~PinnedHostMem() { if (ptr) cudaFree(ptr); }
     void resize(size_t N) {
       if (ptr) cudaFree(ptr);
       ptr = 0;
-      cudaMallocHost(&ptr,N);
+      if (N > 0) cudaMallocHost(&ptr,N);
     }
     uint8_t *data() { return ptr; }
     

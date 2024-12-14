@@ -245,7 +245,6 @@ namespace owl {
                        blockDims.x,blockDims.y,blockDims.z,
                        0, stream, args, 0);
     if (rc) {
-      PING;
       const char *errName = 0;
       _cuGetErrorName(rc,&errName);
       OWL_RAISE("unknown CUDA error in calling bounds function kernel: "

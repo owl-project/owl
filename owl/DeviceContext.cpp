@@ -207,11 +207,15 @@ namespace owl {
     
     OWL_CUDA_CHECK(cudaSetDevice(cudaDeviceID));
     OWL_CUDA_CHECK(cudaStreamCreate(&stream));
-    
+
+#if 1
+    // use current context
+    cudaContext = 0;
+#else
     CUresult  cuRes = _cuCtxGetCurrent(&cudaContext);
     if (cuRes != CUDA_SUCCESS) 
-      OWL_RAISE("Error querying current CUDA context...");
-    
+       OWL_RAISE("Error querying current CUDA context...");
+#endif
     OPTIX_CHECK(optixDeviceContextCreate(cudaContext, 0, &optixContext));
     OPTIX_CHECK(optixDeviceContextSetLogCallback
                 (optixContext,context_log_cb,this,4));

@@ -34,7 +34,10 @@ namespace owl {
     LaunchParamsType(Context *const context,
                size_t varStructSize,
                const std::vector<OWLVarDecl> &varDecls);
+    virtual ~LaunchParamsType() = default;
 
+    Object::DeviceData::SP createOn(const DeviceContext::SP &device) override;
+    
     virtual std::string toString() const { return "LaunchParamsType"; }
   };
 
@@ -52,7 +55,7 @@ namespace owl {
 
       /*! constructor, which allocs all the device-side data */
       DeviceData(const DeviceContext::SP &device, size_t  dataSize);
-      ~DeviceData();
+      virtual ~DeviceData();
       
       const size_t            dataSize;
       

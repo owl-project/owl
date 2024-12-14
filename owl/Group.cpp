@@ -62,18 +62,18 @@ namespace owl {
       geometries(numChildren)      
   {
     if (context->perGeometrySBTRecordsDisabled)
-      sbtOffset = context->sbtRangeAllocator.alloc(1);
+      sbtOffset = context->sbtRangeAllocator->alloc(1);
     else 
-      sbtOffset = context->sbtRangeAllocator.alloc(numChildren);
+      sbtOffset = context->sbtRangeAllocator->alloc(numChildren);
   }
   
   /*! destructor that releases the SBT range used by this group */
   GeomGroup::~GeomGroup()
   {
     if (context->perGeometrySBTRecordsDisabled)
-      context->sbtRangeAllocator.release(sbtOffset,1);
+      context->sbtRangeAllocator->release(sbtOffset,1);
     else
-      context->sbtRangeAllocator.release(sbtOffset,geometries.size());
+      context->sbtRangeAllocator->release(sbtOffset,geometries.size());
   }
 
 

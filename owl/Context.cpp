@@ -46,7 +46,8 @@ namespace owl {
 
   Context::Context(int32_t *requestedDeviceIDs,
                    int      numRequestedDevices)
-    : buffers(this),
+    : sbtRangeAllocator(std::make_shared<RangeAllocator>()),
+      buffers(this),
       textures(this),
       groups(this),
       rayGenTypes(this),
@@ -64,8 +65,9 @@ namespace owl {
   {
     enablePeerAccess();
 
+    std::vector<OWLVarDecl> params /* empty */;
     LaunchParamsType::SP emptyLPType
-      = createLaunchParamsType(0,{});
+      = createLaunchParamsType((size_t)0,params);
     dummyLaunchParams = createLaunchParams(emptyLPType);
   }
   
@@ -382,7 +384,7 @@ namespace owl {
       maxHitProgDataSize = std::max(maxHitProgDataSize, geomType->varStructSize);
     }
       
-    size_t numHitGroupEntries = sbtRangeAllocator.maxAllocedID;
+    size_t numHitGroupEntries = sbtRangeAllocator->maxAllocedID;
     // always add 1 so we always have a hit group array, even for
     // programs that didn't create any Groups (yet?)
     size_t numHitGroupRecords = numHitGroupEntries*numRayTypes + 1;
