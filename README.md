@@ -1,10 +1,10 @@
-# OWL: A Productivity Library for OptiX 7
+# OWL: A Productivity Library for OptiX 7 and 8
 
 <!--- ------------------------------------------------------- -->
 ## What is OWL?
 
 OWL is a convenience/productivity-oriented library on top of OptiX
-7.x, and aims at making it easier to write OptiX programs by taking
+7.x and 8.x, and aims at making it easier to write OptiX programs by taking
 some of the more arcane arts (like knowing what a Shader Binding Table
 is, and how to actually build it), and doing that for the user. For
 example, assuming the node graph (ie, the programs, geometries, and
@@ -149,11 +149,9 @@ information than a single acceleration structure.
 Despite these significant changes after the initial release, the
 current abstraction level and API have remained stable over roughly a
 year now, with only relatively minor additions such as buffers of
-buffers, refitting, textures, or motion blur. Some features will still
-need adding (e.g., curves, which got added to OptiX 7.1 but are not yet
-exposed in OWL); however, we consider the current release to be
-sufficiently stable to finally have given it the long-awaited "version
-1.x".
+buffers, refitting, textures, or motion blur. Some capabilities will
+only be available when used with the respective OptiX and/or driver
+version (like you won't have curves if you use 7.0).
 
 <!--- ------------------------------------------------------- -->
 # Sample Use Cases
@@ -240,14 +238,14 @@ Some sample use projects/papers that recently used OWL:
 # Building OWL / Supported Platforms
 
 General Requirements:
-- OptiX 7 SDK (version 7.0, 7.1, 7.2, 7.3, or 7.4; should work with either)
-- CUDA, preferably CUDA version 12
+- OptiX 7 SDK (version 7.x all the work to 8.0 are frequently used and tested)
+- CUDA version 12, preferable 12.2 and newer
 - a C++11 capable compiler (regular gcc on CentOS, Ubuntu, or any other Linux should do; as should VS on Windows)
 - OpenGL
 
 Per-OS Instructions:
 
-- Ubuntu 18, 19, and 20, 22 (mostly developed on 18 and 20, today mostly used on 22)
+- Ubuntu (mostly developed on 18 and 20, today mostly used on 22 and 24)
     - Required Dependencies (for building just the core library itself)
 		- cmake and general build essentials 
 		
@@ -278,7 +276,7 @@ Per-OS Instructions:
 	```
 	(mind to use `cmake3`, not `cmake`, using the wrong one will mess up the build directory)
 - Windows
-    - Requires: Visual Studio (both 2017 and 2019 work), OptiX 7.0, cmake
+    - Requires: Visual Studio (both 2017 and 2019 work), OptiX 7.x to 8.x, cmake
 	- Build: Use CMake-GUI to build Visual Studio project, then use VS to build
 		- Specifics: source code path is ```...Gitlab/owl```, binaries ```...Gitlab/owl/build```, and after pushing the Configure button choose ```x64``` for the optional platform.
 		- You may need to Configure twice.
