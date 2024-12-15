@@ -64,7 +64,7 @@ namespace owl {
           line.find(",_optix_") != line.npos
           )
         fixed << "//dropped: " << line;
-      else if (line.fine(".version") == 0)
+      else if (line.find(".version") == 0)
         fixed << ".version 8.0\n";
       else
         fixed << line;
