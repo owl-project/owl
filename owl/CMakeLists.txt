@@ -135,6 +135,7 @@ set(OWL_SOURCES
 add_library(owl-config INTERFACE)
 add_library(owl SHARED ${OWL_SOURCES})
 add_library(owl_static STATIC ${OWL_SOURCES})
+target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_STATIC=1)
 add_library(owl_object OBJECT ${OWL_SOURCES})
 
 set_target_properties(owl
@@ -182,10 +183,10 @@ target_compile_definitions(owl_object PUBLIC -DOWL_HAVE_TBB=0)
 find_package(CUDAToolkit REQUIRED)
 if (OWL_CUDA_STATIC)
   target_link_libraries(owl-config INTERFACE
-    ${OWL_CUDA_STATIC}
+#    ${OWL_CUDA_STATIC}
     CUDA::cudart_static
     )
-  target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_STATIC=1)
+  target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_DRIVER_STATIC=1)
 else()
   target_link_libraries(owl-config INTERFACE
     CUDA::cuda_driver
