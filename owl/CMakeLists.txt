@@ -135,6 +135,7 @@ set(OWL_SOURCES
 add_library(owl-config INTERFACE)
 add_library(owl SHARED ${OWL_SOURCES})
 add_library(owl_static STATIC ${OWL_SOURCES})
+add_library(owl_object OBJECT ${OWL_SOURCES})
 
 set_target_properties(owl
   PROPERTIES
@@ -150,12 +151,20 @@ set_target_properties(owl_static
   CUDA_RESOLVE_DEVICE_SYMBOLS ON
   CUDA_USE_STATIC_CUDA_RUNTIME ON
 )
+set_target_properties(owl_object
+  PROPERTIES
+  CUDA_SEPARABLE_COMPILATION ON
+  POSITION_INDEPENDENT_CODE ON
+  CUDA_RESOLVE_DEVICE_SYMBOLS ON
+  CUDA_USE_STATIC_CUDA_RUNTIME ON
+)
 
 target_link_libraries(owl-config INTERFACE
   OptiX::OptiX
   )
 target_link_libraries(owl PUBLIC owl-config)
 target_link_libraries(owl_static PUBLIC owl-config)
+target_link_libraries(owl_object PUBLIC owl-config)
 
 if (OWL_HAVE_TBB AND TBB_FOUND)
   if (TARGET TBB::tbb)
@@ -167,6 +176,7 @@ if (OWL_HAVE_TBB AND TBB_FOUND)
 endif()
 # **NO** TBB for owl-static; there is not static tbb lib
 target_compile_definitions(owl_static PUBLIC -DOWL_HAVE_TBB=0)
+target_compile_definitions(owl_object PUBLIC -DOWL_HAVE_TBB=0)
 
 # bind OWL to CUDA (includes and library)
 find_package(CUDAToolkit REQUIRED)
@@ -201,3 +211,4 @@ endif()
 
 add_library(owl::owl ALIAS owl)
 add_library(owl::owl_static ALIAS owl_static)
+add_library(owl::owl_object ALIAS owl_object)
