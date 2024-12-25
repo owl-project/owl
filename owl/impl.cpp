@@ -687,6 +687,30 @@ owlDeviceBufferCreate(OWLContext _context,
   return (OWLBuffer)context->createHandle(buffer);
 }
 
+
+/*! creates a "user"-buffer; i.e., a buffer whose allocation, filling,
+    ownership,e tc, all lie entirely within the purview of the user
+    itself. OWL will just take the provided address(es), and use them,
+    withotu any allocating, copying, etc. Only works on POD data
+    types. */
+OWL_API OWLBuffer
+owlUserBufferCreate(OWLContext  _context,
+                    OWLDataType type,
+                    size_t      count,
+                    /*! one (device-)address per device in the
+                        context */
+                    void **addresses,
+                    int numAddresses)
+{
+  LOG_API_CALL();
+  APIContext::SP context = checkGet(_context);
+  Buffer::SP  buffer
+    = context->userBufferCreate(type,count,addresses,numAddresses);
+  assert(buffer);
+  return (OWLBuffer)context->createHandle(buffer);
+}
+
+
 /*! clears a buffer in the sense that it sets the entire memory region
   to zeroes. Note this is just a convenience function around
   cudaMemset. */

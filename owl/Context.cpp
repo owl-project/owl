@@ -159,6 +159,32 @@ namespace owl {
     return buffer;
   }
   
+
+  /*! creates a "user"-buffer; i.e., a buffer whose allocation, filling,
+    ownership,e tc, all lie entirely within the purview of the user
+    itself. OWL will just take the provided address(es), and use them,
+    withotu any allocating, copying, etc. Only works on POD data
+    types. */
+  Buffer::SP
+  Context::userBufferCreate(OWLDataType type,
+                            size_t count,
+                            /*! one (device-)address per device in the
+                              context */
+                            void **addresses,
+                            int numAddresses)
+  {
+    if (numAddresses != devices.size())
+      throw std::runtime_error("userBufferCreate must have as many device-addresses as there are devices in the context");
+    std::vector<void *> addrs;
+    for (int i=0;i<numAddresses;i++)
+      addrs.push_back(addresses[i]);
+    Buffer::SP buffer
+      = std::make_shared<UserBuffer>(this,type,count,addrs);
+    assert(buffer);
+    buffer->createDeviceData(getDevices());
+    return buffer;
+  }
+  
   Buffer::SP
   Context::deviceBufferCreate(OWLDataType type,
                               size_t count,

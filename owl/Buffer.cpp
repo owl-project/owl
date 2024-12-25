@@ -487,6 +487,83 @@ namespace owl {
   }
 
   // ------------------------------------------------------------------
+  // Managed Mem Buffer
+  // ------------------------------------------------------------------
+  
+  /*! creates the device-specific data for this group */
+  RegisteredObject::DeviceData::SP
+  UserBuffer::createOn(const DeviceContext::SP &device) 
+  {
+    Buffer::DeviceData::SP dd
+      = std::make_shared<Buffer::DeviceData>(device);
+    dd->d_pointer = this->addresses[device->ID];
+    return dd;
+  }
+  
+  UserBuffer::UserBuffer(Context *const context,
+                         OWLDataType type,
+                         size_t count,
+                         const std::vector<void *> &_addresses)
+    : Buffer(context,type),
+      addresses(_addresses)
+  {
+    this->elementCount = count;
+  }
+  
+  /*! destructor that frees any left-over allocated memory */
+  UserBuffer::~UserBuffer()
+  {
+    // nothing to free, it's user managed
+  }
+
+  /*! pretty-printer, for debugging */
+  std::string UserBuffer::toString() const
+  {
+    return "UserBuffer";
+  }
+  
+  void UserBuffer::resize(size_t newElementCount)
+  {
+    throw std::runtime_error("cannot resize a user-supplied buffer");
+    // for (auto device : context->getDevices())
+    //   getDD(device).d_pointer = cudaManagedMem;
+  }
+  
+  void UserBuffer::clear()
+  {
+    // actually, _clearing_ a user buffer might still make sense if we
+    // define this as a memset(0) operation
+    throw std::runtime_error("cannot resize a user-supplied buffer");
+  }
+  
+  void UserBuffer::upload(const void *hostPtr, size_t offset, int64_t count)
+  {
+    // actually, _uploading to a buffer would still make total setnse
+    for (auto _dd : deviceData) {
+      DeviceData *dd = (DeviceData*)_dd.get();
+      SetActiveGPU(dd->device);
+      cudaMemcpy((char*)dd->d_pointer + offset, hostPtr,
+               (count == -1)
+                 ? sizeInBytes()
+                 : count * sizeOf(type),
+                 cudaMemcpyDefault);
+    }
+  }
+  
+  void UserBuffer::upload(const int deviceID,
+                          const void *hostPtr, size_t offset, int64_t count)
+  {
+    auto _dd = deviceData[deviceID];
+    DeviceData *dd = (DeviceData*)_dd.get();
+    SetActiveGPU(dd->device);
+    cudaMemcpy((char*)dd->d_pointer + offset, hostPtr,
+               (count == -1)
+               ? sizeInBytes()
+               : count * sizeOf(type),
+               cudaMemcpyDefault);
+  }
+
+  // ------------------------------------------------------------------
   // Graphics Resource Buffer
   // ------------------------------------------------------------------
   

@@ -196,6 +196,19 @@ namespace owl {
                        size_t count,
                        const void *init);
 
+    /*! creates a "user"-buffer; i.e., a buffer whose allocation, filling,
+      ownership,e tc, all lie entirely within the purview of the user
+      itself. OWL will just take the provided address(es), and use them,
+      withotu any allocating, copying, etc. Only works on POD data
+      types. */
+    Buffer::SP
+    userBufferCreate(OWLDataType type,
+                     size_t count,
+                     /*! one (device-)address per device in the
+                       context */
+                     void **addresses,
+                     int numAddresses);
+
     /*! creates a buffer that uses CUDA host pinned memory; that
       memory is pinned on the host and accessive to all devices in the
       device group */
