@@ -280,7 +280,7 @@ typedef enum {
   OWL_TEXEL_FORMAT_RGBA8,
   OWL_TEXEL_FORMAT_RGBA32F,
   OWL_TEXEL_FORMAT_R8,
-  OWL_TEXEL_FORMAT_R32F
+  OWL_TEXEL_FORMAT_R32F,
 }
 OWLTexelFormat;
 
@@ -717,7 +717,8 @@ owlTexture2DCreate(OWLContext context,
                    uint32_t size_y,
                    const void *texels,
                    OWLTextureFilterMode filterMode OWL_IF_CPP(=OWL_TEXTURE_LINEAR),
-                   OWLTextureAddressMode addressMode OWL_IF_CPP(=OWL_TEXTURE_CLAMP),
+                   OWLTextureAddressMode addressMode_x OWL_IF_CPP(=OWL_TEXTURE_CLAMP),
+                   OWLTextureAddressMode addressMode_y OWL_IF_CPP(=OWL_TEXTURE_CLAMP),
                    OWLTextureColorSpace colorSpace OWL_IF_CPP(=OWL_COLOR_SPACE_LINEAR),
                    /*! number of bytes between one line of texels and
                      the next; '0' means 'size_x * sizeof(texel)' */

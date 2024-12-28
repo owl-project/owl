@@ -39,7 +39,8 @@ namespace owl {
                    uint32_t             linePitchInBytes,
                    OWLTexelFormat       texelFormat,
                    OWLTextureFilterMode filterMode,
-                   OWLTextureAddressMode addressMode,
+                   OWLTextureAddressMode addressMode_x,
+                   OWLTextureAddressMode addressMode_y,
                    OWLTextureColorSpace colorSpace,
                    const void *texels
                    )
@@ -51,12 +52,11 @@ namespace owl {
     int32_t pitch  = linePitchInBytes;
     if (pitch == 0)
       pitch = int(size.x*bytesPerTexel(texelFormat));
-    assert(
-      (texelFormat == OWL_TEXEL_FORMAT_RGBA8) ||
-      (texelFormat == OWL_TEXEL_FORMAT_RGBA32F) ||
-      (texelFormat == OWL_TEXEL_FORMAT_R8) ||
-      (texelFormat == OWL_TEXEL_FORMAT_R32F)
-    );
+    assert((texelFormat == OWL_TEXEL_FORMAT_RGBA8) ||
+           (texelFormat == OWL_TEXEL_FORMAT_RGBA32F) ||
+           (texelFormat == OWL_TEXEL_FORMAT_R8) ||
+           (texelFormat == OWL_TEXEL_FORMAT_R32F)
+           );
     if (pitch == 0) {
       switch(texelFormat) {
         case OWL_TEXEL_FORMAT_RGBA8:   pitch = size.x*sizeof(vec4uc); break;
@@ -99,17 +99,22 @@ namespace owl {
       res_desc.res.array.array  = pixelArray;
       
       cudaTextureDesc tex_desc     = {};
-      if (addressMode == OWL_TEXTURE_BORDER) {
+      if (addressMode_x == OWL_TEXTURE_BORDER) {
         tex_desc.addressMode[0]      = cudaAddressModeBorder;
-        tex_desc.addressMode[1]      = cudaAddressModeBorder;
-      } else if (addressMode == OWL_TEXTURE_CLAMP) {
+      } else if (addressMode_x == OWL_TEXTURE_CLAMP) {
         tex_desc.addressMode[0]      = cudaAddressModeClamp;
-        tex_desc.addressMode[1]      = cudaAddressModeClamp;
-      } else if (addressMode == OWL_TEXTURE_WRAP) {
+      } else if (addressMode_x == OWL_TEXTURE_WRAP) {
         tex_desc.addressMode[0]      = cudaAddressModeWrap;
-        tex_desc.addressMode[1]      = cudaAddressModeWrap;
       } else {
         tex_desc.addressMode[0]      = cudaAddressModeMirror;
+      }
+      if (addressMode_y == OWL_TEXTURE_BORDER) {
+        tex_desc.addressMode[1]      = cudaAddressModeBorder;
+      } else if (addressMode_y == OWL_TEXTURE_CLAMP) {
+        tex_desc.addressMode[1]      = cudaAddressModeClamp;
+      } else if (addressMode_y == OWL_TEXTURE_WRAP) {
+        tex_desc.addressMode[1]      = cudaAddressModeWrap;
+      } else {
         tex_desc.addressMode[1]      = cudaAddressModeMirror;
       }
       assert(filterMode == OWL_TEXTURE_NEAREST

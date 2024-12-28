@@ -146,7 +146,8 @@ namespace owl {
     Texture::SP
     texture2DCreate(OWLTexelFormat texelFormat,
                     OWLTextureFilterMode filterMode,
-                    OWLTextureAddressMode addressMode,
+                    OWLTextureAddressMode addressMode_x,
+                    OWLTextureAddressMode addressMode_y,
                     OWLTextureColorSpace colorSpace,
                     const vec2i size,
                     uint32_t linePitchInBytes,
