@@ -231,7 +231,7 @@ namespace owl {
                      &d_boundsArray,
                      (void *)&primCount
     };
-    
+
     CUstream stream = device->stream;
     UserGeomType::DeviceData &typeDD = getTypeDD(device);
     if (!typeDD.boundsFuncKernel)
@@ -297,7 +297,7 @@ namespace owl {
     vec3i gridDims(numBlocks_x,numBlocks_y,numBlocks_z);
 
     tempMem.upload(userGeomData);
-    
+
     void  *d_geomData = tempMem.get();
     vec3f *d_boundsArrayKey1 = (vec3f*)dd.internalBufferForBoundsProgramKey1.get();
     vec3f *d_boundsArrayKey2 = (vec3f*)dd.internalBufferForBoundsProgramKey2.get();
@@ -315,12 +315,12 @@ namespace owl {
       OWL_RAISE("bounds kernel set, but not yet compiled - "
                 "did you forget to call BuildPrograms() before"
                 " (User)GroupAccelBuild()!?");
-        
+
     CUresult rc
       = _cuLaunchKernel(typeDD.motionBoundsFuncKernel,
-                       gridDims.x,gridDims.y,gridDims.z,
-                       blockDims.x,blockDims.y,blockDims.z,
-                       0, stream, args, 0);
+                        gridDims.x,gridDims.y,gridDims.z,
+                        blockDims.x,blockDims.y,blockDims.z,
+                        0, stream, args, 0);
     if (rc) {
       const char *errName = 0;
       _cuGetErrorName(rc,&errName);

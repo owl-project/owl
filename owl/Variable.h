@@ -136,7 +136,8 @@ namespace owl {
 
     /*! writes the device specific representation of the given type */
     virtual void writeToSBT(uint8_t *sbtEntry,
-                            const DeviceContext::SP &device) const = 0;
+                            const DeviceContext::SP &device,
+                            bool dbg=false) const = 0;
 
     /*! creates an instance of this variable type to be attached to a
         given object - this instance will can then store the values

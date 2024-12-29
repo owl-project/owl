@@ -100,7 +100,8 @@ namespace owl {
       traversable) while doing so (also works for launch params, even
       though those, strictly speaking, are not part of the SBT)*/
     void writeVariables(uint8_t *sbtEntry,
-                        const DeviceContext::SP &device) const;
+                        const DeviceContext::SP &device,
+                        bool dbg = false) const;
     
     /*! our own type description, that tells us which variables (of
       which type, etc) we have */

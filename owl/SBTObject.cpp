@@ -111,11 +111,12 @@ namespace owl {
     traversable) while doing so (also works for launch params, even
     though those, strictly speaking, are not part of the SBT)*/
   void SBTObjectBase::writeVariables(uint8_t *sbtEntryBase,
-                                     const DeviceContext::SP &device) const
+                                     const DeviceContext::SP &device,
+                                     bool dbg) const
   {
     for (auto var : variables) {
       auto decl = var->varDecl;
-      var->writeToSBT(sbtEntryBase + decl->offset,device);
+      var->writeToSBT(sbtEntryBase + decl->offset,device,dbg);
     }
   }
   

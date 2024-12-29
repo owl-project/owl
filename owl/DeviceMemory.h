@@ -21,7 +21,7 @@
 namespace owl {
 
   struct DeviceMemory {
-    inline ~DeviceMemory() { if (!externallyManaged) free(); }
+    inline ~DeviceMemory() { if (!externallyManaged && !empty()) free(); }
     inline bool   alloced()  const { return !empty(); }
     inline bool   empty()    const { return sizeInBytes == 0; }
     inline bool   notEmpty() const { return !empty(); }
@@ -45,8 +45,10 @@ namespace owl {
 
   inline void DeviceMemory::alloc(size_t size)
   {
+    if (size == sizeInBytes) return;
+    
     assert(!externallyManaged);
-    if (alloced() || size > this->sizeInBytes) free();
+    if (alloced()) free();
       
     assert(empty());
     this->sizeInBytes = size;
@@ -61,6 +63,7 @@ namespace owl {
   {
     assert(!externallyManaged);
     assert(empty());
+    if (alloced()) free();
     this->sizeInBytes = size;
     if (size == 0)
       d_pointer = 0;
