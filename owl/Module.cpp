@@ -62,11 +62,11 @@ namespace owl {
       std::string line = getNextLine(s);
       if (line.find(" _optix_") != line.npos ||
           line.find(",_optix_") != line.npos
-          )
+          ) {
         fixed << "//dropped: " << line;
-      else if (line.find(".version") == 0)
-        fixed << ".version 8.0\n";
-      else
+      // } else if (line.find(".version") == 0) {
+      //   fixed << ".version 8.0\n";
+      } else
         fixed << line;
     }
     return fixed.str();
