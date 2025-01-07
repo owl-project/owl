@@ -37,15 +37,34 @@ if(CUDA_TOOLKIT_ROOT_DIR)
   )
 endif()
 
+# project command is required to come after cmake_minimum_required command.
 set(CMAKE_BUILD_TYPE_INIT "Release")
 
-if (NOT CMAKE_CUDA_ARCHITECTURES)
-  # 'all-major', since cmake-3.23
-  set(CMAKE_CUDA_ARCHITECTURES all-major)
+# at least for cmake < 3.24, if CMAKE_CUDA_ARCHITECTURES isn't set at
+# this point, the 'project' call will set it to "52"; for newer cmake
+# set it to 'native'
+if ((${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.24)
+    AND
+    (NOT CMAKE_CUDA_ARCHITECTURES))
+  set(CMAKE_CUDA_ARCHITECTURES "native")
+endif()
+project(Optix-OWL VERSION 1.1.5 LANGUAGES C CXX CUDA)
+if ((${CMAKE_VERSION} VERSION_LESS 3.24)
+    AND
+    ("${CMAKE_CUDA_ARCHITECTURES}" STREQUAL 52))
+  set(CMAKE_CUDA_ARCHITECTURES OFF)
 endif()
 
-# project command is required to come after cmake_minimum_required command.
-project(Optix-OWL VERSION 1.1.5 LANGUAGES C CXX CUDA)
+if (NOT CMAKE_CUDA_ARCHITECTURES)
+  # 'all-major', since cmake-3.24
+  if (${CMAKE_VERSION} VERSION_LESS 3.24)
+    # cmake < 3.24 doesnt' know 'native', so simply leave it off, and
+    # specify no arch flags at all - which for most cuda versions
+    # should default to whatever the underlying host has, anyway
+  else()
+    set(CMAKE_CUDA_ARCHITECTURES "native")
+  endif()
+endif()
 
 if (NOT OWL_IS_SUBPROJECT)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
