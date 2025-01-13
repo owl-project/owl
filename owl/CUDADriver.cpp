@@ -7,7 +7,7 @@
 #include "owl/common.h"
 
 namespace owl {
-#if OWL_CUDA_DRIVER_STATIC
+#if OWL_CUDA_STATIC
 # ifdef _WIN32
   void* getDriverFunction(const std::string& fctName)
   {

@@ -135,7 +135,8 @@ set(OWL_SOURCES
 add_library(owl-config INTERFACE)
 add_library(owl SHARED ${OWL_SOURCES})
 add_library(owl_static STATIC ${OWL_SOURCES})
-target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_STATIC=1)
+target_compile_definitions(owl-config INTERFACE -DOWL_CUDA_STATIC=1)
+#target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_STATIC=1)
 add_library(owl_object OBJECT ${OWL_SOURCES})
 
 set_target_properties(owl
@@ -163,6 +164,9 @@ set_target_properties(owl_object
 target_link_libraries(owl-config INTERFACE
   OptiX::OptiX
   )
+if (OWL_CUDA_STATIC)
+  target_compile_definitions(owl-config INTERFACE -DOWL_CUDA_STATIC=1)
+endif()
 target_link_libraries(owl PUBLIC owl-config)
 target_link_libraries(owl_static PUBLIC owl-config)
 target_link_libraries(owl_object PUBLIC owl-config)
@@ -186,7 +190,7 @@ if (OWL_CUDA_STATIC)
 #    ${OWL_CUDA_STATIC}
     CUDA::cudart_static
     )
-  target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_DRIVER_STATIC=1)
+#  target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_STATIC=1)
 else()
   target_link_libraries(owl-config INTERFACE
     CUDA::cuda_driver
