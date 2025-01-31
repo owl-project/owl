@@ -394,25 +394,25 @@ namespace owl {
     // default instantiations
     // =======================================================
   
-#define _define_vec_types(T,t)                  \
+#define define_vec_types(T,t)                  \
     using vec2##t = vec_t<T,2>;                 \
     using vec3##t = vec_t<T,3>;                 \
     using vec4##t = vec_t<T,4>;                 \
-    using vec3##t##a = vec3a_t<T>;              \
+    using vec3##t##a = vec3a_t<T>;              
   
-    _define_vec_types(bool ,b);
-    _define_vec_types(int8_t ,c);
-    _define_vec_types(int16_t ,s);
-    _define_vec_types(int32_t ,i);
-    _define_vec_types(int64_t ,l);
-    _define_vec_types(uint8_t ,uc);
-    _define_vec_types(uint16_t,us);
-    _define_vec_types(uint32_t,ui);
-    _define_vec_types(uint64_t,ul);
-    _define_vec_types(float,f);
-    _define_vec_types(double,d);
+    define_vec_types(bool ,b);
+    define_vec_types(int8_t ,c);
+    define_vec_types(int16_t ,s);
+    define_vec_types(int32_t ,i);
+    define_vec_types(int64_t ,l);
+    define_vec_types(uint8_t ,uc);
+    define_vec_types(uint16_t,us);
+    define_vec_types(uint32_t,ui);
+    define_vec_types(uint64_t,ul);
+    define_vec_types(float,f);
+    define_vec_types(double,d);
   
-#undef _define_vec_types
+#undef define_vec_types
 
     inline __both__ vec_t<bool,3> ge(const vec3f &a, const vec3f &b)
     { return { a.x >= b.x, a.y >= b.y, a.z >= b.z }; }
@@ -421,7 +421,7 @@ namespace owl {
     { return { a.x < b.x, a.y < b.y, a.z < b.z }; }
 
     inline __both__ bool any(vec_t<bool,3> v)
-    { return v.x | v.y | v.z; }
+    { return v.x || v.y || v.z; }
     
     
   } // ::owl::common
