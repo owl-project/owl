@@ -44,6 +44,7 @@ namespace owl {
     Variable(const OWLVarDecl *const varDecl)
       : varDecl(varDecl)
     { assert(varDecl); }
+    virtual ~Variable();
     
     // -------------------------------------------------------
     // bool

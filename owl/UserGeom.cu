@@ -79,6 +79,16 @@ namespace owl {
     : GeomType::DeviceData(device)
   {}
 
+  
+  UserGeom::DeviceData::~DeviceData()
+  {
+  }
+  
+  UserGeomType::DeviceData::~DeviceData()
+  {
+  }
+  
+  
   std::shared_ptr<Geom> UserGeomType::createGeom()
   {
     GeomType::SP self
@@ -119,11 +129,16 @@ namespace owl {
     /*! nothing special - all inherited */
   }
 
+  UserGeomType::~UserGeomType()
+  {
+  }
+  
   /*! constructor */
   UserGeom::UserGeom(Context *const context,
                      GeomType::SP geometryType)
     : Geom(context,geometryType)
   {}
+
 
   /*! set number of primitives that this geom will contain */
   void UserGeom::setPrimCount(size_t count)
@@ -135,9 +150,12 @@ namespace owl {
   {
     for (auto device : context->getDevices()) {
       DeviceData &dd = getDD(device);
-      dd.internalBufferForBoundsProgram.d_pointer = (CUdeviceptr)buffer->getPointer(device);
-      dd.internalBufferForBoundsProgram.sizeInBytes = buffer->sizeInBytes();
-      dd.internalBufferForBoundsProgram.externallyManaged = true;
+      dd.internalBufferForBoundsProgram.d_pointer
+        = (CUdeviceptr)buffer->getPointer(device);
+      dd.internalBufferForBoundsProgram.sizeInBytes
+        = buffer->sizeInBytes();
+      dd.internalBufferForBoundsProgram.externallyManaged
+        = true;
       dd.useExternalBoundsBuffer = true;
     }
   }

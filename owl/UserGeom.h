@@ -36,7 +36,8 @@ namespace owl {
 
       /*! construct a new device-data for this type */
       DeviceData(const DeviceContext::SP &device);
-
+      virtual ~DeviceData();
+      
       /*! fill in an OptixProgramGroup descriptor with the module and
         program names for this type */
       void fillPGDesc(OptixProgramGroupDesc &pgDesc,
@@ -57,6 +58,8 @@ namespace owl {
     UserGeomType(Context *const context,
                  size_t varStructSize,
                  const std::vector<OWLVarDecl> &varDecls);
+    virtual ~UserGeomType();
+    
 
     /*! set intersection program to run for this type and given ray type */
     void setIntersectProg(int rayType,
@@ -115,6 +118,7 @@ namespace owl {
       DeviceData(const DeviceContext::SP &device)
         : Geom::DeviceData(device)
       {};
+      virtual ~DeviceData();
 
       /*! stors the device-side buffer to store the bounding boxes in
         that the bounds program generates, and that the BVH builder

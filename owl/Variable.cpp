@@ -35,6 +35,11 @@ namespace owl {
        );
   }
 
+  Variable::~Variable()
+  {
+  }
+  
+
   void Variable::set(const std::shared_ptr<Buffer>  &value)
   { mismatchingType("Buffer"); }
   void Variable::set(const std::shared_ptr<Group>   &value)
@@ -162,6 +167,9 @@ namespace owl {
       // ,
       //   data(/* actual size is 'type' - constant */varDecl->type - OWL_USER_TYPE_BEGIN)
     {}
+    virtual ~UserTypeVariable()
+    {
+    }
     
     void setRaw(const void *ptr, int devID) override
     {
@@ -171,11 +179,10 @@ namespace owl {
         dataShared.resize(dataSize);
         memcpy(dataShared.data(),ptr,dataSize);
       } else {
-        if (devID >= dataPerDev.size()) {
+        if (devID >= dataPerDev.size())
           dataPerDev.resize(devID+1);
-          if (dataPerDev[devID].empty())
-            dataPerDev[devID].resize(dataSize);
-        }
+        if (dataPerDev[devID].empty())
+          dataPerDev[devID].resize(dataSize);
         memcpy(dataPerDev[devID].data(),ptr,dataSize);
       }
     }
@@ -195,7 +202,7 @@ namespace owl {
     }
     
     std::vector<std::vector<uint8_t>> dataPerDev;
-    std::vector<std::vector<uint8_t>> dataShared;
+    std::vector<uint8_t> dataShared;
   };
 
   /*! Variable type for basic and compound-basic data types such as
@@ -215,7 +222,6 @@ namespace owl {
                     const DeviceContext::SP &device,
                     bool dbg) const override
     {
-      if (dbg) { PING; PRINT(varDecl->name); PRINT(value); }
       *(T*)sbtEntry = value;
     }
 
