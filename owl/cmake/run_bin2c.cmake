@@ -36,6 +36,10 @@ foreach(obj ${OBJECTS})
     math(EXPR len "(${len} - 1)")
     string(SUBSTRING "${filedata}" 0 ${len} filedata)
 
+    if (WIN32)
+    string(APPEND file_contents "__declspec(dllexport) \n")
+    endif()
+
     # Append data to file
     string(APPEND file_contents "const uint8_t ${obj_name}[${numBytes}] = \n")
     string(APPEND file_contents "{${filedata}")
