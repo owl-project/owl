@@ -12,6 +12,7 @@ string(APPEND file_contents "#include <stdint.h>\n\n")
 foreach(obj ${OBJECTS})
   get_filename_component(obj_ext ${obj} EXT)
   get_filename_component(obj_dir ${obj} DIRECTORY)
+message("embed-ptx_run obj=${obj} -> dir ${obj_dir}")
 
   list(POP_FRONT SYMBOL_NAMES obj_name)
 

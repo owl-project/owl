@@ -29,6 +29,7 @@ function(embed_ptx)
     endforeach()
   endif()
 
+
   ## Find bin2c and CMake script to feed it ##
 
   # We need to wrap bin2c with a script for multiple reasons:
@@ -57,9 +58,11 @@ function(embed_ptx)
   else()
     set(PTX_TARGET ${EMBED_PTX_PTX_TARGET})
   endif()
-
   add_library(${PTX_TARGET} OBJECT)
-  target_sources(${PTX_TARGET} PRIVATE ${EMBED_PTX_SOURCES})
+  target_sources(${PTX_TARGET} PUBLIC ${EMBED_PTX_SOURCES})
+
+  message("embed: added rule for object_lib ${PTX_TARGET} source ${EMBED_PTX_SOURCES}")
+
   target_link_libraries(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_LINK_LIBRARIES})
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_PTX_COMPILATION ON)
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_ARCHITECTURES OFF)
@@ -67,8 +70,10 @@ function(embed_ptx)
 
   ## Create command to run the bin2c via the CMake script ##
 
-  set(EMBED_PTX_C_FILE ${CMAKE_CURRENT_BINARY_DIR}/${EMBED_PTX_OUTPUT_TARGET}.c)
-  get_filename_component(OUTPUT_FILE_NAME ${EMBED_PTX_C_FILE} NAME)
+  set(EMBED_PTX_C_FILE ${EMBED_PTX_OUTPUT_TARGET}.c)
+  message("embed-ptx EMBED_PTX_C_FILE=${EMBED_PTX_C_FILE}")
+  message("embed-ptx EMBED_PTX_RUN=${EMBED_PTX_RUN}")
+  message("DEPENDS $<TARGET_OBJECTS:${PTX_TARGET}> ${PTX_TARGET}")
   add_custom_command(
     OUTPUT ${EMBED_PTX_C_FILE}
     COMMAND ${CMAKE_COMMAND}
@@ -79,16 +84,11 @@ function(embed_ptx)
       -P ${EMBED_PTX_RUN}
     VERBATIM
     DEPENDS $<TARGET_OBJECTS:${PTX_TARGET}> ${PTX_TARGET}
-    COMMENT "Generating embedded PTX file: ${OUTPUT_FILE_NAME}"
+    COMMENT "Generating embedded PTX file: ${EMBED_PTX_C_FILE}"
   )
 
-  add_library(${EMBED_PTX_OUTPUT_TARGET} STATIC)#OBJECT)
-  target_sources(${EMBED_PTX_OUTPUT_TARGET} PUBLIC ${EMBED_PTX_C_FILE})
-  set_target_properties(${EMBED_PTX_OUTPUT_TARGET}
-  PROPERTIES
-  CXX_VISIBILITY_PRESET default
-  CUDA_VISIBILITY_PRESET default
-  POSITION_INDEPENDENT_CODE ON
-  )
-
+#  add_library(${EMBED_PTX_OUTPUT_TARGET} STATIC)#OBJECT)
+  add_library(${EMBED_PTX_OUTPUT_TARGET} OBJECT)
+  target_sources(${EMBED_PTX_OUTPUT_TARGET} PRIVATE ${EMBED_PTX_C_FILE})
+  
 endfunction()
