@@ -82,6 +82,13 @@ function(embed_ptx)
     COMMENT "Generating embedded PTX file: ${OUTPUT_FILE_NAME}"
   )
 
-  add_library(${EMBED_PTX_OUTPUT_TARGET} OBJECT)
-  target_sources(${EMBED_PTX_OUTPUT_TARGET} PRIVATE ${EMBED_PTX_C_FILE})
+  add_library(${EMBED_PTX_OUTPUT_TARGET} STATIC)#OBJECT)
+  target_sources(${EMBED_PTX_OUTPUT_TARGET} PUBLIC ${EMBED_PTX_C_FILE})
+  set_target_properties(${EMBED_PTX_OUTPUT_TARGET}
+  PROPERTIES
+  CXX_VISIBILITY_PRESET default
+  CUDA_VISIBILITY_PRESET default
+  POSITION_INDEPENDENT_CODE ON
+  )
+
 endfunction()
