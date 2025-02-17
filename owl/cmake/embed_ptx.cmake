@@ -59,6 +59,20 @@ function(embed_ptx)
     set(PTX_TARGET ${EMBED_PTX_PTX_TARGET})
   endif()
   add_library(${PTX_TARGET} OBJECT)
+
+  set(EMBED_PTX_SOURCES_IN ${EMBED_PTX_SOURCES})
+  set(EMBED_PTX_SOURCES_OUT)
+  foreach(src ${EMBED_PTX_SOURCES_IN})
+    cmake_path(IS_ABSOLUTE src is_absolute)
+    if (is_absolute)
+    else()
+      set(src "${CMAKE_CURRENT_SOURCE_DIR}/${src}")
+    endif()
+    list(APPEND EMBED_PTX_SOURCES_OUT "${src}")
+  endforeach()
+  set(EMBED_PTX_SOURCES ${EMBED_PTX_SOURCES_OUT})
+  
+  message("EMBED_PTX_SOURCES ${EMBED_PTX_SOURCES}")
   target_sources(${PTX_TARGET} PUBLIC ${EMBED_PTX_SOURCES})
 
   message("embed: added rule for object_lib ${PTX_TARGET} source ${EMBED_PTX_SOURCES}")
@@ -70,7 +84,7 @@ function(embed_ptx)
 
   ## Create command to run the bin2c via the CMake script ##
 
-  set(EMBED_PTX_C_FILE ${EMBED_PTX_OUTPUT_TARGET}.c)
+  set(EMBED_PTX_C_FILE ${CMAKE_CURRENT_BINARY_DIR}/${EMBED_PTX_OUTPUT_TARGET}.c)
   message("embed-ptx EMBED_PTX_C_FILE=${EMBED_PTX_C_FILE}")
   message("embed-ptx EMBED_PTX_RUN=${EMBED_PTX_RUN}")
   message("DEPENDS $<TARGET_OBJECTS:${PTX_TARGET}> ${PTX_TARGET}")
