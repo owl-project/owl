@@ -84,7 +84,7 @@ function(embed_ptx)
 
   ## Create command to run the bin2c via the CMake script ##
 
-  set(EMBED_PTX_C_FILE ${CMAKE_CURRENT_BINARY_DIR}/${EMBED_PTX_OUTPUT_TARGET}.c)
+  set(EMBED_PTX_C_FILE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${EMBED_PTX_OUTPUT_TARGET}.cpp)
   message("embed-ptx EMBED_PTX_C_FILE=${EMBED_PTX_C_FILE}")
   message("embed-ptx EMBED_PTX_RUN=${EMBED_PTX_RUN}")
   message("DEPENDS $<TARGET_OBJECTS:${PTX_TARGET}> ${PTX_TARGET}")
@@ -100,9 +100,15 @@ function(embed_ptx)
     DEPENDS $<TARGET_OBJECTS:${PTX_TARGET}> ${PTX_TARGET}
     COMMENT "Generating embedded PTX file: ${EMBED_PTX_C_FILE}"
   )
+  add_custom_target(generate_${EMBED_PTX_OUTPUT_TARGET} DEPENDS ${EMBED_PTX_C_FILE})
 
 #  add_library(${EMBED_PTX_OUTPUT_TARGET} STATIC)#OBJECT)
-  add_library(${EMBED_PTX_OUTPUT_TARGET} OBJECT)
+  add_library(${EMBED_PTX_OUTPUT_TARGET} STATIC)
   target_sources(${EMBED_PTX_OUTPUT_TARGET} PRIVATE ${EMBED_PTX_C_FILE})
-  
+  set_property(TARGET ${EMBED_PTX_OUTPUT_TARGET} 
+  PROPERTY 
+  CXX_VISIBILITY_PRESET default
+  CUDA_VISIBILITY_PRESET default
+  )
+
 endfunction()
