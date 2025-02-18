@@ -105,10 +105,15 @@ function(embed_ptx)
 #  add_library(${EMBED_PTX_OUTPUT_TARGET} STATIC)#OBJECT)
   add_library(${EMBED_PTX_OUTPUT_TARGET} STATIC)
   target_sources(${EMBED_PTX_OUTPUT_TARGET} PRIVATE ${EMBED_PTX_C_FILE})
-  set_property(TARGET ${EMBED_PTX_OUTPUT_TARGET} 
-  PROPERTY 
+  set_target_properties(${EMBED_PTX_OUTPUT_TARGET} 
+  PROPERTIES 
   CXX_VISIBILITY_PRESET default
   CUDA_VISIBILITY_PRESET default
   )
+ # set_property(TARGET ${EMBED_PTX_OUTPUT_TARGET} 
+ # PROPERTY 
+ # CXX_VISIBILITY_PRESET default
+ # CUDA_VISIBILITY_PRESET default
+ # )
 
 endfunction()
