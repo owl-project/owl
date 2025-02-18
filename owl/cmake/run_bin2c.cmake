@@ -38,7 +38,8 @@ message("embed-ptx_run obj=${obj} -> dir ${obj_dir}")
     string(SUBSTRING "${filedata}" 0 ${len} filedata)
 
     if (WIN32)
-    string(APPEND file_contents "__declspec(dllexport) \n")
+    string(APPEND file_contents "extern \"C\" __declspec(dllexport) void *dummyFct_${obj_name}() { return 0; };\n")
+    string(APPEND file_contents "extern \"C\" __declspec(dllexport)  extern \n")
     endif()
 
     # Append data to file
