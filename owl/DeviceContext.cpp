@@ -144,17 +144,14 @@ namespace owl {
     // ------------------------------------------------------------------
     // init optix itself
     // ------------------------------------------------------------------
-#if OPTIX_VERSION >= 70400
-    LOG("initializing optix 7.4");
-#elif OPTIX_VERSION >= 70300
-    LOG("initializing optix 7.3");
-#elif OPTIX_VERSION >= 70200
-    LOG("initializing optix 7.2");
-#elif OPTIX_VERSION >= 70100
-    LOG("initializing optix 7.1");
-#else
-    LOG("initializing optix 7");
-#endif
+
+    int major =  OPTIX_VERSION/10000;
+    int minor = (OPTIX_VERSION%10000)/100;
+    int micro =  OPTIX_VERSION%100;
+    
+    std::stringstream ss;
+    ss << "initializing optix " << major << "." << minor << "." << micro;
+    LOG(ss.str().c_str());
     static bool initialized = false;
     if (!initialized) {
       OPTIX_CHECK(optixInit());
