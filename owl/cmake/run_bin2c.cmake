@@ -12,6 +12,7 @@ string(APPEND file_contents "#include <stdint.h>\n\n")
 foreach(obj ${OBJECTS})
   get_filename_component(obj_ext ${obj} EXT)
   get_filename_component(obj_dir ${obj} DIRECTORY)
+message("embed-ptx_run obj=${obj} -> dir ${obj_dir}")
 
   list(POP_FRONT SYMBOL_NAMES obj_name)
 
@@ -35,6 +36,14 @@ foreach(obj ${OBJECTS})
     string(LENGTH ${filedata} len)
     math(EXPR len "(${len} - 1)")
     string(SUBSTRING "${filedata}" 0 ${len} filedata)
+
+    if (WIN32)
+    string(APPEND file_contents "extern \"C\" __declspec(dllexport) void *dummyFct_${obj_name}() { return 0; };\n")
+    string(APPEND file_contents "extern \"C\" __declspec(dllexport)  extern \n")
+    else()
+    string(APPEND file_contents "extern \"C\" __attribute__((visibility(\"default\")))  void *dummyFct_${obj_name}() { return 0; };\n")
+    string(APPEND file_contents "extern \"C\" __attribute__((visibility(\"default\")))  \n")
+    endif()
 
     # Append data to file
     string(APPEND file_contents "const uint8_t ${obj_name}[${numBytes}] = \n")

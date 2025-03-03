@@ -146,7 +146,8 @@ namespace owl {
     Texture::SP
     texture2DCreate(OWLTexelFormat texelFormat,
                     OWLTextureFilterMode filterMode,
-                    OWLTextureAddressMode addressMode,
+                    OWLTextureAddressMode addressMode_x,
+                    OWLTextureAddressMode addressMode_y,
                     OWLTextureColorSpace colorSpace,
                     const vec2i size,
                     uint32_t linePitchInBytes,
@@ -195,6 +196,19 @@ namespace owl {
     deviceBufferCreate(OWLDataType type,
                        size_t count,
                        const void *init);
+
+    /*! creates a "user"-buffer; i.e., a buffer whose allocation, filling,
+      ownership,e tc, all lie entirely within the purview of the user
+      itself. OWL will just take the provided address(es), and use them,
+      withotu any allocating, copying, etc. Only works on POD data
+      types. */
+    Buffer::SP
+    userBufferCreate(OWLDataType type,
+                     size_t count,
+                     /*! one (device-)address per device in the
+                       context */
+                     void **addresses,
+                     int numAddresses);
 
     /*! creates a buffer that uses CUDA host pinned memory; that
       memory is pinned on the host and accessive to all devices in the
@@ -276,7 +290,16 @@ namespace owl {
     // ------------------------------------------------------------------
     // member variables
     // ------------------------------------------------------------------
+    
+    /*! tracks which ID regions in the SBT have already been used -
+      newly created groups allocate ranges of IDs in the SBT (to
+      allow its geometries to be in successive SBT regions), and
+      this struct keeps track of whats already used, and what is
+      available - should come *BEFORE* object registry types */
+    std::shared_ptr<RangeAllocator> sbtRangeAllocator;
 
+
+    
     /*! @{ registries for all the different object types within this
       context. allows for keeping track what's alive, and what has
       to be compiled, put into SBTs, etc */
@@ -293,13 +316,6 @@ namespace owl {
     ObjectRegistryT<LaunchParamsType> launchParamTypes;
     ObjectRegistryT<LaunchParams>     launchParams;
     /*! @} */
-
-    /*! tracks which ID regions in the SBT have already been used -
-      newly created groups allocate ranges of IDs in the SBT (to
-      allow its geometries to be in successive SBT regions), and
-      this struct keeps track of whats already used, and what is
-      available */
-    RangeAllocator sbtRangeAllocator;
 
     /*! one miss prog per ray type */
     std::vector<MissProg::SP> missProgPerRayType;

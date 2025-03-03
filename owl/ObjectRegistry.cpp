@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019 Ingo Wald                                                 //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -34,7 +34,7 @@ namespace owl {
       // reference count and thus hasn't been deleted yet.
       return;
     
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(this->mutex);
     assert(object->ID >= 0);
     assert(object->ID < (int)objects.size());
     assert(objects[object->ID] == object);
@@ -48,7 +48,7 @@ namespace owl {
   void ObjectRegistry::track(RegisteredObject *object)
   {
     assert(object);
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(this->mutex);
     assert(object->ID >= 0);
     assert(object->ID < (int)objects.size());
     assert(objects[object->ID] == nullptr);
@@ -57,26 +57,31 @@ namespace owl {
     
   int ObjectRegistry::allocID()
   {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (previouslyReleasedIDs.empty()) {
-      objects.push_back(nullptr);
-      const int newID = int(objects.size()-1);
-      if (newID >= numIDsAllocedInContext) {
-        while (newID >= numIDsAllocedInContext)
-          numIDsAllocedInContext = std::max(1,numIDsAllocedInContext*2);
+    try {
+      std::lock_guard<std::recursive_mutex> lock(this->mutex);
+      if (previouslyReleasedIDs.empty()) {
+        objects.push_back(nullptr);
+        const int newID = int(objects.size()-1);
+        if (newID >= numIDsAllocedInContext) {
+          while (newID >= numIDsAllocedInContext)
+            numIDsAllocedInContext = std::max(1,numIDsAllocedInContext*2);
+        }
+        return newID;
+      } else {
+        int reusedID = previouslyReleasedIDs.top();
+        previouslyReleasedIDs.pop();
+        return reusedID;
       }
-      return newID;
-    } else {
-      int reusedID = previouslyReleasedIDs.top();
-      previouslyReleasedIDs.pop();
-      return reusedID;
+    } catch (const std::exception &e) {
+      std::cout << "Error in allocating ID " << e.what() << std::endl;;
+      throw;
     }
   }
   
   RegisteredObject *ObjectRegistry::getPtr(size_t ID)
   {
     assert(ID < objects.size());
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return objects[ID];
   }
 

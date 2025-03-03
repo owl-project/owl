@@ -35,6 +35,11 @@ namespace owl {
        );
   }
 
+  Variable::~Variable()
+  {
+  }
+  
+
   void Variable::set(const std::shared_ptr<Buffer>  &value)
   { mismatchingType("Buffer"); }
   void Variable::set(const std::shared_ptr<Group>   &value)
@@ -152,7 +157,7 @@ namespace owl {
   void Variable::set(const affine3f &value)
   { mismatchingType("affine3f"); }
   
-  /*! Variable type for ray "user yypes". User types have a
+  /*! Variable type for ray "user types". User types have a
       user-specified size in bytes, and get set by passing a pointer
       to 'raw' data that then gets copied in binary form */
   struct UserTypeVariable : public Variable
@@ -162,6 +167,9 @@ namespace owl {
       // ,
       //   data(/* actual size is 'type' - constant */varDecl->type - OWL_USER_TYPE_BEGIN)
     {}
+    virtual ~UserTypeVariable()
+    {
+    }
     
     void setRaw(const void *ptr, int devID) override
     {
@@ -171,18 +179,18 @@ namespace owl {
         dataShared.resize(dataSize);
         memcpy(dataShared.data(),ptr,dataSize);
       } else {
-        if (devID >= dataPerDev.size()) {
+        if (devID >= dataPerDev.size())
           dataPerDev.resize(devID+1);
-          if (dataPerDev[devID].empty())
-            dataPerDev[devID].resize(dataSize);
-        }
+        if (dataPerDev[devID].empty())
+          dataPerDev[devID].resize(dataSize);
         memcpy(dataPerDev[devID].data(),ptr,dataSize);
       }
     }
 
     /*! writes the device specific representation of the given type */
     void writeToSBT(uint8_t *sbtEntry,
-                    const DeviceContext::SP &device) const override
+                    const DeviceContext::SP &device,
+                    bool dbg) const override
     {
       if (!dataPerDev.empty()) {
         int devID = device->ID;
@@ -194,7 +202,7 @@ namespace owl {
     }
     
     std::vector<std::vector<uint8_t>> dataPerDev;
-    std::vector<std::vector<uint8_t>> dataShared;
+    std::vector<uint8_t> dataShared;
   };
 
   /*! Variable type for basic and compound-basic data types such as
@@ -211,7 +219,8 @@ namespace owl {
 
     /*! writes the device specific representation of the given type */
     void writeToSBT(uint8_t *sbtEntry,
-                    const DeviceContext::SP &device) const override
+                    const DeviceContext::SP &device,
+                    bool dbg) const override
     {
       *(T*)sbtEntry = value;
     }
@@ -231,7 +240,8 @@ namespace owl {
 
     /*! writes the device specific representation of the given type */
     void writeToSBT(uint8_t *sbtEntry,
-                    const DeviceContext::SP &device) const override
+                    const DeviceContext::SP &device,
+                    bool dbg) const override
     {
       const void *value
         = buffer
@@ -255,7 +265,8 @@ namespace owl {
 
     /*! writes the device specific representation of the given type */
     void writeToSBT(uint8_t *sbtEntry,
-                    const DeviceContext::SP &device) const override
+                    const DeviceContext::SP &device,
+                    bool dbg) const override
     {
       const size_t value
         = buffer
@@ -279,7 +290,8 @@ namespace owl {
 
     /*! writes the device specific representation of the given type */
     void writeToSBT(uint8_t *sbtEntry,
-                    const DeviceContext::SP &device) const override
+                    const DeviceContext::SP &device,
+                    bool dbg) const override
     {
       const int32_t value
         = buffer
@@ -307,7 +319,8 @@ namespace owl {
 
     /*! writes the device specific representation of the given type */
     void writeToSBT(uint8_t *sbtEntry,
-                    const DeviceContext::SP &device) const override
+                    const DeviceContext::SP &device,
+                    bool dbg) const override
     {
       *(int*)sbtEntry = device->ID;
     }
@@ -327,7 +340,8 @@ namespace owl {
 
     /*! writes the device specific representation of the given type */
     void writeToSBT(uint8_t *sbtEntry,
-                    const DeviceContext::SP &device) const override
+                    const DeviceContext::SP &device,
+                    bool dbg) const override
     {
       device::Buffer *devRep = (device::Buffer *)sbtEntry;
       if (!buffer) {
@@ -362,7 +376,8 @@ namespace owl {
 
     /*! writes the device specific representation of the given type */
     void writeToSBT(uint8_t *sbtEntry,
-                    const DeviceContext::SP &device) const override
+                    const DeviceContext::SP &device,
+                    bool dbg) const override
     {
       const OptixTraversableHandle value
         = group
@@ -391,7 +406,8 @@ namespace owl {
 
     /*! writes the device specific representation of the given type */
     void writeToSBT(uint8_t *sbtEntry,
-                    const DeviceContext::SP &device) const override
+                    const DeviceContext::SP &device,
+                    bool dbg) const override
     {
       cudaTextureObject_t to = {};
       if (texture) {

@@ -687,6 +687,30 @@ owlDeviceBufferCreate(OWLContext _context,
   return (OWLBuffer)context->createHandle(buffer);
 }
 
+
+/*! creates a "user"-buffer; i.e., a buffer whose allocation, filling,
+    ownership,e tc, all lie entirely within the purview of the user
+    itself. OWL will just take the provided address(es), and use them,
+    withotu any allocating, copying, etc. Only works on POD data
+    types. */
+OWL_API OWLBuffer
+owlUserBufferCreate(OWLContext  _context,
+                    OWLDataType type,
+                    size_t      count,
+                    /*! one (device-)address per device in the
+                        context */
+                    void **addresses,
+                    int numAddresses)
+{
+  LOG_API_CALL();
+  APIContext::SP context = checkGet(_context);
+  Buffer::SP  buffer
+    = context->userBufferCreate(type,count,addresses,numAddresses);
+  assert(buffer);
+  return (OWLBuffer)context->createHandle(buffer);
+}
+
+
 /*! clears a buffer in the sense that it sets the entire memory region
   to zeroes. Note this is just a convenience function around
   cudaMemset. */
@@ -712,7 +736,8 @@ owlTexture2DCreate(OWLContext _context,
                    uint32_t size_y,
                    const void *texels,
                    OWLTextureFilterMode filterMode,
-                   OWLTextureAddressMode addressMode,
+                   OWLTextureAddressMode addressMode_x,
+                   OWLTextureAddressMode addressMode_y,
                    OWLTextureColorSpace colorSpace,
                    /*! number of bytes between one line of texels and
                      the next; '0' means 'size_x * sizeof(texel)' */
@@ -724,7 +749,8 @@ owlTexture2DCreate(OWLContext _context,
   Texture::SP  texture
     = context->texture2DCreate(texelFormat,
                                filterMode,
-                               addressMode,
+                               addressMode_x,
+                               addressMode_y,
                                colorSpace,
                                vec2i(size_x,size_y),
                                linePitchInBytes,

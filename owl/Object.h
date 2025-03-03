@@ -55,7 +55,7 @@ namespace owl {
 
     /*! constructor */
     Object();
-    virtual ~Object() {}
+    virtual ~Object() = default;
 
     /*! pretty-printer, for printf-debugging */
     virtual std::string toString() const;
@@ -93,7 +93,8 @@ namespace owl {
     
     ContextObject(Context *const context)
       : context(context)
-    {}
+    { }
+    virtual ~ContextObject() = default;
     
     /*! pretty-printer, for printf-debugging */
     std::string toString() const override;

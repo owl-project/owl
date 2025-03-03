@@ -46,7 +46,8 @@ namespace owl {
 
   Context::Context(int32_t *requestedDeviceIDs,
                    int      numRequestedDevices)
-    : buffers(this),
+    : sbtRangeAllocator(std::make_shared<RangeAllocator>()),
+      buffers(this),
       textures(this),
       groups(this),
       rayGenTypes(this),
@@ -64,8 +65,9 @@ namespace owl {
   {
     enablePeerAccess();
 
+    std::vector<OWLVarDecl> params /* empty */;
     LaunchParamsType::SP emptyLPType
-      = createLaunchParamsType(0,{});
+      = createLaunchParamsType((size_t)0,params);
     dummyLaunchParams = createLaunchParams(emptyLPType);
   }
   
@@ -157,6 +159,32 @@ namespace owl {
     return buffer;
   }
   
+
+  /*! creates a "user"-buffer; i.e., a buffer whose allocation, filling,
+    ownership,e tc, all lie entirely within the purview of the user
+    itself. OWL will just take the provided address(es), and use them,
+    withotu any allocating, copying, etc. Only works on POD data
+    types. */
+  Buffer::SP
+  Context::userBufferCreate(OWLDataType type,
+                            size_t count,
+                            /*! one (device-)address per device in the
+                              context */
+                            void **addresses,
+                            int numAddresses)
+  {
+    if (numAddresses != devices.size())
+      throw std::runtime_error("userBufferCreate must have as many device-addresses as there are devices in the context");
+    std::vector<void *> addrs;
+    for (int i=0;i<numAddresses;i++)
+      addrs.push_back(addresses[i]);
+    Buffer::SP buffer
+      = std::make_shared<UserBuffer>(this,type,count,addrs);
+    assert(buffer);
+    buffer->createDeviceData(getDevices());
+    return buffer;
+  }
+  
   Buffer::SP
   Context::deviceBufferCreate(OWLDataType type,
                               size_t count,
@@ -175,7 +203,8 @@ namespace owl {
   Texture::SP
   Context::texture2DCreate(OWLTexelFormat texelFormat,
                            OWLTextureFilterMode filterMode,
-                           OWLTextureAddressMode addressMode,
+                           OWLTextureAddressMode addressMode_x,
+                           OWLTextureAddressMode addressMode_y,
                            OWLTextureColorSpace colorSpace,
                            const vec2i size,
                            uint32_t linePitchInBytes,
@@ -183,7 +212,8 @@ namespace owl {
   {
     Texture::SP texture
       = std::make_shared<Texture>(this,size,linePitchInBytes,
-                                  texelFormat,filterMode,addressMode,colorSpace,
+                                  texelFormat,filterMode,
+                                  addressMode_x,addressMode_y,colorSpace,
                                   texels);
     assert(texture);
     return texture;
@@ -382,7 +412,7 @@ namespace owl {
       maxHitProgDataSize = std::max(maxHitProgDataSize, geomType->varStructSize);
     }
       
-    size_t numHitGroupEntries = sbtRangeAllocator.maxAllocedID;
+    size_t numHitGroupEntries = sbtRangeAllocator->maxAllocedID;
     // always add 1 so we always have a hit group array, even for
     // programs that didn't create any Groups (yet?)
     size_t numHitGroupRecords = numHitGroupEntries*numRayTypes + 1;

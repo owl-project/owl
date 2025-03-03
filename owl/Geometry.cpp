@@ -22,12 +22,18 @@ namespace owl {
   // ------------------------------------------------------------------
   // GeomType::DeviceData
   // ------------------------------------------------------------------
+
   
   /*! construtor - passthrough to parent class */
   GeomType::DeviceData::DeviceData(const DeviceContext::SP &device)
     : RegisteredObject::DeviceData(device)
   {}
 
+  GeomType::DeviceData::~DeviceData()
+  {
+    PING;
+  }
+  
   /*! fill in an OptixProgramGroup descriptor with the module and
     program names for this type */
   void GeomType::DeviceData::fillPGDesc(OptixProgramGroupDesc &pgDesc,
@@ -66,7 +72,13 @@ namespace owl {
       closestHit(context->numRayTypes),
       anyHit(context->numRayTypes)
   {}
+
+  GeomType::~GeomType()
+  {
+    PING;
+  }
   
+
   /*! creates the device-specific data for this group */
   RegisteredObject::DeviceData::SP
   GeomType::createOn(const DeviceContext::SP &device) 

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -19,7 +19,7 @@
 #include "owl/common.h"
 #include <cuda_runtime.h>
 
-#define OWL_CUDA_CHECK( call )                                              \
+#define OWL_CUDA_CHECK( call )                                          \
   {                                                                     \
     cudaError_t rc = call;                                              \
     if (rc != cudaSuccess) {                                            \
@@ -32,7 +32,7 @@
 
 #define OWL_CUDA_CALL(call) OWL_CUDA_CHECK(cuda##call)
 
-#define OWL_CUDA_CHECK2( where, call )                                      \
+#define OWL_CUDA_CHECK2( where, call )                                  \
   {                                                                     \
     cudaError_t rc = call;                                              \
     if(rc != cudaSuccess) {                                             \
@@ -47,17 +47,17 @@
     }                                                                   \
   }
 
-#define OWL_CUDA_SYNC_CHECK()                                       \
-  {                                                             \
-    cudaError_t rc = cudaDeviceSynchronize();                                    \
-    if (rc != cudaSuccess) {                                    \
-      fprintf(stderr, "error (%s: line %d): %s\n",              \
-              __FILE__, __LINE__, cudaGetErrorString(rc));      \
-      OWL_RAISE("fatal cuda error");                            \
-    }                                                           \
+#define OWL_CUDA_SYNC_CHECK()                                           \
+  {                                                                     \
+    cudaError_t rc = cudaDeviceSynchronize();                           \
+    if (rc != cudaSuccess) {                                            \
+      fprintf(stderr, "error (%s: line %d): %s\n",                      \
+              __FILE__, __LINE__, cudaGetErrorString(rc));              \
+      OWL_RAISE("fatal cuda error");                                    \
+    }                                                                   \
   }
 
-#define OWL_CUDA_SYNC_CHECK_STREAM(s)                                       \
+#define OWL_CUDA_SYNC_CHECK_STREAM(s)                           \
   {                                                             \
     cudaError_t rc = cudaStreamSynchronize(s);                  \
     if (rc != cudaSuccess) {                                    \
@@ -69,7 +69,7 @@
 
 
 
-#define OWL_CUDA_CHECK_NOTHROW( call )                                      \
+#define OWL_CUDA_CHECK_NOTHROW( call )                                  \
   {                                                                     \
     cudaError_t rc = call;                                              \
     if (rc != cudaSuccess) {                                            \
@@ -82,7 +82,7 @@
 
 #define OWL_CUDA_CALL_NOTHROW(call) OWL_CUDA_CHECK_NOTHROW(cuda##call)
 
-#define OWL_CUDA_CHECK2_NOTHROW( where, call )                              \
+#define OWL_CUDA_CHECK2_NOTHROW( where, call )                          \
   {                                                                     \
     cudaError_t rc = call;                                              \
     if(rc != cudaSuccess) {                                             \

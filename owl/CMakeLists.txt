@@ -16,11 +16,9 @@
 
 find_package(OptiX REQUIRED)
 
-add_library(owl)
-
 include(cmake/configure_tbb.cmake)
 
-target_sources(owl PRIVATE
+set(OWL_SOURCES
   # -------------------------------------------------------
   # infrastructure
   # -------------------------------------------------------
@@ -73,6 +71,8 @@ target_sources(owl PRIVATE
   # -------------------------------------------------------
   # base classes
   # -------------------------------------------------------
+  CUDADriver.h
+  CUDADriver.cpp
   Object.h
   Object.cpp
   Module.h
@@ -132,6 +132,13 @@ target_sources(owl PRIVATE
   SphereGeomGroup.cpp
 )
 
+add_library(owl-config INTERFACE)
+add_library(owl SHARED ${OWL_SOURCES})
+add_library(owl_static STATIC ${OWL_SOURCES})
+target_compile_definitions(owl-config INTERFACE -DOWL_CUDA_STATIC=1)
+#target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_STATIC=1)
+add_library(owl_object OBJECT ${OWL_SOURCES})
+
 set_target_properties(owl
   PROPERTIES
   CUDA_SEPARABLE_COMPILATION ON
@@ -139,9 +146,31 @@ set_target_properties(owl
   CUDA_RESOLVE_DEVICE_SYMBOLS ON
   CUDA_USE_STATIC_CUDA_RUNTIME ON
 )
+set_target_properties(owl_static
+  PROPERTIES
+  CUDA_SEPARABLE_COMPILATION ON
+  POSITION_INDEPENDENT_CODE ON
+  CUDA_RESOLVE_DEVICE_SYMBOLS ON
+  CUDA_USE_STATIC_CUDA_RUNTIME ON
+)
+set_target_properties(owl_object
+  PROPERTIES
+  CUDA_SEPARABLE_COMPILATION ON
+  POSITION_INDEPENDENT_CODE ON
+  CUDA_RESOLVE_DEVICE_SYMBOLS ON
+  CUDA_USE_STATIC_CUDA_RUNTIME ON
+)
 
-target_link_libraries(owl PUBLIC OptiX::OptiX)
-#target_link_libraries(owl PUBLIC OptiX)
+target_link_libraries(owl-config INTERFACE
+  OptiX::OptiX
+  )
+if (OWL_CUDA_STATIC)
+  target_compile_definitions(owl-config INTERFACE -DOWL_CUDA_STATIC=1)
+endif()
+target_link_libraries(owl PUBLIC owl-config)
+target_link_libraries(owl_static PUBLIC owl-config)
+target_link_libraries(owl_object PUBLIC owl-config)
+
 if (OWL_HAVE_TBB AND TBB_FOUND)
   if (TARGET TBB::tbb)
     target_link_libraries(owl PUBLIC TBB::tbb)
@@ -149,34 +178,45 @@ if (OWL_HAVE_TBB AND TBB_FOUND)
     target_link_libraries(owl PUBLIC ${TBB_LIBRARIES})
     target_include_directories(owl PUBLIC ${TBB_INCLUDE_DIR})
   endif()
-  target_compile_definitions(owl PUBLIC -DOWL_HAVE_TBB=1)
 endif()
+# **NO** TBB for owl-static; there is not static tbb lib
+target_compile_definitions(owl_static PUBLIC -DOWL_HAVE_TBB=0)
+target_compile_definitions(owl_object PUBLIC -DOWL_HAVE_TBB=0)
 
 # bind OWL to CUDA (includes and library)
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.17)
-  # for new cmake version, we can rely on the working cuda detection
-  # mechanism
-  find_package(CUDAToolkit REQUIRED)
-  target_link_libraries(owl PUBLIC CUDA::cuda_driver CUDA::cudart_static)
+find_package(CUDAToolkit REQUIRED)
+if (OWL_CUDA_STATIC)
+  target_link_libraries(owl-config INTERFACE
+#    ${OWL_CUDA_STATIC}
+    CUDA::cudart_static
+    )
+#  target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_STATIC=1)
 else()
-  # for older version of cmake (where CUDAToolkit detection doesn't
-  # properly work) we fall back to search paths for hardcoded library
-  # names and header name; this isn't clean, but applies only for a
-  # small set of deprecated cmake versions, so OK for now.
-  target_link_libraries(owl PUBLIC cuda)
-  find_path(cuda_h_dir NAMES cuda.h HINTS /usr/local/cuda/include)
-  target_include_directories(owl PUBLIC ${cuda_h_dir})
+  target_link_libraries(owl-config INTERFACE
+    CUDA::cuda_driver
+    CUDA::cudart_static
+    )
 endif()
 
-target_include_directories(owl
-  PUBLIC
+target_include_directories(owl-config
+  INTERFACE
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
-set_property(TARGET owl PROPERTY CUDA_ARCHITECTURES OFF)
+#set_property(TARGET owl-config
+#  PROPERTY
+#  CUDA_ARCHITECTURES "${OWL_CUDA_ARCHITECTURES}"
+#  CUDA_PTX_COMPILATION ON
+#  CUDA_COMPILE_PTX_COMPILATION OFF
+#  )
+#set_property(TARGET owl_static
+#  PROPERTY CUDA_ARCHITECTURES all-major
+#  )
 
 if (WIN32)
-  target_compile_definitions(owl PUBLIC -DNOMINMAX)
+  target_compile_definitions(owl-config INTERFACE -DNOMINMAX)
 endif()
 
 add_library(owl::owl ALIAS owl)
+add_library(owl::owl_static ALIAS owl_static)
+add_library(owl::owl_object ALIAS owl_object)

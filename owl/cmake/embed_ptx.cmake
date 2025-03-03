@@ -29,6 +29,7 @@ function(embed_ptx)
     endforeach()
   endif()
 
+
   ## Find bin2c and CMake script to feed it ##
 
   # We need to wrap bin2c with a script for multiple reasons:
@@ -57,18 +58,30 @@ function(embed_ptx)
   else()
     set(PTX_TARGET ${EMBED_PTX_PTX_TARGET})
   endif()
-
   add_library(${PTX_TARGET} OBJECT)
-  target_sources(${PTX_TARGET} PRIVATE ${EMBED_PTX_SOURCES})
+
+  set(EMBED_PTX_SOURCES_IN ${EMBED_PTX_SOURCES})
+  set(EMBED_PTX_SOURCES_OUT)
+  foreach(src ${EMBED_PTX_SOURCES_IN})
+    cmake_path(IS_ABSOLUTE src is_absolute)
+    if (is_absolute)
+    else()
+      set(src "${CMAKE_CURRENT_SOURCE_DIR}/${src}")
+    endif()
+    list(APPEND EMBED_PTX_SOURCES_OUT "${src}")
+  endforeach()
+  set(EMBED_PTX_SOURCES ${EMBED_PTX_SOURCES_OUT})
+  
+  target_sources(${PTX_TARGET} PUBLIC ${EMBED_PTX_SOURCES})
+
   target_link_libraries(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_LINK_LIBRARIES})
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_PTX_COMPILATION ON)
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_ARCHITECTURES OFF)
-  target_compile_options(${PTX_TARGET} PRIVATE "-lineinfo")
+  target_compile_options(${PTX_TARGET} PRIVATE -lineinfo -ptx)
 
   ## Create command to run the bin2c via the CMake script ##
 
-  set(EMBED_PTX_C_FILE ${CMAKE_CURRENT_BINARY_DIR}/${EMBED_PTX_OUTPUT_TARGET}.c)
-  get_filename_component(OUTPUT_FILE_NAME ${EMBED_PTX_C_FILE} NAME)
+  set(EMBED_PTX_C_FILE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${EMBED_PTX_OUTPUT_TARGET}.cpp)
   add_custom_command(
     OUTPUT ${EMBED_PTX_C_FILE}
     COMMAND ${CMAKE_COMMAND}
@@ -79,9 +92,16 @@ function(embed_ptx)
       -P ${EMBED_PTX_RUN}
     VERBATIM
     DEPENDS $<TARGET_OBJECTS:${PTX_TARGET}> ${PTX_TARGET}
-    COMMENT "Generating embedded PTX file: ${OUTPUT_FILE_NAME}"
+    COMMENT "Generating embedded PTX file: ${EMBED_PTX_C_FILE}"
+  )
+  add_custom_target(generate_${EMBED_PTX_OUTPUT_TARGET} DEPENDS ${EMBED_PTX_C_FILE})
+
+  add_library(${EMBED_PTX_OUTPUT_TARGET} STATIC)
+  target_sources(${EMBED_PTX_OUTPUT_TARGET} PRIVATE ${EMBED_PTX_C_FILE})
+  set_target_properties(${EMBED_PTX_OUTPUT_TARGET} 
+  PROPERTIES 
+  CXX_VISIBILITY_PRESET default
+  CUDA_VISIBILITY_PRESET default
   )
 
-  add_library(${EMBED_PTX_OUTPUT_TARGET} OBJECT)
-  target_sources(${EMBED_PTX_OUTPUT_TARGET} PRIVATE ${EMBED_PTX_C_FILE})
 endfunction()

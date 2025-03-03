@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2019-2020 Ingo Wald                                            //
+// Copyright 2019-2024 Ingo Wald                                            //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -31,7 +31,7 @@ namespace owl {
 
     RegisteredObject(Context *const context,
                      ObjectRegistry &registry);
-    ~RegisteredObject();
+    virtual ~RegisteredObject();
 
     /*! the ID we're registered by - should only ever get set to any
         useful value in the constructor, and get set to -1 when the

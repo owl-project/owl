@@ -50,7 +50,8 @@ namespace owl {
 
       /*! constructor - passthrough to parent class */
       DeviceData(const DeviceContext::SP &device);
-
+      virtual ~DeviceData();
+      
       /*! build the optix program groups for the given (parent)
           geomtype */
       void buildHitGroupPrograms(GeomType *gt);
@@ -70,6 +71,7 @@ namespace owl {
              size_t varStructSize,
              /*! list of variables within this struct that we can/have to set */
              const std::vector<OWLVarDecl> &varDecls);
+    virtual ~GeomType();
     
     /*! pretty-printer, for printf-debugging */
     std::string toString() const override;

@@ -112,7 +112,6 @@ namespace owl {
       UserGeom::SP child = geometries[childID]->as<UserGeom>();
 
       UserGeom::DeviceData &ugDD = child->getDD(device);
-      
       if (context->motionBlurEnabled) {
         assert("user geom is either empty, or has valid bounds buffers for both keys"
               && ((child->primCount == 0) || ugDD.internalBufferForBoundsProgramKey1.alloced() 
@@ -255,7 +254,7 @@ namespace owl {
       OptixAccelEmitDesc emitDesc;
       emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
       emitDesc.result = (CUdeviceptr)compactedSizeBuffer.get();
-
+      
       OPTIX_CHECK(optixAccelBuild(optixContext,
                                   /* todo: stream */0,
                                   &accelOptions,
@@ -332,7 +331,7 @@ namespace owl {
       
       UserGeom::DeviceData &ugDD = child->getDD(device);
       
-      if (!!ugDD.internalBufferForBoundsProgram.externallyManaged) {
+      if (!ugDD.internalBufferForBoundsProgram.externallyManaged) {
         if (context->motionBlurEnabled) {
           sumBoundsMem += ugDD.internalBufferForBoundsProgramKey1.sizeInBytes;
           sumBoundsMem += ugDD.internalBufferForBoundsProgramKey2.sizeInBytes;

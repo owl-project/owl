@@ -94,7 +94,7 @@ namespace owl {
   };
 
 
-
+  
   /*! a device-side buffer that has its own cuda-malloc'ed memory on
       each device. DeviceBuffers are fastest to access on the device,
       *BUT* are not visible on the host, and are replicated in the
@@ -128,7 +128,8 @@ namespace owl {
           cudaTextreObject_t for that device). this will *not* wait
           for the upload to complete, so an explicit cuda sync has to
           be done to ensure no race conditiosn will occur */
-      virtual void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) = 0;
+      virtual
+      void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) = 0;
       
       /*! clear the buffer by setting its contents to zero */
       virtual void clear() = 0;
@@ -208,14 +209,18 @@ namespace owl {
     /*! device-data for a device buffer that contains raw, copyable
         data (float, vec3f, etc) */
     struct DeviceDataForCopyableData : public DeviceData {
-      DeviceDataForCopyableData(DeviceBuffer *parent, const DeviceContext::SP &device)
+      DeviceDataForCopyableData(DeviceBuffer *parent,
+                                const DeviceContext::SP &device)
         : DeviceData(parent,device)
       {}
-      void executeResize() override;
-      void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count) override;
+      void executeResize()
+        override;
+      void uploadAsync(const void *hostDataPtr, size_t offset, int64_t count)
+        override;
       
       /*! clear the buffer by setting its contents to zero */
-      void clear() override;
+      void clear()
+        override;
     };
 
     /*! contructor - creates the right device data type based on content type */
@@ -299,6 +304,40 @@ namespace owl {
     void *cudaManagedMem { 0 };
   };
 
+
+
+  /*! a "user"-buffer is a buffer whose allocation, filling,
+    ownership,e tc, all lie entirely within the purview of the user
+    itself. OWL will just take the provided address(es), and use them,
+    withotu any allocating, copying, etc. Only works on POD data
+    types. */
+  struct UserBuffer : public Buffer {
+    typedef std::shared_ptr<UserBuffer> SP;
+    
+    UserBuffer(Context *const context,
+               OWLDataType type,
+               size_t elementCount,
+               const std::vector<void *> &_addresses);
+    /*! destructor that frees any left-over allocated memory */
+    virtual ~UserBuffer();
+
+    /*! creates the device-specific data for this group */
+    RegisteredObject::DeviceData::SP
+    createOn(const DeviceContext::SP &device) override;
+    
+    void resize(size_t newElementCount) override;
+    void upload(const void *hostPtr, size_t offset, int64_t count) override;
+    void upload(const int deviceID, const void *hostPtr, size_t offset, int64_t count) override;
+
+    /*! pretty-printer, for debugging */
+    std::string toString() const override;
+      
+    /*! clear the buffer by setting its contents to zero */
+    void clear() override;
+
+    std::vector<void *> addresses;
+  };
+  
 
   /*! a special graphics resource buffer that, upon mapping, will map
       that graphics resource */
