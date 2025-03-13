@@ -145,6 +145,8 @@ set_target_properties(owl
   POSITION_INDEPENDENT_CODE ON
   CUDA_RESOLVE_DEVICE_SYMBOLS ON
   CUDA_USE_STATIC_CUDA_RUNTIME ON
+  CXX_VISIBILITY_PRESET  hidden
+  CUDA_VISIBILITY_PRESET hidden
 )
 set_target_properties(owl_static
   PROPERTIES
@@ -152,6 +154,8 @@ set_target_properties(owl_static
   POSITION_INDEPENDENT_CODE ON
   CUDA_RESOLVE_DEVICE_SYMBOLS ON
   CUDA_USE_STATIC_CUDA_RUNTIME ON
+  CXX_VISIBILITY_PRESET  hidden
+  CUDA_VISIBILITY_PRESET hidden
 )
 set_target_properties(owl_object
   PROPERTIES
@@ -159,6 +163,8 @@ set_target_properties(owl_object
   POSITION_INDEPENDENT_CODE ON
   CUDA_RESOLVE_DEVICE_SYMBOLS ON
   CUDA_USE_STATIC_CUDA_RUNTIME ON
+  CXX_VISIBILITY_PRESET  hidden
+  CUDA_VISIBILITY_PRESET hidden
 )
 
 target_link_libraries(owl-config INTERFACE
