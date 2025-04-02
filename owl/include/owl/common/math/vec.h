@@ -100,7 +100,7 @@ namespace owl {
       inline __both__ vec_t() {}
       inline __both__ vec_t(const T &t) : x(t), y(t) {}
       inline __both__ vec_t(const T &x, const T &y) : x(x), y(y) {}
-#ifdef __CUDACC__
+#if defined(__CUDACC__)
       inline __both__ vec_t(const float2 v) : x(v.x), y(v.y) {}
       inline __both__ vec_t(const int2 v) : x(v.x), y(v.y) {}
       inline __both__ vec_t(const uint2 v) : x(v.x), y(v.y) {}
@@ -149,7 +149,7 @@ namespace owl {
       inline __both__ vec_t() {}
       inline __both__ vec_t(const T &t) : x(t), y(t), z(t) {}
       inline __both__ vec_t(const T &_x, const T &_y, const T &_z) : x(_x), y(_y), z(_z) {}
-#ifdef __CUDACC__
+#if defined(__CUDACC__)
       inline __both__ vec_t(const int3 &v)   : x(v.x), y(v.y), z(v.z) {}
       inline __both__ vec_t(const uint3 &v)  : x(v.x), y(v.y), z(v.z) {}
       inline __both__ vec_t(const float3 &v) : x(v.x), y(v.y), z(v.z) {}
@@ -207,7 +207,7 @@ namespace owl {
       inline vec3a_t() {}
       inline vec3a_t(const T &t) : vec_t<T,3>(t) {}
       inline vec3a_t(const T &x, const T &y, const T &z) : vec_t<T,3>(x,y,z) {}
-#ifdef __CUDACC__
+#if defined(__CUDACC__)
       inline __both__ vec3a_t(const int3 &v) : vec_t<T,3>(v) {};
       inline __both__ vec3a_t(const uint3 &v) : vec_t<T,3>(v) {};
       inline __both__ vec3a_t(const float3 &v) : vec_t<T,3>(v) {};
@@ -243,7 +243,7 @@ namespace owl {
         : x(_x), y(_y), z(_z), w(_w)
       {}
     
-#ifdef __CUDACC__
+#if defined(__CUDACC__)
       inline __both__ vec_t(const float4 &v)
         : x(v.x), y(v.y), z(v.z), w(v.w)
         {}
