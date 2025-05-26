@@ -27,6 +27,8 @@ else()
   set(OWL_IS_SUBPROJECT OFF)
 endif()
 
+message("OWL_IS_SUBPROJECT ${OWL_IS_SUBPROJECT}")
+
 if(CUDA_TOOLKIT_ROOT_DIR)
   # Somebody called find_cuda--they are trying to use the deprecated build.
   message(WARNING "CUDA_TOOLKIT_ROOT_DIR is set. "
@@ -113,17 +115,17 @@ option(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 
 add_subdirectory(3rdParty)
 
+#if (OWL_IS_SUBPROJECT)
+#  return()
+#endif()
+
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
 if (OWL_BUILD_SAMPLES)
   add_subdirectory(samples)
-else()
-  add_subdirectory(samples EXCLUDE_FROM_ALL)
-endif()
-
-if (OWL_IS_SUBPROJECT)
-  return()
+#else()
+#  add_subdirectory(samples EXCLUDE_FROM_ALL)
 endif()
 
 include(CTest)

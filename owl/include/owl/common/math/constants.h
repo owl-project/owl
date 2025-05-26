@@ -17,7 +17,7 @@
 #pragma once
 
 #include <limits>
-#include <limits.h>
+#include <climits>
 #ifdef __CUDACC__
 #include <math_constants.h>
 #include <cuda/std/limits>
@@ -90,15 +90,12 @@ namespace owl {
       __both__ operator unsigned char     ( ) const { return std::numeric_limits<unsigned char>::min(); }
 #endif
     } neg_inf MAYBE_UNUSED;
-
+    
     inline __both__ float infty() {
 #if defined(__CUDA_ARCH__)
-<<<<<<< Updated upstream
-      return (float)INFINITY;
-=======
+      // return (float)INFINITY;
       // return CUDART_INF_F; 
-      return cuda::std::numeric_limits<float>::infinity(); 
->>>>>>> Stashed changes
+      return ::cuda::std::numeric_limits<float>::infinity(); 
 #else
       return std::numeric_limits<float>::infinity(); 
 #endif
