@@ -18,9 +18,10 @@
 
 #include <limits>
 #include <limits.h>
-// #ifdef __CUDACC__
-// #include <math_constants.h>
-// #endif
+#ifdef __CUDACC__
+#include <math_constants.h>
+#include <cuda/std/limits>
+#endif
 
 #ifndef M_PI
 #define M_PI 3.141593f
@@ -64,8 +65,16 @@ namespace owl {
     static struct NegInfTy
     {
 #ifdef __CUDA_ARCH__
-      __device__ operator          double   ( ) const { return -INFINITY; }
-      __device__ operator          float    ( ) const { return -(float)INFINITY; }
+      // __device__ operator          double   ( ) const { return -INFINITY; }
+      // __device__ operator          float    ( ) const { return -(float)INFINITY; }
+      __device__ operator          double   ( ) const {
+        return -::cuda::std::numeric_limits<double>::infinity();
+        //return -CUDART_INF;
+      }
+      __device__ operator          float    ( ) const {
+        return -::cuda::std::numeric_limits<float>::infinity();
+        // return -CUDART_INF_F;
+      }
 #else
       __both__ operator          double   ( ) const { return -std::numeric_limits<double>::infinity(); }
       __both__ operator          float    ( ) const { return -std::numeric_limits<float>::infinity(); }
@@ -84,7 +93,12 @@ namespace owl {
 
     inline __both__ float infty() {
 #if defined(__CUDA_ARCH__)
+<<<<<<< Updated upstream
       return (float)INFINITY;
+=======
+      // return CUDART_INF_F; 
+      return cuda::std::numeric_limits<float>::infinity(); 
+>>>>>>> Stashed changes
 #else
       return std::numeric_limits<float>::infinity(); 
 #endif
@@ -93,8 +107,17 @@ namespace owl {
     static struct PosInfTy
     {
 #ifdef __CUDA_ARCH__
-      __device__ operator          double   ( ) const { return INFINITY; }
-      __device__ operator          float    ( ) const { return (float)INFINITY; }
+      // __device__ operator          double   ( ) const { return INFINITY; }
+      // __device__ operator          float    ( ) const { return (float)INFINITY; 
+      // }
+      __device__ operator          double   ( ) const {
+        return ::cuda::std::numeric_limits<double>::infinity();
+        //return CUDART_INF;
+      }
+      __device__ operator          float    ( ) const {
+        return ::cuda::std::numeric_limits<float>::infinity();
+        // return CUDART_INF_F;
+      }
 #else
       __both__ operator          double   ( ) const { return std::numeric_limits<double>::infinity(); }
       __both__ operator          float    ( ) const { return std::numeric_limits<float>::infinity(); }
