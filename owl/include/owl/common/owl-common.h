@@ -65,25 +65,8 @@
 #  define OWL_DLL_IMPORT
 #endif
 
-// #if 1
 # define OWL_INTERFACE /* nothing - currently not building any special 'owl.dll' */
-// #else
-// //#if defined(OWL_DLL_INTERFACE)
-// #  ifdef owl_EXPORTS
-// #    define OWL_INTERFACE OWL_DLL_EXPORT
-// #  else
-// #    define OWL_INTERFACE OWL_DLL_IMPORT
-// #  endif
-// //#else
-// //#  define OWL_INTERFACE /*static lib*/
-// //#endif
-// #endif
-
-//#ifdef __WIN32__
-//#define  __PRETTY_FUNCTION__ __FUNCTION__ 
-//#endif
 #if defined(_MSC_VER)
-//&& !defined(__PRETTY_FUNCTION__)
 #  define __PRETTY_FUNCTION__ __FUNCTION__
 #endif
 
@@ -97,7 +80,10 @@
 #endif
 #endif
 
-#if defined(__CUDA_ARCH__)
+#if defined(__CUDACC__)
+# define __owl_device   __device__
+# define __owl_host     __host__
+#elif defined(__HIPCC__)
 # define __owl_device   __device__
 # define __owl_host     __host__
 #else
@@ -201,32 +187,18 @@ inline void owlRaise_impl(std::string str)
 # define OWL_ALIGN(alignment) __attribute__((aligned(alignment)))
 #endif
 
-
-
 namespace owl {
   namespace common {
 
-#ifdef __CUDA_ARCH__
+#if defined(__CUDA_ARCH__)
     using ::min;
     using ::max;
-    // inline __both__ float abs(float f)      { return fabsf(f); }
-    // inline __both__ double abs(double f)    { return fabs(f); }
-    using std::abs;
-    // inline __both__ float sin(float f) { return ::sinf(f); }
-    // inline __both__ double sin(double f) { return ::sin(f); }
-    // inline __both__ float cos(float f) { return ::cosf(f); }
-    // inline __both__ double cos(double f) { return ::cos(f); }
-
 #else
     using std::min;
     using std::max;
-    using std::abs;
-    // inline __both__ double sin(double f) { return ::sin(f); }
-    // inline __both__ float saturate(const float &f) { return min(1.f,max(0.f,f)); }
 #endif
+    using std::abs;
 
-    // inline __both__ float abs(float f)      { return fabsf(f); }
-    // inline __both__ double abs(double f)    { return fabs(f); }
     inline __both__ float rcp(float f)      { return 1.f/f; }
     inline __both__ double rcp(double d)    { return 1./d; }
   
@@ -235,15 +207,8 @@ namespace owl {
     inline __both__ int64_t divRoundUp(int64_t a, int64_t b) { return (a+b-1)/b; }
     inline __both__ uint64_t divRoundUp(uint64_t a, uint64_t b) { return (a+b-1)/b; }
   
-// #ifdef __CUDA_ARCH__
-//     using ::sin; // this is the double version
-//     // inline __both__ float sin(float f) { return ::sinf(f); }
-//     using ::cos; // this is the double version
-//     // inline __both__ float cos(float f) { return ::cosf(f); }
-// #else
     using ::sin; // this is the double version
     using ::cos; // this is the double version
-// #endif
 
     /*! namespace that offers polymorphic overloads of functions like
         sqrt, rsqrt, sin, cos, etc (that vary based on float vs
@@ -252,13 +217,8 @@ namespace owl {
         - TODO: make sure that cos, sin, abs, etc are also properly
         handled here. */
     namespace polymorphic {
-#ifdef __CUDA_ARCH__
       inline __both__ float sqrt(const float f)     { return ::sqrtf(f); }
       inline __both__ double sqrt(const double d)   { return ::sqrt(d); }
-#else
-      inline __both__ float sqrt(const float f)     { return ::sqrtf(f); }
-      inline __both__ double sqrt(const double d)   { return ::sqrt(d); }
-#endif
       
       inline __both__ float rsqrt(const float f)    { return 1.f/owl::common::polymorphic::sqrt(f); }
       inline __both__ double rsqrt(const double d)  { return 1./owl::common::polymorphic::sqrt(d); }
