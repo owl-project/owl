@@ -21,6 +21,7 @@
 #endif
 // #include <math.h> // using cmath causes issues under Windows
 
+#include <cstdlib>
 #include <stdio.h>
 #include <iostream>
 #include <stdexcept>
