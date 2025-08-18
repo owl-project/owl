@@ -30,9 +30,7 @@ namespace owl {
   {}
 
   GeomType::DeviceData::~DeviceData()
-  {
-    PING;
-  }
+  {}
   
   /*! fill in an OptixProgramGroup descriptor with the module and
     program names for this type */
@@ -74,9 +72,7 @@ namespace owl {
   {}
 
   GeomType::~GeomType()
-  {
-    PING;
-  }
+  {}
   
 
   /*! creates the device-specific data for this group */
