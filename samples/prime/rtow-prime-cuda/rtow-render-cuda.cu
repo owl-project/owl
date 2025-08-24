@@ -144,7 +144,8 @@ namespace samples {
         path.weight = 0.f;
         return;
       }
-      
+      int instID = hit.instID;
+      affine3f xfm = world.transforms[instID];
       auto &random = path.random;
 
       ScatterEvent scatter;
@@ -153,7 +154,10 @@ namespace samples {
       scatter.inDir = normalize(dir);
       int materialID = 0;
       // geomID==0 : triangles
-      const Triangle tri = world.triangles[hit.primID];
+      Triangle tri = world.triangles[hit.primID];
+      tri.A = xfmPoint(xfm,tri.A);
+      tri.B = xfmPoint(xfm,tri.B);
+      tri.C = xfmPoint(xfm,tri.C);
       const float u = hit.u;
       const float v = hit.v;
 #if HAVE_SHADING_NORMALS
@@ -170,7 +174,7 @@ namespace samples {
         (1.f-u-v) * tri.A
         + u       * tri.B
         + v       * tri.C;
-      materialID = tri.materialID;
+      materialID = world.materialIDs[instID];
       auto &material = world.materials[materialID];
       if (!material.scatter(scatter,random))
         // path lost .... ugh.
@@ -195,7 +199,6 @@ namespace samples {
     WaveFront(std::shared_ptr<World> world,
               const vec2i fbSize)
     {
-      // primeContext = world->scene->createTraceContext(fbSize.x*fbSize.y);
       numAllocated = fbSize.x*fbSize.y;
       cudaMalloc(&d_launch.rays,numAllocated*sizeof(Ray));
       cudaMalloc(&d_launch.hits,numAllocated*sizeof(Hit));
@@ -207,7 +210,6 @@ namespace samples {
 
     device::LaunchState d_launch;
     int numAllocated = 0;
-    // std::thread               thread;
   };
 
   void renderOneSample(const World &world,
@@ -302,6 +304,18 @@ namespace samples {
                world->triangles.size()*sizeof(world->triangles[0]),
                cudaMemcpyHostToDevice);
 
+    // upload materialIDs
+    cudaMalloc(&scene.materialIDs,world->materialIDs.size()*sizeof(world->materialIDs[0]));
+    cudaMemcpy(scene.materialIDs,world->materialIDs.data(),
+               world->materialIDs.size()*sizeof(world->materialIDs[0]),
+               cudaMemcpyHostToDevice);
+
+    // upload transforms
+    cudaMalloc(&scene.transforms,world->transforms.size()*sizeof(world->transforms[0]));
+    cudaMemcpy(scene.transforms,world->transforms.data(),
+               world->transforms.size()*sizeof(world->transforms[0]),
+               cudaMemcpyHostToDevice);
+    
     scene.camera = *camera;
       
     // ------------------------------------------------------------------
@@ -311,46 +325,13 @@ namespace samples {
     cudaMalloc(&scene.fb,fb->size.x*fb->size.y*sizeof(vec3f));
     cudaMemset(scene.fb,0,fb->size.x*fb->size.y*sizeof(vec3f));
 
-    // ------------------------------------------------------------------
-    // now, create per-thread data
-    // ------------------------------------------------------------------
-    // std::vector<PerThread *> perThreadStates(numThreads);
     WaveFront waveFront(world,fb->size);
-    // for (int i=0;i<numThreads;i++) 
-    //   perThreadStates[i] = new PerThread(world,fb->size);
-
-    // ------------------------------------------------------------------
-    // and have different threads work on different samples per
-    // pixel
-    // ------------------------------------------------------------------
     const vec2i fbSize = fb->size;
-    // std::cout << "launching " << numThreads << " parallel render jobs" << std::endl;
-    // for (int threadID=0;threadID<numThreads;threadID++) 
-    //   perThreadStates[threadID]->thread = std::thread
-    //     ([threadID,numThreads,numSamplesPerPixel,
-    //       scene,perThreadStates]()
-         {
-           // PerThread *perThread = perThreadStates[threadID];
-
-           // device::LaunchState launch;
-//            launch.rays   = perThread->d_rays;
-//            launch.hits   = perThread->d_hits;
-//            launch.paths  = perThread->d_paths;
-// #if PURGE_INACTIVE_BLOCKS
-//            launch.pNumActive = perThread->d_numActive;
-// #endif
-           //launch = perThread->d_launch;
-           for (int sampleID=0;
-                sampleID<numSamplesPerPixel;
-                sampleID+=1) 
-           // for (int sampleID=threadID;
-           //      sampleID<numSamplesPerPixel;
-           //      sampleID+=numThreads) 
-             renderOneSample(*world,scene,waveFront,//perThread->primeContext,
-                             sampleID,numSamplesPerPixel);
-         }//);
-    // for (int threadID=0;threadID<numThreads;threadID++) 
-    //   perThreadStates[threadID]->thread.join();
+    for (int sampleID=0;
+         sampleID<numSamplesPerPixel;
+         sampleID+=1) 
+      renderOneSample(*world,scene,waveFront,
+                      sampleID,numSamplesPerPixel);
     
     cudaDeviceSynchronize();
     cudaMemcpy(fb->pixels.data(),scene.fb,
@@ -363,14 +344,11 @@ namespace samples {
                    std::shared_ptr<Camera> camera,
                    std::shared_ptr<FrameBuffer> fb,
                    int numSamplesPerPixel,
-                   int maxPathLength// ,
-                   // int numThreads
-                   );
+                   int maxPathLength);
   
   int rtow_CUDA(int ac, const char **av)
   {
     int Nx = 800, Ny = 600;
-    int sphereRecDepth = 6;
     int spp = 128;
     int maxPathLength = 3;
     
@@ -379,26 +357,20 @@ namespace samples {
       if (arg == "-fast" || arg == "-lq") {
         Nx = 800;
         Ny = 600;
-        sphereRecDepth = 5;
         spp  = 16;
       } else if (arg == "--final" || arg == "-hq") {
         Nx = 2*800;
         Ny = 2*600;
-        sphereRecDepth = 7;
         spp  = 1024;
       } else if (arg == "--size") {
         Nx = std::stoi(av[++i]);
         Ny = std::stoi(av[++i]);
-      } else if (arg == "--tess") {
-        sphereRecDepth = std::stoi(av[++i]);;
       } else if (arg == "--rec" || arg == "--bounces" || arg == "--max-path-length") {
         maxPathLength = std::stoi(av[++i]);;
       } else if (arg == "--spp" || arg == "-spp") {
         spp = std::stoi(av[++i]);;
       } else throw std::runtime_error("unknown arg " +arg);
     }
-    
-    World::sphereRecDepth = sphereRecDepth;
     
     // create - and set - the camera
     const vec3f lookfrom(13, 2, 3);

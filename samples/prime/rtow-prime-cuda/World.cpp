@@ -18,6 +18,8 @@
 
 namespace samples {
 
+  int World::sphereRecDepth = 1;
+  
   using device::Triangle;
   
   int World::addMaterial(const Material &material)
@@ -26,37 +28,35 @@ namespace samples {
     return materials.size()-1;
   }
 
-  void World::addSphericalTriangle(const affine3f &xfm,
-                                   int recDepth,
+  void World::addSphericalTriangle(int recDepth,
                                    const vec3f &a,
                                    const vec3f &b,
-                                   const vec3f &c,
-                                   int material)
+                                   const vec3f &c)
   {
     if (recDepth <= 0) {
       if (dot(cross(b-a,c-a),a) < 0.f)
         
-        triangles.push_back({xfmPoint(xfm,b),xfmPoint(xfm,a),xfmPoint(xfm,c),
+        triangles.push_back({b,a,c
 #if HAVE_SHADING_NORMALS 
-              b,a,c,
+            ,b,a,c
 #endif
-              material});
+            });
       else
-        triangles.push_back({xfmPoint(xfm,a),xfmPoint(xfm,b),xfmPoint(xfm,c),
+        triangles.push_back({a,b,c
 #if HAVE_SHADING_NORMALS 
-              a,b,c,
+            ,a,b,c,
 #endif
-              material});
+            });
     } else {
       
       const vec3f ab = normalize(a+b);
       const vec3f bc = normalize(b+c);
       const vec3f ca = normalize(c+a);
       
-      addSphericalTriangle(xfm,recDepth-1,ab,bc,ca,material);
-      addSphericalTriangle(xfm,recDepth-1,a,ab,ca,material);
-      addSphericalTriangle(xfm,recDepth-1,b,bc,ab,material);
-      addSphericalTriangle(xfm,recDepth-1,c,ca,bc,material);
+      addSphericalTriangle(recDepth-1,ab,bc,ca);
+      addSphericalTriangle(recDepth-1,a,ab,ca);
+      addSphericalTriangle(recDepth-1,b,bc,ab);
+      addSphericalTriangle(recDepth-1,c,ca,bc);
     }
   }
 
@@ -65,17 +65,21 @@ namespace samples {
                         int recDepth)
   {
     const affine3f xfm = affine3f::translate(center) * affine3f::scale(radius);
-    addSphericalTriangle(xfm,recDepth,vec3f(+1,0,0),vec3f(0,+1,0),vec3f(0,0,+1),material);
-    addSphericalTriangle(xfm,recDepth,vec3f(-1,0,0),vec3f(0,+1,0),vec3f(0,0,+1),material);
-
-    addSphericalTriangle(xfm,recDepth,vec3f(+1,0,0),vec3f(0,-1,0),vec3f(0,0,+1),material);
-    addSphericalTriangle(xfm,recDepth,vec3f(-1,0,0),vec3f(0,-1,0),vec3f(0,0,+1),material);
-
-    addSphericalTriangle(xfm,recDepth,vec3f(+1,0,0),vec3f(0,+1,0),vec3f(0,0,-1),material);
-    addSphericalTriangle(xfm,recDepth,vec3f(-1,0,0),vec3f(0,+1,0),vec3f(0,0,-1),material);
-
-    addSphericalTriangle(xfm,recDepth,vec3f(+1,0,0),vec3f(0,-1,0),vec3f(0,0,-1),material);
-    addSphericalTriangle(xfm,recDepth,vec3f(-1,0,0),vec3f(0,-1,0),vec3f(0,0,-1),material);
+    transforms.push_back(xfm);
+    materialIDs.push_back(material);
+    if (triangles.empty()) {
+      addSphericalTriangle(recDepth,vec3f(+1,0,0),vec3f(0,+1,0),vec3f(0,0,+1));
+      addSphericalTriangle(recDepth,vec3f(-1,0,0),vec3f(0,+1,0),vec3f(0,0,+1));
+      
+      addSphericalTriangle(recDepth,vec3f(+1,0,0),vec3f(0,-1,0),vec3f(0,0,+1));
+      addSphericalTriangle(recDepth,vec3f(-1,0,0),vec3f(0,-1,0),vec3f(0,0,+1));
+      
+      addSphericalTriangle(recDepth,vec3f(+1,0,0),vec3f(0,+1,0),vec3f(0,0,-1));
+      addSphericalTriangle(recDepth,vec3f(-1,0,0),vec3f(0,+1,0),vec3f(0,0,-1));
+      
+      addSphericalTriangle(recDepth,vec3f(+1,0,0),vec3f(0,-1,0),vec3f(0,0,-1));
+      addSphericalTriangle(recDepth,vec3f(-1,0,0),vec3f(0,-1,0),vec3f(0,0,-1));
+    }
   }
 
   void World::addSphere(const vec3f center,
@@ -112,12 +116,13 @@ namespace samples {
                                indices.size(),
                                sizeof(vec3i));
     OPGroup group = opGroupCreate(context,&mesh,1);
-    model = opModelCreate(context,&group,nullptr,1);
+    std::vector<OPGroup> groups;
+    for (int i=0;i<transforms.size();i++)
+      groups.push_back(group);
+    model = opModelCreate(context,groups.data(),(OPTransform*)transforms.data(),transforms.size());
     assert(model);
   }
 
-  int World::sphereRecDepth = 3;
-  
   inline vec3f randomPointInUnitSphere(Random &rnd)
   {
     vec3f p;
@@ -153,61 +158,7 @@ namespace samples {
                            
         float choose_type = random();
         vec3f center(a + random(), 0.2f, b + random());
-        if (choose_type < .5f) {
-          const int NUM_VERTICES = 8;
-          static const vec3f unitBoxVertices[NUM_VERTICES] =
-            {
-             {-1.f, -1.f, -1.f},
-             {+1.f, -1.f, -1.f},
-             {+1.f, +1.f, -1.f},
-             {-1.f, +1.f, -1.f},
-             {-1.f, +1.f, +1.f},
-             {+1.f, +1.f, +1.f},
-             {+1.f, -1.f, +1.f},
-             {-1.f, -1.f, +1.f},
-            };
-
-          const int NUM_INDICES = 12;
-          static const vec3i unitBoxIndices[NUM_INDICES] =
-            {
-             {0, 2, 1}, //face front
-             {0, 3, 2},
-             {2, 3, 4}, //face top
-             {2, 4, 5},
-             {1, 2, 5}, //face right
-             {1, 5, 6},
-             {0, 7, 4}, //face left
-             {0, 4, 3},
-             {5, 4, 7}, //face back
-             {5, 7, 6},
-             {0, 6, 7}, //face bottom
-             {0, 1, 6}
-            };
-
-          const float size = .2f;
-          const vec3f U = normalize(randomPointInUnitSphere(random));
-          owl::affine3f xfm = owl::frame(U);
-          xfm = owl::affine3f(owl::linear3f::rotate(U,random())) * xfm;
-          xfm = owl::affine3f(owl::linear3f::scale(.7f*size)) * xfm;
-          xfm = owl::affine3f(owl::affine3f::translate(center)) * xfm;
-
-          for (int i=0;i<NUM_INDICES;i++) {
-            vec3f A = unitBoxVertices[unitBoxIndices[i].x];
-            vec3f B = unitBoxVertices[unitBoxIndices[i].y];
-            vec3f C = unitBoxVertices[unitBoxIndices[i].z];
-            A = owl::xfmPoint(xfm,A);
-            B = owl::xfmPoint(xfm,B);
-            C = owl::xfmPoint(xfm,C);
-#if HAVE_SHADING_NORMALS
-            const vec3f N = normalize(cross(B-A,C-A));
-            world->triangles.push_back({A,B,C,N,N,N,materialID});
-#else
-            world->triangles.push_back({A,B,C,materialID});
-#endif
-          }
-        } else {
-          world->addSphere(center, 0.2f, materialID);
-        }
+        world->addSphere(center, 0.2f, materialID);
       }
     }
     world->addSphere(vec3f( 0.f, 1.f, 0.f), 1.f, world->addMaterial(Dielectric(1.5f)));
@@ -215,7 +166,5 @@ namespace samples {
     world->addSphere(vec3f( 4.f, 1.f, 0.f), 1.f, world->addMaterial(Metal(vec3f(0.7f, 0.6f, 0.5f), 0.0f)));
     return world;
   }
-
-
   
 }

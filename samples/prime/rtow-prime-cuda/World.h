@@ -29,7 +29,6 @@ namespace samples {
 #if HAVE_SHADING_NORMALS
       vec3f Na,Nb,Nc;
 #endif
-      int materialID;
     };
 
     struct Scene {
@@ -39,6 +38,8 @@ namespace samples {
       int    maxPathLength;
       Triangle *triangles;
       Material *materials;
+      affine3f *transforms;
+      int      *materialIDs;
       Camera camera;
     };
     
@@ -59,12 +60,10 @@ namespace samples {
   private:
     /*! do given number of recursive subdivs on given spherical
         triangle, and add resuting triangles to scene */
-    void addSphericalTriangle(const affine3f &xfm,
-                              int recDepth,
+    void addSphericalTriangle(int recDepth,
                               const vec3f &a,
                               const vec3f &b,
-                              const vec3f &c,
-                              int material);
+                              const vec3f &c);
     
     /*! add a _tessellated_ sphere, using given number of recursive
       subdivisions of a spherical triangle */ 
@@ -74,7 +73,12 @@ namespace samples {
                    int recDepth);
 
   public:
+    // triangles for the (one) tessellated sphere
     std::vector<device::Triangle> triangles;
+    // intance transforms
+    std::vector<affine3f> transforms;
+    // material ID per instance
+    std::vector<int> materialIDs;
     OPModel   model   = nullptr;
     OPContext context = nullptr;
   };
