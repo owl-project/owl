@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019-2025 Ingo Wald                                            #
+# Copyright 2019-2021 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,25 +14,43 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# support libraries
-add_subdirectory(common)
+# builds device programs that the owl-prime device will use on the device
+embed_ptx(
+  OUTPUT_TARGET
+  prime-owl-ptx
+  
+  PTX_LINK_LIBRARIES
+  owl_prime-interface
+  
+  SOURCES
+  deviceCode.cu
+  )
 
-# ------------------------------------------------------------------
-# cmdline-only samples, also used for 'make test'
-# ------------------------------------------------------------------
-add_subdirectory(cmdline)
+add_library(owl-backend STATIC
+  Triangles.h
+  Triangles.cpp
+  Spheres.h
+  Spheres.cpp
+  Model.h
+  Model.cpp
+  Group.h
+  Group.cpp
+  Context.h
+  Context.cu
+  )
+target_link_libraries(owl-backend
+  prime-owl-ptx
+  owl_prime-interface
+  )
+set_target_properties(owl-backend
+  PROPERTIES
+  POSITION_INDEPENDENT_CODE ON
+  CUDA_USE_STATIC_CUDA_RUNTIME ON
+  CUDA_USE_STATIC_RUNTIME ON
+  )
 
-# "owl prime" samples
-add_subdirectory(prime)
+# aaand: link ourselves into owl_prime
+target_link_libraries(owl_prime PUBLIC owl-backend)
+target_link_libraries(owl_prime_static  PUBLIC owl-backend)
 
-if (TARGET owl_viewer)
 
-  # interactive tutorial-style samples (these will try to open windows)
-  add_subdirectory(interactive)
-
-  # advanced samples (these will try to open windows)
-  add_subdirectory(advanced)
-
-else()
-  message(WARNING "#owl.cmake: could not build owl_viewer library; skipping advanced samples")
-endif()
