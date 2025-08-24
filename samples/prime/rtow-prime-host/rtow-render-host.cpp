@@ -29,8 +29,6 @@
 #include <chrono>
 #include <memory>
 
-#define HAVE_SHADING_NORMALS 1
-
 namespace samples {
   using namespace owl::common;
 
@@ -235,20 +233,15 @@ namespace samples {
       vec3f A, B, C;
     };
     struct TriangleData {
-#if HAVE_SHADING_NORMALS
       vec3f Na,Nb,Nc;
-#endif
-      Material *material;
     };
 
     World(OPContextType contextType);
     
-    void addSphericalTriangle(const affine3f &xfm,
-                              int recDepth,
+    void addSphericalTriangle(int recDepth,
                               const vec3f &a,
                               const vec3f &b,
-                              const vec3f &c,
-                              Material *material);
+                              const vec3f &c);
     void addSphere(const vec3f center,
                    const float radius,
                    Material *material,
@@ -259,9 +252,8 @@ namespace samples {
                    Material *material)
     {
       addSphere(center,radius,material,
-                sphereRecDepth);
+                /*sphereRecDepth:*/11);
     }
-    static int sphereRecDepth;
     
     void finalize()
     {
@@ -276,11 +268,18 @@ namespace samples {
                                  indices.size(),
                                  sizeof(vec3i));
       OPGroup group = opGroupCreate(context,&mesh,1);
-      handle = opModelCreate(context,&group,nullptr,1);
+      std::vector<OPGroup> groups;
+      for (int i=0;i<transforms.size();i++)
+        groups.push_back(group);
+      handle = opModelCreate(context,groups.data(),
+                             (OPTransform*)transforms.data(),
+                             transforms.size());
     }
 
     std::vector<Triangle> triangles;
     std::vector<TriangleData> triangleData;
+    std::vector<Material *> materials;
+    std::vector<affine3f> transforms;
     OPModel   handle = nullptr;
     OPContext context = nullptr;
   };
@@ -290,33 +289,25 @@ namespace samples {
     context = opContextCreate(contextType,0);
   }
   
-  int World::sphereRecDepth = 3;
-  
-  void World::addSphericalTriangle(const affine3f &xfm,
-                                   int recDepth,
+  void World::addSphericalTriangle(int recDepth,
                                    const vec3f &a,
                                    const vec3f &b,
-                                   const vec3f &c,
-                                   Material *material)
+                                   const vec3f &c)
   {
     if (recDepth <= 0) {
       if (dot(cross(b-a,c-a),a) < 0.f) {
         
-        triangles.push_back({xfmPoint(xfm,b),xfmPoint(xfm,a),xfmPoint(xfm,c)});
+        triangles.push_back({b,a,c});
         triangleData.push_back({
-#if HAVE_SHADING_NORMALS
             // we only use scale and translate, no need to transform
-            b,a,c,
-#endif
-            material});
+            b,a,c
+            });
       } else {
-        triangles.push_back({xfmPoint(xfm,a),xfmPoint(xfm,b),xfmPoint(xfm,c)});
+        triangles.push_back({a,b,c});
         triangleData.push_back({
-#if HAVE_SHADING_NORMALS 
             // we only use scale and translate, no need to transform
-            a,b,c,
-#endif
-            material});
+            a,b,c
+            });
       }
     } else {
       
@@ -324,10 +315,10 @@ namespace samples {
       const vec3f bc = normalize(b+c);
       const vec3f ca = normalize(c+a);
       
-      addSphericalTriangle(xfm,recDepth-1,ab,bc,ca,material);
-      addSphericalTriangle(xfm,recDepth-1,a,ab,ca,material);
-      addSphericalTriangle(xfm,recDepth-1,b,bc,ab,material);
-      addSphericalTriangle(xfm,recDepth-1,c,ca,bc,material);
+      addSphericalTriangle(recDepth-1,ab,bc,ca);
+      addSphericalTriangle(recDepth-1,a,ab,ca);
+      addSphericalTriangle(recDepth-1,b,bc,ab);
+      addSphericalTriangle(recDepth-1,c,ca,bc);
     }
   }
 
@@ -337,17 +328,21 @@ namespace samples {
                         int recDepth)
   {
     const affine3f xfm = affine3f::translate(center) * affine3f::scale(radius);
-    addSphericalTriangle(xfm,recDepth,vec3f(+1,0,0),vec3f(0,+1,0),vec3f(0,0,+1),material);
-    addSphericalTriangle(xfm,recDepth,vec3f(-1,0,0),vec3f(0,+1,0),vec3f(0,0,+1),material);
+    if (triangles.empty()) {
+      addSphericalTriangle(recDepth,vec3f(+1,0,0),vec3f(0,+1,0),vec3f(0,0,+1));
+      addSphericalTriangle(recDepth,vec3f(-1,0,0),vec3f(0,+1,0),vec3f(0,0,+1));
 
-    addSphericalTriangle(xfm,recDepth,vec3f(+1,0,0),vec3f(0,-1,0),vec3f(0,0,+1),material);
-    addSphericalTriangle(xfm,recDepth,vec3f(-1,0,0),vec3f(0,-1,0),vec3f(0,0,+1),material);
+      addSphericalTriangle(recDepth,vec3f(+1,0,0),vec3f(0,-1,0),vec3f(0,0,+1));
+      addSphericalTriangle(recDepth,vec3f(-1,0,0),vec3f(0,-1,0),vec3f(0,0,+1));
 
-    addSphericalTriangle(xfm,recDepth,vec3f(+1,0,0),vec3f(0,+1,0),vec3f(0,0,-1),material);
-    addSphericalTriangle(xfm,recDepth,vec3f(-1,0,0),vec3f(0,+1,0),vec3f(0,0,-1),material);
+      addSphericalTriangle(recDepth,vec3f(+1,0,0),vec3f(0,+1,0),vec3f(0,0,-1));
+      addSphericalTriangle(recDepth,vec3f(-1,0,0),vec3f(0,+1,0),vec3f(0,0,-1));
 
-    addSphericalTriangle(xfm,recDepth,vec3f(+1,0,0),vec3f(0,-1,0),vec3f(0,0,-1),material);
-    addSphericalTriangle(xfm,recDepth,vec3f(-1,0,0),vec3f(0,-1,0),vec3f(0,0,-1),material);
+      addSphericalTriangle(recDepth,vec3f(+1,0,0),vec3f(0,-1,0),vec3f(0,0,-1));
+      addSphericalTriangle(recDepth,vec3f(-1,0,0),vec3f(0,-1,0),vec3f(0,0,-1));
+    }
+    transforms.push_back(xfm);
+    materials.push_back(material);
   }
 
 
@@ -561,24 +556,27 @@ namespace samples {
                   return;
                 }
 
+                int instID = isecs[lID].instID;
                 ScatterEvent scatter;
                 vec3f &org = (vec3f&)rays[lID].origin;
                 vec3f &dir = (vec3f&)rays[lID].direction;
                 scatter.inDir = normalize(dir);
                 scatter.P = org + isecs[lID].t * dir;
-                const World::Triangle &tri = world->triangles[isecs[lID].primID];
-                const World::TriangleData &triData = world->triangleData[isecs[lID].primID];
-#if HAVE_SHADING_NORMALS
+                Material *material = world->materials[instID];
+                affine3f xfm = world->transforms[instID];
+                World::Triangle tri = world->triangles[isecs[lID].primID];
+                tri.A = xfmPoint(xfm,tri.A);
+                tri.B = xfmPoint(xfm,tri.B);
+                tri.C = xfmPoint(xfm,tri.C);
+                const World::TriangleData &triData
+                  = world->triangleData[isecs[lID].primID];
                 const float u = isecs[lID].u;
                 const float v = isecs[lID].v;
                 scatter.N
                   = normalize((1.f-u-v) * triData.Na
                               + u       * triData.Nb
                               + v       * triData.Nc);
-#else
-                scatter.N = normalize(cross(tri.B-tri.A,tri.C-tri.A));
-#endif
-                if (triData.material->scatter(scatter,random)) {
+                if (material->scatter(scatter,random)) {
                   numActive++;
                   org = scatter.out_org;
                   dir = scatter.out_dir;
@@ -629,7 +627,6 @@ using namespace samples;
     // owl::prime::init(ac,av);
 
     int Nx = 800, Ny = 600;
-    int sphereRecDepth = 5;
     int spp = 8;
     int maxPathLength = 3;
     OPContextType contextType = OP_CONTEXT_DEFAULT;
@@ -638,18 +635,14 @@ using namespace samples;
       if (arg == "-fast" || arg == "-lq") {
         Nx = 400;
         Ny = 300;
-        sphereRecDepth = 2;
         spp  = 1;
       } else if (arg == "--final" || arg == "-hq") {
         Nx = 2*800;
         Ny = 2*600;
-        sphereRecDepth = 6;
         spp  = 1024;
       } else if (arg == "--size") {
         Nx = std::stoi(av[++i]);
         Ny = std::stoi(av[++i]);
-      } else if (arg == "--tess") {
-        sphereRecDepth = std::stoi(av[++i]);;
       } else if (arg == "--rec" || arg == "--bounces" || arg == "--max-path-length") {
         maxPathLength = std::stoi(av[++i]);;
       } else if (arg == "--spp" || arg == "-spp") {
@@ -658,8 +651,6 @@ using namespace samples;
         contextType = OP_CONTEXT_HOST_FORCE_CPU;        
       } else throw std::runtime_error("unknown arg " +arg);
     }
-    
-    World::sphereRecDepth = sphereRecDepth;
     
     // create - and set - the camera
     const vec3f lookfrom(13, 2, 3);

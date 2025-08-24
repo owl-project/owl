@@ -381,11 +381,7 @@ namespace samples {
                                         /* up */ vec3f(0, 1, 0),
                                         /* fovy, in degrees */ 20.0,
                                         /* aspect */ float(Nx) / float(Ny),
-#if 1
-                                        0.f,
-#else
                                         /* aperture */ 0.1f,
-#endif
                                         /* dist to focus: */ 10.f);
     
     // create a frame buffer
