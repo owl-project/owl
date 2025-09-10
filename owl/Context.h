@@ -39,7 +39,9 @@ namespace owl {
 #ifdef NDEBUG
       return false;
 #else
-      return true;
+      // TODO: check environment, and allow to enable via env
+      return false;
+      // return true;
 #endif
     }
 

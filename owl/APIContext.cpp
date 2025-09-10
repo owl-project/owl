@@ -55,9 +55,9 @@ namespace owl {
     std::shared_ptr<APIContext> self = shared_from_this()->as<APIContext>();
     std::vector<APIHandle*> handlesToFree;
     for (auto &it : activeHandles) {
-        if (it && it->object //&& it->object.get() != this
+        if (it && it->object
             ) {
-          PRINT(it->object->toString());
+          // PRINT(it->object->toString());
             it->object = {};
             it->context = {};
             handlesToFree.push_back(it);
