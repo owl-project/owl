@@ -184,6 +184,7 @@ if (OWL_HAVE_TBB AND TBB_FOUND)
     target_link_libraries(owl PUBLIC ${TBB_LIBRARIES})
     target_include_directories(owl PUBLIC ${TBB_INCLUDE_DIR})
   endif()
+  target_compile_definitions(owl PUBLIC -DOWL_HAVE_TBB=1)
 endif()
 # **NO** TBB for owl-static; there is not static tbb lib
 target_compile_definitions(owl_static PUBLIC -DOWL_HAVE_TBB=0)

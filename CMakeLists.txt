@@ -115,9 +115,10 @@ option(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 
 add_subdirectory(3rdParty)
 
-#if (OWL_IS_SUBPROJECT)
-#  return()
-#endif()
+# ------------------------------------------------------------------
+# "owl prime" interface
+# ------------------------------------------------------------------
+add_subdirectory(prime)
 
 # ------------------------------------------------------------------
 # tutorial/samples

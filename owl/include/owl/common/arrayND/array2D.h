@@ -43,7 +43,6 @@ namespace owl {
             lambda(vec2i(ix,iy));
       }
 
-// #if OWL_HAVE_PARALLEL_FOR
       template<typename Lambda>
       inline void parallel_for(const vec2i &dims, const Lambda &lambda)
       {
@@ -51,7 +50,7 @@ namespace owl {
             lambda(vec2i(index%dims.x,index/dims.x));
           });
       }
-// #endif
+      
       template<typename Lambda>
       inline void serial_for(const vec2i &dims, const Lambda &lambda)
       {
@@ -71,9 +70,6 @@ namespace owl {
                        const vec2i begin = block*blockSize;
                        const vec2i end   = min(begin+blockSize,dims);
                        lambda(begin,end);
-                       // array2D::for_each(begin,end,
-                       //                   [&](const vec2i &pixel)
-                       //                   { lambda(pixel); });
                      });
       }
     } // owl::common::array2D

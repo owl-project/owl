@@ -14,25 +14,16 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# support libraries
-add_subdirectory(common)
+add_executable(opWeekendCuda
+  rtow-render-cuda.cu
+  FrameBuffer.cpp
+  World.cpp
+  )
 
-# ------------------------------------------------------------------
-# cmdline-only samples, also used for 'make test'
-# ------------------------------------------------------------------
-add_subdirectory(cmdline)
+target_link_libraries(opWeekendCuda
+  owl::owl_prime
+  stb_image
+  )
+  
+add_test(opWeekendCuda ${CMAKE_BINARY_DIR}/opWeekendCuda)
 
-# "owl prime" samples
-add_subdirectory(prime)
-
-if (TARGET owl_viewer)
-
-  # interactive tutorial-style samples (these will try to open windows)
-  add_subdirectory(interactive)
-
-  # advanced samples (these will try to open windows)
-  add_subdirectory(advanced)
-
-else()
-  message(WARNING "#owl.cmake: could not build owl_viewer library; skipping advanced samples")
-endif()

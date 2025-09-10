@@ -1,5 +1,5 @@
 # ======================================================================== #
-# Copyright 2019-2025 Ingo Wald                                            #
+# Copyright 2019-2023 Ingo Wald                                            #
 #                                                                          #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
@@ -14,25 +14,14 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-# support libraries
-add_subdirectory(common)
+add_executable(opSampleInstances
+  instances.cu
+  )
 
-# ------------------------------------------------------------------
-# cmdline-only samples, also used for 'make test'
-# ------------------------------------------------------------------
-add_subdirectory(cmdline)
+target_link_libraries(opSampleInstances
+  owl::owl_prime
+  stb_image
+  )
+  
+add_test(opSampleInstances ${CMAKE_BINARY_DIR}/opSampleInstances)
 
-# "owl prime" samples
-add_subdirectory(prime)
-
-if (TARGET owl_viewer)
-
-  # interactive tutorial-style samples (these will try to open windows)
-  add_subdirectory(interactive)
-
-  # advanced samples (these will try to open windows)
-  add_subdirectory(advanced)
-
-else()
-  message(WARNING "#owl.cmake: could not build owl_viewer library; skipping advanced samples")
-endif()
