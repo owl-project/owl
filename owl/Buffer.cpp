@@ -85,7 +85,8 @@ namespace owl {
   /*! pretty-printer, for debugging */
   std::string DeviceBuffer::toString() const 
   {
-    return "DeviceBuffer";
+    return "DeviceBuffer (type="+typeToString(type)
+      +", count="+std::to_string(elementCount)+")";
   }
 
   DeviceBuffer::DeviceData::~DeviceData()

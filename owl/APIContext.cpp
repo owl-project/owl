@@ -57,6 +57,7 @@ namespace owl {
     for (auto &it : activeHandles) {
         if (it && it->object //&& it->object.get() != this
             ) {
+          PRINT(it->object->toString());
             it->object = {};
             it->context = {};
             handlesToFree.push_back(it);
