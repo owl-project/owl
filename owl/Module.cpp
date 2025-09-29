@@ -57,6 +57,8 @@ namespace owl {
   std::string killAllInternalOptixSymbolsFromPtxString(const char *orignalPtxCode)
   {
     std::stringstream fixed;
+    const std::string fake_ptx_version = std::getenv("OWL_FAKE_PTX_VERSION");
+    bool fakePTX = (fake_ptx_version != "");
 
     for (const char *s = orignalPtxCode; *s; ) {
       std::string line = getNextLine(s);
@@ -64,8 +66,8 @@ namespace owl {
           line.find(",_optix_") != line.npos
           ) {
         fixed << "//dropped: " << line;
-      // } else if (line.find(".version") == 0) {
-      //   fixed << ".version 8.0\n";
+      } else if (fakePTX && line.find(".version") == 0) {
+        fixed << ".version " << fake_ptx_version << "\n";
       } else
         fixed << line;
     }
