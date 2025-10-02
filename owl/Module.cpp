@@ -54,13 +54,12 @@ namespace owl {
       that contains ' _optix_' get commented out. This will make this
       PTX code invalid for all optix functions, but makes it
       compilable by cude for the non-optix bounds program */
-  std::string killAllInternalOptixSymbolsFromPtxString(const char *orignalPtxCode)
+  std::string killAllInternalOptixSymbolsFromPtxString(const char *originalPtxCode)
   {
     std::stringstream fixed;
-    const std::string fake_ptx_version = std::getenv("OWL_FAKE_PTX_VERSION");
-    bool fakePTX = (fake_ptx_version != "");
-
-    for (const char *s = orignalPtxCode; *s; ) {
+    const char *fake_ptx_version = std::getenv("OWL_FAKE_PTX_VERSION");
+    bool fakePTX = (fake_ptx_version && std::stoi(fake_ptx_version) != 0);
+    for (const char *s = originalPtxCode; *s; ) {
       std::string line = getNextLine(s);
       if (line.find(" _optix_") != line.npos ||
           line.find(",_optix_") != line.npos
