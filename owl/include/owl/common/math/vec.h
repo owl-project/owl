@@ -30,7 +30,7 @@ namespace owl {
     template<> struct long_type_of<uint32_t> { typedef uint64_t type; };
   
     template<typename T, int N>
-    struct OWL_INTERFACE vec_t { T t[N]; };
+    struct vec_t { T t[N]; };
 
 
     template<typename ScalarTypeA, typename ScalarTypeB> struct BinaryOpResultType;
@@ -54,7 +54,7 @@ namespace owl {
     // vector, so we can use it in, say, box1f
     // ------------------------------------------------------------------
     template<typename T>
-    struct OWL_INTERFACE vec_t<T,1> {
+    struct vec_t<T,1> {
       enum { dims = 1 };
       typedef T scalar_t;
     
@@ -93,7 +93,7 @@ namespace owl {
     // vec2
     // ------------------------------------------------------------------
     template<typename T>
-    struct OWL_INTERFACE vec_t<T,2> {
+    struct vec_t<T,2> {
       enum { dims = 2 };
       typedef T scalar_t;
     
@@ -140,7 +140,7 @@ namespace owl {
     // vec3
     // ------------------------------------------------------------------
     template<typename T>
-    struct OWL_INTERFACE vec_t<T,3> {
+    struct vec_t<T,3> {
       enum { dims = 3 };
       typedef T scalar_t;
     
@@ -203,7 +203,7 @@ namespace owl {
     // vec3a
     // ------------------------------------------------------------------
     template<typename T>
-    struct OWL_INTERFACE OWL_ALIGN(16) vec3a_t : public vec_t<T,3> {
+    struct OWL_ALIGN(16) vec3a_t : public vec_t<T,3> {
       inline vec3a_t() {}
       inline vec3a_t(const T &t) : vec_t<T,3>(t) {}
       inline vec3a_t(const T &x, const T &y, const T &z) : vec_t<T,3>(x,y,z) {}
@@ -227,7 +227,7 @@ namespace owl {
     // vec4
     // ------------------------------------------------------------------
     template<typename T>
-    struct OWL_INTERFACE vec_t<T,4> {
+    struct vec_t<T,4> {
       enum { dims = 4 };
       typedef T scalar_t;
     
