@@ -55,17 +55,20 @@
 #include <signal.h>
 #endif
 
-#if defined(_MSC_VER)
-#  define OWL_DLL_EXPORT __declspec(dllexport)
-#  define OWL_DLL_IMPORT __declspec(dllimport)
-#elif defined(__clang__) || defined(__GNUC__)
-#  define OWL_DLL_EXPORT __attribute__((visibility("default")))
-#  define OWL_DLL_IMPORT __attribute__((visibility("default")))
-#else
-#  define OWL_DLL_EXPORT
-#  define OWL_DLL_IMPORT
-#endif
+// #if defined(_MSC_VER)
+// #  define OWL_DLL_EXPORT __declspec(dllexport)
+// #  define OWL_DLL_IMPORT __declspec(dllimport)
+// #elif defined(__clang__) || defined(__GNUC__)
+// #  define OWL_DLL_EXPORT __attribute__((visibility("default")))
+// #  define OWL_DLL_IMPORT __attribute__((visibility("default")))
+// #else
+// #  define OWL_DLL_EXPORT
+// #  define OWL_DLL_IMPORT
+// #endif
 
+#ifdef OWL_INTERFACE
+# undef OWL_INTERFACE
+#endif
 # define OWL_INTERFACE /* nothing - currently not building any special 'owl.dll' */
 #if defined(_MSC_VER)
 #  define __PRETTY_FUNCTION__ __FUNCTION__

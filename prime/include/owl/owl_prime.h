@@ -21,7 +21,7 @@
 #include <stdint.h>
 
 #ifdef _WIN32
-# if defined(owl_prime_STATIC)
+# if defined(owl_prime_static_STATIC)
 #  define OP_INTERFACE /* nothing */
 # elif defined(owl_prime_EXPORTS)
 #  define OP_INTERFACE __declspec(dllexport)
