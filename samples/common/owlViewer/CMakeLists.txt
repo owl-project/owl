@@ -14,15 +14,6 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-#if (WIN32)
-#set(OPENGL_DEPENDENCY "")
-#else()
-#set(OpenGL_GL_PREFERENCE "LEGACY")
-#find_package(OpenGL QUIET)
-#set(OPENGL_DEPENDENCY OpenGL::OpenGL)
-#endif()
-#find_package(OpenGL QUIET)
-
 set(OpenGL_GL_PREFERENCE "LEGACY")
 find_package(OpenGL REQUIRED OPTIONAL_COMPONENTS OpenGL)
 

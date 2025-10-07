@@ -39,14 +39,17 @@
 
 
 #if defined(_MSC_VER)
-#  define OWL_DLL_EXPORT __declspec(dllexport)
-#  define OWL_DLL_IMPORT __declspec(dllimport)
+#  if defined(owl_static_STATIC)
+#    define OWL_INTERFACE /* nothing */
+#  elif defined(owl_EXPORTS)
+#    define OWL_INTERFACE __declspec(dllexport)
+#  else 
+#    define OWL_INTERFACE __declspec(dllimport)
+#  endif
 #elif defined(__clang__) || defined(__GNUC__)
-#  define OWL_DLL_EXPORT __attribute__((visibility("default")))
-#  define OWL_DLL_IMPORT __attribute__((visibility("default")))
+#  define OWL_INTERFACE __attribute__((visibility("default")))
 #else
-#  define OWL_DLL_EXPORT
-#  define OWL_DLL_IMPORT
+#  define OWL_INTERFACE
 #endif
 
 #ifdef __cplusplus
@@ -56,7 +59,7 @@
 #endif
 
 #  ifdef __cplusplus
-#    define OWL_API extern "C" OWL_DLL_EXPORT
+#    define OWL_API extern "C" OWL_INTERFACE
 #  else
 #    define OWL_API /* bla */
 #  endif

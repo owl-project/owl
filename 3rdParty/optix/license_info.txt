@@ -1,0 +1,8 @@
+
+OptiX Licenses
+==============
+
+In addition to the terms of the NVIDIA DesignWorks license outlined in
+LICENSE.txt, the OptiX API header files are each licensed under either a
+BSD-3 license or an NVIDIA Proprietary license. Please refer to the specific
+license posted in comments at the top each individual file.

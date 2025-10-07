@@ -20,8 +20,8 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-#ifdef _WIN32
-# if defined(owl_prime_STATIC)
+#if defined(_MSC_VER)
+# if defined(owl_prime_static_STATIC)
 #  define OP_INTERFACE /* nothing */
 # elif defined(owl_prime_EXPORTS)
 #  define OP_INTERFACE __declspec(dllexport)
@@ -38,7 +38,7 @@
 #  define OP_API extern "C" OP_INTERFACE
 #  define OP_IF_CPP(a) a
 #else
-#  define OP_API /* bla */
+#  define OP_API /* nothing */ OP_INTERFACE
 #  define OP_IF_CPP(a) /* ignore */
 #endif
 

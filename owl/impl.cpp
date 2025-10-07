@@ -25,7 +25,7 @@
 #include "InstanceGroup.h"
 
 #undef OWL_API
-#define OWL_API extern "C" OWL_DLL_EXPORT
+#define OWL_API extern "C" OWL_INTERFACE
 
 using namespace owl;
 
