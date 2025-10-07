@@ -213,7 +213,7 @@ Viewer::Viewer()
     = owlDeviceBufferCreate(context,OWL_FLOAT3,colors.size(),colors.data());
   
   OWLGeom spheresGeom = owlGeomCreate(context,spheresGeomType);
-  owlSpheresSetVertices(spheresGeom,vertices.size(),verticesBuffer,radiiBuffer);
+  owlSpheresSetVertices(spheresGeom,(int)vertices.size(),verticesBuffer,radiiBuffer);
 
 #if 1
   owlGeomSetBuffer(spheresGeom, "tint", colorsBuffer);

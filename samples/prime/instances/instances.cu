@@ -57,7 +57,7 @@ inline float randomFloat()
   static std::random_device rd;  // Will be used to obtain a seed for the random number engine
   static std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
   static std::uniform_real_distribution<> dis(0.f, 1.f);
-  return dis(gen);
+  return (float)dis(gen);
 }
 
 inline vec3f randomPoint()
@@ -127,7 +127,7 @@ int main(int, char **)
     = opModelCreate(context,
                     groups.data(),
                     transforms.data(),
-                    transforms.size());
+                    (int)transforms.size());
 
   std::cout << "generating rays..." << std::endl;
   vec3f up(0,1,0);

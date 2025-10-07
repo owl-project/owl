@@ -81,9 +81,6 @@ if (NOT OWL_IS_SUBPROJECT)
 endif()
 
 # ------------------------------------------------------------------
-# first, include gdt project to do some general configuration stuff
-# (build modes, glut, optixb, etc)
-# ------------------------------------------------------------------
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/owl/cmake/")
 if (OWL_IS_SUBPROJECT)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)

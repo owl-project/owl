@@ -235,8 +235,8 @@ Viewer::Viewer()
     = owlDeviceBufferCreate(context,OWL_INT,segmentIndices.size(),segmentIndices.data());
   
   OWLGeom curvesGeom = owlGeomCreate(context,curvesGeomType);
-  owlCurvesSetControlPoints(curvesGeom,vertices.size(),verticesBuffer,widthsBuffer);
-  owlCurvesSetSegmentIndices(curvesGeom,segmentIndices.size(),segmentIndicesBuffer);
+  owlCurvesSetControlPoints(curvesGeom,(int)vertices.size(),verticesBuffer,widthsBuffer);
+  owlCurvesSetSegmentIndices(curvesGeom,(int)segmentIndices.size(),segmentIndicesBuffer);
   owlCurvesSetDegree(curvesGeomType,degree,forceCaps);
 
 #if 1

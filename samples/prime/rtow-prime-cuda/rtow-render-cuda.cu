@@ -373,13 +373,13 @@ namespace samples {
     }
     
     // create - and set - the camera
-    const vec3f lookfrom(13, 2, 3);
-    const vec3f lookat(0, 0, 0);
+    const vec3f lookfrom(13.f, 2.f, 3.f);
+    const vec3f lookat(0.f, 0.f, 0.f);
     std::shared_ptr<Camera>
       camera = std::make_shared<Camera>(lookfrom,
                                         lookat,
-                                        /* up */ vec3f(0, 1, 0),
-                                        /* fovy, in degrees */ 20.0,
+                                        /* up */ vec3f(0.f, 1.f, 0.f),
+                                        /* fovy, in degrees */ 20.f,
                                         /* aspect */ float(Nx) / float(Ny),
                                         /* aperture */ 0.1f,
                                         /* dist to focus: */ 10.f);

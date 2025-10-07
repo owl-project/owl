@@ -207,7 +207,7 @@ namespace samples {
       }
       else {
         outward_normal = scatter.N;
-        ni_over_nt = 1.0 / ref_idx;
+        ni_over_nt = 1.f / ref_idx;
         cosine = -NdotD;
       }
       
@@ -273,7 +273,7 @@ namespace samples {
         groups.push_back(group);
       handle = opModelCreate(context,groups.data(),
                              (OPTransform*)transforms.data(),
-                             transforms.size());
+                             (int)transforms.size());
     }
 
     std::vector<Triangle> triangles;
