@@ -433,9 +433,9 @@ namespace owl {
           int result = 0;
           cudaDeviceGetAttribute(&result, cudaDevAttrConcurrentManagedAccess, cudaDevID);
           if (result) {
-            cudaError_t rc = cudaSuccess;
+            cudaError_t rc = cudaSuccess;            
+#if CUDART_VERSION >= 13000
             cudaMemLocation memLocation;
-#if 1
             memLocation.type = cudaMemLocationTypeDevice;
             for (int i=0;i<context->deviceCount();i++) {
               if (rc == cudaSuccess) {
