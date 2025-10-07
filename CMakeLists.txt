@@ -27,7 +27,7 @@ else()
   set(OWL_IS_SUBPROJECT OFF)
 endif()
 
-message("OWL_IS_SUBPROJECT ${OWL_IS_SUBPROJECT}")
+##message("OWL_IS_SUBPROJECT ${OWL_IS_SUBPROJECT}")
 
 if(CUDA_TOOLKIT_ROOT_DIR)
   # Somebody called find_cuda--they are trying to use the deprecated build.
