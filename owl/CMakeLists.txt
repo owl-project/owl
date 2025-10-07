@@ -136,8 +136,7 @@ add_library(owl-config INTERFACE)
 add_library(owl SHARED ${OWL_SOURCES})
 add_library(owl_static STATIC ${OWL_SOURCES})
 target_compile_definitions(owl-config INTERFACE -DOWL_CUDA_STATIC=1)
-#target_compile_definitions(owl_static PUBLIC -DOWL_CUDA_STATIC=1)
-add_library(owl_object OBJECT ${OWL_SOURCES})
+target_compile_definitions(owl_static PUBLIC -Dowl_static_STATIC=1)
 
 set_target_properties(owl
   PROPERTIES
