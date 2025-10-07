@@ -24,11 +24,10 @@
 //    distribution.
 //
 //========================================================================
-// It is fine to use C99 in this file because it will not be built with VS
-//========================================================================
 
 #include "internal.h"
 
+#if defined(_GLFW_X11) || defined(_GLFW_WAYLAND)
 
 /*
  * Marcus: This code was originally written by Markus G. Kuhn.
@@ -907,7 +906,7 @@ static const struct codepair {
 
 // Convert XKB KeySym to Unicode
 //
-long _glfwKeySym2Unicode(unsigned int keysym)
+uint32_t _glfwKeySym2Unicode(unsigned int keysym)
 {
     int min = 0;
     int max = sizeof(keysymtab) / sizeof(struct codepair) - 1;
@@ -937,6 +936,8 @@ long _glfwKeySym2Unicode(unsigned int keysym)
     }
 
     // No matching Unicode value found
-    return -1;
+    return GLFW_INVALID_CODEPOINT;
 }
+
+#endif // _GLFW_WAYLAND or _GLFW_X11
 
