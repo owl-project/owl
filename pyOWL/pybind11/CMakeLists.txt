@@ -307,25 +307,6 @@ if(PYBIND11_INSTALL)
   endif()
 endif()
 
-# BUILD_TESTING takes priority, but only if this is the master project
-if(PYBIND11_MASTER_PROJECT AND DEFINED BUILD_TESTING)
-  if(BUILD_TESTING)
-    if(_pybind11_nopython)
-      message(FATAL_ERROR "Cannot activate tests in NOPYTHON mode")
-    else()
-      add_subdirectory(tests)
-    endif()
-  endif()
-else()
-  if(PYBIND11_TEST)
-    if(_pybind11_nopython)
-      message(FATAL_ERROR "Cannot activate tests in NOPYTHON mode")
-    else()
-      add_subdirectory(tests)
-    endif()
-  endif()
-endif()
-
 # Better symmetry with find_package(pybind11 CONFIG) mode.
 if(NOT PYBIND11_MASTER_PROJECT)
   set(pybind11_FOUND

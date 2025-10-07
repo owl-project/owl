@@ -24,7 +24,7 @@ target_include_directories(owl_prime-interface INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
  )
-target_link_libraries(owl_prime-interface INTERFACE owl::owl)
+target_link_libraries(owl_prime-interface INTERFACE owl-config)
 
 # ------------------------------------------------------------------
 # build abstract owl_prime abstraction layer that implements the API.
@@ -46,7 +46,8 @@ set_target_properties(owl_prime_static
   CUDA_RESOLVE_DEVICE_SYMBOLS ON
   CUDA_USE_STATIC_CUDA_RUNTIME ON
   )
-target_link_libraries(owl_prime_static PUBLIC CUDA::cuda_driver CUDA::cudart_static)
+target_compile_definitions(owl_prime_static PUBLIC -Dowl_prime_static_STATIC=1)
+target_link_libraries(owl_prime_static PUBLIC CUDA::cuda_driver CUDA::cudart_static owl::owl_static)
 
 add_library(owl_prime SHARED ${SOURCES})
 target_link_libraries(owl_prime PUBLIC owl_prime-interface)
@@ -60,7 +61,7 @@ set_target_properties(owl_prime
 #  CUDA_ARCHITECTURES OFF
   )
 find_package(CUDAToolkit REQUIRED)
-target_link_libraries(owl_prime PUBLIC CUDA::cuda_driver CUDA::cudart_static)
+target_link_libraries(owl_prime PUBLIC CUDA::cuda_driver CUDA::cudart_static owl::owl)
 
 # allow actual backend(s) in subdirector(ies) to link to this library
 # in current directory

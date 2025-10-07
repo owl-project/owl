@@ -27,7 +27,7 @@ else()
   set(OWL_IS_SUBPROJECT OFF)
 endif()
 
-message("OWL_IS_SUBPROJECT ${OWL_IS_SUBPROJECT}")
+##message("OWL_IS_SUBPROJECT ${OWL_IS_SUBPROJECT}")
 
 if(CUDA_TOOLKIT_ROOT_DIR)
   # Somebody called find_cuda--they are trying to use the deprecated build.
@@ -103,13 +103,6 @@ option(OWL_BUILD_SHARED "Build OWL as a shared library? (otherwise static)" OFF)
 set(BUILD_SHARED_LIBS ${OWL_BUILD_SHARED}) # use 'OWL_' naming convention
 add_subdirectory(owl)
 
-if (NOT OWL_IS_SUBPROJECT)
-  option(OWL_BUILD_SAMPLES "Build the Samples?" ON)
-else()
-  # make it off by default when building as subproject, so we don't
-  # even define glfw target under windows when used as submodule
-  option(OWL_BUILD_SAMPLES "Build the Samples?" OFF)
-endif()
 #add_compile_definitions(OWL_BUILDING_ALL_SAMPLES)
 option(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 
@@ -123,10 +116,27 @@ add_subdirectory(prime)
 # ------------------------------------------------------------------
 # tutorial/samples
 # ------------------------------------------------------------------
-if (OWL_BUILD_SAMPLES)
-  add_subdirectory(samples)
-#else()
-#  add_subdirectory(samples EXCLUDE_FROM_ALL)
+if (OWL_IS_SUBPROJECT)
+  # if we ARE a subproject, we ONLY include the samples/common subdir,
+  # and ONLY with exclude from all. This make sure that the owlViewer
+  # target is defined for those projects using owl that need that
+  # library (if it's defined they can link to it, and cmake will then
+  # automatically build it), but at the same time will not actually
+  # build any samples or viewer, and all of the other owl samples will
+  # not even be defined (and thus not pollute the visual studio
+  # targets list)
+  add_subdirectory(samples/common/owlViewer EXCLUDE_FROM_ALL)
+else()
+  # if we're NOT a submodule, we _probably_ want to build the samples,
+  # but give the user a way of turning that off, too:
+  option(OWL_BUILD_SAMPLES "Build the Samples?" ON)
+  if (OWL_BUILD_SAMPLES)
+    add_subdirectory(samples)
+  endif()
+endif()
+
+if (OWL_IS_SUBPROJECT)
+  return()
 endif()
 
 include(CTest)
