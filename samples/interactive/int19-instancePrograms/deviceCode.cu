@@ -148,7 +148,6 @@ OPTIX_INSTANCE_PROGRAM(instanceProg)(const int32_t instanceIndex, OptixInstance 
 
   const float worldSize = 1;
   const vec3f boxSize   = (2*.4f*worldSize)/vec3f(optixLaunchParams.numBoxes);
-  const float animSpeed = 4.f;
 
   vec3i boxID = vec3i(instanceIndex % 100,(instanceIndex / 100) % 100,(instanceIndex / (100 * 100)) % 100);
   

@@ -128,9 +128,11 @@ namespace op {
     for (int i=0;i<numIndices;i++) 
       d_indices[i] = getWithOffset(indices,i,indexStrideInBytes);
     
+    assert(size_t(int(numIndices)) == numIndices);
+    assert(size_t(int(numVertices)) == numVertices);
     return new Triangles(this,userID,
-                         vertexBuffer,numVertices,
-                         indexBuffer,numIndices);
+                         vertexBuffer,(int)numVertices,
+                         indexBuffer,(int)numIndices);
   }
 
   primer::Group *Context::createGroup(std::vector<OPGeom> &geoms) 

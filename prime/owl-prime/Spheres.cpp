@@ -37,7 +37,7 @@ namespace op {
     geom = owlGeomCreate(context->owl,
                          context->spheresGeomType);
     owlGeomSetPrimCount(geom,numSpheres);
-    owlGeomSet1i(geom,"geomDataValue",geomDataValue);
+    owlGeomSet1ul(geom,"geomDataValue",geomDataValue);
     owlGeomSetBuffer(geom,"spheres",spheresBuffer);
   }
 

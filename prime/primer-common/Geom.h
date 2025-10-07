@@ -26,7 +26,7 @@ namespace primer {
       etc). this is the primer-common version that backends will
       likely override */
   struct Geom : public Object {
-    Geom(uint32_t geomDataValue) : geomDataValue(geomDataValue) {}
+    Geom(uint64_t geomDataValue) : geomDataValue(geomDataValue) {}
 
     /*! pretty-printer (mostly for debugging) */
     std::string toString() const override { return "primer::Geom (abstract)"; }

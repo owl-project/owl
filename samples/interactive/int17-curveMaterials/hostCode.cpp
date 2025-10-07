@@ -149,7 +149,7 @@ void Viewer::createScene()
 
   // Segment configuration
   float radius = 0.05f;
-  float d = 0.3;
+  float d = 0.3f;
 
 
   // Set up curve materials
@@ -323,8 +323,8 @@ Viewer::Viewer()
     = owlDeviceBufferCreate(context,OWL_INT,segmentIndices.size(),segmentIndices.data());
   
   OWLGeom curvesGeom = owlGeomCreate(context,curvesGeomType);
-  owlCurvesSetControlPoints(curvesGeom,vertices.size(),verticesBuffer,widthsBuffer);
-  owlCurvesSetSegmentIndices(curvesGeom,segmentIndices.size(),segmentIndicesBuffer);
+  owlCurvesSetControlPoints(curvesGeom,(int)vertices.size(),verticesBuffer,widthsBuffer);
+  owlCurvesSetSegmentIndices(curvesGeom,(int)segmentIndices.size(),segmentIndicesBuffer);
   owlCurvesSetDegree(curvesGeomType,degree,forceCaps);
   owlGeomSetBuffer(curvesGeom,"curves",materialsBuffer);
 

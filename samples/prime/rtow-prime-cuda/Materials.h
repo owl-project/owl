@@ -177,7 +177,7 @@ namespace samples {
       }
       else {
         outward_normal = scatter.N;
-        ni_over_nt = 1.0 / ref_idx;
+        ni_over_nt = 1.f / ref_idx;
         cosine = -NdotD;
       }
       

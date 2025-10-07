@@ -758,6 +758,8 @@ static void stbiw__write_hdr_scanline(stbi__write_context *s, int width, int nco
    }
 }
 
+#if 0
+// removing this because it only generates warnings and isn't ever used in owl, anyway
 static int stbi_write_hdr_core(stbi__write_context *s, int x, int y, int comp, float *data)
 {
    if (y <= 0 || x <= 0 || data == NULL)
@@ -802,6 +804,7 @@ STBIWDEF int stbi_write_hdr(char const *filename, int x, int y, int comp, const 
       return 0;
 }
 #endif // STBI_WRITE_NO_STDIO
+#endif
 
 
 //////////////////////////////////////////////////////////////////////////////
