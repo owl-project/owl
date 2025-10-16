@@ -27,7 +27,7 @@ else()
   set(OWL_IS_SUBPROJECT OFF)
 endif()
 
-##message("OWL_IS_SUBPROJECT ${OWL_IS_SUBPROJECT}")
+message("OWL_IS_SUBPROJECT ${OWL_IS_SUBPROJECT}")
 
 if(CUDA_TOOLKIT_ROOT_DIR)
   # Somebody called find_cuda--they are trying to use the deprecated build.
@@ -103,6 +103,10 @@ add_subdirectory(owl)
 #add_compile_definitions(OWL_BUILDING_ALL_SAMPLES)
 option(OWL_BUILD_ADVANCED_TESTS "Build the *advanced* test-cases?" OFF)
 
+if (NOT (DEFINED OWL_BUILD_VIEWER))
+  option (OWL_BUILD_VIEWER "Build owlViewer target" ON)
+endif()
+
 add_subdirectory(3rdParty)
 
 # ------------------------------------------------------------------
@@ -122,7 +126,7 @@ if (OWL_IS_SUBPROJECT)
   # build any samples or viewer, and all of the other owl samples will
   # not even be defined (and thus not pollute the visual studio
   # targets list)
-  add_subdirectory(samples/common/owlViewer EXCLUDE_FROM_ALL)
+  #  add_subdirectory(samples/common/owlViewer EXCLUDE_FROM_ALL)
 else()
   # if we're NOT a submodule, we _probably_ want to build the samples,
   # but give the user a way of turning that off, too:

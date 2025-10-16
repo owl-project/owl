@@ -18,6 +18,8 @@ if (NOT (TARGET stb_image))
   add_subdirectory(stb_image)
 endif()
 
+if (OWL_BUILD_VIEWER)
+  message("owl build viewer ${OWL_BUILD_VIEWER}")
   if (TARGET glfw)
     # glfw already exists, don't find or build again
   else()
@@ -34,3 +36,4 @@ endif()
   #    endif()
     endif()
   endif()
+endif()
