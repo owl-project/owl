@@ -1,5 +1,15 @@
 # OWL: A Productivity Library for OptiX 7 and 8
 
+THIS PROJECT HAS MOVED. PLEASE SWITCH TO USING
+https://github.com/NVIDIA/OWL.git
+
+After years of having lived on the github.com/owl-project/
+organization, OWL has finally moved to be an official
+github.com/NVIDIA/ project. I will leave this repo here in existance
+for those projects that depend on it as git submodule paths, but
+going forward please switch your remote to 
+https://github.com/NVIDIA/OWL.git
+
 <!--- ------------------------------------------------------- -->
 ## What is OWL?
 
